@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .login-box { width: 300px; margin: 80px auto; padding: 18px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 0 6px #ccc; }
+    .login-box input { width: 97%; padding: 7px; margin: 8px 0;}
+    .login-box button { padding: 7px 18px; border-radius: 4px; background: #007bfc; color: white; border: none; }
+    .error { color: red; margin-bottom: 12px;}
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Iniciar sesión</h2>
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+      <label>Email:</label><br>
+      <input type="email" name="email" required><br>
+      <label>Contraseña:</label><br>
+      <input type="password" name="password" required><br>
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+</body>
+</html>

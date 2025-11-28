@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Panel Usuario</title>
+</head>
+<body>
+  <h2>Bienvenido, {{ user['nombre'] }}</h2>
+  <p>Email: {{ user['email'] }}</p>
+  <p>Rol: {{ user.get('rol', 'N/A') }}</p>
+  <p>Tu UID actual: <b>{{ uid }}</b></p>
+  
+  <!-- Enlaces corregidos con el UID que debe ir en la URL -->
+  <a href="/pedidos?uid={{ uid }}">Tus pedidos</a> |
+  <a href="/cotizaciones?uid={{ uid }}">Tus cotizaciones</a>
+</body>
+</html>
