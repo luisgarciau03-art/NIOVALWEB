@@ -33,8 +33,9 @@ MENSAJES_SHEET_NAME = "Mensajes"
 GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
-CLIENT_SECRET_FILE = r"C:\Users\PC 1\NIOVALWEB\client_secret_714518911092-kbf030ufdkrpfp1tacn6stbof3cl2g7n.apps.googleusercontent.com.json"
-TOKEN_FILE = r"C:\Users\PC 1\NIOVALWEB\token.json"
+# Usa la ruta relativa para Render
+CLIENT_SECRET_FILE = "client_secret.json"
+TOKEN_FILE = "token.json"
 PDF_RANGE = "A1:I44"
 DRIVE_FOLDER_ID = "1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28"
 
@@ -306,22 +307,49 @@ def obtener_numero_mensaje(sheet_ventas, sheet_contactos, sheet_mensajes):
 
 def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> Options:
     opts = Options()
-    opts.add_argument(f"--user-data-dir={user_data_dir}")
-    opts.add_argument(f"--profile-directory={profile_dir}")
-    if CHROME_BINARY and os.path.isfile(CHROME_BINARY):
-        opts.binary_location = CHROME_BINARY
-    opts.add_argument('--no-sandbox')
-    opts.add_argument('--disable-dev-shm-usage')
-    opts.add_argument('--disable-gpu')
-    opts.add_argument('--disable-extensions')
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
-    opts.add_experimental_option('useAutomationExtension', False)
+    # Detecta si está en Render por variable de entorno
+    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+        # Configuración headless para Render
+        opts.add_argument('--headless')
+        opts.add_argument('--no-sandbox')
+        opts.add_argument('--disable-dev-shm-usage')
+        opts.add_argument('--disable-gpu')
+        opts.add_argument('--disable-extensions')
+        opts.add_argument('--window-size=1920,1080')
+        opts.add_argument('--disable-software-rasterizer')
+        opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+        opts.add_experimental_option('useAutomationExtension', False)
+        # Usa binarios instalados por build.sh
+        chromium_path = '/usr/bin/chromium-browser'
+        if os.path.isfile(chromium_path):
+            opts.binary_location = chromium_path
+    else:
+        # Configuración local (PC)
+        opts.add_argument(f"--user-data-dir={user_data_dir}")
+        opts.add_argument(f"--profile-directory={profile_dir}")
+        if CHROME_BINARY and os.path.isfile(CHROME_BINARY):
+            opts.binary_location = CHROME_BINARY
+        opts.add_argument('--no-sandbox')
+        opts.add_argument('--disable-dev-shm-usage')
+        opts.add_argument('--disable-gpu')
+        opts.add_argument('--disable-extensions')
+        opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+        opts.add_experimental_option('useAutomationExtension', False)
     return opts
 
 def iniciar_driver(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> webdriver.Chrome:
-    svc = Service(ChromeDriverManager().install())
-    opts = crear_opciones(user_data_dir, profile_dir)
-    return webdriver.Chrome(service=svc, options=opts)
+    # Detecta si está en Render
+    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+        # Render: usa chromedriver instalado por build.sh
+        chromedriver_path = '/usr/bin/chromedriver'
+        svc = Service(chromedriver_path) if os.path.isfile(chromedriver_path) else Service(ChromeDriverManager().install())
+        opts = crear_opciones()
+        return webdriver.Chrome(service=svc, options=opts)
+    else:
+        # Local: usa webdriver_manager y perfil de usuario
+        svc = Service(ChromeDriverManager().install())
+        opts = crear_opciones(user_data_dir, profile_dir)
+        return webdriver.Chrome(service=svc, options=opts)
 
 def detect_invalid_popup(driver) -> bool:
     """
