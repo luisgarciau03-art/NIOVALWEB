@@ -25,6 +25,11 @@ from typing import Optional
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import requests
+import subprocess
+print("Chromium path:", subprocess.getoutput('which chromium'))
+print("Chromium version:", subprocess.getoutput('chromium --version'))
+print("Chromedriver path:", subprocess.getoutput('which chromedriver'))
+print("Chromedriver version:", subprocess.getoutput('chromedriver --version'))
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
