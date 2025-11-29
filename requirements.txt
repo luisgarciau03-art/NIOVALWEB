@@ -51,6 +51,8 @@ google-api-python-client==2.186.0
 requests==2.32.5
 selenium==4.38.0
 webdriver-manager==4.0.2
+selenium
+chromedriver-autoinstaller
 protobuf==6.33.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
