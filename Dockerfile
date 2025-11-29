@@ -43,4 +43,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Comando para iniciar tu app (ajusta si usas Flask, FastAPI, etc)
 CMD ["python", "app.py"]
->>>>>>> 0737b5f4972923487d8dc6b802ec9c2d1b72da37
+
