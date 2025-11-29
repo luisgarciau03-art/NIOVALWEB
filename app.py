@@ -102,7 +102,10 @@ def login():
 
 @app.route("/pedidos", methods=["GET", "POST"])
 def pedidos_panel():
-    uid = request.args.get("uid")
+    # Permitir obtener uid tanto por GET (args) como por POST (form)
+    print("request.args:", dict(request.args))
+    print("request.form:", dict(request.form))
+    uid = request.args.get("uid") or request.form.get("uid")
     print("Panel de pedidos, uid recibido =", uid)
     if not uid:
         return "UID no proporcionado", 400
@@ -128,11 +131,48 @@ def pedidos_panel():
 
     # Procesar formulario POST para guardar pedido (solo estructura, no guardado aún)
     if request.method == "POST":
-        productos_json = request.form.get("productos_json")
-        print("Pedido recibido:", productos_json)
-        # ...guardar en Firestore...
+        import json
+        productos = json.loads(request.form.get("productos_json", "[]"))
+        print("Pedido recibido:", productos)
+        # Obtener datos de usuario
+        user_data = get_user_data(uid)
+        nombre = user_data.get('nombre', '') if user_data else ''
+        esquema = user_data.get('Esquema', '') if user_data else ''
+        metodo_pago = user_data.get('Metodo De Pago', '') if user_data else ''
 
-    return render_template("pedidos.html", pedidos=pedidos, productos=productos, precio_esquema=precio_esquema)
+
+        # --- INTEGRACIÓN FLUJO PRINCIPAL script45t.py ---
+
+        try:
+            from script45t import extraer_datos_cotizacion, export_pdf_rango, insertar_fila_ventas, guardar_productos_en_bd
+            # Preparar productos para hoja BD
+            productos_bd = []
+            for p in productos:
+                prod = {
+                    'SKU': p.get('sku', ''),
+                    'Nombre': p.get('producto', {}).get('Nombre', ''),
+                    'Cantidad': p.get('cantidad', ''),
+                    'Precio': p.get('producto', {}).get(precio_esquema, '')
+                }
+                productos_bd.append(prod)
+            # Guardar productos en hoja BD (borra y escribe)
+            guardar_productos_en_bd(productos_bd, nombre, esquema, metodo_pago)
+
+            # Extraer datos de cotización
+            nombre_cliente, total_factura, num_factura, esquema, mes_actual = extraer_datos_cotizacion()
+            # Exportar PDF
+            pdf_path, pdf_filename, drive_url = export_pdf_rango(nombre_cliente, num_factura)
+            # Escribir en hoja Ventas
+            if pdf_path:
+                insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+            mensaje = "¡Pedido procesado y registrado en hoja BD y Ventas!"
+        except Exception as e:
+            print("Error en integración con script45t.py:", e)
+            mensaje = f"Error al procesar pedido: {e}"
+
+        return render_template("panel.html", user=user_data, uid=uid, mensaje=mensaje)
+
+    return render_template("pedidos.html", pedidos=pedidos, productos=productos, precio_esquema=precio_esquema, uid=uid)
 
 @app.route("/cotizaciones")
 def cotizaciones_panel():
