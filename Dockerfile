@@ -21,7 +21,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Comando para iniciar tu app (ajusta si usas Flask, FastAPI, etc)
 CMD ["python", "app.py"]
-=======
 # Dockerfile para Render con Python, Chromium y Chromedriver
 FROM python:3.10-slim
 
