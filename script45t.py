@@ -50,8 +50,7 @@ MENSAJES_SHEET_NAME = "Mensajes"
 GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
-CLIENT_SECRET_FILE = "client_secret.json"
-TOKEN_FILE = "token.json"
+
 CLIENT_SECRET_FILE = "client_secret.json"
 TOKEN_FILE = "token.json"
 PDF_RANGE = "A1:I44"
@@ -337,8 +336,8 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
         opts.add_argument('--disable-software-rasterizer')
         opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         opts.add_experimental_option('useAutomationExtension', False)
-        # Usa binarios instalados por build.sh
-        chromium_path = '/usr/bin/chromium-browser'
+        # Usa binarios instalados por Dockerfile
+        chromium_path = '/usr/bin/chromium'
         if os.path.isfile(chromium_path):
             opts.binary_location = chromium_path
     else:
