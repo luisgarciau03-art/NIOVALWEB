@@ -33,8 +33,8 @@ MENSAJES_SHEET_NAME = "Mensajes"
 GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
-CLIENT_SECRET_FILE = r"C:\Users\PC 1\NIOVALWEB\client_secret_714518911092-kbf030ufdkrpfp1tacn6stbof3cl2g7n.apps.googleusercontent.com.json"
-TOKEN_FILE = r"C:\Users\PC 1\NIOVALWEB\token.json"
+CLIENT_SECRET_FILE = "client_secret.json"
+TOKEN_FILE = "token.json"
 PDF_RANGE = "A1:I44"
 DRIVE_FOLDER_ID = "1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28"
 
