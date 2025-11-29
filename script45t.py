@@ -1,3 +1,20 @@
+"""
+INSTRUCCIONES PARA RESOLVER CONFLICTOS DE GIT:
+
+1. Busca las marcas de conflicto en este archivo:
+    <<<<<<< HEAD
+    (tu versión local)
+    =======
+    (versión remota)
+    >>>>>>> main
+
+2. Elige y edita el contenido correcto, eliminando las marcas <<<<<<<, =======, >>>>>>>.
+3. Guarda el archivo.
+4. En la terminal ejecuta:
+    git add script45t.py
+    git commit -m "Resuelve conflicto en script45t.py"
+    git push
+"""
 import os
 import time
 import re
@@ -33,7 +50,8 @@ MENSAJES_SHEET_NAME = "Mensajes"
 GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
-# Usa la ruta relativa para Render
+CLIENT_SECRET_FILE = "client_secret.json"
+TOKEN_FILE = "token.json"
 CLIENT_SECRET_FILE = "client_secret.json"
 TOKEN_FILE = "token.json"
 PDF_RANGE = "A1:I44"
