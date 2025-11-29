@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Dockerfile para Render con Python, Chromium y Chromedriver
 FROM python:3.10-slim
 
