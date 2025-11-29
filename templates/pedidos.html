@@ -114,19 +114,13 @@
       <div class="table-container">
         <div id="productosAgregados"></div>
         <form id="enviarPedidoForm" method="POST" action="/pedidos" style="margin-top: 18px; text-align: right;">
+          <input type="hidden" name="uid" value="{{ uid }}">
+          <input type="hidden" id="productos_json" name="productos_json" value="">
           <button type="submit" style="background: linear-gradient(90deg, #0050d8 60%, #0077ff 100%); color: #fff; border: none; border-radius: 10px; padding: 12px 32px; font-size: 1.12em; font-weight: 700; cursor: pointer; box-shadow: 0 2px 12px #0050d822;">Enviar pedido</button>
         </form>
       </div>
     </div>
-  <!-- Modal de confirmación visual -->
-  <div id="modalConfirm" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,32,128,0.18); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#fff; border-radius:18px; box-shadow:0 8px 32px #0050d822; padding:38px 32px 28px 32px; max-width:340px; text-align:center;">
-      <h3 style="color:#0050d8; font-size:1.3em; margin-bottom:18px;">¿Confirmar envío de pedido?</h3>
-      <p style="color:#222; margin-bottom:22px;">¿Estás seguro de que deseas enviar el pedido?</p>
-      <button id="btnConfirmar" style="background:linear-gradient(90deg,#0050d8 60%,#0077ff 100%); color:#fff; border:none; border-radius:10px; padding:10px 28px; font-size:1.08em; font-weight:700; cursor:pointer; margin-right:10px;">Confirmar</button>
-      <button id="btnCancelar" style="background:#eaf0fa; color:#0050d8; border:none; border-radius:10px; padding:10px 28px; font-size:1.08em; font-weight:700; cursor:pointer;">Cancelar</button>
-    </div>
-  </div>
+  <!-- Modal de confirmación visual eliminado completamente -->
   <!-- Bloque JS movido al final -->
   <script>
   var productos = {{ productos|tojson|safe }};
@@ -140,22 +134,22 @@
     const cantidad = parseInt(document.getElementById('cantidad').value);
     const mensajeDiv = document.getElementById('mensajeError');
     mensajeDiv.innerText = '';
+    if (!sku) {
+      mensajeDiv.innerText = 'Debes ingresar un SKU válido.';
+      return;
+    }
     if (!cantidad || cantidad < 1) {
       mensajeDiv.innerText = 'Debes ingresar una cantidad válida.';
       return;
     }
-    // Si el SKU está vacío, se permite agregar el producto sin buscarlo en la base
-    let producto = null;
-    if (sku) {
-      const skuInput = sku.toString().trim().toLowerCase();
-      producto = productos.find(function(p) {
-        let skuDb = (p['SKU'] || p['sku'] || '').toString().trim().toLowerCase();
-        return skuDb === skuInput;
-      });
-      if (!producto) {
-        mensajeDiv.innerText = 'SKU no encontrado. Verifica que esté correcto.';
-        return;
-      }
+    const skuInput = sku.toString().trim().toLowerCase();
+    const producto = productos.find(function(p) {
+      let skuDb = (p['SKU'] || p['sku'] || '').toString().trim().toLowerCase();
+      return skuDb === skuInput;
+    });
+    if (!producto) {
+      mensajeDiv.innerText = 'SKU no encontrado. Verifica que esté correcto.';
+      return;
     }
     productosPedido.push({ sku: sku, cantidad: cantidad, producto: producto });
     mostrarProductosAgregados();
@@ -209,18 +203,17 @@
     mostrarProductosAgregados();
   }
 
-  document.getElementById('enviarPedidoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    document.getElementById('modalConfirm').style.display = 'flex';
-  });
 
-  document.getElementById('btnConfirmar').onclick = function() {
-    document.getElementById('modalConfirm').style.display = 'none';
-    document.getElementById('enviarPedidoForm').submit();
-  };
-  document.getElementById('btnCancelar').onclick = function() {
-    document.getElementById('modalConfirm').style.display = 'none';
-  };
+  document.getElementById('enviarPedidoForm').addEventListener('submit', function(e) {
+    document.getElementById('productos_json').value = JSON.stringify(productosPedido);
+    if (!Array.isArray(productosPedido) || productosPedido.length === 0) {
+      alert('Debes agregar al menos un producto antes de enviar el pedido.');
+      e.preventDefault();
+      return;
+    }
+    // Enviar directamente sin mostrar modal de confirmación
+    // Si hay productos, el formulario se envía normalmente
+  });
   </script>
 </body>
 </html>

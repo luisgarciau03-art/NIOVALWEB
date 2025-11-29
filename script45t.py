@@ -33,8 +33,8 @@ MENSAJES_SHEET_NAME = "Mensajes"
 GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
-CLIENT_SECRET_FILE = "client_secret_714518911092-kbf030ufdkrpfp1tacn6stbof3cl2g7n.apps.googleusercontent.com.json"
-TOKEN_FILE = 'token.json'
+CLIENT_SECRET_FILE = r"C:\Users\PC 1\NIOVALWEB\client_secret_714518911092-kbf030ufdkrpfp1tacn6stbof3cl2g7n.apps.googleusercontent.com.json"
+TOKEN_FILE = r"C:\Users\PC 1\NIOVALWEB\token.json"
 PDF_RANGE = "A1:I44"
 DRIVE_FOLDER_ID = "1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28"
 
@@ -96,8 +96,18 @@ def authenticate():
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
     if not creds or not creds.valid:
         from google_auth_oauthlib.flow import InstalledAppFlow
-        flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-        creds = flow.run_local_server(port=8080)
+        flow = InstalledAppFlow.from_client_secrets_file(
+            CLIENT_SECRET_FILE,
+            SCOPES
+        )
+        creds = flow.run_local_server(
+            port=8765,
+            authorization_prompt_message=None,
+            success_message=None,
+            open_browser=True,
+            access_type='offline',
+            prompt='consent'
+        )
         with open(TOKEN_FILE, 'w') as token:
             token.write(creds.to_json())
     return creds
@@ -585,12 +595,17 @@ def guardar_productos_en_bd(productos, nombre, esquema, metodo_pago):
         sheet.batch_clear(['A2:D1000'])
     except Exception as e:
         print(f"Error al limpiar rango A2:D1000: {e}")
-    # Inserta productos en el rango A2:D (sobrescribe las filas existentes)
     filas = [[prod.get('SKU', ''), prod.get('Nombre', ''), prod.get('Cantidad', ''), prod.get('Precio', '')] for prod in productos]
-    if filas:
-        sheet.update(f'A2:D{1 + len(filas)}', filas)
-    print(f"Productos y datos de usuario guardados en hoja BD.")
-    avisar_telegram(f"Productos y datos de usuario guardados en hoja BD para {nombre}.")
+    print(f"Filas a insertar en BD: {filas}")
+    if filas and any(any(cell for cell in fila) for fila in filas):
+        # Escribe directamente en el rango A2:D (no insert_rows)
+        rango = f"A2:D{len(filas)+1}"
+        sheet.update(rango, filas)
+        print(f"Productos escritos en hoja BD en rango {rango}.")
+        avisar_telegram(f"Productos escritos en hoja BD para {nombre} en rango {rango}.")
+    else:
+        print("No se recibieron productos para insertar en hoja BD.")
+        avisar_telegram(f"No se recibieron productos para insertar en hoja BD para {nombre}.")
 
 def main():
     try:

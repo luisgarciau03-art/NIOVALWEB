@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import requests
 import os
 
@@ -40,6 +40,7 @@ def login_firebase(email, password, api_key):
 
 
 app = Flask(__name__)
+app.secret_key = "NIOVALWEB_SUPER_SECRET_KEY_2025"
 
 # Ruta para obtener productos desde Google Sheets
 @app.route("/productos")
@@ -90,6 +91,7 @@ def login():
             user_data = get_user_data(uid)
             print("Datos usuario Firestore:", user_data)
             if user_data:
+                session['uid'] = uid  # <--- Guardar uid en la sesión
                 # Aquí uid SE PASA CORRECTAMENTE Y NUNCA QUEDARÁ VACÍO
                 return render_template("panel.html", user=user_data, uid=uid)
             else:
@@ -105,7 +107,12 @@ def pedidos_panel():
     # Permitir obtener uid tanto por GET (args) como por POST (form)
     print("request.args:", dict(request.args))
     print("request.form:", dict(request.form))
-    uid = request.args.get("uid") or request.form.get("uid")
+    print("request.json:", request.get_json(silent=True))
+    uid = session.get("uid") or request.args.get("uid") or request.form.get("uid")
+    if not uid and request.is_json:
+        data = request.get_json()
+        if data:
+            uid = data.get("uid")
     print("Panel de pedidos, uid recibido =", uid)
     if not uid:
         return "UID no proporcionado", 400
@@ -132,7 +139,9 @@ def pedidos_panel():
     # Procesar formulario POST para guardar pedido (solo estructura, no guardado aún)
     if request.method == "POST":
         import json
-        productos = json.loads(request.form.get("productos_json", "[]"))
+        valor_crudo = request.form.get("productos_json", "")
+        print("Valor crudo productos_json:", valor_crudo)
+        productos = json.loads(valor_crudo or "[]")
         print("Pedido recibido:", productos)
         # Obtener datos de usuario
         user_data = get_user_data(uid)
@@ -140,21 +149,22 @@ def pedidos_panel():
         esquema = user_data.get('Esquema', '') if user_data else ''
         metodo_pago = user_data.get('Metodo De Pago', '') if user_data else ''
 
-
         # --- INTEGRACIÓN FLUJO PRINCIPAL script45t.py ---
-
         try:
             from script45t import extraer_datos_cotizacion, export_pdf_rango, insertar_fila_ventas, guardar_productos_en_bd
             # Preparar productos para hoja BD
             productos_bd = []
             for p in productos:
+                print("Producto recibido:", p)
+                # Si el producto viene del frontend como {'sku':..., 'cantidad':..., 'producto':{...}}
                 prod = {
                     'SKU': p.get('sku', ''),
-                    'Nombre': p.get('producto', {}).get('Nombre', ''),
+                    'Nombre': (p.get('producto') or {}).get('Nombre', ''),
                     'Cantidad': p.get('cantidad', ''),
-                    'Precio': p.get('producto', {}).get(precio_esquema, '')
+                    'Precio': (p.get('producto') or {}).get(precio_esquema, '')
                 }
                 productos_bd.append(prod)
+            print("Productos BD construidos:", productos_bd)
             # Guardar productos en hoja BD (borra y escribe)
             guardar_productos_en_bd(productos_bd, nombre, esquema, metodo_pago)
 
