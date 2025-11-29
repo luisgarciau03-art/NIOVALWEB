@@ -2,9 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import requests
 import os
 
-# Limpia cualquier variable previa y configura credenciales
 os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\PC 1\\niovalclientes-firebase-adminsdk-fbsvc-30b99db631.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "niovalclientes-firebase-adminsdk-fbsvc-30b99db631.json"
 print("Ruta credencial Firestore utilizada:", os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 
@@ -13,7 +12,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 def get_productos_from_sheet():
-    creds_path = r"C:\Users\PC 1\niovalclientes-a38cae49d183.json"
+    creds_path = "niovalclientes-a38cae49d183.json"
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     credentials = Credentials.from_service_account_file(creds_path, scopes=scopes)
     gc = gspread.authorize(credentials)
