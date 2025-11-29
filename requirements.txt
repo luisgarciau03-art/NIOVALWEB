@@ -97,5 +97,3 @@ google-api-python-client
 requests
 selenium
 webdriver-manager
-selenium
-chromedriver-autoinstaller
