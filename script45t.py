@@ -30,6 +30,11 @@ print("Chromium path:", subprocess.getoutput('which chromium'))
 print("Chromium version:", subprocess.getoutput('chromium --version'))
 print("Chromedriver path:", subprocess.getoutput('which chromedriver'))
 print("Chromedriver version:", subprocess.getoutput('chromedriver --version'))
+try:
+    out = subprocess.getoutput('/usr/bin/chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --window-size=1920,1080 --version')
+    print("Chromium manual launch output:", out)
+except Exception as e:
+    print("Chromium manual launch error:", e)
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
