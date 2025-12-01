@@ -772,3 +772,5 @@ if __name__ == "__main__":
 import os
 print("CHROME_BIN exists:", os.path.isfile(os.environ.get('CHROME_BIN', '/usr/bin/chromium')))
 print("CHROMEDRIVER_PATH exists:", os.path.isfile(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')))
+print("CHROME_BIN is executable:", os.access(os.environ.get('CHROME_BIN', '/usr/bin/chromium'), os.X_OK))
+print("CHROMEDRIVER_PATH is executable:", os.access(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver'), os.X_OK))
