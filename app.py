@@ -170,13 +170,17 @@ def pedidos_panel():
             print("[LOG] Productos guardados en hoja BD.")
 
             print("[LOG] Extrayendo datos de cotización...")
-            nombre_cliente, total_factura, num_factura, esquema, mes_actual = extraer_datos_cotizacion()
-            print(f"[LOG] Datos cotización: nombre_cliente={nombre_cliente}, total_factura={total_factura}, num_factura={num_factura}, esquema={esquema}, mes_actual={mes_actual}")
+            pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura = extraer_datos_cotizacion()
+            print(f"[LOG] Datos cotización: nombre_cliente={nombre_cliente}, num_factura={num_factura}, pdf_path={pdf_path}, pdf_filename={pdf_filename}, drive_url={drive_url}")
 
-            print("[LOG] Exportando PDF de cotización...")
-            pdf_path, pdf_filename, drive_url = export_pdf_rango(nombre_cliente, num_factura)
-            print(f"[LOG] PDF exportado: pdf_path={pdf_path}, pdf_filename={pdf_filename}, drive_url={drive_url}")
+            # Si necesitas total_factura, esquema, mes_actual, obténlos aquí o ajusta el flujo
+            # print(f"[LOG] Datos cotización: total_factura={total_factura}, esquema={esquema}, mes_actual={mes_actual}")
 
+            # Ya tienes pdf_path, pdf_filename, drive_url de extraer_datos_cotizacion
+            # Definir valores por defecto si no se obtienen de extraer_datos_cotizacion
+            total_factura = None
+            esquema = None
+            mes_actual = None
             if pdf_path:
                 print("[LOG] Insertando fila en hoja Ventas...")
                 insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)

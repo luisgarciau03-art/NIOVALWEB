@@ -209,6 +209,11 @@ def extraer_datos_cotizacion():
     try:
         import traceback
         print("[LOG] extraer_datos_cotizacion: INICIO")
+        # Definir valores por defecto para evitar NameError
+        nombre_cliente = "cliente"
+        num_factura = "factura"
+        pdf_filename = f"{nombre_cliente}-{num_factura}.pdf"
+        pdf_path = os.path.join(os.getcwd(), pdf_filename)
         def authenticate():
             # ...existing code...
             import json
@@ -267,7 +272,7 @@ def extraer_datos_cotizacion():
             drive_url = export_pdf_drive(pdf_path)
             avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
             print("[LOG] extraer_datos_cotizacion: FIN flujo requests.")
-            return pdf_path, pdf_filename, drive_url
+            return pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura
         else:
             print("[LOG] extraer_datos_cotizacion: Error descargando PDF por requests. Intentando Selenium...")
             avisar_telegram("❌ Error descargando PDF de cotización, intentando con Selenium autenticado...")
@@ -294,19 +299,20 @@ def extraer_datos_cotizacion():
                 drive_url = export_pdf_drive(pdf_path)
                 avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
                 print("[LOG] extraer_datos_cotizacion: FIN flujo Selenium.")
-                return pdf_path, pdf_filename, drive_url
+                return pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura
             except Exception as e:
                 print(f"[ERROR] extraer_datos_cotizacion: Error en Selenium al descargar PDF: {e}")
                 print(traceback.format_exc())
                 avisar_telegram(f"❌ Error en Selenium al descargar PDF: {e}")
-                return None, None, None
+                return None, None, None, nombre_cliente, num_factura
         print("[LOG] extraer_datos_cotizacion: FIN")
     except Exception as e:
         import traceback
         print(f"[ERROR] extraer_datos_cotizacion: Error general: {e}")
         print(traceback.format_exc())
         avisar_telegram(f"❌ Error en export_pdf_rango: {e}")
-        return None, None, None
+        # Retornar 5 valores aunque haya error
+        return None, None, None, nombre_cliente, num_factura
 
 def export_pdf_drive(pdf_path):
     """
