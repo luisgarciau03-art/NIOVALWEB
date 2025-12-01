@@ -390,6 +390,7 @@ def obtener_numero_mensaje(sheet_ventas, sheet_contactos, sheet_mensajes):
 
 def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> Options:
     opts = Options()
+    print("[LOG] crear_opciones: RENDER=", os.environ.get('RENDER', None))
     if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
         # Configuración headless para Render
         opts.add_argument('--headless')
@@ -401,8 +402,8 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
         opts.add_argument('--disable-software-rasterizer')
         opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         opts.add_experimental_option('useAutomationExtension', False)
-        # Usa binario de Chromium instalado por Dockerfile
         opts.binary_location = os.environ.get('CHROME_BIN', '/usr/bin/chromium')
+        print(f"[LOG] crear_opciones: binary_location={opts.binary_location}")
     else:
         # Configuración local (PC)
         opts.add_argument(f"--user-data-dir={user_data_dir}")
@@ -415,20 +416,37 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
         opts.add_argument('--disable-extensions')
         opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         opts.add_experimental_option('useAutomationExtension', False)
+        print(f"[LOG] crear_opciones: binary_location={getattr(opts, 'binary_location', None)}")
+    print("[LOG] crear_opciones: args=", opts.arguments)
     return opts
 
 
 def iniciar_driver(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> webdriver.Chrome:
+    print("[LOG] iniciar_driver: RENDER=", os.environ.get('RENDER', None))
     if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
         chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+        print(f"[LOG] iniciar_driver: chromedriver_path={chromedriver_path}")
         svc = Service(chromedriver_path)
         opts = crear_opciones()
-        return webdriver.Chrome(service=svc, options=opts)
+        try:
+            driver = webdriver.Chrome(service=svc, options=opts)
+            print("[LOG] iniciar_driver: Selenium Chrome iniciado correctamente.")
+            return driver
+        except Exception as e:
+            print(f"[ERROR] iniciar_driver: Selenium no pudo iniciar Chrome. Error: {e}")
+            raise
     else:
         # Local: usa webdriver_manager y perfil de usuario
+        print("[LOG] iniciar_driver: modo local")
         svc = Service(ChromeDriverManager().install())
         opts = crear_opciones(user_data_dir, profile_dir)
-        return webdriver.Chrome(service=svc, options=opts)
+        try:
+            driver = webdriver.Chrome(service=svc, options=opts)
+            print("[LOG] iniciar_driver: Selenium Chrome iniciado correctamente (local).")
+            return driver
+        except Exception as e:
+            print(f"[ERROR] iniciar_driver: Selenium no pudo iniciar Chrome (local). Error: {e}")
+            raise
 
 def detect_invalid_popup(driver) -> bool:
     """
