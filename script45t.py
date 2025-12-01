@@ -768,3 +768,7 @@ if __name__ == "__main__":
         avisar_telegram(resumen)
     except Exception as e_main:
         avisar_telegram(f"❌ Error general en el proceso principal: {e_main}")
+
+import os
+print("CHROME_BIN exists:", os.path.isfile(os.environ.get('CHROME_BIN', '/usr/bin/chromium')))
+print("CHROMEDRIVER_PATH exists:", os.path.isfile(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')))
