@@ -158,28 +158,43 @@ def actualizar_num_factura(sheet):
 
 def extraer_datos_cotizacion():
     try:
-        creds = authenticate()
-        gc = gspread.authorize(creds)
-        sheet = gc.open_by_key(SPREADSHEET_ID_COT).sheet1
-        nuevo_num_factura = actualizar_num_factura(sheet)
-        nombre_cliente = sheet.acell('D10').value
-        total_factura = sheet.acell('H43').value
-        esquema = sheet.acell('D12').value
-        mes_actual = get_mes_actual()
-        avisar_telegram(f"Datos de cotización extraídos: Cliente={nombre_cliente}, Total={total_factura}, Nº Factura={nuevo_num_factura}, Esquema={esquema}, Mes={mes_actual}")
-        return nombre_cliente, total_factura, nuevo_num_factura, esquema, mes_actual
-    except Exception as e:
-        avisar_telegram(f"❌ Error extrayendo datos de cotización: {e}")
-        raise
-
-def export_pdf_rango(nombre_cliente, num_factura):
-    try:
-        download_dir = crear_ruta_mes(LOCAL_BASE_DIR, SUBDIR_NOVIEMBRE)
-        pdf_filename = clean_filename(f"{nombre_cliente}-{num_factura}.pdf")
-        pdf_path = os.path.join(download_dir, pdf_filename)
-        pdf_url = (
-            f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID_COT}/export"
-            f"?format=pdf"
+        def authenticate():
+            """
+            Autenticación para Google API usando credenciales desde variables de entorno en Render.
+            Si está en Render, lee el JSON de credenciales desde la variable de entorno GOOGLE_SERVICE_ACCOUNT_JSON.
+            Localmente, sigue usando los archivos.
+            """
+            import json
+            from google.oauth2.service_account import Credentials as ServiceAccountCreds
+            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+                service_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                if not service_json:
+                    raise Exception("No se encontró GOOGLE_SERVICE_ACCOUNT_JSON en variables de entorno Render.")
+                info = json.loads(service_json)
+                creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+                return creds
+            else:
+                creds = None
+                if os.path.exists(TOKEN_FILE):
+                    from google.oauth2.credentials import Credentials
+                    creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+                if not creds or not creds.valid:
+                    from google_auth_oauthlib.flow import InstalledAppFlow
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        CLIENT_SECRET_FILE,
+                        SCOPES
+                    )
+                    creds = flow.run_local_server(
+                        port=8765,
+                        authorization_prompt_message=None,
+                        success_message=None,
+                        open_browser=True,
+                        access_type='offline',
+                        prompt='consent'
+                    )
+                    with open(TOKEN_FILE, 'w') as token:
+                        token.write(creds.to_json())
+                return creds
             f"&portrait=true"
             f"&fitw=true"
             f"&sheetnames=false"
@@ -334,7 +349,6 @@ def obtener_numero_mensaje(sheet_ventas, sheet_contactos, sheet_mensajes):
 
 def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> Options:
     opts = Options()
-    # Detecta si está en Render por variable de entorno
     if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
         # Configuración headless para Render
         opts.add_argument('--headless')
@@ -346,10 +360,8 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
         opts.add_argument('--disable-software-rasterizer')
         opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         opts.add_experimental_option('useAutomationExtension', False)
-        # Usa binarios instalados por Dockerfile
-        chromium_path = '/usr/bin/chromium'
-        if os.path.isfile(chromium_path):
-            opts.binary_location = chromium_path
+        # Usa binario de Chromium instalado por Dockerfile
+        opts.binary_location = os.environ.get('CHROME_BIN', '/usr/bin/chromium')
     else:
         # Configuración local (PC)
         opts.add_argument(f"--user-data-dir={user_data_dir}")
@@ -364,12 +376,11 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
         opts.add_experimental_option('useAutomationExtension', False)
     return opts
 
+
 def iniciar_driver(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> webdriver.Chrome:
-    # Detecta si está en Render
     if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
-        # Render: usa chromedriver instalado por build.sh
-        chromedriver_path = '/usr/bin/chromedriver'
-        svc = Service(chromedriver_path) if os.path.isfile(chromedriver_path) else Service(ChromeDriverManager().install())
+        chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+        svc = Service(chromedriver_path)
         opts = crear_opciones()
         return webdriver.Chrome(service=svc, options=opts)
     else:
