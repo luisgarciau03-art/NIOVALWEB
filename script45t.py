@@ -15,6 +15,8 @@ INSTRUCCIONES PARA RESOLVER CONFLICTOS DE GIT:
     git commit -m "Resuelve conflicto en script45t.py"
     git push
 """
+
+# --- TEST DE SELENIUM Y LOGGING AL INICIO ---
 import os
 import time
 import re
@@ -22,9 +24,6 @@ from time import sleep
 from datetime import datetime
 from typing import Optional
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import requests
 import subprocess
 print("Chromium path:", subprocess.getoutput('which chromium'))
 print("Chromium version:", subprocess.getoutput('chromium --version'))
@@ -35,6 +34,44 @@ try:
     print("Chromium manual launch output:", out)
 except Exception as e:
     print("Chromium manual launch error:", e)
+
+# Test Selenium Chromium siempre al importar
+def test_selenium_chromium():
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    import os
+
+    chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+    chrome_bin = os.environ.get('CHROME_BIN', '/usr/bin/chromium')
+    opts = Options()
+    opts.add_argument('--headless')
+    opts.add_argument('--no-sandbox')
+    opts.add_argument('--disable-dev-shm-usage')
+    opts.add_argument('--disable-gpu')
+    opts.add_argument('--disable-software-rasterizer')
+    opts.add_argument('--window-size=1920,1080')
+    opts.binary_location = chrome_bin
+
+    try:
+        driver = webdriver.Chrome(service=Service(chromedriver_path), options=opts)
+        driver.get("chrome://version")
+        print("Selenium Chromium test: OK")
+        driver.quit()
+    except Exception as e:
+        print("Selenium Chromium test: ERROR", e)
+
+test_selenium_chromium()
+
+print("CHROME_BIN exists:", os.path.isfile(os.environ.get('CHROME_BIN', '/usr/bin/chromium')))
+print("CHROMEDRIVER_PATH exists:", os.path.isfile(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')))
+print("CHROME_BIN is executable:", os.access(os.environ.get('CHROME_BIN', '/usr/bin/chromium'), os.X_OK))
+print("CHROMEDRIVER_PATH is executable:", os.access(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver'), os.X_OK))
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import requests
+# ...existing code...
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
