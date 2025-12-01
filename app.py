@@ -152,11 +152,11 @@ def pedidos_panel():
         # --- INTEGRACIÓN FLUJO PRINCIPAL script45t.py ---
         try:
             from script45t import extraer_datos_cotizacion, export_pdf_rango, insertar_fila_ventas, guardar_productos_en_bd
+            print("[LOG] INICIO integración script45t.py")
             # Preparar productos para hoja BD
             productos_bd = []
             for p in productos:
-                print("Producto recibido:", p)
-                # Si el producto viene del frontend como {'sku':..., 'cantidad':..., 'producto':{...}}
+                print("[LOG] Producto recibido:", p)
                 prod = {
                     'SKU': p.get('sku', ''),
                     'Nombre': (p.get('producto') or {}).get('Nombre', ''),
@@ -164,20 +164,29 @@ def pedidos_panel():
                     'Precio': (p.get('producto') or {}).get(precio_esquema, '')
                 }
                 productos_bd.append(prod)
-            print("Productos BD construidos:", productos_bd)
-            # Guardar productos en hoja BD (borra y escribe)
+            print("[LOG] Productos BD construidos:", productos_bd)
+            print("[LOG] Guardando productos en hoja BD...")
             guardar_productos_en_bd(productos_bd, nombre, esquema, metodo_pago)
+            print("[LOG] Productos guardados en hoja BD.")
 
-            # Extraer datos de cotización
+            print("[LOG] Extrayendo datos de cotización...")
             nombre_cliente, total_factura, num_factura, esquema, mes_actual = extraer_datos_cotizacion()
-            # Exportar PDF
+            print(f"[LOG] Datos cotización: nombre_cliente={nombre_cliente}, total_factura={total_factura}, num_factura={num_factura}, esquema={esquema}, mes_actual={mes_actual}")
+
+            print("[LOG] Exportando PDF de cotización...")
             pdf_path, pdf_filename, drive_url = export_pdf_rango(nombre_cliente, num_factura)
-            # Escribir en hoja Ventas
+            print(f"[LOG] PDF exportado: pdf_path={pdf_path}, pdf_filename={pdf_filename}, drive_url={drive_url}")
+
             if pdf_path:
+                print("[LOG] Insertando fila en hoja Ventas...")
                 insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+                print("[LOG] Fila insertada en hoja Ventas.")
             mensaje = "¡Pedido procesado y registrado en hoja BD y Ventas!"
+            print("[LOG] FIN integración script45t.py")
         except Exception as e:
-            print("Error en integración con script45t.py:", e)
+            import traceback
+            print("[ERROR] Error en integración con script45t.py:", e)
+            print(traceback.format_exc())
             mensaje = f"Error al procesar pedido: {e}"
 
         return render_template("panel.html", user=user_data, uid=uid, mensaje=mensaje)

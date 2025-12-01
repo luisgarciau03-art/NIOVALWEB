@@ -195,12 +195,10 @@ def actualizar_num_factura(sheet):
 
 def extraer_datos_cotizacion():
     try:
+        import traceback
+        print("[LOG] extraer_datos_cotizacion: INICIO")
         def authenticate():
-            """
-            Autenticación para Google API usando credenciales desde variables de entorno en Render.
-            Si está en Render, lee el JSON de credenciales desde la variable de entorno GOOGLE_SERVICE_ACCOUNT_JSON.
-            Localmente, sigue usando los archivos.
-            """
+            # ...existing code...
             import json
             from google.oauth2.service_account import Credentials as ServiceAccountCreds
             if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
@@ -246,20 +244,21 @@ def extraer_datos_cotizacion():
             f"&range={PDF_RANGE}"
             f"&gid={GID_COT}"
         )
-        print("Descargando PDF solo del rango", PDF_RANGE)
+        print("[LOG] extraer_datos_cotizacion: Descargando PDF solo del rango", PDF_RANGE)
         response = requests.get(pdf_url)
         if response.ok:
+            print("[LOG] extraer_datos_cotizacion: PDF descargado correctamente por requests.")
             with open(pdf_path, "wb") as f:
                 f.write(response.content)
-            print(f"PDF guardado como: {pdf_path}")
+            print(f"[LOG] extraer_datos_cotizacion: PDF guardado como: {pdf_path}")
             avisar_telegram(f"✅ PDF guardado localmente: {pdf_path}")
             drive_url = export_pdf_drive(pdf_path)
             avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
+            print("[LOG] extraer_datos_cotizacion: FIN flujo requests.")
             return pdf_path, pdf_filename, drive_url
         else:
-            print("Error descargando PDF. Revisa permisos (¿es hoja pública?) o usa Selenium autenticado.")
+            print("[LOG] extraer_datos_cotizacion: Error descargando PDF por requests. Intentando Selenium...")
             avisar_telegram("❌ Error descargando PDF de cotización, intentando con Selenium autenticado...")
-            # Intentar con Selenium
             try:
                 from selenium import webdriver
                 from selenium.webdriver.chrome.service import Service
@@ -269,20 +268,31 @@ def extraer_datos_cotizacion():
                 # opts.add_argument('--headless')  # Eliminado para abrir ventana
                 opts.add_argument('--no-sandbox')
                 opts.add_argument('--disable-dev-shm-usage')
+                print("[LOG] extraer_datos_cotizacion: Iniciando Selenium WebDriver...")
                 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
+                print("[LOG] extraer_datos_cotizacion: Selenium WebDriver iniciado.")
                 driver.get(pdf_url)
+                print("[LOG] extraer_datos_cotizacion: Navegando a PDF URL con Selenium.")
                 sleep(5)
                 with open(pdf_path, "wb") as f:
                     f.write(driver.page_source.encode())
+                print(f"[LOG] extraer_datos_cotizacion: PDF guardado con Selenium como: {pdf_path}")
                 driver.quit()
                 avisar_telegram(f"✅ PDF descargado con Selenium: {pdf_path}")
                 drive_url = export_pdf_drive(pdf_path)
                 avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
+                print("[LOG] extraer_datos_cotizacion: FIN flujo Selenium.")
                 return pdf_path, pdf_filename, drive_url
             except Exception as e:
+                print(f"[ERROR] extraer_datos_cotizacion: Error en Selenium al descargar PDF: {e}")
+                print(traceback.format_exc())
                 avisar_telegram(f"❌ Error en Selenium al descargar PDF: {e}")
                 return None, None, None
+        print("[LOG] extraer_datos_cotizacion: FIN")
     except Exception as e:
+        import traceback
+        print(f"[ERROR] extraer_datos_cotizacion: Error general: {e}")
+        print(traceback.format_exc())
         avisar_telegram(f"❌ Error en export_pdf_rango: {e}")
         return None, None, None
 
