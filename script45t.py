@@ -723,6 +723,18 @@ def main():
     except Exception as e_main:
         avisar_telegram(f"❌ Error general en el proceso principal: {e_main}")
 
+def export_pdf_rango(nombre_cliente, num_factura):
+    """
+    Wrapper para exportar PDF de cotización y subirlo a Drive.
+    Reutiliza la lógica existente de extraer_datos_cotizacion.
+    """
+    try:
+        pdf_path, pdf_filename, drive_url = extraer_datos_cotizacion()
+        return pdf_path, pdf_filename, drive_url
+    except Exception as e:
+        avisar_telegram(f"❌ Error en export_pdf_rango wrapper: {e}")
+        return None, None, None
+
 if __name__ == "__main__":
     try:
         errores = []
