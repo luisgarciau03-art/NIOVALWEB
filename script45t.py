@@ -155,6 +155,17 @@ def clean_filename(filename):
     return "".join([c for c in filename if c.isalnum() or c in " .-_"]).rstrip()
 
 def authenticate():
+    # Si estamos en Render, usar solo Service Account
+    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+        import json
+        from google.oauth2.service_account import Credentials as ServiceAccountCreds
+        service_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+        if not service_json:
+            raise Exception("No se encontró GOOGLE_SERVICE_ACCOUNT_JSON en variables de entorno Render.")
+        info = json.loads(service_json)
+        creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+        return creds
+    # Local: usar OAuth si no existe token
     creds = None
     if os.path.exists(TOKEN_FILE):
         from google.oauth2.credentials import Credentials
