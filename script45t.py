@@ -159,7 +159,7 @@ def authenticate():
     if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
         import json
         from google.oauth2.service_account import Credentials as ServiceAccountCreds
-        secret_path = '/etc/secrets/google_service_account.json'  # Cambia el nombre si tu archivo es diferente
+        secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'  # Usar el nombre exacto del archivo en Render
         if not os.path.exists(secret_path):
             raise Exception(f"No se encontró el archivo de Service Account en {secret_path}. Verifica el nombre en Secret Files de Render.")
         with open(secret_path, 'r') as f:
