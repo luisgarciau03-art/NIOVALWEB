@@ -735,7 +735,34 @@ def export_pdf_rango(nombre_cliente, num_factura):
         avisar_telegram(f"❌ Error en export_pdf_rango wrapper: {e}")
         return None, None, None
 
+def test_selenium_chromium():
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    import os
+
+    chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+    chrome_bin = os.environ.get('CHROME_BIN', '/usr/bin/chromium')
+    opts = Options()
+    opts.add_argument('--headless')
+    opts.add_argument('--no-sandbox')
+    opts.add_argument('--disable-dev-shm-usage')
+    opts.add_argument('--disable-gpu')
+    opts.add_argument('--disable-software-rasterizer')
+    opts.add_argument('--window-size=1920,1080')
+    opts.binary_location = chrome_bin
+
+    try:
+        driver = webdriver.Chrome(service=Service(chromedriver_path), options=opts)
+        driver.get("chrome://version")
+        print("Selenium Chromium test: OK")
+        driver.quit()
+    except Exception as e:
+        print("Selenium Chromium test: ERROR", e)
+
+# Ejecutar test al inicio
 if __name__ == "__main__":
+    test_selenium_chromium()
     try:
         errores = []
         urls_local = []
