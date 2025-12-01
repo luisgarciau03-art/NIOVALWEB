@@ -206,6 +206,25 @@ def cotizaciones_panel():
     cotizaciones = get_cotizaciones(uid)
     return render_template("cotizaciones.html", cotizaciones=cotizaciones)
 
+@app.route('/upload_to_drive')
+def upload_to_drive():
+    if 'credentials' not in session:
+        return redirect('authorize')
+    credentials = google.oauth2.credentials.Credentials(
+        **session['credentials']
+    )
+    # Obtener nombre y num_factura de la sesión o por parámetros
+    nombre_cliente = session.get('nombre_cliente', 'cliente')
+    num_factura = session.get('num_factura', 'factura')
+    pdf_filename = f"{nombre_cliente}-{num_factura}.pdf"
+    pdf_path = session.get('pdf_path', pdf_filename)  # Ruta real del PDF generado
+    drive_service = googleapiclient.discovery.build('drive', 'v3', credentials=credentials)
+    file_metadata = {'name': pdf_filename}
+    media = googleapiclient.http.MediaFileUpload(pdf_path, mimetype='application/pdf')
+    file = drive_service.files().create(body=file_metadata, media_body=media, fields='id,webViewLink').execute()
+    session['credentials'] = credentials_to_dict(credentials)
+    return f"Archivo subido. ID: {file.get('id')}, Link: {file.get('webViewLink')}"
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
