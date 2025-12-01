@@ -195,6 +195,10 @@ def extraer_datos_cotizacion():
                     with open(TOKEN_FILE, 'w') as token:
                         token.write(creds.to_json())
                 return creds
+        # Construir la URL correctamente
+        pdf_url = (
+            f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID_COT}/export?"
+            f"format=pdf"
             f"&portrait=true"
             f"&fitw=true"
             f"&sheetnames=false"
