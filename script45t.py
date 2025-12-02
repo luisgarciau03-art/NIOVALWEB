@@ -98,8 +98,8 @@ GID_COT = "1320728772"
 LOCAL_BASE_DIR = r'C:\Users\PC 1\Cotizaciones'
 SUBDIR_NOVIEMBRE = "Noviembre"
 
-CLIENT_SECRET_FILE = "client_secret.json"
-TOKEN_FILE = "token.json"
+CLIENT_SECRET_FILE = "webniovalpdfs.json"
+TOKEN_FILE = "token2.json"
 PDF_RANGE = "A1:I44"
 DRIVE_FOLDER_ID = "1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28"
 
@@ -210,43 +210,43 @@ def extraer_datos_cotizacion():
         import traceback
         print("[LOG] extraer_datos_cotizacion: INICIO")
         # Definir valores por defecto para evitar NameError
-        nombre_cliente = "cliente"
-        num_factura = "factura"
-        pdf_filename = f"{nombre_cliente}-{num_factura}.pdf"
+        # Obtener nombre del cliente y número de factura actualizado
+        creds = authenticate()
+        gc = gspread.authorize(creds)
+        sheet = gc.open_by_key(SPREADSHEET_ID_COT).worksheet("Factura")
+        nombre_cliente = sheet.acell('D10').value
+        print(f"[DEBUG] Valor original de D10 (nombre_cliente): '{nombre_cliente}'")
+        if not nombre_cliente or not nombre_cliente.strip():
+            avisar_telegram("⚠️ D10 vacío en Factura. Usando 'cliente' como nombre.")
+            nombre_cliente = "cliente"
+        else:
+            nombre_cliente = nombre_cliente.strip()
+        print(f"[DEBUG] Nombre cliente final usado: '{nombre_cliente}'")
+        esquema = sheet.acell('D12').value or ''
+        esquema = esquema.strip()
+        print(f"[DEBUG] Esquema detectado D12: '{esquema}'")
+        monto = sheet.acell('H43').value or ''
+        monto = monto.strip()
+        print(f"[DEBUG] Monto detectado H43: '{monto}'")
+        num_factura_actual = sheet.acell('G10').value or "1"
+        match = re.match(r"(\d+)(.*)", num_factura_actual)
+        if match:
+            numero = int(match.group(1)) + 1
+            sufijo = match.group(2)
+            num_factura = f"{numero}{sufijo}"
+            # Actualizar G10 con el nuevo número de factura
+            try:
+                sheet.update_acell('G10', num_factura)
+                print(f"[DEBUG] G10 actualizado a: {num_factura}")
+                avisar_telegram(f"G10 actualizado a: {num_factura}")
+            except Exception as e:
+                print(f"[ERROR] No se pudo actualizar G10: {e}")
+                avisar_telegram(f"❌ Error actualizando G10: {e}")
+        else:
+            num_factura = num_factura_actual
+        pdf_filename = f"{nombre_cliente} - {num_factura}.pdf"
         pdf_path = os.path.join(os.getcwd(), pdf_filename)
-        def authenticate():
-            # ...existing code...
-            import json
-            from google.oauth2.service_account import Credentials as ServiceAccountCreds
-            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
-                service_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-                if not service_json:
-                    raise Exception("No se encontró GOOGLE_SERVICE_ACCOUNT_JSON en variables de entorno Render.")
-                info = json.loads(service_json)
-                creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
-                return creds
-            else:
-                creds = None
-                if os.path.exists(TOKEN_FILE):
-                    from google.oauth2.credentials import Credentials
-                    creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-                if not creds or not creds.valid:
-                    from google_auth_oauthlib.flow import InstalledAppFlow
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        CLIENT_SECRET_FILE,
-                        SCOPES
-                    )
-                    creds = flow.run_local_server(
-                        port=8765,
-                        authorization_prompt_message=None,
-                        success_message=None,
-                        open_browser=True,
-                        access_type='offline',
-                        prompt='consent'
-                    )
-                    with open(TOKEN_FILE, 'w') as token:
-                        token.write(creds.to_json())
-                return creds
+        # Usar la función global authenticate()
         # Construir la URL correctamente
         pdf_url = (
             f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID_COT}/export?"
@@ -265,14 +265,29 @@ def extraer_datos_cotizacion():
         response = requests.get(pdf_url)
         if response.ok:
             print("[LOG] extraer_datos_cotizacion: PDF descargado correctamente por requests.")
+            # Guardar PDF temporalmente solo para subirlo a Drive, luego eliminarlo
             with open(pdf_path, "wb") as f:
                 f.write(response.content)
-            print(f"[LOG] extraer_datos_cotizacion: PDF guardado como: {pdf_path}")
-            avisar_telegram(f"✅ PDF guardado localmente: {pdf_path}")
-            drive_url = export_pdf_drive(pdf_path)
+            # Subir PDF a Drive usando OAuth si no estamos en Render
+            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+                drive_url = export_pdf_drive(pdf_path)
+            else:
+                from pathlib import Path
+                drive_url = upload_pdf_to_drive_oauth(
+                    pdf_path,
+                    pdf_filename,
+                    drive_folder_id=DRIVE_FOLDER_ID,
+                    client_secret_file="webniovalpdfs.json",
+                    token_file="token2.json"
+                )
+            # Eliminar el PDF local después de subirlo
+            try:
+                os.remove(pdf_path)
+            except Exception:
+                pass
             avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
             print("[LOG] extraer_datos_cotizacion: FIN flujo requests.")
-            return pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura
+            return pdf_path, pdf_filename, drive_url, nombre_cliente, esquema, monto, num_factura
         else:
             print("[LOG] extraer_datos_cotizacion: Error descargando PDF por requests. Intentando Selenium...")
             avisar_telegram("❌ Error descargando PDF de cotización, intentando con Selenium autenticado...")
@@ -304,7 +319,7 @@ def extraer_datos_cotizacion():
                 print(f"[ERROR] extraer_datos_cotizacion: Error en Selenium al descargar PDF: {e}")
                 print(traceback.format_exc())
                 avisar_telegram(f"❌ Error en Selenium al descargar PDF: {e}")
-                return None, None, None, nombre_cliente, num_factura
+                return None, None, None, nombre_cliente, esquema, monto, num_factura
         print("[LOG] extraer_datos_cotizacion: FIN")
     except Exception as e:
         import traceback
@@ -312,7 +327,7 @@ def extraer_datos_cotizacion():
         print(traceback.format_exc())
         avisar_telegram(f"❌ Error en export_pdf_rango: {e}")
         # Retornar 5 valores aunque haya error
-        return None, None, None, nombre_cliente, num_factura
+        return None, None, None, nombre_cliente, esquema, monto, num_factura
 
 def export_pdf_drive(pdf_path):
     """
@@ -344,36 +359,95 @@ def export_pdf_drive(pdf_path):
         print("Error en export_pdf_drive:", e)
         return None
 
+# --- UTILIDAD PARA FLASK: SUBIDA PDF A DRIVE VIA OAUTH ---
+def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, client_secret_file=None, token_file=None):
+    """
+    Sube un PDF a Google Drive usando OAuth y retorna el enlace público.
+    Parámetros:
+        pdf_path: Ruta local del PDF
+        pdf_filename: Nombre del archivo PDF
+        drive_folder_id: ID de la carpeta destino en Drive
+        client_secret_file: Ruta al client_secret.json
+        token_file: Ruta al token.json
+    """
+    import os
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.oauth2.credentials import Credentials
+
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+    drive_folder_id = drive_folder_id or '1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28'
+    client_secret_file = client_secret_file or 'webniovalpdfs.json'
+    token_file = token_file or 'token2.json'
+
+    creds = None
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+    if not creds or not creds.valid:
+        flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
+        creds = flow.run_local_server(port=8765)
+        with open(token_file, 'w') as token:
+            token.write(creds.to_json())
+
+    service = build('drive', 'v3', credentials=creds)
+    file_metadata = {
+        'name': pdf_filename,
+        'mimeType': 'application/pdf',
+        'parents': [drive_folder_id]
+    }
+    media = MediaFileUpload(pdf_path, mimetype='application/pdf', resumable=True)
+    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    service.permissions().create(fileId=file['id'], body={'type': 'anyone', 'role': 'reader'}).execute()
+    drive_url = f"https://drive.google.com/file/d/{file['id']}/view?usp=sharing"
+    return drive_url
+
 def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, esquema, mes_actual):
     try:
         creds = authenticate()
         gc = gspread.authorize(creds)
         sheet = gc.open_by_key(SPREADSHEET_ID_VENTAS).worksheet(SHEET_NAME_VENTAS)
-        # Inserta fila vacía en posición 2
-        sheet.insert_row([''] * 11, 2)
-        fila = [
-            '',              # A2 (fecha), la actualizaremos luego
-            nombre_cliente,  # B2 (nombre del cliente)
-            '',              # C2
-            '',              # D2
-            esquema,         # E2
-            '',              # F2
-            mes_actual,      # G2
-            total_factura,   # H2
-            '',              # I2
-            num_factura,     # J2
-            link_pdf         # K2
-        ]
-        sheet.update([fila], 'A2:K2')
-        # Fecha actual en A2
+        print(f"[DEBUG] Antes de insertar fila vacía en Ventas...")
+        sheet.insert_row([''] * 15, 2)
+        print(f"[DEBUG] Fila vacía insertada en posición 2.")
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-        sheet.update_acell('A2', fecha_hoy)
-        print(f"[DEBUG] Fecha actual '{fecha_hoy}' escrita en A2")
-        avisar_telegram(f"📅 Fecha actual '{fecha_hoy}' actualizada en A2 de la hoja Ventas.")
-        print(f"Fila insertada y B2 actualizado en hoja Ventas. Cliente='{nombre_cliente}'")
-        avisar_telegram(f"➡️ Fila Ventas actualizada para cliente {nombre_cliente}.")
-        return sheet
+        # Eliminar comillas simples si existen
+        if fecha_hoy.startswith("'"):
+            fecha_hoy = fecha_hoy[1:]
+        print(f"[DEBUG] Preparando datos para fila: Fecha={fecha_hoy}, Cliente={nombre_cliente}, Esquema={esquema}, Mes={mes_actual}, Monto={total_factura}, Num Factura={num_factura}, PDF={link_pdf}")
+        fila = [
+            fecha_hoy,          # A2: Fecha
+            nombre_cliente,     # B2: Nombre
+            '',                 # C2: VACÍO
+            '',                 # D2: VACÍO
+            esquema,            # E2: ESQUEMA
+            '',                 # F2: VACÍO
+            mes_actual,         # G2: MES
+            total_factura,      # H2: Monto
+            '',                 # I2: VACÍO
+            num_factura,        # J2: Número Factura
+            link_pdf,           # K2: Cotización PDF
+            '',                 # L2: EXCEL
+            '',                 # M2: PAGO
+            '',                 # N2: Dias
+            ''                  # O2: VACÍO
+        ]
+        print(f"[DEBUG] Datos de la fila a actualizar en A2:O2: {fila}")
+        # Actualizar la fila en el rango A2:O2
+        try:
+            print("[DEBUG] Intentando actualizar la fila en Ventas...")
+            result = sheet.update([fila], 'A2:O2')
+            print(f"[DEBUG] Resultado de sheet.update: {result}")
+            avisar_telegram(f"📅 Fecha actual '{fecha_hoy}' actualizada en A2 de la hoja Ventas.")
+            print(f"Fila insertada y B2 actualizado en hoja Ventas. Cliente='{nombre_cliente}'")
+            avisar_telegram(f"➡️ Fila Ventas actualizada para cliente {nombre_cliente}.")
+            return result
+        except Exception as e:
+            print(f"[ERROR] No se pudo actualizar la fila en Ventas: {e}")
+            avisar_telegram(f"❌ Error actualizando fila Ventas: {e}")
+            raise
     except Exception as e:
+        print(f"[ERROR] Error al insertar fila de ventas: {e}")
         avisar_telegram(f"❌ Error al insertar fila de ventas: {e}")
         raise
 
@@ -768,8 +842,15 @@ def main():
         ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         avisar_telegram(f"🔔 [{ahora}] Inicio de proceso de cotización automatizada...")
 
-        nombre_cliente, total_factura, num_factura, esquema, mes_actual = extraer_datos_cotizacion()
-        pdf_path, pdf_filename, drive_url = export_pdf_rango(nombre_cliente, num_factura)
+        # Llamar solo una vez a extraer_datos_cotizacion y usar los valores correctos
+        result = extraer_datos_cotizacion()
+        pdf_path = result[0]
+        pdf_filename = result[1]
+        drive_url = result[2]
+        nombre_cliente = result[3]
+        esquema = result[4]
+        monto = result[5]
+        num_factura = result[6]
         if pdf_path:
             urls_local.append(pdf_path)
         if drive_url:
@@ -781,7 +862,9 @@ def main():
             print("No se pudo obtener el PDF. Flujo detenido.")
             return
 
-        sheet_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+        mes_actual = get_mes_actual()
+
+        sheet_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, monto, num_factura, esquema, mes_actual)
         creds = authenticate()
         gc = gspread.authorize(creds)
         sheet_contactos = gc.open_by_key(CONTACTOS_SHEET_ID).worksheet(CONTACTOS_SHEET_TAB)
@@ -812,7 +895,9 @@ def export_pdf_rango(nombre_cliente, num_factura):
     Reutiliza la lógica existente de extraer_datos_cotizacion.
     """
     try:
-        pdf_path, pdf_filename, drive_url = extraer_datos_cotizacion()
+        # extraer_datos_cotizacion returns 5 values, but we only need the first three
+        result = extraer_datos_cotizacion()
+        pdf_path, pdf_filename, drive_url = result[:3]
         return pdf_path, pdf_filename, drive_url
     except Exception as e:
         avisar_telegram(f"❌ Error en export_pdf_rango wrapper: {e}")
@@ -853,8 +938,17 @@ if __name__ == "__main__":
         ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         avisar_telegram(f"🔔 [{ahora}] Inicio de proceso de cotización automatizada...")
 
-        nombre_cliente, total_factura, num_factura, esquema, mes_actual = extraer_datos_cotizacion()
-        pdf_path, pdf_filename, drive_url = export_pdf_rango(nombre_cliente, num_factura)
+        # Extraer todos los datos necesarios
+        result = extraer_datos_cotizacion()
+        pdf_path = result[0]
+        pdf_filename = result[1]
+        drive_url = result[2]
+        nombre_cliente = result[3]
+        esquema = result[4]
+        total_factura = result[5]
+        num_factura = result[6]
+        mes_actual = get_mes_actual()
+
         if pdf_path:
             urls_local.append(pdf_path)
         if drive_url:
@@ -865,7 +959,9 @@ if __name__ == "__main__":
             errores.append("PDF local no obtenido.")
             print("No se pudo obtener el PDF. Flujo detenido.")
         else:
-            sheet_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+            print("[DEBUG] Llamando a insertar_fila_ventas...")
+            result_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+            print(f"[DEBUG] Resultado de insertar_fila_ventas: {result_ventas}")
 
         ahora_fin = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         resumen = f"🔔 [{ahora_fin}] Proceso FINALIZADO.\n\n"
