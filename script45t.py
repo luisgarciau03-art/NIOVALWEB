@@ -843,14 +843,7 @@ def main():
         avisar_telegram(f"🔔 [{ahora}] Inicio de proceso de cotización automatizada...")
 
         # Llamar solo una vez a extraer_datos_cotizacion y usar los valores correctos
-        result = extraer_datos_cotizacion()
-        pdf_path = result[0]
-        pdf_filename = result[1]
-        drive_url = result[2]
-        nombre_cliente = result[3]
-        esquema = result[4]
-        monto = result[5]
-        num_factura = result[6]
+        pdf_path, pdf_filename, drive_url, nombre_cliente, esquema, monto, num_factura = extraer_datos_cotizacion()
         if pdf_path:
             urls_local.append(pdf_path)
         if drive_url:
