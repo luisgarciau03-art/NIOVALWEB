@@ -6,3 +6,4 @@ client_secret_*.json
 .env
 .DS_Store
 *.log
+client_secret.json 
