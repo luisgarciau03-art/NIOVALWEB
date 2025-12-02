@@ -879,8 +879,46 @@ if __name__ == "__main__":
     except Exception as e_main:
         avisar_telegram(f"❌ Error general en el proceso principal: {e_main}")
 
-import os
-print("CHROME_BIN exists:", os.path.isfile(os.environ.get('CHROME_BIN', '/usr/bin/chromium')))
-print("CHROMEDRIVER_PATH exists:", os.path.isfile(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')))
-print("CHROME_BIN is executable:", os.access(os.environ.get('CHROME_BIN', '/usr/bin/chromium'), os.X_OK))
-print("CHROMEDRIVER_PATH is executable:", os.access(os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver'), os.X_OK))
+
+# --- UTILIDAD PARA FLASK: SUBIDA PDF A DRIVE VIA OAUTH ---
+def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, client_secret_file=None, token_file=None):
+    """
+    Sube un PDF a Google Drive usando OAuth y retorna el enlace público.
+    Parámetros:
+        pdf_path: Ruta local del PDF
+        pdf_filename: Nombre del archivo PDF
+        drive_folder_id: ID de la carpeta destino en Drive
+        client_secret_file: Ruta al client_secret.json
+        token_file: Ruta al token.json
+    """
+    import os
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.oauth2.credentials import Credentials
+
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+    drive_folder_id = drive_folder_id or '1ppeYE8f_uWkXITmwkC2_U7ozvoYxLh28'
+    client_secret_file = client_secret_file or 'client_secret.json'
+    token_file = token_file or 'token.json'
+
+    creds = None
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+    if not creds or not creds.valid:
+        flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
+        creds = flow.run_local_server(port=8765)
+        with open(token_file, 'w') as token:
+            token.write(creds.to_json())
+
+    service = build('drive', 'v3', credentials=creds)
+    file_metadata = {
+        'name': pdf_filename,
+        'mimeType': 'application/pdf',
+        'parents': [drive_folder_id]
+    }
+    media = MediaFileUpload(pdf_path, mimetype='application/pdf', resumable=True)
+    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    service.permissions().create(fileId=file['id'], body={'type': 'anyone', 'role': 'reader'}).execute()
+    drive_url = f"https://drive.google.com/file/d/{file['id']}/view?usp=sharing"
+    return drive_url
