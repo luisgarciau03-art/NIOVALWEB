@@ -278,18 +278,14 @@ def extraer_datos_cotizacion():
                 avisar_telegram(f"❌ El PDF no se generó correctamente: {pdf_path}")
                 drive_url = None
             else:
-                # Subir PDF a Drive usando OAuth si no estamos en Render
-                if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
-                    drive_url = export_pdf_drive(pdf_path)
-                else:
-                    from pathlib import Path
-                    drive_url = upload_pdf_to_drive_oauth(
-                        pdf_path,
-                        pdf_filename,
-                        drive_folder_id=DRIVE_FOLDER_ID,
-                        client_secret_file="webniovalpdfs.json",
-                        token_file="token2.json"
-                    )
+                # Subir PDF a Drive usando OAuth siempre, tanto en Render como local
+                drive_url = upload_pdf_to_drive_oauth(
+                    pdf_path,
+                    pdf_filename,
+                    drive_folder_id=DRIVE_FOLDER_ID,
+                    client_secret_file="webniovalpdfs.json",
+                    token_file="token2.json"
+                )
                 # Validar que la URL de Drive se haya generado
                 if not drive_url:
                     print(f"[ERROR] No se obtuvo URL de Drive tras subir el PDF: {pdf_path}")
