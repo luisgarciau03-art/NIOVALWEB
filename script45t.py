@@ -350,6 +350,7 @@ def export_pdf_drive(pdf_path):
             print(f"[ERROR] El archivo PDF no existe o está vacío: {pdf_path}")
             avisar_telegram(f"❌ El archivo PDF no existe o está vacío: {pdf_path}")
             return None
+        # Usar la misma autenticación que para la hoja BD
         creds = authenticate()
         service = build('drive', 'v3', credentials=creds)
         file_metadata = {
