@@ -268,18 +268,30 @@ def extraer_datos_cotizacion():
             # Guardar PDF temporalmente solo para subirlo a Drive, luego eliminarlo
             with open(pdf_path, "wb") as f:
                 f.write(response.content)
-            # Subir PDF a Drive usando OAuth si no estamos en Render
-            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
-                drive_url = export_pdf_drive(pdf_path)
+            # Validar que el PDF se haya guardado correctamente
+            if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) == 0:
+                print(f"[ERROR] El PDF no se generó correctamente: {pdf_path}")
+                avisar_telegram(f"❌ El PDF no se generó correctamente: {pdf_path}")
+                drive_url = None
             else:
-                from pathlib import Path
-                drive_url = upload_pdf_to_drive_oauth(
-                    pdf_path,
-                    pdf_filename,
-                    drive_folder_id=DRIVE_FOLDER_ID,
-                    client_secret_file="webniovalpdfs.json",
-                    token_file="token2.json"
-                )
+                # Subir PDF a Drive usando OAuth si no estamos en Render
+                if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+                    drive_url = export_pdf_drive(pdf_path)
+                else:
+                    from pathlib import Path
+                    drive_url = upload_pdf_to_drive_oauth(
+                        pdf_path,
+                        pdf_filename,
+                        drive_folder_id=DRIVE_FOLDER_ID,
+                        client_secret_file="webniovalpdfs.json",
+                        token_file="token2.json"
+                    )
+                # Validar que la URL de Drive se haya generado
+                if not drive_url:
+                    print(f"[ERROR] No se obtuvo URL de Drive tras subir el PDF: {pdf_path}")
+                    avisar_telegram(f"❌ No se obtuvo URL de Drive tras subir el PDF: {pdf_path}")
+                else:
+                    print(f"[LOG] PDF subido a Drive: {drive_url}")
             # Eliminar el PDF local después de subirlo
             try:
                 os.remove(pdf_path)
@@ -326,7 +338,6 @@ def extraer_datos_cotizacion():
         print(f"[ERROR] extraer_datos_cotizacion: Error general: {e}")
         print(traceback.format_exc())
         avisar_telegram(f"❌ Error en export_pdf_rango: {e}")
-        # Retornar 5 valores aunque haya error
         return None, None, None, nombre_cliente, esquema, monto, num_factura
 
 def export_pdf_drive(pdf_path):
@@ -334,7 +345,11 @@ def export_pdf_drive(pdf_path):
     Sube el PDF a Drive en la carpeta compartida y retorna el enlace público.
     """
     try:
-        print('[DEBUG] Subiendo archivo a Drive...')
+        print(f'[DEBUG] Subiendo archivo a Drive: {pdf_path}')
+        if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) == 0:
+            print(f"[ERROR] El archivo PDF no existe o está vacío: {pdf_path}")
+            avisar_telegram(f"❌ El archivo PDF no existe o está vacío: {pdf_path}")
+            return None
         creds = authenticate()
         service = build('drive', 'v3', credentials=creds)
         file_metadata = {
@@ -414,23 +429,25 @@ def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, e
         # Eliminar comillas simples si existen
         if fecha_hoy.startswith("'"):
             fecha_hoy = fecha_hoy[1:]
-        print(f"[DEBUG] Preparando datos para fila: Fecha={fecha_hoy}, Cliente={nombre_cliente}, Esquema={esquema}, Mes={mes_actual}, Monto={total_factura}, Num Factura={num_factura}, PDF={link_pdf}")
+        # Forzar que todos los valores sean cadenas y nunca None
+        def safe_str(val):
+            return str(val) if val is not None else ''
         fila = [
-            fecha_hoy,          # A2: Fecha
-            nombre_cliente,     # B2: Nombre
-            '',                 # C2: VACÍO
-            '',                 # D2: VACÍO
-            esquema,            # E2: ESQUEMA
-            '',                 # F2: VACÍO
-            mes_actual,         # G2: MES
-            total_factura,      # H2: Monto
-            '',                 # I2: VACÍO
-            num_factura,        # J2: Número Factura
-            link_pdf,           # K2: Cotización PDF
-            '',                 # L2: EXCEL
-            '',                 # M2: PAGO
-            '',                 # N2: Dias
-            ''                  # O2: VACÍO
+            safe_str(fecha_hoy),          # A2: Fecha
+            safe_str(nombre_cliente),     # B2: Nombre
+            '',                          # C2: VACÍO
+            '',                          # D2: VACÍO
+            safe_str(esquema),           # E2: ESQUEMA
+            '',                          # F2: VACÍO
+            safe_str(mes_actual),        # G2: MES
+            safe_str(total_factura),     # H2: Monto
+            '',                          # I2: VACÍO
+            safe_str(num_factura),       # J2: Número Factura
+            safe_str(link_pdf),          # K2: Cotización PDF
+            '',                          # L2: EXCEL
+            '',                          # M2: PAGO
+            '',                          # N2: Dias
+            ''                           # O2: VACÍO
         ]
         print(f"[DEBUG] Datos de la fila a actualizar en A2:O2: {fila}")
         # Actualizar la fila en el rango A2:O2
