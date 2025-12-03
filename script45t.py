@@ -245,7 +245,11 @@ def extraer_datos_cotizacion():
         else:
             num_factura = num_factura_actual
         pdf_filename = f"{nombre_cliente} - {num_factura}.pdf"
-        pdf_path = os.path.join(os.getcwd(), pdf_filename)
+        # Guardar en /tmp/ si estamos en Render, en cwd si es local
+        if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+            pdf_path = f"/tmp/{pdf_filename}"
+        else:
+            pdf_path = os.path.join(os.getcwd(), pdf_filename)
         # Usar la función global authenticate()
         # Construir la URL correctamente
         pdf_url = (
