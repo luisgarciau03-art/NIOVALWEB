@@ -406,7 +406,11 @@ def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, clie
         if not creds or not creds.valid:
             print(f"[LOG] Token inválido o no existe, iniciando flujo OAuth...")
             flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
-            creds = flow.run_local_server(port=8765)
+            # Si estamos en Render, usar run_console (no hay navegador)
+            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+                creds = flow.run_console()
+            else:
+                creds = flow.run_local_server(port=8765)
             with open(token_file, 'w') as token:
                 token.write(creds.to_json())
         print("[LOG] Autenticación OAuth completada.")
