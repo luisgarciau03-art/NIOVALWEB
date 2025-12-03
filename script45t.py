@@ -401,26 +401,42 @@ def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, clie
     client_secret_file = client_secret_file or 'webniovalpdfs.json'
     token_file = token_file or 'token2.json'
 
-    creds = None
-    if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
-        creds = flow.run_local_server(port=8765)
-        with open(token_file, 'w') as token:
-            token.write(creds.to_json())
-
-    service = build('drive', 'v3', credentials=creds)
-    file_metadata = {
-        'name': pdf_filename,
-        'mimeType': 'application/pdf',
-        'parents': [drive_folder_id]
-    }
-    media = MediaFileUpload(pdf_path, mimetype='application/pdf', resumable=True)
-    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    service.permissions().create(fileId=file['id'], body={'type': 'anyone', 'role': 'reader'}).execute()
-    drive_url = f"https://drive.google.com/file/d/{file['id']}/view?usp=sharing"
-    return drive_url
+    try:
+        print(f"[LOG] Iniciando subida de PDF a Drive via OAuth: {pdf_path}, nombre: {pdf_filename}")
+        creds = None
+        if os.path.exists(token_file):
+            print(f"[LOG] Usando token existente: {token_file}")
+            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+        if not creds or not creds.valid:
+            print(f"[LOG] Token inválido o no existe, iniciando flujo OAuth...")
+            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
+            creds = flow.run_local_server(port=8765)
+            with open(token_file, 'w') as token:
+                token.write(creds.to_json())
+        print("[LOG] Autenticación OAuth completada.")
+        service = build('drive', 'v3', credentials=creds)
+        print("[LOG] Servicio Google Drive inicializado.")
+        file_metadata = {
+            'name': pdf_filename,
+            'mimeType': 'application/pdf',
+            'parents': [drive_folder_id]
+        }
+        print(f"[LOG] Metadata del archivo: {file_metadata}")
+        media = MediaFileUpload(pdf_path, mimetype='application/pdf', resumable=True)
+        print(f"[LOG] MediaFileUpload creado para: {pdf_path}")
+        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        print(f"[LOG] Archivo creado en Drive con id: {file['id']}")
+        service.permissions().create(fileId=file['id'], body={'type': 'anyone', 'role': 'reader'}).execute()
+        print(f"[LOG] Permisos públicos asignados al archivo: {file['id']}")
+        drive_url = f"https://drive.google.com/file/d/{file['id']}/view?usp=sharing"
+        print(f"[LOG] URL final de Drive: {drive_url}")
+        return drive_url
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] Error subiendo PDF a Drive via OAuth: {e}")
+        print(traceback.format_exc())
+        avisar_telegram(f"❌ Error subiendo PDF a Drive via OAuth: {e}")
+        return None
 
 def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, esquema, mes_actual):
     try:
