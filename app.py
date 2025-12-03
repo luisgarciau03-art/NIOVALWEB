@@ -170,7 +170,7 @@ def pedidos_panel():
             print("[LOG] Productos guardados en hoja BD.")
 
             print("[LOG] Extrayendo datos de cotización...")
-            pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura = extraer_datos_cotizacion()
+            pdf_path, pdf_filename, drive_url, nombre_cliente, num_factura, monto, esquema = extraer_datos_cotizacion()
             print(f"[LOG] Datos cotización: nombre_cliente={nombre_cliente}, num_factura={num_factura}, pdf_path={pdf_path}, pdf_filename={pdf_filename}, drive_url={drive_url}")
 
             # Si necesitas total_factura, esquema, mes_actual, obténlos aquí o ajusta el flujo
