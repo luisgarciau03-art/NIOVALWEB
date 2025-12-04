@@ -244,7 +244,8 @@ def extraer_datos_cotizacion():
         print(f"[DEBUG] Esquema detectado D12: '{esquema}'")
         monto = sheet.acell('H43').value or ''
         print(f"[DEBUG] Valor original de H43 (monto): '{monto}'")
-        monto = monto.strip()
+        if isinstance(monto, str):
+            monto = monto.strip().strip("'\" ")
         print(f"[DEBUG] Monto detectado H43: '{monto}'")
         num_factura_actual = sheet.acell('G10').value or "1"
         print(f"[DEBUG] Valor original de G10 (num_factura_actual): '{num_factura_actual}'")
