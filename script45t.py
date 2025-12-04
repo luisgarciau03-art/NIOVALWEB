@@ -30,6 +30,13 @@ print("Chromium version:", subprocess.getoutput('chromium --version'))
 print("Chromedriver path:", subprocess.getoutput('which chromedriver'))
 print("Chromedriver version:", subprocess.getoutput('chromedriver --version'))
 try:
+    import google_auth_oauthlib
+    import google_auth
+    print("google-auth-oauthlib version:", google_auth_oauthlib.__version__)
+    print("google-auth version:", google_auth.__version__)
+except Exception as e:
+    print("Error mostrando versión de google-auth-oauthlib/google-auth:", e)
+try:
     out = subprocess.getoutput('/usr/bin/chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --window-size=1920,1080 --version')
     print("Chromium manual launch output:", out)
 except Exception as e:
