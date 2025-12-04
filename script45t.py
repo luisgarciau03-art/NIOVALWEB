@@ -1011,6 +1011,7 @@ if __name__ == "__main__":
             print("No se pudo obtener el PDF. Flujo detenido.")
         else:
             print("[DEBUG] Llamando a insertar_fila_ventas...")
+            # link_pdf, nombre_cliente, total_factura, num_factura, esquema, mes_actual
             result_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, monto, num_factura, esquema, mes_actual)
             print(f"[DEBUG] Resultado de insertar_fila_ventas: {result_ventas}")
 
