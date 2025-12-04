@@ -467,12 +467,15 @@ def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, e
         sheet.insert_row([''] * 15, 2)
         print(f"[DEBUG] Fila vacía insertada en posición 2.")
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-        # Eliminar comillas simples si existen en fecha
-        if fecha_hoy.startswith("'"):
-            fecha_hoy = fecha_hoy[1:]
-        # Eliminar comillas simples si existen en monto total
-        if isinstance(total_factura, str) and total_factura.startswith("'"):
-            total_factura = total_factura[1:]
+        # Limpiar fecha
+        if isinstance(fecha_hoy, str):
+            fecha_hoy = fecha_hoy.strip().lstrip("'").rstrip("'")
+        # Limpiar monto total
+        if isinstance(total_factura, str):
+            total_factura = total_factura.strip().lstrip("'").rstrip("'")
+        # Limpiar número de factura
+        if isinstance(num_factura, str):
+            num_factura = num_factura.strip().lstrip("'").rstrip("'")
         # Forzar que todos los valores sean cadenas y nunca None
         def safe_str(val):
             return str(val) if val is not None else ''
