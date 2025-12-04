@@ -294,28 +294,22 @@ def extraer_datos_cotizacion():
                 avisar_telegram(f"❌ El PDF no se generó correctamente: {pdf_path}")
                 drive_url = None
             else:
-                # Subir PDF a Drive usando OAuth siempre, tanto en Render como local
-                drive_url = upload_pdf_to_drive_oauth(
-                    pdf_path,
-                    pdf_filename,
-                    drive_folder_id=DRIVE_FOLDER_ID,
-                    client_secret_file="webniovalpdfs.json",
-                    token_file="token2.json"
-                )
-                # Validar que la URL de Drive se haya generado
-                if not drive_url:
-                    print(f"[ERROR] No se obtuvo URL de Drive tras subir el PDF: {pdf_path}")
-                    avisar_telegram(f"❌ No se obtuvo URL de Drive tras subir el PDF: {pdf_path}")
+                # Subir PDF a Dropbox siempre
+                from subir_dropbox import subir_pdf_a_dropbox
+                dropbox_url = subir_pdf_a_dropbox(pdf_path, pdf_filename)
+                if not dropbox_url:
+                    print(f"[ERROR] No se obtuvo URL de Dropbox tras subir el PDF: {pdf_path}")
+                    avisar_telegram(f"❌ No se obtuvo URL de Dropbox tras subir el PDF: {pdf_path}")
                 else:
-                    print(f"[LOG] PDF subido a Drive: {drive_url}")
+                    print(f"[LOG] PDF subido a Dropbox: {dropbox_url}")
             # Eliminar el PDF local después de subirlo
             try:
                 os.remove(pdf_path)
             except Exception:
                 pass
-            avisar_telegram(f"✅ PDF cargado a Drive: {drive_url}")
+            avisar_telegram(f"✅ PDF cargado a Dropbox: {dropbox_url}")
             print("[LOG] extraer_datos_cotizacion: FIN flujo requests.")
-            return pdf_path, pdf_filename, drive_url, nombre_cliente, esquema, monto, num_factura
+            return pdf_path, pdf_filename, dropbox_url, nombre_cliente, esquema, monto, num_factura
         else:
             print("[LOG] extraer_datos_cotizacion: Error descargando PDF por requests. Intentando Selenium...")
             avisar_telegram("❌ Error descargando PDF de cotización, intentando con Selenium autenticado...")
