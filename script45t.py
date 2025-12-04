@@ -245,7 +245,8 @@ def extraer_datos_cotizacion():
         monto = sheet.acell('H43').value or ''
         print(f"[DEBUG] Valor original de H43 (monto): '{monto}'")
         if isinstance(monto, str):
-            monto = monto.strip().strip("'\" ")
+            import re
+            monto = re.sub(r"[^0-9.,]", "", monto)
         print(f"[DEBUG] Monto detectado H43: '{monto}'")
         num_factura_actual = sheet.acell('G10').value or "1"
         print(f"[DEBUG] Valor original de G10 (num_factura_actual): '{num_factura_actual}'")
