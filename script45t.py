@@ -33,6 +33,13 @@ print("Chromedriver path:", subprocess.getoutput('which chromedriver'))
 print("Chromedriver version:", subprocess.getoutput('chromedriver --version'))
 try:
     import google_auth_oauthlib
+    import google.auth
+    print("google-auth-oauthlib version:", google_auth_oauthlib.__version__)
+    print("google-auth version:", google.auth.__version__)
+except Exception as e:
+    print("Error mostrando versión de google-auth-oauthlib/google-auth:", e)
+try:
+    import google_auth_oauthlib
     import google_auth
     print("google-auth-oauthlib version:", google_auth_oauthlib.__version__)
     print("google-auth version:", google_auth.__version__)
