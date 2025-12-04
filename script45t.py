@@ -996,7 +996,7 @@ if __name__ == "__main__":
         drive_url = result[2]
         nombre_cliente = result[3]
         esquema = result[4]
-        total_factura = result[5]
+        monto = result[5]
         num_factura = result[6]
         mes_actual = get_mes_actual()
 
@@ -1011,7 +1011,7 @@ if __name__ == "__main__":
             print("No se pudo obtener el PDF. Flujo detenido.")
         else:
             print("[DEBUG] Llamando a insertar_fila_ventas...")
-            result_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, total_factura, num_factura, esquema, mes_actual)
+            result_ventas = insertar_fila_ventas(drive_url or "", nombre_cliente, monto, num_factura, esquema, mes_actual)
             print(f"[DEBUG] Resultado de insertar_fila_ventas: {result_ventas}")
 
         ahora_fin = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
