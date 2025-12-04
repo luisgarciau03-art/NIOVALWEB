@@ -92,8 +92,9 @@ def login():
             print("Datos usuario Firestore:", user_data)
             if user_data:
                 session['uid'] = uid  # <--- Guardar uid en la sesión
+                esquema_raw = user_data.get("Esquema", "Distribuidor")
                 # Aquí uid SE PASA CORRECTAMENTE Y NUNCA QUEDARÁ VACÍO
-                return render_template("panel.html", user=user_data, uid=uid)
+                return render_template("panel.html", user=user_data, uid=uid, esquema_raw=esquema_raw)
             else:
                 print("Mostrando welcome.html")
                 return render_template("welcome.html", uid=uid)
@@ -191,7 +192,8 @@ def pedidos_panel():
             print(traceback.format_exc())
             mensaje = f"Error al procesar pedido: {e}"
 
-        return render_template("panel.html", user=user_data, uid=uid, mensaje=mensaje)
+        esquema_raw = user_data.get("Esquema", "Distribuidor") if user_data else "Distribuidor"
+        return render_template("panel.html", user=user_data, uid=uid, mensaje=mensaje, esquema_raw=esquema_raw)
 
     return render_template("pedidos.html", pedidos=pedidos, productos=productos, precio_esquema=precio_esquema, uid=uid)
 
