@@ -127,7 +127,7 @@
     <div class="user-info">
       <p><b>Email:</b> {{ user['email'] }}</p>
       <p><b>Rol:</b> {{ user.get('rol', 'N/A') }}</p>
-      <p><b>Esquema actual:</b> {{ precio_esquema }}</p>
+      <p><b>Esquema actual:</b> {{ esquema_raw }}</p>
     </div>
     <div class="panel-links">
       <a class="panel-link" href="/pedidos?uid={{ uid }}">
