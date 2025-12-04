@@ -16,6 +16,8 @@ INSTRUCCIONES PARA RESOLVER CONFLICTOS DE GIT:
     git push
 """
 
+import google.auth
+import google_auth_oauthlib
 # --- TEST DE SELENIUM Y LOGGING AL INICIO ---
 import os
 import time
