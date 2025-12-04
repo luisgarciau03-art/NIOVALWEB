@@ -476,19 +476,19 @@ def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, e
         fila = [
             safe_str(fecha_hoy),          # A2: Fecha
             safe_str(nombre_cliente),     # B2: Nombre
-            '',                          # C2: VACÍO
-            '',                          # D2: VACÍO
-            safe_str(esquema),           # E2: ESQUEMA
-            '',                          # F2: VACÍO
-            safe_str(mes_actual),        # G2: MES
-            safe_str(total_factura),     # H2: Monto
-            '',                          # I2: VACÍO
-            safe_str(num_factura),       # J2: Número Factura
-            safe_str(link_pdf),          # K2: Cotización PDF
-            '',                          # L2: EXCEL
-            '',                          # M2: PAGO
-            '',                          # N2: Dias
-            ''                           # O2: VACÍO
+            safe_str(total_factura),      # C2: Monto
+            safe_str(num_factura),        # D2: Número Factura
+            safe_str(esquema),            # E2: Esquema
+            '',                           # F2: VACÍO
+            safe_str(mes_actual),         # G2: Mes
+            '',                           # H2: VACÍO
+            '',                           # I2: VACÍO
+            safe_str(link_pdf),           # J2: Cotización PDF
+            '',                           # K2: EXCEL
+            '',                           # L2: PAGO
+            '',                           # M2: Dias
+            '',                           # N2: VACÍO
+            ''                            # O2: VACÍO
         ]
         print(f"[DEBUG] Datos de la fila a actualizar en A2:O2: {fila}")
         # Actualizar la fila en el rango A2:O2

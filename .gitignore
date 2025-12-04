@@ -1,4 +1,6 @@
 # Ignora archivos sensibles y temporales
+# No subir estos archivos a GitHub
+
 *.pyc
 __pycache__/
 token.json
@@ -6,4 +8,7 @@ client_secret_*.json
 .env
 .DS_Store
 *.log
-client_secret.json 
+client_secret.json
+token2.json
+webniovalpdfs.json
+C:/Users/PC 1/NIOVALWEB/
