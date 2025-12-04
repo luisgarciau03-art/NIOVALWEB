@@ -416,20 +416,27 @@ def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, clie
     try:
         print(f"[LOG] Iniciando subida de PDF a Drive via OAuth: {pdf_path}, nombre: {pdf_filename}")
         creds = None
-        if os.path.exists(token_file):
-            print(f"[LOG] Usando token existente: {token_file}")
-            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
-        if not creds or not creds.valid:
-            print(f"[LOG] Token inválido o no existe, iniciando flujo OAuth...")
-            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
-            # Si estamos en Render, usar run_console() para evitar error CSRF
-            if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
-                creds = flow.run_console()
-            else:
+        # Si estamos en Render, usar Service Account siempre
+        if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+            import json
+            from google.oauth2.service_account import Credentials as ServiceAccountCreds
+            secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'
+            if not os.path.exists(secret_path):
+                raise Exception(f"No se encontró el archivo de Service Account en {secret_path}. Verifica el nombre en Secret Files de Render.")
+            with open(secret_path, 'r') as f:
+                info = json.load(f)
+            creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+        else:
+            if os.path.exists(token_file):
+                print(f"[LOG] Usando token existente: {token_file}")
+                creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+            if not creds or not creds.valid:
+                print(f"[LOG] Token inválido o no existe, iniciando flujo OAuth...")
+                flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
                 creds = flow.run_local_server(port=8765)
-            with open(token_file, 'w') as token:
-                token.write(creds.to_json())
-        print("[LOG] Autenticación OAuth completada.")
+                with open(token_file, 'w') as token:
+                    token.write(creds.to_json())
+        print("[LOG] Autenticación completada.")
         service = build('drive', 'v3', credentials=creds)
         print("[LOG] Servicio Google Drive inicializado.")
         file_metadata = {
@@ -449,9 +456,9 @@ def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, clie
         return drive_url
     except Exception as e:
         import traceback
-        print(f"[ERROR] Error subiendo PDF a Drive via OAuth: {e}")
+        print(f"[ERROR] Error subiendo PDF a Drive: {e}")
         print(traceback.format_exc())
-        avisar_telegram(f"❌ Error subiendo PDF a Drive via OAuth: {e}")
+        avisar_telegram(f"❌ Error subiendo PDF a Drive: {e}")
         return None
 
 def insertar_fila_ventas(link_pdf, nombre_cliente, total_factura, num_factura, esquema, mes_actual):
