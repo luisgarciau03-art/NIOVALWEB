@@ -1,3 +1,6 @@
+# Ignorar archivos sensibles
+import dropbox.py
+subir_dropbox.py
 # Ignora archivos sensibles y temporales
 # No subir estos archivos a GitHub
 
