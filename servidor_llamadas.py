@@ -50,14 +50,14 @@ contactos_llamadas = {}
 def generar_audio_elevenlabs(texto, audio_id):
     """Genera audio con ElevenLabs y lo guarda temporalmente (OPTIMIZADO para baja latencia)"""
     try:
-        # Usar modelo TURBO para respuesta más rápida con idioma español forzado
+        # Usar modelo TURBO para respuesta más rápida
+        # NOTA: eleven_turbo_v2 NO soporta language_code, usa la voz configurada
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto,
             model_id="eleven_turbo_v2",  # Modelo más rápido
             optimize_streaming_latency=4,  # Máxima prioridad a latencia baja
-            output_format="mp3_44100_128",  # Formato optimizado
-            language_code="es"  # FORZAR español mexicano
+            output_format="mp3_44100_128"  # Formato optimizado
         )
 
         # Guardar en archivo temporal
