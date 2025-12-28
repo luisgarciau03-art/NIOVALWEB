@@ -53,8 +53,16 @@ audio_cache = {}
 def pre_generar_audios_cache():
     """Pre-genera frases comunes con Multilingual v2 para acento perfecto"""
     frases_comunes = {
+        # Frases de sistema
         "timeout": "¿Sigue ahí?",
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
+
+        # Saludo inicial (se usa en TODAS las llamadas)
+        "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
+
+        # Despedidas comunes
+        "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
+        "despedida_2": "Perfecto. En las próximas dos horas le llega el catálogo completo por WhatsApp. Muchas gracias por su tiempo. Que tenga excelente tarde.",
     }
 
     print("🔧 Pre-generando caché de audios con Multilingual v2...")
@@ -262,9 +270,14 @@ def webhook_voz():
     # Mensaje inicial
     mensaje_inicial = agente.iniciar_conversacion()
 
-    # Generar audio con ElevenLabs
+    # Generar audio con ElevenLabs - usar CACHÉ si es el saludo estándar
     audio_id = f"inicial_{call_sid}"
-    generar_audio_elevenlabs(mensaje_inicial, audio_id)
+
+    # Detectar si es el saludo estándar para usar caché (0s delay, Multilingual v2)
+    if "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial:
+        generar_audio_elevenlabs(mensaje_inicial, audio_id, usar_cache_key="saludo_inicial")
+    else:
+        generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
     # Crear respuesta TwiML
     response = VoiceResponse()
@@ -320,10 +333,18 @@ def procesar_respuesta():
     tiempo_gpt = time.time() - inicio
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
 
-    # Generar audio con ElevenLabs (en paralelo para reducir latencia)
+    # Generar audio con ElevenLabs - detectar si puede usar caché
     audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
     inicio_audio = time.time()
-    generar_audio_elevenlabs(respuesta_agente, audio_id)
+
+    # Detectar despedidas comunes para usar caché (0s delay, Multilingual v2)
+    cache_key = None
+    if "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_agente:
+        cache_key = "despedida_1"
+    elif "En las próximas dos horas le llega el catálogo" in respuesta_agente and "Muchas gracias por su tiempo" in respuesta_agente:
+        cache_key = "despedida_2"
+
+    generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
     tiempo_audio = time.time() - inicio_audio
     print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
     print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
