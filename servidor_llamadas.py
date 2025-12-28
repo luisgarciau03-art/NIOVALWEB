@@ -607,7 +607,6 @@ def obtener_status(call_sid):
 @app.route("/regenerar-cache", methods=["POST"])
 def regenerar_cache():
     """Regenera el caché manual con la voz actual"""
-    import shutil
     import os
 
     try:
@@ -615,10 +614,20 @@ def regenerar_cache():
         audio_cache.clear()
         cache_metadata.clear()
 
-        # Eliminar directorio de caché en disco
+        # Eliminar SOLO archivos dentro del directorio (no el directorio mismo)
+        # Esto es necesario porque Railway Volume monta el directorio
         if os.path.exists(CACHE_DIR):
-            shutil.rmtree(CACHE_DIR)
-            print(f"🗑️  Caché en disco eliminado")
+            archivos_eliminados = 0
+            for archivo in os.listdir(CACHE_DIR):
+                filepath = os.path.join(CACHE_DIR, archivo)
+                try:
+                    if os.path.isfile(filepath):
+                        os.remove(filepath)
+                        archivos_eliminados += 1
+                except Exception as e:
+                    print(f"⚠️  No se pudo eliminar {archivo}: {e}")
+
+            print(f"🗑️  {archivos_eliminados} archivos eliminados del caché")
 
         # Regenerar caché manual con la voz ACTUAL
         pre_generar_audios_cache()
