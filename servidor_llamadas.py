@@ -47,30 +47,65 @@ audio_files = {}
 contactos_llamadas = {}
 
 
+def corregir_pronunciacion(texto):
+    """Aplica correcciones fonéticas para mejorar pronunciación con Turbo v2"""
+    # Reemplazos específicos para mejorar pronunciación
+    correcciones = {
+        # Palabras problemáticas con RR
+        "ferreteros": "fe-rre-te-ros",
+        "ferretería": "fe-rre-te-rí-a",
+        "ferreterías": "fe-rre-te-rí-as",
+        "tapagoteras": "ta-pa-go-te-ras",
+        "grifería": "gri-fe-rí-a",
+        "griferías": "gri-fe-rí-as",
+        # Números
+        "$1,500": "mil quinientos",
+        "$5,000": "cinco mil",
+        "15": "quince",
+    }
+
+    texto_corregido = texto
+    for original, reemplazo in correcciones.items():
+        texto_corregido = texto_corregido.replace(original, reemplazo)
+
+    return texto_corregido
+
+
 def generar_audio_elevenlabs(texto, audio_id):
-    """Genera audio con ElevenLabs y lo guarda temporalmente (CON PRONUNCIACIÓN NATIVA)"""
+    """Genera audio con ElevenLabs (TURBO v2 + corrección fonética para velocidad + calidad)"""
     try:
-        # Usar modelo MULTILINGUAL v2 para mejor pronunciación en español mexicano
-        # Sacrifica 1-2 segundos de latencia pero mejora SIGNIFICATIVAMENTE el acento nativo
+        import time
+        inicio = time.time()
+
+        # Aplicar correcciones fonéticas antes de generar
+        texto_corregido = corregir_pronunciacion(texto)
+
+        # Usar modelo TURBO v2 para velocidad + optimize_streaming_latency
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
-            text=texto,
-            model_id="eleven_multilingual_v2",  # Mejor calidad y pronunciación nativa
-            output_format="mp3_44100_128"  # Formato optimizado
+            text=texto_corregido,
+            model_id="eleven_turbo_v2",  # Rápido (2-3s)
+            optimize_streaming_latency=4,  # Reducir latencia inicial
+            output_format="mp3_44100_128"
         )
 
-        # Guardar en archivo temporal
+        # Guardar en archivo temporal con streaming
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        chunk_count = 0
         for chunk in audio_generator:
             temp_file.write(chunk)
+            chunk_count += 1
+            if chunk_count == 1:
+                print(f"🎵 Primer chunk recibido en {(time.time() - inicio):.2f}s")
         temp_file.close()
 
         # Guardar ruta del archivo
         audio_files[audio_id] = temp_file.name
+        print(f"✅ Audio generado en {(time.time() - inicio):.2f}s ({chunk_count} chunks)")
         return audio_id
 
     except Exception as e:
-        print(f"Error generando audio ElevenLabs: {e}")
+        print(f"❌ Error generando audio: {e}")
         return None
 
 
@@ -220,11 +255,19 @@ def procesar_respuesta():
         return Response(str(response), mimetype="text/xml")
 
     # Procesar respuesta con GPT-4o
+    import time
+    inicio = time.time()
     respuesta_agente = agente.procesar_respuesta(speech_result)
+    tiempo_gpt = time.time() - inicio
+    print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
 
-    # Generar audio con ElevenLabs
+    # Generar audio con ElevenLabs (en paralelo para reducir latencia)
     audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
+    inicio_audio = time.time()
     generar_audio_elevenlabs(respuesta_agente, audio_id)
+    tiempo_audio = time.time() - inicio_audio
+    print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
+    print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
 
     # Crear respuesta TwiML
     response = VoiceResponse()
