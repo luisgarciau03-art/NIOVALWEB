@@ -17,6 +17,16 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Inicializar Google Sheets Manager (solo una vez al arrancar)
+sheets_manager = None
+try:
+    from nioval_sheets_adapter import NiovalSheetsAdapter
+    sheets_manager = NiovalSheetsAdapter()
+    print("✅ Google Sheets Manager inicializado")
+except Exception as e:
+    print(f"⚠️  Google Sheets no disponible: {e}")
+    print("⚠️  Las llamadas se guardarán solo en backup local")
+
 # Configuración Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
@@ -33,6 +43,8 @@ elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 conversaciones_activas = {}
 # Almacenar archivos de audio temporales
 audio_files = {}
+# Mapear Call SID a información de contacto
+contactos_llamadas = {}
 
 
 def generar_audio_elevenlabs(texto, audio_id):
@@ -113,13 +125,19 @@ def iniciar_llamada():
             url=request.url_root + "webhook-voz",
             method="POST"
         )
-        
+
+        # Guardar info del contacto para usar en el webhook
+        contactos_llamadas[call.sid] = {
+            "telefono": telefono_destino,
+            "nombre_negocio": nombre_negocio
+        }
+
         return {
             "success": True,
             "call_sid": call.sid,
             "status": call.status
         }
-        
+
     except Exception as e:
         return {"error": str(e)}, 500
 
@@ -135,8 +153,15 @@ def webhook_voz():
     else:
         call_sid = request.form.get("CallSid")
 
-    # Crear nueva conversación
-    agente = AgenteVentas()
+    # Obtener info del contacto si existe
+    contacto_info = contactos_llamadas.get(call_sid, {})
+
+    # Crear nueva conversación con Google Sheets habilitado
+    agente = AgenteVentas(
+        contacto_info=contacto_info,
+        sheets_manager=sheets_manager
+    )
+    agente.call_sid = call_sid  # Guardar el Call SID de Twilio
     conversaciones_activas[call_sid] = agente
 
     # Mensaje inicial
@@ -212,9 +237,13 @@ def procesar_respuesta():
         # Terminar llamada
         response.hangup()
 
-        # Guardar lead
-        agente.guardar_lead()
+        # Guardar lead y llamada en Google Sheets
+        agente.guardar_llamada_y_lead()
+
+        # Limpiar memoria
         del conversaciones_activas[call_sid]
+        if call_sid in contactos_llamadas:
+            del contactos_llamadas[call_sid]
     else:
         # Continuar conversación (OPTIMIZADO para respuesta rápida)
         gather = Gather(
