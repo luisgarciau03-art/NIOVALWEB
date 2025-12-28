@@ -8,6 +8,7 @@ from twilio.twiml.voice_response import VoiceResponse, Gather, Play
 from twilio.rest import Client
 import os
 import tempfile
+import threading
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
@@ -35,13 +36,15 @@ audio_files = {}
 
 
 def generar_audio_elevenlabs(texto, audio_id):
-    """Genera audio con ElevenLabs y lo guarda temporalmente"""
+    """Genera audio con ElevenLabs y lo guarda temporalmente (OPTIMIZADO para baja latencia)"""
     try:
-        # Generar audio con ElevenLabs usando el método correcto
+        # Usar modelo TURBO para respuesta más rápida
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto,
-            model_id="eleven_multilingual_v2"
+            model_id="eleven_turbo_v2",  # Modelo más rápido
+            optimize_streaming_latency=4,  # Máxima prioridad a latencia baja
+            output_format="mp3_44100_128"  # Formato optimizado
         )
 
         # Guardar en archivo temporal
@@ -59,9 +62,26 @@ def generar_audio_elevenlabs(texto, audio_id):
         return None
 
 
+def generar_audio_async(texto, audio_id):
+    """Wrapper para generar audio en background thread"""
+    thread = threading.Thread(target=generar_audio_elevenlabs, args=(texto, audio_id))
+    thread.daemon = True
+    thread.start()
+    return audio_id
+
+
 @app.route("/audio/<audio_id>")
 def servir_audio(audio_id):
-    """Sirve el archivo de audio generado"""
+    """Sirve el archivo de audio generado (con espera inteligente)"""
+    import time
+
+    # Esperar hasta 3 segundos si el audio aún no está listo
+    max_wait = 3
+    waited = 0
+    while audio_id not in audio_files and waited < max_wait:
+        time.sleep(0.1)
+        waited += 0.1
+
     if audio_id in audio_files:
         return send_file(audio_files[audio_id], mimetype='audio/mpeg')
     return "Audio not found", 404
@@ -133,12 +153,12 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # Recopilar respuesta del cliente
+    # Recopilar respuesta del cliente (OPTIMIZADO para respuesta rápida)
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=5,
-        speech_timeout="auto",
+        timeout=3,  # Reducido de 5 a 3 segundos
+        speech_timeout=2,  # Detectar fin de habla más rápido
         action="/procesar-respuesta",
         method="POST"
     )
@@ -196,12 +216,12 @@ def procesar_respuesta():
         agente.guardar_lead()
         del conversaciones_activas[call_sid]
     else:
-        # Continuar conversación
+        # Continuar conversación (OPTIMIZADO para respuesta rápida)
         gather = Gather(
             input="speech",
             language="es-MX",
-            timeout=5,
-            speech_timeout="auto",
+            timeout=3,  # Reducido de 5 a 3 segundos
+            speech_timeout=2,  # Detectar fin de habla más rápido
             action="/procesar-respuesta",
             method="POST"
         )
