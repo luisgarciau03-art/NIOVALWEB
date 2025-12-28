@@ -50,13 +50,14 @@ contactos_llamadas = {}
 def generar_audio_elevenlabs(texto, audio_id):
     """Genera audio con ElevenLabs y lo guarda temporalmente (OPTIMIZADO para baja latencia)"""
     try:
-        # Usar modelo TURBO para respuesta más rápida
+        # Usar modelo TURBO para respuesta más rápida con idioma español forzado
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto,
             model_id="eleven_turbo_v2",  # Modelo más rápido
             optimize_streaming_latency=4,  # Máxima prioridad a latencia baja
-            output_format="mp3_44100_128"  # Formato optimizado
+            output_format="mp3_44100_128",  # Formato optimizado
+            language_code="es"  # FORZAR español mexicano
         )
 
         # Guardar en archivo temporal
@@ -178,12 +179,12 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # Recopilar respuesta del cliente (OPTIMIZADO para respuesta rápida)
+    # Recopilar respuesta del cliente
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=3,  # Reducido de 5 a 3 segundos
-        speech_timeout=2,  # Detectar fin de habla más rápido
+        timeout=5,  # Tiempo de espera antes de timeout
+        speech_timeout=3,  # Tiempo después de que cliente deja de hablar
         action="/procesar-respuesta",
         method="POST"
     )
@@ -245,12 +246,12 @@ def procesar_respuesta():
         if call_sid in contactos_llamadas:
             del contactos_llamadas[call_sid]
     else:
-        # Continuar conversación (OPTIMIZADO para respuesta rápida)
+        # Continuar conversación
         gather = Gather(
             input="speech",
             language="es-MX",
-            timeout=3,  # Reducido de 5 a 3 segundos
-            speech_timeout=2,  # Detectar fin de habla más rápido
+            timeout=5,  # Tiempo de espera antes de timeout
+            speech_timeout=3,  # Tiempo después de que cliente deja de hablar
             action="/procesar-respuesta",
             method="POST"
         )
