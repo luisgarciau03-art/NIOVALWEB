@@ -46,6 +46,40 @@ audio_files = {}
 # Mapear Call SID a información de contacto
 contactos_llamadas = {}
 
+# Caché de audios pre-generados con Multilingual v2 (mejor calidad)
+audio_cache = {}
+
+
+def pre_generar_audios_cache():
+    """Pre-genera frases comunes con Multilingual v2 para acento perfecto"""
+    frases_comunes = {
+        "timeout": "¿Sigue ahí?",
+        "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
+    }
+
+    print("🔧 Pre-generando caché de audios con Multilingual v2...")
+    for key, texto in frases_comunes.items():
+        try:
+            # Usar Multilingual v2 para frases comunes (mejor acento)
+            audio_generator = elevenlabs_client.text_to_speech.convert(
+                voice_id=ELEVENLABS_VOICE_ID,
+                text=texto,
+                model_id="eleven_multilingual_v2",  # Mejor acento
+                output_format="mp3_44100_128"
+            )
+
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            for chunk in audio_generator:
+                temp_file.write(chunk)
+            temp_file.close()
+
+            audio_cache[key] = temp_file.name
+            print(f"  ✅ Cached: {key}")
+        except Exception as e:
+            print(f"  ❌ Error caching {key}: {e}")
+
+    print(f"✅ Caché completo: {len(audio_cache)} audios pre-generados\n")
+
 
 def corregir_pronunciacion(texto):
     """Aplica correcciones fonéticas para mejorar pronunciación con Turbo v2"""
@@ -71,21 +105,46 @@ def corregir_pronunciacion(texto):
     return texto_corregido
 
 
-def generar_audio_elevenlabs(texto, audio_id):
-    """Genera audio con ElevenLabs (TURBO v2 + corrección fonética para velocidad + calidad)"""
+def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
+    """
+    Genera audio con ElevenLabs usando estrategia híbrida:
+    - Frases comunes: Usa caché (Multilingual v2, acento perfecto, 0s delay)
+    - Frases largas: Multilingual v2 (mejor acento, ~5s delay)
+    - Frases cortas: Turbo v2 (velocidad, ~2s delay)
+    """
     try:
         import time
         inicio = time.time()
 
-        # Aplicar correcciones fonéticas antes de generar
+        # Si hay cache key, usar audio pre-generado
+        if usar_cache_key and usar_cache_key in audio_cache:
+            audio_files[audio_id] = audio_cache[usar_cache_key]
+            print(f"📦 Audio desde caché: {usar_cache_key} (0s delay)")
+            return audio_id
+
+        # Aplicar correcciones fonéticas
         texto_corregido = corregir_pronunciacion(texto)
 
-        # Usar modelo TURBO v2 para velocidad + optimize_streaming_latency
+        # ESTRATEGIA HÍBRIDA: Elegir modelo según longitud
+        palabras = len(texto_corregido.split())
+
+        if palabras > 25:
+            # Frases largas: Usar Multilingual v2 (mejor acento)
+            modelo = "eleven_multilingual_v2"
+            optimize_latency = None
+            print(f"🎙️ Usando Multilingual v2 ({palabras} palabras)")
+        else:
+            # Frases cortas: Usar Turbo v2 (velocidad)
+            modelo = "eleven_turbo_v2"
+            optimize_latency = 4
+            print(f"⚡ Usando Turbo v2 ({palabras} palabras)")
+
+        # Generar audio
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto_corregido,
-            model_id="eleven_turbo_v2",  # Rápido (2-3s)
-            optimize_streaming_latency=4,  # Reducir latencia inicial
+            model_id=modelo,
+            optimize_streaming_latency=optimize_latency,
             output_format="mp3_44100_128"
         )
 
@@ -96,12 +155,12 @@ def generar_audio_elevenlabs(texto, audio_id):
             temp_file.write(chunk)
             chunk_count += 1
             if chunk_count == 1:
-                print(f"🎵 Primer chunk recibido en {(time.time() - inicio):.2f}s")
+                print(f"🎵 Primer chunk en {(time.time() - inicio):.2f}s")
         temp_file.close()
 
         # Guardar ruta del archivo
         audio_files[audio_id] = temp_file.name
-        print(f"✅ Audio generado en {(time.time() - inicio):.2f}s ({chunk_count} chunks)")
+        print(f"✅ Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
         return audio_id
 
     except Exception as e:
@@ -305,9 +364,9 @@ def procesar_respuesta():
         )
         response.append(gather)
 
-        # Fallback si no hay respuesta - usar voz de Bruce (ElevenLabs)
+        # Fallback si no hay respuesta - usar CACHÉ (0s delay, acento perfecto)
         audio_id_timeout = f"timeout_{call_sid}_{len(audio_files)}"
-        generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout)
+        generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout, usar_cache_key="timeout")
         audio_url_timeout = request.url_root + f"audio/{audio_id_timeout}"
         response.play(audio_url_timeout)
         response.redirect("/procesar-respuesta")
@@ -392,6 +451,9 @@ if __name__ == "__main__":
     print("  GET  /status/<call_sid>    - Estado de una llamada")
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
+
+    # Pre-generar caché de audios comunes con Multilingual v2
+    pre_generar_audios_cache()
 
     # Puerto dinámico para Render (usa PORT de env o 5000 por defecto)
     port = int(os.getenv("PORT", 5000))
