@@ -51,7 +51,11 @@ audio_cache = {}
 
 # Sistema de caché auto-adaptativo
 frase_stats = {}  # Contador de frecuencia de frases
-CACHE_DIR = "audio_cache"  # Directorio para persistir caché en disco
+
+# Directorio de caché - detecta automáticamente si estamos en Railway
+# Railway monta el Volume en /app/audio_cache por defecto
+# En local usa ./audio_cache
+CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable de entorno
 FRECUENCIA_MIN_CACHE = 3  # Auto-generar caché después de N usos
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
@@ -698,6 +702,7 @@ if __name__ == "__main__":
     print(f"\n📊 Estadísticas de caché:")
     print(f"   • Audios en caché: {len(audio_cache)}")
     print(f"   • Directorio: {CACHE_DIR}")
+    print(f"   • Ruta absoluta: {os.path.abspath(CACHE_DIR)}")
     print(f"   • Auto-caché después de {FRECUENCIA_MIN_CACHE} usos\n")
 
     # Puerto dinámico para Render (usa PORT de env o 5000 por defecto)
