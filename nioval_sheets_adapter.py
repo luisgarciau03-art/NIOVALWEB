@@ -414,6 +414,134 @@ class NiovalSheetsAdapter:
             print(f"❌ Error al obtener estadísticas: {e}")
             return {}
 
+    def registrar_llamada(self, **kwargs) -> Optional[int]:
+        """
+        Registra una llamada en la hoja "HISTORIAL DE LLAMADAS"
+        Si la hoja no existe, la crea automáticamente.
+
+        Retorna: Número de fila donde se registró la llamada, o None si falló
+        """
+        try:
+            # Obtener o crear hoja de llamadas
+            try:
+                hoja_llamadas = self.spreadsheet.worksheet("HISTORIAL DE LLAMADAS")
+            except gspread.exceptions.WorksheetNotFound:
+                print("📄 Creando hoja 'HISTORIAL DE LLAMADAS'...")
+                hoja_llamadas = self.spreadsheet.add_worksheet(
+                    title="HISTORIAL DE LLAMADAS",
+                    rows=1000,
+                    cols=20
+                )
+                # Crear header
+                headers = [
+                    "Fecha/Hora", "Call SID", "Contacto Fila", "Nombre Negocio",
+                    "Teléfono", "Estado", "Duración (seg)", "WhatsApp", "Email",
+                    "Nombre Contacto", "Productos Interés", "Nivel Interés",
+                    "Objeciones", "Notas", "Fecha Reprog", "Hora Preferida", "Motivo No Contacto"
+                ]
+                hoja_llamadas.append_row(headers)
+
+            # Preparar datos de la llamada
+            fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            fila_datos = [
+                fecha_hora,
+                kwargs.get('call_sid', ''),
+                kwargs.get('contacto_fila', ''),
+                kwargs.get('contacto_nombre', ''),
+                kwargs.get('telefono', ''),
+                kwargs.get('estado', ''),
+                kwargs.get('duracion_segundos', 0),
+                kwargs.get('whatsapp_capturado', ''),
+                kwargs.get('email_capturado', ''),
+                kwargs.get('nombre_contacto', ''),
+                kwargs.get('productos_interes', ''),
+                kwargs.get('nivel_interes', ''),
+                kwargs.get('objeciones', ''),
+                kwargs.get('notas', ''),
+                kwargs.get('fecha_reprogramacion', ''),
+                kwargs.get('hora_preferida', ''),
+                kwargs.get('motivo_no_contacto', '')
+            ]
+
+            # Agregar fila
+            hoja_llamadas.append_row(fila_datos)
+
+            # Obtener número de fila (última fila agregada)
+            todas_filas = hoja_llamadas.get_all_values()
+            fila_numero = len(todas_filas)
+
+            print(f"✅ Llamada registrada en HISTORIAL DE LLAMADAS - Fila {fila_numero}")
+            return fila_numero
+
+        except Exception as e:
+            print(f"❌ Error al registrar llamada: {e}")
+            return None
+
+    def crear_lead(self, **kwargs) -> Optional[int]:
+        """
+        Crea un lead en la hoja "LEADS"
+        Si la hoja no existe, la crea automáticamente.
+
+        Retorna: Número de fila donde se registró el lead, o None si falló
+        """
+        try:
+            # Obtener o crear hoja de leads
+            try:
+                hoja_leads = self.spreadsheet.worksheet("LEADS")
+            except gspread.exceptions.WorksheetNotFound:
+                print("📄 Creando hoja 'LEADS'...")
+                hoja_leads = self.spreadsheet.add_worksheet(
+                    title="LEADS",
+                    rows=1000,
+                    cols=20
+                )
+                # Crear header
+                headers = [
+                    "Fecha Creación", "Contacto Fila", "Llamada Fila", "Nombre Contacto",
+                    "Nombre Negocio", "WhatsApp", "Email", "Teléfono", "Ciudad",
+                    "Productos Interés", "Nivel Interés", "Presupuesto Estimado",
+                    "Timeline Compra", "Notas", "Estado Lead", "Último Seguimiento", "Próximo Seguimiento"
+                ]
+                hoja_leads.append_row(headers)
+
+            # Preparar datos del lead
+            fecha_creacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            fila_datos = [
+                fecha_creacion,
+                kwargs.get('contacto_fila', ''),
+                kwargs.get('llamada_fila', ''),
+                kwargs.get('nombre_contacto', ''),
+                kwargs.get('nombre_negocio', ''),
+                kwargs.get('whatsapp', ''),
+                kwargs.get('email', ''),
+                kwargs.get('telefono', ''),
+                kwargs.get('ciudad', ''),
+                kwargs.get('productos_interes', ''),
+                kwargs.get('nivel_interes', ''),
+                kwargs.get('presupuesto_estimado', ''),
+                kwargs.get('timeline_compra', ''),
+                kwargs.get('notas', ''),
+                'Nuevo',  # Estado Lead por defecto
+                fecha_creacion,  # Último seguimiento
+                ''  # Próximo seguimiento (vacío)
+            ]
+
+            # Agregar fila
+            hoja_leads.append_row(fila_datos)
+
+            # Obtener número de fila
+            todas_filas = hoja_leads.get_all_values()
+            fila_numero = len(todas_filas)
+
+            print(f"✅ Lead creado en hoja LEADS - Fila {fila_numero}")
+            return fila_numero
+
+        except Exception as e:
+            print(f"❌ Error al crear lead: {e}")
+            return None
+
 
 # Testing y ejemplos de uso
 if __name__ == "__main__":
