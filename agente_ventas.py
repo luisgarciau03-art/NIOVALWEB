@@ -1151,18 +1151,27 @@ class AgenteVentas:
 
             return respuesta_agente
 
-        # Generar respuesta con GPT-4o-mini (94% más económico, misma calidad para ventas)
+        # Generar respuesta con GPT-4o-mini (OPTIMIZADO para baja latencia)
         try:
+            # Limitar historial a últimos 6 mensajes para respuestas más rápidas
+            historial_reciente = self.conversation_history[-6:] if len(self.conversation_history) > 6 else self.conversation_history
+
+            # PROMPT DINÁMICO: Solo enviar secciones relevantes según estado de conversación
+            prompt_optimizado = self._construir_prompt_dinamico()
+
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    *self.conversation_history
+                    {"role": "system", "content": prompt_optimizado},
+                    *historial_reciente
                 ],
                 temperature=0.7,
-                max_tokens=150
+                max_tokens=100,  # Reducido de 150 a 100 para respuestas más rápidas
+                presence_penalty=0.6,  # Evita repetición
+                frequency_penalty=0.3,  # Respuestas más directas
+                timeout=5  # Timeout de 5 segundos
             )
-            
+
             respuesta_agente = response.choices[0].message.content
             
             # Agregar al historial
@@ -1808,6 +1817,95 @@ Responde SOLO en este formato JSON:
             return "contestada"
         else:
             return "contestada_sin_interes"
+
+    def _construir_prompt_dinamico(self) -> str:
+        """
+        Construye un prompt optimizado enviando solo las secciones relevantes
+        según el estado actual de la conversación. Esto reduce tokens y mejora velocidad.
+        """
+        # Sección base (siempre se incluye)
+        prompt_base = """# IDENTIDAD
+Eres Bruce W, asesor comercial de NIOVAL (distribuidores de productos ferreteros en México).
+Teléfono: 662 415 1997 (repetir en grupos: 66 24 15 19 97)
+
+# PRODUCTOS PRINCIPALES
+- Cinta tapagoteras (producto estrella)
+- Grifería completa
+- Herramientas, candados, productos para mascotas, más de 15 categorías
+
+# VENTAJAS
+- Envíos a toda la República desde Guadalajara
+- PROMOCIÓN: Primer pedido $1,500 MXN con envío GRATIS
+- Envío gratis a partir de $5,000 MXN en pedidos subsecuentes
+- Crédito disponible, pago con TDC sin comisión
+
+# REGLAS
+✓ UNA pregunta a la vez, espera respuesta
+✓ Máximo 2-3 oraciones seguidas
+✓ Usar nombre del cliente si lo tienes
+✓ Ser consultivo, no agresivo
+✓ Repetir números en grupos de 2 dígitos
+✓ Deletrear correos despacio (PUNTO, ARROBA, GUIÓN)
+✗ NO inventar precios o promesas
+✗ NO ser insistente si dicen "no"
+✗ NO mencionar que eres IA"""
+
+        # Determinar fase actual según datos capturados
+        fase_actual = []
+
+        # FASE 1: Si aún no tenemos nombre del contacto
+        if not self.lead_data.get("nombre_contacto"):
+            fase_actual.append("""
+# FASE ACTUAL: APERTURA Y CONEXIÓN
+Mensaje inicial: "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferreteros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
+
+⚠️ CRÍTICO: NO continúes con productos hasta confirmar que hablas con el encargado de compras.
+
+Si responden solo "Hola" sin confirmar rol:
+"Muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos ferreteros. ¿Me comunica con el encargado de compras del negocio por favor?"
+
+Si dicen que SÍ es el encargado: "Perfecto, ¿con quién tengo el gusto?"
+Si dicen que NO: "¿Me lo podría comunicar por favor?"
+""")
+
+        # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
+        elif not self.lead_data.get("productos_interes") and len(self.conversation_history) < 8:
+            fase_actual.append(f"""
+# FASE ACTUAL: PRESENTACIÓN DE VALOR
+Ya hablas con: {self.lead_data.get("nombre_contacto", "el encargado")}
+
+Presentación: "El motivo de mi llamada es muy breve: nosotros distribuimos productos ferreteros con alta rotación, especialmente nuestra cinta tapagoteras que muchas ferreterías tienen como producto estrella, además de grifería, herramientas y más de 15 categorías. ¿Usted maneja este tipo de productos actualmente en su negocio?"
+
+[ESPERA RESPUESTA - ESCUCHA ACTIVA]
+""")
+
+        # FASE 3: Si hay interés pero no tenemos WhatsApp
+        elif not self.lead_data.get("whatsapp"):
+            fase_actual.append(f"""
+# FASE ACTUAL: CAPTURA DE WHATSAPP
+Ya tienes: Nombre={self.lead_data.get("nombre_contacto", "N/A")}
+
+PRIORIDAD #1: Obtener WhatsApp
+"Me gustaría enviarle nuestro catálogo digital completo con lista de precios para que lo revise con calma. Le puedo compartir todo por WhatsApp que es más rápido y visual. ¿Cuál es su número de WhatsApp?"
+
+Si da número: "Perfecto, entonces anoto el WhatsApp: [REPETIR EN GRUPOS DE 2]. ¿Es correcto?"
+Si no tiene WhatsApp: "Entiendo. ¿Tiene algún correo electrónico donde pueda enviarle el catálogo?"
+""")
+
+        # FASE 4: Si ya tenemos WhatsApp, proceder al cierre
+        elif self.lead_data.get("whatsapp"):
+            nombre = self.lead_data.get("nombre_contacto", "")
+            fase_actual.append(f"""
+# FASE ACTUAL: CIERRE
+Ya tienes: Nombre={nombre}, WhatsApp={self.lead_data.get("whatsapp")}
+
+Cierre: "Excelente{f', {nombre}' if nombre else ''}. En las próximas 2 horas le llega el catálogo completo por WhatsApp. Le voy a marcar algunos productos que creo pueden interesarle según lo que me comentó. También le incluyo información sobre nuestra promoción de primer pedido de $1,500 pesos con envío gratis. Un compañero del equipo le dará seguimiento en los próximos días. ¿Le parece bien?"
+
+Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre else ''}. Que tenga excelente tarde. Hasta pronto."
+""")
+
+        # Combinar prompt base + fase actual
+        return prompt_base + "\n".join(fase_actual)
 
     def _guardar_backup_excel(self):
         """Guarda un respaldo en Excel local"""
