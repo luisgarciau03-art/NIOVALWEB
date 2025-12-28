@@ -239,7 +239,12 @@ def procesar_respuesta():
         response.hangup()
 
         # Guardar lead y llamada en Google Sheets
-        agente.guardar_llamada_y_lead()
+        print(f"💾 Guardando llamada {call_sid} en Google Sheets...")
+        try:
+            agente.guardar_llamada_y_lead()
+            print(f"✅ Llamada {call_sid} guardada correctamente")
+        except Exception as e:
+            print(f"❌ Error guardando llamada {call_sid}: {e}")
 
         # Limpiar memoria
         del conversaciones_activas[call_sid]
@@ -257,8 +262,11 @@ def procesar_respuesta():
         )
         response.append(gather)
 
-        # Fallback si no hay respuesta
-        response.say("¿Sigue ahí?", language="es-MX")
+        # Fallback si no hay respuesta - usar voz de Bruce (ElevenLabs)
+        audio_id_timeout = f"timeout_{call_sid}_{len(audio_files)}"
+        generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout)
+        audio_url_timeout = request.url_root + f"audio/{audio_id_timeout}"
+        response.play(audio_url_timeout)
         response.redirect("/procesar-respuesta")
 
     return Response(str(response), mimetype="text/xml")
