@@ -1727,18 +1727,27 @@ Responde SOLO en este formato JSON:
         También guarda en Excel como respaldo
         """
         try:
+            print(f"📊 INICIANDO GUARDADO DE LLAMADA...")
+            print(f"📊 - Call SID: {self.call_sid}")
+            print(f"📊 - Sheets Manager: {'✅ Disponible' if self.sheets_manager else '❌ No disponible'}")
+            print(f"📊 - Contacto Info: {'✅ Disponible' if self.contacto_info else '❌ No disponible'}")
+
             # Calcular duración de la llamada
             if self.lead_data["fecha_inicio"]:
                 inicio = datetime.strptime(self.lead_data["fecha_inicio"], "%Y-%m-%d %H:%M:%S")
                 duracion = (datetime.now() - inicio).total_seconds()
                 self.lead_data["duracion_segundos"] = int(duracion)
+                print(f"📊 - Duración: {self.lead_data['duracion_segundos']} segundos")
 
             # Determinar estado de la llamada
             estado_llamada = self._determinar_estado_llamada()
+            print(f"📊 - Estado: {estado_llamada}")
 
             # Guardar en Google Sheets si está disponible
             if self.sheets_manager and self.contacto_info:
+                print(f"📊 Guardando en Google Sheets...")
                 contacto_fila = self.contacto_info.get('ID', 0)
+                print(f"📊 - Contacto Fila: {contacto_fila}")
 
                 # Registrar llamada
                 llamada_fila = self.sheets_manager.registrar_llamada(
@@ -1759,9 +1768,11 @@ Responde SOLO en este formato JSON:
                     hora_preferida=self.hora_preferida,
                     motivo_no_contacto=self.motivo_no_contacto
                 )
+                print(f"✅ Llamada registrada en Google Sheets - Fila {llamada_fila}")
 
                 # Crear lead si hubo interés
                 if self.lead_data["interesado"] and self.lead_data["whatsapp"]:
+                    print(f"📊 Cliente interesado con WhatsApp - creando lead...")
                     lead_fila = self.sheets_manager.crear_lead(
                         contacto_fila=contacto_fila,
                         llamada_fila=llamada_fila,
@@ -1776,31 +1787,46 @@ Responde SOLO en este formato JSON:
                         temperatura=self.lead_data["temperatura"],
                         notas=self.lead_data["notas"]
                     )
-
                     print(f"✅ Lead guardado en Google Sheets - Fila {lead_fila}")
+                else:
+                    print(f"ℹ️ No se crea lead (interesado={self.lead_data['interesado']}, whatsapp={self.lead_data['whatsapp']})")
 
                 # Actualizar contacto en Sheets
                 if self.lead_data["whatsapp"]:
+                    print(f"📊 Actualizando WhatsApp en contacto...")
                     self.sheets_manager.actualizar_numero_con_whatsapp(
                         fila=contacto_fila,
                         whatsapp=self.lead_data["whatsapp"]
                     )
 
                 if self.lead_data["email"]:
+                    print(f"📊 Registrando email en contacto...")
                     self.sheets_manager.registrar_email_capturado(
                         fila=contacto_fila,
                         email=self.lead_data["email"]
                     )
 
-                print(f"✅ Llamada guardada en Google Sheets")
+                print(f"✅ Llamada guardada completamente en Google Sheets")
+            else:
+                if not self.sheets_manager:
+                    print(f"⚠️ Sheets Manager no está inicializado - saltando Google Sheets")
+                if not self.contacto_info:
+                    print(f"⚠️ contacto_info no está disponible - saltando Google Sheets")
 
             # Guardar también en Excel como respaldo
+            print(f"📊 Guardando backup en Excel...")
             self._guardar_backup_excel()
 
         except Exception as e:
+            import traceback
             print(f"❌ Error al guardar llamada/lead: {e}")
+            print(f"❌ Traceback completo:")
+            print(traceback.format_exc())
             # Intentar guardar al menos en Excel
-            self._guardar_backup_excel()
+            try:
+                self._guardar_backup_excel()
+            except Exception as e2:
+                print(f"❌ Error también en backup Excel: {e2}")
 
     def _determinar_estado_llamada(self) -> str:
         """Determina el estado final de la llamada"""
@@ -1927,13 +1953,19 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
     def _guardar_backup_excel(self):
         """Guarda un respaldo en Excel local"""
         try:
+            import os
             archivo_excel = "leads_nioval_backup.xlsx"
+            ruta_completa = os.path.abspath(archivo_excel)
+
+            print(f"📁 Intentando guardar backup en: {ruta_completa}")
 
             # Intentar cargar archivo existente
             try:
                 df = pd.read_excel(archivo_excel)
+                print(f"📂 Archivo existente cargado con {len(df)} filas")
             except FileNotFoundError:
                 df = pd.DataFrame()
+                print(f"📄 Creando nuevo archivo Excel")
 
             # Convertir objeciones a string
             lead_data_excel = self.lead_data.copy()
@@ -1945,10 +1977,12 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 
             # Guardar
             df.to_excel(archivo_excel, index=False)
-            print(f"✅ Backup guardado en {archivo_excel}")
+            print(f"✅ Backup guardado en {ruta_completa} ({len(df)} filas totales)")
 
         except Exception as e:
+            import traceback
             print(f"⚠️ No se pudo guardar backup en Excel: {e}")
+            print(f"⚠️ Traceback: {traceback.format_exc()}")
     
     def obtener_resumen(self) -> dict:
         """Retorna un resumen de la conversación y datos recopilados"""
