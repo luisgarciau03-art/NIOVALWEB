@@ -618,6 +618,40 @@ def regenerar_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/info-cache", methods=["GET"])
+def info_cache():
+    """Obtiene información detallada del caché"""
+    import os
+
+    try:
+        # Listar archivos en disco
+        archivos_disco = []
+        if os.path.exists(CACHE_DIR):
+            archivos_disco = os.listdir(CACHE_DIR)
+
+        # Calcular tamaño total
+        tamano_total = 0
+        if os.path.exists(CACHE_DIR):
+            for archivo in archivos_disco:
+                filepath = os.path.join(CACHE_DIR, archivo)
+                if os.path.isfile(filepath):
+                    tamano_total += os.path.getsize(filepath)
+
+        return {
+            "audios_en_cache": len(audio_cache),
+            "archivos_en_disco": len(archivos_disco),
+            "tamano_mb": round(tamano_total / (1024 * 1024), 2),
+            "directorio": CACHE_DIR,
+            "voice_id_actual": ELEVENLABS_VOICE_ID,
+            "archivos": archivos_disco[:10],  # Primeros 10 archivos
+            "frecuencia_min": FRECUENCIA_MIN_CACHE,
+            "frases_registradas": len(frase_stats)
+        }
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
