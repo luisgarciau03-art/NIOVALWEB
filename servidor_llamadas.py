@@ -49,6 +49,119 @@ contactos_llamadas = {}
 # Caché de audios pre-generados con Multilingual v2 (mejor calidad)
 audio_cache = {}
 
+# Sistema de caché auto-adaptativo
+frase_stats = {}  # Contador de frecuencia de frases
+CACHE_DIR = "audio_cache"  # Directorio para persistir caché en disco
+FRECUENCIA_MIN_CACHE = 3  # Auto-generar caché después de N usos
+cache_metadata = {}  # Metadata: frase → archivo MP3
+
+
+def cargar_cache_desde_disco():
+    """Carga caché persistente desde disco al iniciar"""
+    import os
+    import json
+
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+        print("📁 Directorio de caché creado")
+        return
+
+    # Cargar metadata
+    metadata_file = os.path.join(CACHE_DIR, "metadata.json")
+    if os.path.exists(metadata_file):
+        with open(metadata_file, 'r', encoding='utf-8') as f:
+            global cache_metadata
+            cache_metadata = json.load(f)
+
+        # Cargar archivos de audio
+        for key, filename in cache_metadata.items():
+            filepath = os.path.join(CACHE_DIR, filename)
+            if os.path.exists(filepath):
+                audio_cache[key] = filepath
+                print(f"  📦 Cargado desde disco: {key}")
+
+        print(f"✅ {len(audio_cache)} audios cargados desde caché persistente\n")
+
+
+def guardar_cache_en_disco(key, texto, audio_path):
+    """Guarda un audio en el caché persistente"""
+    import os
+    import json
+    import shutil
+
+    # Crear directorio si no existe
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+
+    # Generar nombre de archivo único
+    import hashlib
+    hash_key = hashlib.md5(texto.encode()).hexdigest()[:12]
+    filename = f"{key}_{hash_key}.mp3"
+    filepath = os.path.join(CACHE_DIR, filename)
+
+    # Copiar archivo de audio temporal al caché persistente
+    shutil.copy2(audio_path, filepath)
+
+    # Actualizar metadata
+    cache_metadata[key] = filename
+
+    # Guardar metadata
+    metadata_file = os.path.join(CACHE_DIR, "metadata.json")
+    with open(metadata_file, 'w', encoding='utf-8') as f:
+        json.dump(cache_metadata, f, ensure_ascii=False, indent=2)
+
+    print(f"💾 Caché guardado en disco: {key} → {filename}")
+
+
+def registrar_frase_usada(texto):
+    """
+    Registra una frase usada y auto-genera caché si alcanza frecuencia mínima
+    """
+    # Normalizar texto (quitar espacios extras, lowercase para comparación)
+    texto_norm = " ".join(texto.split()).strip()
+
+    # Generar key único basado en primeras palabras
+    palabras = texto_norm.split()[:8]  # Primeras 8 palabras
+    frase_key = "_".join(palabras).lower()
+
+    # Incrementar contador
+    if frase_key not in frase_stats:
+        frase_stats[frase_key] = {"texto": texto, "count": 0}
+
+    frase_stats[frase_key]["count"] += 1
+    count = frase_stats[frase_key]["count"]
+
+    # Auto-generar caché si alcanza frecuencia mínima
+    if count == FRECUENCIA_MIN_CACHE and frase_key not in audio_cache:
+        print(f"\n🔥 Frase frecuente detectada ({count} usos): {texto[:50]}...")
+        print(f"   Generando caché automático con Multilingual v2...")
+
+        try:
+            # Generar audio con Multilingual v2 (mejor calidad)
+            audio_generator = elevenlabs_client.text_to_speech.convert(
+                voice_id=ELEVENLABS_VOICE_ID,
+                text=texto,
+                model_id="eleven_multilingual_v2",
+                output_format="mp3_44100_128"
+            )
+
+            # Guardar en archivo temporal
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            for chunk in audio_generator:
+                temp_file.write(chunk)
+            temp_file.close()
+
+            # Agregar a caché en memoria
+            audio_cache[frase_key] = temp_file.name
+
+            # Guardar en disco para persistencia
+            guardar_cache_en_disco(frase_key, texto, temp_file.name)
+
+            print(f"   ✅ Caché auto-generado: {frase_key}")
+
+        except Exception as e:
+            print(f"   ❌ Error generando caché automático: {e}")
+
 
 def pre_generar_audios_cache():
     """Pre-genera frases comunes con Multilingual v2 para acento perfecto"""
@@ -115,8 +228,9 @@ def corregir_pronunciacion(texto):
 
 def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
     """
-    Genera audio con ElevenLabs usando estrategia híbrida:
-    - Frases comunes: Usa caché (Multilingual v2, acento perfecto, 0s delay)
+    Genera audio con ElevenLabs usando estrategia híbrida AUTO-ADAPTATIVA:
+    - Caché manual: Usa audio pre-generado (0s delay)
+    - Caché auto: Busca en caché auto-generado de frases frecuentes
     - Frases largas: Multilingual v2 (mejor acento, ~5s delay)
     - Frases cortas: Turbo v2 (velocidad, ~2s delay)
     """
@@ -124,11 +238,23 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         import time
         inicio = time.time()
 
-        # Si hay cache key, usar audio pre-generado
+        # PASO 1: Si hay cache key manual, usar audio pre-generado
         if usar_cache_key and usar_cache_key in audio_cache:
             audio_files[audio_id] = audio_cache[usar_cache_key]
-            print(f"📦 Audio desde caché: {usar_cache_key} (0s delay)")
+            print(f"📦 Caché manual: {usar_cache_key} (0s delay)")
             return audio_id
+
+        # PASO 2: Buscar en caché auto-generado
+        palabras_inicio = " ".join(texto.split()[:8]).lower()
+        frase_key = "_".join(palabras_inicio.split())
+
+        if frase_key in audio_cache:
+            audio_files[audio_id] = audio_cache[frase_key]
+            print(f"📦 Caché AUTO: {frase_key[:40]}... (0s delay)")
+            return audio_id
+
+        # PASO 3: Registrar frase para estadísticas (auto-genera caché si es frecuente)
+        registrar_frase_usada(texto)
 
         # Aplicar correcciones fonéticas
         texto_corregido = corregir_pronunciacion(texto)
@@ -473,8 +599,17 @@ if __name__ == "__main__":
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
-    # Pre-generar caché de audios comunes con Multilingual v2
+    # PASO 1: Cargar caché persistente desde disco (audios auto-generados)
+    print("🔄 Cargando caché desde disco...")
+    cargar_cache_desde_disco()
+
+    # PASO 2: Pre-generar caché manual de audios comunes con Multilingual v2
     pre_generar_audios_cache()
+
+    print(f"\n📊 Estadísticas de caché:")
+    print(f"   • Audios en caché: {len(audio_cache)}")
+    print(f"   • Directorio: {CACHE_DIR}")
+    print(f"   • Auto-caché después de {FRECUENCIA_MIN_CACHE} usos\n")
 
     # Puerto dinámico para Render (usa PORT de env o 5000 por defecto)
     port = int(os.getenv("PORT", 5000))
