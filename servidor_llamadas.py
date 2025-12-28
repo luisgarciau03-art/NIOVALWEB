@@ -62,12 +62,16 @@ def iniciar_llamada():
         return {"error": str(e)}, 500
 
 
-@app.route("/webhook-voz", methods=["POST"])
+@app.route("/webhook-voz", methods=["GET", "POST"])
 def webhook_voz():
     """
     Webhook que Twilio llama cuando se contesta la llamada
     """
-    call_sid = request.form.get("CallSid")
+    # Twilio puede enviar GET o POST
+    if request.method == "GET":
+        call_sid = request.args.get("CallSid")
+    else:
+        call_sid = request.form.get("CallSid")
     
     # Crear nueva conversación
     agente = AgenteVentas()
@@ -104,13 +108,18 @@ def webhook_voz():
     return Response(str(response), mimetype="text/xml")
 
 
-@app.route("/procesar-respuesta", methods=["POST"])
+@app.route("/procesar-respuesta", methods=["GET", "POST"])
 def procesar_respuesta():
     """
     Procesa la respuesta del cliente y continúa la conversación
     """
-    call_sid = request.form.get("CallSid")
-    speech_result = request.form.get("SpeechResult", "")
+    # Twilio puede enviar GET o POST
+    if request.method == "GET":
+        call_sid = request.args.get("CallSid")
+        speech_result = request.args.get("SpeechResult", "")
+    else:
+        call_sid = request.form.get("CallSid")
+        speech_result = request.form.get("SpeechResult", "")
     
     # Obtener agente de esta conversación
     agente = conversaciones_activas.get(call_sid)
