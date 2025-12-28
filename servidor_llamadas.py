@@ -588,6 +588,36 @@ def obtener_status(call_sid):
         return {"error": str(e)}, 404
 
 
+@app.route("/regenerar-cache", methods=["POST"])
+def regenerar_cache():
+    """Regenera el caché manual con la voz actual"""
+    import shutil
+    import os
+
+    try:
+        # Limpiar caché en memoria
+        audio_cache.clear()
+        cache_metadata.clear()
+
+        # Eliminar directorio de caché en disco
+        if os.path.exists(CACHE_DIR):
+            shutil.rmtree(CACHE_DIR)
+            print(f"🗑️  Caché en disco eliminado")
+
+        # Regenerar caché manual con la voz ACTUAL
+        pre_generar_audios_cache()
+
+        return {
+            "success": True,
+            "message": "Caché regenerado con la voz actual",
+            "audios_en_cache": len(audio_cache),
+            "voice_id": ELEVENLABS_VOICE_ID
+        }
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
