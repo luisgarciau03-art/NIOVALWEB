@@ -1,0 +1,37 @@
+services:
+  # Servidor de Webhooks para Twilio
+  - type: web
+    name: nioval-webhook-server
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python servidor_llamadas.py
+    envVars:
+      # OpenAI
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: USE_GITHUB_MODELS
+        value: false
+
+      # ElevenLabs
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: ELEVENLABS_AGENT_ID
+        sync: false
+
+      # Twilio
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+
+      # Webhook URL (se configurará automáticamente)
+      - key: WEBHOOK_URL
+        sync: false
+
+      # Puerto (Render lo asigna automáticamente)
+      - key: PORT
+        value: 5000
