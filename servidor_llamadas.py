@@ -119,12 +119,13 @@ def iniciar_llamada():
         return {"error": "Teléfono requerido"}, 400
     
     try:
-        # Crear llamada con Twilio
+        # Crear llamada con Twilio (con grabación automática habilitada)
         call = twilio_client.calls.create(
             to=telefono_destino,
             from_=TWILIO_PHONE_NUMBER,
             url=request.url_root + "webhook-voz",
-            method="POST"
+            method="POST",
+            record=True  # Grabar llamada automáticamente
         )
 
         # Guardar info del contacto para usar en el webhook
@@ -298,9 +299,10 @@ def llamadas_masivas():
                 to=contacto["telefono"],
                 from_=TWILIO_PHONE_NUMBER,
                 url=request.url_root + "webhook-voz",
-                method="POST"
+                method="POST",
+                record=True  # Grabar llamada automáticamente
             )
-            
+
             resultados.append({
                 "telefono": contacto["telefono"],
                 "nombre": contacto.get("nombre"),
