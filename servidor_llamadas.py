@@ -3,12 +3,14 @@ Servidor Flask para manejar llamadas telefónicas con Twilio
 Integración: Twilio → GPT-4o → ElevenLabs → Cliente
 """
 
-from flask import Flask, request, Response
-from twilio.twiml.voice_response import VoiceResponse, Gather
+from flask import Flask, request, Response, send_file
+from twilio.twiml.voice_response import VoiceResponse, Gather, Play
 from twilio.rest import Client
 import os
+import tempfile
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
+from elevenlabs import ElevenLabs
 
 load_dotenv()
 
@@ -19,10 +21,50 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
+# Configuración ElevenLabs
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
+
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 # Almacenar conversaciones activas (en producción usar Redis/DB)
 conversaciones_activas = {}
+# Almacenar archivos de audio temporales
+audio_files = {}
+
+
+def generar_audio_elevenlabs(texto, audio_id):
+    """Genera audio con ElevenLabs y lo guarda temporalmente"""
+    try:
+        # Generar audio con ElevenLabs
+        audio = elevenlabs_client.generate(
+            text=texto,
+            voice=ELEVENLABS_VOICE_ID,
+            model="eleven_multilingual_v2"
+        )
+
+        # Guardar en archivo temporal
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        for chunk in audio:
+            temp_file.write(chunk)
+        temp_file.close()
+
+        # Guardar ruta del archivo
+        audio_files[audio_id] = temp_file.name
+        return audio_id
+
+    except Exception as e:
+        print(f"Error generando audio ElevenLabs: {e}")
+        return None
+
+
+@app.route("/audio/<audio_id>")
+def servir_audio(audio_id):
+    """Sirve el archivo de audio generado"""
+    if audio_id in audio_files:
+        return send_file(audio_files[audio_id], mimetype='audio/mpeg')
+    return "Audio not found", 404
 
 
 @app.route("/iniciar-llamada", methods=["POST"])
@@ -72,24 +114,25 @@ def webhook_voz():
         call_sid = request.args.get("CallSid")
     else:
         call_sid = request.form.get("CallSid")
-    
+
     # Crear nueva conversación
     agente = AgenteVentas()
     conversaciones_activas[call_sid] = agente
-    
+
     # Mensaje inicial
     mensaje_inicial = agente.iniciar_conversacion()
-    
+
+    # Generar audio con ElevenLabs
+    audio_id = f"inicial_{call_sid}"
+    generar_audio_elevenlabs(mensaje_inicial, audio_id)
+
     # Crear respuesta TwiML
     response = VoiceResponse()
-    
-    # Decir el mensaje inicial
-    response.say(
-        mensaje_inicial,
-        voice="Polly.Miguel",  # Voz en español
-        language="es-MX"
-    )
-    
+
+    # Reproducir audio de ElevenLabs
+    audio_url = request.url_root + f"audio/{audio_id}"
+    response.play(audio_url)
+
     # Recopilar respuesta del cliente
     gather = Gather(
         input="speech",
@@ -100,11 +143,11 @@ def webhook_voz():
         method="POST"
     )
     response.append(gather)
-    
-    # Si no hay respuesta
+
+    # Si no hay respuesta (fallback a TTS de Twilio)
     response.say("No escuché su respuesta. Le llamaremos más tarde.", language="es-MX")
     response.hangup()
-    
+
     return Response(str(response), mimetype="text/xml")
 
 
@@ -120,35 +163,40 @@ def procesar_respuesta():
     else:
         call_sid = request.form.get("CallSid")
         speech_result = request.form.get("SpeechResult", "")
-    
+
     # Obtener agente de esta conversación
     agente = conversaciones_activas.get(call_sid)
-    
+
     if not agente:
         response = VoiceResponse()
         response.say("Error en la conversación.", language="es-MX")
         response.hangup()
         return Response(str(response), mimetype="text/xml")
-    
+
     # Procesar respuesta con GPT-4o
     respuesta_agente = agente.procesar_respuesta(speech_result)
-    
+
+    # Generar audio con ElevenLabs
+    audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
+    generar_audio_elevenlabs(respuesta_agente, audio_id)
+
     # Crear respuesta TwiML
     response = VoiceResponse()
-    
+
+    # Reproducir audio de ElevenLabs
+    audio_url = request.url_root + f"audio/{audio_id}"
+    response.play(audio_url)
+
     # Verificar si debe terminar
     if any(palabra in respuesta_agente.lower() for palabra in ["gracias por su tiempo", "hasta luego", "que tenga buen día"]):
         # Terminar llamada
-        response.say(respuesta_agente, voice="Polly.Miguel", language="es-MX")
         response.hangup()
-        
+
         # Guardar lead
         agente.guardar_lead()
         del conversaciones_activas[call_sid]
     else:
         # Continuar conversación
-        response.say(respuesta_agente, voice="Polly.Miguel", language="es-MX")
-        
         gather = Gather(
             input="speech",
             language="es-MX",
@@ -158,10 +206,11 @@ def procesar_respuesta():
             method="POST"
         )
         response.append(gather)
-        
+
+        # Fallback si no hay respuesta
         response.say("¿Sigue ahí?", language="es-MX")
         response.redirect("/procesar-respuesta")
-    
+
     return Response(str(response), mimetype="text/xml")
 
 
