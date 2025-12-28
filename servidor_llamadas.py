@@ -37,16 +37,16 @@ audio_files = {}
 def generar_audio_elevenlabs(texto, audio_id):
     """Genera audio con ElevenLabs y lo guarda temporalmente"""
     try:
-        # Generar audio con ElevenLabs
-        audio = elevenlabs_client.generate(
+        # Generar audio con ElevenLabs usando el método correcto
+        audio_generator = elevenlabs_client.text_to_speech.convert(
+            voice_id=ELEVENLABS_VOICE_ID,
             text=texto,
-            voice=ELEVENLABS_VOICE_ID,
-            model="eleven_multilingual_v2"
+            model_id="eleven_multilingual_v2"
         )
 
         # Guardar en archivo temporal
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-        for chunk in audio:
+        for chunk in audio_generator:
             temp_file.write(chunk)
         temp_file.close()
 
