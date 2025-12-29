@@ -919,11 +919,12 @@ def ver_estadisticas():
             stats = {}
 
         # Ordenar por frecuencia (más usadas primero)
-        sorted_stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
+        # stats tiene formato: {"frase_key": {"texto": "...", "count": N}}
+        sorted_stats = dict(sorted(stats.items(), key=lambda x: x[1].get("count", 0), reverse=True))
 
         # Estadísticas generales
         total_frases = len(sorted_stats)
-        total_usos = sum(sorted_stats.values())
+        total_usos = sum(item.get("count", 0) for item in sorted_stats.values())
         frases_en_cache = len(audio_cache)
 
         # Construir respuesta HTML bonita
@@ -1037,14 +1038,18 @@ def ver_estadisticas():
         """
 
         # Agregar filas de la tabla
-        for i, (frase, count) in enumerate(sorted_stats.items(), 1):
+        for i, (frase_key, data) in enumerate(sorted_stats.items(), 1):
+            # Extraer texto y contador
+            texto = data.get("texto", frase_key)
+            count = data.get("count", 0)
+
             # Verificar si está en caché
-            frase_normalizada = frase.lower()[:50].replace(" ", "_").replace(",", "").replace(".", "")
+            frase_normalizada = frase_key
             en_cache = frase_normalizada in audio_cache
             estado = '<span class="cached">✅ En caché</span>' if en_cache else '<span class="not-cached">⏳ No cacheado</span>'
 
             # Limitar longitud de frase para visualización
-            frase_display = frase if len(frase) <= 100 else frase[:100] + "..."
+            frase_display = texto if len(texto) <= 100 else texto[:100] + "..."
 
             html += f"""
                     <tr>
