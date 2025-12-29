@@ -1402,15 +1402,20 @@ class AgenteVentas:
 
                     # Validar WhatsApp si tenemos validador
                     if self.whatsapp_validator:
+                        print(f"   🔍 Validando número con Twilio Lookup...")
                         es_valido = self._validar_whatsapp(numero_completo)
 
                         if es_valido:
                             # Solo guardamos si es válido
                             self.lead_data["whatsapp"] = numero_completo
                             self.lead_data["whatsapp_valido"] = True
+                            print(f"   ✅ Número VÁLIDO - WhatsApp activo confirmado")
+                            print(f"   💾 WhatsApp guardado: {numero_completo}")
                         else:
                             # No es válido - el agente debe pedir confirmación
                             # Agregamos un mensaje de sistema para que GPT sepa que debe re-preguntar
+                            print(f"   ❌ Número NO VÁLIDO - WhatsApp NO activo")
+                            print(f"   ⚠️ No se guardará en lead_data - se pedirá otro número")
                             numero_formateado = f"{numero[:2]} {numero[2:4]} {numero[4:6]} {numero[6:8]} {numero[8:]}"
                             self.conversation_history.append({
                                 "role": "system",
@@ -1418,8 +1423,10 @@ class AgenteVentas:
                             })
                     else:
                         # Sin validador, guardamos directamente
+                        print(f"   ⚠️ Validador no disponible - guardando sin validar")
                         self.lead_data["whatsapp"] = numero_completo
                         self.lead_data["whatsapp_valido"] = True
+                        print(f"   💾 WhatsApp guardado: {numero_completo}")
 
                 break
 
@@ -2053,13 +2060,22 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             # Actualizar WhatsApp y Email en LISTA DE CONTACTOS si están disponibles
             if self.sheets_manager and self.contacto_info:
                 fila = self.contacto_info.get('ID')
+                print(f"\n📝 Verificando actualización en LISTA DE CONTACTOS...")
+                print(f"   Fila: {fila}")
+                print(f"   WhatsApp capturado: {self.lead_data['whatsapp']}")
+                print(f"   Email capturado: {self.lead_data['email']}")
 
                 if self.lead_data["whatsapp"] and fila:
+                    print(f"   ➡️ Actualizando WhatsApp en columna E:E fila {fila}...")
                     self.sheets_manager.actualizar_numero_con_whatsapp(
                         fila=fila,
                         whatsapp=self.lead_data["whatsapp"]
                     )
-                    print(f"✅ WhatsApp actualizado en LISTA DE CONTACTOS")
+                    print(f"✅ WhatsApp actualizado en LISTA DE CONTACTOS (columna E)")
+                elif not self.lead_data["whatsapp"]:
+                    print(f"⚠️ No se capturó WhatsApp durante la llamada - no se actualiza columna E")
+                elif not fila:
+                    print(f"⚠️ No se tiene fila del contacto - no se puede actualizar")
 
                 if self.lead_data["email"] and fila:
                     self.sheets_manager.registrar_email_capturado(
