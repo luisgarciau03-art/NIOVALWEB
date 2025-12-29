@@ -101,6 +101,14 @@ def cargar_cache_desde_disco():
 
         print(f"✅ {len(audio_cache)} audios cargados desde caché persistente\n")
 
+    # Cargar estadísticas de frases
+    stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
+    if os.path.exists(stats_file):
+        with open(stats_file, 'r', encoding='utf-8') as f:
+            global frase_stats
+            frase_stats = json.load(f)
+        print(f"📊 {len(frase_stats)} estadísticas de frases cargadas desde disco\n")
+
 
 def guardar_cache_en_disco(key, texto, audio_path):
     """Guarda un audio en el caché persistente"""
@@ -132,6 +140,16 @@ def guardar_cache_en_disco(key, texto, audio_path):
     print(f"💾 Caché guardado en disco: {key} → {filename}")
 
 
+def guardar_stats_en_disco():
+    """Guarda las estadísticas de frases en disco para persistencia"""
+    import os
+    import json
+
+    stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
+    with open(stats_file, 'w', encoding='utf-8') as f:
+        json.dump(frase_stats, f, ensure_ascii=False, indent=2)
+
+
 def registrar_frase_usada(texto):
     """
     Registra una frase usada y auto-genera caché si alcanza frecuencia mínima
@@ -149,6 +167,9 @@ def registrar_frase_usada(texto):
 
     frase_stats[frase_key]["count"] += 1
     count = frase_stats[frase_key]["count"]
+
+    # Guardar estadísticas en disco para persistencia
+    guardar_stats_en_disco()
 
     # Auto-generar caché si alcanza frecuencia mínima
     if count == FRECUENCIA_MIN_CACHE and frase_key not in audio_cache:
@@ -766,6 +787,22 @@ def info_cache():
                 if os.path.isfile(filepath):
                     tamano_total += os.path.getsize(filepath)
 
+        # Obtener frases más usadas (top 10)
+        frases_ordenadas = sorted(
+            frase_stats.items(),
+            key=lambda x: x[1]["count"],
+            reverse=True
+        )[:10]
+
+        top_frases = [
+            {
+                "frase": v["texto"][:60] + "..." if len(v["texto"]) > 60 else v["texto"],
+                "usos": v["count"],
+                "en_cache": k in audio_cache
+            }
+            for k, v in frases_ordenadas
+        ]
+
         return {
             "audios_en_cache": len(audio_cache),
             "archivos_en_disco": len(archivos_disco),
@@ -774,7 +811,8 @@ def info_cache():
             "voice_id_actual": ELEVENLABS_VOICE_ID,
             "archivos": archivos_disco[:10],  # Primeros 10 archivos
             "frecuencia_min": FRECUENCIA_MIN_CACHE,
-            "frases_registradas": len(frase_stats)
+            "frases_registradas": len(frase_stats),
+            "top_frases": top_frases
         }
 
     except Exception as e:
