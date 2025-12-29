@@ -1448,17 +1448,323 @@ def generar_cache_manual():
         }, 500
 
 
+@app.route("/diagnostico-persistencia", methods=["GET"])
+def diagnostico_persistencia():
+    """
+    Endpoint de diagnóstico para verificar el estado del volumen persistente en Railway
+    Muestra información detallada sobre archivos, permisos y capacidad de escritura
+    """
+    import os
+    import tempfile
+
+    try:
+        diagnostico = {
+            "directorio_cache": CACHE_DIR,
+            "ruta_absoluta": os.path.abspath(CACHE_DIR),
+            "existe": os.path.exists(CACHE_DIR),
+            "es_directorio": os.path.isdir(CACHE_DIR) if os.path.exists(CACHE_DIR) else False,
+        }
+
+        # Verificar permisos de lectura/escritura
+        if os.path.exists(CACHE_DIR):
+            diagnostico["readable"] = os.access(CACHE_DIR, os.R_OK)
+            diagnostico["writable"] = os.access(CACHE_DIR, os.W_OK)
+            diagnostico["executable"] = os.access(CACHE_DIR, os.X_OK)
+        else:
+            diagnostico["readable"] = False
+            diagnostico["writable"] = False
+            diagnostico["executable"] = False
+
+        # Listar archivos en el directorio
+        archivos_info = []
+        if os.path.exists(CACHE_DIR):
+            for archivo in os.listdir(CACHE_DIR):
+                filepath = os.path.join(CACHE_DIR, archivo)
+                if os.path.isfile(filepath):
+                    archivos_info.append({
+                        "nombre": archivo,
+                        "tamano_kb": round(os.path.getsize(filepath) / 1024, 2),
+                        "fecha_modificacion": os.path.getmtime(filepath)
+                    })
+
+        diagnostico["total_archivos"] = len(archivos_info)
+        diagnostico["archivos"] = sorted(archivos_info, key=lambda x: x["fecha_modificacion"], reverse=True)[:20]  # Últimos 20
+
+        # Calcular tamaño total
+        tamano_total = sum(a["tamano_kb"] for a in archivos_info)
+        diagnostico["tamano_total_mb"] = round(tamano_total / 1024, 2)
+
+        # Verificar metadata.json
+        metadata_file = os.path.join(CACHE_DIR, "metadata.json")
+        diagnostico["metadata_existe"] = os.path.exists(metadata_file)
+        if os.path.exists(metadata_file):
+            diagnostico["metadata_tamano_kb"] = round(os.path.getsize(metadata_file) / 1024, 2)
+
+        # Verificar frase_stats.json
+        stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
+        diagnostico["stats_existe"] = os.path.exists(stats_file)
+        if os.path.exists(stats_file):
+            diagnostico["stats_tamano_kb"] = round(os.path.getsize(stats_file) / 1024, 2)
+
+        # Test de escritura
+        try:
+            test_file = os.path.join(CACHE_DIR, ".test_write")
+            with open(test_file, 'w') as f:
+                f.write("test")
+            os.remove(test_file)
+            diagnostico["test_escritura"] = "✅ OK"
+        except Exception as e:
+            diagnostico["test_escritura"] = f"❌ FALLO: {str(e)}"
+
+        # Variables de entorno relevantes
+        diagnostico["env_vars"] = {
+            "CACHE_DIR": os.getenv("CACHE_DIR", "No configurada (usando default)"),
+            "RAILWAY_VOLUME_MOUNT_PATH": os.getenv("RAILWAY_VOLUME_MOUNT_PATH", "No configurada"),
+        }
+
+        # Estado de caché en memoria
+        diagnostico["cache_memoria"] = {
+            "audios_cargados": len(audio_cache),
+            "frases_registradas": len(frase_stats),
+        }
+
+        # Generar HTML de diagnóstico
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Diagnóstico de Persistencia - Bruce W</title>
+            <meta charset="UTF-8">
+            <style>
+                body {{
+                    font-family: 'Courier New', monospace;
+                    max-width: 1000px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: #1e1e1e;
+                    color: #d4d4d4;
+                }}
+                h1 {{
+                    color: #4ec9b0;
+                    border-bottom: 2px solid #4ec9b0;
+                    padding-bottom: 10px;
+                }}
+                h2 {{
+                    color: #569cd6;
+                    margin-top: 30px;
+                }}
+                .section {{
+                    background: #252526;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin: 15px 0;
+                    border-left: 4px solid #4ec9b0;
+                }}
+                .ok {{
+                    color: #4ec9b0;
+                    font-weight: bold;
+                }}
+                .error {{
+                    color: #f48771;
+                    font-weight: bold;
+                }}
+                .warning {{
+                    color: #dcdcaa;
+                    font-weight: bold;
+                }}
+                table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }}
+                th, td {{
+                    padding: 8px;
+                    text-align: left;
+                    border-bottom: 1px solid #3e3e42;
+                }}
+                th {{
+                    background: #2d2d30;
+                    color: #4ec9b0;
+                }}
+                .key {{
+                    color: #9cdcfe;
+                }}
+                .value {{
+                    color: #ce9178;
+                }}
+            </style>
+        </head>
+        <body>
+            <h1>🔍 Diagnóstico de Persistencia - Railway</h1>
+
+            <div class="section">
+                <h2>📁 Información del Directorio</h2>
+                <table>
+                    <tr>
+                        <td class="key">Directorio configurado:</td>
+                        <td class="value">{diagnostico['directorio_cache']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Ruta absoluta:</td>
+                        <td class="value">{diagnostico['ruta_absoluta']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Existe:</td>
+                        <td class="{'ok' if diagnostico['existe'] else 'error'}">
+                            {'✅ SÍ' if diagnostico['existe'] else '❌ NO'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Es directorio:</td>
+                        <td class="{'ok' if diagnostico['es_directorio'] else 'error'}">
+                            {'✅ SÍ' if diagnostico['es_directorio'] else '❌ NO'}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>🔐 Permisos</h2>
+                <table>
+                    <tr>
+                        <td class="key">Lectura (R):</td>
+                        <td class="{'ok' if diagnostico['readable'] else 'error'}">
+                            {'✅ OK' if diagnostico['readable'] else '❌ FALLO'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Escritura (W):</td>
+                        <td class="{'ok' if diagnostico['writable'] else 'error'}">
+                            {'✅ OK' if diagnostico['writable'] else '❌ FALLO'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Ejecución (X):</td>
+                        <td class="{'ok' if diagnostico['executable'] else 'error'}">
+                            {'✅ OK' if diagnostico['executable'] else '❌ FALLO'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Test de escritura:</td>
+                        <td class="{'ok' if 'OK' in diagnostico['test_escritura'] else 'error'}">
+                            {diagnostico['test_escritura']}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>📊 Archivos en Disco</h2>
+                <table>
+                    <tr>
+                        <td class="key">Total archivos:</td>
+                        <td class="value">{diagnostico['total_archivos']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Tamaño total:</td>
+                        <td class="value">{diagnostico['tamano_total_mb']} MB</td>
+                    </tr>
+                    <tr>
+                        <td class="key">metadata.json:</td>
+                        <td class="{'ok' if diagnostico['metadata_existe'] else 'warning'}">
+                            {'✅ Existe (' + str(diagnostico.get('metadata_tamano_kb', 0)) + ' KB)' if diagnostico['metadata_existe'] else '⚠️ No existe'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">frase_stats.json:</td>
+                        <td class="{'ok' if diagnostico['stats_existe'] else 'warning'}">
+                            {'✅ Existe (' + str(diagnostico.get('stats_tamano_kb', 0)) + ' KB)' if diagnostico['stats_existe'] else '⚠️ No existe'}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>💾 Caché en Memoria</h2>
+                <table>
+                    <tr>
+                        <td class="key">Audios cargados:</td>
+                        <td class="value">{diagnostico['cache_memoria']['audios_cargados']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Frases registradas:</td>
+                        <td class="value">{diagnostico['cache_memoria']['frases_registradas']}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>🌍 Variables de Entorno</h2>
+                <table>
+                    <tr>
+                        <td class="key">CACHE_DIR:</td>
+                        <td class="value">{diagnostico['env_vars']['CACHE_DIR']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">RAILWAY_VOLUME_MOUNT_PATH:</td>
+                        <td class="value">{diagnostico['env_vars']['RAILWAY_VOLUME_MOUNT_PATH']}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>📄 Últimos Archivos (Top 20)</h2>
+                <table>
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Tamaño (KB)</th>
+                    </tr>
+        """
+
+        for archivo in diagnostico['archivos'][:20]:
+            html += f"""
+                    <tr>
+                        <td class="value">{archivo['nombre']}</td>
+                        <td class="value">{archivo['tamano_kb']}</td>
+                    </tr>
+            """
+
+        html += """
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>✅ Recomendaciones</h2>
+                <ul>
+                    <li>Si el directorio NO existe, verifica que el volumen esté montado en Railway</li>
+                    <li>Si NO hay permisos de escritura, verifica la configuración del volumen</li>
+                    <li>Si metadata.json NO existe, el caché no sobrevivirá a reinicios del contenedor</li>
+                    <li>Verifica que RAILWAY_VOLUME_MOUNT_PATH apunte al directorio correcto</li>
+                    <li>Idealmente, CACHE_DIR debe ser igual a RAILWAY_VOLUME_MOUNT_PATH</li>
+                </ul>
+            </div>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "message": "Error al realizar diagnóstico"
+        }, 500
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
     print("=" * 60)
     print("\n📞 Endpoints disponibles:")
-    print("  POST /iniciar-llamada      - Inicia una llamada individual")
-    print("  POST /llamadas-masivas     - Inicia múltiples llamadas")
-    print("  GET  /status/<call_sid>    - Estado de una llamada")
-    print("  GET  /stats                - Ver estadísticas de caché")
+    print("  POST /iniciar-llamada            - Inicia una llamada individual")
+    print("  POST /llamadas-masivas           - Inicia múltiples llamadas")
+    print("  GET  /status/<call_sid>          - Estado de una llamada")
+    print("  GET  /stats                      - Ver estadísticas de caché")
+    print("  POST /generate-cache             - Generar audios manualmente")
+    print("  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente")
     print("\n🌐 URLs de acceso:")
     print("  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
+    print("  🔍 Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia")
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
