@@ -1473,11 +1473,12 @@ class AgenteVentas:
 
             # Patrones SIN nombre - Ofrecimientos de pasar contacto
             # NOTA: Ordenar de más específico a menos específico
-            r'(?:te lo paso|se lo paso|te lo doy)',  # "sí, te lo paso"
-            r'(?:quiere|quieres?)\s+(?:el |su |tu )?(?:contacto|número)',  # "quiere su contacto"
-            r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el|su)\s+(?:contacto|número)',  # "te puedo pasar su contacto"
-            r'(?:le doy|te doy)\s+(?:el|su)\s+(?:contacto|número)',  # "te doy su número"
-            r'(?:te paso|le paso)\s+(?:el|su)\s+(?:contacto|número)',  # "te paso su número"
+            # IMPORTANTE: Usar [oó] para aceptar "paso" y "pasó" (con/sin acento)
+            r'(?:te lo pas[oó]|se lo pas[oó]|te lo doy)',  # "sí, te lo paso" o "te lo pasó"
+            r'(?:quiere|quieres?)\s+(?:el |su |tu )?(?:contacto|n[uú]mero)',  # "quiere su contacto"
+            r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te puedo pasar su contacto"
+            r'(?:le doy|te doy)\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te doy su número"
+            r'(?:te pas[oó]|le pas[oó])\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te paso/pasó su número"
         ]
 
         for patron in patrones_referencia:
