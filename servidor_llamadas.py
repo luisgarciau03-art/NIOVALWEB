@@ -1000,6 +1000,50 @@ def ver_estadisticas():
                     max-width: 600px;
                     word-wrap: break-word;
                 }}
+                .download-section {{
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    margin: 20px 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }}
+                .download-btn {{
+                    background: #4CAF50;
+                    color: white;
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                }}
+                .download-btn:hover {{
+                    background: #45a049;
+                }}
+                .download-btn:disabled {{
+                    background: #ccc;
+                    cursor: not-allowed;
+                }}
+                .select-all-btn {{
+                    background: #2196F3;
+                    color: white;
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-left: 10px;
+                }}
+                .select-all-btn:hover {{
+                    background: #0b7dda;
+                }}
+                input[type="checkbox"] {{
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                }}
             </style>
         </head>
         <body>
@@ -1024,10 +1068,22 @@ def ver_estadisticas():
                 </div>
             </div>
 
+            <div class="download-section">
+                <div>
+                    <span id="selected-count">0 frases seleccionadas</span>
+                    <button class="select-all-btn" onclick="selectAll()">Seleccionar Todo</button>
+                    <button class="select-all-btn" onclick="deselectAll()">Deseleccionar Todo</button>
+                </div>
+                <button class="download-btn" id="generate-btn" onclick="generateSelected()" disabled>
+                    🎤 Generar Audios Seleccionados
+                </button>
+            </div>
+
             <h2>📊 Frases por Frecuencia de Uso</h2>
             <table>
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="select-all-header" onclick="toggleAll()"></th>
                         <th>#</th>
                         <th>Frase</th>
                         <th>Usos</th>
@@ -1051,8 +1107,13 @@ def ver_estadisticas():
             # Limitar longitud de frase para visualización
             frase_display = texto if len(texto) <= 100 else texto[:100] + "..."
 
+            # Checkbox deshabilitado si ya está en caché
+            checkbox_disabled = 'disabled' if en_cache else ''
+            checkbox_html = f'<input type="checkbox" class="frase-checkbox" data-texto="{texto}" data-key="{frase_key}" {checkbox_disabled} onchange="updateSelectedCount()">'
+
             html += f"""
                     <tr>
+                        <td>{checkbox_html}</td>
                         <td>{i}</td>
                         <td class="frase-text">{frase_display}</td>
                         <td><strong>{count}</strong></td>
@@ -1067,6 +1128,76 @@ def ver_estadisticas():
             <p style="margin-top: 20px; color: #666; text-align: center;">
                 Actualizado en tiempo real • Railway Volume Persistente
             </p>
+
+            <script>
+                function updateSelectedCount() {
+                    const checkboxes = document.querySelectorAll('.frase-checkbox:checked');
+                    const count = checkboxes.length;
+                    document.getElementById('selected-count').textContent = count + ' frases seleccionadas';
+                    document.getElementById('generate-btn').disabled = count === 0;
+                }
+
+                function selectAll() {
+                    document.querySelectorAll('.frase-checkbox:not(:disabled)').forEach(cb => {
+                        cb.checked = true;
+                    });
+                    updateSelectedCount();
+                }
+
+                function deselectAll() {
+                    document.querySelectorAll('.frase-checkbox').forEach(cb => {
+                        cb.checked = false;
+                    });
+                    updateSelectedCount();
+                }
+
+                function toggleAll() {
+                    const headerCheckbox = document.getElementById('select-all-header');
+                    document.querySelectorAll('.frase-checkbox:not(:disabled)').forEach(cb => {
+                        cb.checked = headerCheckbox.checked;
+                    });
+                    updateSelectedCount();
+                }
+
+                async function generateSelected() {
+                    const checkboxes = document.querySelectorAll('.frase-checkbox:checked');
+                    const frases = Array.from(checkboxes).map(cb => ({
+                        texto: cb.dataset.texto,
+                        key: cb.dataset.key
+                    }));
+
+                    if (frases.length === 0) {
+                        alert('Selecciona al menos una frase');
+                        return;
+                    }
+
+                    const btn = document.getElementById('generate-btn');
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Generando ' + frases.length + ' audios...';
+
+                    try {
+                        const response = await fetch('/generate-cache', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({frases: frases})
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert('✅ ' + result.generated + ' audios generados correctamente!');
+                            location.reload(); // Recargar para ver cambios
+                        } else {
+                            alert('❌ Error: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('❌ Error al generar audios: ' + error.message);
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = '🎤 Generar Audios Seleccionados';
+                }
+            </script>
         </body>
         </html>
         """
@@ -1080,6 +1211,79 @@ def ver_estadisticas():
         }, 500
 
 
+@app.route("/generate-cache", methods=["POST"])
+def generar_cache_manual():
+    """
+    Endpoint para generar audios de caché manualmente desde la interfaz /stats
+    Recibe: {"frases": [{"texto": "...", "key": "..."}, ...]}
+    """
+    try:
+        data = request.json
+        frases = data.get("frases", [])
+
+        if not frases:
+            return {"success": False, "error": "No se proporcionaron frases"}, 400
+
+        generated_count = 0
+        errors = []
+
+        for frase_data in frases:
+            texto = frase_data.get("texto")
+            key = frase_data.get("key")
+
+            if not texto or not key:
+                continue
+
+            # Verificar si ya existe en caché
+            if key in audio_cache:
+                print(f"⏭️ Omitido: {key} (ya está en caché)")
+                continue
+
+            try:
+                print(f"\n🎤 Generando audio para: {texto[:50]}...")
+
+                # Generar audio con ElevenLabs Multilingual v2
+                audio_generator = elevenlabs_client.text_to_speech.convert(
+                    voice_id=ELEVENLABS_VOICE_ID,
+                    text=texto,
+                    model_id="eleven_multilingual_v2",
+                    output_format="mp3_44100_128"
+                )
+
+                # Guardar en memoria
+                audio_bytes = b"".join(audio_generator)
+                audio_cache[key] = audio_bytes
+
+                # Guardar en disco para persistencia
+                guardar_cache_en_disco(key, audio_bytes)
+
+                generated_count += 1
+                print(f"✅ Audio generado y cacheado: {key}")
+
+            except Exception as e:
+                error_msg = f"Error en '{texto[:30]}...': {str(e)}"
+                errors.append(error_msg)
+                print(f"❌ {error_msg}")
+
+        # Respuesta
+        result = {
+            "success": True,
+            "generated": generated_count,
+            "total_requested": len(frases),
+            "errors": errors if errors else None
+        }
+
+        print(f"\n✅ Generación completada: {generated_count}/{len(frases)} audios")
+        return result
+
+    except Exception as e:
+        print(f"❌ Error en generate-cache: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }, 500
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
@@ -1089,6 +1293,8 @@ if __name__ == "__main__":
     print("  POST /llamadas-masivas     - Inicia múltiples llamadas")
     print("  GET  /status/<call_sid>    - Estado de una llamada")
     print("  GET  /stats                - Ver estadísticas de caché")
+    print("\n🌐 URLs de acceso:")
+    print("  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
