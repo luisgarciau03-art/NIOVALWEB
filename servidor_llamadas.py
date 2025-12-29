@@ -626,21 +626,19 @@ def procesar_respuesta():
 
                 # 2. Manejo de REPROGRAMACIÓN
                 elif agente.lead_data.get("estado_llamada") == "reprogramar" and fila:
-                    # Contexto ya se guardó en guardar_llamada_y_lead()
+                    # Contexto ya se guardó en guardar_llamada_y_lead() en columna W
                     # Columna F ya se limpió para que vuelva a aparecer como pendiente
-                    print(f"📅 Reprogramación guardada - contacto volverá a aparecer")
+                    print(f"📅 Reprogramación guardada en columna W")
 
-                # 3. OTROS ESTADOS - Marcar como completado
-                elif agente.lead_data.get("estado_llamada") and fila:
-                    # Estados: Respondio, Telefono Incorrecto, Colgo, No Contesta
-                    estado_final = agente.lead_data.get("estado_llamada")
-                    sheets_manager.marcar_estado_final(fila, estado_final)
-                    print(f"✅ Estado final marcado en columna F: {estado_final}")
-
-                    # Marcar primera llamada si columnas U,V,W están vacías
+                # 3. OTROS ESTADOS - Solo marcar en U si es primera llamada
+                elif fila:
+                    # NO marcar en columna F
+                    # Solo verificar si es primera llamada y marcar en U
                     if not sheets_manager.verificar_contacto_ya_llamado(fila):
                         sheets_manager.marcar_primera_llamada(fila)
                         print(f"📝 Primera llamada registrada en columna U")
+                    else:
+                        print(f"ℹ️  Contacto ya fue llamado anteriormente (columnas U/V/W tienen datos)")
 
         except Exception as e:
             print(f"❌ Error guardando llamada {call_sid}: {e}")
