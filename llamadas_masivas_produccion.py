@@ -32,13 +32,14 @@ class SistemaLlamadasMasivas:
         self.sheets_adapter = NiovalSheetsAdapter()
         print("✅ Conectado a Google Sheets\n")
 
-    def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 30):
+    def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 30, pedir_confirmacion: bool = True):
         """
         Ejecuta un lote de llamadas reales vía Railway
 
         Args:
             cantidad: Número de llamadas a realizar
             delay_entre_llamadas: Segundos de espera entre llamadas (default: 30)
+            pedir_confirmacion: Si False, omite mensaje de confirmación (default: True)
         """
         print("\n" + "=" * 60)
         print(f"📞 INICIANDO LLAMADAS MASIVAS EN PRODUCCIÓN")
@@ -62,11 +63,12 @@ class SistemaLlamadasMasivas:
         print(f"\n📞 Se realizarán {len(contactos)} llamadas")
         print(f"⏱️  Delay entre llamadas: {delay_entre_llamadas} segundos\n")
 
-        # Confirmar
-        confirmar = input("⚠️  ¿Deseas continuar? (s/n): ").strip().lower()
-        if confirmar != 's':
-            print("❌ Cancelado")
-            return
+        # Confirmar (opcional)
+        if pedir_confirmacion:
+            confirmar = input("⚠️  ¿Deseas continuar? (s/n): ").strip().lower()
+            if confirmar != 's':
+                print("❌ Cancelado")
+                return
 
         # Ejecutar llamadas
         resultados = {
@@ -191,7 +193,7 @@ def main():
                 sistema.ver_estadisticas()
 
             elif opcion == "2":
-                sistema.ejecutar_llamadas(cantidad=1, delay_entre_llamadas=30)
+                sistema.ejecutar_llamadas(cantidad=1, delay_entre_llamadas=30, pedir_confirmacion=False)
 
             elif opcion == "3":
                 sistema.ejecutar_llamadas(cantidad=2, delay_entre_llamadas=30)
