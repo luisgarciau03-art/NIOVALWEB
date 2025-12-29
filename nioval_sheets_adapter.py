@@ -135,51 +135,112 @@ class NiovalSheetsAdapter:
         Verifica si un contacto ya fue llamado anteriormente
         Revisa si las columnas U (Referencia), V (Intentos buzón), W (Contexto) tienen contenido
 
+        NOTA: Si el número en columna E cambió desde la última llamada, se considera NUEVO contacto
+
         Args:
             fila: Número de fila a verificar
 
         Returns:
-            True si ya fue llamado, False si es primera vez
+            True si ya fue llamado (y número NO cambió), False si es primera vez o número cambió
         """
         try:
-            # Verificar columna U (Referencia) - índice 21
-            referencia = self.hoja_contactos.cell(fila, 21).value
-            if referencia and referencia.strip():
-                return True
+            # 1. Verificar si hay datos en U/V/W
+            referencia = self.hoja_contactos.cell(fila, 21).value  # U
+            intentos = self.hoja_contactos.cell(fila, 22).value    # V
+            contexto = self.hoja_contactos.cell(fila, 23).value    # W
 
-            # Verificar columna V (Intentos buzón) - índice 22
-            intentos = self.hoja_contactos.cell(fila, 22).value
-            if intentos and intentos.strip():
-                return True
+            tiene_historial = bool(
+                (referencia and referencia.strip()) or
+                (intentos and intentos.strip()) or
+                (contexto and contexto.strip())
+            )
 
-            # Verificar columna W (Contexto reprogramación) - índice 23
-            contexto = self.hoja_contactos.cell(fila, 23).value
-            if contexto and contexto.strip():
-                return True
+            if not tiene_historial:
+                # No hay historial, es primera vez
+                return False
 
-            # Si todas están vacías, no ha sido llamado
-            return False
+            # 2. Si tiene historial, verificar si el número cambió
+            numero_cambio = self.verificar_cambio_numero(fila)
+
+            if numero_cambio:
+                print(f"🔄 Fila {fila}: Número cambió desde última llamada - permitir re-contacto")
+                return False  # Permitir llamar aunque tenga historial
+
+            # 3. Tiene historial y número NO cambió = ya fue llamado
+            return True
 
         except Exception as e:
             print(f"⚠️ Error verificando si contacto fue llamado: {e}")
             return False  # En caso de error, asumir que no fue llamado
 
-    def marcar_primera_llamada(self, fila: int):
+    def verificar_cambio_numero(self, fila: int) -> bool:
+        """
+        Verifica si el número en columna E cambió desde la última llamada
+
+        Args:
+            fila: Número de fila a verificar
+
+        Returns:
+            True si el número cambió, False si sigue igual o no hay registro previo
+        """
+        try:
+            # Obtener número actual en columna E (índice 5)
+            numero_actual = self.hoja_contactos.cell(fila, 5).value
+            if not numero_actual:
+                return False
+
+            # Normalizar número actual
+            numero_actual_normalizado = self.normalizar_numero(numero_actual)
+            if not numero_actual_normalizado:
+                return False
+
+            # Obtener registro previo en columna U (formato: "NUM:6623534185|Primera llamada: 2025-01-15 10:30")
+            registro_u = self.hoja_contactos.cell(fila, 21).value
+
+            if not registro_u or not registro_u.strip():
+                # No hay registro previo
+                return False
+
+            # Extraer número guardado del registro (formato: NUM:XXXXXXXXXX|...)
+            if registro_u.startswith("NUM:"):
+                numero_previo = registro_u.split("|")[0].replace("NUM:", "").strip()
+
+                if numero_previo != numero_actual_normalizado:
+                    print(f"   📞 Número anterior: {numero_previo}")
+                    print(f"   📞 Número actual: {numero_actual_normalizado}")
+                    return True
+
+            return False
+
+        except Exception as e:
+            print(f"⚠️ Error verificando cambio de número: {e}")
+            return False
+
+    def marcar_primera_llamada(self, fila: int, numero_llamado: str = None):
         """
         Marca que se realizó la primera llamada a este contacto
         Guarda timestamp en columna U para indicar que ya fue contactado
+        También guarda el número llamado para detectar cambios futuros
 
         Args:
             fila: Número de fila
+            numero_llamado: Número de teléfono que se llamó (normalizado)
         """
         try:
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-            marca = f"Primera llamada: {timestamp}"
+
+            # Si no se proporcionó número, obtenerlo de columna E
+            if not numero_llamado:
+                numero_raw = self.hoja_contactos.cell(fila, 5).value
+                numero_llamado = self.normalizar_numero(numero_raw) if numero_raw else "DESCONOCIDO"
+
+            # Formato: NUM:XXXXXXXXXX|Primera llamada: YYYY-MM-DD HH:MM
+            marca = f"NUM:{numero_llamado}|Primera llamada: {timestamp}"
 
             # Guardar en columna U (índice 21)
             self.hoja_contactos.update_cell(fila, 21, marca)
-            print(f"✅ Primera llamada marcada en fila {fila} (columna U)")
+            print(f"✅ Primera llamada marcada en fila {fila} (columna U) - Número: {numero_llamado}")
 
         except Exception as e:
             print(f"❌ Error al marcar primera llamada: {e}")
@@ -340,22 +401,29 @@ class NiovalSheetsAdapter:
         except Exception as e:
             print(f"❌ Error al registrar email: {e}")
 
-    def guardar_referencia(self, fila_destino: int, nombre_referidor: str, telefono_referidor: str = "", contexto: str = ""):
+    def guardar_referencia(self, fila_destino: int, nombre_referidor: str, telefono_referidor: str = "", contexto: str = "", numero_llamado: str = None):
         """
         Guarda información de referencia en columna U del contacto destino
+        IMPORTANTE: Preserva el número original para detectar cambios futuros
 
         Args:
             fila_destino: Fila del contacto que fue referido
             nombre_referidor: Nombre de quien refirió
             telefono_referidor: Teléfono de quien refirió (opcional)
             contexto: Contexto adicional (opcional)
+            numero_llamado: Número que se llamó originalmente (para detectar cambios)
         """
         try:
-            # Formato: "Ref: Juan (+523312345678) - 2025-12-28 - Encargado de compras"
             from datetime import datetime
             fecha = datetime.now().strftime("%Y-%m-%d")
 
-            referencia = f"Ref: {nombre_referidor}"
+            # Si no se proporcionó número, obtenerlo de columna E
+            if not numero_llamado:
+                numero_raw = self.hoja_contactos.cell(fila_destino, 5).value
+                numero_llamado = self.normalizar_numero(numero_raw) if numero_raw else "DESCONOCIDO"
+
+            # Formato: "NUM:XXXXXXXXXX|Ref: Juan (+523312345678) - 2025-12-28 - Encargado de compras"
+            referencia = f"NUM:{numero_llamado}|Ref: {nombre_referidor}"
             if telefono_referidor:
                 referencia += f" ({telefono_referidor})"
             referencia += f" - {fecha}"
@@ -372,6 +440,7 @@ class NiovalSheetsAdapter:
     def obtener_referencia(self, fila: int) -> Optional[str]:
         """
         Obtiene la información de referencia de la columna U
+        Elimina el prefijo NUM:XXXXXXXXXX| si existe
 
         Args:
             fila: Número de fila
@@ -384,12 +453,54 @@ class NiovalSheetsAdapter:
             valor = self.hoja_contactos.cell(fila, 21).value
 
             if valor and valor.strip():
+                # Si tiene formato NUM:XXXXXXXXXX|..., extraer solo la parte después del pipe
+                if "|" in valor:
+                    return valor.split("|", 1)[1].strip()
                 return valor.strip()
             return None
 
         except Exception as e:
             print(f"⚠️ Error al obtener referencia: {e}")
             return None
+
+    def obtener_historial_completo(self, fila: int) -> Dict[str, str]:
+        """
+        Obtiene todo el historial de contacto previo (columnas U, V, W)
+        Útil para cargar contexto cuando hay cambio de número
+
+        Args:
+            fila: Número de fila
+
+        Returns:
+            Dict con 'referencia', 'intentos_buzon', 'contexto_reprogramacion'
+        """
+        try:
+            # Obtener valores de U, V, W
+            referencia = self.hoja_contactos.cell(fila, 21).value  # U
+            intentos = self.hoja_contactos.cell(fila, 22).value    # V
+            contexto = self.hoja_contactos.cell(fila, 23).value    # W
+
+            # Procesar referencia (quitar prefijo NUM:)
+            referencia_limpia = None
+            if referencia and referencia.strip():
+                if "|" in referencia:
+                    referencia_limpia = referencia.split("|", 1)[1].strip()
+                else:
+                    referencia_limpia = referencia.strip()
+
+            return {
+                'referencia': referencia_limpia,
+                'intentos_buzon': intentos.strip() if intentos else None,
+                'contexto_reprogramacion': contexto.strip() if contexto else None
+            }
+
+        except Exception as e:
+            print(f"⚠️ Error al obtener historial completo: {e}")
+            return {
+                'referencia': None,
+                'intentos_buzon': None,
+                'contexto_reprogramacion': None
+            }
 
     def obtener_contador_intentos_buzon(self, fila: int) -> int:
         """

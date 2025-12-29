@@ -1920,6 +1920,27 @@ Responde SOLO en este formato JSON:
         Construye un prompt optimizado enviando solo las secciones relevantes
         según el estado actual de la conversación. Esto reduce tokens y mejora velocidad.
         """
+        # Agregar historial previo si hay cambio de número
+        contexto_recontacto = ""
+        if self.contacto_info and self.contacto_info.get('historial_previo'):
+            historial = self.contacto_info['historial_previo']
+
+            if any(historial.values()):
+                contexto_recontacto = "\n# CONTEXTO DE RE-CONTACTO (NÚMERO CAMBIÓ)\n"
+                contexto_recontacto += "⚠️ IMPORTANTE: Ya contactamos a esta tienda anteriormente con otro número.\n"
+                contexto_recontacto += "El contacto anterior nos dio este nuevo número de teléfono.\n\n"
+
+                if historial.get('referencia'):
+                    contexto_recontacto += f"📋 Referencia anterior: {historial['referencia']}\n"
+
+                if historial.get('contexto_reprogramacion'):
+                    contexto_recontacto += f"📅 Contexto de reprogramación: {historial['contexto_reprogramacion']}\n"
+
+                if historial.get('intentos_buzon'):
+                    contexto_recontacto += f"📞 Intentos previos: {historial['intentos_buzon']}\n"
+
+                contexto_recontacto += "\n💡 Usa este contexto para ser más efectivo. Menciona que ya contactamos la tienda si es relevante.\n\n"
+
         # Agregar memoria de corto plazo (últimas 3 respuestas del cliente)
         memoria_corto_plazo = ""
         respuestas_recientes = [msg for msg in self.conversation_history if msg["role"] == "user"]
@@ -1932,7 +1953,7 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "\nIMPORTANTE: NO repitas preguntas que ya respondieron. Si ya dijeron 'no está', NO vuelvas a preguntar si está.\n\n"
 
         # Sección base (siempre se incluye)
-        prompt_base = memoria_corto_plazo + """# IDENTIDAD
+        prompt_base = contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
 Teléfono: 662 415 1997 (di: seis seis dos, cuatro uno cinco, uno nueve nueve siete)
 
@@ -2167,11 +2188,13 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         telefono_referidor = self.contacto_info.get('telefono', '')
                         contexto = self.lead_data.get('referencia_contexto', '')
 
+                        # Pasar también el número que se está guardando para detectar cambios futuros
                         self.sheets_manager.guardar_referencia(
                             fila_destino=fila_referido,
                             nombre_referidor=nombre_referidor,
                             telefono_referidor=telefono_referidor,
-                            contexto=contexto
+                            contexto=contexto,
+                            numero_llamado=telefono_referido  # Número del nuevo contacto
                         )
                         print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
                     else:

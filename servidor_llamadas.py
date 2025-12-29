@@ -433,6 +433,28 @@ def webhook_voz():
     # Obtener info del contacto si existe
     contacto_info = contactos_llamadas.get(call_sid, {})
 
+    # Verificar si hay cambio de número y cargar historial previo
+    historial_previo = None
+    if contacto_info and sheets_manager:
+        fila = contacto_info.get('fila') or contacto_info.get('ID')
+        if fila:
+            # Verificar si el número cambió
+            if sheets_manager.verificar_cambio_numero(fila):
+                print(f"\n🔄 NÚMERO CAMBIÓ - Cargando historial previo para contexto...")
+                historial_previo = sheets_manager.obtener_historial_completo(fila)
+
+                if any(historial_previo.values()):
+                    print(f"📚 Historial cargado:")
+                    if historial_previo['referencia']:
+                        print(f"   - Referencia: {historial_previo['referencia'][:80]}...")
+                    if historial_previo['intentos_buzon']:
+                        print(f"   - Intentos buzón: {historial_previo['intentos_buzon']}")
+                    if historial_previo['contexto_reprogramacion']:
+                        print(f"   - Contexto: {historial_previo['contexto_reprogramacion'][:80]}...")
+
+                # Agregar historial al contacto_info para que el agente lo use
+                contacto_info['historial_previo'] = historial_previo
+
     # Crear nueva conversación con Google Sheets y WhatsApp Validator
     agente = AgenteVentas(
         contacto_info=contacto_info,
@@ -635,8 +657,10 @@ def procesar_respuesta():
                     # NO marcar en columna F
                     # Solo verificar si es primera llamada y marcar en U
                     if not sheets_manager.verificar_contacto_ya_llamado(fila):
-                        sheets_manager.marcar_primera_llamada(fila)
-                        print(f"📝 Primera llamada registrada en columna U")
+                        # Obtener el número llamado del contacto_info
+                        telefono_llamado = agente.contacto_info.get('telefono')
+                        sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
+                        print(f"📝 Primera llamada registrada en columna U con número: {telefono_llamado}")
                     else:
                         print(f"ℹ️  Contacto ya fue llamado anteriormente (columnas U/V/W tienen datos)")
 
