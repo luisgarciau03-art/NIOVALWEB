@@ -2210,7 +2210,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             break
 
                     if fila_referido:
-                        # Guardar referencia en columna U del contacto referido
+                        # 1. Guardar referencia en columna U del contacto referido (nueva fila)
                         nombre_referidor = self.contacto_info.get('nombre_negocio', 'Cliente')
                         telefono_referidor = self.contacto_info.get('telefono', '')
                         contexto = self.lead_data.get('referencia_contexto', '')
@@ -2224,9 +2224,37 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             numero_llamado=telefono_referido  # Número del nuevo contacto
                         )
                         print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
+
+                        # 2. Guardar contexto en columna W de la fila ACTUAL indicando que dio una referencia
+                        nombre_ref = self.lead_data.get('referencia_nombre', 'Encargado')
+                        if not nombre_ref:
+                            nombre_ref = "Encargado"
+
+                        contexto_actual = f"Dio referencia: {nombre_ref} ({telefono_referido}) - {contexto[:50]}"
+                        self.sheets_manager.guardar_contexto_reprogramacion(
+                            fila=fila,
+                            fecha="Referencia dada",
+                            motivo=f"Pasó contacto de {nombre_ref}",
+                            notas=contexto_actual
+                        )
+                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+
                     else:
                         print(f"⚠️ No se encontró el número {telefono_referido} en LISTA DE CONTACTOS")
                         print(f"   La referencia NO se guardó - agregar el contacto manualmente")
+
+                        # Guardar en columna W que dio una referencia pero no está en la lista
+                        nombre_ref = self.lead_data.get('referencia_nombre', 'Encargado')
+                        if not nombre_ref:
+                            nombre_ref = "Encargado"
+
+                        self.sheets_manager.guardar_contexto_reprogramacion(
+                            fila=fila,
+                            fecha="Referencia no encontrada",
+                            motivo=f"Dio número {telefono_referido} ({nombre_ref}) - NO ESTÁ EN LISTA",
+                            notas="Agregar contacto manualmente a LISTA DE CONTACTOS"
+                        )
+                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
 
                 # Guardar contexto de reprogramación si el cliente pidió ser llamado después
                 if self.lead_data.get("estado_llamada") == "reprogramar" and fila:
