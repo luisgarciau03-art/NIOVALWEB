@@ -2112,6 +2112,10 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             else:
                 print(f"❌ Error al guardar resultados")
 
+            print("\n" + "=" * 60)
+            print("📋 ACTUALIZACIONES EN LISTA DE CONTACTOS")
+            print("=" * 60)
+
             # Actualizar WhatsApp y Email en LISTA DE CONTACTOS si están disponibles
             if self.sheets_manager and self.contacto_info:
                 fila = self.contacto_info.get('fila') or self.contacto_info.get('ID')
@@ -2193,6 +2197,14 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                     # Limpiar columna F para que vuelva a aparecer como pendiente
                     self.sheets_manager.marcar_estado_final(fila, "")
                     print(f"✅ Columna F limpiada - contacto volverá a aparecer como pendiente")
+            else:
+                print("⚠️ No hay sheets_manager o contacto_info - omitiendo actualizaciones")
+                print(f"   sheets_manager: {'✓' if self.sheets_manager else '✗'}")
+                print(f"   contacto_info: {'✓' if self.contacto_info else '✗'}")
+
+            print("\n" + "=" * 60)
+            print("✅ GUARDADO COMPLETO - Todos los datos procesados")
+            print("=" * 60 + "\n")
 
         except Exception as e:
             print(f"❌ Error al guardar llamada: {e}")
