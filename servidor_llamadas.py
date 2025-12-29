@@ -221,7 +221,13 @@ def pre_generar_audios_cache():
 
     print("🔧 Pre-generando caché de audios con Multilingual v2...")
     for key, texto in frases_comunes.items():
+        # IMPORTANTE: Solo generar si NO existe en cache (ahorra créditos)
+        if key in audio_cache:
+            print(f"  ⏭️ Omitido: {key} (ya existe en cache)")
+            continue
+
         try:
+            print(f"  🎙️ Generando: {key}...")
             # Usar Multilingual v2 para frases comunes (mejor acento)
             audio_generator = elevenlabs_client.text_to_speech.convert(
                 voice_id=ELEVENLABS_VOICE_ID,
