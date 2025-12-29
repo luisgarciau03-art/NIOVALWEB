@@ -458,6 +458,9 @@ def webhook_voz():
     # Crear respuesta TwiML
     response = VoiceResponse()
 
+    # PAUSA DE 2 SEGUNDOS - Dar tiempo al cliente de decir "Hola" primero
+    response.pause(length=2)
+
     # Reproducir audio de ElevenLabs
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)

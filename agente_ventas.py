@@ -1454,12 +1454,13 @@ class AgenteVentas:
             print(f"📧 Email detectado: {self.lead_data['email']}")
 
         # Detectar referencias (cuando el cliente pasa contacto de otra persona)
-        # Frases: "te paso el contacto de Juan", "mi compañero Luis", "habla con Pedro", etc.
+        # Frases: "te paso el contacto de Juan", "mi compañero Luis", "habla con Pedro", "Sí Ana", etc.
         patrones_referencia = [
             r'(?:te paso|paso|pasa)\s+(?:el )?contacto\s+(?:de|del)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:contacta|habla con|llama a|comunicate con)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:es|se llama)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+(?:el|la|quien)',
+            r'^(?:sí|si|ok|bueno|claro)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+',  # "Sí Ana tienes..."
         ]
 
         for patron in patrones_referencia:
