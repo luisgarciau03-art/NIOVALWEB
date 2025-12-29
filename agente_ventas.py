@@ -1493,19 +1493,53 @@ class AgenteVentas:
                         print(f"   Contexto: {texto[:100]}...")
                     break
 
-        # Si tenemos una referencia pendiente y el cliente dice un número, capturarlo como referencia
-        if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
-            # Buscar número en el texto actual
-            for patron in patrones_tel:
-                match = re.search(patron, texto_lower)
-                if match:
-                    numero = re.sub(r'[^\d]', '', match.group(0))
-                    if len(numero) == 10:
-                        numero_completo = f"+52{numero}"
-                        self.lead_data["referencia_telefono"] = numero_completo
-                        print(f"📞 Número de referencia detectado: {numero_completo}")
-                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
-                        break
+        # Si tenemos una referencia pendiente, capturar nombre o número
+        if "referencia_nombre" in self.lead_data:
+            # 1. Si ya tenemos nombre pero falta número, buscar número
+            if self.lead_data.get("referencia_nombre") and not self.lead_data.get("referencia_telefono"):
+                for patron in patrones_tel:
+                    match = re.search(patron, texto_lower)
+                    if match:
+                        numero = re.sub(r'[^\d]', '', match.group(0))
+                        if len(numero) == 10:
+                            numero_completo = f"+52{numero}"
+                            self.lead_data["referencia_telefono"] = numero_completo
+                            print(f"📞 Número de referencia detectado: {numero_completo}")
+                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                            break
+
+            # 2. Si NO tenemos nombre pero sí número, buscar nombre con patrones simples
+            elif not self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
+                # Patrones para capturar nombres: "se llama Juan", "es Pedro", "su nombre es María"
+                patrones_nombre = [
+                    r'(?:se llama|llama)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+                    r'(?:es|nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+                    r'^(?:sí|si),?\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+                ]
+
+                for patron in patrones_nombre:
+                    match = re.search(patron, texto, re.IGNORECASE)
+                    if match:
+                        nombre = match.group(1).strip()
+                        palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información', 'ese', 'este']
+                        if nombre.lower() not in palabras_invalidas and len(nombre) > 2:
+                            self.lead_data["referencia_nombre"] = nombre
+                            print(f"👤 Nombre de referencia detectado: {nombre}")
+                            print(f"   Asociado al número: {self.lead_data.get('referencia_telefono')}")
+                            break
+
+            # 3. Si NO tenemos nombre ni número, buscar número
+            elif not self.lead_data.get("referencia_telefono"):
+                for patron in patrones_tel:
+                    match = re.search(patron, texto_lower)
+                    if match:
+                        numero = re.sub(r'[^\d]', '', match.group(0))
+                        if len(numero) == 10:
+                            numero_completo = f"+52{numero}"
+                            self.lead_data["referencia_telefono"] = numero_completo
+                            print(f"📞 Número de referencia detectado: {numero_completo}")
+                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                            break
 
         # Detectar productos de interés
         productos_keywords = {
@@ -2191,8 +2225,8 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                     )
                     print(f"✅ Email actualizado en LISTA DE CONTACTOS")
 
-                # Guardar referencia si se detectó una
-                if self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
+                # Guardar referencia si se detectó una (solo necesitamos el teléfono)
+                if "referencia_nombre" in self.lead_data and self.lead_data.get("referencia_telefono"):
                     print(f"\n👥 Procesando referencia...")
                     print(f"   Nombre del referido: {self.lead_data['referencia_nombre']}")
                     print(f"   Teléfono del referido: {self.lead_data['referencia_telefono']}")
