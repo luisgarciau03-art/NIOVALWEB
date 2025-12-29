@@ -9,6 +9,7 @@ from twilio.rest import Client
 import os
 import tempfile
 import threading
+import json
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
