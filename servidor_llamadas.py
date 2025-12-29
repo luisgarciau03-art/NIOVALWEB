@@ -151,20 +151,73 @@ def guardar_stats_en_disco():
         json.dump(frase_stats, f, ensure_ascii=False, indent=2)
 
 
+def normalizar_frase_con_nombres(texto):
+    """
+    Detecta nombres propios en frases y los convierte en placeholders (NAME)
+    para crear plantillas universales de audio
+
+    Ejemplos:
+    - "Entiendo, Rodrigo. ¿Me podrías..." → "Entiendo, (NAME). ¿Me podrías..."
+    - "Mucho gusto, Juan." → "Mucho gusto, (NAME)."
+    """
+    import re
+
+    # Patrones para detectar nombres después de palabras clave
+    patrones_nombre = [
+        r'\b(Mucho gusto|Perfecto|Entiendo|Claro|Gracias|Hola),\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',  # "Mucho gusto, Juan"
+        r'\b(señor|señora|don|doña)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',  # "señor Juan"
+    ]
+
+    texto_normalizado = texto
+    nombre_detectado = None
+
+    for patron in patrones_nombre:
+        match = re.search(patron, texto)
+        if match:
+            palabra_clave = match.group(1)
+            nombre = match.group(2)
+
+            # Filtrar palabras que no son nombres
+            palabras_invalidas = ['verdad', 'favor', 'tiempo', 'momento', 'información', 'contacto', 'número']
+            if nombre.lower() not in palabras_invalidas:
+                # Reemplazar nombre con placeholder
+                texto_normalizado = texto.replace(f"{palabra_clave}, {nombre}", f"{palabra_clave}, (NAME)")
+                texto_normalizado = texto_normalizado.replace(f"{palabra_clave} {nombre}", f"{palabra_clave} (NAME)")
+                nombre_detectado = nombre
+                break
+
+    return texto_normalizado, nombre_detectado
+
+
 def registrar_frase_usada(texto):
     """
     Registra una frase usada y auto-genera caché si alcanza frecuencia mínima
+    Detecta nombres y crea plantillas universales con (NAME)
     """
-    # Normalizar texto (quitar espacios extras, lowercase para comparación)
+    # Normalizar texto (quitar espacios extras)
     texto_norm = " ".join(texto.split()).strip()
 
-    # Generar key único basado en primeras palabras
-    palabras = texto_norm.split()[:8]  # Primeras 8 palabras
+    # Detectar y normalizar nombres → plantilla universal
+    texto_plantilla, nombre_detectado = normalizar_frase_con_nombres(texto_norm)
+
+    # Si se detectó un nombre, usar la plantilla universal
+    if nombre_detectado:
+        print(f"👤 Nombre detectado: '{nombre_detectado}' → Usando plantilla universal")
+        texto_para_cache = texto_plantilla
+    else:
+        texto_para_cache = texto_norm
+
+    # Generar key único basado en primeras palabras de la plantilla
+    palabras = texto_para_cache.split()[:8]  # Primeras 8 palabras
     frase_key = "_".join(palabras).lower()
 
     # Incrementar contador
     if frase_key not in frase_stats:
-        frase_stats[frase_key] = {"texto": texto, "count": 0}
+        frase_stats[frase_key] = {
+            "texto": texto_para_cache,  # Guardar plantilla universal
+            "count": 0,
+            "tiene_nombre": bool(nombre_detectado)
+        }
 
     frase_stats[frase_key]["count"] += 1
     count = frase_stats[frase_key]["count"]
@@ -174,14 +227,14 @@ def registrar_frase_usada(texto):
 
     # Auto-generar caché si alcanza frecuencia mínima
     if count == FRECUENCIA_MIN_CACHE and frase_key not in audio_cache:
-        print(f"\n🔥 Frase frecuente detectada ({count} usos): {texto[:50]}...")
+        print(f"\n🔥 Frase frecuente detectada ({count} usos): {texto_para_cache[:50]}...")
         print(f"   Generando caché automático con Multilingual v2...")
 
         try:
-            # Generar audio con Multilingual v2 (mejor calidad)
+            # Generar audio con Multilingual v2 usando la plantilla universal
             audio_generator = elevenlabs_client.text_to_speech.convert(
                 voice_id=ELEVENLABS_VOICE_ID,
-                text=texto,
+                text=texto_para_cache,  # Usar plantilla con (NAME) si tiene nombre
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128"
             )
@@ -196,9 +249,11 @@ def registrar_frase_usada(texto):
             audio_cache[frase_key] = temp_file.name
 
             # Guardar en disco para persistencia
-            guardar_cache_en_disco(frase_key, texto, temp_file.name)
+            guardar_cache_en_disco(frase_key, texto_para_cache, temp_file.name)
 
             print(f"   ✅ Caché auto-generado: {frase_key}")
+            if nombre_detectado:
+                print(f"   📝 Guardado como plantilla universal con (NAME)")
 
         except Exception as e:
             print(f"   ❌ Error generando caché automático: {e}")
