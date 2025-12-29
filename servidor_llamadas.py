@@ -495,16 +495,18 @@ def procesar_respuesta():
     response.play(audio_url)
 
     # Verificar si debe terminar (solo si Bruce se despide explícitamente)
-    # IMPORTANTE: Usar frases COMPLETAS para evitar falsos positivos
+    # IMPORTANTE: Usar frases distintivas que solo aparecen en despedidas
     debe_terminar = False
 
-    # Despedidas explícitas de Bruce (frases completas)
+    # Despedidas explícitas de Bruce (frases distintivas)
     despedidas_bruce = [
         "gracias por su tiempo",
         "hasta pronto",
-        "que tenga excelente tarde",
-        "que tenga excelente día",
-        "que tenga buen día",
+        "hasta luego",
+        "que tenga excelente",  # Captura: "que tenga excelente tarde/día"
+        "que tengas excelente", # Captura: "que tengas excelente tarde/día"
+        "que tenga un excelente",  # Captura: "que tenga un excelente día"
+        "que tengas un excelente", # Captura: "que tengas un excelente día"
         "que le vaya bien"
     ]
 
