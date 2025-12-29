@@ -370,20 +370,22 @@ def servir_audio(audio_id):
 def iniciar_llamada():
     """
     Endpoint para iniciar una llamada saliente
-    
+
     Body JSON:
     {
         "telefono": "+52XXXXXXXXXX",
-        "nombre_negocio": "Ferretería ejemplo"
+        "nombre_negocio": "Ferretería ejemplo",
+        "contacto_info": {...}  # Información completa del contacto (opcional)
     }
     """
     data = request.json
     telefono_destino = data.get("telefono")
     nombre_negocio = data.get("nombre_negocio", "cliente")
-    
+    contacto_info = data.get("contacto_info", None)  # Info completa del contacto
+
     if not telefono_destino:
         return {"error": "Teléfono requerido"}, 400
-    
+
     try:
         # Crear llamada con Twilio (con grabación automática habilitada)
         call = twilio_client.calls.create(
@@ -395,10 +397,17 @@ def iniciar_llamada():
         )
 
         # Guardar info del contacto para usar en el webhook
-        contactos_llamadas[call.sid] = {
-            "telefono": telefono_destino,
-            "nombre_negocio": nombre_negocio
-        }
+        if contacto_info:
+            # Si se envió contacto_info completo, usarlo
+            contactos_llamadas[call.sid] = contacto_info
+            print(f"📋 Contacto completo guardado para Call SID {call.sid[:10]}... (fila {contacto_info.get('fila', 'N/A')})")
+        else:
+            # Si no, guardar solo lo básico (compatibilidad con llamadas antiguas)
+            contactos_llamadas[call.sid] = {
+                "telefono": telefono_destino,
+                "nombre_negocio": nombre_negocio
+            }
+            print(f"📋 Contacto básico guardado para Call SID {call.sid[:10]}...")
 
         return {
             "success": True,
@@ -542,6 +551,7 @@ def procesar_respuesta():
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
+    print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
 
     # Generar audio con ElevenLabs - detectar si puede usar caché
     audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
@@ -592,8 +602,32 @@ def procesar_respuesta():
         try:
             agente.guardar_llamada_y_lead()
             print(f"✅ Llamada {call_sid} guardada correctamente")
+
+            # Manejo post-guardado: Buzón y Reprogramación
+            if sheets_manager and agente.contacto_info:
+                fila = agente.contacto_info.get('fila') or agente.contacto_info.get('ID')
+
+                # 1. Manejo de BUZÓN - Marcar intentos y mover al final
+                if agente.lead_data.get("estado_llamada") == "Buzon" and fila:
+                    print(f"\n📞 Llamada cayó en buzón - manejando reintento...")
+                    intentos = sheets_manager.marcar_intento_buzon(fila)
+
+                    if intentos <= 3:
+                        # Intentos 1, 2, 3 - mover al final para reintentar
+                        sheets_manager.mover_fila_al_final(fila)
+                        print(f"📋 Fila {fila} movida al final (intento #{intentos}/3)")
+                    else:
+                        # Intento 4+ - marcar como BUZON definitivo
+                        sheets_manager.marcar_estado_final(fila, "BUZON")
+                        print(f"❌ Fila {fila} marcada como BUZON (máximo 3 intentos alcanzado)")
+
+                # 2. Manejo de REPROGRAMACIÓN - Ya se guarda en guardar_llamada_y_lead()
+                # (No necesita acción adicional aquí, ya se maneja en agente_ventas.py línea 2165)
+
         except Exception as e:
             print(f"❌ Error guardando llamada {call_sid}: {e}")
+            import traceback
+            traceback.print_exc()
 
         # Limpiar memoria
         del conversaciones_activas[call_sid]

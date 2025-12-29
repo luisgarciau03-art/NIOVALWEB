@@ -1919,8 +1919,19 @@ Responde SOLO en este formato JSON:
         Construye un prompt optimizado enviando solo las secciones relevantes
         según el estado actual de la conversación. Esto reduce tokens y mejora velocidad.
         """
+        # Agregar memoria de corto plazo (últimas 3 respuestas del cliente)
+        memoria_corto_plazo = ""
+        respuestas_recientes = [msg for msg in self.conversation_history if msg["role"] == "user"]
+        if len(respuestas_recientes) > 0:
+            ultimas_3 = respuestas_recientes[-3:]
+            memoria_corto_plazo = "\n# MEMORIA DE LA CONVERSACIÓN ACTUAL\n"
+            memoria_corto_plazo += "El cliente acaba de decir:\n"
+            for i, resp in enumerate(ultimas_3, 1):
+                memoria_corto_plazo += f"{i}. \"{resp['content']}\"\n"
+            memoria_corto_plazo += "\nIMPORTANTE: NO repitas preguntas que ya respondieron. Si ya dijeron 'no está', NO vuelvas a preguntar si está.\n\n"
+
         # Sección base (siempre se incluye)
-        prompt_base = """# IDENTIDAD
+        prompt_base = memoria_corto_plazo + """# IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
 Teléfono: 662 415 1997 (di: seis seis dos, cuatro uno cinco, uno nueve nueve siete)
 
