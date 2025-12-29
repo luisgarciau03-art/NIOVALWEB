@@ -1496,7 +1496,7 @@ class AgenteVentas:
         # Si tenemos una referencia pendiente y el cliente dice un número, capturarlo como referencia
         if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
             # Buscar número en el texto actual
-            for patron in patrones_telefono:
+            for patron in patrones_tel:
                 match = re.search(patron, texto_lower)
                 if match:
                     numero = re.sub(r'[^\d]', '', match.group(0))
