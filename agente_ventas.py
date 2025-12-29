@@ -1084,7 +1084,7 @@ class AgenteVentas:
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
-            "contacto_id": contacto_info.get('ID') if contacto_info else None,
+            "contacto_id": (contacto_info.get('fila') or contacto_info.get('ID')) if contacto_info else None,
             "nombre_contacto": "",
             "nombre_negocio": contacto_info.get('nombre_negocio', contacto_info.get('Nombre Negocio', '')) if contacto_info else "",
             "telefono": contacto_info.get('telefono', contacto_info.get('Teléfono', '')) if contacto_info else "",
@@ -2114,7 +2114,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 
             # Actualizar WhatsApp y Email en LISTA DE CONTACTOS si están disponibles
             if self.sheets_manager and self.contacto_info:
-                fila = self.contacto_info.get('ID')
+                fila = self.contacto_info.get('fila') or self.contacto_info.get('ID')
                 print(f"\n📝 Verificando actualización en LISTA DE CONTACTOS...")
                 print(f"   Fila: {fila}")
                 print(f"   WhatsApp capturado: {self.lead_data['whatsapp']}")
