@@ -494,21 +494,22 @@ def procesar_respuesta():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # Verificar si debe terminar (palabras clave de despedida del CLIENTE)
-    palabras_despedida = [
-        # Despedidas del agente
-        "gracias por su tiempo", "hasta pronto", "hasta luego", "que tenga excelente",
-        "que tenga buen día", "buenas tardes", "que le vaya bien",
-        # Despedidas del cliente detectadas en respuesta
-        "adiós", "adios", "bye", "nos vemos", "luego hablamos",
-        "lo reviso", "lo revisare", "lo revisaré", "ya te contacto"
+    # Verificar si debe terminar (solo si Bruce se despide explícitamente)
+    # IMPORTANTE: Usar frases COMPLETAS para evitar falsos positivos
+    debe_terminar = False
+
+    # Despedidas explícitas de Bruce (frases completas)
+    despedidas_bruce = [
+        "gracias por su tiempo",
+        "hasta pronto",
+        "que tenga excelente tarde",
+        "que tenga excelente día",
+        "que tenga buen día",
+        "que le vaya bien"
     ]
 
-    debe_terminar = any(palabra in respuesta_agente.lower() for palabra in palabras_despedida)
-
-    # También terminar si Bruce ya dijo "Hasta pronto" o similar
-    if "hasta pronto" in respuesta_agente.lower() or "que tenga excelente tarde" in respuesta_agente.lower():
-        debe_terminar = True
+    respuesta_lower = respuesta_agente.lower()
+    debe_terminar = any(despedida in respuesta_lower for despedida in despedidas_bruce)
 
     if debe_terminar:
         print(f"🔚 Detectada despedida en: {respuesta_agente[:50]}...")
