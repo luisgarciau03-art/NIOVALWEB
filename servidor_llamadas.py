@@ -71,7 +71,7 @@ frase_stats = {}  # Contador de frecuencia de frases
 # Railway monta el Volume en /app/audio_cache por defecto
 # En local usa ./audio_cache
 CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable de entorno
-FRECUENCIA_MIN_CACHE = 3  # Auto-generar caché después de N usos
+FRECUENCIA_MIN_CACHE = 2  # Auto-generar caché después de N usos (reducido de 3 a 2)
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
 
