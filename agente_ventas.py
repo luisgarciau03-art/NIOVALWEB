@@ -1461,24 +1461,51 @@ class AgenteVentas:
             r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:es|se llama)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+(?:el|la|quien)',
             r'^(?:sí|si|ok|bueno|claro)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+',  # "Sí Ana tienes..."
+            # Detectar cuando dicen "te puedo pasar su contacto/número" SIN nombre
+            r'(?:te puedo pasar|puedo pasar|te paso)\s+(?:el|su)\s+(?:contacto|número)',
         ]
 
         for patron in patrones_referencia:
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
-                nombre_referido = match.group(1).strip()
+                # Si el patrón captura un nombre (grupo 1)
+                if match.lastindex and match.lastindex >= 1:
+                    nombre_referido = match.group(1).strip()
 
-                # Filtrar palabras no válidas como nombres
-                palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información']
-                if nombre_referido.lower() not in palabras_invalidas and len(nombre_referido) > 2:
-                    # Guardar en lead_data para procesarlo después
+                    # Filtrar palabras no válidas como nombres
+                    palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información']
+                    if nombre_referido.lower() not in palabras_invalidas and len(nombre_referido) > 2:
+                        # Guardar en lead_data para procesarlo después
+                        if "referencia_nombre" not in self.lead_data:
+                            self.lead_data["referencia_nombre"] = nombre_referido
+                            self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
+                            self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
+                            print(f"👥 Referencia detectada: {nombre_referido}")
+                            print(f"   Contexto: {texto[:100]}...")
+                        break
+                else:
+                    # Si no hay nombre pero mencionan "te puedo pasar su contacto"
                     if "referencia_nombre" not in self.lead_data:
-                        self.lead_data["referencia_nombre"] = nombre_referido
-                        self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
+                        self.lead_data["referencia_nombre"] = ""  # Sin nombre todavía
+                        self.lead_data["referencia_telefono"] = ""  # Se capturará después
                         self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
-                        print(f"👥 Referencia detectada: {nombre_referido}")
+                        print(f"👥 Referencia detectada (sin nombre aún)")
                         print(f"   Contexto: {texto[:100]}...")
                     break
+
+        # Si tenemos una referencia pendiente y el cliente dice un número, capturarlo como referencia
+        if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
+            # Buscar número en el texto actual
+            for patron in patrones_telefono:
+                match = re.search(patron, texto_lower)
+                if match:
+                    numero = re.sub(r'[^\d]', '', match.group(0))
+                    if len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        self.lead_data["referencia_telefono"] = numero_completo
+                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                        break
 
         # Detectar productos de interés
         productos_keywords = {
