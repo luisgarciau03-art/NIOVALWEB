@@ -1396,55 +1396,64 @@ class AgenteVentas:
             r'(\d{8,10})'                                                 # 12345678, 123456789, 1234567890 (8-10 dígitos)
         ]
 
-        for patron in patrones_tel:
-            match = re.search(patron, texto)
-            if match:
-                numero = ''.join(match.groups())
+        # IMPORTANTE: Si ya detectamos una referencia pendiente, NO capturar números como WhatsApp
+        # Los números deben guardarse como referencia_telefono
+        tiene_referencia_pendiente = ("referencia_nombre" in self.lead_data and
+                                      not self.lead_data.get("referencia_telefono"))
 
-                # Validar longitud del número
-                if len(numero) < 10:
-                    # Número incompleto - pedir número completo
-                    print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
-                    numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": f"[SISTEMA] El cliente proporcionó un número incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de WhatsApp en México deben tener 10 dígitos. Debes pedirle que proporcione el número COMPLETO de 10 dígitos. Ejemplo de respuesta: 'Disculpe, me proporcionó {numero_formateado}, pero me faltan dígitos. Los números de WhatsApp en México son de 10 dígitos. ¿Podría darme el número completo?'"
-                    })
-                    break
+        if not tiene_referencia_pendiente:
+            # Solo buscar WhatsApp si NO hay referencia pendiente
+            for patron in patrones_tel:
+                match = re.search(patron, texto)
+                if match:
+                    numero = ''.join(match.groups())
 
-                elif len(numero) == 10:
-                    numero_completo = f"+52{numero}"
-                    print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
+                    # Validar longitud del número
+                    if len(numero) < 10:
+                        # Número incompleto - pedir número completo
+                        print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"[SISTEMA] El cliente proporcionó un número incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de WhatsApp en México deben tener 10 dígitos. Debes pedirle que proporcione el número COMPLETO de 10 dígitos. Ejemplo de respuesta: 'Disculpe, me proporcionó {numero_formateado}, pero me faltan dígitos. Los números de WhatsApp en México son de 10 dígitos. ¿Podría darme el número completo?'"
+                        })
+                        break
 
-                    # Validar WhatsApp si tenemos validador
-                    if self.whatsapp_validator:
-                        print(f"   🔍 Validando número con Twilio Lookup...")
-                        es_valido = self._validar_whatsapp(numero_completo)
+                    elif len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
 
-                        if es_valido:
-                            # Solo guardamos si es válido
+                        # Validar WhatsApp si tenemos validador
+                        if self.whatsapp_validator:
+                            print(f"   🔍 Validando número con Twilio Lookup...")
+                            es_valido = self._validar_whatsapp(numero_completo)
+
+                            if es_valido:
+                                # Solo guardamos si es válido
+                                self.lead_data["whatsapp"] = numero_completo
+                                self.lead_data["whatsapp_valido"] = True
+                                print(f"   ✅ Número VÁLIDO - WhatsApp activo confirmado")
+                                print(f"   💾 WhatsApp guardado: {numero_completo}")
+                            else:
+                                # No es válido - el agente debe pedir confirmación
+                                # Agregamos un mensaje de sistema para que GPT sepa que debe re-preguntar
+                                print(f"   ❌ Número NO VÁLIDO - WhatsApp NO activo")
+                                print(f"   ⚠️ No se guardará en lead_data - se pedirá otro número")
+                                numero_formateado = f"{numero[:2]} {numero[2:4]} {numero[4:6]} {numero[6:8]} {numero[8:]}"
+                                self.conversation_history.append({
+                                    "role": "system",
+                                    "content": f"[SISTEMA] El número {numero_formateado} NO tiene WhatsApp activo. Debes informar al cliente de manera natural y pedirle que proporcione otro número de WhatsApp o confirme si tiene uno diferente."
+                                })
+                        else:
+                            # Sin validador, guardamos directamente
+                            print(f"   ⚠️ Validador no disponible - guardando sin validar")
                             self.lead_data["whatsapp"] = numero_completo
                             self.lead_data["whatsapp_valido"] = True
-                            print(f"   ✅ Número VÁLIDO - WhatsApp activo confirmado")
                             print(f"   💾 WhatsApp guardado: {numero_completo}")
-                        else:
-                            # No es válido - el agente debe pedir confirmación
-                            # Agregamos un mensaje de sistema para que GPT sepa que debe re-preguntar
-                            print(f"   ❌ Número NO VÁLIDO - WhatsApp NO activo")
-                            print(f"   ⚠️ No se guardará en lead_data - se pedirá otro número")
-                            numero_formateado = f"{numero[:2]} {numero[2:4]} {numero[4:6]} {numero[6:8]} {numero[8:]}"
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número {numero_formateado} NO tiene WhatsApp activo. Debes informar al cliente de manera natural y pedirle que proporcione otro número de WhatsApp o confirme si tiene uno diferente."
-                            })
-                    else:
-                        # Sin validador, guardamos directamente
-                        print(f"   ⚠️ Validador no disponible - guardando sin validar")
-                        self.lead_data["whatsapp"] = numero_completo
-                        self.lead_data["whatsapp_valido"] = True
-                        print(f"   💾 WhatsApp guardado: {numero_completo}")
 
-                break
+                    break
+        else:
+            print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
 
         # Detectar email
         patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
@@ -2272,6 +2281,48 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             notas=contexto_actual
                         )
                         print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+
+                        # 3. INICIAR LLAMADA AUTOMÁTICA AL REFERIDO
+                        print(f"\n📞 Iniciando llamada automática al referido...")
+                        try:
+                            import requests
+                            import os
+
+                            # URL del servidor de llamadas (puede estar en variable de entorno)
+                            servidor_url = os.getenv("SERVIDOR_LLAMADAS_URL", "https://nioval-webhook-server-production.up.railway.app")
+                            endpoint = f"{servidor_url}/iniciar-llamada"
+
+                            # Preparar datos de la llamada
+                            payload = {
+                                "telefono": telefono_referido,
+                                "fila": fila_referido
+                            }
+
+                            print(f"   🌐 Enviando solicitud a {endpoint}")
+                            print(f"   📱 Teléfono: {telefono_referido}")
+                            print(f"   📋 Fila: {fila_referido}")
+
+                            # Hacer la solicitud POST (con timeout para no bloquear)
+                            response = requests.post(
+                                endpoint,
+                                json=payload,
+                                timeout=5
+                            )
+
+                            if response.status_code == 200:
+                                data = response.json()
+                                call_sid = data.get("call_sid", "Unknown")
+                                print(f"   ✅ Llamada iniciada exitosamente!")
+                                print(f"   📞 Call SID: {call_sid}")
+                            else:
+                                print(f"   ⚠️ Error al iniciar llamada: {response.status_code}")
+                                print(f"   Respuesta: {response.text}")
+
+                        except requests.exceptions.Timeout:
+                            print(f"   ⚠️ Timeout al iniciar llamada - la llamada puede haberse iniciado de todas formas")
+                        except Exception as e:
+                            print(f"   ❌ Error al iniciar llamada automática: {e}")
+                            print(f"   La llamada deberá iniciarse manualmente")
 
                     else:
                         print(f"⚠️ No se encontró el número {telefono_referido} en LISTA DE CONTACTOS")
