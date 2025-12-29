@@ -624,8 +624,23 @@ def procesar_respuesta():
                         sheets_manager.marcar_estado_final(fila, "BUZON")
                         print(f"❌ Fila {fila} marcada como BUZON (máximo 3 intentos alcanzado)")
 
-                # 2. Manejo de REPROGRAMACIÓN - Ya se guarda en guardar_llamada_y_lead()
-                # (No necesita acción adicional aquí, ya se maneja en agente_ventas.py línea 2165)
+                # 2. Manejo de REPROGRAMACIÓN
+                elif agente.lead_data.get("estado_llamada") == "reprogramar" and fila:
+                    # Contexto ya se guardó en guardar_llamada_y_lead()
+                    # Columna F ya se limpió para que vuelva a aparecer como pendiente
+                    print(f"📅 Reprogramación guardada - contacto volverá a aparecer")
+
+                # 3. OTROS ESTADOS - Marcar como completado
+                elif agente.lead_data.get("estado_llamada") and fila:
+                    # Estados: Respondio, Telefono Incorrecto, Colgo, No Contesta
+                    estado_final = agente.lead_data.get("estado_llamada")
+                    sheets_manager.marcar_estado_final(fila, estado_final)
+                    print(f"✅ Estado final marcado en columna F: {estado_final}")
+
+                    # Marcar primera llamada si columnas U,V,W están vacías
+                    if not sheets_manager.verificar_contacto_ya_llamado(fila):
+                        sheets_manager.marcar_primera_llamada(fila)
+                        print(f"📝 Primera llamada registrada en columna U")
 
         except Exception as e:
             print(f"❌ Error guardando llamada {call_sid}: {e}")

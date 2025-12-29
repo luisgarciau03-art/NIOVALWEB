@@ -130,6 +130,60 @@ class NiovalSheetsAdapter:
             print(f"⚠️ Número inválido (no tiene 10 dígitos): {numero} → {numero_limpio}")
             return None
 
+    def verificar_contacto_ya_llamado(self, fila: int) -> bool:
+        """
+        Verifica si un contacto ya fue llamado anteriormente
+        Revisa si las columnas U (Referencia), V (Intentos buzón), W (Contexto) tienen contenido
+
+        Args:
+            fila: Número de fila a verificar
+
+        Returns:
+            True si ya fue llamado, False si es primera vez
+        """
+        try:
+            # Verificar columna U (Referencia) - índice 21
+            referencia = self.hoja_contactos.cell(fila, 21).value
+            if referencia and referencia.strip():
+                return True
+
+            # Verificar columna V (Intentos buzón) - índice 22
+            intentos = self.hoja_contactos.cell(fila, 22).value
+            if intentos and intentos.strip():
+                return True
+
+            # Verificar columna W (Contexto reprogramación) - índice 23
+            contexto = self.hoja_contactos.cell(fila, 23).value
+            if contexto and contexto.strip():
+                return True
+
+            # Si todas están vacías, no ha sido llamado
+            return False
+
+        except Exception as e:
+            print(f"⚠️ Error verificando si contacto fue llamado: {e}")
+            return False  # En caso de error, asumir que no fue llamado
+
+    def marcar_primera_llamada(self, fila: int):
+        """
+        Marca que se realizó la primera llamada a este contacto
+        Guarda timestamp en columna U para indicar que ya fue contactado
+
+        Args:
+            fila: Número de fila
+        """
+        try:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+            marca = f"Primera llamada: {timestamp}"
+
+            # Guardar en columna U (índice 21)
+            self.hoja_contactos.update_cell(fila, 21, marca)
+            print(f"✅ Primera llamada marcada en fila {fila} (columna U)")
+
+        except Exception as e:
+            print(f"❌ Error al marcar primera llamada: {e}")
+
     def obtener_contactos_pendientes(self, limite: int = 100) -> List[Dict]:
         """
         Obtiene contactos pendientes de llamar
