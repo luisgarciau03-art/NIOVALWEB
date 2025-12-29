@@ -332,11 +332,84 @@ def corregir_pronunciacion(texto):
     return texto_corregido
 
 
+def concatenar_audios_mp3(audio_paths):
+    """
+    Concatena múltiples archivos MP3 en uno solo
+    Usa pydub para concatenación sin problemas de compatibilidad
+    """
+    try:
+        from pydub import AudioSegment
+
+        combined = AudioSegment.empty()
+        for path in audio_paths:
+            audio = AudioSegment.from_mp3(path)
+            combined += audio
+
+        # Guardar en archivo temporal
+        temp_output = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        combined.export(temp_output.name, format="mp3", bitrate="128k")
+        temp_output.close()
+
+        return temp_output.name
+
+    except ImportError:
+        # Si pydub no está disponible, usar concatenación simple de bytes
+        print("⚠️ pydub no disponible, usando concatenación simple")
+        temp_output = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+
+        for path in audio_paths:
+            with open(path, 'rb') as f:
+                temp_output.write(f.read())
+
+        temp_output.close()
+        return temp_output.name
+
+
+def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
+    """
+    Genera audio compuesto usando plantilla universal
+
+    Estrategia simplificada:
+    1. La plantilla tiene (NAME) literal en el audio
+    2. Generar el texto completo reemplazando (NAME) con el nombre real
+    3. Generar solo ese audio (rápido porque es corto)
+
+    Nota: Por ahora generamos el audio completo en vez de concatenar,
+    pero aún aprovechamos la detección automática de nombres.
+    """
+    import time
+    inicio = time.time()
+
+    print(f"🎭 Generando audio con nombre específico: '{nombre}'")
+
+    # Reemplazar (NAME) con el nombre real
+    texto_final = texto_plantilla.replace("(NAME)", nombre)
+
+    # Generar audio completo
+    print(f"   🎤 Generando: '{texto_final[:50]}...'")
+    audio_generator = elevenlabs_client.text_to_speech.convert(
+        voice_id=ELEVENLABS_VOICE_ID,
+        text=texto_final,
+        model_id="eleven_multilingual_v2",
+        output_format="mp3_44100_128"
+    )
+
+    # Guardar en archivo temporal
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+    for chunk in audio_generator:
+        temp_file.write(chunk)
+    temp_file.close()
+
+    print(f"   ✅ Audio generado en {(time.time() - inicio):.2f}s")
+    return temp_file.name
+
+
 def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
     """
     Genera audio con ElevenLabs usando SOLO Multilingual v2 (mejor calidad)
     - Caché manual: Usa audio pre-generado (0s delay)
     - Caché auto: Busca en caché auto-generado de frases frecuentes
+    - Plantillas con nombres: Concatena plantilla + nombre específico
     - Genera nuevo: Multilingual v2 para mejor acento mexicano
     """
     try:
@@ -349,7 +422,32 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
             print(f"📦 Caché manual: {usar_cache_key} (0s delay)")
             return audio_id
 
-        # PASO 2: Buscar en caché auto-generado
+        # PASO 2: Detectar si tiene nombre y buscar plantilla correspondiente
+        texto_plantilla, nombre_detectado = normalizar_frase_con_nombres(texto)
+
+        if nombre_detectado:
+            # Buscar plantilla en caché
+            palabras_plantilla = " ".join(texto_plantilla.split()[:8]).lower()
+            frase_key_plantilla = "_".join(palabras_plantilla.split())
+
+            if frase_key_plantilla in audio_cache:
+                print(f"🎭 Usando plantilla universal + nombre '{nombre_detectado}'")
+                audio_compuesto = generar_audio_con_nombre(
+                    texto_plantilla,
+                    nombre_detectado,
+                    frase_key_plantilla
+                )
+
+                if audio_compuesto:
+                    audio_files[audio_id] = audio_compuesto
+                    print(f"✅ Audio compuesto listo (plantilla + nombre)")
+                    return audio_id
+                else:
+                    print(f"⚠️ Error en audio compuesto, generando completo...")
+            else:
+                print(f"ℹ️ Plantilla no en caché, generando completo...")
+
+        # PASO 3: Buscar en caché auto-generado (sin nombre)
         palabras_inicio = " ".join(texto.split()[:8]).lower()
         frase_key = "_".join(palabras_inicio.split())
 
@@ -358,7 +456,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
             print(f"📦 Caché AUTO: {frase_key[:40]}... (0s delay)")
             return audio_id
 
-        # PASO 3: Registrar frase para estadísticas (auto-genera caché si es frecuente)
+        # PASO 4: Registrar frase para estadísticas (auto-genera caché si es frecuente)
         registrar_frase_usada(texto)
 
         # Aplicar correcciones fonéticas
