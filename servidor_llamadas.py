@@ -199,6 +199,9 @@ def pre_generar_audios_cache():
             temp_file.close()
 
             audio_cache[key] = temp_file.name
+
+            # Guardar en disco para persistencia
+            guardar_cache_en_disco(key, texto, temp_file.name)
             print(f"  ✅ Cached: {key}")
         except Exception as e:
             print(f"  ❌ Error caching {key}: {e}")

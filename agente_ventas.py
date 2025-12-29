@@ -1784,75 +1784,8 @@ Responde SOLO en este formato JSON:
             estado_llamada = self._determinar_estado_llamada()
             print(f"📊 - Estado: {estado_llamada}")
 
-            # Guardar en Google Sheets si está disponible
-            if self.sheets_manager and self.contacto_info:
-                print(f"📊 Guardando en Google Sheets...")
-                contacto_fila = self.contacto_info.get('ID', 0)
-                print(f"📊 - Contacto Fila: {contacto_fila}")
-
-                # Registrar llamada
-                llamada_fila = self.sheets_manager.registrar_llamada(
-                    contacto_fila=contacto_fila,
-                    contacto_nombre=self.lead_data["nombre_negocio"],
-                    telefono=self.lead_data["telefono"],
-                    estado=estado_llamada,
-                    call_sid=self.call_sid,
-                    duracion_segundos=self.lead_data["duracion_segundos"],
-                    whatsapp_capturado=self.lead_data["whatsapp"],
-                    email_capturado=self.lead_data["email"],
-                    nombre_contacto=self.lead_data["nombre_contacto"],
-                    productos_interes=self.lead_data["productos_interes"],
-                    nivel_interes=self.lead_data["nivel_interes"],
-                    objeciones=", ".join(self.lead_data["objeciones"]),
-                    notas=self.lead_data["notas"],
-                    fecha_reprogramacion=self.fecha_reprogramacion,
-                    hora_preferida=self.hora_preferida,
-                    motivo_no_contacto=self.motivo_no_contacto
-                )
-                print(f"✅ Llamada registrada en Google Sheets - Fila {llamada_fila}")
-
-                # Crear lead si hubo interés
-                if self.lead_data["interesado"] and self.lead_data["whatsapp"]:
-                    print(f"📊 Cliente interesado con WhatsApp - creando lead...")
-                    lead_fila = self.sheets_manager.crear_lead(
-                        contacto_fila=contacto_fila,
-                        llamada_fila=llamada_fila,
-                        nombre_contacto=self.lead_data["nombre_contacto"],
-                        nombre_negocio=self.lead_data["nombre_negocio"],
-                        telefono=self.lead_data["telefono"],
-                        whatsapp=self.lead_data["whatsapp"],
-                        email=self.lead_data["email"],
-                        ciudad=self.lead_data["ciudad"],
-                        productos_interes=self.lead_data["productos_interes"],
-                        nivel_interes=self.lead_data["nivel_interes"],
-                        temperatura=self.lead_data["temperatura"],
-                        notas=self.lead_data["notas"]
-                    )
-                    print(f"✅ Lead guardado en Google Sheets - Fila {lead_fila}")
-                else:
-                    print(f"ℹ️ No se crea lead (interesado={self.lead_data['interesado']}, whatsapp={self.lead_data['whatsapp']})")
-
-                # Actualizar contacto en Sheets
-                if self.lead_data["whatsapp"]:
-                    print(f"📊 Actualizando WhatsApp en contacto...")
-                    self.sheets_manager.actualizar_numero_con_whatsapp(
-                        fila=contacto_fila,
-                        whatsapp=self.lead_data["whatsapp"]
-                    )
-
-                if self.lead_data["email"]:
-                    print(f"📊 Registrando email en contacto...")
-                    self.sheets_manager.registrar_email_capturado(
-                        fila=contacto_fila,
-                        email=self.lead_data["email"]
-                    )
-
-                print(f"✅ Llamada guardada completamente en Google Sheets")
-            else:
-                if not self.sheets_manager:
-                    print(f"⚠️ Sheets Manager no está inicializado - saltando Google Sheets")
-                if not self.contacto_info:
-                    print(f"⚠️ contacto_info no está disponible - saltando Google Sheets")
+            # NOTA: Google Sheets se guarda en el modo automático usando ResultadosSheetsAdapter
+            # Ver líneas 2230+ para la lógica correcta de guardado
 
             # Guardar también en Excel como respaldo
             print(f"📊 Guardando backup en Excel...")
