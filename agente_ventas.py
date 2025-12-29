@@ -1463,15 +1463,21 @@ class AgenteVentas:
             print(f"📧 Email detectado: {self.lead_data['email']}")
 
         # Detectar referencias (cuando el cliente pasa contacto de otra persona)
-        # Frases: "te paso el contacto de Juan", "mi compañero Luis", "habla con Pedro", "Sí Ana", etc.
+        # IMPORTANTE: Ordenar patrones de MÁS ESPECÍFICO a MENOS ESPECÍFICO
+        # para evitar falsos positivos
         patrones_referencia = [
+            # Patrones CON nombre específico (grupo de captura)
             r'(?:te paso|paso|pasa)\s+(?:el )?contacto\s+(?:de|del)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:contacta|habla con|llama a|comunicate con)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
             r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
-            r'(?:es|se llama)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+(?:el|la|quien)',
-            r'^(?:sí|si|ok|bueno|claro)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+',  # "Sí Ana tienes..."
-            # Detectar cuando dicen "te puedo pasar su contacto/número" SIN nombre
-            r'(?:te puedo pasar|puedo pasar|te paso)\s+(?:el|su)\s+(?:contacto|número)',
+
+            # Patrones SIN nombre - Ofrecimientos de pasar contacto
+            # NOTA: Ordenar de más específico a menos específico
+            r'(?:te lo paso|se lo paso|te lo doy)',  # "sí, te lo paso"
+            r'(?:quiere|quieres?)\s+(?:el |su |tu )?(?:contacto|número)',  # "quiere su contacto"
+            r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el|su)\s+(?:contacto|número)',  # "te puedo pasar su contacto"
+            r'(?:le doy|te doy)\s+(?:el|su)\s+(?:contacto|número)',  # "te doy su número"
+            r'(?:te paso|le paso)\s+(?:el|su)\s+(?:contacto|número)',  # "te paso su número"
         ]
 
         for patron in patrones_referencia:
@@ -1481,8 +1487,11 @@ class AgenteVentas:
                 if match.lastindex and match.lastindex >= 1:
                     nombre_referido = match.group(1).strip()
 
-                    # Filtrar palabras no válidas como nombres
-                    palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información']
+                    # Filtrar palabras no válidas como nombres Y despedidas
+                    palabras_invalidas = [
+                        'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información',
+                        'gracias', 'hasta', 'luego', 'adiós', 'bye', 'bueno', 'favor', 'tiempo', 'momento'
+                    ]
                     if nombre_referido.lower() not in palabras_invalidas and len(nombre_referido) > 2:
                         # Guardar en lead_data para procesarlo después
                         if "referencia_nombre" not in self.lead_data:
