@@ -177,6 +177,7 @@ def pre_generar_audios_cache():
         # Frases de sistema
         "timeout": "¿Sigue ahí?",
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
+        "pensando": "Mmm, déjeme pensarlo un momento...",  # Audio de relleno mientras GPT procesa
 
         # Saludo inicial (se usa en TODAS las llamadas)
         "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
@@ -239,11 +240,10 @@ def corregir_pronunciacion(texto):
 
 def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
     """
-    Genera audio con ElevenLabs usando estrategia híbrida AUTO-ADAPTATIVA:
+    Genera audio con ElevenLabs usando SOLO Multilingual v2 (mejor calidad)
     - Caché manual: Usa audio pre-generado (0s delay)
     - Caché auto: Busca en caché auto-generado de frases frecuentes
-    - Frases largas: Multilingual v2 (mejor acento, ~5s delay)
-    - Frases cortas: Turbo v2 (velocidad, ~2s delay)
+    - Genera nuevo: Multilingual v2 para mejor acento mexicano
     """
     try:
         import time
@@ -270,26 +270,16 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         # Aplicar correcciones fonéticas
         texto_corregido = corregir_pronunciacion(texto)
 
-        # ESTRATEGIA HÍBRIDA: Elegir modelo según longitud
+        # SIEMPRE usar Multilingual v2 (mejor acento mexicano)
         palabras = len(texto_corregido.split())
-
-        if palabras > 25:
-            # Frases largas: Usar Multilingual v2 (mejor acento)
-            modelo = "eleven_multilingual_v2"
-            optimize_latency = None
-            print(f"🎙️ Usando Multilingual v2 ({palabras} palabras)")
-        else:
-            # Frases cortas: Usar Turbo v2 (velocidad)
-            modelo = "eleven_turbo_v2"
-            optimize_latency = 4
-            print(f"⚡ Usando Turbo v2 ({palabras} palabras)")
+        modelo = "eleven_multilingual_v2"
+        print(f"🎙️ Usando Multilingual v2 ({palabras} palabras)")
 
         # Generar audio
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto_corregido,
             model_id=modelo,
-            optimize_streaming_latency=optimize_latency,
             output_format="mp3_44100_128"
         )
 
@@ -466,8 +456,48 @@ def procesar_respuesta():
 
     # Procesar respuesta con GPT-4o
     import time
+    import threading
     inicio = time.time()
-    respuesta_agente = agente.procesar_respuesta(speech_result)
+
+    # Variable para almacenar la respuesta cuando termine GPT
+    respuesta_container = {"respuesta": None, "completado": False}
+
+    def procesar_gpt():
+        respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
+        respuesta_container["completado"] = True
+
+    # Iniciar procesamiento de GPT en thread separado
+    gpt_thread = threading.Thread(target=procesar_gpt)
+    gpt_thread.start()
+
+    # Crear respuesta TwiML inicial
+    response = VoiceResponse()
+
+    # Esperar máximo 5 segundos por GPT
+    gpt_thread.join(timeout=5.0)
+
+    # Si GPT no terminó en 5 segundos, reproducir audio de "pensando"
+    if not respuesta_container["completado"]:
+        print(f"⏰ GPT tardando más de 5s - reproduciendo audio de relleno...")
+
+        # Reproducir audio de "pensando" desde cache
+        if "pensando" in audio_cache:
+            audio_pensando_url = request.url_root + f"audio/pensando_{call_sid}"
+            # Copiar audio del cache a un ID temporal
+            audio_files[f"pensando_{call_sid}"] = audio_cache["pensando"]
+            response.play(audio_pensando_url)
+
+        # Esperar a que GPT termine (máximo 25 segundos adicionales)
+        gpt_thread.join(timeout=25.0)
+
+        if not respuesta_container["completado"]:
+            # GPT tardó más de 30 segundos total - error timeout
+            print(f"❌ GPT timeout después de 30s")
+            response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+            response.hangup()
+            return Response(str(response), mimetype="text/xml")
+
+    respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
 
@@ -487,10 +517,7 @@ def procesar_respuesta():
     print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
     print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
 
-    # Crear respuesta TwiML
-    response = VoiceResponse()
-
-    # Reproducir audio de ElevenLabs
+    # Reproducir audio de ElevenLabs (response ya fue creado arriba)
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
