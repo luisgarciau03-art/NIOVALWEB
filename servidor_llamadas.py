@@ -487,6 +487,9 @@ def procesar_respuesta():
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
+    # LOG: Mostrar lo que dijo el cliente
+    print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
+
     # Procesar respuesta con GPT-4o
     import time
     import threading
