@@ -902,6 +902,178 @@ def info_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/stats", methods=["GET"])
+def ver_estadisticas():
+    """
+    Endpoint para ver estadísticas de frases y caché en tiempo real
+    Acceso: GET http://localhost:5000/stats o https://tu-dominio.railway.app/stats
+    """
+    try:
+        # Cargar estadísticas desde archivo
+        stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
+        if os.path.exists(stats_file):
+            with open(stats_file, 'r', encoding='utf-8') as f:
+                stats = json.load(f)
+        else:
+            stats = {}
+
+        # Ordenar por frecuencia (más usadas primero)
+        sorted_stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
+
+        # Estadísticas generales
+        total_frases = len(sorted_stats)
+        total_usos = sum(sorted_stats.values())
+        frases_en_cache = len(audio_cache)
+
+        # Construir respuesta HTML bonita
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Estadísticas Bruce W - Caché de Audio</title>
+            <meta charset="UTF-8">
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: #f5f5f5;
+                }}
+                h1 {{
+                    color: #333;
+                    border-bottom: 3px solid #4CAF50;
+                    padding-bottom: 10px;
+                }}
+                .stats-summary {{
+                    display: flex;
+                    gap: 20px;
+                    margin: 20px 0;
+                }}
+                .stat-card {{
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    flex: 1;
+                }}
+                .stat-number {{
+                    font-size: 2em;
+                    font-weight: bold;
+                    color: #4CAF50;
+                }}
+                .stat-label {{
+                    color: #666;
+                    margin-top: 5px;
+                }}
+                table {{
+                    width: 100%;
+                    background: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    border-collapse: collapse;
+                }}
+                th {{
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px;
+                    text-align: left;
+                }}
+                td {{
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #ddd;
+                }}
+                tr:hover {{
+                    background: #f9f9f9;
+                }}
+                .cached {{
+                    color: #4CAF50;
+                    font-weight: bold;
+                }}
+                .not-cached {{
+                    color: #999;
+                }}
+                .frase-text {{
+                    max-width: 600px;
+                    word-wrap: break-word;
+                }}
+            </style>
+        </head>
+        <body>
+            <h1>🎤 Estadísticas de Caché - Bruce W</h1>
+
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-number">{total_frases}</div>
+                    <div class="stat-label">Frases Únicas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{total_usos}</div>
+                    <div class="stat-label">Usos Totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{frases_en_cache}</div>
+                    <div class="stat-label">Audios en Caché</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{FRECUENCIA_MIN_CACHE}</div>
+                    <div class="stat-label">Umbral Auto-Caché</div>
+                </div>
+            </div>
+
+            <h2>📊 Frases por Frecuencia de Uso</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Frase</th>
+                        <th>Usos</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+
+        # Agregar filas de la tabla
+        for i, (frase, count) in enumerate(sorted_stats.items(), 1):
+            # Verificar si está en caché
+            frase_normalizada = frase.lower()[:50].replace(" ", "_").replace(",", "").replace(".", "")
+            en_cache = frase_normalizada in audio_cache
+            estado = '<span class="cached">✅ En caché</span>' if en_cache else '<span class="not-cached">⏳ No cacheado</span>'
+
+            # Limitar longitud de frase para visualización
+            frase_display = frase if len(frase) <= 100 else frase[:100] + "..."
+
+            html += f"""
+                    <tr>
+                        <td>{i}</td>
+                        <td class="frase-text">{frase_display}</td>
+                        <td><strong>{count}</strong></td>
+                        <td>{estado}</td>
+                    </tr>
+            """
+
+        html += """
+                </tbody>
+            </table>
+
+            <p style="margin-top: 20px; color: #666; text-align: center;">
+                Actualizado en tiempo real • Railway Volume Persistente
+            </p>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "message": "Error al cargar estadísticas"
+        }, 500
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
@@ -910,6 +1082,7 @@ if __name__ == "__main__":
     print("  POST /iniciar-llamada      - Inicia una llamada individual")
     print("  POST /llamadas-masivas     - Inicia múltiples llamadas")
     print("  GET  /status/<call_sid>    - Estado de una llamada")
+    print("  GET  /stats                - Ver estadísticas de caché")
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
