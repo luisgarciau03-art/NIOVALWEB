@@ -1254,8 +1254,19 @@ def generar_cache_manual():
                 audio_bytes = b"".join(audio_generator)
                 audio_cache[key] = audio_bytes
 
+                # Crear archivo temporal para guardar en disco
+                with tempfile.NamedTemporaryFile(mode='wb', suffix='.mp3', delete=False) as temp_file:
+                    temp_file.write(audio_bytes)
+                    temp_path = temp_file.name
+
                 # Guardar en disco para persistencia
-                guardar_cache_en_disco(key, audio_bytes)
+                guardar_cache_en_disco(key, texto, temp_path)
+
+                # Limpiar archivo temporal
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
 
                 generated_count += 1
                 print(f"✅ Audio generado y cacheado: {key}")
