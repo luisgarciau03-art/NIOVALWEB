@@ -1,13 +1,21 @@
+# -*- coding: utf-8 -*-
 """
 Sistema de Llamadas Masivas en Producción (Railway)
 Lee contactos de Google Sheets y hace llamadas reales vía Twilio/Railway
 """
 
 import os
+import sys
 import requests
 import time
 from dotenv import load_dotenv
 from nioval_sheets_adapter import NiovalSheetsAdapter
+
+# Configurar encoding UTF-8 para Windows
+if sys.platform == 'win32':
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 load_dotenv()
 

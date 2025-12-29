@@ -1022,18 +1022,20 @@ Considera estos aspectos:
 class AgenteVentas:
     """Agente de ventas con GPT-4o y ElevenLabs + Integración Google Sheets"""
 
-    def __init__(self, contacto_info: dict = None, sheets_manager=None, whatsapp_validator=None):
+    def __init__(self, contacto_info: dict = None, sheets_manager=None, resultados_manager=None, whatsapp_validator=None):
         """
         Inicializa el agente de ventas
 
         Args:
             contacto_info: Información del contacto a llamar (desde Google Sheets)
-            sheets_manager: Instancia de GoogleSheetsManager
+            sheets_manager: Instancia de NiovalSheetsAdapter (para leer contactos)
+            resultados_manager: Instancia de ResultadosSheetsAdapter (para guardar resultados)
             whatsapp_validator: Instancia de WhatsAppValidator
         """
         self.conversation_history = []
         self.contacto_info = contacto_info or {}
         self.sheets_manager = sheets_manager
+        self.resultados_manager = resultados_manager
         self.whatsapp_validator = whatsapp_validator
 
         # Datos del lead que se van capturando durante la llamada
@@ -1963,7 +1965,70 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             import traceback
             print(f"⚠️ No se pudo guardar backup en Excel: {e}")
             print(f"⚠️ Traceback: {traceback.format_exc()}")
-    
+
+    def guardar_llamada_y_lead(self):
+        """
+        Guarda la llamada en Google Sheets usando ResultadosSheetsAdapter
+        (Llamado desde servidor_llamadas.py al finalizar llamada)
+        """
+        if not self.resultados_manager:
+            print("⚠️ ResultadosSheetsAdapter no disponible - no se puede guardar")
+            return
+
+        try:
+            print("📊 Guardando resultados en 'Respuestas de formulario 1'...")
+
+            # Determinar conclusión antes de guardar
+            self._determinar_conclusion()
+
+            # Guardar en "Respuestas de formulario 1"
+            resultado_guardado = self.resultados_manager.guardar_resultado_llamada({
+                'nombre_negocio': self.lead_data["nombre_negocio"],
+                'telefono': self.lead_data["telefono"],
+                'ciudad': self.lead_data["ciudad"],
+                'estado_llamada': self.lead_data["pregunta_0"],
+                'pregunta_1': self.lead_data["pregunta_1"],
+                'pregunta_2': self.lead_data["pregunta_2"],
+                'pregunta_3': self.lead_data["pregunta_3"],
+                'pregunta_4': self.lead_data["pregunta_4"],
+                'pregunta_5': self.lead_data["pregunta_5"],
+                'pregunta_6': self.lead_data["pregunta_6"],
+                'pregunta_7': self.lead_data["pregunta_7"],
+                'resultado': self.lead_data["resultado"],
+                'duracion': self.lead_data["duracion_segundos"],
+                'nivel_interes_clasificado': self.lead_data["nivel_interes_clasificado"],
+                'estado_animo_cliente': self.lead_data["estado_animo_cliente"],
+                'opinion_bruce': self.lead_data["opinion_bruce"]
+            })
+
+            if resultado_guardado:
+                print(f"✅ Resultados guardados en 'Respuestas de formulario 1'")
+            else:
+                print(f"❌ Error al guardar resultados")
+
+            # Actualizar WhatsApp y Email en LISTA DE CONTACTOS si están disponibles
+            if self.sheets_manager and self.contacto_info:
+                fila = self.contacto_info.get('ID')
+
+                if self.lead_data["whatsapp"] and fila:
+                    self.sheets_manager.actualizar_numero_con_whatsapp(
+                        fila=fila,
+                        whatsapp=self.lead_data["whatsapp"]
+                    )
+                    print(f"✅ WhatsApp actualizado en LISTA DE CONTACTOS")
+
+                if self.lead_data["email"] and fila:
+                    self.sheets_manager.registrar_email_capturado(
+                        fila=fila,
+                        email=self.lead_data["email"]
+                    )
+                    print(f"✅ Email actualizado en LISTA DE CONTACTOS")
+
+        except Exception as e:
+            print(f"❌ Error al guardar llamada: {e}")
+            import traceback
+            traceback.print_exc()
+
     def obtener_resumen(self) -> dict:
         """Retorna un resumen de la conversación y datos recopilados"""
 

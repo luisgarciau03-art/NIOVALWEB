@@ -17,12 +17,16 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Inicializar Google Sheets Manager (solo una vez al arrancar)
+# Inicializar Google Sheets Managers (solo una vez al arrancar)
 sheets_manager = None
+resultados_manager = None
 try:
     from nioval_sheets_adapter import NiovalSheetsAdapter
-    sheets_manager = NiovalSheetsAdapter()
-    print("✅ Google Sheets Manager inicializado")
+    from resultados_sheets_adapter import ResultadosSheetsAdapter
+
+    sheets_manager = NiovalSheetsAdapter()  # Para leer contactos
+    resultados_manager = ResultadosSheetsAdapter()  # Para guardar resultados
+    print("✅ Google Sheets Managers inicializados")
 except Exception as e:
     print(f"⚠️  Google Sheets no disponible: {e}")
     print("⚠️  Las llamadas se guardarán solo en backup local")
@@ -395,7 +399,8 @@ def webhook_voz():
     # Crear nueva conversación con Google Sheets habilitado
     agente = AgenteVentas(
         contacto_info=contacto_info,
-        sheets_manager=sheets_manager
+        sheets_manager=sheets_manager,
+        resultados_manager=resultados_manager
     )
     agente.call_sid = call_sid  # Guardar el Call SID de Twilio
     conversaciones_activas[call_sid] = agente
