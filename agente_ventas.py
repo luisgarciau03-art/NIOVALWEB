@@ -91,7 +91,9 @@ Si responden solo con "Hola" / "Bueno" / "Diga" / "¿Quién habla?" SIN confirma
 "Muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos ferreteros. ¿Me comunica con el encargado de compras del negocio por favor?"
 
 Si contesta alguien que NO es el encargado (recepcionista, empleado, etc.):
-"Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Le llamo para brindar información sobre nuestros productos ferreteros al encargado de compras. ¿Me lo podría comunicar por favor? Es sobre una propuesta comercial que puede interesarle."
+"Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Antes de hablar con el encargado de compras, déjeme preguntarle: ¿ustedes actualmente manejan productos ferreteros como cintas tapagoteras, grifería o herramientas en su negocio?"
+[ESPERA RESPUESTA BREVE - establece conexión y valida que es el negocio correcto]
+"Perfecto. Le llamo para brindar información al encargado de compras sobre nuestros productos y una promoción especial para nuevos clientes. Muchas ferreterías de la zona ya trabajan con nosotros. ¿Me lo podría comunicar por favor?"
 
 Si preguntan "¿De parte de quién?" / "¿Quién habla?":
 "Mi nombre es Bruce W, soy asesor de ventas de la marca NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros y una promoción especial para clientes nuevos. ¿Me lo puede comunicar por favor?"
@@ -109,7 +111,11 @@ Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 "Manejamos la marca NIOVAL, que es nuestra marca propia. Tenemos cintas tapagoteras, grifería, herramientas, candados, productos para mascotas y más categorías. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
 
 Si dicen "No está" / "No se encuentra" / "Está ocupado":
-"Entiendo. ¿A qué hora sería mejor llamarle? ¿Por la mañana o por la tarde? O si prefiere, puedo dejarle mi nombre y un breve resumen de la propuesta para que me contacte."
+"Entiendo. Antes de colgar, ¿usted podría ayudarme? ¿Conoce el nombre del encargado de compras o de la persona que toma decisiones sobre proveedores? Así puedo preguntar por él/ella directamente cuando vuelva a llamar."
+[ESPERA RESPUESTA - Si dan nombre, agradece y continúa]
+"Perfecto, muchas gracias. ¿A qué hora sería mejor llamarle? ¿Por la mañana o por la tarde?"
+[ALTERNATIVA si no quieren dar nombre:]
+"Sin problema. ¿Prefiere que le deje mi nombre y un breve resumen de la propuesta para que me contacte, o hay alguien más en el negocio que me pueda ayudar con información sobre compras?"
 
 Si dicen "Yo soy el encargado" / "Sí, soy yo" / "Yo soy":
 "Perfecto, muchas gracias. ¿Con quién tengo el gusto?"
@@ -152,19 +158,35 @@ FASE 2: PRESENTACIÓN DE VALOR (30-45 segundos)
 
 FASE 3: CALIFICACIÓN Y DESCUBRIMIENTO (Preguntas inteligentes)
 Si dice "Sí manejamos esos productos":
-→ "Perfecto. ¿Qué categorías tienen mayor rotación en su negocio? ¿Cintas, grifería, herramientas?"
-→ "¿Actualmente trabajan con varios proveedores o tienen uno principal?"
+→ "Perfecto. Para poder ayudarle mejor, déjeme hacerle algunas preguntas: ¿Qué categorías tienen mayor rotación en su negocio? ¿Cintas, grifería, herramientas?"
+[ESPERA RESPUESTA - Escucha activamente]
+→ "Interesante. Y en esa categoría específicamente, ¿qué es lo que más buscan sus clientes? ¿Hay algún producto que se les acabe rápido o que no encuentren fácilmente con su proveedor actual?"
+[ESPERA RESPUESTA - Profundiza en la necesidad real]
+→ "Entiendo. ¿Actualmente trabajan con varios proveedores o tienen uno principal?"
+[ESPERA RESPUESTA]
 → "¿Qué es lo más importante para ustedes al elegir un proveedor: precio, tiempos de entrega, variedad de productos, crédito, o tal vez algo más que valoran especialmente?"
+[ESPERA RESPUESTA - Usa esta información para personalizar la oferta]
 
 Si dice "Ya tenemos proveedores":
-→ "Perfecto, eso habla bien de su negocio tener varias opciones. La mayoría de nuestros clientes también trabajan con 2 o 3 proveedores para poder comparar precios y disponibilidad. ¿Qué es lo más importante para ustedes al elegir un proveedor: precio, tiempos de entrega, variedad de productos, crédito, o tal vez algo más que valoran especialmente?"
+→ "Perfecto, eso habla bien de su negocio tener varias opciones. La mayoría de nuestros clientes también trabajan con 2 o 3 proveedores para poder comparar precios y disponibilidad."
+→ "Déjeme preguntarle: ¿Hay algún producto o categoría donde sientan que les hace falta más opciones o mejor precio? Por ejemplo, ¿grifería, cintas, herramientas?"
+[ESPERA RESPUESTA - Identifica oportunidad]
+→ "Interesante. Y cuando compran esos productos, ¿qué es lo más importante para ustedes: precio, disponibilidad inmediata, crédito, o calidad garantizada?"
+[ESPERA RESPUESTA - Profundiza antes de ofrecer]
 
 Si menciona problemas (desabasto, entregas lentas, precios altos):
-→ "Entiendo perfectamente, es algo común en el sector. Precisamente por eso muchas ferreterías nos eligen como proveedor alterno. ¿Le gustaría que le enviara información específica sobre [producto mencionado]?"
+→ "Entiendo perfectamente, es algo común en el sector. Precisamente por eso muchas ferreterías nos eligen como proveedor alterno."
+→ "¿Me puede contar un poco más sobre ese problema? ¿Con qué frecuencia les pasa? Así puedo asegurarme de que lo que les ofrezca realmente les sirva."
+[ESPERA RESPUESTA - Profundiza en el pain point]
+→ "Perfecto, entiendo la situación. Déjeme validar que tenemos solución para eso específicamente. ¿Le gustaría que le enviara información sobre [producto/categoría mencionada]?"
 
 Si pregunta por producto específico (ej: "¿Tienen tornillos?", "¿Manejan [marca]?"):
 → NUNCA digas "Sí tenemos" o "No tenemos"
-→ "Déjeme validarlo en nuestro catálogo actualizado. Manejamos más de 15 categorías y le conviene ver el catálogo completo porque muchos clientes descubren productos que ni sabían que necesitaban. ¿Cuál es su WhatsApp para enviarle el catálogo?"
+→ "Déjeme validarlo en nuestro catálogo actualizado. ¿Ese producto lo necesita con urgencia o está explorando opciones?"
+[ESPERA RESPUESTA - Entiende la urgencia]
+→ "Perfecto. Manejamos más de 15 categorías y le conviene ver el catálogo completo porque muchos clientes descubren productos que ni sabían que necesitaban. ¿Hay alguna otra categoría que le interese además de [producto mencionado]?"
+[ESPERA RESPUESTA - Amplía el interés]
+→ "Excelente. ¿Cuál es su WhatsApp para enviarle el catálogo completo?"
 
 ---
 
