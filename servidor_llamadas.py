@@ -17,9 +17,11 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Inicializar Google Sheets Managers (solo una vez al arrancar)
+# Inicializar Google Sheets Managers y WhatsApp Validator (solo una vez al arrancar)
 sheets_manager = None
 resultados_manager = None
+whatsapp_validator = None
+
 try:
     from nioval_sheets_adapter import NiovalSheetsAdapter
     from resultados_sheets_adapter import ResultadosSheetsAdapter
@@ -30,6 +32,15 @@ try:
 except Exception as e:
     print(f"⚠️  Google Sheets no disponible: {e}")
     print("⚠️  Las llamadas se guardarán solo en backup local")
+
+# Inicializar WhatsApp Validator
+try:
+    from whatsapp_validator import WhatsAppValidator
+    whatsapp_validator = WhatsAppValidator()
+    print("✅ WhatsApp Validator inicializado")
+except Exception as e:
+    print(f"⚠️  WhatsApp Validator no disponible: {e}")
+    print("⚠️  No se validarán números de WhatsApp")
 
 # Configuración Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -179,8 +190,8 @@ def pre_generar_audios_cache():
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
         "pensando": "Mmm, déjeme pensarlo un momento...",  # Audio de relleno mientras GPT procesa
 
-        # Saludo inicial (se usa en TODAS las llamadas)
-        "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
+        # Saludo inicial (se usa en TODAS las llamadas) - CON PRONUNCIACIÓN CORRECTA
+        "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferre-teros. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
 
         # Despedidas comunes
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
@@ -386,11 +397,12 @@ def webhook_voz():
     # Obtener info del contacto si existe
     contacto_info = contactos_llamadas.get(call_sid, {})
 
-    # Crear nueva conversación con Google Sheets habilitado
+    # Crear nueva conversación con Google Sheets y WhatsApp Validator
     agente = AgenteVentas(
         contacto_info=contacto_info,
         sheets_manager=sheets_manager,
-        resultados_manager=resultados_manager
+        resultados_manager=resultados_manager,
+        whatsapp_validator=whatsapp_validator
     )
     agente.call_sid = call_sid  # Guardar el Call SID de Twilio
     conversaciones_activas[call_sid] = agente
