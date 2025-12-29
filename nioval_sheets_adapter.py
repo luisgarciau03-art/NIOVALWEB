@@ -209,6 +209,8 @@ class NiovalSheetsAdapter:
                             'esquema': fila[17] if len(fila) > 17 else "",  # R: Esquema
                             'fecha': fila[18] if len(fila) > 18 else "",  # S: Fecha
                             # T: Email (se escribe aquí cuando se captura)
+                            'referencia': fila[20] if len(fila) > 20 else "",  # U: Referencia (índice 20)
+                            'contexto_reprogramacion': fila[22] if len(fila) > 22 else "",  # W: Contexto reprogramación (índice 22)
 
                             # Flag para indicar que tiene datos previos
                             'tiene_datos_previos': True,
@@ -284,6 +286,57 @@ class NiovalSheetsAdapter:
         except Exception as e:
             print(f"❌ Error al registrar email: {e}")
 
+    def guardar_referencia(self, fila_destino: int, nombre_referidor: str, telefono_referidor: str = "", contexto: str = ""):
+        """
+        Guarda información de referencia en columna U del contacto destino
+
+        Args:
+            fila_destino: Fila del contacto que fue referido
+            nombre_referidor: Nombre de quien refirió
+            telefono_referidor: Teléfono de quien refirió (opcional)
+            contexto: Contexto adicional (opcional)
+        """
+        try:
+            # Formato: "Ref: Juan (+523312345678) - 2025-12-28 - Encargado de compras"
+            from datetime import datetime
+            fecha = datetime.now().strftime("%Y-%m-%d")
+
+            referencia = f"Ref: {nombre_referidor}"
+            if telefono_referidor:
+                referencia += f" ({telefono_referidor})"
+            referencia += f" - {fecha}"
+            if contexto:
+                referencia += f" - {contexto}"
+
+            # Columna U (índice 21)
+            self.hoja_contactos.update_cell(fila_destino, 21, referencia)
+            print(f"✅ Referencia guardada en fila {fila_destino} (columna U): {referencia}")
+
+        except Exception as e:
+            print(f"❌ Error al guardar referencia: {e}")
+
+    def obtener_referencia(self, fila: int) -> Optional[str]:
+        """
+        Obtiene la información de referencia de la columna U
+
+        Args:
+            fila: Número de fila
+
+        Returns:
+            Texto de referencia o None si no existe
+        """
+        try:
+            # Columna U (índice 21)
+            valor = self.hoja_contactos.cell(fila, 21).value
+
+            if valor and valor.strip():
+                return valor.strip()
+            return None
+
+        except Exception as e:
+            print(f"⚠️ Error al obtener referencia: {e}")
+            return None
+
     def obtener_contador_intentos_buzon(self, fila: int) -> int:
         """
         Obtiene el número de intentos de buzón registrados para esta fila
@@ -295,8 +348,8 @@ class NiovalSheetsAdapter:
             Número de intentos (0, 1, o 2)
         """
         try:
-            # Columna U (índice 21) guarda el contador de intentos de buzón
-            valor = self.hoja_contactos.cell(fila, 21).value
+            # Columna V (índice 22) guarda el contador de intentos de buzón
+            valor = self.hoja_contactos.cell(fila, 22).value
 
             if valor and valor.isdigit():
                 return int(valor)
@@ -320,8 +373,8 @@ class NiovalSheetsAdapter:
             intentos_actuales = self.obtener_contador_intentos_buzon(fila)
             nuevos_intentos = intentos_actuales + 1
 
-            # Actualizar contador en columna U (índice 21)
-            self.hoja_contactos.update_cell(fila, 21, str(nuevos_intentos))
+            # Actualizar contador en columna V (índice 22)
+            self.hoja_contactos.update_cell(fila, 22, str(nuevos_intentos))
 
             print(f"📞 Intento de buzón #{nuevos_intentos} registrado para fila {fila}")
             return nuevos_intentos
@@ -367,6 +420,54 @@ class NiovalSheetsAdapter:
             print(f"❌ Error al mover fila: {e}")
             import traceback
             traceback.print_exc()
+
+    def guardar_contexto_reprogramacion(self, fila: int, fecha: str, motivo: str, notas: str = ""):
+        """
+        Guarda contexto de reprogramación en columna W
+
+        Args:
+            fila: Número de fila
+            fecha: Fecha de reprogramación
+            motivo: Motivo de la reprogramación
+            notas: Notas adicionales
+        """
+        try:
+            from datetime import datetime
+            fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+            contexto = f"Reprog: {fecha} | {motivo}"
+            if notas:
+                contexto += f" | {notas}"
+            contexto += f" | Registrado: {fecha_actual}"
+
+            # Columna W (índice 23)
+            self.hoja_contactos.update_cell(fila, 23, contexto)
+            print(f"✅ Contexto de reprogramación guardado en fila {fila} (columna W): {contexto[:50]}...")
+
+        except Exception as e:
+            print(f"❌ Error al guardar contexto de reprogramación: {e}")
+
+    def obtener_contexto_reprogramacion(self, fila: int) -> Optional[str]:
+        """
+        Obtiene el contexto de reprogramación de la columna W
+
+        Args:
+            fila: Número de fila
+
+        Returns:
+            Texto de contexto o None si no existe
+        """
+        try:
+            # Columna W (índice 23)
+            valor = self.hoja_contactos.cell(fila, 23).value
+
+            if valor and valor.strip():
+                return valor.strip()
+            return None
+
+        except Exception as e:
+            print(f"⚠️ Error al obtener contexto de reprogramación: {e}")
+            return None
 
     def marcar_estado_final(self, fila: int, estado: str):
         """

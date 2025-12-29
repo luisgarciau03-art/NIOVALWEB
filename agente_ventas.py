@@ -1192,6 +1192,20 @@ class AgenteVentas:
         if self.contacto_info.get('estatus'):
             contexto_partes.append(f"- Estatus previo: {self.contacto_info['estatus']}")
 
+        # REFERENCIA - Si alguien lo refirió (columna U)
+        if self.contacto_info.get('referencia'):
+            contexto_partes.append(f"\n🔥 IMPORTANTE - REFERENCIA:")
+            contexto_partes.append(f"- {self.contacto_info['referencia']}")
+            contexto_partes.append(f"- Usa esta información en tu SALUDO INICIAL para generar confianza")
+            contexto_partes.append(f"- Ejemplo: 'Hola, mi nombre es Bruce W. Me pasó su contacto [NOMBRE DEL REFERIDOR] de [EMPRESA]. Él me comentó que usted...'")
+
+        # CONTEXTO DE REPROGRAMACIÓN - Si hubo llamadas previas (columna W)
+        if self.contacto_info.get('contexto_reprogramacion'):
+            contexto_partes.append(f"\n📞 LLAMADA REPROGRAMADA:")
+            contexto_partes.append(f"- {self.contacto_info['contexto_reprogramacion']}")
+            contexto_partes.append(f"- Menciona que ya habían hablado antes y retomas la conversación")
+            contexto_partes.append(f"- Ejemplo: 'Hola, qué tal. Como le había comentado la vez pasada, me comunico nuevamente...'")
+
         if len(contexto_partes) > 1:  # Más que solo el header
             contexto_partes.append("\nRecuerda: NO preguntes nada de esta información, ya la tienes.")
             return "\n".join(contexto_partes)
@@ -1438,6 +1452,27 @@ class AgenteVentas:
         if match_email:
             self.lead_data["email"] = match_email.group(0)
             print(f"📧 Email detectado: {self.lead_data['email']}")
+
+        # Detectar referencias (cuando el cliente pasa contacto de otra persona)
+        # Frases: "te paso el contacto de Juan", "mi compañero Luis", "habla con Pedro", etc.
+        patrones_referencia = [
+            r'(?:te paso|paso|pasa|contacta|habla con|llama a|comunicate con)\s+(?:el contacto de\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:contacto|número|teléfono)\s+(?:de|del)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+        ]
+
+        for patron in patrones_referencia:
+            match = re.search(patron, texto, re.IGNORECASE)
+            if match:
+                nombre_referido = match.group(1)
+                # Guardar en lead_data para procesarlo después
+                if "referencia_nombre" not in self.lead_data:
+                    self.lead_data["referencia_nombre"] = nombre_referido
+                    self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
+                    self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
+                    print(f"👥 Referencia detectada: {nombre_referido}")
+                    print(f"   Contexto: {texto[:100]}...")
+                break
 
         # Detectar productos de interés
         productos_keywords = {
@@ -2085,6 +2120,61 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         email=self.lead_data["email"]
                     )
                     print(f"✅ Email actualizado en LISTA DE CONTACTOS")
+
+                # Guardar referencia si se detectó una
+                if self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
+                    print(f"\n👥 Procesando referencia...")
+                    print(f"   Nombre del referido: {self.lead_data['referencia_nombre']}")
+                    print(f"   Teléfono del referido: {self.lead_data['referencia_telefono']}")
+
+                    # Buscar el número del referido en LISTA DE CONTACTOS
+                    telefono_referido = self.lead_data["referencia_telefono"]
+
+                    # Buscar en todos los contactos
+                    contactos = self.sheets_manager.obtener_contactos_pendientes(limite=10000)
+                    fila_referido = None
+
+                    for contacto in contactos:
+                        if contacto['telefono'] == telefono_referido:
+                            fila_referido = contacto['fila']
+                            break
+
+                    if fila_referido:
+                        # Guardar referencia en columna U del contacto referido
+                        nombre_referidor = self.contacto_info.get('nombre_negocio', 'Cliente')
+                        telefono_referidor = self.contacto_info.get('telefono', '')
+                        contexto = self.lead_data.get('referencia_contexto', '')
+
+                        self.sheets_manager.guardar_referencia(
+                            fila_destino=fila_referido,
+                            nombre_referidor=nombre_referidor,
+                            telefono_referidor=telefono_referidor,
+                            contexto=contexto
+                        )
+                        print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
+                    else:
+                        print(f"⚠️ No se encontró el número {telefono_referido} en LISTA DE CONTACTOS")
+                        print(f"   La referencia NO se guardó - agregar el contacto manualmente")
+
+                # Guardar contexto de reprogramación si el cliente pidió ser llamado después
+                if self.estado_llamada == "reprogramar" and fila:
+                    print(f"\n📅 Guardando contexto de reprogramación...")
+
+                    # Extraer fecha y motivo si están disponibles
+                    fecha_reprogramacion = self.fecha_reprogramacion or "Próximos días"
+                    motivo = f"Cliente solicitó ser llamado después. {self.lead_data['notas'][:100]}"
+
+                    self.sheets_manager.guardar_contexto_reprogramacion(
+                        fila=fila,
+                        fecha=fecha_reprogramacion,
+                        motivo=motivo,
+                        notas=f"Interés: {self.lead_data['nivel_interes']} | WhatsApp: {self.lead_data['whatsapp'] or 'No capturado'}"
+                    )
+                    print(f"✅ Contexto de reprogramación guardado en columna W")
+
+                    # Limpiar columna F para que vuelva a aparecer como pendiente
+                    self.sheets_manager.marcar_estado_final(fila, "")
+                    print(f"✅ Columna F limpiada - contacto volverá a aparecer como pendiente")
 
         except Exception as e:
             print(f"❌ Error al guardar llamada: {e}")

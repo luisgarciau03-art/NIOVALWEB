@@ -89,8 +89,8 @@ class SistemaLlamadasMasivas:
             print(f"📞 Fila {fila}: {nombre}")
             print(f"   Teléfono: {telefono}")
 
-            # Hacer llamada vía Railway
-            exito = self._iniciar_llamada_railway(telefono, nombre, fila)
+            # Hacer llamada vía Railway (enviar contacto completo para cargar referencia y contexto)
+            exito = self._iniciar_llamada_railway(contacto)
 
             if exito:
                 resultados['exitosas'] += 1
@@ -115,9 +115,12 @@ class SistemaLlamadasMasivas:
         print(f"📈 Tasa de éxito: {round(resultados['exitosas']/resultados['total']*100, 1)}%")
         print("=" * 60 + "\n")
 
-    def _iniciar_llamada_railway(self, telefono: str, nombre_negocio: str, fila: int) -> bool:
+    def _iniciar_llamada_railway(self, contacto: dict) -> bool:
         """
         Inicia una llamada a través de Railway
+
+        Args:
+            contacto: Diccionario completo con toda la información del contacto
 
         Returns:
             True si se inició correctamente, False si hubo error
@@ -125,14 +128,18 @@ class SistemaLlamadasMasivas:
         try:
             url = f"{WEBHOOK_URL}/iniciar-llamada"
 
+            # Cargar referencia de columna U (si existe)
+            fila = contacto['fila']
+            referencia = self.sheets_adapter.obtener_referencia(fila)
+            if referencia:
+                contacto['referencia'] = referencia
+                print(f"👥 Referencia encontrada: {referencia[:50]}...")
+
+            # Enviar contacto completo con TODA la información
             payload = {
-                "telefono": telefono,
-                "nombre_negocio": nombre_negocio,
-                "contacto_info": {
-                    "ID": fila,
-                    "nombre_negocio": nombre_negocio,
-                    "telefono": telefono
-                }
+                "telefono": contacto['telefono'],
+                "nombre_negocio": contacto['nombre_negocio'],
+                "contacto_info": contacto  # Enviar TODO el diccionario
             }
 
             print(f"🌐 Enviando solicitud a Railway: {url}")
