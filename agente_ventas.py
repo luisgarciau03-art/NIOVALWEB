@@ -1456,23 +1456,28 @@ class AgenteVentas:
         # Detectar referencias (cuando el cliente pasa contacto de otra persona)
         # Frases: "te paso el contacto de Juan", "mi compañero Luis", "habla con Pedro", etc.
         patrones_referencia = [
-            r'(?:te paso|paso|pasa|contacta|habla con|llama a|comunicate con)\s+(?:el contacto de\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
-            r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
-            r'(?:contacto|número|teléfono)\s+(?:de|del)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:te paso|paso|pasa)\s+(?:el )?contacto\s+(?:de|del)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:contacta|habla con|llama a|comunicate con)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:mi compañero|mi socio|mi jefe|el encargado|el dueño|el gerente)\s+(?:se llama\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)',
+            r'(?:es|se llama)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)\s+(?:el|la|quien)',
         ]
 
         for patron in patrones_referencia:
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
-                nombre_referido = match.group(1)
-                # Guardar en lead_data para procesarlo después
-                if "referencia_nombre" not in self.lead_data:
-                    self.lead_data["referencia_nombre"] = nombre_referido
-                    self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
-                    self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
-                    print(f"👥 Referencia detectada: {nombre_referido}")
-                    print(f"   Contexto: {texto[:100]}...")
-                break
+                nombre_referido = match.group(1).strip()
+
+                # Filtrar palabras no válidas como nombres
+                palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información']
+                if nombre_referido.lower() not in palabras_invalidas and len(nombre_referido) > 2:
+                    # Guardar en lead_data para procesarlo después
+                    if "referencia_nombre" not in self.lead_data:
+                        self.lead_data["referencia_nombre"] = nombre_referido
+                        self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
+                        self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
+                        print(f"👥 Referencia detectada: {nombre_referido}")
+                        print(f"   Contexto: {texto[:100]}...")
+                    break
 
         # Detectar productos de interés
         productos_keywords = {
@@ -1504,8 +1509,9 @@ class AgenteVentas:
                     self.lead_data["objeciones"].append(objecion)
 
         # Detectar reprogramación
-        if any(palabra in texto_lower for palabra in ["llama después", "llámame", "después", "más tarde"]):
-            self.estado_llamada = "reprogramar"
+        if any(palabra in texto_lower for palabra in ["llama después", "llámame", "después", "más tarde", "reprograma", "otro día", "mañana"]):
+            self.lead_data["estado_llamada"] = "reprogramar"
+            print(f"📅 Reprogramación detectada en texto: {texto[:50]}...")
 
         # Agregar a notas
         if self.lead_data["notas"]:
@@ -2157,7 +2163,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         print(f"   La referencia NO se guardó - agregar el contacto manualmente")
 
                 # Guardar contexto de reprogramación si el cliente pidió ser llamado después
-                if self.estado_llamada == "reprogramar" and fila:
+                if self.lead_data.get("estado_llamada") == "reprogramar" and fila:
                     print(f"\n📅 Guardando contexto de reprogramación...")
 
                     # Extraer fecha y motivo si están disponibles
