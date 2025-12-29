@@ -658,6 +658,56 @@ def regenerar_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/listar-audios", methods=["GET"])
+def listar_audios():
+    """Lista todos los audios disponibles en el cache"""
+    import os
+
+    try:
+        archivos = []
+        if os.path.exists(CACHE_DIR):
+            for archivo in os.listdir(CACHE_DIR):
+                if archivo.endswith('.mp3'):
+                    filepath = os.path.join(CACHE_DIR, archivo)
+                    size = os.path.getsize(filepath)
+                    archivos.append({
+                        "nombre": archivo,
+                        "tamaño_kb": round(size / 1024, 2),
+                        "url_descarga": f"/descargar-audio/{archivo}"
+                    })
+
+        return {
+            "total": len(archivos),
+            "archivos": archivos,
+            "directorio": os.path.abspath(CACHE_DIR)
+        }
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/descargar-audio/<filename>", methods=["GET"])
+def descargar_audio(filename):
+    """Descarga un archivo de audio del cache"""
+    import os
+    from flask import send_file
+
+    try:
+        # Validar que el archivo existe y es MP3
+        if not filename.endswith('.mp3'):
+            return {"error": "Solo archivos MP3 permitidos"}, 400
+
+        filepath = os.path.join(CACHE_DIR, filename)
+
+        if not os.path.exists(filepath):
+            return {"error": "Archivo no encontrado"}, 404
+
+        return send_file(filepath, mimetype='audio/mpeg', as_attachment=True, download_name=filename)
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 @app.route("/info-cache", methods=["GET"])
 def info_cache():
     """Obtiene información detallada del caché"""
