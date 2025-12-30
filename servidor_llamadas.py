@@ -1110,8 +1110,9 @@ def status_callback():
                 base_url = request.url_root
 
                 def hacer_reintento():
+                    import sys
                     time.sleep(30)
-                    print(f"\n📞 Iniciando reintento inmediato a {telefono}...")
+                    print(f"\n📞 Iniciando reintento inmediato a {telefono}...", flush=True)
 
                     try:
                         import requests
@@ -1127,11 +1128,11 @@ def status_callback():
 
                         if response_call.status_code == 200:
                             data = response_call.json()
-                            print(f"   ✅ Reintento iniciado: {data.get('call_sid', 'Unknown')}")
+                            print(f"   ✅ Reintento iniciado: {data.get('call_sid', 'Unknown')}", flush=True)
                         else:
-                            print(f"   ⚠️ Error en reintento: {response_call.status_code}")
+                            print(f"   ⚠️ Error en reintento: {response_call.status_code}", flush=True)
                     except Exception as e:
-                        print(f"   ❌ Error iniciando reintento: {e}")
+                        print(f"   ❌ Error iniciando reintento: {e}", flush=True)
 
                 # Ejecutar reintento en thread separado para no bloquear el callback
                 thread = threading.Thread(target=hacer_reintento)
