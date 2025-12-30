@@ -322,6 +322,11 @@ Si NO quiere dar ni WhatsApp ni correo:
 
 FASE 5: CIERRE Y SIGUIENTE PASO
 
+⚠️ TIMING DE ENVÍO DEL CATÁLOGO - MUY IMPORTANTE:
+NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
+SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
+Razón: Un compañero del equipo lo envía, NO es automático. NO generes expectativas falsas.
+
 Si obtuviste WhatsApp:
 "Excelente[si tienes nombre: , [NOMBRE]]. En las próximas 2 horas le llega el catálogo completo por WhatsApp. Le voy a marcar algunos productos que creo pueden interesarle según lo que me comentó. También le incluyo información sobre nuestra promoción de primer pedido de $1,500 pesos con envío gratis, por si quiere hacer un pedido de prueba. Un compañero del equipo le dará seguimiento en los próximos días para resolver dudas. ¿Le parece bien?"
 
@@ -2349,6 +2354,11 @@ IMPORTANTE - Respuestas comunes del cliente:
 
 NUNCA repitas la solicitud del número si el cliente ya ofreció darlo o está a punto de darlo.
 NUNCA digas que no puedes enviar el catálogo. SIEMPRE puedes enviarlo.
+
+⚠️ TIMING DE ENVÍO DEL CATÁLOGO - MUY IMPORTANTE:
+NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente"
+SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
+Razón: Un compañero del equipo lo envía, NO es automático.
 """)
 
         # FASE 4: Si ya tenemos WhatsApp, proceder al cierre
