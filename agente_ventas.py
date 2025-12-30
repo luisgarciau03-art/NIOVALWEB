@@ -1503,33 +1503,34 @@ class AgenteVentas:
             # 1. Si ya tenemos nombre (o referencia sin nombre) pero falta número, buscar número
             # IMPORTANTE: Checar si la key existe en el dict, porque puede ser "" (string vacío)
             if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
-                for patron in patrones_tel:
-                    match = re.search(patron, texto_lower)
-                    if match:
-                        numero = re.sub(r'[^\d]', '', match.group(0))
+                # SCANNER SIMPLE: Detectar cualquier secuencia de 8+ dígitos (con o sin espacios/guiones)
+                # Esto detecta: "66 23 53 41 8", "6623534185", "66-23-53-41-85", etc.
+                numero = re.sub(r'[^\d]', '', texto)  # Extraer TODOS los dígitos del texto
 
-                        # Validar que tenga exactamente 10 dígitos
-                        if len(numero) == 10:
-                            numero_completo = f"+52{numero}"
-                            self.lead_data["referencia_telefono"] = numero_completo
-                            print(f"📞 Número de referencia detectado: {numero_completo}")
-                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
-                            break
+                print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+
+                # Si encontramos 8+ dígitos, es probablemente un número telefónico
+                if len(numero) >= 8:
+                    # Validar que tenga exactamente 10 dígitos
+                    if len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        self.lead_data["referencia_telefono"] = numero_completo
+                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                    else:
+                        # Número incorrecto - pedir número de 10 dígitos
+                        if len(numero) < 10:
+                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "incompleto"
                         else:
-                            # Número incorrecto - pedir número de 10 dígitos
-                            if len(numero) < 10:
-                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                estado = "incompleto"
-                            else:
-                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                estado = "con dígitos de más"
+                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "con dígitos de más"
 
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
-                            })
-                            break
+                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
+                        })
 
             # 2. Si NO tenemos nombre pero sí número, buscar nombre con patrones simples
             elif not self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
@@ -1553,33 +1554,33 @@ class AgenteVentas:
 
             # 3. Si NO tenemos nombre ni número, buscar número
             elif not self.lead_data.get("referencia_telefono"):
-                for patron in patrones_tel:
-                    match = re.search(patron, texto_lower)
-                    if match:
-                        numero = re.sub(r'[^\d]', '', match.group(0))
+                # SCANNER SIMPLE: Detectar cualquier secuencia de 8+ dígitos
+                numero = re.sub(r'[^\d]', '', texto)  # Extraer TODOS los dígitos
 
-                        # Validar que tenga exactamente 10 dígitos
-                        if len(numero) == 10:
-                            numero_completo = f"+52{numero}"
-                            self.lead_data["referencia_telefono"] = numero_completo
-                            print(f"📞 Número de referencia detectado: {numero_completo}")
-                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
-                            break
+                print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+
+                # Si encontramos 8+ dígitos, es probablemente un número telefónico
+                if len(numero) >= 8:
+                    # Validar que tenga exactamente 10 dígitos
+                    if len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        self.lead_data["referencia_telefono"] = numero_completo
+                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                    else:
+                        # Número incorrecto - pedir número de 10 dígitos
+                        if len(numero) < 10:
+                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "incompleto"
                         else:
-                            # Número incorrecto - pedir número de 10 dígitos
-                            if len(numero) < 10:
-                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                estado = "incompleto"
-                            else:
-                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                estado = "con dígitos de más"
+                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "con dígitos de más"
 
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
-                            })
-                            break
+                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
+                        })
 
         # Detectar productos de interés
         productos_keywords = {
