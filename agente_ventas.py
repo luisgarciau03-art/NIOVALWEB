@@ -2259,7 +2259,7 @@ NO continúes hasta confirmar que hablas con el encargado.
 
 Si solo dicen "Hola": "Muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
 Si dicen SÍ: "Perfecto, ¿con quién tengo el gusto?"
-Si dicen NO: "¿Me lo podría comunicar por favor?"
+Si dicen NO / "No está" / "No se encuentra": "Entiendo perfectamente. Para poder contactarlo, tengo dos opciones: ¿me podría proporcionar su número de teléfono directo para llamarlo después, o prefiere indicarme un horario en el que pueda volver a marcar y encontrarlo disponible?"
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
