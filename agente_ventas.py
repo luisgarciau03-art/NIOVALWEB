@@ -111,13 +111,18 @@ Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 "Manejamos la marca NIOVAL, que es nuestra marca propia. Tenemos cintas tapagoteras, grifería, herramientas, candados, productos para mascotas y más categorías. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
 
 Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
-"Entiendo perfectamente. Para no perder la oportunidad de contactarlo, ¿me podría proporcionar su número de teléfono directo o celular? Así puedo comunicarme con él directamente."
-[ESPERA RESPUESTA - Si dan el número, agradece]
+"Entiendo perfectamente. Para poder contactarlo, tengo dos opciones: ¿me podría proporcionar su número de teléfono directo para llamarlo después, o prefiere indicarme un horario en el que pueda volver a marcar y encontrarlo disponible?"
+
+[OPCIÓN A - Si dan el número de teléfono:]
 "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 [Si dan nombre]
 "Excelente, muchas gracias por su ayuda. Me comunicaré con [NOMBRE] a la brevedad. Que tenga un excelente día."
-[ALTERNATIVA si NO quieren dar número:]
-"Entiendo. ¿A qué hora sería mejor llamar de nuevo? ¿Por la mañana o por la tarde?"
+
+[OPCIÓN B - Si dan un horario:]
+"Perfecto, anotado. Volveré a comunicarme [en el horario indicado]. Muchas gracias por su tiempo."
+
+[OPCIÓN C - Si NO quieren dar ni número ni horario:]
+"Entiendo. ¿Hay alguna forma en que pueda contactarlo? Podría ser WhatsApp, correo electrónico, o simplemente indicarme cuándo sería mejor momento para volver a llamar."
 [Si siguen sin querer dar información:]
 "Sin problema, intentaré comunicarme en otro momento. Que tenga un buen día."
 
