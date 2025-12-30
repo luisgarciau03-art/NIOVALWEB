@@ -1455,16 +1455,18 @@ class AgenteVentas:
                         # Número incorrecto - pedir número de 10 dígitos
                         if len(numero) < 10:
                             print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "incompleto"
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos."
+                            })
                         else:
                             print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "con dígitos de más"
-
-                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                        self.conversation_history.append({
-                            "role": "system",
-                            "content": f"[SISTEMA] El número proporcionado está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números de WhatsApp en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos."
-                        })
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número de WhatsApp tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme su WhatsApp dígito por dígito? Por ejemplo: seis, seis, dos, tres...'"
+                            })
                         break
 
                     else:  # len(numero) == 10
@@ -1566,16 +1568,18 @@ class AgenteVentas:
                         # Número incorrecto - pedir número de 10 dígitos
                         if len(numero) < 10:
                             print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "incompleto"
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
+                            })
                         else:
                             print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "con dígitos de más"
-
-                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                        self.conversation_history.append({
-                            "role": "system",
-                            "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
-                        })
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
+                            })
 
             # 2. Si NO tenemos nombre pero sí número, buscar nombre con patrones simples
             elif not self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
@@ -1619,16 +1623,18 @@ class AgenteVentas:
                         # Número incorrecto - pedir número de 10 dígitos
                         if len(numero) < 10:
                             print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "incompleto"
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
+                            })
                         else:
                             print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                            estado = "con dígitos de más"
-
-                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                        self.conversation_history.append({
-                            "role": "system",
-                            "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
-                        })
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
+                            })
 
         # Detectar productos de interés
         productos_keywords = {
