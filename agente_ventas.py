@@ -2372,17 +2372,31 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                 print(f"\n📝 Verificando actualización en LISTA DE CONTACTOS...")
                 print(f"   Fila: {fila}")
                 print(f"   WhatsApp capturado: {self.lead_data['whatsapp']}")
+                print(f"   Referencia capturada: {self.lead_data.get('referencia_telefono', '')}")
                 print(f"   Email capturado: {self.lead_data['email']}")
 
-                if self.lead_data["whatsapp"] and fila:
-                    print(f"   ➡️ Actualizando WhatsApp en columna E:E fila {fila}...")
+                # Determinar qué número actualizar en columna E
+                numero_para_columna_e = None
+
+                # Prioridad 1: WhatsApp directo del contacto
+                if self.lead_data["whatsapp"]:
+                    numero_para_columna_e = self.lead_data["whatsapp"]
+                    tipo_numero = "WhatsApp directo"
+                # Prioridad 2: Número de referencia (encargado/contacto)
+                elif self.lead_data.get("referencia_telefono"):
+                    numero_para_columna_e = self.lead_data["referencia_telefono"]
+                    tipo_numero = "Número de referencia"
+
+                # Actualizar columna E si tenemos algún número
+                if numero_para_columna_e and fila:
+                    print(f"   ➡️ Actualizando columna E:E fila {fila} con {tipo_numero}...")
                     self.sheets_manager.actualizar_numero_con_whatsapp(
                         fila=fila,
-                        whatsapp=self.lead_data["whatsapp"]
+                        whatsapp=numero_para_columna_e
                     )
-                    print(f"✅ WhatsApp actualizado en LISTA DE CONTACTOS (columna E)")
-                elif not self.lead_data["whatsapp"]:
-                    print(f"⚠️ No se capturó WhatsApp durante la llamada - no se actualiza columna E")
+                    print(f"✅ Columna E actualizada con {tipo_numero}: {numero_para_columna_e}")
+                elif not numero_para_columna_e:
+                    print(f"⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E")
                 elif not fila:
                     print(f"⚠️ No se tiene fila del contacto - no se puede actualizar")
 
