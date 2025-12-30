@@ -113,10 +113,21 @@ Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
 "Entiendo perfectamente. Para poder contactarlo, tengo dos opciones: ¿me podría proporcionar su número de teléfono directo para llamarlo después, o prefiere indicarme un horario en el que pueda volver a marcar y encontrarlo disponible?"
 
+⚠️ IMPORTANTE - Si el cliente ofrece dar el número:
+- Si dicen "Te paso su contacto" / "Le doy el número": Di solo "Perfecto, estoy listo." y ESPERA el número SIN volver a pedirlo.
+- Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
+- NUNCA repitas la solicitud del número si el cliente ya ofreció darlo.
+
 [OPCIÓN A - Si dan el número de teléfono:]
 "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 [Si dan nombre]
-"Excelente, muchas gracias por su ayuda. Me comunicaré con [NOMBRE] a la brevedad. Que tenga un excelente día."
+"Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para poder prepararle una mejor propuesta al encargado, ¿me podría comentar brevemente qué tipo de productos de ferretería manejan más? Por ejemplo, si venden herramientas, grifería, productos eléctricos..."
+[ESPERA RESPUESTA]
+[Después de obtener contexto:]
+"Perfecto, eso me ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen un proveedor principal?"
+[ESPERA RESPUESTA]
+[Después de obtener info de proveedores:]
+"Entendido, aprecio mucho la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
 
 [OPCIÓN B - Si dan un horario:]
 "Perfecto, anotado. Volveré a comunicarme [en el horario indicado]. Muchas gracias por su tiempo."
@@ -275,7 +286,12 @@ IMPORTANTE:
 "Me gustaría enviarle nuestro catálogo digital completo con lista de precios para que lo revise con calma. Le puedo compartir todo por WhatsApp que es más rápido y visual. ¿Cuál es su número de WhatsApp?"
 [ESPERA RESPUESTA]
 
-Si dice que SÍ tiene WhatsApp o da el número:
+⚠️ IMPORTANTE - Si el cliente ofrece dar el número:
+- Si dicen "Te paso el contacto" / "Te lo doy": Di solo "Perfecto, estoy listo para anotarlo." y ESPERA el número SIN volver a pedirlo.
+- Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
+- NUNCA repitas la solicitud del número si el cliente ya ofreció darlo.
+
+Si dice que SÍ tiene WhatsApp o da el número directamente:
 "Perfecto, entonces anoto el WhatsApp: [XX XX XX XX XX]. ¿Es correcto?"
 [IMPORTANTE: Repite el número en GRUPOS DE 2 DÍGITOS lentamente para validación]
 [ESPERA CONFIRMACIÓN]
@@ -2270,6 +2286,11 @@ Si solo dicen "Hola": "Muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOV
 Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): "Perfecto, ¿me lo podría comunicar por favor?"
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto, ¿con quién tengo el gusto?"
 Si dicen NO / "No está" / "No se encuentra": "Entiendo perfectamente. Para poder contactarlo, tengo dos opciones: ¿me podría proporcionar su número de teléfono directo para llamarlo después, o prefiere indicarme un horario en el que pueda volver a marcar y encontrarlo disponible?"
+
+IMPORTANTE - Si el cliente ofrece dar el número:
+- Si dicen "Te paso su contacto" / "Le doy el número": Di solo "Perfecto, estoy listo." y ESPERA el número SIN volver a pedirlo.
+- Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
+- NUNCA repitas la solicitud del número si el cliente ya ofreció darlo.
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
@@ -2302,9 +2323,13 @@ CRÍTICO: Tú SÍ puedes enviar el catálogo por WhatsApp. Un compañero del equ
 
 Di: "Me gustaría enviarle nuestro catálogo digital completo con lista de precios para que lo revise con calma. Le puedo compartir todo por WhatsApp que es más rápido y visual. ¿Cuál es su número de WhatsApp?"
 
-Si da número: Di el número en grupos de 2 dígitos y pregunta si es correcto.
-Si no tiene: "Entiendo. ¿Tiene correo electrónico donde enviarle el catálogo?"
+IMPORTANTE - Respuestas comunes del cliente:
+- Si dicen "Te paso el contacto" / "Te lo doy": Di solo "Perfecto, estoy listo para anotarlo." y ESPERA el número SIN volver a pedirlo.
+- Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
+- Si dan el número directamente: Di el número en grupos de 2 dígitos y pregunta si es correcto.
+- Si no tienen WhatsApp: "Entiendo. ¿Tiene correo electrónico donde enviarle el catálogo?"
 
+NUNCA repitas la solicitud del número si el cliente ya ofreció darlo o está a punto de darlo.
 NUNCA digas que no puedes enviar el catálogo. SIEMPRE puedes enviarlo.
 """)
 
