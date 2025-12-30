@@ -1521,17 +1521,21 @@ class AgenteVentas:
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
 
-                        # Aceptar números de 9 o 10 dígitos
-                        if len(numero) == 9:
-                            # Números de 9 dígitos (común en Sonora): agregar 6 al inicio
-                            numero = "6" + numero
-                            print(f"ℹ️  Número de 9 dígitos detectado, completando: {numero}")
-
+                        # Solo aceptar números completos de 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                            break
+                        elif len(numero) == 9:
+                            # Número incompleto - pedir confirmación o número completo
+                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto parece incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de México son de 10 dígitos. Debes pedirle que confirme si ese es el número correcto o que proporcione el número COMPLETO de 10 dígitos de manera natural."
+                            })
                             break
 
             # 2. Si NO tenemos nombre pero sí número, buscar nombre con patrones simples
@@ -1561,17 +1565,21 @@ class AgenteVentas:
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
 
-                        # Aceptar números de 9 o 10 dígitos
-                        if len(numero) == 9:
-                            # Números de 9 dígitos (común en Sonora): agregar 6 al inicio
-                            numero = "6" + numero
-                            print(f"ℹ️  Número de 9 dígitos detectado, completando: {numero}")
-
+                        # Solo aceptar números completos de 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                            break
+                        elif len(numero) == 9:
+                            # Número incompleto - pedir confirmación o número completo
+                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto parece incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de México son de 10 dígitos. Debes pedirle que confirme si ese es el número correcto o que proporcione el número COMPLETO de 10 dígitos de manera natural."
+                            })
                             break
 
         # Detectar productos de interés
