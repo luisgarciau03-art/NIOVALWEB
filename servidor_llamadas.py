@@ -806,17 +806,22 @@ def procesar_respuesta():
                     # Columna F ya se limpió para que vuelva a aparecer como pendiente
                     print(f"📅 Reprogramación guardada en columna W")
 
-                # 3. OTROS ESTADOS - Solo marcar en U si es primera llamada
+                # 3. OTROS ESTADOS - Marcar en U (primera o subsecuente llamada)
                 elif fila:
                     # NO marcar en columna F
-                    # Solo verificar si es primera llamada y marcar en U
-                    if not sheets_manager.verificar_contacto_ya_llamado(fila):
-                        # Obtener el número llamado del contacto_info
-                        telefono_llamado = agente.contacto_info.get('telefono')
-                        sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
+                    # Siempre marcar en U, sin importar si ya fue llamado antes
+                    # Las columnas U/V/W se usan para CONTEXTO, no para bloquear llamadas
+                    telefono_llamado = agente.contacto_info.get('telefono')
+
+                    # Verificar si es primera llamada solo para el mensaje de log
+                    es_primera_llamada = not sheets_manager.verificar_contacto_ya_llamado(fila)
+
+                    sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
+
+                    if es_primera_llamada:
                         print(f"📝 Primera llamada registrada en columna U con número: {telefono_llamado}")
                     else:
-                        print(f"ℹ️  Contacto ya fue llamado anteriormente (columnas U/V/W tienen datos)")
+                        print(f"📝 Llamada subsecuente registrada en columna U con número: {telefono_llamado}")
 
         except Exception as e:
             print(f"❌ Error guardando llamada {call_sid}: {e}")
