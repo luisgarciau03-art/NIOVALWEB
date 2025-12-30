@@ -1069,6 +1069,63 @@ def status_callback():
     if answered_by:
         print(f"   AnsweredBy: {answered_by}")
 
+    # NUEVO: Manejo de buzón detectado por Twilio - REINTENTO INMEDIATO
+    if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
+        print(f"   📞 Buzón detectado por Twilio: {answered_by}")
+
+        # Obtener info del contacto (puede estar en conversaciones_activas o contactos_llamadas)
+        contacto_info = None
+        if call_sid in conversaciones_activas:
+            contacto_info = conversaciones_activas[call_sid].contacto_info
+        elif call_sid in contactos_llamadas:
+            contacto_info = contactos_llamadas[call_sid]
+
+        if contacto_info and nioval_adapter:
+            fila = contacto_info.get('fila') or contacto_info.get('ID')
+            telefono = contacto_info.get('telefono')
+            nombre_negocio = contacto_info.get('nombre_negocio', 'cliente')
+
+            # Marcar intento de buzón
+            intentos = nioval_adapter.marcar_intento_buzon(fila)
+            print(f"   📞 Intento de buzón #{intentos} registrado")
+
+            if intentos == 1:
+                # PRIMER intento - REINTENTO INMEDIATO
+                print(f"   🔄 Primer buzón - programando reintento inmediato...")
+                print(f"   ⏰ Esperando 30 segundos...")
+
+                import time
+                import threading
+
+                def hacer_reintento():
+                    time.sleep(30)
+                    print(f"\n📞 Iniciando reintento inmediato a {telefono}...")
+
+                    try:
+                        import requests
+                        response_call = requests.post(
+                            f"{request.url_root}iniciar-llamada",
+                            json={
+                                "telefono": telefono,
+                                "nombre_negocio": nombre_negocio,
+                                "contacto_info": contacto_info
+                            },
+                            timeout=10
+                        )
+
+                        if response_call.status_code == 200:
+                            data = response_call.json()
+                            print(f"   ✅ Reintento iniciado: {data.get('call_sid', 'Unknown')}")
+                        else:
+                            print(f"   ⚠️ Error en reintento: {response_call.status_code}")
+                    except Exception as e:
+                        print(f"   ❌ Error iniciando reintento: {e}")
+
+                # Ejecutar reintento en thread separado para no bloquear el callback
+                thread = threading.Thread(target=hacer_reintento)
+                thread.daemon = True
+                thread.start()
+
     # Si la llamada terminó y el agente aún existe en memoria
     if call_status == "completed" and call_sid in conversaciones_activas:
         agente = conversaciones_activas[call_sid]
