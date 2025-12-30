@@ -1609,8 +1609,14 @@ class AgenteVentas:
 
                     print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
-                    # Si encontramos 8+ dígitos, es probablemente un número telefónico
-                    if len(numero) >= 8:
+                    # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
+                    # cuando el cliente está en medio de dictar el número
+                    if len(numero) >= 1 and len(numero) <= 5:
+                        print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                        # NO agregamos mensajes al sistema, dejamos que el cliente continúe
+
+                    # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
+                    elif len(numero) >= 6:
                         # Validar que tenga exactamente 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
@@ -1672,8 +1678,14 @@ class AgenteVentas:
 
                     print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
-                    # Si encontramos 8+ dígitos, es probablemente un número telefónico
-                    if len(numero) >= 8:
+                    # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
+                    # cuando el cliente está en medio de dictar el número
+                    if len(numero) >= 1 and len(numero) <= 5:
+                        print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                        # NO agregamos mensajes al sistema, dejamos que el cliente continúe
+
+                    # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
+                    elif len(numero) >= 6:
                         # Validar que tenga exactamente 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
