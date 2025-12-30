@@ -650,7 +650,7 @@ def webhook_voz():
         input="speech",
         language="es-MX",
         timeout=5,  # Tiempo de espera antes de timeout
-        speech_timeout=3,  # Tiempo después de que cliente deja de hablar
+        speech_timeout=1,  # OPTIMIZADO: 1s después de que cliente deja de hablar (antes 3s)
         action="/procesar-respuesta",
         method="POST"
     )
@@ -807,29 +807,16 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
-    # Esperar máximo 5 segundos por GPT
+    # OPTIMIZACIÓN: Timeout más corto para respuestas más rápidas
+    # Esperar máximo 5 segundos por GPT (suficiente para respuestas normales)
     gpt_thread.join(timeout=5.0)
 
-    # Si GPT no terminó en 5 segundos, reproducir audio de "pensando"
     if not respuesta_container["completado"]:
-        print(f"⏰ GPT tardando más de 5s - reproduciendo audio de relleno...")
-
-        # Reproducir audio de "pensando" desde cache
-        if "pensando" in audio_cache:
-            audio_pensando_url = request.url_root + f"audio/pensando_{call_sid}"
-            # Copiar audio del cache a un ID temporal
-            audio_files[f"pensando_{call_sid}"] = audio_cache["pensando"]
-            response.play(audio_pensando_url)
-
-        # Esperar a que GPT termine (máximo 25 segundos adicionales)
-        gpt_thread.join(timeout=25.0)
-
-        if not respuesta_container["completado"]:
-            # GPT tardó más de 30 segundos total - error timeout
-            print(f"❌ GPT timeout después de 30s")
-            response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
-            response.hangup()
-            return Response(str(response), mimetype="text/xml")
+        # GPT tardó más de 5 segundos - timeout
+        print(f"❌ GPT timeout después de 5s")
+        response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
 
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
@@ -978,7 +965,7 @@ def procesar_respuesta():
             input="speech",
             language="es-MX",
             timeout=5,  # Tiempo de espera antes de timeout
-            speech_timeout=3,  # Tiempo después de que cliente deja de hablar
+            speech_timeout=1,  # OPTIMIZADO: 1s después de que cliente deja de hablar (antes 3s)
             action="/procesar-respuesta",
             method="POST"
         )
