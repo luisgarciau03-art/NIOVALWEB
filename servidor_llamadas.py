@@ -541,13 +541,15 @@ def iniciar_llamada():
         return {"error": "Teléfono requerido"}, 400
 
     try:
-        # Crear llamada con Twilio (con grabación automática habilitada)
+        # Crear llamada con Twilio (con grabación y detección de buzón automática)
         call = twilio_client.calls.create(
             to=telefono_destino,
             from_=TWILIO_PHONE_NUMBER,
             url=request.url_root + "webhook-voz",
             method="POST",
-            record=True  # Grabar llamada automáticamente
+            record=True,  # Grabar llamada automáticamente
+            machine_detection="DetectMessageEnd",  # Detectar buzón de voz automáticamente
+            machine_detection_timeout=5  # Timeout de 5 segundos para detectar
         )
 
         # Guardar info del contacto para usar en el webhook
@@ -668,9 +670,61 @@ def procesar_respuesta():
     if request.method == "GET":
         call_sid = request.args.get("CallSid")
         speech_result = request.args.get("SpeechResult", "")
+        call_status = request.args.get("CallStatus", "")
+        answered_by = request.args.get("AnsweredBy", "")
     else:
         call_sid = request.form.get("CallSid")
         speech_result = request.form.get("SpeechResult", "")
+        call_status = request.form.get("CallStatus", "")
+        answered_by = request.form.get("AnsweredBy", "")
+
+    # Verificar si Twilio detectó buzón de voz (AnsweredBy=machine_start)
+    if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
+        print(f"📞 Buzón de voz detectado automáticamente por Twilio: {answered_by}")
+        print(f"💬 Marcando como BUZON")
+
+        # Obtener agente si existe
+        agente = conversaciones_activas.get(call_sid)
+        if agente:
+            # Marcar como "Buzon"
+            agente.lead_data["estado_llamada"] = "Buzon"
+            agente.lead_data["pregunta_0"] = "Buzon"
+            agente.lead_data["pregunta_7"] = "BUZON"
+            agente.lead_data["resultado"] = "NEGADO"
+            print(f"📝 Estado actualizado: Buzón detectado automáticamente")
+
+            # Guardar la llamada
+            agente.guardar_llamada_y_lead()
+
+        # Terminar con respuesta TwiML
+        response = VoiceResponse()
+        response.say("Disculpe, parece que entró el buzón de voz. Le llamaré en otro momento. Que tenga buen día.", language="es-MX")
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
+
+    # Verificar si la llamada ya terminó (cliente colgó)
+    if call_status in ["completed", "busy", "no-answer", "canceled", "failed"]:
+        print(f"📞 Llamada terminada - Estado: {call_status}")
+        print(f"💬 Cliente colgó o llamada desconectada")
+
+        # Obtener agente si existe
+        agente = conversaciones_activas.get(call_sid)
+        if agente:
+            # Marcar como "Colgo" si no hay otro estado especial
+            if agente.lead_data["estado_llamada"] == "Respondio":
+                agente.lead_data["estado_llamada"] = "Colgo"
+                agente.lead_data["pregunta_0"] = "Colgo"
+                agente.lead_data["pregunta_7"] = "Colgo"
+                agente.lead_data["resultado"] = "NEGADO"
+                print(f"📝 Estado actualizado: Cliente colgó")
+
+            # Guardar la llamada
+            agente.guardar_llamada_y_lead()
+
+        # Terminar con respuesta TwiML
+        response = VoiceResponse()
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
 
     # Obtener agente de esta conversación
     agente = conversaciones_activas.get(call_sid)
@@ -683,6 +737,36 @@ def procesar_respuesta():
 
     # LOG: Mostrar lo que dijo el cliente
     print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
+
+    # Detectar respuestas vacías consecutivas (cliente ya no está en línea)
+    if not speech_result or speech_result.strip() == "":
+        agente.respuestas_vacias_consecutivas += 1
+        print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
+
+        # Si hay 3 respuestas vacías consecutivas, cliente probablemente colgó
+        if agente.respuestas_vacias_consecutivas >= 3:
+            print(f"📞 Detectadas 3 respuestas vacías consecutivas")
+            print(f"💬 Cliente probablemente colgó o no responde")
+
+            # Marcar como "Colgo" o "No Contesta" según el caso
+            if agente.lead_data["estado_llamada"] == "Respondio":
+                # Si había respondido antes, probablemente colgó
+                agente.lead_data["estado_llamada"] = "Colgo"
+                agente.lead_data["pregunta_0"] = "Colgo"
+                agente.lead_data["pregunta_7"] = "Colgo"
+                agente.lead_data["resultado"] = "NEGADO"
+                print(f"📝 Estado actualizado: Cliente colgó (3 silencios)")
+
+            # Guardar la llamada
+            agente.guardar_llamada_y_lead()
+
+            # Terminar llamada
+            response = VoiceResponse()
+            response.hangup()
+            return Response(str(response), mimetype="text/xml")
+    else:
+        # Resetear contador si hubo respuesta
+        agente.respuestas_vacias_consecutivas = 0
 
     # Procesar respuesta con GPT-4o
     import time

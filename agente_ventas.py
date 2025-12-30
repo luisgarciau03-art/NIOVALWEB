@@ -1173,6 +1173,7 @@ class AgenteVentas:
         self.sheets_manager = sheets_manager
         self.resultados_manager = resultados_manager
         self.whatsapp_validator = whatsapp_validator
+        self.respuestas_vacias_consecutivas = 0  # Contador para detectar cuelgue
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
