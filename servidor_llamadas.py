@@ -1089,13 +1089,13 @@ def status_callback():
         elif call_sid in contactos_llamadas:
             contacto_info = contactos_llamadas[call_sid]
 
-        if contacto_info and nioval_adapter:
+        if contacto_info and sheets_manager:
             fila = contacto_info.get('fila') or contacto_info.get('ID')
             telefono = contacto_info.get('telefono')
             nombre_negocio = contacto_info.get('nombre_negocio', 'cliente')
 
             # Marcar intento de buzón
-            intentos = nioval_adapter.marcar_intento_buzon(fila)
+            intentos = sheets_manager.marcar_intento_buzon(fila)
             print(f"   📞 Intento de buzón #{intentos} registrado")
 
             if intentos == 1:
