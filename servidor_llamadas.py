@@ -549,7 +549,9 @@ def iniciar_llamada():
             method="POST",
             record=True,  # Grabar llamada automáticamente
             machine_detection="DetectMessageEnd",  # Detectar buzón de voz automáticamente
-            machine_detection_timeout=5  # Timeout de 5 segundos para detectar
+            machine_detection_timeout=5,  # Timeout de 5 segundos para detectar
+            status_callback=request.url_root + "status-callback",  # Webhook para estado de llamada
+            status_callback_event=["completed"]  # Notificar cuando termine
         )
 
         # Guardar info del contacto para usar en el webhook
@@ -672,11 +674,29 @@ def procesar_respuesta():
         speech_result = request.args.get("SpeechResult", "")
         call_status = request.args.get("CallStatus", "")
         answered_by = request.args.get("AnsweredBy", "")
+
+        # DEBUG: Log todos los parámetros de Twilio
+        print(f"\n🔍 DEBUG - Parámetros Twilio (GET):")
+        print(f"   CallSid: {call_sid}")
+        print(f"   CallStatus: {call_status}")
+        print(f"   AnsweredBy: {answered_by}")
+        print(f"   SpeechResult: '{speech_result}'")
+        if request.args.get("Digits"):
+            print(f"   Digits: {request.args.get('Digits')}")
     else:
         call_sid = request.form.get("CallSid")
         speech_result = request.form.get("SpeechResult", "")
         call_status = request.form.get("CallStatus", "")
         answered_by = request.form.get("AnsweredBy", "")
+
+        # DEBUG: Log todos los parámetros de Twilio
+        print(f"\n🔍 DEBUG - Parámetros Twilio (POST):")
+        print(f"   CallSid: {call_sid}")
+        print(f"   CallStatus: {call_status}")
+        print(f"   AnsweredBy: {answered_by}")
+        print(f"   SpeechResult: '{speech_result}'")
+        if request.form.get("Digits"):
+            print(f"   Digits: {request.form.get('Digits')}")
 
     # Verificar si Twilio detectó buzón de voz (AnsweredBy=machine_start)
     if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
@@ -987,6 +1007,61 @@ def llamadas_masivas():
             })
     
     return {"resultados": resultados}
+
+
+@app.route("/status-callback", methods=["POST"])
+def status_callback():
+    """
+    Webhook que Twilio llama cuando cambia el estado de una llamada
+    Se usa para detectar cuando el cliente cuelga o entra buzón
+    """
+    call_sid = request.form.get("CallSid")
+    call_status = request.form.get("CallStatus")
+    call_duration = request.form.get("CallDuration")
+    answered_by = request.form.get("AnsweredBy", "")
+
+    print(f"\n📞 STATUS CALLBACK - Llamada {call_sid[:10]}...")
+    print(f"   Estado: {call_status}")
+    print(f"   Duración: {call_duration}s")
+    if answered_by:
+        print(f"   AnsweredBy: {answered_by}")
+
+    # Si la llamada terminó y el agente aún existe en memoria
+    if call_status == "completed" and call_sid in conversaciones_activas:
+        agente = conversaciones_activas[call_sid]
+
+        # Verificar si fue buzón de voz
+        if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
+            if agente.lead_data["estado_llamada"] == "Respondio":
+                print(f"   📞 Buzón de voz - detectado por status callback")
+                agente.lead_data["estado_llamada"] = "Buzon"
+                agente.lead_data["pregunta_0"] = "Buzon"
+                agente.lead_data["pregunta_7"] = "BUZON"
+                agente.lead_data["resultado"] = "NEGADO"
+
+                # Guardar la llamada
+                try:
+                    agente.guardar_llamada_y_lead()
+                    print(f"   ✅ Buzón guardado desde status callback")
+                except Exception as e:
+                    print(f"   ⚠️ Error guardando buzón desde status callback: {e}")
+
+        # Si no fue buzón, marcar como "Colgo" si aún está en estado "Respondio"
+        elif agente.lead_data["estado_llamada"] == "Respondio":
+            print(f"   💬 Cliente colgó - detectado por status callback")
+            agente.lead_data["estado_llamada"] = "Colgo"
+            agente.lead_data["pregunta_0"] = "Colgo"
+            agente.lead_data["pregunta_7"] = "Colgo"
+            agente.lead_data["resultado"] = "NEGADO"
+
+            # Guardar la llamada
+            try:
+                agente.guardar_llamada_y_lead()
+                print(f"   ✅ Llamada guardada desde status callback")
+            except Exception as e:
+                print(f"   ⚠️ Error guardando desde status callback: {e}")
+
+    return Response("OK", status=200)
 
 
 @app.route("/status/<call_sid>", methods=["GET"])
