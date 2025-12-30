@@ -2446,8 +2446,10 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                     fila_referido = None
 
                     for contacto in contactos:
-                        if contacto['telefono'] == telefono_referido:
+                        # IMPORTANTE: Excluir la fila actual para evitar referencia circular
+                        if contacto['telefono'] == telefono_referido and contacto['fila'] != fila:
                             fila_referido = contacto['fila']
+                            print(f"   ✅ Referido encontrado en fila {contacto['fila']}: {contacto.get('nombre_negocio', 'Sin nombre')}")
                             break
 
                     if fila_referido:
