@@ -1473,69 +1473,9 @@ class AgenteVentas:
         elif any(palabra in texto_lower for palabra in palabras_rechazo):
             self.lead_data["interesado"] = False
 
-        # Detectar WhatsApp en el texto
-        # Patrones: 3312345678, 33-1234-5678, +523312345678, 66 23 53 41 85, etc.
-        patrones_tel = [
-            r'\+?52\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})',  # +52 66 23 53 41 85 (espacio cada 2)
-            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',              # 66 23 53 41 85 (espacio cada 2)
-            r'\+?52\s?(\d{2})\s?(\d{4})\s?(\d{4})',                      # +52 33 1234 5678
-            r'(\d{2})\s?(\d{4})\s?(\d{4})',                              # 33 1234 5678
-            r'(\d{8,10})'                                                 # 12345678, 123456789, 1234567890 (8-10 dígitos)
-        ]
-
-        # IMPORTANTE: Si ya detectamos una referencia pendiente, NO capturar números como WhatsApp
-        # Los números deben guardarse como referencia_telefono
-        tiene_referencia_pendiente = ("referencia_nombre" in self.lead_data and
-                                      not self.lead_data.get("referencia_telefono"))
-
-        if not tiene_referencia_pendiente:
-            # Solo buscar WhatsApp si NO hay referencia pendiente
-            for patron in patrones_tel:
-                match = re.search(patron, texto)
-                if match:
-                    numero = ''.join(match.groups())
-
-                    # Validar longitud del número (solo 10 dígitos)
-                    if len(numero) != 10:
-                        # Número incorrecto - pedir número de 10 dígitos
-                        if len(numero) < 10:
-                            print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos."
-                            })
-                        else:
-                            print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número de WhatsApp tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme su WhatsApp dígito por dígito? Por ejemplo: seis, seis, dos, tres...'"
-                            })
-                        break
-
-                    else:  # len(numero) == 10
-                        numero_completo = f"+52{numero}"
-                        print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
-
-                        # Validación simple: solo verificar formato y cantidad de dígitos
-                        # Asumimos que todos los números móviles mexicanos de 10 dígitos tienen WhatsApp
-                        self.lead_data["whatsapp"] = numero_completo
-                        self.lead_data["whatsapp_valido"] = True
-                        print(f"   ✅ Formato válido (10 dígitos)")
-                        print(f"   💾 WhatsApp guardado: {numero_completo}")
-
-                    break
-        else:
-            print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
-
-        # Detectar email
-        patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        match_email = re.search(patron_email, texto)
-        if match_email:
-            self.lead_data["email"] = match_email.group(0)
-            print(f"📧 Email detectado: {self.lead_data['email']}")
-
+        # ============================================================
+        # PASO 1: DETECTAR REFERENCIAS PRIMERO (antes de WhatsApp)
+        # ============================================================
         # Detectar referencias (cuando el cliente pasa contacto de otra persona)
         # IMPORTANTE: Ordenar patrones de MÁS ESPECÍFICO a MENOS ESPECÍFICO
         # para evitar falsos positivos
@@ -1623,6 +1563,13 @@ class AgenteVentas:
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+
+                            # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                            })
                         else:
                             # Número incorrecto - pedir número de 10 dígitos
                             if len(numero) < 10:
@@ -1692,6 +1639,13 @@ class AgenteVentas:
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+
+                            # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                            })
                         else:
                             # Número incorrecto - pedir número de 10 dígitos
                             if len(numero) < 10:
@@ -1708,6 +1662,72 @@ class AgenteVentas:
                                     "role": "system",
                                     "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
                                 })
+
+        # ============================================================
+        # PASO 2: DETECTAR WHATSAPP (solo si NO hay referencia pendiente)
+        # ============================================================
+        # Detectar WhatsApp en el texto
+        # Patrones: 3312345678, 33-1234-5678, +523312345678, 66 23 53 41 85, etc.
+        patrones_tel = [
+            r'\+?52\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})',  # +52 66 23 53 41 85 (espacio cada 2)
+            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',              # 66 23 53 41 85 (espacio cada 2)
+            r'\+?52\s?(\d{2})\s?(\d{4})\s?(\d{4})',                      # +52 33 1234 5678
+            r'(\d{2})\s?(\d{4})\s?(\d{4})',                              # 33 1234 5678
+            r'(\d{8,10})'                                                 # 12345678, 123456789, 1234567890 (8-10 dígitos)
+        ]
+
+        # IMPORTANTE: Si ya detectamos una referencia pendiente, NO capturar números como WhatsApp
+        # Los números deben guardarse como referencia_telefono
+        tiene_referencia_pendiente = ("referencia_nombre" in self.lead_data and
+                                      not self.lead_data.get("referencia_telefono"))
+
+        if not tiene_referencia_pendiente:
+            # Solo buscar WhatsApp si NO hay referencia pendiente
+            for patron in patrones_tel:
+                match = re.search(patron, texto)
+                if match:
+                    numero = ''.join(match.groups())
+
+                    # Validar longitud del número (solo 10 dígitos)
+                    if len(numero) != 10:
+                        # Número incorrecto - pedir número de 10 dígitos
+                        if len(numero) < 10:
+                            print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos."
+                            })
+                        else:
+                            print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número de WhatsApp tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme su WhatsApp dígito por dígito? Por ejemplo: seis, seis, dos, tres...'"
+                            })
+                        break
+
+                    else:  # len(numero) == 10
+                        numero_completo = f"+52{numero}"
+                        print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
+
+                        # Validación simple: solo verificar formato y cantidad de dígitos
+                        # Asumimos que todos los números móviles mexicanos de 10 dígitos tienen WhatsApp
+                        self.lead_data["whatsapp"] = numero_completo
+                        self.lead_data["whatsapp_valido"] = True
+                        print(f"   ✅ Formato válido (10 dígitos)")
+                        print(f"   💾 WhatsApp guardado: {numero_completo}")
+
+                    break
+        else:
+            print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
+
+        # Detectar email
+        patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        match_email = re.search(patron_email, texto)
+        if match_email:
+            self.lead_data["email"] = match_email.group(0)
+            print(f"📧 Email detectado: {self.lead_data['email']}")
 
         # Detectar productos de interés
         productos_keywords = {
