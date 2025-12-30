@@ -1408,48 +1408,33 @@ class AgenteVentas:
                 if match:
                     numero = ''.join(match.groups())
 
-                    # Validar longitud del número
-                    if len(numero) < 10:
-                        # Número incompleto - pedir número completo
-                        print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                    # Validar longitud del número (solo 10 dígitos)
+                    if len(numero) != 10:
+                        # Número incorrecto - pedir número de 10 dígitos
+                        if len(numero) < 10:
+                            print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "incompleto"
+                        else:
+                            print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
+                            estado = "con dígitos de más"
+
                         numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"[SISTEMA] El cliente proporcionó un número incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de WhatsApp en México deben tener 10 dígitos. Debes pedirle que proporcione el número COMPLETO de 10 dígitos. Ejemplo de respuesta: 'Disculpe, me proporcionó {numero_formateado}, pero me faltan dígitos. Los números de WhatsApp en México son de 10 dígitos. ¿Podría darme el número completo?'"
+                            "content": f"[SISTEMA] El número proporcionado está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números de WhatsApp en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos."
                         })
                         break
 
-                    elif len(numero) == 10:
+                    else:  # len(numero) == 10
                         numero_completo = f"+52{numero}"
                         print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
 
-                        # Validar WhatsApp si tenemos validador
-                        if self.whatsapp_validator:
-                            print(f"   🔍 Validando número con Twilio Lookup...")
-                            es_valido = self._validar_whatsapp(numero_completo)
-
-                            if es_valido:
-                                # Solo guardamos si es válido
-                                self.lead_data["whatsapp"] = numero_completo
-                                self.lead_data["whatsapp_valido"] = True
-                                print(f"   ✅ Número VÁLIDO - WhatsApp activo confirmado")
-                                print(f"   💾 WhatsApp guardado: {numero_completo}")
-                            else:
-                                # No es válido - el agente debe pedir confirmación
-                                # Agregamos un mensaje de sistema para que GPT sepa que debe re-preguntar
-                                print(f"   ❌ Número NO VÁLIDO - WhatsApp NO activo")
-                                print(f"   ⚠️ No se guardará en lead_data - se pedirá otro número")
-                                numero_formateado = f"{numero[:2]} {numero[2:4]} {numero[4:6]} {numero[6:8]} {numero[8:]}"
-                                self.conversation_history.append({
-                                    "role": "system",
-                                    "content": f"[SISTEMA] El número {numero_formateado} NO tiene WhatsApp activo. Debes informar al cliente de manera natural y pedirle que proporcione otro número de WhatsApp o confirme si tiene uno diferente."
-                                })
-                        else:
-                            # Sin validador, guardamos directamente
-                            print(f"   ⚠️ Validador no disponible - guardando sin validar")
-                            self.lead_data["whatsapp"] = numero_completo
-                            self.lead_data["whatsapp_valido"] = True
-                            print(f"   💾 WhatsApp guardado: {numero_completo}")
+                        # Validación simple: solo verificar formato y cantidad de dígitos
+                        # Asumimos que todos los números móviles mexicanos de 10 dígitos tienen WhatsApp
+                        self.lead_data["whatsapp"] = numero_completo
+                        self.lead_data["whatsapp_valido"] = True
+                        print(f"   ✅ Formato válido (10 dígitos)")
+                        print(f"   💾 WhatsApp guardado: {numero_completo}")
 
                     break
         else:
@@ -1523,20 +1508,26 @@ class AgenteVentas:
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
 
-                        # Solo aceptar números completos de 10 dígitos
+                        # Validar que tenga exactamente 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
                             break
-                        elif len(numero) == 9:
-                            # Número incompleto - pedir confirmación o número completo
-                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                        else:
+                            # Número incorrecto - pedir número de 10 dígitos
+                            if len(numero) < 10:
+                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                estado = "incompleto"
+                            else:
+                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                estado = "con dígitos de más"
+
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                             self.conversation_history.append({
                                 "role": "system",
-                                "content": f"[SISTEMA] El número del contacto parece incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de México son de 10 dígitos. Debes pedirle que confirme si ese es el número correcto o que proporcione el número COMPLETO de 10 dígitos de manera natural."
+                                "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
                             })
                             break
 
@@ -1567,20 +1558,26 @@ class AgenteVentas:
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
 
-                        # Solo aceptar números completos de 10 dígitos
+                        # Validar que tenga exactamente 10 dígitos
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
                             print(f"📞 Número de referencia detectado: {numero_completo}")
                             print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
                             break
-                        elif len(numero) == 9:
-                            # Número incompleto - pedir confirmación o número completo
-                            print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                        else:
+                            # Número incorrecto - pedir número de 10 dígitos
+                            if len(numero) < 10:
+                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                estado = "incompleto"
+                            else:
+                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                estado = "con dígitos de más"
+
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                             self.conversation_history.append({
                                 "role": "system",
-                                "content": f"[SISTEMA] El número del contacto parece incompleto: {numero_formateado} (solo {len(numero)} dígitos). Los números de México son de 10 dígitos. Debes pedirle que confirme si ese es el número correcto o que proporcione el número COMPLETO de 10 dígitos de manera natural."
+                                "content": f"[SISTEMA] El número del contacto está {estado}: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número correcto de 10 dígitos de manera natural."
                             })
                             break
 
