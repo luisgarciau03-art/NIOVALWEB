@@ -890,13 +890,49 @@ def procesar_respuesta():
             if sheets_manager and agente.contacto_info:
                 fila = agente.contacto_info.get('fila') or agente.contacto_info.get('ID')
 
-                # 1. Manejo de BUZÓN - Marcar intentos y mover al final
+                # 1. Manejo de BUZÓN - Marcar intentos y reintentar
                 if agente.lead_data.get("estado_llamada") == "Buzon" and fila:
                     print(f"\n📞 Llamada cayó en buzón - manejando reintento...")
                     intentos = sheets_manager.marcar_intento_buzon(fila)
 
-                    if intentos <= 3:
-                        # Intentos 1, 2, 3 - mover al final para reintentar
+                    if intentos == 1:
+                        # PRIMER intento de buzón - REINTENTO INMEDIATO
+                        print(f"📞 Primer intento de buzón - iniciando reintento inmediato...")
+                        print(f"⏰ Esperando 30 segundos antes de reintentar...")
+
+                        import time
+                        time.sleep(30)  # Esperar 30 segundos
+
+                        # Iniciar segunda llamada automáticamente
+                        telefono_destino = agente.contacto_info.get('telefono')
+                        nombre_negocio = agente.contacto_info.get('nombre_negocio', 'cliente')
+
+                        print(f"📞 Iniciando segundo intento a {telefono_destino}...")
+
+                        try:
+                            import requests
+                            servidor_url = request.url_root
+
+                            response_call = requests.post(
+                                f"{servidor_url}iniciar-llamada",
+                                json={
+                                    "telefono": telefono_destino,
+                                    "nombre_negocio": nombre_negocio,
+                                    "contacto_info": agente.contacto_info
+                                },
+                                timeout=10
+                            )
+
+                            if response_call.status_code == 200:
+                                data = response_call.json()
+                                print(f"   ✅ Segunda llamada iniciada: {data.get('call_sid', 'Unknown')}")
+                            else:
+                                print(f"   ⚠️ Error al iniciar segunda llamada: {response_call.status_code}")
+                        except Exception as e:
+                            print(f"   ❌ Error iniciando reintento inmediato: {e}")
+
+                    elif intentos <= 3:
+                        # Intentos 2, 3 - mover al final para reintentar más tarde
                         sheets_manager.mover_fila_al_final(fila)
                         print(f"📋 Fila {fila} movida al final (intento #{intentos}/3)")
                     else:
