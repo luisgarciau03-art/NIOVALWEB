@@ -1100,8 +1100,9 @@ def status_callback():
 
             if intentos == 1:
                 # PRIMER intento - REINTENTO INMEDIATO
-                print(f"   🔄 Primer buzón - programando reintento inmediato...")
-                print(f"   ⏰ Esperando 30 segundos...")
+                print(f"   🔄 Primer buzón - programando reintento inmediato...", flush=True)
+                print(f"   ⏰ Esperando 30 segundos...", flush=True)
+                print(f"   📋 Datos del reintento: tel={telefono}, fila={fila}, base_url={request.url_root}", flush=True)
 
                 import time
                 import threading
@@ -1111,6 +1112,7 @@ def status_callback():
 
                 def hacer_reintento():
                     import sys
+                    print(f"\n🔄 Thread iniciado - esperando 30s...", flush=True)
                     time.sleep(30)
                     print(f"\n📞 Iniciando reintento inmediato a {telefono}...", flush=True)
 
@@ -1135,9 +1137,11 @@ def status_callback():
                         print(f"   ❌ Error iniciando reintento: {e}", flush=True)
 
                 # Ejecutar reintento en thread separado para no bloquear el callback
+                print(f"   🧵 Creando thread para reintento...", flush=True)
                 thread = threading.Thread(target=hacer_reintento)
                 thread.daemon = True
                 thread.start()
+                print(f"   ✅ Thread iniciado correctamente (daemon={thread.daemon}, alive={thread.is_alive()})", flush=True)
 
     # Si la llamada terminó y el agente aún existe en memoria
     if call_status == "completed" and call_sid in conversaciones_activas:
