@@ -1474,11 +1474,12 @@ class AgenteVentas:
             # Patrones SIN nombre - Ofrecimientos de pasar contacto
             # NOTA: Ordenar de más específico a menos específico
             # IMPORTANTE: Usar [oó] para aceptar "paso" y "pasó" (con/sin acento)
+            # IMPORTANTE: "el|su" es opcional para permitir "te pasó contacto" (sin "su/el")
             r'(?:te lo pas[oó]|se lo pas[oó]|te lo doy)',  # "sí, te lo paso" o "te lo pasó"
             r'(?:quiere|quieres?)\s+(?:el |su |tu )?(?:contacto|n[uú]mero)',  # "quiere su contacto"
-            r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te puedo pasar su contacto"
-            r'(?:le doy|te doy)\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te doy su número"
-            r'(?:te pas[oó]|le pas[oó])\s+(?:el|su)\s+(?:contacto|n[uú]mero)',  # "te paso/pasó su número"
+            r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te puedo pasar su contacto" o "puedo pasar contacto"
+            r'(?:le doy|te doy)\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te doy su número" o "te doy contacto"
+            r'(?:te pas[oó]|le pas[oó])\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te paso/pasó su número" o "te pasó contacto"
         ]
 
         for patron in patrones_referencia:
@@ -1514,8 +1515,9 @@ class AgenteVentas:
 
         # Si tenemos una referencia pendiente, capturar nombre o número
         if "referencia_nombre" in self.lead_data:
-            # 1. Si ya tenemos nombre pero falta número, buscar número
-            if self.lead_data.get("referencia_nombre") and not self.lead_data.get("referencia_telefono"):
+            # 1. Si ya tenemos nombre (o referencia sin nombre) pero falta número, buscar número
+            # IMPORTANTE: Checar si la key existe en el dict, porque puede ser "" (string vacío)
+            if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
                 for patron in patrones_tel:
                     match = re.search(patron, texto_lower)
                     if match:
