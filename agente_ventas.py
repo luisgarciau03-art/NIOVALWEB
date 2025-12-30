@@ -1532,60 +1532,60 @@ class AgenteVentas:
             # 1. Si ya tenemos nombre (o referencia sin nombre) pero falta número, buscar número
             # IMPORTANTE: Checar si la key existe en el dict, porque puede ser "" (string vacío)
             if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
-                # DETECTAR si está dando números en pares/grupos ANTES de procesar
-                if detectar_numeros_en_grupos(texto):
-                    print(f"⚠️ Detectado número en pares/grupos en: '{texto[:50]}...'")
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
-                    })
-                else:
-                    # PASO 1: Convertir números escritos a dígitos
-                    # "seis seis veintitrés 53 41 8" → "6 6 23 53 41 8"
-                    texto_convertido = convertir_numeros_escritos_a_digitos(texto)
+                # PASO 1: Convertir números escritos a dígitos
+                # "seis seis veintitrés 53 41 8" → "6 6 23 53 41 8"
+                texto_convertido = convertir_numeros_escritos_a_digitos(texto)
 
-                    # PASO 2: Extraer TODOS los dígitos (quitar espacios, guiones, etc.)
-                    numero = re.sub(r'[^\d]', '', texto_convertido)
+                # PASO 2: Extraer TODOS los dígitos (quitar espacios, guiones, etc.)
+                numero = re.sub(r'[^\d]', '', texto_convertido)
 
-                    print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+                print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
-                    # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
-                    # cuando el cliente está en medio de dictar el número
-                    if len(numero) >= 1 and len(numero) <= 5:
-                        print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
-                        # NO agregamos mensajes al sistema, dejamos que el cliente continúe
+                # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
+                # cuando el cliente está en medio de dictar el número
+                if len(numero) >= 1 and len(numero) <= 5:
+                    print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                    # NO agregamos mensajes al sistema, dejamos que el cliente continúe
 
-                    # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
-                    elif len(numero) >= 6:
-                        # Validar que tenga exactamente 10 dígitos
-                        if len(numero) == 10:
-                            numero_completo = f"+52{numero}"
-                            self.lead_data["referencia_telefono"] = numero_completo
-                            print(f"📞 Número de referencia detectado: {numero_completo}")
-                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
+                elif len(numero) >= 6:
+                    # Validar que tenga exactamente 10 dígitos
+                    if len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        self.lead_data["referencia_telefono"] = numero_completo
+                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
 
-                            # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
-                            })
-                        else:
-                            # Número incorrecto - pedir número de 10 dígitos
-                            if len(numero) < 10:
+                        # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
+                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                        })
+                    else:
+                        # Número incorrecto (6-9 dígitos o 11+ dígitos)
+                        if len(numero) < 10:
+                            # Número incompleto: Verificar si está en pares/grupos para pedir dígito por dígito
+                            if detectar_numeros_en_grupos(texto):
+                                print(f"⚠️ Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
+                                self.conversation_history.append({
+                                    "role": "system",
+                                    "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
+                                })
+                            else:
                                 print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
                                 numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
                                 })
-                            else:
-                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                                self.conversation_history.append({
-                                    "role": "system",
-                                    "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
-                                })
+                        else:
+                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
+                            })
 
             # 2. Si NO tenemos nombre pero sí número, buscar nombre con patrones simples
             elif not self.lead_data.get("referencia_nombre") and self.lead_data.get("referencia_telefono"):
@@ -1609,59 +1609,59 @@ class AgenteVentas:
 
             # 3. Si NO tenemos nombre ni número, buscar número
             elif not self.lead_data.get("referencia_telefono"):
-                # DETECTAR si está dando números en pares/grupos ANTES de procesar
-                if detectar_numeros_en_grupos(texto):
-                    print(f"⚠️ Detectado número en pares/grupos (sin nombre) en: '{texto[:50]}...'")
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
-                    })
-                else:
-                    # PASO 1: Convertir números escritos a dígitos
-                    texto_convertido = convertir_numeros_escritos_a_digitos(texto)
+                # PASO 1: Convertir números escritos a dígitos
+                texto_convertido = convertir_numeros_escritos_a_digitos(texto)
 
-                    # PASO 2: Extraer TODOS los dígitos
-                    numero = re.sub(r'[^\d]', '', texto_convertido)
+                # PASO 2: Extraer TODOS los dígitos
+                numero = re.sub(r'[^\d]', '', texto_convertido)
 
-                    print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+                print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
-                    # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
-                    # cuando el cliente está en medio de dictar el número
-                    if len(numero) >= 1 and len(numero) <= 5:
-                        print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
-                        # NO agregamos mensajes al sistema, dejamos que el cliente continúe
+                # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
+                # cuando el cliente está en medio de dictar el número
+                if len(numero) >= 1 and len(numero) <= 5:
+                    print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                    # NO agregamos mensajes al sistema, dejamos que el cliente continúe
 
-                    # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
-                    elif len(numero) >= 6:
-                        # Validar que tenga exactamente 10 dígitos
-                        if len(numero) == 10:
-                            numero_completo = f"+52{numero}"
-                            self.lead_data["referencia_telefono"] = numero_completo
-                            print(f"📞 Número de referencia detectado: {numero_completo}")
-                            print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
+                # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
+                elif len(numero) >= 6:
+                    # Validar que tenga exactamente 10 dígitos
+                    if len(numero) == 10:
+                        numero_completo = f"+52{numero}"
+                        self.lead_data["referencia_telefono"] = numero_completo
+                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
 
-                            # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
-                            })
-                        else:
-                            # Número incorrecto - pedir número de 10 dígitos
-                            if len(numero) < 10:
+                        # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
+                        numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                        })
+                    else:
+                        # Número incorrecto (6-9 dígitos o 11+ dígitos)
+                        if len(numero) < 10:
+                            # Número incompleto: Verificar si está en pares/grupos para pedir dígito por dígito
+                            if detectar_numeros_en_grupos(texto):
+                                print(f"⚠️ Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
+                                self.conversation_history.append({
+                                    "role": "system",
+                                    "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
+                                })
+                            else:
                                 print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
                                 numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
                                 })
-                            else:
-                                print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
-                                numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                                self.conversation_history.append({
-                                    "role": "system",
-                                    "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
-                                })
+                        else:
+                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                            self.conversation_history.append({
+                                "role": "system",
+                                "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
+                            })
 
         # ============================================================
         # PASO 2: DETECTAR WHATSAPP (solo si NO hay referencia pendiente)
