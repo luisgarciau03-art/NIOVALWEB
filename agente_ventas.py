@@ -110,12 +110,16 @@ Si preguntan "¿Qué vende?" / "¿Qué productos?":
 Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 "Manejamos la marca NIOVAL, que es nuestra marca propia. Tenemos cintas tapagoteras, grifería, herramientas, candados, productos para mascotas y más categorías. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
 
-Si dicen "No está" / "No se encuentra" / "Está ocupado":
-"Entiendo. Antes de colgar, ¿usted podría ayudarme? ¿Conoce el nombre del encargado de compras o de la persona que toma decisiones sobre proveedores? Así puedo preguntar por él/ella directamente cuando vuelva a llamar."
-[ESPERA RESPUESTA - Si dan nombre, agradece y continúa]
-"Perfecto, muchas gracias. ¿A qué hora sería mejor llamarle? ¿Por la mañana o por la tarde?"
-[ALTERNATIVA si no quieren dar nombre:]
-"Sin problema. ¿Prefiere que le deje mi nombre y un breve resumen de la propuesta para que me contacte, o hay alguien más en el negocio que me pueda ayudar con información sobre compras?"
+Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
+"Entiendo perfectamente. Para no perder la oportunidad de contactarlo, ¿me podría proporcionar su número de teléfono directo o celular? Así puedo comunicarme con él directamente."
+[ESPERA RESPUESTA - Si dan el número, agradece]
+"Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
+[Si dan nombre]
+"Excelente, muchas gracias por su ayuda. Me comunicaré con [NOMBRE] a la brevedad. Que tenga un excelente día."
+[ALTERNATIVA si NO quieren dar número:]
+"Entiendo. ¿A qué hora sería mejor llamar de nuevo? ¿Por la mañana o por la tarde?"
+[Si siguen sin querer dar información:]
+"Sin problema, intentaré comunicarme en otro momento. Que tenga un buen día."
 
 Si dicen "Yo soy el encargado" / "Sí, soy yo" / "Yo soy":
 "Perfecto, muchas gracias. ¿Con quién tengo el gusto?"
@@ -1063,6 +1067,44 @@ Considera estos aspectos:
 """
 
 
+def convertir_numeros_escritos_a_digitos(texto: str) -> str:
+    """
+    Convierte números escritos en palabras a dígitos
+
+    Ejemplos:
+        "seis seis veintitrés 53 41 8" → "66 23 53 41 8"
+        "tres tres uno dos" → "33 12"
+        "sesenta y seis" → "66"
+    """
+    # Mapeo de palabras a dígitos
+    numeros_palabras = {
+        # Números del 0-9
+        'cero': '0', 'uno': '1', 'dos': '2', 'tres': '3', 'cuatro': '4',
+        'cinco': '5', 'seis': '6', 'siete': '7', 'ocho': '8', 'nueve': '9',
+
+        # Números 10-19
+        'diez': '10', 'once': '11', 'doce': '12', 'trece': '13', 'catorce': '14',
+        'quince': '15', 'dieciséis': '16', 'dieciseis': '16', 'diecisiete': '17',
+        'dieciocho': '18', 'diecinueve': '19',
+
+        # Decenas 20-90
+        'veinte': '20', 'veintiuno': '21', 'veintidos': '22', 'veintidós': '22',
+        'veintitrés': '23', 'veintitres': '23', 'veinticuatro': '24', 'veinticinco': '25',
+        'veintiséis': '26', 'veintiseis': '26', 'veintisiete': '27', 'veintiocho': '28',
+        'veintinueve': '29',
+        'treinta': '30', 'cuarenta': '40', 'cincuenta': '50',
+        'sesenta': '60', 'setenta': '70', 'ochenta': '80', 'noventa': '90'
+    }
+
+    texto_convertido = texto.lower()
+
+    # Reemplazar cada palabra por su dígito
+    for palabra, digito in numeros_palabras.items():
+        texto_convertido = texto_convertido.replace(palabra, digito)
+
+    return texto_convertido
+
+
 class AgenteVentas:
     """Agente de ventas con GPT-4o y ElevenLabs + Integración Google Sheets"""
 
@@ -1503,9 +1545,12 @@ class AgenteVentas:
             # 1. Si ya tenemos nombre (o referencia sin nombre) pero falta número, buscar número
             # IMPORTANTE: Checar si la key existe en el dict, porque puede ser "" (string vacío)
             if "referencia_nombre" in self.lead_data and not self.lead_data.get("referencia_telefono"):
-                # SCANNER SIMPLE: Detectar cualquier secuencia de 8+ dígitos (con o sin espacios/guiones)
-                # Esto detecta: "66 23 53 41 8", "6623534185", "66-23-53-41-85", etc.
-                numero = re.sub(r'[^\d]', '', texto)  # Extraer TODOS los dígitos del texto
+                # PASO 1: Convertir números escritos a dígitos
+                # "seis seis veintitrés 53 41 8" → "6 6 23 53 41 8"
+                texto_convertido = convertir_numeros_escritos_a_digitos(texto)
+
+                # PASO 2: Extraer TODOS los dígitos (quitar espacios, guiones, etc.)
+                numero = re.sub(r'[^\d]', '', texto_convertido)
 
                 print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
@@ -1554,8 +1599,11 @@ class AgenteVentas:
 
             # 3. Si NO tenemos nombre ni número, buscar número
             elif not self.lead_data.get("referencia_telefono"):
-                # SCANNER SIMPLE: Detectar cualquier secuencia de 8+ dígitos
-                numero = re.sub(r'[^\d]', '', texto)  # Extraer TODOS los dígitos
+                # PASO 1: Convertir números escritos a dígitos
+                texto_convertido = convertir_numeros_escritos_a_digitos(texto)
+
+                # PASO 2: Extraer TODOS los dígitos
+                numero = re.sub(r'[^\d]', '', texto_convertido)
 
                 print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
