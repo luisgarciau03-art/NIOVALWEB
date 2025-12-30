@@ -1151,13 +1151,26 @@ def status_callback():
                 except Exception as e:
                     print(f"   ⚠️ Error guardando buzón desde status callback: {e}")
 
-        # Si no fue buzón, marcar como "Colgo" si aún está en estado "Respondio"
+        # Si no fue buzón, determinar si colgó o no respondió
         elif agente.lead_data["estado_llamada"] == "Respondio":
-            print(f"   💬 Cliente colgó - detectado por status callback")
-            agente.lead_data["estado_llamada"] = "Colgo"
-            agente.lead_data["pregunta_0"] = "Colgo"
-            agente.lead_data["pregunta_7"] = "Colgo"
-            agente.lead_data["resultado"] = "NEGADO"
+            # Verificar si hubo intercambio de conversación
+            # Si hay menos de 2 mensajes en el historial, el cliente nunca respondió
+            num_mensajes = len(agente.conversation_history)
+
+            if num_mensajes <= 1:
+                # Cliente nunca respondió al saludo inicial
+                print(f"   📞 Cliente no respondió - detectado por status callback (solo {num_mensajes} mensaje)")
+                agente.lead_data["estado_llamada"] = "No Respondio"
+                agente.lead_data["pregunta_0"] = "No Respondio"
+                agente.lead_data["pregunta_7"] = "No Respondio"
+                agente.lead_data["resultado"] = "NEGADO"
+            else:
+                # Hubo conversación, entonces sí colgó
+                print(f"   💬 Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
+                agente.lead_data["estado_llamada"] = "Colgo"
+                agente.lead_data["pregunta_0"] = "Colgo"
+                agente.lead_data["pregunta_7"] = "Colgo"
+                agente.lead_data["resultado"] = "NEGADO"
 
             # Guardar la llamada
             try:

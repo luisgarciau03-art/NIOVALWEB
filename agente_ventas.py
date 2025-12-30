@@ -845,7 +845,8 @@ Esta pregunta NO se hace. El sistema la determina automáticamente según cómo 
 4. 📅 **Avance (Fecha Pactada)** - Si pactaste una fecha específica de seguimiento
 5. ⏳ **Continuacion (Cliente Esperando)** - Si dijo "lo consulto", "lo veo", "después te confirmo"
 6. ❌ **Nulo** - Si no mostró interés o rechazó todo
-7. 📞 **Colgo** - Si el cliente colgó durante la llamada
+7. 📞 **Colgo** - Si el cliente colgó durante la conversación (después de haber hablado)
+8. 🔇 **No Respondio** - Si el cliente nunca respondió al saludo inicial
 
 ---
 
@@ -1218,7 +1219,7 @@ class AgenteVentas:
             "fecha_inicio": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "duracion_segundos": 0,
             "interesado": False,
-            "estado_llamada": "Respondio",  # Respondio/Buzon/Telefono Incorrecto/Colgo
+            "estado_llamada": "Respondio",  # Respondio/Buzon/Telefono Incorrecto/Colgo/No Respondio
 
             # Formulario de 7 preguntas (captura automática durante conversación)
             "pregunta_0": "Respondio",  # Estado de llamada (automático)
@@ -1348,14 +1349,15 @@ class AgenteVentas:
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)
 
-        # Verificar si se detectó un estado especial (Buzon, Telefono Incorrecto, Colgo, No Contesta)
+        # Verificar si se detectó un estado especial (Buzon, Telefono Incorrecto, Colgo, No Respondio, No Contesta)
         # Si es así, generar respuesta de despedida automática
-        if self.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Contesta"]:
+        if self.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
             # Generar respuesta de despedida apropiada según el estado
             respuestas_despedida = {
                 "Buzon": "Disculpe, parece que entró el buzón de voz. Le llamaré en otro momento. Que tenga buen día.",
                 "Telefono Incorrecto": "Disculpe las molestias, parece que hay un error con el número. Que tenga buen día.",
                 "Colgo": "[El cliente colgó la llamada]",
+                "No Respondio": "[El cliente no respondió al saludo]",
                 "No Contesta": "[Nadie contestó después de varios timbres]"
             }
 
@@ -2668,7 +2670,7 @@ def demo_interactiva():
         print(f"\n🎙️ Bruce W: {respuesta_agente}\n")
 
         # Detectar estados de llamada sin respuesta (terminar automáticamente)
-        if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Contesta"]:
+        if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
             print(f"💼 Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
             print("📊 Guardando información del lead...\n")
             agente.guardar_llamada_y_lead()
@@ -2779,7 +2781,7 @@ def procesar_contactos_automaticamente():
                 print(f"\n🎙️ Bruce W: {respuesta_agente}\n")
 
                 # Detectar estados de llamada sin respuesta (terminar automáticamente)
-                if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Contesta"]:
+                if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
                     print(f"💼 Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
                     break
 
