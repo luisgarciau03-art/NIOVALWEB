@@ -1009,16 +1009,23 @@ def llamadas_masivas():
     return {"resultados": resultados}
 
 
-@app.route("/status-callback", methods=["POST"])
+@app.route("/status-callback", methods=["GET", "POST"])
 def status_callback():
     """
     Webhook que Twilio llama cuando cambia el estado de una llamada
     Se usa para detectar cuando el cliente cuelga o entra buzón
     """
-    call_sid = request.form.get("CallSid")
-    call_status = request.form.get("CallStatus")
-    call_duration = request.form.get("CallDuration")
-    answered_by = request.form.get("AnsweredBy", "")
+    # Twilio puede enviar GET o POST
+    if request.method == "GET":
+        call_sid = request.args.get("CallSid")
+        call_status = request.args.get("CallStatus")
+        call_duration = request.args.get("CallDuration")
+        answered_by = request.args.get("AnsweredBy", "")
+    else:
+        call_sid = request.form.get("CallSid")
+        call_status = request.form.get("CallStatus")
+        call_duration = request.form.get("CallDuration")
+        answered_by = request.form.get("AnsweredBy", "")
 
     print(f"\n📞 STATUS CALLBACK - Llamada {call_sid[:10]}...")
     print(f"   Estado: {call_status}")
