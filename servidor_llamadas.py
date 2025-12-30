@@ -1108,7 +1108,8 @@ def status_callback():
                 import threading
 
                 # IMPORTANTE: Capturar url_root ANTES del thread (Flask context)
-                base_url = request.url_root
+                # Forzar HTTPS para Railway (evita redirect 301/302 que causa 405)
+                base_url = request.url_root.replace('http://', 'https://')
 
                 def hacer_reintento():
                     import sys
