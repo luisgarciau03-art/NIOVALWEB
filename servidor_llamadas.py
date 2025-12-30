@@ -1070,8 +1070,17 @@ def status_callback():
         print(f"   AnsweredBy: {answered_by}")
 
     # NUEVO: Manejo de buzón detectado por Twilio - REINTENTO INMEDIATO
-    if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
-        print(f"   📞 Buzón detectado por Twilio: {answered_by}")
+    # Detectar buzón por AnsweredBy O por call_status="no-answer"
+    es_buzon = (
+        answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"] or
+        call_status == "no-answer"
+    )
+
+    if es_buzon:
+        if answered_by:
+            print(f"   📞 Buzón detectado por AnsweredBy: {answered_by}")
+        else:
+            print(f"   📞 Buzón detectado por CallStatus: {call_status} (no-answer)")
 
         # Obtener info del contacto (puede estar en conversaciones_activas o contactos_llamadas)
         contacto_info = None
