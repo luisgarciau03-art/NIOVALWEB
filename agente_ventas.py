@@ -1520,6 +1520,13 @@ class AgenteVentas:
                     match = re.search(patron, texto_lower)
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
+
+                        # Aceptar números de 9 o 10 dígitos
+                        if len(numero) == 9:
+                            # Números de 9 dígitos (común en Sonora): agregar 6 al inicio
+                            numero = "6" + numero
+                            print(f"ℹ️  Número de 9 dígitos detectado, completando: {numero}")
+
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
@@ -1553,6 +1560,13 @@ class AgenteVentas:
                     match = re.search(patron, texto_lower)
                     if match:
                         numero = re.sub(r'[^\d]', '', match.group(0))
+
+                        # Aceptar números de 9 o 10 dígitos
+                        if len(numero) == 9:
+                            # Números de 9 dígitos (común en Sonora): agregar 6 al inicio
+                            numero = "6" + numero
+                            print(f"ℹ️  Número de 9 dígitos detectado, completando: {numero}")
+
                         if len(numero) == 10:
                             numero_completo = f"+52{numero}"
                             self.lead_data["referencia_telefono"] = numero_completo
