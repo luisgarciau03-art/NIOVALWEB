@@ -1106,6 +1106,9 @@ def status_callback():
                 import time
                 import threading
 
+                # IMPORTANTE: Capturar url_root ANTES del thread (Flask context)
+                base_url = request.url_root
+
                 def hacer_reintento():
                     time.sleep(30)
                     print(f"\n📞 Iniciando reintento inmediato a {telefono}...")
@@ -1113,7 +1116,7 @@ def status_callback():
                     try:
                         import requests
                         response_call = requests.post(
-                            f"{request.url_root}iniciar-llamada",
+                            f"{base_url}iniciar-llamada",
                             json={
                                 "telefono": telefono,
                                 "nombre_negocio": nombre_negocio,
