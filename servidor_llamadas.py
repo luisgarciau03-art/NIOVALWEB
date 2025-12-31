@@ -507,6 +507,7 @@ def generar_audio_async(texto, audio_id):
 def servir_audio(audio_id):
     """Sirve el archivo de audio generado (con espera inteligente)"""
     import time
+    import io
 
     # Esperar hasta 3 segundos si el audio aún no está listo
     max_wait = 3
@@ -516,7 +517,15 @@ def servir_audio(audio_id):
         waited += 0.1
 
     if audio_id in audio_files:
-        return send_file(audio_files[audio_id], mimetype='audio/mpeg')
+        audio_data = audio_files[audio_id]
+
+        # Si es bytes, envolver en BytesIO para send_file
+        if isinstance(audio_data, bytes):
+            return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
+
+        # Si es string (ruta), send_file lo maneja directamente
+        return send_file(audio_data, mimetype='audio/mpeg')
+
     return "Audio not found", 404
 
 

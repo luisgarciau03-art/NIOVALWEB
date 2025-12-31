@@ -120,14 +120,26 @@ Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
 
 [OPCIÓN A - Si dan el número de teléfono:]
 "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
-[Si dan nombre]
+
+⚠️ FLUJO OBLIGATORIO DESPUÉS DE OBTENER NOMBRE - SIGUE EXACTAMENTE ESTE ORDEN:
+
+[PASO 1 - Después de obtener el nombre]
+DEBES DECIR EXACTAMENTE:
 "Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para poder prepararle una mejor propuesta al encargado, ¿me podría comentar brevemente qué tipo de productos de ferretería manejan más? Por ejemplo, si venden herramientas, grifería, productos eléctricos..."
-[ESPERA RESPUESTA]
-[Después de obtener contexto:]
+[ESPERA RESPUESTA DEL CLIENTE]
+
+[PASO 2 - Después de obtener contexto de productos]
+DEBES PREGUNTAR:
 "Perfecto, eso me ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen un proveedor principal?"
-[ESPERA RESPUESTA]
-[Después de obtener info de proveedores:]
+[ESPERA RESPUESTA DEL CLIENTE]
+
+[PASO 3 - Después de obtener info de proveedores]
+DEBES DESPEDIRTE:
 "Entendido, aprecio mucho la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+
+❌ NUNCA digas "Estaré en contacto con él" sin hacer las preguntas de contexto
+❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS PREGUNTAS ESPECÍFICAS DE ARRIBA
+❌ NUNCA te saltes las preguntas de contexto (productos y proveedores)
 
 [OPCIÓN B - Si dan un horario:]
 "Perfecto, anotado. Volveré a comunicarme [en el horario indicado]. Muchas gracias por su tiempo."
@@ -2314,6 +2326,23 @@ IMPORTANTE - Si el cliente ofrece dar el número:
 - Si dicen "Te paso su contacto" / "Le doy el número": Di solo "Perfecto, estoy listo." y ESPERA el número SIN volver a pedirlo.
 - Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
 - NUNCA repitas la solicitud del número si el cliente ya ofreció darlo.
+
+⚠️ FLUJO OBLIGATORIO SI DAN NÚMERO DE CONTACTO DE REFERENCIA:
+[Si dan número de teléfono del encargado]
+PASO 1: "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
+[Esperar nombre]
+
+PASO 2: "Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para poder prepararle una mejor propuesta al encargado, ¿me podría comentar brevemente qué tipo de productos de ferretería manejan más? Por ejemplo, si venden herramientas, grifería, productos eléctricos..."
+[Esperar respuesta sobre productos]
+
+PASO 3: "Perfecto, eso me ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen un proveedor principal?"
+[Esperar respuesta sobre proveedores]
+
+PASO 4: "Entendido, aprecio mucho la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+
+❌ NUNCA digas "Estaré en contacto con él" sin hacer las preguntas de contexto
+❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS PREGUNTAS ESPECÍFICAS DE ARRIBA
+❌ NUNCA te saltes las preguntas de contexto (productos y proveedores)
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
