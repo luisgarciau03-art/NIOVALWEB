@@ -125,21 +125,26 @@ Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
 
 [PASO 1 - Después de obtener el nombre]
 DEBES DECIR EXACTAMENTE:
-"Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para poder prepararle una mejor propuesta al encargado, ¿me podría comentar brevemente qué tipo de productos de ferretería manejan más? Por ejemplo, si venden herramientas, grifería, productos eléctricos..."
+"Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para prepararle una mejor propuesta al encargado, ¿me podría comentar qué tipo de productos de ferretería manejan más y aproximadamente qué tamaño de negocio tienen? Por ejemplo, si es una ferretería local, tienen varias sucursales, o son distribuidor mayorista..."
 [ESPERA RESPUESTA DEL CLIENTE]
 
-[PASO 2 - Después de obtener contexto de productos]
+[PASO 2 - Después de obtener contexto de productos y tamaño]
 DEBES PREGUNTAR:
-"Perfecto, eso me ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen un proveedor principal?"
+"Perfecto, eso ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen uno principal? Y aprovechando, ¿en qué horario suele estar disponible el encargado para contactarlo directamente?"
 [ESPERA RESPUESTA DEL CLIENTE]
 
-[PASO 3 - Después de obtener info de proveedores]
-DEBES DESPEDIRTE:
-"Entendido, aprecio mucho la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+[PASO 3 - Después de obtener info de proveedores y horario]
+DEBES PREGUNTAR:
+"Entendido. Una última pregunta: ¿sabe si actualmente tienen alguna necesidad inmediata de producto o están buscando mejorar precios con sus proveedores actuales?"
+[ESPERA RESPUESTA DEL CLIENTE]
 
-❌ NUNCA digas "Estaré en contacto con él" sin hacer las preguntas de contexto
-❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS PREGUNTAS ESPECÍFICAS DE ARRIBA
-❌ NUNCA te saltes las preguntas de contexto (productos y proveedores)
+[PASO 4 - Después de obtener info de necesidad inmediata]
+DEBES DESPEDIRTE:
+"Perfecto, aprecio mucho toda la información. Me comunicaré con el encargado en [HORARIO MENCIONADO] para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+
+❌ NUNCA digas "Estaré en contacto con él" sin hacer las 3 preguntas de contexto
+❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS 3 PREGUNTAS ESPECÍFICAS DE ARRIBA
+❌ NUNCA te saltes ninguna de las 3 preguntas (productos+tamaño, proveedores+horario, necesidad inmediata)
 
 [OPCIÓN B - Si dan un horario:]
 "Perfecto, anotado. Volveré a comunicarme [en el horario indicado]. Muchas gracias por su tiempo."
@@ -2332,17 +2337,20 @@ IMPORTANTE - Si el cliente ofrece dar el número:
 PASO 1: "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 [Esperar nombre]
 
-PASO 2: "Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para poder prepararle una mejor propuesta al encargado, ¿me podría comentar brevemente qué tipo de productos de ferretería manejan más? Por ejemplo, si venden herramientas, grifería, productos eléctricos..."
-[Esperar respuesta sobre productos]
+PASO 2: "Excelente, muchas gracias [NOMBRE]. Déjeme comentarle que estamos muy interesados en trabajar con ustedes, ya que detectamos que su zona es de crecimiento y actualmente no tenemos distribuidores en el área. Para prepararle una mejor propuesta al encargado, ¿me podría comentar qué tipo de productos de ferretería manejan más y aproximadamente qué tamaño de negocio tienen? Por ejemplo, si es una ferretería local, tienen varias sucursales, o son distribuidor mayorista..."
+[Esperar respuesta sobre productos y tamaño]
 
-PASO 3: "Perfecto, eso me ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen un proveedor principal?"
-[Esperar respuesta sobre proveedores]
+PASO 3: "Perfecto, eso ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen uno principal? Y aprovechando, ¿en qué horario suele estar disponible el encargado para contactarlo directamente?"
+[Esperar respuesta sobre proveedores y horario]
 
-PASO 4: "Entendido, aprecio mucho la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+PASO 4: "Entendido. Una última pregunta: ¿sabe si actualmente tienen alguna necesidad inmediata de producto o están buscando mejorar precios con sus proveedores actuales?"
+[Esperar respuesta sobre necesidad inmediata]
 
-❌ NUNCA digas "Estaré en contacto con él" sin hacer las preguntas de contexto
-❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS PREGUNTAS ESPECÍFICAS DE ARRIBA
-❌ NUNCA te saltes las preguntas de contexto (productos y proveedores)
+PASO 5: "Perfecto, aprecio mucho toda la información. Me comunicaré con el encargado en [HORARIO MENCIONADO] para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
+
+❌ NUNCA digas "Estaré en contacto con él" sin hacer las 3 preguntas de contexto
+❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS 3 PREGUNTAS ESPECÍFICAS DE ARRIBA
+❌ NUNCA te saltes ninguna de las 3 preguntas (productos+tamaño, proveedores+horario, necesidad inmediata)
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
