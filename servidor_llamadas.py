@@ -647,8 +647,8 @@ def webhook_voz():
     # Crear respuesta TwiML
     response = VoiceResponse()
 
-    # PAUSA DE 2 SEGUNDOS - Dar tiempo al cliente de decir "Hola" primero
-    response.pause(length=2)
+    # PAUSA DE 1 SEGUNDO - Dar tiempo al cliente de decir "Hola" primero
+    response.pause(length=1)
 
     # Reproducir audio de ElevenLabs
     audio_url = request.url_root + f"audio/{audio_id}"
@@ -873,10 +873,72 @@ def procesar_respuesta():
 
     if debe_terminar:
         print(f"🔚 Detectada despedida en: {respuesta_agente[:50]}...")
-        # Terminar llamada
+
+        # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
+        print(f"⏳ Esperando despedida del cliente por cortesía...")
+
+        # Crear Gather para escuchar despedida del cliente
+        gather_despedida = Gather(
+            input="speech",
+            language="es-MX",
+            timeout=3,  # Esperar hasta 3 segundos
+            speech_timeout=2,  # 2 segundos después de que termine de hablar
+            action="/despedida-final",
+            method="POST"
+        )
+        response.append(gather_despedida)
+
+        # Si no responde en 3 segundos, terminar igual
         response.hangup()
 
-        # Guardar lead y llamada en Google Sheets
+        return str(response)
+
+    # Si NO es despedida, continuar conversación normal
+    gather = Gather(
+        input="speech",
+        language="es-MX",
+        timeout=5,  # Tiempo de espera antes de timeout
+        speech_timeout=1,  # OPTIMIZADO: 1s después de que cliente deja de hablar (antes 3s)
+        action="/procesar-respuesta",
+        method="POST"
+    )
+    response.append(gather)
+
+    # Fallback si no hay respuesta - usar CACHÉ (0s delay, acento perfecto)
+    audio_id_timeout = f"timeout_{call_sid}_{len(audio_files)}"
+    generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout, usar_cache_key="timeout")
+    audio_url_timeout = request.url_root + f"audio/{audio_id_timeout}"
+    response.play(audio_url_timeout)
+    response.redirect("/procesar-respuesta")
+
+    return Response(str(response), mimetype="text/xml")
+
+
+@app.route("/despedida-final", methods=["GET", "POST"])
+def despedida_final():
+    """
+    Endpoint para manejar la despedida del cliente después de que Bruce se despidió.
+    Por cortesía, esperamos a que el cliente se despida antes de colgar.
+    """
+    # Obtener parámetros de Twilio
+    if request.method == "GET":
+        call_sid = request.args.get("CallSid")
+        cliente_respuesta = request.args.get("SpeechResult", "")
+    else:
+        call_sid = request.form.get("CallSid")
+        cliente_respuesta = request.form.get("SpeechResult", "")
+
+    print(f"\n👋 DESPEDIDA FINAL - Call SID: {call_sid}")
+    if cliente_respuesta:
+        print(f"💬 CLIENTE SE DESPIDE: \"{cliente_respuesta}\"")
+    else:
+        print(f"🔇 Cliente no respondió despedida (silencio)")
+
+    # Obtener agente de la conversación activa
+    agente = conversaciones_activas.get(call_sid)
+
+    # Guardar lead y llamada en Google Sheets
+    if agente:
         print(f"💾 Guardando llamada {call_sid} en Google Sheets...")
         try:
             agente.guardar_llamada_y_lead()
@@ -896,65 +958,132 @@ def procesar_respuesta():
                         print(f"📞 Primer intento de buzón - iniciando reintento inmediato...")
                         print(f"⏰ Esperando 30 segundos antes de reintentar...")
 
-                        import time
-                        time.sleep(30)  # Esperar 30 segundos
+                        # Capturar url_root ANTES del thread (Flask context)
+                        base_url = request.url_root.replace('http://', 'https://')
 
-                        # Iniciar segunda llamada automáticamente
-                        telefono_destino = agente.contacto_info.get('telefono')
-                        nombre_negocio = agente.contacto_info.get('nombre_negocio', 'cliente')
+                        def hacer_reintento():
+                            import time
+                            import requests
+                            time.sleep(30)  # Esperar 30 segundos
 
-                        print(f"📞 Iniciando segundo intento a {telefono_destino}...")
+                            telefono_destino = agente.contacto_info.get('telefono')
+                            nombre_negocio = agente.contacto_info.get('nombre_negocio', 'cliente')
+
+                            print(f"📞 Iniciando segundo intento a {telefono_destino}...")
+
+                            try:
+                                response_call = requests.post(
+                                    f"{base_url}iniciar-llamada",
+                                    json={
+                                        "telefono": telefono_destino,
+                                        "nombre_negocio": nombre_negocio,
+                                        "contacto_info": agente.contacto_info
+                                    },
+                                    timeout=10
+                                )
+
+                                if response_call.status_code == 200:
+                                    print(f"✅ Segundo intento iniciado correctamente")
+                                else:
+                                    print(f"⚠️ Error en reintento: {response_call.status_code}")
+
+                            except Exception as e:
+                                print(f"❌ Error iniciando reintento: {e}")
+
+                        # Ejecutar reintento en background
+                        import threading
+                        thread = threading.Thread(target=hacer_reintento)
+                        thread.daemon = True
+                        thread.start()
+
+                    else:
+                        print(f"📞 Intento de buzón #{intentos} - no se hará reintento automático")
+
+                # 2. Manejo de REFERENCIAS - Llamar automáticamente al referido
+                telefono_referencia = agente.lead_data.get("referencia_telefono")
+                if telefono_referencia and fila:
+                    print(f"\n👥 Procesando referencia...")
+                    nombre_ref = agente.lead_data.get("referencia_nombre", "")
+                    print(f"     Nombre del referido: {nombre_ref}")
+                    print(f"     Teléfono del referido: {telefono_referencia}")
+
+                    # Buscar el contacto referido en la lista
+                    contacto_referido = sheets_manager.buscar_contacto_referido(telefono_referencia)
+
+                    if contacto_referido:
+                        fila_referido = contacto_referido.get('fila')
+                        nombre_negocio_ref = contacto_referido.get('nombre_negocio', nombre_ref)
+
+                        # Guardar la referencia en columna U del contacto referido
+                        nombre_negocio_origen = agente.contacto_info.get('nombre_negocio', 'Desconocido')
+                        telefono_origen = agente.contacto_info.get('telefono', '')
+
+                        contexto_referencia = f"Referencia de: {nombre_negocio_origen} ({telefono_origen})"
+                        if nombre_ref:
+                            contexto_referencia += f" - Contacto: {nombre_ref}"
+
+                        # Obtener último mensaje del cliente para contexto
+                        ultimo_mensaje_cliente = ""
+                        for msg in reversed(agente.conversation_history):
+                            if msg.get('role') == 'user':
+                                ultimo_mensaje_cliente = msg.get('content', '')
+                                break
+
+                        if ultimo_mensaje_cliente:
+                            contexto_referencia += f" - Comentó: {ultimo_mensaje_cliente[:100]}"
+
+                        fecha_hora = agente.lead_data.get("fecha_inicio", "")
+                        referencia_completa = f"NUM:{telefono_referencia}|Ref: {nombre_negocio_origen} ({telefono_origen}) - {fecha_hora[:10]} - {ultimo_mensaje_cliente[:50]}"
+
+                        sheets_manager.guardar_referencia(fila_referido, referencia_completa)
+                        print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
+
+                        # Guardar contexto de reprogramación en el contacto ACTUAL (quien dio la referencia)
+                        contexto_reprog = f"Reprog: Referencia dada | Pasó contacto de {nombre_ref or 'encargado'} ({telefono_referencia})"
+                        sheets_manager.guardar_contexto_reprogramacion(fila, contexto_reprog)
+                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+
+                        # Iniciar llamada automática al referido
+                        print(f"\n📞 Iniciando llamada automática al referido...")
+                        print(f"     🌐 Enviando solicitud a {base_url}iniciar-llamada")
+                        print(f"     📱 Teléfono: {telefono_referencia}")
+                        print(f"     📋 Fila: {fila_referido}")
 
                         try:
                             import requests
-                            servidor_url = request.url_root
-
-                            response_call = requests.post(
-                                f"{servidor_url}iniciar-llamada",
+                            response_ref = requests.post(
+                                f"{base_url}iniciar-llamada",
                                 json={
-                                    "telefono": telefono_destino,
-                                    "nombre_negocio": nombre_negocio,
-                                    "contacto_info": agente.contacto_info
+                                    "telefono": telefono_referencia,
+                                    "nombre_negocio": nombre_negocio_ref,
+                                    "contacto_info": contacto_referido
                                 },
                                 timeout=10
                             )
 
-                            if response_call.status_code == 200:
-                                data = response_call.json()
-                                print(f"   ✅ Segunda llamada iniciada: {data.get('call_sid', 'Unknown')}")
+                            if response_ref.status_code == 200:
+                                result = response_ref.json()
+                                print(f"     ✅ Llamada iniciada exitosamente!")
+                                print(f"     📞 Call SID: {result.get('call_sid', 'N/A')}")
                             else:
-                                print(f"   ⚠️ Error al iniciar segunda llamada: {response_call.status_code}")
+                                print(f"     ⚠️ Error en llamada automática: {response_ref.status_code}")
+
                         except Exception as e:
-                            print(f"   ❌ Error iniciando reintento inmediato: {e}")
+                            print(f"     ❌ Error iniciando llamada automática: {e}")
 
-                    elif intentos <= 3:
-                        # Intentos 2, 3 - mover al final para reintentar más tarde
-                        sheets_manager.mover_fila_al_final(fila)
-                        print(f"📋 Fila {fila} movida al final (intento #{intentos}/3)")
-                    else:
-                        # Intento 4+ - marcar como BUZON definitivo
-                        sheets_manager.marcar_estado_final(fila, "BUZON")
-                        print(f"❌ Fila {fila} marcada como BUZON (máximo 3 intentos alcanzado)")
+                # 3. Verificar si número cambió y marcar primera llamada
+                telefono_actual = agente.lead_data.get("telefono", "")
+                if telefono_actual and fila:
+                    telefono_anterior = sheets_manager.obtener_numero_anterior(fila)
 
-                # 2. Manejo de REPROGRAMACIÓN
-                elif agente.lead_data.get("estado_llamada") == "reprogramar" and fila:
-                    # Contexto ya se guardó en guardar_llamada_y_lead() en columna W
-                    # Columna F ya se limpió para que vuelva a aparecer como pendiente
-                    print(f"📅 Reprogramación guardada en columna W")
+                    if telefono_anterior and telefono_anterior != telefono_actual:
+                        print(f"🔄 Fila {fila}: Número cambió desde última llamada - permitir re-contacto")
 
-                # 3. OTROS ESTADOS - Marcar en U (primera o subsecuente llamada)
-                elif fila:
-                    # NO marcar en columna F
-                    # Siempre marcar en U, sin importar si ya fue llamado antes
-                    # Las columnas U/V/W se usan para CONTEXTO, no para bloquear llamadas
-                    telefono_llamado = agente.contacto_info.get('telefono')
+                    # Marcar primera llamada en columna U
+                    telefono_llamado = agente.contacto_info.get('telefono', telefono_actual)
+                    sheets_manager.marcar_primera_llamada(fila, telefono_llamado)
 
-                    # Verificar si es primera llamada solo para el mensaje de log
-                    es_primera_llamada = not sheets_manager.verificar_contacto_ya_llamado(fila)
-
-                    sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
-
-                    if es_primera_llamada:
+                    if not telefono_anterior:
                         print(f"📝 Primera llamada registrada en columna U con número: {telefono_llamado}")
                     else:
                         print(f"📝 Llamada subsecuente registrada en columna U con número: {telefono_llamado}")
@@ -968,24 +1097,10 @@ def procesar_respuesta():
         del conversaciones_activas[call_sid]
         if call_sid in contactos_llamadas:
             del contactos_llamadas[call_sid]
-    else:
-        # Continuar conversación
-        gather = Gather(
-            input="speech",
-            language="es-MX",
-            timeout=5,  # Tiempo de espera antes de timeout
-            speech_timeout=1,  # OPTIMIZADO: 1s después de que cliente deja de hablar (antes 3s)
-            action="/procesar-respuesta",
-            method="POST"
-        )
-        response.append(gather)
 
-        # Fallback si no hay respuesta - usar CACHÉ (0s delay, acento perfecto)
-        audio_id_timeout = f"timeout_{call_sid}_{len(audio_files)}"
-        generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout, usar_cache_key="timeout")
-        audio_url_timeout = request.url_root + f"audio/{audio_id_timeout}"
-        response.play(audio_url_timeout)
-        response.redirect("/procesar-respuesta")
+    # Crear respuesta TwiML para colgar
+    response = VoiceResponse()
+    response.hangup()
 
     return Response(str(response), mimetype="text/xml")
 
