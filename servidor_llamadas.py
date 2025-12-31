@@ -1071,19 +1071,18 @@ def despedida_final():
                         except Exception as e:
                             print(f"     ❌ Error iniciando llamada automática: {e}")
 
-                # 3. Verificar si número cambió y marcar primera llamada
+                # 3. Marcar llamada en columna U (registro de contacto)
+                # No bloquear llamadas futuras - columnas U/V/W son solo para contexto
                 telefono_actual = agente.lead_data.get("telefono", "")
                 if telefono_actual and fila:
-                    telefono_anterior = sheets_manager.obtener_numero_anterior(fila)
-
-                    if telefono_anterior and telefono_anterior != telefono_actual:
-                        print(f"🔄 Fila {fila}: Número cambió desde última llamada - permitir re-contacto")
-
-                    # Marcar primera llamada en columna U
                     telefono_llamado = agente.contacto_info.get('telefono', telefono_actual)
-                    sheets_manager.marcar_primera_llamada(fila, telefono_llamado)
 
-                    if not telefono_anterior:
+                    # Verificar si ya fue llamado antes (para el mensaje de log)
+                    es_primera = not sheets_manager.verificar_contacto_ya_llamado(fila)
+
+                    sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
+
+                    if es_primera:
                         print(f"📝 Primera llamada registrada en columna U con número: {telefono_llamado}")
                     else:
                         print(f"📝 Llamada subsecuente registrada en columna U con número: {telefono_llamado}")
