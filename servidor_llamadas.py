@@ -21,14 +21,17 @@ app = Flask(__name__)
 # Inicializar Google Sheets Managers y WhatsApp Validator (solo una vez al arrancar)
 sheets_manager = None
 resultados_manager = None
+logs_manager = None
 whatsapp_validator = None
 
 try:
     from nioval_sheets_adapter import NiovalSheetsAdapter
     from resultados_sheets_adapter import ResultadosSheetsAdapter
+    from logs_sheets_adapter import LogsSheetsAdapter
 
     sheets_manager = NiovalSheetsAdapter()  # Para leer contactos
     resultados_manager = ResultadosSheetsAdapter()  # Para guardar resultados
+    logs_manager = LogsSheetsAdapter()  # Para registrar logs de conversación
     print("✅ Google Sheets Managers inicializados")
 except Exception as e:
     print(f"⚠️  Google Sheets no disponible: {e}")
@@ -639,10 +642,20 @@ def webhook_voz():
     audio_id = f"inicial_{call_sid}"
 
     # Detectar si es el saludo estándar para usar caché (0s delay, Multilingual v2)
-    if "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial:
+    usa_cache_saludo = "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial
+    if usa_cache_saludo:
         generar_audio_elevenlabs(mensaje_inicial, audio_id, usar_cache_key="saludo_inicial")
     else:
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
+
+    # Registrar mensaje inicial de Bruce en LOGS
+    if logs_manager:
+        logs_manager.registrar_mensaje_bruce(
+            call_sid,
+            mensaje_inicial,
+            desde_cache=usa_cache_saludo,
+            cache_key="saludo_inicial" if usa_cache_saludo else None
+        )
 
     # Crear respuesta TwiML
     response = VoiceResponse()
@@ -767,6 +780,10 @@ def procesar_respuesta():
     # LOG: Mostrar lo que dijo el cliente
     print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
 
+    # Registrar mensaje del cliente en LOGS
+    if logs_manager and speech_result:
+        logs_manager.registrar_mensaje_cliente(call_sid, speech_result)
+
     # Detectar respuestas vacías consecutivas (cliente ya no está en línea)
     if not speech_result or speech_result.strip() == "":
         agente.respuestas_vacias_consecutivas += 1
@@ -847,6 +864,18 @@ def procesar_respuesta():
     tiempo_audio = time.time() - inicio_audio
     print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
     print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
+
+    # Registrar mensaje de Bruce en LOGS (con info de cache)
+    if logs_manager:
+        # Determinar si vino del caché
+        desde_cache = (tiempo_audio < 0.1)  # Si tardó menos de 0.1s, vino del caché
+        logs_manager.registrar_mensaje_bruce(
+            call_sid,
+            respuesta_agente,
+            desde_cache=desde_cache,
+            cache_key=cache_key,
+            tiempo_generacion=tiempo_audio if not desde_cache else None
+        )
 
     # Reproducir audio de ElevenLabs (response ya fue creado arriba)
     audio_url = request.url_root + f"audio/{audio_id}"
@@ -933,6 +962,10 @@ def despedida_final():
         print(f"💬 CLIENTE SE DESPIDE: \"{cliente_respuesta}\"")
     else:
         print(f"🔇 Cliente no respondió despedida (silencio)")
+
+    # ADDED - Registrar despedida del cliente en LOGS
+    if logs_manager and cliente_respuesta:
+        logs_manager.registrar_mensaje_cliente(call_sid, cliente_respuesta)
 
     # Obtener agente de la conversación activa
     agente = conversaciones_activas.get(call_sid)
