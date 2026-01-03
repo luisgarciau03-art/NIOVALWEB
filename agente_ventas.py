@@ -1411,8 +1411,15 @@ class AgenteVentas:
 
         # Generar respuesta con GPT-4o-mini (OPTIMIZADO para baja latencia)
         try:
-            # Limitar historial a últimos 6 mensajes para respuestas más rápidas
-            historial_reciente = self.conversation_history[-6:] if len(self.conversation_history) > 6 else self.conversation_history
+            # IMPORTANTE: Separar mensajes de contexto (system) de la conversación
+            mensajes_contexto = [msg for msg in self.conversation_history if msg['role'] == 'system']
+            mensajes_conversacion = [msg for msg in self.conversation_history if msg['role'] != 'system']
+
+            # Limitar solo la CONVERSACIÓN a últimos 6 mensajes (no el contexto)
+            conversacion_reciente = mensajes_conversacion[-6:] if len(mensajes_conversacion) > 6 else mensajes_conversacion
+
+            # Reconstruir historial: CONTEXTO + CONVERSACIÓN RECIENTE
+            historial_completo = mensajes_contexto + conversacion_reciente
 
             # PROMPT DINÁMICO: Solo enviar secciones relevantes según estado de conversación
             prompt_optimizado = self._construir_prompt_dinamico()
@@ -1421,7 +1428,7 @@ class AgenteVentas:
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": prompt_optimizado},
-                    *historial_reciente
+                    *historial_completo
                 ],
                 temperature=0.7,
                 max_tokens=100,  # Reducido de 150 a 100 para respuestas más rápidas
@@ -2239,6 +2246,13 @@ Responde SOLO en este formato JSON:
         Construye un prompt optimizado enviando solo las secciones relevantes
         según el estado actual de la conversación. Esto reduce tokens y mejora velocidad.
         """
+        # CRÍTICO: Incluir contexto del cliente (info que ya tenemos)
+        contexto_cliente = self._generar_contexto_cliente()
+        if contexto_cliente:
+            contexto_cliente = "\n" + contexto_cliente + "\n"
+        else:
+            contexto_cliente = ""
+
         # Agregar historial previo si hay cambio de número
         contexto_recontacto = ""
         if self.contacto_info and self.contacto_info.get('historial_previo'):
@@ -2271,8 +2285,8 @@ Responde SOLO en este formato JSON:
                 memoria_corto_plazo += f"{i}. \"{resp['content']}\"\n"
             memoria_corto_plazo += "\nIMPORTANTE: NO repitas preguntas que ya respondieron. Si ya dijeron 'no está', NO vuelvas a preguntar si está.\n\n"
 
-        # Sección base (siempre se incluye)
-        prompt_base = contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
+        # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
+        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
 Teléfono: 662 415 1997 (di: seis seis dos, cuatro uno cinco, uno nueve nueve siete)
 
