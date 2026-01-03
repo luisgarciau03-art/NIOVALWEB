@@ -2447,6 +2447,89 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             print(f"⚠️ No se pudo guardar backup en Excel: {e}")
             print(f"⚠️ Traceback: {traceback.format_exc()}")
 
+    def autoevaluar_llamada(self):
+        """
+        Bruce se autoevalúa y asigna una calificación del 1-10 según el resultado de la llamada
+
+        Parámetros de calificación:
+
+        10 - EXCELENTE: Lead caliente confirmado con WhatsApp validado, interesado, respondió todas las preguntas
+        9  - MUY BUENO: Lead caliente con WhatsApp, interesado pero faltó alguna información menor
+        8  - BUENO: Lead tibio con WhatsApp capturado, mostró algo de interés
+        7  - ACEPTABLE: Contacto correcto (dueño/encargado), conversación completa pero sin mucho interés
+        6  - REGULAR: Contacto correcto, conversación cortada o cliente neutral
+        5  - SUFICIENTE: Número incorrecto pero se obtuvo referencia con número nuevo
+        4  - BAJO: No es el contacto correcto, no dio referencia
+        3  - DEFICIENTE: Cliente molesto/cortó rápido, no se pudo rescatar nada
+        2  - MUY DEFICIENTE: Buzón de voz
+        1  - PÉSIMO: Número equivocado/no existe
+
+        Returns:
+            int: Calificación de 1-10
+        """
+        try:
+            # Extraer datos clave
+            resultado = self.lead_data.get("resultado", "")
+            estado_llamada = self.lead_data.get("pregunta_0", "")
+            nivel_interes = self.lead_data.get("nivel_interes_clasificado", "")
+            whatsapp = self.lead_data.get("whatsapp", "")
+            referencia = self.lead_data.get("referencia_telefono", "")
+            estado_animo = self.lead_data.get("estado_animo_cliente", "")
+
+            # CASO 10: Lead perfecto
+            if (resultado == "ACEPTADO" and
+                whatsapp and
+                nivel_interes in ["CALIENTE", "Caliente"] and
+                self.lead_data.get("pregunta_7") == "SI"):
+                return 10
+
+            # CASO 9: Lead muy bueno
+            if (resultado == "ACEPTADO" and
+                whatsapp and
+                nivel_interes in ["CALIENTE", "Caliente", "TIBIO", "Tibio"]):
+                return 9
+
+            # CASO 8: Lead bueno
+            if (resultado == "ACEPTADO" and whatsapp):
+                return 8
+
+            # CASO 7: Conversación completa, contacto correcto
+            if (estado_llamada in ["Dueño", "Encargado Compras"] and
+                resultado in ["PENDIENTE", "ACEPTADO"]):
+                return 7
+
+            # CASO 6: Conversación cortada pero contacto correcto
+            if estado_llamada in ["Dueño", "Encargado Compras"]:
+                return 6
+
+            # CASO 5: Número incorrecto pero con referencia
+            if (estado_llamada in ["Número Incorrecto", "Numero Incorrecto"] and
+                referencia):
+                return 5
+
+            # CASO 4: Número incorrecto sin referencia
+            if estado_llamada in ["Número Incorrecto", "Numero Incorrecto"]:
+                return 4
+
+            # CASO 3: Cliente molesto
+            if estado_animo in ["Molesto", "Enojado"] or resultado == "NEGADO":
+                return 3
+
+            # CASO 2: Buzón de voz
+            if estado_llamada == "Buzon":
+                return 2
+
+            # CASO 1: Número equivocado/no existe
+            if estado_llamada in ["No Contesta", "Numero Equivocado"]:
+                return 1
+
+            # Default: 5 (suficiente)
+            return 5
+
+        except Exception as e:
+            print(f"⚠️ Error en autoevaluación: {e}")
+            return 5  # Calificación neutra si hay error
+
     def guardar_llamada_y_lead(self):
         """
         Guarda la llamada en Google Sheets usando ResultadosSheetsAdapter
@@ -2461,6 +2544,10 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 
             # Determinar conclusión antes de guardar
             self._determinar_conclusion()
+
+            # Autoevaluar llamada (Bruce se califica del 1-10)
+            calificacion_bruce = self.autoevaluar_llamada()
+            print(f"⭐ Bruce se autoevaluó: {calificacion_bruce}/10")
 
             # Guardar en "Respuestas de formulario 1"
             resultado_guardado = self.resultados_manager.guardar_resultado_llamada({
@@ -2479,7 +2566,8 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                 'duracion': self.lead_data["duracion_segundos"],
                 'nivel_interes_clasificado': self.lead_data["nivel_interes_clasificado"],
                 'estado_animo_cliente': self.lead_data["estado_animo_cliente"],
-                'opinion_bruce': self.lead_data["opinion_bruce"]
+                'opinion_bruce': self.lead_data["opinion_bruce"],
+                'calificacion': calificacion_bruce  # Agregar calificación de Bruce
             })
 
             if resultado_guardado:

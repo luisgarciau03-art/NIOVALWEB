@@ -30,7 +30,11 @@ class LogsSheetsAdapter:
         self.spreadsheet = self._abrir_spreadsheet()
         self.hoja_logs = self._obtener_hoja_logs()
 
+        # Contador de IDs BRUCE (se incrementa por cada nueva conversación)
+        self.contador_bruce = self._obtener_ultimo_id_bruce()
+
         print(f"✅ Conectado a hoja LOGS para registro de conversaciones")
+        print(f"📊 Último ID BRUCE: BRUCE{self.contador_bruce:02d}")
 
     def _autenticar(self):
         """Autentica con Google usando las credenciales (local o Railway/Render)"""
@@ -83,38 +87,69 @@ class LogsSheetsAdapter:
             print(f"❌ No se encontró la hoja '{self.hoja_nombre}'")
             raise
 
+    def _obtener_ultimo_id_bruce(self):
+        """Obtiene el último ID BRUCE usado en la hoja"""
+        try:
+            # Leer columna B (IDs) desde fila 2 hasta el final
+            ids = self.hoja_logs.col_values(2)
+
+            # Buscar el ID BRUCE más alto
+            max_id = 0
+            for id_value in ids[1:]:  # Saltar encabezado
+                if id_value.startswith("BRUCE"):
+                    try:
+                        numero = int(id_value.replace("BRUCE", ""))
+                        if numero > max_id:
+                            max_id = numero
+                    except ValueError:
+                        continue
+
+            return max_id
+        except Exception as e:
+            print(f"⚠️ Error obteniendo último ID BRUCE: {e}")
+            return 0
+
+    def generar_nuevo_id_bruce(self):
+        """Genera un nuevo ID BRUCE secuencial (BRUCE01, BRUCE02, etc.)"""
+        self.contador_bruce += 1
+        return f"BRUCE{self.contador_bruce:02d}"
+
     def registrar_mensaje(
         self,
-        call_sid: str,
+        bruce_id: str,
         quien: str,  # "BRUCE" o "CLIENTE"
         mensaje: str,
-        audio_info: str = "N/A"  # Info sobre cache/generado
+        audio_info: str = "N/A",  # Info sobre cache/generado
+        nombre_tienda: str = ""  # Nombre de la tienda
     ):
         """
-        Registra un mensaje en la hoja LOGS
+        Registra un mensaje en la hoja LOGS (inserta al inicio, recorre lo anterior hacia abajo)
 
         Args:
-            call_sid: ID de la llamada de Twilio
+            bruce_id: ID de la conversación (BRUCE01, BRUCE02, etc.)
             quien: "BRUCE" o "CLIENTE"
             mensaje: Texto del mensaje
-            audio_info: Información sobre el audio (cache/generado/N/A)
+            audio_info: Información sobre el audio (cache/generado/CLIENTE)
+            nombre_tienda: Nombre de la tienda del cliente
         """
         try:
-            # Formato de fecha: YYYY-MM-DD HH:MM:SS
-            fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Formato de fecha: Solo fecha (YYYY-MM-DD)
+            fecha = datetime.now().strftime("%Y-%m-%d")
 
             # Preparar fila para insertar
-            # Columnas: Fecha | ID | CLIENTE/BRUCE | MENSAJE | Audio/Cache
+            # Columnas: Fecha | ID | CLIENTE/BRUCE | MENSAJE | Audio/Cache | Nombre de la tienda
             fila = [
-                fecha_hora,
-                call_sid,
+                fecha,
+                bruce_id,
                 quien,
                 mensaje,
-                audio_info
+                audio_info,
+                nombre_tienda
             ]
 
-            # Agregar al final de la hoja
-            self.hoja_logs.append_row(fila, value_input_option='USER_ENTERED')
+            # INSERTAR en fila 2 (después de encabezados) para que lo nuevo quede arriba
+            # Esto recorre automáticamente todo lo anterior hacia abajo
+            self.hoja_logs.insert_row(fila, index=2, value_input_option='USER_ENTERED')
 
             print(f"📝 LOG registrado: {quien[:6]}... | {mensaje[:50]}...")
 
@@ -124,21 +159,23 @@ class LogsSheetsAdapter:
 
     def registrar_mensaje_bruce(
         self,
-        call_sid: str,
+        bruce_id: str,
         mensaje: str,
         desde_cache: bool = False,
         cache_key: Optional[str] = None,
-        tiempo_generacion: Optional[float] = None
+        tiempo_generacion: Optional[float] = None,
+        nombre_tienda: str = ""
     ):
         """
         Registra un mensaje de BRUCE con información de audio
 
         Args:
-            call_sid: ID de la llamada
+            bruce_id: ID de la conversación (BRUCE01, BRUCE02, etc.)
             mensaje: Texto que dijo Bruce
             desde_cache: Si el audio vino del cache
             cache_key: Nombre de la key del cache (si aplica)
             tiempo_generacion: Tiempo que tardó en generar (si se generó)
+            nombre_tienda: Nombre de la tienda
         """
         # Construir info de audio
         if desde_cache:
@@ -151,21 +188,23 @@ class LogsSheetsAdapter:
         else:
             audio_info = "Generado"
 
-        self.registrar_mensaje(call_sid, "BRUCE", mensaje, audio_info)
+        self.registrar_mensaje(bruce_id, "BRUCE", mensaje, audio_info, nombre_tienda)
 
     def registrar_mensaje_cliente(
         self,
-        call_sid: str,
-        mensaje: str
+        bruce_id: str,
+        mensaje: str,
+        nombre_tienda: str = ""
     ):
         """
         Registra un mensaje del CLIENTE
 
         Args:
-            call_sid: ID de la llamada
+            bruce_id: ID de la conversación (BRUCE01, BRUCE02, etc.)
             mensaje: Texto que dijo el cliente
+            nombre_tienda: Nombre de la tienda
         """
-        self.registrar_mensaje(call_sid, "CLIENTE", mensaje, "N/A")
+        self.registrar_mensaje(bruce_id, "CLIENTE", mensaje, "CLIENTE", nombre_tienda)
 
     def registrar_evento(
         self,

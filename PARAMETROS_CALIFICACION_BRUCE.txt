@@ -1,0 +1,114 @@
+================================================================
+PARÁMETROS DE AUTOEVALUACIÓN DE BRUCE (CALIFICACIÓN 1-10)
+================================================================
+
+Bruce se autoevalúa al finalizar cada llamada y asigna una calificación
+del 1 al 10 según el resultado obtenido.
+
+La calificación se guarda automáticamente en:
+- Google Sheets: Columna Y de "Respuestas de formulario 1"
+- Código: agente_ventas.py método autoevaluar_llamada()
+
+================================================================
+CRITERIOS DE CALIFICACIÓN
+================================================================
+
+10 - EXCELENTE
+   - Lead caliente confirmado
+   - WhatsApp validado y capturado
+   - Cliente interesado (nivel CALIENTE)
+   - Respondió SÍ a todas las preguntas
+   - Conversación completa y productiva
+
+9  - MUY BUENO
+   - Lead caliente o tibio
+   - WhatsApp capturado
+   - Cliente interesado (nivel CALIENTE o TIBIO)
+   - Buena conversación aunque faltó algún detalle menor
+
+8  - BUENO
+   - Lead con potencial
+   - WhatsApp capturado
+   - Mostró algo de interés
+   - Conversación aceptable
+
+7  - ACEPTABLE
+   - Contacto correcto (dueño/encargado de compras)
+   - Conversación completa
+   - Sin mucho interés pero cordial
+   - Resultado PENDIENTE o ACEPTADO
+
+6  - REGULAR
+   - Contacto correcto (dueño/encargado)
+   - Conversación cortada o incompleta
+   - Cliente neutral, sin interés claro
+
+5  - SUFICIENTE
+   - Número incorrecto PERO
+   - Se obtuvo referencia (número nuevo del encargado)
+   - Oportunidad de rescatar el contacto
+
+4  - BAJO
+   - No es el contacto correcto
+   - No proporcionó referencia
+   - Llamada no productiva
+
+3  - DEFICIENTE
+   - Cliente molesto o enojado
+   - Colgó rápido
+   - Resultado NEGADO
+   - No se pudo rescatar nada de la llamada
+
+2  - MUY DEFICIENTE
+   - Buzón de voz
+   - No se pudo hablar con nadie
+   - Llamada desperdiciada
+
+1  - PÉSIMO
+   - Número equivocado (no existe)
+   - No contesta
+   - Número fuera de servicio
+
+================================================================
+USO DE LA CALIFICACIÓN
+================================================================
+
+Esta calificación sirve para:
+
+1. ANÁLISIS DE DESEMPEÑO
+   - Medir la calidad de las llamadas
+   - Identificar qué tipos de llamadas son más exitosas
+   - Calcular promedio de calificación por día/semana
+
+2. PRIORIZACIÓN
+   - Leads con calificación 8-10: Seguimiento inmediato
+   - Leads con calificación 5-7: Seguimiento programado
+   - Leads con calificación 1-4: Revisar manualmente
+
+3. OPTIMIZACIÓN
+   - Identificar patrones en llamadas exitosas (9-10)
+   - Mejorar el script para aumentar calificaciones
+   - Detectar problemas recurrentes (calificaciones bajas)
+
+4. REPORTES
+   - Dashboard de calidad de llamadas
+   - KPI: Promedio de calificación semanal
+   - Meta: Mantener promedio >= 6
+
+================================================================
+FÓRMULAS ÚTILES EN GOOGLE SHEETS
+================================================================
+
+# Promedio de calificación:
+=AVERAGE(Y:Y)
+
+# Contar llamadas excelentes (9-10):
+=COUNTIF(Y:Y,">=9")
+
+# Contar llamadas deficientes (1-4):
+=COUNTIF(Y:Y,"<=4")
+
+# Porcentaje de llamadas exitosas (>= 7):
+=COUNTIF(Y:Y,">=7")/COUNTA(Y:Y)*100
+
+================================================================

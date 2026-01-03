@@ -232,6 +232,12 @@ class ResultadosSheetsAdapter:
                 actualizaciones.append({'range': f'X{ultima_fila}', 'values': [[opinion_bruce]]})
                 print(f"  → Opinión Bruce: {opinion_bruce[:50]}...")
 
+            # Columna Y: Calificación de Bruce (1-10)
+            calificacion = datos.get('calificacion', '')
+            if calificacion:
+                actualizaciones.append({'range': f'Y{ultima_fila}', 'values': [[calificacion]]})
+                print(f"  → Calificación Bruce: {calificacion}/10")
+
             # Ejecutar todas las actualizaciones en batch
             self.hoja_resultados.batch_update(actualizaciones)
 
