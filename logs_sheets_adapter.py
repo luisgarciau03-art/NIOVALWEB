@@ -149,7 +149,12 @@ class LogsSheetsAdapter:
 
             # INSERTAR en fila 2 (después de encabezados) para que lo nuevo quede arriba
             # Esto recorre automáticamente todo lo anterior hacia abajo
-            self.hoja_logs.insert_row(fila, index=2, value_input_option='USER_ENTERED')
+            try:
+                self.hoja_logs.insert_row(fila, index=2, value_input_option='USER_ENTERED')
+            except Exception as e:
+                # Si falla insert_row (hoja vacía), usar append_row
+                print(f"   ⚠️ insert_row falló, usando append_row: {e}")
+                self.hoja_logs.append_row(fila, value_input_option='USER_ENTERED')
 
             print(f"📝 LOG registrado: {quien[:6]}... | {mensaje[:50]}...")
 
