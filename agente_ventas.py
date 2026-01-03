@@ -2567,7 +2567,8 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                 'nivel_interes_clasificado': self.lead_data["nivel_interes_clasificado"],
                 'estado_animo_cliente': self.lead_data["estado_animo_cliente"],
                 'opinion_bruce': self.lead_data["opinion_bruce"],
-                'calificacion': calificacion_bruce  # Agregar calificación de Bruce
+                'calificacion': calificacion_bruce,  # Calificación de Bruce (1-10)
+                'bruce_id': getattr(self, 'bruce_id', None)  # ID BRUCE (BRUCE01, BRUCE02, etc.)
             })
 
             if resultado_guardado:

@@ -625,6 +625,12 @@ def webhook_voz():
                 # Agregar historial al contacto_info para que el agente lo use
                 contacto_info['historial_previo'] = historial_previo
 
+    # Generar ID BRUCE para esta conversación (si logs_manager está disponible)
+    bruce_id = None
+    if logs_manager:
+        bruce_id = logs_manager.generar_nuevo_id_bruce()
+        print(f"🆔 ID BRUCE generado: {bruce_id}")
+
     # Crear nueva conversación con Google Sheets y WhatsApp Validator
     agente = AgenteVentas(
         contacto_info=contacto_info,
@@ -633,6 +639,7 @@ def webhook_voz():
         whatsapp_validator=whatsapp_validator
     )
     agente.call_sid = call_sid  # Guardar el Call SID de Twilio
+    agente.bruce_id = bruce_id  # Guardar el ID BRUCE
     conversaciones_activas[call_sid] = agente
 
     # Mensaje inicial
@@ -649,12 +656,14 @@ def webhook_voz():
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
     # Registrar mensaje inicial de Bruce en LOGS
-    if logs_manager:
+    if logs_manager and bruce_id:
+        nombre_tienda = contacto_info.get('nombre_negocio', '') if contacto_info else ''
         logs_manager.registrar_mensaje_bruce(
-            call_sid,
+            bruce_id,
             mensaje_inicial,
             desde_cache=usa_cache_saludo,
-            cache_key="saludo_inicial" if usa_cache_saludo else None
+            cache_key="saludo_inicial" if usa_cache_saludo else None,
+            nombre_tienda=nombre_tienda
         )
 
     # Crear respuesta TwiML
@@ -781,8 +790,9 @@ def procesar_respuesta():
     print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
 
     # Registrar mensaje del cliente en LOGS
-    if logs_manager and speech_result:
-        logs_manager.registrar_mensaje_cliente(call_sid, speech_result)
+    if logs_manager and speech_result and agente.bruce_id:
+        nombre_tienda = agente.lead_data.get('nombre_negocio', '')
+        logs_manager.registrar_mensaje_cliente(agente.bruce_id, speech_result, nombre_tienda)
 
     # Detectar respuestas vacías consecutivas (cliente ya no está en línea)
     if not speech_result or speech_result.strip() == "":
@@ -866,15 +876,17 @@ def procesar_respuesta():
     print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
 
     # Registrar mensaje de Bruce en LOGS (con info de cache)
-    if logs_manager:
+    if logs_manager and agente.bruce_id:
         # Determinar si vino del caché
         desde_cache = (tiempo_audio < 0.1)  # Si tardó menos de 0.1s, vino del caché
+        nombre_tienda = agente.lead_data.get('nombre_negocio', '')
         logs_manager.registrar_mensaje_bruce(
-            call_sid,
+            agente.bruce_id,
             respuesta_agente,
             desde_cache=desde_cache,
             cache_key=cache_key,
-            tiempo_generacion=tiempo_audio if not desde_cache else None
+            tiempo_generacion=tiempo_audio if not desde_cache else None,
+            nombre_tienda=nombre_tienda
         )
 
     # Reproducir audio de ElevenLabs (response ya fue creado arriba)
@@ -963,12 +975,13 @@ def despedida_final():
     else:
         print(f"🔇 Cliente no respondió despedida (silencio)")
 
-    # ADDED - Registrar despedida del cliente en LOGS
-    if logs_manager and cliente_respuesta:
-        logs_manager.registrar_mensaje_cliente(call_sid, cliente_respuesta)
-
     # Obtener agente de la conversación activa
     agente = conversaciones_activas.get(call_sid)
+
+    # ADDED - Registrar despedida del cliente en LOGS
+    if logs_manager and cliente_respuesta and agente and agente.bruce_id:
+        nombre_tienda = agente.lead_data.get('nombre_negocio', '')
+        logs_manager.registrar_mensaje_cliente(agente.bruce_id, cliente_respuesta, nombre_tienda)
 
     # Guardar lead y llamada en Google Sheets
     if agente:

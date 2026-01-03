@@ -238,6 +238,12 @@ class ResultadosSheetsAdapter:
                 actualizaciones.append({'range': f'Y{ultima_fila}', 'values': [[calificacion]]})
                 print(f"  → Calificación Bruce: {calificacion}/10")
 
+            # Columna Z: ID BRUCE (BRUCE01, BRUCE02, etc.)
+            bruce_id = datos.get('bruce_id', '')
+            if bruce_id:
+                actualizaciones.append({'range': f'Z{ultima_fila}', 'values': [[bruce_id]]})
+                print(f"  → ID BRUCE: {bruce_id}")
+
             # Ejecutar todas las actualizaciones en batch
             self.hoja_resultados.batch_update(actualizaciones)
 
