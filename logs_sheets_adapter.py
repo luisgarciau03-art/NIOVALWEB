@@ -110,9 +110,19 @@ class LogsSheetsAdapter:
             return 0
 
     def generar_nuevo_id_bruce(self):
-        """Genera un nuevo ID BRUCE secuencial (BRUCE01, BRUCE02, etc.)"""
-        self.contador_bruce += 1
-        return f"BRUCE{self.contador_bruce:02d}"
+        """
+        Genera un nuevo ID BRUCE secuencial (BRUCE01, BRUCE02, etc.)
+        RE-LEE el último ID desde la hoja cada vez para garantizar consecutividad
+        incluso si el servidor se reinicia o hay llamadas concurrentes.
+        """
+        # Re-leer el último ID desde la hoja (no confiar solo en memoria)
+        ultimo_id_en_hoja = self._obtener_ultimo_id_bruce()
+        nuevo_id = ultimo_id_en_hoja + 1
+
+        # Actualizar contador en memoria también
+        self.contador_bruce = nuevo_id
+
+        return f"BRUCE{nuevo_id:02d}"
 
     def registrar_mensaje(
         self,

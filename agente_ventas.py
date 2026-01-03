@@ -2550,6 +2550,20 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
         try:
             print("📊 Guardando resultados en 'Respuestas de formulario 1'...")
 
+            # Calcular duración de la llamada ANTES de guardar
+            if self.lead_data.get("fecha_inicio"):
+                try:
+                    inicio = datetime.strptime(self.lead_data["fecha_inicio"], "%Y-%m-%d %H:%M:%S")
+                    duracion = (datetime.now() - inicio).total_seconds()
+                    self.lead_data["duracion_segundos"] = int(duracion)
+                    print(f"⏱️ Duración de la llamada: {self.lead_data['duracion_segundos']} segundos")
+                except Exception as e:
+                    print(f"⚠️ Error calculando duración: {e}")
+                    self.lead_data["duracion_segundos"] = 0
+            else:
+                print(f"⚠️ No hay fecha_inicio - duración = 0")
+                self.lead_data["duracion_segundos"] = 0
+
             # Determinar conclusión antes de guardar
             self._determinar_conclusion()
 
