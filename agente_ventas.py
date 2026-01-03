@@ -1434,7 +1434,7 @@ class AgenteVentas:
                 max_tokens=100,  # Reducido de 150 a 100 para respuestas más rápidas
                 presence_penalty=0.6,  # Evita repetición
                 frequency_penalty=0.3,  # Respuestas más directas
-                timeout=5  # Timeout de 5 segundos
+                timeout=7  # Timeout aumentado a 7 segundos (era 5s)
             )
 
             respuesta_agente = response.choices[0].message.content
@@ -2246,12 +2246,17 @@ Responde SOLO en este formato JSON:
         Construye un prompt optimizado enviando solo las secciones relevantes
         según el estado actual de la conversación. Esto reduce tokens y mejora velocidad.
         """
-        # CRÍTICO: Incluir contexto del cliente (info que ya tenemos)
-        contexto_cliente = self._generar_contexto_cliente()
-        if contexto_cliente:
-            contexto_cliente = "\n" + contexto_cliente + "\n"
-        else:
-            contexto_cliente = ""
+        # CRÍTICO: Incluir contexto del cliente SOLO en los primeros 5 mensajes de Bruce
+        # Después de eso, Bruce ya debe tener la info en memoria y no necesitamos repetirla
+        contexto_cliente = ""
+        mensajes_bruce = [msg for msg in self.conversation_history if msg["role"] == "assistant"]
+
+        if len(mensajes_bruce) < 5:  # Solo primeros 5 turnos de Bruce
+            contexto_cliente = self._generar_contexto_cliente()
+            if contexto_cliente:
+                contexto_cliente = "\n" + contexto_cliente + "\n"
+            else:
+                contexto_cliente = ""
 
         # Agregar historial previo si hay cambio de número
         contexto_recontacto = ""
