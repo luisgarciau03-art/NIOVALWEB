@@ -1281,7 +1281,39 @@ class AgenteVentas:
         self.fecha_reprogramacion = None
         self.hora_preferida = None
         self.motivo_no_contacto = None
-    
+
+        # Contador para alternar frases de relleno (hace la conversación más natural)
+        self.indice_frase_relleno = 0
+
+    def _obtener_frase_relleno(self) -> str:
+        """
+        Obtiene una frase de relleno natural para ganar tiempo cuando GPT tarda >3s.
+        Alterna entre diferentes frases para que suene natural y no repetitivo.
+
+        Returns:
+            Frase de relleno en español mexicano
+        """
+        frases_relleno = [
+            "Ajá, déjeme ver...",
+            "Mmm, perfecto...",
+            "Entiendo, sí...",
+            "Ajá, mire...",
+            "Eso está bien, déjeme comentarle...",
+            "Mmm, está claro...",
+            "Perfecto, permítame...",
+            "Ajá, exacto...",
+            "Entendido, pues...",
+            "Mmm, muy bien...",
+            "Eso sí, déjeme...",
+            "Ajá, claro...",
+        ]
+
+        # Obtener frase actual y avanzar el índice
+        frase = frases_relleno[self.indice_frase_relleno % len(frases_relleno)]
+        self.indice_frase_relleno += 1
+
+        return frase
+
     def iniciar_conversacion(self):
         """Inicia la conversación con el mensaje de apertura"""
 
@@ -1411,6 +1443,9 @@ class AgenteVentas:
 
         # Generar respuesta con GPT-4o-mini (OPTIMIZADO para baja latencia)
         try:
+            import time
+            inicio_gpt = time.time()
+
             # IMPORTANTE: Separar mensajes de contexto (system) de la conversación
             mensajes_contexto = [msg for msg in self.conversation_history if msg['role'] == 'system']
             mensajes_conversacion = [msg for msg in self.conversation_history if msg['role'] != 'system']
@@ -1437,16 +1472,28 @@ class AgenteVentas:
                 timeout=7  # Timeout aumentado a 7 segundos (era 5s)
             )
 
+            duracion_gpt = time.time() - inicio_gpt
+
+            # Si GPT tardó más de 3 segundos, agregar frase de relleno ANTES de la respuesta
+            frase_relleno = ""
+            if duracion_gpt > 3.0:
+                frase_relleno = self._obtener_frase_relleno()
+                print(f"⏱️ GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
+
             respuesta_agente = response.choices[0].message.content
-            
+
+            # Si hay frase de relleno, agregarla al inicio de la respuesta
+            if frase_relleno:
+                respuesta_agente = f"{frase_relleno} {respuesta_agente}"
+
             # Agregar al historial
             self.conversation_history.append({
                 "role": "assistant",
                 "content": respuesta_agente
             })
-            
+
             return respuesta_agente
-            
+
         except Exception as e:
             print(f"Error al procesar con GPT-4o: {e}")
             return "Disculpe, tuve un problema técnico. ¿Podría repetir lo que dijo?"
