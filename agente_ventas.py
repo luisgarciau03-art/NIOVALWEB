@@ -1325,7 +1325,28 @@ class AgenteVentas:
                 "content": contexto_previo
             })
 
-        mensaje_inicial = "Hola, qué tal, muy buenas tardes. Me comunico de la empresa NIOVAL con el fin de brindarles información de nuestros productos del ramo ferretero. ¿Se encuentra el encargado de compras?"
+        # Detectar si el contexto indica que este número ES del encargado de compras
+        es_encargado_confirmado = False
+        if self.contacto_info:
+            contexto_reprog = self.contacto_info.get('contexto_reprogramacion', '').lower()
+            referencia = self.contacto_info.get('referencia', '').lower()
+
+            # Buscar palabras clave que indiquen que este número es del encargado
+            keywords_encargado = ['encargado', 'dio número', 'dio numero', 'contacto del encargado',
+                                  'número del encargado', 'numero del encargado', 'referencia']
+
+            if any(keyword in contexto_reprog for keyword in keywords_encargado):
+                es_encargado_confirmado = True
+            if any(keyword in referencia for keyword in keywords_encargado):
+                es_encargado_confirmado = True
+
+        # Ajustar saludo inicial según si ya sabemos que es el encargado
+        if es_encargado_confirmado:
+            # YA sabemos que es el encargado - NO preguntar
+            mensaje_inicial = "Hola, qué tal, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Con quién tengo el gusto?"
+        else:
+            # NO sabemos si es el encargado - preguntar como siempre
+            mensaje_inicial = "Hola, qué tal, muy buenas tardes. Me comunico de la empresa NIOVAL con el fin de brindarles información de nuestros productos del ramo ferretero. ¿Se encuentra el encargado de compras?"
 
         self.conversation_history.append({
             "role": "assistant",
@@ -1394,8 +1415,15 @@ class AgenteVentas:
             contexto_partes.append(f"- Menciona que ya habían hablado antes y retomas la conversación")
             contexto_partes.append(f"- Ejemplo: 'Hola, qué tal. Como le había comentado la vez pasada, me comunico nuevamente...'")
 
+            # Si el contexto indica que este número ES del encargado, agregar advertencia CRÍTICA
+            contexto_lower = self.contacto_info['contexto_reprogramacion'].lower()
+            if any(keyword in contexto_lower for keyword in ['encargado', 'dio número', 'dio numero', 'contacto del']):
+                contexto_partes.append(f"\n⚠️ CRÍTICO: Este número FUE PROPORCIONADO como el del ENCARGADO DE COMPRAS")
+                contexto_partes.append(f"- NO preguntes 'se encuentra el encargado' - YA ESTÁS HABLANDO CON ÉL")
+                contexto_partes.append(f"- Saluda directamente y pide su nombre: '¿Con quién tengo el gusto?'")
+
         if len(contexto_partes) > 1:  # Más que solo el header
-            contexto_partes.append("\nRecuerda: NO preguntes nada de esta información, ya la tienes.")
+            contexto_partes.append("\n🔒 Recuerda: NO preguntes nada de esta información, ya la tienes.")
             return "\n".join(contexto_partes)
 
         return ""
