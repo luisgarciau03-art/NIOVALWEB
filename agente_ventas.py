@@ -521,9 +521,6 @@ RESPUESTA: "Le entiendo perfectamente. Precisamente por eso tenemos una promoci�
 OBJECIÓN: "No me da confianza pagar antes de recibir" / "¿Y si pago y no me llega?" / "¿Cómo sé que son de confianza?" / "Tengo miedo de que sea fraude"
 RESPUESTA: "Entiendo perfectamente su preocupación, [NOMBRE]. Es completamente válido querer proteger su inversión. Por eso tenemos dos opciones: puede hacer un pedido de prueba de solo $1,500 pesos con envío gratis para probar sin arriesgar mucho, o bien, puedo tramitar una autorización de Pago Contra Entrega con mi supervisor, donde usted paga hasta después de recibir su pedido y verificar que todo esté correcto. La mayoría de las veces sí aprueban el pago contra entrega, especialmente para clientes nuevos. ¿Cuál opción le parece mejor?"
 
-PREGUNTA: "¿Tienen precio especial en la frontera?" / "¿El IVA es diferente en frontera?" / "¿Tienen precio frontera?" / "¿Manejan precio especial para zona fronteriza?"
-RESPUESTA: "¡Excelente pregunta! Sí, definitivamente tenemos precios especiales para la zona fronteriza. En la frontera el IVA es del 8% en lugar del 16% que se maneja en el resto del país, y nosotros respetamos ese beneficio fiscal en nuestras cotizaciones. Esto hace que los productos sean aún más competitivos para ustedes. ¿En qué ciudad de la frontera se encuentran? Así puedo asegurarme de aplicar correctamente el precio especial en su cotización."
-
 CLIENTE SE DESPIDE: "Hasta luego" / "Adiós" / "Bye" / "Nos vemos" / "Lo reviso" / "Lo checo" / "Luego hablamos" / "Ya te contacto"
 RESPUESTA: "Muchas gracias por su tiempo{f', {nombre}' if nombre else ''}. Que tenga excelente tarde. Hasta pronto."
 IMPORTANTE: Cuando el cliente se despida, responde ÚNICAMENTE con esta despedida corta. NO hagas preguntas adicionales, NO ofrezcas nada más, NO continúes la conversación. Simplemente agradece y termina profesionalmente.
@@ -1618,47 +1615,6 @@ class AgenteVentas:
             return
 
         # ============================================================
-        # DETECCIÓN CRÍTICA: "DAME UN MOMENTO" (Cliente pide pausa)
-        # ============================================================
-        frases_pide_pausa = [
-            "dame un momento", "deme un momento", "un momento", "espera un momento",
-            "espérame", "dando unos momentos", "en algunos momentos",
-            "dame unos segundos", "deme unos segundos", "un segundo",
-            "déjame ver", "dejame ver", "permíteme un momento"
-        ]
-
-        if any(frase in texto_lower for frase in frases_pide_pausa):
-            # Cliente pide un momento (posiblemente está ocupado)
-            if not hasattr(self, 'cliente_pidio_pausa'):
-                self.cliente_pidio_pausa = True
-                print(f"⏸️ Cliente pidió pausa: '{texto[:50]}...'")
-
-                # Agregar mensaje al sistema para ESPERAR
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": """⚠️ CRÍTICO: El cliente pidió un momento
-
-El cliente está ocupado o necesita atender algo. Debes RESPETAR su solicitud.
-
-ACCIÓN INMEDIATA:
-1. Responde de forma cortés y profesional
-2. Confirma que esperarás
-3. NO hagas más preguntas hasta que el cliente regrese
-
-RESPUESTAS APROPIADAS:
-- "Claro, con gusto. Aquí espero."
-- "Sin problema, tómese su tiempo."
-- "Entendido, aquí estaré esperando."
-- "Claro, quedo al pendiente."
-
-IMPORTANTE:
-- NO preguntes "¿Con quién tengo el gusto?" ni hagas nuevas preguntas
-- ESPERA a que el cliente retome la conversación
-- Mantén un silencio respetuoso
-- Cuando el cliente regrese, continúa desde donde se quedó la conversación"""
-                })
-
-        # ============================================================
         # DETECCIÓN CRÍTICA: "SOY YO EL ENCARGADO"
         # ============================================================
         # Detectar cuando el cliente confirma que ÉL/ELLA es el encargado
@@ -2002,38 +1958,6 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
 
         # ============================================================
-        # DETECCIÓN: "Ya te lo pasé" (cliente ya dio el email)
-        # ============================================================
-        frases_ya_lo_di = [
-            "ya te lo", "ya te lo pasé", "ya te lo di", "ya te lo dije",
-            "ya te lo había", "ya te lo brindé", "ya te lo mencioné",
-            "ya está", "ya lo tienes", "ya lo tiene"
-        ]
-
-        if any(frase in texto_lower for frase in frases_ya_lo_di):
-            # Cliente confirma que YA dio el email anteriormente
-            print(f"📧 Cliente confirmó que YA dio el email: '{texto[:50]}...'")
-
-            # Marcar que NO debe pedir el email nuevamente
-            if not hasattr(self, 'email_confirmado_por_cliente'):
-                self.email_confirmado_por_cliente = True
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": """[SISTEMA] ✅ CLIENTE CONFIRMÓ QUE YA DIO EL EMAIL
-
-El cliente acaba de confirmar que YA te proporcionó su correo electrónico anteriormente.
-
-⚠️ ACCIÓN CRÍTICA:
-1. NO vuelvas a pedir el correo
-2. Revisa el historial de conversación para encontrar el email que dio
-3. Si lo encuentras, confírmalo: "Tiene razón, disculpe. El correo que tengo es [EMAIL]. ¿Es correcto?"
-4. Si NO lo encuentras en el historial, di: "Tiene razón, discúlpeme. Para asegurarme, ¿me lo podría repetir una última vez?"
-5. Después de confirmar el email, continúa con el cierre de la conversación
-
-NO INSISTAS más en el correo. El cliente ya lo proporcionó."""
-                })
-
-        # ============================================================
         # DETECCIÓN DE EMAIL (con validación y confirmación)
         # ============================================================
         # Patrón estricto para emails válidos
@@ -2042,19 +1966,16 @@ NO INSISTAS más en el correo. El cliente ya lo proporcionó."""
 
         if match_email:
             email_detectado = match_email.group(0)
+            self.lead_data["email"] = email_detectado
+            print(f"📧 Email detectado: {email_detectado}")
 
-            # Solo guardar si NO hemos pedido confirmación antes
-            if not hasattr(self, 'email_pedido_confirmacion'):
-                self.lead_data["email"] = email_detectado
-                print(f"📧 Email detectado: {email_detectado}")
-                self.email_pedido_confirmacion = True
+            # IMPORTANTE: Siempre confirmar el email con el cliente
+            # Los emails dictados verbalmente pueden tener errores
+            self.conversation_history.append({
+                "role": "system",
+                "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
 
-                # IMPORTANTE: Confirmar UNA SOLA VEZ
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
-
-⚠️ CONFIRMACIÓN OBLIGATORIA (UNA SOLA VEZ):
+⚠️ CONFIRMACIÓN OBLIGATORIA:
 Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
 
 FORMATO DE CONFIRMACIÓN:
@@ -2065,45 +1986,33 @@ Si el email es "juan.perez@gmail.com", di:
 "Perfecto, déjeme confirmar: j-u-a-n punto p-e-r-e-z arroba g-m-a-i-l punto com. ¿Es correcto?"
 
 IMPORTANTE:
-- Deletrea el email completo UNA SOLA VEZ
-- Si el cliente confirma "sí" o "correcto", continúa con el cierre
-- Si el cliente dice que NO es correcto, pide que lo repita UNA VEZ MÁS
-- NO pidas el email más de 2 veces en total"""
-                })
-            else:
-                # Ya pedimos confirmación antes, solo actualizar
-                self.lead_data["email"] = email_detectado
-                print(f"📧 Email actualizado: {email_detectado}")
+- SIEMPRE deletrea el email completo
+- Confirma con el cliente que está correcto
+- Si el cliente dice que hay un error, pide que lo repita letra por letra"""
+            })
         else:
             # Detectar posibles emails incompletos o malformados
             # Buscar palabras que sugieren que el cliente está dando un email
-            palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo"]
+            palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo", "email"]
 
-            # Solo pedir si NO hemos confirmado con el cliente que ya lo dio
-            if (any(palabra in texto_lower for palabra in palabras_email) and
-                not hasattr(self, 'email_confirmado_por_cliente')):
+            if any(palabra in texto_lower for palabra in palabras_email):
                 print(f"⚠️ Posible email incompleto o malformado detectado en: '{texto[:100]}...'")
-
-                # Solo pedir UNA VEZ si no hemos pedido antes
-                if not hasattr(self, 'email_pedido_una_vez'):
-                    self.email_pedido_una_vez = True
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
 
 Detecté que el cliente podría estar proporcionando un email, pero no se capturó correctamente.
 
-ACCIÓN REQUERIDA (UNA SOLA VEZ):
+ACCIÓN REQUERIDA:
 1. Pide al cliente que repita el correo LETRA POR LETRA
 2. NO intentes adivinar o completar el email
 3. Ejemplo: "Disculpe, no alcancé a captar el correo completo. ¿Me lo podría deletrear letra por letra? Por ejemplo: j-u-a-n-punto-p-e-r-e-z-arroba-g-m-a-i-l-punto-c-o-m"
 
 IMPORTANTE:
-- Solo pide el correo UNA VEZ
-- Si el cliente se molesta o dice que ya lo dio, NO insistas
 - Escucha cada letra con atención
-- Repite el email completo al final para confirmar"""
-                    })
+- Repite el email completo al final para confirmar
+- Asegúrate de captar correctamente el dominio (@gmail.com, @hotmail.com, etc.)"""
+                })
 
         # Detectar productos de interés
         productos_keywords = {
