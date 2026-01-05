@@ -544,15 +544,24 @@ def iniciar_llamada():
         "contacto_info": {...}  # Información completa del contacto (opcional)
     }
     """
-    data = request.json
-    telefono_destino = data.get("telefono")
-    nombre_negocio = data.get("nombre_negocio", "cliente")
-    contacto_info = data.get("contacto_info", None)  # Info completa del contacto
-
-    if not telefono_destino:
-        return {"error": "Teléfono requerido"}, 400
-
     try:
+        print(f"\n🔍 DEBUG 1: /iniciar-llamada - Request recibido")
+
+        data = request.json
+        print(f"🔍 DEBUG 2: JSON parseado correctamente")
+
+        telefono_destino = data.get("telefono")
+        nombre_negocio = data.get("nombre_negocio", "cliente")
+        contacto_info = data.get("contacto_info", None)
+
+        print(f"🔍 DEBUG 3: Datos extraídos - Tel: {telefono_destino}, Negocio: {nombre_negocio}")
+
+        if not telefono_destino:
+            print(f"❌ ERROR: Teléfono no proporcionado")
+            return {"error": "Teléfono requerido"}, 400
+
+        print(f"🔍 DEBUG 4: Iniciando llamada Twilio a {telefono_destino}")
+
         # Crear llamada con Twilio (con grabación y detección de buzón automática)
         call = twilio_client.calls.create(
             to=telefono_destino,
@@ -565,6 +574,8 @@ def iniciar_llamada():
             status_callback=request.url_root + "status-callback",  # Webhook para estado de llamada
             status_callback_event=["completed"]  # Notificar cuando termine
         )
+
+        print(f"🔍 DEBUG 5: Llamada Twilio creada - SID: {call.sid}")
 
         # Guardar info del contacto para usar en el webhook
         if contacto_info:
@@ -579,6 +590,8 @@ def iniciar_llamada():
             }
             print(f"📋 Contacto básico guardado para Call SID {call.sid[:10]}...")
 
+        print(f"🔍 DEBUG 6: Retornando respuesta exitosa")
+
         return {
             "success": True,
             "call_sid": call.sid,
@@ -586,7 +599,14 @@ def iniciar_llamada():
         }
 
     except Exception as e:
-        return {"error": str(e)}, 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"\n❌ ERROR EN /iniciar-llamada:")
+        print(f"❌ Tipo de error: {type(e).__name__}")
+        print(f"❌ Mensaje: {str(e)}")
+        print(f"❌ Stack trace completo:")
+        print(error_trace)
+        return {"error": str(e), "type": type(e).__name__, "traceback": error_trace}, 500
 
 
 @app.route("/webhook-voz", methods=["GET", "POST"])
