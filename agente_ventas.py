@@ -1614,6 +1614,70 @@ class AgenteVentas:
             print(f"📝 Estado detectado: No contesta")
             return
 
+        # ============================================================
+        # DETECCIÓN CRÍTICA: "SOY YO EL ENCARGADO"
+        # ============================================================
+        # Detectar cuando el cliente confirma que ÉL/ELLA es el encargado
+        frases_es_encargado = [
+            "soy yo", "yo soy", "soy yo el encargado", "yo soy el encargado",
+            "soy yo la encargada", "yo soy la encargada",
+            "la encargada soy yo", "el encargado soy yo",
+            "el trato es conmigo", "hablo yo", "hable conmigo",
+            "yo atiendo", "yo me encargo", "yo soy quien"
+        ]
+
+        if any(frase in texto_lower for frase in frases_es_encargado):
+            # Marcar que YA estamos hablando con el encargado
+            if not hasattr(self, 'encargado_confirmado'):
+                self.encargado_confirmado = True
+                print(f"👤 CONFIRMADO: Cliente ES el encargado - '{texto[:50]}...'")
+
+                # Agregar mensaje al sistema para que GPT NO vuelva a preguntar
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": "⚠️ CRÍTICO: El cliente acaba de confirmar que ÉL/ELLA ES el encargado de compras. NO vuelvas a preguntar por el encargado, NO preguntes por su horario. Continúa la conversación directamente con esta persona y pide su nombre: '¿Con quién tengo el gusto?'"
+                })
+
+        # ============================================================
+        # DETECCIÓN CRÍTICA: OBJECIÓN TRUPER (NO APTO)
+        # ============================================================
+        # Detectar cuando cliente SOLO maneja Truper (marca exclusiva)
+        # Truper NO permite que sus socios distribuyan otras marcas
+        frases_solo_truper = [
+            "solo truper", "solamente truper", "únicamente truper",
+            "solo manejamos truper", "solamente manejamos truper",
+            "solo podemos truper", "solo podemos comprar truper",
+            "somos truper", "solo trabajamos con truper",
+            "nada más truper", "nomás truper", "solo compramos truper"
+        ]
+
+        if any(frase in texto_lower for frase in frases_solo_truper):
+            # Marcar como NO APTO y preparar despedida
+            self.lead_data["estado_llamada"] = "Colgo"
+            self.lead_data["pregunta_0"] = "Colgo"
+            self.lead_data["pregunta_7"] = "NO APTO - SOLO TRUPER"
+            self.lead_data["resultado"] = "NEGADO"
+            self.lead_data["nivel_interes_clasificado"] = "NO APTO"
+            print(f"🚫 OBJECIÓN TRUPER detectada - Marcando como NO APTO")
+
+            # Agregar despedida protocolizada al sistema
+            self.conversation_history.append({
+                "role": "system",
+                "content": """⚠️ PROTOCOLO TRUPER DETECTADO - DESPEDIDA OBLIGATORIA
+
+El cliente SOLO maneja productos Truper. Esta marca NO permite que sus socios comerciales distribuyan otras marcas.
+
+ACCIÓN INMEDIATA:
+1. Despídete cortésmente SIN insistir
+2. NO ofrezcas más productos
+3. Termina la llamada profesionalmente
+
+DESPEDIDA EXACTA:
+"Entiendo perfectamente. Truper es una excelente marca. Le agradezco mucho su tiempo y le deseo mucho éxito en su negocio. Que tenga un excelente día."
+
+Después de esta despedida, la llamada debe TERMINAR."""
+            })
+
         # Detectar interés
         palabras_interes = ["sí", "si", "me interesa", "claro", "adelante", "ok", "envíe", "mándame"]
         palabras_rechazo = ["no", "no gracias", "no me interesa", "ocupado", "no tengo tiempo"]
@@ -1825,7 +1889,7 @@ class AgenteVentas:
             r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',              # 66 23 53 41 85 (espacio cada 2)
             r'\+?52\s?(\d{2})\s?(\d{4})\s?(\d{4})',                      # +52 33 1234 5678
             r'(\d{2})\s?(\d{4})\s?(\d{4})',                              # 33 1234 5678
-            r'(\d{8,10})'                                                 # 12345678, 123456789, 1234567890 (8-10 dígitos)
+            r'(\d{4,10})'                                                 # 4-10 dígitos (capturar incluso muy cortos para alertar)
         ]
 
         # IMPORTANTE: Si ya detectamos una referencia pendiente, NO capturar números como WhatsApp
@@ -1844,12 +1908,31 @@ class AgenteVentas:
                     if len(numero) != 10:
                         # Número incorrecto - pedir número de 10 dígitos
                         if len(numero) < 10:
-                            print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
-                            numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
-                            self.conversation_history.append({
-                                "role": "system",
-                                "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos."
-                            })
+                            # Casos especiales según longitud
+                            if len(numero) <= 7:
+                                # MUY CORTO (4-7 dígitos) - probablemente cliente interrumpido o número parcial
+                                print(f"🚨 Número MUY CORTO detectado: {numero} ({len(numero)} dígitos)")
+                                self.conversation_history.append({
+                                    "role": "system",
+                                    "content": f"""[SISTEMA] ⚠️ NÚMERO MUY INCOMPLETO: Solo captaste {len(numero)} dígitos ({numero}).
+
+Los números de WhatsApp en México SIEMPRE tienen 10 dígitos.
+
+ACCIÓN REQUERIDA:
+1. NO guardes este número incompleto
+2. Pide el número completo de forma clara y natural
+3. Ejemplo: "Disculpe, solo alcancé a captar {numero}. ¿Me podría dar el número completo de 10 dígitos? Por ejemplo: tres, tres, uno, cero, dos, tres..."
+
+IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de continuar."""
+                                })
+                            else:
+                                # 8-9 dígitos - casi completo
+                                print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                                numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
+                                self.conversation_history.append({
+                                    "role": "system",
+                                    "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos. Ejemplo: 'El número que tengo es {numero_formateado}, pero me parece que falta un dígito. ¿Me lo podría confirmar completo?'"
+                                })
                         else:
                             print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
@@ -1874,12 +1957,62 @@ class AgenteVentas:
         else:
             print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
 
-        # Detectar email
+        # ============================================================
+        # DETECCIÓN DE EMAIL (con validación y confirmación)
+        # ============================================================
+        # Patrón estricto para emails válidos
         patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
         match_email = re.search(patron_email, texto)
+
         if match_email:
-            self.lead_data["email"] = match_email.group(0)
-            print(f"📧 Email detectado: {self.lead_data['email']}")
+            email_detectado = match_email.group(0)
+            self.lead_data["email"] = email_detectado
+            print(f"📧 Email detectado: {email_detectado}")
+
+            # IMPORTANTE: Siempre confirmar el email con el cliente
+            # Los emails dictados verbalmente pueden tener errores
+            self.conversation_history.append({
+                "role": "system",
+                "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
+
+⚠️ CONFIRMACIÓN OBLIGATORIA:
+Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
+
+FORMATO DE CONFIRMACIÓN:
+"Perfecto, déjeme confirmar el correo: {email_detectado} - eso es [DELETREAR PARTE ANTES DE @] arroba [DELETREAR DOMINIO]. ¿Es correcto?"
+
+Ejemplo real:
+Si el email es "juan.perez@gmail.com", di:
+"Perfecto, déjeme confirmar: j-u-a-n punto p-e-r-e-z arroba g-m-a-i-l punto com. ¿Es correcto?"
+
+IMPORTANTE:
+- SIEMPRE deletrea el email completo
+- Confirma con el cliente que está correcto
+- Si el cliente dice que hay un error, pide que lo repita letra por letra"""
+            })
+        else:
+            # Detectar posibles emails incompletos o malformados
+            # Buscar palabras que sugieren que el cliente está dando un email
+            palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo", "email"]
+
+            if any(palabra in texto_lower for palabra in palabras_email):
+                print(f"⚠️ Posible email incompleto o malformado detectado en: '{texto[:100]}...'")
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
+
+Detecté que el cliente podría estar proporcionando un email, pero no se capturó correctamente.
+
+ACCIÓN REQUERIDA:
+1. Pide al cliente que repita el correo LETRA POR LETRA
+2. NO intentes adivinar o completar el email
+3. Ejemplo: "Disculpe, no alcancé a captar el correo completo. ¿Me lo podría deletrear letra por letra? Por ejemplo: j-u-a-n-punto-p-e-r-e-z-arroba-g-m-a-i-l-punto-c-o-m"
+
+IMPORTANTE:
+- Escucha cada letra con atención
+- Repite el email completo al final para confirmar
+- Asegúrate de captar correctamente el dominio (@gmail.com, @hotmail.com, etc.)"""
+                })
 
         # Detectar productos de interés
         productos_keywords = {
@@ -1920,6 +2053,33 @@ class AgenteVentas:
             self.lead_data["notas"] += f" | {texto[:100]}"
         else:
             self.lead_data["notas"] = texto[:100]
+
+        # ============================================================
+        # CORRECCIÓN DE NOMBRE (Género y Correcciones del Cliente)
+        # ============================================================
+        # Detectar si el cliente está corrigiendo su nombre
+        patrones_correccion_nombre = [
+            r'no,?\s+(?:me llamo|mi nombre es|soy)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})',
+            r'es\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
+            r'([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
+        ]
+
+        for patron in patrones_correccion_nombre:
+            match = re.search(patron, texto, re.IGNORECASE)
+            if match:
+                nombre_corregido = match.group(1).strip()
+                # Verificar que sea un nombre válido (no una palabra común)
+                palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto']
+                if nombre_corregido.lower() not in palabras_invalidas and len(nombre_corregido) > 2:
+                    self.lead_data["nombre_contacto"] = nombre_corregido
+                    print(f"✏️ Nombre CORREGIDO por cliente: {nombre_corregido}")
+
+                    # Enviar instrucción a GPT para usar el nombre correcto
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": f"⚠️ CORRECCIÓN: El cliente corrigió su nombre a '{nombre_corregido}'. De ahora en adelante, SIEMPRE usa '{nombre_corregido}' (no cambies ni el género ni la ortografía). Ejemplo: 'Perfecto, {nombre_corregido}...' o 'Gracias, {nombre_corregido}...'"
+                    })
+                    break
 
         # Capturar respuestas del formulario de 7 preguntas
         self._capturar_respuestas_formulario(texto, texto_lower)
@@ -2480,6 +2640,21 @@ Mantén conversación natural mientras capturas esta info.
             fase_actual.append(f"""
 # FASE ACTUAL: CAPTURA DE WHATSAPP
 Ya tienes: Nombre={self.lead_data.get("nombre_contacto", "N/A")}
+
+⚠️⚠️⚠️ CRÍTICO - VERIFICAR HISTORIAL ANTES DE PEDIR CORREO ⚠️⚠️⚠️
+ANTES DE PEDIR CORREO ELECTRÓNICO, REVISA CUIDADOSAMENTE EL HISTORIAL DE LA CONVERSACIÓN:
+- Si el cliente YA mencionó su WhatsApp anteriormente (ej: "3331234567"), NO pidas correo
+- Si el cliente dice "ya te lo pasé" o "ya te lo di", es porque SÍ te dio el WhatsApp antes
+- NUNCA pidas correo si ya tienes WhatsApp en el historial
+
+PRIORIDAD ABSOLUTA DE CONTACTO:
+1. WhatsApp (PRIMERA OPCIÓN - siempre pedir primero)
+2. Correo (SOLO si confirmó que NO tiene WhatsApp o no puede dar WhatsApp)
+
+Si cliente dice "ya te lo pasé/di el WhatsApp":
+- Pide disculpas: "Tiene razón, discúlpeme. Deje verifico el número que me pasó..."
+- Revisa el historial y confirma el número que dio
+- NO pidas el correo
 
 CRÍTICO: Tú SÍ puedes enviar el catálogo por WhatsApp. Un compañero del equipo lo enviará.
 
