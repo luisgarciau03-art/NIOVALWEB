@@ -1628,15 +1628,17 @@ class AgenteVentas:
             return
 
         # ============================================================
-        # DETECCIÓN CRÍTICA: "SOY YO EL ENCARGADO"
+        # FIX 18: DETECCIÓN CRÍTICA - "YO SOY EL ENCARGADO"
         # ============================================================
         # Detectar cuando el cliente confirma que ÉL/ELLA es el encargado
         frases_es_encargado = [
-            "soy yo", "yo soy", "soy yo el encargado", "yo soy el encargado",
-            "soy yo la encargada", "yo soy la encargada",
+            "yo soy el encargado", "soy yo el encargado", "yo soy la encargada", "soy yo la encargada",
+            "soy el encargado", "soy la encargada",
             "la encargada soy yo", "el encargado soy yo",
+            "soy yo", "yo soy", "habla con él", "es conmigo",
             "el trato es conmigo", "hablo yo", "hable conmigo",
-            "yo atiendo", "yo me encargo", "yo soy quien"
+            "yo atiendo", "yo me encargo", "yo soy quien",
+            "aquí yo", "yo le atiendo", "conmigo puede hablar"
         ]
 
         if any(frase in texto_lower for frase in frases_es_encargado):
@@ -1648,7 +1650,41 @@ class AgenteVentas:
                 # Agregar mensaje al sistema para que GPT NO vuelva a preguntar
                 self.conversation_history.append({
                     "role": "system",
-                    "content": "⚠️ CRÍTICO: El cliente acaba de confirmar que ÉL/ELLA ES el encargado de compras. NO vuelvas a preguntar por el encargado, NO preguntes por su horario. Continúa la conversación directamente con esta persona y pide su nombre: '¿Con quién tengo el gusto?'"
+                    "content": """⚠️⚠️⚠️ CRÍTICO: El cliente acaba de confirmar que ÉL/ELLA ES el encargado de compras.
+
+ACCIÓN INMEDIATA:
+1. NO vuelvas a preguntar "¿Se encuentra el encargado?" NUNCA MÁS
+2. NO preguntas por horario del encargado
+3. NO pidas que te comuniquen con el encargado
+4. Continúa la conversación DIRECTAMENTE con esta persona
+5. Si no tienes su nombre, pregunta: "Perfecto, ¿con quién tengo el gusto?"
+
+YA ESTÁS HABLANDO CON EL ENCARGADO. NO LO VUELVAS A BUSCAR."""
+                })
+
+        # ============================================================
+        # FIX 16: DETECCIÓN - YA TENGO NOMBRE, NO VOLVER A PEDIRLO
+        # ============================================================
+        # Si ya tenemos nombre_contacto guardado, advertir a GPT que NO lo vuelva a pedir
+        if self.lead_data.get("nombre_contacto"):
+            nombre_actual = self.lead_data.get("nombre_contacto")
+            # Detectar si Bruce está preguntando por el nombre OTRA VEZ
+            frases_pide_nombre = [
+                "¿con quién tengo el gusto?", "con quien tengo el gusto",
+                "¿me podría decir su nombre?", "me podria decir su nombre",
+                "¿cuál es su nombre?", "cual es su nombre",
+                "¿cómo se llama?", "como se llama"
+            ]
+
+            if any(frase in texto_lower for frase in frases_pide_nombre):
+                print(f"⚠️ ADVERTENCIA: Bruce pidió nombre pero YA tenemos: {nombre_actual}")
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""⚠️ ERROR: Acabas de preguntar el nombre del cliente pero YA lo tienes guardado: {nombre_actual}
+
+NO VUELVAS A PREGUNTAR EL NOMBRE. Ya te lo dijo anteriormente.
+
+Continúa la conversación usando su nombre: {nombre_actual}"""
                 })
 
         # ============================================================
@@ -1925,6 +1961,32 @@ Después de esta despedida, la llamada debe TERMINAR."""
                                 "role": "system",
                                 "content": f"[SISTEMA] El número del contacto tiene dígitos de más: {numero_formateado} ({len(numero)} dígitos, pero deberían ser 10). Probablemente hubo un error en la captura. Debes pedirle que repita el número DÍGITO POR DÍGITO de manera clara y natural. Ejemplo: 'Disculpe, parece que capté algunos dígitos de más. ¿Podría repetirme el número dígito por dígito para asegurarme de anotarlo correctamente? Por ejemplo: seis, seis, dos, tres...'"
                             })
+
+        # ============================================================
+        # FIX 17: DETECCIÓN - "YA TE LO DI/PASÉ EL NÚMERO"
+        # ============================================================
+        # Detectar cuando cliente dice que YA dio el WhatsApp anteriormente
+        frases_ya_dio_numero = [
+            "ya te lo di", "ya te lo dije", "ya te lo pasé", "ya te lo había dado",
+            "ya te lo había pasado", "ya te lo mencioné", "ya te lo comenté",
+            "ya lo tienes", "ya te lo envié", "ya está", "ya se lo di",
+            "sí ya le dije", "ya le había pasado"
+        ]
+
+        if any(frase in texto_lower for frase in frases_ya_dio_numero):
+            print(f"⚠️ Cliente dice que YA dio el número antes")
+            self.conversation_history.append({
+                "role": "system",
+                "content": """⚠️ CRÍTICO: El cliente dice que YA te dio el número de WhatsApp anteriormente.
+
+ACCIÓN INMEDIATA:
+1. Revisa el historial de la conversación
+2. Busca el número que te dio (probablemente esté en uno de los mensajes anteriores)
+3. Si lo encuentras, confírmalo: "Tiene razón, discúlpeme. El número que tengo es [NÚMERO]. ¿Es correcto?"
+4. Si NO lo encuentras, pide disculpas y solicítalo una última vez: "Tiene razón, discúlpeme. Para asegurarme de tenerlo bien, ¿me lo podría repetir una última vez?"
+
+NO sigas pidiendo el número sin revisar el historial primero."""
+            })
 
         # ============================================================
         # PASO 2: DETECTAR WHATSAPP (solo si NO hay referencia pendiente)

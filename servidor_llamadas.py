@@ -700,8 +700,8 @@ def webhook_voz():
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=5,  # Tiempo de espera antes de timeout
-        speech_timeout=1,  # OPTIMIZADO: 1s después de que cliente deja de hablar (antes 3s)
+        timeout=7,  # Tiempo de espera antes de timeout (aumentado de 5s a 7s)
+        speech_timeout=3,  # FIX 19: 3s después de que cliente deja de hablar (permite pausas naturales)
         action="/procesar-respuesta",
         method="POST"
     )
