@@ -1463,22 +1463,25 @@ class AgenteVentas:
         # Verificar si se detectó un estado especial (Buzon, Telefono Incorrecto, Colgo, No Respondio, No Contesta)
         # Si es así, generar respuesta de despedida automática
         if self.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
-            # Generar respuesta de despedida apropiada según el estado
+            # FIX 22A: Respuestas de despedida apropiadas según el estado
+            # IMPORTANTE: Estados "Colgo", "No Respondio", "No Contesta" retornan cadena vacía
+            # porque la llamada YA terminó y NO hay que decir nada más
             respuestas_despedida = {
                 "Buzon": "Disculpe, parece que entró el buzón de voz. Le llamaré en otro momento. Que tenga buen día.",
                 "Telefono Incorrecto": "Disculpe las molestias, parece que hay un error con el número. Que tenga buen día.",
-                "Colgo": "[El cliente colgó la llamada]",
-                "No Respondio": "[El cliente no respondió al saludo]",
-                "No Contesta": "[Nadie contestó después de varios timbres]"
+                "Colgo": "",  # Llamada terminada - NO decir nada
+                "No Respondio": "",  # No hubo respuesta - NO decir nada
+                "No Contesta": ""  # Nadie contestó - NO decir nada
             }
 
             respuesta_agente = respuestas_despedida.get(self.lead_data["estado_llamada"], "Que tenga buen día.")
 
-            # Agregar al historial
-            self.conversation_history.append({
-                "role": "assistant",
-                "content": respuesta_agente
-            })
+            # Solo agregar al historial si hay respuesta (no vacía)
+            if respuesta_agente:
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_agente
+                })
 
             return respuesta_agente
 
@@ -1611,12 +1614,18 @@ class AgenteVentas:
             print(f"📝 Estado detectado: Teléfono Incorrecto (número equivocado)")
             return
 
-        if any(palabra in texto_lower for palabra in ["cuelga", "colgo", "colgó", "*cuelga*"]):
+        # FIX 22B: Detección MÁS ESTRICTA de "colgó" - solo frases completas
+        # NO detectar palabras sueltas que puedan confundirse
+        frases_colgo_real = [
+            "el cliente colgó", "cliente colgó", "ya colgó", "colgó la llamada",
+            "se colgó", "colgaron", "me colgaron", "cortó la llamada"
+        ]
+        if any(frase in texto_lower for frase in frases_colgo_real):
             self.lead_data["estado_llamada"] = "Colgo"
             self.lead_data["pregunta_0"] = "Colgo"
             self.lead_data["pregunta_7"] = "Colgo"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: Cliente colgó")
+            print(f"📝 Estado detectado: Cliente colgó - '{texto[:50]}...'")
             return
 
         if any(palabra in texto_lower for palabra in ["no contesta", "no responde", "sin respuesta"]):
