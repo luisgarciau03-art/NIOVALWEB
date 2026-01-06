@@ -1592,17 +1592,24 @@ class AgenteVentas:
             print(f"📝 Estado detectado: Buzón de voz")
             return
 
-        # Detectar teléfono incorrecto / número equivocado / no es el lugar correcto
+        # FIX 24: Detección MÁS ESTRICTA de teléfono incorrecto
+        # Frases completas que indican número equivocado
         frases_numero_incorrecto = [
             "numero incorrecto", "número incorrecto", "numero equivocado", "número equivocado",
-            "no existe", "fuera de servicio", "no es aqui", "no es aquí", "no es este",
-            "se equivocó", "se equivoco", "marcó mal", "marco mal", "número equivocado",
-            "no tengo el contacto", "no tengo contacto", "no conozco", "no trabajo aqui",
-            "no trabajo aquí", "no es el negocio", "no es mi negocio", "no es negocio",
+            "no existe", "fuera de servicio", "no es aqui", "no es aquí",
+            "se equivocó de número", "se equivoco de numero", "marcó mal", "marco mal",
+            "no trabajo aqui", "no trabajo aquí", "no es el negocio", "no es mi negocio",
             "equivocado de numero", "equivocado de número", "llamó mal", "llamo mal",
-            "no soy", "no somos", "no hay negocio", "aqui no es", "aquí no es",
-            "no es aca", "no es acá", "esto no es"
+            "no hay negocio", "aqui no es", "aquí no es", "no es aca", "no es acá",
+            "esto no es una ferretería", "esto no es ferretería", "no vendemos",
+            "no es este el número", "no es este número", "llamó al número equivocado",
+            "se equivocó de teléfono", "marcó equivocado"
         ]
+
+        # NOTA: Eliminadas frases genéricas que causan falsos positivos:
+        # - "no soy" (cliente puede decir "no soy el encargado de compras")
+        # - "no somos" (cliente puede decir "no somos distribuidores")
+        # - "no es este" (demasiado genérico)
 
         if (any(frase in texto_lower for frase in frases_numero_incorrecto) or
             (("telefono" in texto_lower or "teléfono" in texto_lower or "numero" in texto_lower or "número" in texto_lower) and
@@ -1611,7 +1618,7 @@ class AgenteVentas:
             self.lead_data["pregunta_0"] = "Telefono Incorrecto"
             self.lead_data["pregunta_7"] = "TELEFONO INCORRECTO"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: Teléfono Incorrecto (número equivocado)")
+            print(f"📝 Estado detectado: Teléfono Incorrecto - '{texto[:50]}...'")
             return
 
         # FIX 22B: Detección MÁS ESTRICTA de "colgó" - solo frases completas
