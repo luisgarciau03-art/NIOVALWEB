@@ -240,13 +240,18 @@ Si menciona problemas (desabasto, entregas lentas, precios altos):
 [ESPERA RESPUESTA - Profundiza en el pain point]
 → "Perfecto, entiendo la situación. Déjeme validar que tenemos solución para eso específicamente. ¿Le gustaría que le enviara información sobre [producto/categoría mencionada]?"
 
-Si pregunta por producto específico (ej: "¿Tienen tornillos?", "¿Manejan [marca]?"):
-→ NUNCA digas "Sí tenemos" o "No tenemos"
-→ "Déjeme validarlo en nuestro catálogo actualizado. ¿Ese producto lo necesita con urgencia o está explorando opciones?"
+⚠️⚠️⚠️ Si pregunta por producto específico (ej: "¿Tienen tubo PVC?", "¿Manejan tornillos?", "¿En cuánto tienes X?"):
+→ ❌ NUNCA NUNCA NUNCA digas "Sí tenemos" o "No tenemos" o "Sí manejamos"
+→ ❌ NUNCA NUNCA NUNCA inventes precios (ej: "El precio es $X", "Cuesta $Y")
+→ ✅ SIEMPRE di: "Déjeme validarlo con mi compañero que tiene el catálogo actualizado. ¿Ese producto lo necesita con urgencia o está explorando opciones para su negocio?"
 [ESPERA RESPUESTA - Entiende la urgencia]
 → "Perfecto. Manejamos más de 15 categorías y le conviene ver el catálogo completo porque muchos clientes descubren productos que ni sabían que necesitaban. ¿Hay alguna otra categoría que le interese además de [producto mencionado]?"
 [ESPERA RESPUESTA - Amplía el interés]
-→ "Excelente. ¿Cuál es su WhatsApp para enviarle el catálogo completo?"
+→ "Excelente. ¿Cuál es su WhatsApp para enviarle el catálogo completo con todos los precios actualizados?"
+
+⚠️⚠️⚠️ Si pide precio de algo específico:
+→ ❌ NUNCA inventes precios
+→ ✅ Di: "Déjeme consultarlo con mi compañero y le informo el precio exacto en las próximas 2 horas. Para poder enviarle esa información junto con el catálogo completo, ¿cuál es su WhatsApp?"
 
 ---
 
@@ -347,10 +352,18 @@ Si NO quiere dar ni WhatsApp ni correo:
 
 FASE 5: CIERRE Y SIGUIENTE PASO
 
-⚠️ TIMING DE ENVÍO DEL CATÁLOGO - MUY IMPORTANTE:
-NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
-SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
+⚠️⚠️⚠️ TIMING DE ENVÍO DEL CATÁLOGO - CRÍTICO:
+❌ NUNCA NUNCA NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
+✅ SIEMPRE SIEMPRE SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
 Razón: Un compañero del equipo lo envía, NO es automático. NO generes expectativas falsas.
+
+Ejemplos CORRECTOS:
+- "En las próximas 2 horas le llega el catálogo por WhatsApp"
+- "Le envío el catálogo en el transcurso del día"
+
+Ejemplos INCORRECTOS (NUNCA uses):
+- "En un momento le enviaré..." ❌
+- "Ahorita le envío..." ❌
 
 Si obtuviste WhatsApp:
 "Excelente[si tienes nombre: , [NOMBRE]]. En las próximas 2 horas le llega el catálogo completo por WhatsApp. Le voy a marcar algunos productos que creo pueden interesarle según lo que me comentó. También le incluyo información sobre nuestra promoción de primer pedido de $1,500 pesos con envío gratis, por si quiere hacer un pedido de prueba. Un compañero del equipo le dará seguimiento en los próximos días para resolver dudas. ¿Le parece bien?"
@@ -1639,6 +1652,40 @@ class AgenteVentas:
                 })
 
         # ============================================================
+        # FIX 11: DETECCIÓN CRÍTICA - "NO, POR WHATSAPP" / "MÁNDAMELO POR WHATSAPP"
+        # ============================================================
+        # Detectar cuando cliente RECHAZA correo y pide WhatsApp repetidamente
+        frases_pide_whatsapp = [
+            "no, mándamelo por whatsapp", "mándamelo por whatsapp", "envialo por whatsapp",
+            "no es por whatsapp", "no, es whatsapp", "por whatsapp",
+            "mejor whatsapp", "prefiero whatsapp", "whatsapp mejor",
+            "no por correo", "no, por correo no", "no correo",
+            "tengo whatsapp", "mejor el whatsapp", "dame tu whatsapp"
+        ]
+
+        if any(frase in texto_lower for frase in frases_pide_whatsapp):
+            if not hasattr(self, 'cliente_confirmo_whatsapp'):
+                self.cliente_confirmo_whatsapp = True
+                print(f"✅ CRÍTICO: Cliente CONFIRMÓ que quiere WhatsApp (NO correo)")
+
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": """⚠️⚠️⚠️ CRÍTICO - CLIENTE RECHAZÓ CORREO Y PIDIÓ WHATSAPP
+
+El cliente acaba de decir que NO quiere correo, quiere WHATSAPP.
+
+ACCIÓN INMEDIATA:
+1. NO vuelvas a pedir correo electrónico
+2. Pide su número de WhatsApp AHORA MISMO
+3. Di: "Perfecto, le enviaré el catálogo por WhatsApp. ¿Me podría proporcionar su número de teléfono para enviárselo?"
+
+IMPORTANTE:
+- WhatsApp es PRIORITARIO sobre correo
+- Si ya pediste correo antes, cambia inmediatamente a WhatsApp
+- NUNCA insistas en correo si el cliente pidió WhatsApp"""
+                })
+
+        # ============================================================
         # DETECCIÓN CRÍTICA: OBJECIÓN TRUPER (NO APTO)
         # ============================================================
         # Detectar cuando cliente SOLO maneja Truper (marca exclusiva)
@@ -1885,11 +1932,13 @@ Después de esta despedida, la llamada debe TERMINAR."""
         # Detectar WhatsApp en el texto
         # Patrones: 3312345678, 33-1234-5678, +523312345678, 66 23 53 41 85, etc.
         patrones_tel = [
-            r'\+?52\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})',  # +52 66 23 53 41 85 (espacio cada 2)
-            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',              # 66 23 53 41 85 (espacio cada 2)
+            r'\+?52\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})',  # +52 66 23 53 41 85 (10 dígitos espacio cada 2)
+            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',              # 66 23 53 41 85 (10 dígitos espacio cada 2)
+            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})',                       # 33 12 12 83 (8 dígitos espacio cada 2) - FIX 12
+            r'(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{1})',              # 66 23 53 41 8 (9 dígitos espacio cada 2)
             r'\+?52\s?(\d{2})\s?(\d{4})\s?(\d{4})',                      # +52 33 1234 5678
             r'(\d{2})\s?(\d{4})\s?(\d{4})',                              # 33 1234 5678
-            r'(\d{4,10})'                                                 # 4-10 dígitos (capturar incluso muy cortos para alertar)
+            r'(\d{4,10})'                                                 # 4-10 dígitos sin espacios (capturar incluso muy cortos para alertar)
         ]
 
         # IMPORTANTE: Si ya detectamos una referencia pendiente, NO capturar números como WhatsApp
@@ -2669,10 +2718,19 @@ IMPORTANTE - Respuestas comunes del cliente:
 NUNCA repitas la solicitud del número si el cliente ya ofreció darlo o está a punto de darlo.
 NUNCA digas que no puedes enviar el catálogo. SIEMPRE puedes enviarlo.
 
-⚠️ TIMING DE ENVÍO DEL CATÁLOGO - MUY IMPORTANTE:
-NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente"
-SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
+⚠️⚠️⚠️ TIMING DE ENVÍO DEL CATÁLOGO - CRÍTICO:
+❌ NUNCA NUNCA NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
+✅ SIEMPRE SIEMPRE SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
 Razón: Un compañero del equipo lo envía, NO es automático.
+
+Ejemplos CORRECTOS cuando confirmas WhatsApp:
+- "Perfecto, en las próximas 2 horas le llega el catálogo por WhatsApp"
+- "Excelente, le envío el catálogo en el transcurso del día"
+
+Ejemplos INCORRECTOS (NUNCA uses):
+- "En un momento le enviaré..." ❌
+- "Ahorita le envío..." ❌
+- "Se lo envío al instante..." ❌
 """)
 
         # FASE 4: Si ya tenemos WhatsApp, proceder al cierre
