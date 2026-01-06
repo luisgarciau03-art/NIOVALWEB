@@ -1746,19 +1746,23 @@ IMPORTANTE:
             # Agregar despedida protocolizada al sistema
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️ PROTOCOLO TRUPER DETECTADO - DESPEDIDA OBLIGATORIA
+                "content": """⚠️⚠️⚠️ PROTOCOLO TRUPER DETECTADO - DESPEDIDA OBLIGATORIA INMEDIATA
 
 El cliente SOLO maneja productos Truper. Esta marca NO permite que sus socios comerciales distribuyan otras marcas.
 
+⚠️ CRÍTICO: NIOVAL NO MANEJA PRODUCTOS TRUPER. NO podemos ayudar a este cliente.
+
 ACCIÓN INMEDIATA:
 1. Despídete cortésmente SIN insistir
-2. NO ofrezcas más productos
-3. Termina la llamada profesionalmente
+2. ❌ NO ofrezcas catálogos de Truper (NO los tenemos)
+3. ❌ NO ofrezcas "información de Truper" (NO somos distribuidores Truper)
+4. ❌ NO preguntes nada más
+5. Termina la llamada INMEDIATAMENTE
 
-DESPEDIDA EXACTA:
+DESPEDIDA EXACTA (di esto y TERMINA):
 "Entiendo perfectamente. Truper es una excelente marca. Le agradezco mucho su tiempo y le deseo mucho éxito en su negocio. Que tenga un excelente día."
 
-Después de esta despedida, la llamada debe TERMINAR."""
+DESPUÉS DE ESTA FRASE, LA LLAMADA DEBE TERMINAR. NO digas nada más."""
             })
 
         # Detectar interés
@@ -1802,10 +1806,17 @@ Después de esta despedida, la llamada debe TERMINAR."""
                 if match.lastindex and match.lastindex >= 1:
                     nombre_referido = match.group(1).strip()
 
-                    # Filtrar palabras no válidas como nombres Y despedidas
+                    # FIX 20: Filtrar palabras no válidas como nombres (productos, marcas, despedidas)
                     palabras_invalidas = [
                         'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información',
-                        'gracias', 'hasta', 'luego', 'adiós', 'bye', 'bueno', 'favor', 'tiempo', 'momento'
+                        'gracias', 'hasta', 'luego', 'adiós', 'bye', 'bueno', 'favor', 'tiempo', 'momento',
+                        'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
+                        'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                        'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
+                        'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
+                        'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
+                        'nioval', 'toolcraft', 'milwaukee', 'makita', 'bosch',
+                        'productos', 'producto', 'artículos', 'artículo', 'cosas', 'cosa', 'eso', 'nada'
                     ]
                     if nombre_referido.lower() not in palabras_invalidas and len(nombre_referido) > 2:
                         # Guardar en lead_data para procesarlo después
@@ -1899,7 +1910,17 @@ Después de esta despedida, la llamada debe TERMINAR."""
                     match = re.search(patron, texto, re.IGNORECASE)
                     if match:
                         nombre = match.group(1).strip()
-                        palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información', 'ese', 'este']
+                        # FIX 20: Lista expandida - NO capturar productos ni marcas como nombres
+                        palabras_invalidas = [
+                            'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información', 'ese', 'este',
+                            'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
+                            'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                            'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
+                            'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
+                            'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
+                            'nioval', 'toolcraft', 'milwaukee', 'makita', 'bosch',
+                            'productos', 'producto', 'artículos', 'artículo', 'cosas', 'cosa', 'eso', 'nada'
+                        ]
                         if nombre.lower() not in palabras_invalidas and len(nombre) > 2:
                             self.lead_data["referencia_nombre"] = nombre
                             print(f"👤 Nombre de referencia detectado: {nombre}")
@@ -2179,8 +2200,20 @@ IMPORTANTE:
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
                 nombre_corregido = match.group(1).strip()
-                # Verificar que sea un nombre válido (no una palabra común)
-                palabras_invalidas = ['número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto']
+                # FIX 20: Verificar que sea un nombre válido (NO productos ni marcas)
+                palabras_invalidas = [
+                    'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto',
+                    # Productos de ferretería
+                    'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
+                    'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                    'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
+                    'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
+                    # Marcas comunes
+                    'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
+                    'nioval', 'toolcraft', 'milwaukee', 'makita', 'bosch',
+                    # Palabras genéricas
+                    'productos', 'producto', 'artículos', 'artículo', 'cosas', 'cosa', 'eso', 'nada'
+                ]
                 if nombre_corregido.lower() not in palabras_invalidas and len(nombre_corregido) > 2:
                     self.lead_data["nombre_contacto"] = nombre_corregido
                     print(f"✏️ Nombre CORREGIDO por cliente: {nombre_corregido}")
