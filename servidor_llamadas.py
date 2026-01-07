@@ -10,6 +10,7 @@ import os
 import tempfile
 import threading
 import json
+import random
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
@@ -268,7 +269,16 @@ def pre_generar_audios_cache():
         # Frases de sistema
         "timeout": "¿Sigue ahí?",
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
-        "pensando": "Mmm, déjeme pensarlo un momento...",  # Audio de relleno mientras GPT procesa
+
+        # FIX 54B: Múltiples frases de "pensando" con voz de Bruce (variables)
+        "pensando_1": "Déjeme ver...",
+        "pensando_2": "Mmm, déjeme validarlo...",
+        "pensando_3": "Un momento...",
+        "pensando_4": "Déjeme revisar...",
+        "pensando_5": "Mmm...",
+        "pensando_6": "Déjeme checar...",
+        "pensando_7": "Permítame un segundo...",
+        "pensando_8": "Déjame verificar...",
 
         # Saludo inicial (se usa en TODAS las llamadas) - CON PRONUNCIACIÓN CORRECTA
         "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferre-teros. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
@@ -530,6 +540,24 @@ def servir_audio(audio_id):
         return send_file(audio_data, mimetype='audio/mpeg')
 
     return "Audio not found", 404
+
+
+@app.route("/audio_cache/<cache_key>")
+def servir_audio_cache(cache_key):
+    """Sirve archivos de audio pre-cacheados (0s delay)"""
+    import io
+
+    if cache_key in audio_cache:
+        audio_data = audio_cache[cache_key]
+
+        # Si es bytes, envolver en BytesIO
+        if isinstance(audio_data, bytes):
+            return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
+
+        # Si es string (ruta de archivo), send_file lo maneja
+        return send_file(audio_data, mimetype='audio/mpeg')
+
+    return "Audio cache not found", 404
 
 
 @app.route("/iniciar-llamada", methods=["POST"])
@@ -958,11 +986,21 @@ def procesar_respuesta():
         # GPT aún procesando después de 1s - dar señal auditiva
         print(f"⏳ GPT procesando (>1s) - reproduciendo tono de pensando...")
 
-        # Reproducir tono sutil mientras GPT piensa (evita silencio)
-        # Opción 1: Usar un breve "ajá" o "mmm" pre-grabado
-        # Opción 2: Decir "déjeme ver" mientras procesa
-        # IMPORTANTE: Usar voz masculina (Polly.Miguel) para mantener consistencia con Bruce
-        response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
+        # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
+        # Seleccionar aleatoriamente una de las 8 frases de "pensando"
+        pensando_keys = [f"pensando_{i}" for i in range(1, 9)]
+        pensando_key = random.choice(pensando_keys)
+
+        # Verificar si existe en caché
+        if pensando_key in audio_cache:
+            # Reproducir audio pre-generado con voz de Bruce (0s delay)
+            audio_url = request.url_root + f"audio_cache/{pensando_key}"
+            print(f"💭 Bruce dice (voz Bruce): '{pensando_key}' desde caché")
+            response.play(audio_url)
+        else:
+            # Fallback si no está en caché (no debería pasar)
+            print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
+            response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
 
         # Ahora sí esperar otros 6 segundos (total 7s máximo)
         gpt_thread.join(timeout=6.0)
