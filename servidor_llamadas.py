@@ -1108,6 +1108,10 @@ def procesar_respuesta():
                 respuesta_container["respuesta"] = respuesta_desde_cache
                 respuesta_container["completado"] = True
                 respuesta_container["desde_cache"] = True
+
+                # FIX 58: Log del tiempo de caché (debería ser ~0s)
+                tiempo_cache = time.time() - inicio
+                print(f"⚡ Tiempo de caché: {tiempo_cache:.4f}s (debe ser <0.01s)")
                 break
 
         if respuesta_desde_cache:
@@ -1132,13 +1136,16 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
-    # FIX 50: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
-    # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
+    # FIX 58: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
+    # El caché es instantáneo (0s), no necesita señal auditiva
+    if not respuesta_container.get("desde_cache", False):
+        # FIX 50: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
+        # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
-    # Esperar máximo 1 segundo por GPT antes de dar señal auditiva
-    gpt_thread.join(timeout=1.0)
+        # Esperar máximo 1 segundo por GPT antes de dar señal auditiva
+        gpt_thread.join(timeout=1.0)
 
-    if not respuesta_container["completado"]:
+    if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
         # GPT aún procesando después de 1s - dar señal auditiva
         print(f"⏳ GPT procesando (>1s) - reproduciendo tono de pensando...")
 
