@@ -2023,13 +2023,14 @@ IMPORTANTE:
                 if match.lastindex and match.lastindex >= 1:
                     nombre_referido = match.group(1).strip()
 
-                    # FIX 38: Filtrar palabras no válidas como nombres (productos, marcas, despedidas, pronombres)
+                    # FIX 40: Filtrar palabras no válidas como nombres (productos, marcas, despedidas, pronombres)
                     palabras_invalidas = [
                         'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información',
                         'gracias', 'hasta', 'luego', 'adiós', 'bye', 'bueno', 'favor', 'tiempo', 'momento',
                         'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',  # FIX 38: Pronombres
                         'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                         'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                        'chapas', 'chapa',  # FIX 40: Producto específico (cerraduras)
                         'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
                         'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
                         'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
@@ -2128,12 +2129,13 @@ IMPORTANTE:
                     match = re.search(patron, texto, re.IGNORECASE)
                     if match:
                         nombre = match.group(1).strip()
-                        # FIX 38: Lista expandida - NO capturar productos, marcas ni pronombres como nombres
+                        # FIX 40: Lista expandida - NO capturar productos, marcas ni pronombres como nombres
                         palabras_invalidas = [
                             'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información', 'ese', 'este',
                             'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',  # FIX 38: Pronombres
                             'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                             'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                            'chapas', 'chapa',  # FIX 40: Producto específico (cerraduras)
                             'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
                             'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
                             'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
@@ -2420,7 +2422,7 @@ IMPORTANTE:
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
                 nombre_corregido = match.group(1).strip()
-                # FIX 38: Verificar que sea un nombre válido (NO productos, marcas ni pronombres)
+                # FIX 40: Verificar que sea un nombre válido (NO productos, marcas ni pronombres)
                 palabras_invalidas = [
                     'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto',
                     # FIX 38: Pronombres
@@ -2428,6 +2430,7 @@ IMPORTANTE:
                     # Productos de ferretería
                     'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                     'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                    'chapas', 'chapa',  # FIX 40: Producto específico (cerraduras)
                     'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
                     'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
                     # Marcas comunes
