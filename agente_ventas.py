@@ -2427,27 +2427,41 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
 
         # FIX 48: ELIMINAR AYUDAS MNEMOTÉCNICAS antes de procesar
         # Cliente dice: "Z a m de mamá r o D r y G de gato"
-        # Necesitamos eliminar: "de mamá", "de gato", "con acento", etc.
-        # Solo eliminar si el contexto parece ser deletreo de email (tiene "arroba" o dominios)
+        # Cliente dice: "Z a de Armando m de mamá r de Rogelio o de Óscar"
+        # Necesitamos eliminar: nombres propios, frases descriptivas, TODO excepto letras/números
 
         if 'arroba' in texto_email_procesado or any(dom in texto_email_procesado for dom in ['gmail', 'hotmail', 'outlook', 'yahoo', 'live', 'icloud']):
-            # Patrones de ayudas mnemotécnicas a eliminar
-            ayudas_mnemonicas = [
-                r'\bde\s+\w+\b',           # "de mamá", "de gato", "de casa", etc.
-                r'\bcon\s+\w+\b',          # "con acento", "con tilde"
-                r'\bcomo\s+\w+\b',         # "como en mamá"
-                r'\bpara\s+\w+\b',         # "para arriba"
+            # FIX 48B: ESTRATEGIA AGRESIVA - Eliminar TODAS las palabras largas (3+ letras)
+            # que sean ayudas mnemotécnicas comunes en español
+
+            # Lista de palabras a eliminar (nombres propios y palabras comunes usadas como ayudas)
+            palabras_ayuda = [
+                # Preposiciones/conectores
+                'de', 'del', 'con', 'como', 'para', 'por', 'sin', 'bajo',
+                # Nombres comunes en alfabeto radiofónico informal
+                'mama', 'mamá', 'papa', 'papá', 'gato', 'casa', 'perro', 'vaca', 'burro',
+                'rosa', 'ana', 'oscar', 'óscar', 'carlos', 'daniel', 'elena', 'fernando',
+                'rogelio', 'armando', 'ricardo', 'sandra', 'teresa', 'ursula', 'vicente',
+                'william', 'xavier', 'yolanda', 'zorro', 'antonio', 'beatriz',
+                # Palabras descriptivas comunes
+                'latina', 'latino', 'grande', 'chico', 'ring', 'heredado', 'vedado',
+                'acento', 'tilde', 'mayúscula', 'mayuscula', 'minúscula', 'minuscula',
+                # Números escritos (a veces se mezclan)
+                'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'cero'
             ]
 
-            for patron in ayudas_mnemonicas:
-                texto_email_procesado = re.sub(patron, '', texto_email_procesado)
+            # Construir patrón regex que elimine estas palabras
+            patron_palabras_ayuda = r'\b(' + '|'.join(palabras_ayuda) + r')\b'
+            texto_original_debug = texto_email_procesado
+            texto_email_procesado = re.sub(patron_palabras_ayuda, '', texto_email_procesado, flags=re.IGNORECASE)
 
             # Limpiar espacios múltiples que quedan después de eliminar ayudas
             texto_email_procesado = re.sub(r'\s+', ' ', texto_email_procesado).strip()
 
-            print(f"🔧 FIX 48 - Ayudas mnemotécnicas eliminadas")
-            print(f"   Original: '{texto[:80]}...'")
-            print(f"   Sin ayudas: '{texto_email_procesado[:80]}...'")
+            print(f"🔧 FIX 48B - Ayudas mnemotécnicas eliminadas (AGRESIVO)")
+            print(f"   Original: '{texto[:100]}...'")
+            print(f"   Procesado: '{texto_original_debug[:100]}...'")
+            print(f"   Sin ayudas: '{texto_email_procesado[:100]}...'")
 
         # Paso 1: Reemplazar palabras clave por símbolos
         # "arroba" → "@"
