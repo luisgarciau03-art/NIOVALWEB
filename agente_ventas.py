@@ -1906,14 +1906,16 @@ IMPORTANTE:
         # Truper NO permite que sus socios distribuyan otras marcas
         frases_solo_truper = [
             "solo truper", "solamente truper", "únicamente truper",
-            "solo manejamos truper", "solamente manejamos truper",
+            "solo manejamos truper", "solamente manejamos truper", "únicamente manejamos truper",  # FIX 42
             "solo podemos truper", "solo podemos comprar truper",
             "somos truper", "solo trabajamos con truper",
             "nada más truper", "nomás truper", "solo compramos truper",
             "trabajamos para truper", "somos distribuidores de truper",
             "distribuidor de truper", "distribuidores truper",
             "únicamente trabajamos para truper", "solamente trabajamos para truper",
-            "todo lo que es truper", "manejamos truper", "trabajamos truper"
+            "todo lo que es truper", "manejamos truper", "trabajamos truper",
+            "no podemos manejar alguna otra", "no podemos manejar otra marca",  # FIX 42
+            "no puedo manejar otra", "no podemos trabajar con otra",  # FIX 42
         ]
 
         # FIX 36: Detección ULTRA-AGRESIVA - "trabajamos con truper" SIN necesidad de "solo"
