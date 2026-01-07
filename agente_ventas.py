@@ -2425,6 +2425,30 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
 
         texto_email_procesado = texto.lower()
 
+        # FIX 48: ELIMINAR AYUDAS MNEMOTÉCNICAS antes de procesar
+        # Cliente dice: "Z a m de mamá r o D r y G de gato"
+        # Necesitamos eliminar: "de mamá", "de gato", "con acento", etc.
+        # Solo eliminar si el contexto parece ser deletreo de email (tiene "arroba" o dominios)
+
+        if 'arroba' in texto_email_procesado or any(dom in texto_email_procesado for dom in ['gmail', 'hotmail', 'outlook', 'yahoo', 'live', 'icloud']):
+            # Patrones de ayudas mnemotécnicas a eliminar
+            ayudas_mnemonicas = [
+                r'\bde\s+\w+\b',           # "de mamá", "de gato", "de casa", etc.
+                r'\bcon\s+\w+\b',          # "con acento", "con tilde"
+                r'\bcomo\s+\w+\b',         # "como en mamá"
+                r'\bpara\s+\w+\b',         # "para arriba"
+            ]
+
+            for patron in ayudas_mnemonicas:
+                texto_email_procesado = re.sub(patron, '', texto_email_procesado)
+
+            # Limpiar espacios múltiples que quedan después de eliminar ayudas
+            texto_email_procesado = re.sub(r'\s+', ' ', texto_email_procesado).strip()
+
+            print(f"🔧 FIX 48 - Ayudas mnemotécnicas eliminadas")
+            print(f"   Original: '{texto[:80]}...'")
+            print(f"   Sin ayudas: '{texto_email_procesado[:80]}...'")
+
         # Paso 1: Reemplazar palabras clave por símbolos
         # "arroba" → "@"
         texto_email_procesado = re.sub(r'\b(arroba|aroba|a roba)\b', '@', texto_email_procesado)
