@@ -936,16 +936,30 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
-    # OPTIMIZACIÓN: Timeout más corto para respuestas más rápidas
-    # Esperar máximo 5 segundos por GPT (suficiente para respuestas normales)
-    gpt_thread.join(timeout=5.0)
+    # FIX 50: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
+    # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
+
+    # Esperar máximo 1 segundo por GPT antes de dar señal auditiva
+    gpt_thread.join(timeout=1.0)
 
     if not respuesta_container["completado"]:
-        # GPT tardó más de 5 segundos - timeout
-        print(f"❌ GPT timeout después de 5s")
-        response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
-        response.hangup()
-        return Response(str(response), mimetype="text/xml")
+        # GPT aún procesando después de 1s - dar señal auditiva
+        print(f"⏳ GPT procesando (>1s) - reproduciendo tono de pensando...")
+
+        # Reproducir tono sutil mientras GPT piensa (evita silencio)
+        # Opción 1: Usar un breve "ajá" o "mmm" pre-grabado
+        # Opción 2: Decir "déjeme ver" mientras procesa
+        response.say("Déjeme ver...", language="es-MX", voice="Polly.Mia")
+
+        # Ahora sí esperar otros 6 segundos (total 7s máximo)
+        gpt_thread.join(timeout=6.0)
+
+        if not respuesta_container["completado"]:
+            # GPT tardó más de 7 segundos total - timeout real
+            print(f"❌ GPT timeout después de 7s")
+            response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+            response.hangup()
+            return Response(str(response), mimetype="text/xml")
 
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio

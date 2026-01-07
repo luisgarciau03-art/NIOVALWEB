@@ -1739,7 +1739,9 @@ class AgenteVentas:
             "soy yo", "yo soy", "habla con él", "es conmigo",
             "el trato es conmigo", "hablo yo", "hable conmigo",
             "yo atiendo", "yo me encargo", "yo soy quien",
-            "aquí yo", "yo le atiendo", "conmigo puede hablar"
+            "aquí yo", "yo le atiendo", "conmigo puede hablar",
+            "yo lo puedo atender", "lo puedo atender", "puedo atenderlo",  # FIX 51
+            "yo puedo atender", "yo te atiendo", "yo te puedo atender"  # FIX 51
         ]
 
         if any(frase in texto_lower for frase in frases_es_encargado):
