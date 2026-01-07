@@ -2560,10 +2560,44 @@ IMPORTANTE:
                 palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo", "email"]
 
                 if any(palabra in texto_lower for palabra in palabras_email):
-                    print(f"⚠️ Posible email incompleto o malformado detectado en: '{texto[:100]}...'")
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
+                    # FIX 49: Contador de intentos fallidos de captura de email
+                    if not hasattr(self, 'email_intentos_fallidos'):
+                        self.email_intentos_fallidos = 0
+
+                    self.email_intentos_fallidos += 1
+                    print(f"⚠️ Posible email incompleto o malformado detectado (Intento {self.email_intentos_fallidos}): '{texto[:100]}...'")
+
+                    # Si ya fallamos 2+ veces, ofrecer alternativa de WhatsApp
+                    if self.email_intentos_fallidos >= 2:
+                        print(f"🚨 FIX 49: Email falló {self.email_intentos_fallidos} veces - ofrecer alternativa WhatsApp")
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": """[SISTEMA] 🚨 PROBLEMA PERSISTENTE CON EMAIL (2+ intentos fallidos)
+
+El cliente ha intentado deletrear el email 2 o más veces pero sigue sin capturarse correctamente.
+La captura de emails por voz es POCO CONFIABLE cuando hay ayudas mnemotécnicas.
+
+⚠️⚠️⚠️ ACCIÓN OBLIGATORIA - OFRECER ALTERNATIVA:
+
+Di EXACTAMENTE:
+"Disculpe, veo que hay dificultades con la captura del correo por teléfono. Para asegurarme de tenerlo correcto, tengo dos opciones:
+
+1. Le puedo enviar el catálogo por WhatsApp a su número [NÚMERO SI LO TIENES], y desde ahí usted me puede escribir su correo para tenerlo bien anotado.
+
+2. O si prefiere, me lo puede escribir por WhatsApp y yo se lo confirmo.
+
+¿Qué opción prefiere?"
+
+IMPORTANTE:
+- NO vuelvas a pedir que deletree el email por voz
+- La solución es usar WhatsApp/mensaje de texto
+- Así evitamos más errores de transcripción"""
+                        })
+                    else:
+                        # Primer intento fallido - pedir una vez más
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
 
 Detecté que el cliente podría estar proporcionando un email, pero no se capturó correctamente.
 
@@ -2577,7 +2611,7 @@ IMPORTANTE:
 - Escucha cada letra con atención
 - Repite el email completo al final para confirmar
 - Asegúrate de captar correctamente el dominio (@gmail.com, @hotmail.com, etc.)"""
-                    })
+                        })
 
         # Detectar productos de interés
         productos_keywords = {
