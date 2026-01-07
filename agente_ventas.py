@@ -2344,20 +2344,88 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
         # ============================================================
         # DETECCIÓN DE EMAIL (con validación y confirmación)
         # ============================================================
-        # Patrón estricto para emails válidos
-        patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        match_email = re.search(patron_email, texto)
+        # FIX 45: CONVERTIR EMAILS DELETREADOS A FORMATO CORRECTO
+        # Cliente dice: "yahir sam rodriguez arroba gmail punto com"
+        # Twilio transcribe: "yahir sam rodriguez arroba gmail punto com" (palabras separadas)
+        # Necesitamos convertir a: "yahirsamrodriguez@gmail.com"
 
-        if match_email:
-            email_detectado = match_email.group(0)
+        texto_email_procesado = texto.lower()
+
+        # Paso 1: Reemplazar palabras clave por símbolos
+        # "arroba" → "@"
+        texto_email_procesado = re.sub(r'\b(arroba|aroba|a roba)\b', '@', texto_email_procesado)
+
+        # "punto" → "."
+        # IMPORTANTE: Solo reemplazar "punto" cuando está en contexto de email (cerca de @, gmail, com, etc.)
+        # NO reemplazar en contextos como "punto de venta"
+        if '@' in texto_email_procesado or any(dom in texto_email_procesado for dom in ['gmail', 'hotmail', 'outlook', 'yahoo', 'live', 'icloud']):
+            texto_email_procesado = re.sub(r'\bpunto\b', '.', texto_email_procesado)
+
+        # "guión" → "-"
+        texto_email_procesado = re.sub(r'\b(guion|guión)\b', '-', texto_email_procesado)
+
+        # "guión bajo" / "underscore" → "_"
+        texto_email_procesado = re.sub(r'\b(guion bajo|guión bajo|underscore|bajo)\b', '_', texto_email_procesado)
+
+        # Paso 2: Detectar y reconstruir email deletreado
+        # Patrón: [palabras/letras] @ [palabras/letras] . [dominio]
+        # Ejemplo: "yahir sam rodriguez @ gmail . com"
+        patron_email_deletreado = r'([a-z0-9._-]+(?:\s+[a-z0-9._-]+)*)\s*@\s*([a-z0-9.-]+(?:\s+[a-z0-9.-]+)*)\s*\.\s*([a-z]{2,})'
+        match_deletreado = re.search(patron_email_deletreado, texto_email_procesado)
+
+        if match_deletreado:
+            # Reconstruir email eliminando espacios
+            nombre_local = match_deletreado.group(1).replace(' ', '')  # "yahir sam rodriguez" → "yahirsamrodriguez"
+            dominio = match_deletreado.group(2).replace(' ', '')        # "gmail" → "gmail"
+            extension = match_deletreado.group(3).replace(' ', '')      # "com" → "com"
+
+            email_reconstruido = f"{nombre_local}@{dominio}.{extension}"
+
+            print(f"🔧 FIX 45 - Email deletreado detectado y reconstruido:")
+            print(f"   Original: '{texto[:80]}...'")
+            print(f"   Procesado: '{texto_email_procesado[:80]}...'")
+            print(f"   Email reconstruido: '{email_reconstruido}'")
+
+            # Usar el email reconstruido directamente
+            email_detectado = email_reconstruido
             self.lead_data["email"] = email_detectado
-            print(f"📧 Email detectado: {email_detectado}")
+            print(f"📧 Email detectado (deletreado): {email_detectado}")
 
             # IMPORTANTE: Siempre confirmar el email con el cliente
-            # Los emails dictados verbalmente pueden tener errores
             self.conversation_history.append({
                 "role": "system",
-                "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
+                "content": f"""[SISTEMA] ✅ Email capturado (deletreado): {email_detectado}
+
+⚠️ CONFIRMACIÓN OBLIGATORIA:
+Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
+
+FORMATO DE CONFIRMACIÓN:
+"Perfecto, déjeme confirmar el correo: {email_detectado} - ¿es correcto?"
+
+⚠️⚠️⚠️ FIX 29: NUNCA uses ejemplos inventados
+✅ CORRECTO: Deletrea el correo REAL que el cliente te dio
+
+IMPORTANTE:
+- SIEMPRE confirma que el email esté correcto
+- Si el cliente dice que hay un error, pide que lo repita letra por letra"""
+            })
+
+        # Patrón estricto para emails válidos (detectar emails que ya vienen formateados)
+        # Solo procesar si NO se detectó email deletreado anteriormente
+        if not match_deletreado:
+            patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+            match_email = re.search(patron_email, texto)
+
+            if match_email:
+                email_detectado = match_email.group(0)
+                self.lead_data["email"] = email_detectado
+                print(f"📧 Email detectado: {email_detectado}")
+
+                # IMPORTANTE: Siempre confirmar el email con el cliente
+                # Los emails dictados verbalmente pueden tener errores
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
 
 ⚠️ CONFIRMACIÓN OBLIGATORIA:
 Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
@@ -2373,17 +2441,17 @@ IMPORTANTE:
 - SIEMPRE deletrea el email completo
 - Confirma con el cliente que está correcto
 - Si el cliente dice que hay un error, pide que lo repita letra por letra"""
-            })
-        else:
-            # Detectar posibles emails incompletos o malformados
-            # Buscar palabras que sugieren que el cliente está dando un email
-            palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo", "email"]
+                })
+            else:
+                # Detectar posibles emails incompletos o malformados
+                # Buscar palabras que sugieren que el cliente está dando un email
+                palabras_email = ["arroba", "@", "gmail", "hotmail", "outlook", "yahoo", "correo", "email"]
 
-            if any(palabra in texto_lower for palabra in palabras_email):
-                print(f"⚠️ Posible email incompleto o malformado detectado en: '{texto[:100]}...'")
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
+                if any(palabra in texto_lower for palabra in palabras_email):
+                    print(f"⚠️ Posible email incompleto o malformado detectado en: '{texto[:100]}...'")
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
 
 Detecté que el cliente podría estar proporcionando un email, pero no se capturó correctamente.
 
@@ -2397,7 +2465,7 @@ IMPORTANTE:
 - Escucha cada letra con atención
 - Repite el email completo al final para confirmar
 - Asegúrate de captar correctamente el dominio (@gmail.com, @hotmail.com, etc.)"""
-                })
+                    })
 
         # Detectar productos de interés
         productos_keywords = {
