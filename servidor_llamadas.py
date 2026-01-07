@@ -130,6 +130,12 @@ cache_respuestas_stats = {
     "por_categoria": {}
 }
 
+# FIX 57: AUTO-APRENDIZAJE DE CACHÉ (detecta preguntas frecuentes)
+# Diccionario: pregunta_normalizada → {count, respuestas, ultima_respuesta}
+preguntas_frecuentes = {}
+UMBRAL_AUTO_CACHE = 3  # Después de 3 veces, sugerir para caché
+candidatos_auto_cache = []  # Lista de preguntas que califican para caché automático
+
 
 def cargar_cache_desde_disco():
     """Carga caché persistente desde disco al iniciar"""
@@ -164,6 +170,24 @@ def cargar_cache_desde_disco():
             global frase_stats
             frase_stats = json.load(f)
         print(f"📊 {len(frase_stats)} estadísticas de frases cargadas desde disco\n")
+
+    # FIX 57: Cargar preguntas frecuentes y candidatos auto-cache
+    preguntas_file = os.path.join(CACHE_DIR, "preguntas_frecuentes.json")
+    if os.path.exists(preguntas_file):
+        with open(preguntas_file, 'r', encoding='utf-8') as f:
+            global preguntas_frecuentes
+            preguntas_frecuentes = json.load(f)
+        print(f"🔍 {len(preguntas_frecuentes)} preguntas frecuentes cargadas desde disco\n")
+
+    # FIX 57: Cargar respuestas cacheadas personalizadas
+    respuestas_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
+    if os.path.exists(respuestas_file):
+        with open(respuestas_file, 'r', encoding='utf-8') as f:
+            global respuestas_cache
+            cache_personalizado = json.load(f)
+            # Merge con las respuestas por defecto (prioridad a las personalizadas)
+            respuestas_cache.update(cache_personalizado)
+        print(f"💾 {len(cache_personalizado)} respuestas personalizadas cargadas desde disco\n")
 
 
 def guardar_cache_en_disco(key, texto, audio_path):
@@ -204,6 +228,53 @@ def guardar_stats_en_disco():
     stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
     with open(stats_file, 'w', encoding='utf-8') as f:
         json.dump(frase_stats, f, ensure_ascii=False, indent=2)
+
+
+def registrar_pregunta_respuesta(pregunta, respuesta):
+    """
+    FIX 57: Registra pares pregunta-respuesta para detectar patrones frecuentes
+    Si una pregunta se repite UMBRAL_AUTO_CACHE veces, se sugiere para caché automático
+    """
+    import os
+    import json
+    import re
+
+    global preguntas_frecuentes, candidatos_auto_cache
+
+    # Normalizar pregunta (minúsculas, sin puntuación excesiva)
+    pregunta_normalizada = re.sub(r'[¿?¡!]+', '', pregunta.lower().strip())
+    pregunta_normalizada = ' '.join(pregunta_normalizada.split())  # Normalizar espacios
+
+    # Si la pregunta ya existe, incrementar contador
+    if pregunta_normalizada in preguntas_frecuentes:
+        preguntas_frecuentes[pregunta_normalizada]["count"] += 1
+        preguntas_frecuentes[pregunta_normalizada]["respuestas"].append(respuesta)
+        preguntas_frecuentes[pregunta_normalizada]["ultima_respuesta"] = respuesta
+    else:
+        # Primera vez que se ve esta pregunta
+        preguntas_frecuentes[pregunta_normalizada] = {
+            "count": 1,
+            "pregunta_original": pregunta,
+            "respuestas": [respuesta],
+            "ultima_respuesta": respuesta
+        }
+
+    # Verificar si alcanzó el umbral para auto-caché
+    if preguntas_frecuentes[pregunta_normalizada]["count"] == UMBRAL_AUTO_CACHE:
+        # Calificar para caché automático
+        print(f"\n🎯 FIX 57: Pregunta frecuente detectada ({UMBRAL_AUTO_CACHE} veces):")
+        print(f"   Pregunta: '{pregunta[:60]}...'")
+        print(f"   Respuesta más común: '{respuesta[:60]}...'")
+
+        # Agregar a candidatos si no está ya
+        if pregunta_normalizada not in candidatos_auto_cache:
+            candidatos_auto_cache.append(pregunta_normalizada)
+            print(f"   ✅ Agregado a candidatos de auto-caché")
+
+    # Guardar en disco para persistencia
+    preguntas_file = os.path.join(CACHE_DIR, "preguntas_frecuentes.json")
+    with open(preguntas_file, 'w', encoding='utf-8') as f:
+        json.dump(preguntas_frecuentes, f, ensure_ascii=False, indent=2)
 
 
 def normalizar_frase_con_nombres(texto):
@@ -1101,6 +1172,11 @@ def procesar_respuesta():
     tiempo_gpt = time.time() - inicio
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
+
+    # FIX 57: Registrar pregunta-respuesta para auto-aprendizaje de caché
+    # Solo registrar si NO vino del caché (las cacheadas ya están optimizadas)
+    if not respuesta_container.get("desde_cache", False):
+        registrar_pregunta_respuesta(speech_result, respuesta_agente)
 
     # FIX 54: GENERAR AUDIO EN PARALELO mientras GPT piensa
     # Esto reduce delay de audio de 2-4s a casi 0s
@@ -2789,7 +2865,73 @@ def cache_manager():
 
         html += """
                 </div>
+        """
 
+        # FIX 57: Mostrar candidatos de auto-caché (preguntas frecuentes)
+        if candidatos_auto_cache or preguntas_frecuentes:
+            html += """
+                <!-- Candidatos de Auto-Caché -->
+                <div class="category-list" style="margin-top: 40px;">
+                    <h2>🤖 Candidatos de Auto-Caché (Preguntas Frecuentes)</h2>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Estas preguntas se han repetido {0} o más veces. Puedes agregarlas al caché para respuestas instantáneas.
+                    </p>
+            """.format(UMBRAL_AUTO_CACHE)
+
+            # Mostrar candidatos que alcanzaron el umbral
+            for pregunta_norm in candidatos_auto_cache:
+                if pregunta_norm in preguntas_frecuentes:
+                    datos = preguntas_frecuentes[pregunta_norm]
+                    count = datos["count"]
+                    pregunta_orig = datos["pregunta_original"]
+                    ultima_resp = datos["ultima_respuesta"]
+
+                    html += f"""
+                    <div class="category-item" style="border-left-color: #f39c12;">
+                        <div class="category-header">
+                            <span class="category-name" style="color: #f39c12;">🔥 "{pregunta_orig[:50]}..."</span>
+                            <div>
+                                <span class="usage-badge" style="background: #f39c12;">{count} veces</span>
+                            </div>
+                        </div>
+                        <div class="response-box">
+                            <strong>Última respuesta de Bruce:</strong><br>
+                            "{ultima_resp}"
+                        </div>
+                        <p class="help-text" style="margin-top: 10px;">
+                            💡 Usa el formulario abajo para agregar esta respuesta al caché permanente
+                        </p>
+                    </div>
+                    """
+
+            # Mostrar top 5 preguntas que están cerca del umbral
+            preguntas_cerca = [(k, v) for k, v in preguntas_frecuentes.items()
+                             if v["count"] < UMBRAL_AUTO_CACHE and k not in candidatos_auto_cache]
+            preguntas_cerca.sort(key=lambda x: x[1]["count"], reverse=True)
+
+            if preguntas_cerca[:5]:
+                html += """
+                    <h3 style="margin-top: 30px; color: #666;">📊 Preguntas Emergentes</h3>
+                """
+
+                for pregunta_norm, datos in preguntas_cerca[:5]:
+                    count = datos["count"]
+                    pregunta_orig = datos["pregunta_original"]
+
+                    html += f"""
+                    <div style="background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid #95a5a6;">
+                        <strong>"{pregunta_orig[:60]}..."</strong>
+                        <span style="background: #95a5a6; color: white; padding: 3px 10px; border-radius: 10px; margin-left: 10px; font-size: 0.85em;">
+                            {count}/{UMBRAL_AUTO_CACHE}
+                        </span>
+                    </div>
+                    """
+
+            html += """
+                </div>
+            """
+
+        html += """
                 <!-- Formulario para agregar nueva categoría -->
                 <div class="add-form">
                     <h2>➕ Agregar Nueva Respuesta</h2>
