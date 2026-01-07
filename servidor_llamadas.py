@@ -665,15 +665,9 @@ def webhook_voz():
     # Mensaje inicial
     mensaje_inicial = agente.iniciar_conversacion()
 
-    # Generar audio con ElevenLabs - usar CACHÉ si es el saludo estándar
-    audio_id = f"inicial_{call_sid}"
-
-    # Detectar si es el saludo estándar para usar caché (0s delay, Multilingual v2)
-    usa_cache_saludo = "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial
-    if usa_cache_saludo:
-        generar_audio_elevenlabs(mensaje_inicial, audio_id, usar_cache_key="saludo_inicial")
-    else:
-        generar_audio_elevenlabs(mensaje_inicial, audio_id)
+    # FIX 52: USAR TWILIO TTS para mensaje inicial (0s delay, instantáneo)
+    # ElevenLabs puede tardar 2-4s en generar, causando que cliente cuelgue
+    # Twilio TTS es instantáneo y suficiente para saludo inicial
 
     # Registrar mensaje inicial de Bruce en LOGS
     if logs_manager and bruce_id:
@@ -681,8 +675,8 @@ def webhook_voz():
         logs_manager.registrar_mensaje_bruce(
             bruce_id,
             mensaje_inicial,
-            desde_cache=usa_cache_saludo,
-            cache_key="saludo_inicial" if usa_cache_saludo else None,
+            desde_cache=True,  # Twilio TTS es como caché (instantáneo)
+            cache_key="twilio_tts_inicial",
             nombre_tienda=nombre_tienda
         )
 
@@ -692,9 +686,13 @@ def webhook_voz():
     # PAUSA DE 1 SEGUNDO - Dar tiempo al cliente de decir "Hola" primero
     response.pause(length=1)
 
-    # Reproducir audio de ElevenLabs
-    audio_url = request.url_root + f"audio/{audio_id}"
-    response.play(audio_url)
+    # FIX 52: Usar Twilio TTS directo (instantáneo, 0s delay)
+    # Voz: Polly.Mia (español mexicano, mujer, natural)
+    response.say(
+        mensaje_inicial,
+        language="es-MX",
+        voice="Polly.Mia"
+    )
 
     # Recopilar respuesta del cliente
     gather = Gather(
