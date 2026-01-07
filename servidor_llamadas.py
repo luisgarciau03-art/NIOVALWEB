@@ -79,6 +79,57 @@ CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable d
 FRECUENCIA_MIN_CACHE = 2  # Auto-generar caché después de N usos (reducido de 3 a 2)
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
+# FIX 56: CACHÉ DE RESPUESTAS DE GPT (0s delay para preguntas comunes)
+# Diccionario: patrón de pregunta → respuesta pre-definida
+respuestas_cache = {
+    # Preguntas sobre origen/ubicación
+    "de_donde_habla": {
+        "patrones": [
+            "de dónde", "de donde", "dónde están", "donde están",
+            "de qué ciudad", "de que ciudad", "ubicados", "ubicación",
+            "de parte de", "de qué parte", "de que parte"
+        ],
+        "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Se encuentra el encargado de compras?"
+    },
+
+    # Preguntas sobre qué vende
+    "que_vende": {
+        "patrones": [
+            "qué vende", "que vende", "qué productos", "que productos",
+            "qué maneja", "que maneja", "de qué se trata", "de que se trata",
+            "qué ofrece", "que ofrece", "para qué llama", "para que llama"
+        ],
+        "respuesta": "Distribuimos productos de ferretería: cinta para goteras, griferías, herramientas, candados y más categorías. ¿Se encuentra el encargado de compras?"
+    },
+
+    # Preguntas sobre marcas
+    "que_marcas": {
+        "patrones": [
+            "qué marcas", "que marcas", "cuáles marcas", "cuales marcas",
+            "qué marca", "que marca", "de qué marca", "de que marca",
+            "marcas manejan", "marcas tienen"
+        ],
+        "respuesta": "Manejamos la marca NIOVAL, que es nuestra marca propia. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
+    },
+
+    # Quien habla / de parte de quien
+    "quien_habla": {
+        "patrones": [
+            "quién habla", "quien habla", "de parte de quién", "de parte de quien",
+            "quién es", "quien es", "su nombre", "cómo se llama", "como se llama"
+        ],
+        "respuesta": "Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
+    },
+}
+
+# Estadísticas de uso del caché de respuestas
+cache_respuestas_stats = {
+    "total_consultas": 0,
+    "cache_hits": 0,
+    "cache_misses": 0,
+    "por_categoria": {}
+}
+
 
 def cargar_cache_desde_disco():
     """Carga caché persistente desde disco al iniciar"""
@@ -957,21 +1008,55 @@ def procesar_respuesta():
         # Resetear contador si hubo respuesta
         agente.respuestas_vacias_consecutivas = 0
 
-    # Procesar respuesta con GPT-4o
+    # FIX 56: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
     import time
     import threading
     inicio = time.time()
 
     # Variable para almacenar la respuesta cuando termine GPT
-    respuesta_container = {"respuesta": None, "completado": False}
+    respuesta_container = {"respuesta": None, "completado": False, "desde_cache": False}
 
-    def procesar_gpt():
-        respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
-        respuesta_container["completado"] = True
+    # Detectar si la pregunta está en el caché
+    respuesta_desde_cache = None
+    speech_lower = speech_result.lower()
 
-    # Iniciar procesamiento de GPT en thread separado
-    gpt_thread = threading.Thread(target=procesar_gpt)
-    gpt_thread.start()
+    global cache_respuestas_stats
+    cache_respuestas_stats["total_consultas"] += 1
+
+    for categoria, datos in respuestas_cache.items():
+        for patron in datos["patrones"]:
+            if patron in speech_lower:
+                respuesta_desde_cache = datos["respuesta"]
+                cache_respuestas_stats["cache_hits"] += 1
+                cache_respuestas_stats["por_categoria"][categoria] = cache_respuestas_stats["por_categoria"].get(categoria, 0) + 1
+                print(f"🎯 FIX 56: Respuesta desde caché (0s delay) - Categoría: '{categoria}'")
+                print(f"   Pregunta: '{speech_result}'")
+                print(f"   Respuesta: '{respuesta_desde_cache[:60]}...'")
+
+                # Marcar como completado inmediatamente
+                respuesta_container["respuesta"] = respuesta_desde_cache
+                respuesta_container["completado"] = True
+                respuesta_container["desde_cache"] = True
+                break
+
+        if respuesta_desde_cache:
+            break
+
+    # Solo llamar a GPT si NO hay respuesta en caché
+    if not respuesta_desde_cache:
+        cache_respuestas_stats["cache_misses"] += 1
+
+        def procesar_gpt():
+            respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
+            respuesta_container["completado"] = True
+
+        # Iniciar procesamiento de GPT en thread separado
+        gpt_thread = threading.Thread(target=procesar_gpt)
+        gpt_thread.start()
+    else:
+        # Crear thread dummy para mantener compatibilidad con código existente
+        gpt_thread = threading.Thread(target=lambda: None)
+        gpt_thread.start()
 
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
@@ -2403,6 +2488,411 @@ def diagnostico_persistencia():
         return {
             "error": str(e),
             "message": "Error al realizar diagnóstico"
+        }, 500
+
+
+@app.route("/cache-manager", methods=["GET", "POST"])
+def cache_manager():
+    """
+    FIX 56: Panel de administración del caché de respuestas de GPT
+    GET: Muestra el panel con estadísticas y respuestas actuales
+    POST: Permite agregar/editar/eliminar respuestas cacheadas
+    """
+    global respuestas_cache, cache_respuestas_stats
+
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            accion = data.get("accion")
+
+            if accion == "agregar":
+                categoria = data.get("categoria")
+                patrones = data.get("patrones", [])  # Lista de strings
+                respuesta = data.get("respuesta")
+
+                if not categoria or not patrones or not respuesta:
+                    return {"error": "Faltan campos requeridos"}, 400
+
+                # Agregar nueva categoría al caché
+                respuestas_cache[categoria] = {
+                    "patrones": patrones,
+                    "respuesta": respuesta
+                }
+
+                # Guardar en disco para persistencia
+                cache_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
+                with open(cache_file, 'w', encoding='utf-8') as f:
+                    json.dump(respuestas_cache, f, ensure_ascii=False, indent=2)
+
+                return {"success": True, "message": f"Categoría '{categoria}' agregada"}
+
+            elif accion == "eliminar":
+                categoria = data.get("categoria")
+
+                if categoria in respuestas_cache:
+                    del respuestas_cache[categoria]
+
+                    # Guardar en disco
+                    cache_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
+                    with open(cache_file, 'w', encoding='utf-8') as f:
+                        json.dump(respuestas_cache, f, ensure_ascii=False, indent=2)
+
+                    return {"success": True, "message": f"Categoría '{categoria}' eliminada"}
+                else:
+                    return {"error": "Categoría no encontrada"}, 404
+
+            else:
+                return {"error": "Acción no válida"}, 400
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    # GET: Mostrar panel HTML
+    try:
+        # Calcular tasa de aciertos del caché
+        total = cache_respuestas_stats["total_consultas"]
+        hits = cache_respuestas_stats["cache_hits"]
+        misses = cache_respuestas_stats["cache_misses"]
+        hit_rate = (hits / total * 100) if total > 0 else 0
+
+        # Construir HTML del panel
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Bruce W - Gestor de Caché de Respuestas</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                }}
+                .container {{
+                    background: white;
+                    border-radius: 15px;
+                    padding: 30px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                }}
+                h1 {{
+                    color: #667eea;
+                    margin-bottom: 10px;
+                    font-size: 2.5em;
+                }}
+                .subtitle {{
+                    color: #666;
+                    margin-bottom: 30px;
+                }}
+                .stats-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 40px;
+                }}
+                .stat-card {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 25px;
+                    border-radius: 12px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                }}
+                .stat-number {{
+                    font-size: 3em;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }}
+                .stat-label {{
+                    font-size: 1.1em;
+                    opacity: 0.9;
+                }}
+                .category-list {{
+                    margin-top: 30px;
+                }}
+                .category-item {{
+                    background: #f8f9fa;
+                    border-left: 4px solid #667eea;
+                    padding: 20px;
+                    margin-bottom: 15px;
+                    border-radius: 8px;
+                    transition: all 0.3s ease;
+                }}
+                .category-item:hover {{
+                    transform: translateX(5px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                }}
+                .category-header {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }}
+                .category-name {{
+                    font-size: 1.3em;
+                    font-weight: bold;
+                    color: #667eea;
+                }}
+                .delete-btn {{
+                    background: #e74c3c;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    transition: background 0.3s;
+                }}
+                .delete-btn:hover {{
+                    background: #c0392b;
+                }}
+                .patterns-list {{
+                    background: white;
+                    padding: 15px;
+                    border-radius: 6px;
+                    margin-bottom: 10px;
+                }}
+                .pattern-tag {{
+                    display: inline-block;
+                    background: #667eea;
+                    color: white;
+                    padding: 5px 12px;
+                    border-radius: 20px;
+                    margin: 5px;
+                    font-size: 0.9em;
+                }}
+                .response-box {{
+                    background: white;
+                    padding: 15px;
+                    border-radius: 6px;
+                    border: 2px solid #e1e8ed;
+                    font-style: italic;
+                    color: #333;
+                }}
+                .usage-badge {{
+                    background: #27ae60;
+                    color: white;
+                    padding: 5px 12px;
+                    border-radius: 15px;
+                    font-size: 0.85em;
+                    font-weight: bold;
+                }}
+                .add-form {{
+                    background: #f8f9fa;
+                    padding: 25px;
+                    border-radius: 12px;
+                    margin-top: 40px;
+                    border: 2px dashed #667eea;
+                }}
+                .form-group {{
+                    margin-bottom: 20px;
+                }}
+                .form-label {{
+                    display: block;
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 8px;
+                }}
+                .form-input {{
+                    width: 100%;
+                    padding: 12px;
+                    border: 2px solid #ddd;
+                    border-radius: 6px;
+                    font-size: 1em;
+                    transition: border-color 0.3s;
+                }}
+                .form-input:focus {{
+                    outline: none;
+                    border-color: #667eea;
+                }}
+                .form-textarea {{
+                    min-height: 100px;
+                    resize: vertical;
+                }}
+                .btn-primary {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 12px 30px;
+                    border-radius: 8px;
+                    font-size: 1.1em;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }}
+                .btn-primary:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                }}
+                .help-text {{
+                    font-size: 0.9em;
+                    color: #666;
+                    margin-top: 5px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🎯 Gestor de Caché de Respuestas</h1>
+                <p class="subtitle">Administra respuestas pre-definidas para reducir latencia en preguntas comunes</p>
+
+                <!-- Estadísticas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">{total}</div>
+                        <div class="stat-label">Total Consultas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{hits}</div>
+                        <div class="stat-label">Cache Hits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{misses}</div>
+                        <div class="stat-label">Cache Misses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{hit_rate:.1f}%</div>
+                        <div class="stat-label">Tasa de Aciertos</div>
+                    </div>
+                </div>
+
+                <!-- Lista de categorías -->
+                <div class="category-list">
+                    <h2>📋 Respuestas Cacheadas ({len(respuestas_cache)})</h2>
+        """
+
+        for categoria, datos in respuestas_cache.items():
+            usos = cache_respuestas_stats["por_categoria"].get(categoria, 0)
+            patrones_html = "".join([f'<span class="pattern-tag">{p}</span>' for p in datos["patrones"]])
+
+            html += f"""
+                    <div class="category-item">
+                        <div class="category-header">
+                            <span class="category-name">{categoria}</span>
+                            <div>
+                                <span class="usage-badge">{usos} usos</span>
+                                <button class="delete-btn" onclick="eliminarCategoria('{categoria}')">🗑️ Eliminar</button>
+                            </div>
+                        </div>
+                        <div class="patterns-list">
+                            <strong>Patrones detectados:</strong><br>
+                            {patrones_html}
+                        </div>
+                        <div class="response-box">
+                            <strong>Respuesta:</strong><br>
+                            "{datos['respuesta']}"
+                        </div>
+                    </div>
+            """
+
+        html += """
+                </div>
+
+                <!-- Formulario para agregar nueva categoría -->
+                <div class="add-form">
+                    <h2>➕ Agregar Nueva Respuesta</h2>
+                    <form id="addForm">
+                        <div class="form-group">
+                            <label class="form-label">Categoría (ID única)</label>
+                            <input type="text" class="form-input" id="categoria" placeholder="ej: horario_atencion" required>
+                            <p class="help-text">Identificador único sin espacios (usa guiones bajos)</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Patrones (uno por línea)</label>
+                            <textarea class="form-input form-textarea" id="patrones" placeholder="qué horario&#10;horario de atención&#10;a qué hora" required></textarea>
+                            <p class="help-text">Frases que activan esta respuesta (una por línea, en minúsculas)</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Respuesta de Bruce</label>
+                            <textarea class="form-input form-textarea" id="respuesta" placeholder="Nuestro horario es de lunes a viernes de 8am a 5pm." required></textarea>
+                            <p class="help-text">La respuesta exacta que Bruce dirá cuando detecte los patrones</p>
+                        </div>
+
+                        <button type="submit" class="btn-primary">💾 Guardar Respuesta</button>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                // Agregar nueva categoría
+                document.getElementById('addForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const categoria = document.getElementById('categoria').value.trim();
+                    const patronesText = document.getElementById('patrones').value.trim();
+                    const respuesta = document.getElementById('respuesta').value.trim();
+
+                    // Convertir patrones de texto multilínea a array
+                    const patrones = patronesText.split('\\n').map(p => p.trim()).filter(p => p.length > 0);
+
+                    try {
+                        const response = await fetch('/cache-manager', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                accion: 'agregar',
+                                categoria: categoria,
+                                patrones: patrones,
+                                respuesta: respuesta
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            alert('✅ ' + result.message);
+                            location.reload();
+                        } else {
+                            alert('❌ Error: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('❌ Error: ' + error.message);
+                    }
+                });
+
+                // Eliminar categoría
+                async function eliminarCategoria(categoria) {
+                    if (!confirm(`¿Seguro que deseas eliminar la categoría "${categoria}"?`)) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/cache-manager', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                accion: 'eliminar',
+                                categoria: categoria
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            alert('✅ ' + result.message);
+                            location.reload();
+                        } else {
+                            alert('❌ Error: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('❌ Error: ' + error.message);
+                    }
+                }
+            </script>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "message": "Error al cargar el gestor de caché"
         }, 500
 
 
