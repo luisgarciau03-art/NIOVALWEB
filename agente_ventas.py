@@ -2584,44 +2584,78 @@ IMPORTANTE:
         # ============================================================
         # CORRECCIÓN DE NOMBRE (Género y Correcciones del Cliente)
         # ============================================================
-        # Detectar si el cliente está corrigiendo su nombre
-        patrones_correccion_nombre = [
-            r'no,?\s+(?:me llamo|mi nombre es|soy)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})',
-            r'es\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
-            r'([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
-        ]
+        # FIX 47: Detectar si el cliente está corrigiendo su nombre
+        # Patrones mejorados para capturar el nombre CORRECTO, no el incorrecto
 
-        for patron in patrones_correccion_nombre:
-            match = re.search(patron, texto, re.IGNORECASE)
-            if match:
-                nombre_corregido = match.group(1).strip()
-                # FIX 40: Verificar que sea un nombre válido (NO productos, marcas ni pronombres)
-                palabras_invalidas = [
-                    'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto',
-                    # FIX 38: Pronombres
-                    'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',
-                    # Productos de ferretería
-                    'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
-                    'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
-                    'chapas', 'chapa',  # FIX 40: Producto específico (cerraduras)
-                    'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
-                    'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
-                    # Marcas comunes
-                    'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
-                    'nioval', 'toolcraft', 'milwaukee', 'makita', 'bosch',
-                    # Palabras genéricas
-                    'productos', 'producto', 'artículos', 'artículo', 'cosas', 'cosa', 'eso', 'nada'
-                ]
-                if nombre_corregido.lower() not in palabras_invalidas and len(nombre_corregido) > 2:
-                    self.lead_data["nombre_contacto"] = nombre_corregido
-                    print(f"✏️ Nombre CORREGIDO por cliente: {nombre_corregido}")
+        # PATRÓN 1 (FIX 47): "no me llamo [NOMBRE_MAL] me llamo [NOMBRE_BUENO]"
+        # Ejemplo: "yo no me llamo Jason me llamo Yahir"
+        patron_correccion_completa = r'no\s+me\s+llamo\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\s+(?:me llamo|soy)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})'
+        match_completo = re.search(patron_correccion_completa, texto, re.IGNORECASE)
 
-                    # Enviar instrucción a GPT para usar el nombre correcto
-                    self.conversation_history.append({
-                        "role": "system",
-                        "content": f"⚠️ CORRECCIÓN: El cliente corrigió su nombre a '{nombre_corregido}'. De ahora en adelante, SIEMPRE usa '{nombre_corregido}' (no cambies ni el género ni la ortografía). Ejemplo: 'Perfecto, {nombre_corregido}...' o 'Gracias, {nombre_corregido}...'"
-                    })
+        if match_completo:
+            nombre_corregido = match_completo.group(1).strip()
+            print(f"🔧 FIX 47 - Corrección detectada: 'no me llamo X me llamo {nombre_corregido}'")
+        else:
+            # PATRONES ORIGINALES (para otros casos)
+            patrones_correccion_nombre = [
+                # "es Yahir, no..." → captura Yahir
+                r'es\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
+                # "Yahir, no..." → captura Yahir (al inicio)
+                r'^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}),?\s+no\s+',
+            ]
+
+            nombre_corregido = None
+            for patron in patrones_correccion_nombre:
+                match = re.search(patron, texto, re.IGNORECASE)
+                if match:
+                    nombre_corregido = match.group(1).strip()
                     break
+
+        # Solo procesar si se detectó corrección
+        if match_completo or nombre_corregido:
+            # FIX 40: Verificar que sea un nombre válido (NO productos, marcas ni pronombres)
+            palabras_invalidas = [
+                'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto',
+                # FIX 38: Pronombres
+                'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',
+                # Productos de ferretería
+                'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
+                'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
+                'chapas', 'chapa',  # FIX 40: Producto específico (cerraduras)
+                'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
+                'manguera', 'mangueras', 'cable', 'cables', 'alambre', 'alambres',
+                # Marcas comunes
+                'truper', 'pretul', 'stanley', 'dewalt', 'urrea', 'surtek', 'evans', 'foset',
+                'nioval', 'toolcraft', 'milwaukee', 'makita', 'bosch',
+                # Palabras genéricas
+                'productos', 'producto', 'artículos', 'artículo', 'cosas', 'cosa', 'eso', 'nada'
+            ]
+            if nombre_corregido and nombre_corregido.lower() not in palabras_invalidas and len(nombre_corregido) > 2:
+                # Actualizar nombre en lead_data
+                nombre_anterior = self.lead_data.get("nombre_contacto", "")
+                self.lead_data["nombre_contacto"] = nombre_corregido
+                print(f"✏️ Nombre CORREGIDO por cliente: '{nombre_anterior}' → '{nombre_corregido}'")
+
+                # FIX 47: Enviar instrucción ULTRA-CLARA a GPT para usar el nombre correcto
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""🚨🚨🚨 CORRECCIÓN CRÍTICA DE NOMBRE 🚨🚨🚨
+
+El cliente acaba de corregir su nombre:
+❌ Nombre INCORRECTO que usaste antes: "{nombre_anterior}"
+✅ Nombre CORRECTO: "{nombre_corregido}"
+
+ACCIÓN INMEDIATA OBLIGATORIA:
+1. PIDE DISCULPAS por el error: "Disculpe, {nombre_corregido}, tiene razón."
+2. De ahora en adelante, SIEMPRE usa "{nombre_corregido}" (NO "{nombre_anterior}")
+3. En la despedida, usa "{nombre_corregido}" (NO "{nombre_anterior}")
+4. NO cambies ni el género ni la ortografía de "{nombre_corregido}"
+
+Ejemplo de disculpa:
+"Disculpe, {nombre_corregido}, tiene toda la razón. Permítame continuar..."
+
+IMPORTANTE: El nombre correcto es "{nombre_corregido}", NO "{nombre_anterior}"."""
+                })
 
         # Capturar respuestas del formulario de 7 preguntas
         self._capturar_respuestas_formulario(texto, texto_lower)
