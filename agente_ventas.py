@@ -1885,7 +1885,7 @@ IMPORTANTE:
                 })
 
         # ============================================================
-        # DETECCIÓN CRÍTICA: OBJECIÓN TRUPER (NO APTO)
+        # FIX 34: DETECCIÓN CRÍTICA EXPANDIDA - OBJECIÓN TRUPER (NO APTO)
         # ============================================================
         # Detectar cuando cliente SOLO maneja Truper (marca exclusiva)
         # Truper NO permite que sus socios distribuyan otras marcas
@@ -1894,10 +1894,25 @@ IMPORTANTE:
             "solo manejamos truper", "solamente manejamos truper",
             "solo podemos truper", "solo podemos comprar truper",
             "somos truper", "solo trabajamos con truper",
-            "nada más truper", "nomás truper", "solo compramos truper"
+            "nada más truper", "nomás truper", "solo compramos truper",
+            "trabajamos para truper", "somos distribuidores de truper",
+            "distribuidor de truper", "distribuidores truper",
+            "únicamente trabajamos para truper", "solamente trabajamos para truper",
+            "todo lo que es truper", "manejamos truper", "trabajamos truper"
         ]
 
-        if any(frase in texto_lower for frase in frases_solo_truper):
+        # FIX 34: Detección adicional - "solo podemos manejar" + menciona Truper
+        mencion_truper = "truper" in texto_lower
+        solo_pueden_manejar = any(frase in texto_lower for frase in [
+            "solo podemos manejar", "solo podemos trabajar", "únicamente podemos",
+            "solamente podemos", "solo manejamos", "únicamente manejamos"
+        ])
+
+        # Si menciona Truper Y dice "solo podemos manejar", es NO APTO
+        es_truper_exclusivo = (any(frase in texto_lower for frase in frases_solo_truper) or
+                               (mencion_truper and solo_pueden_manejar))
+
+        if es_truper_exclusivo:
             # Marcar como NO APTO y preparar despedida
             self.lead_data["estado_llamada"] = "Colgo"
             self.lead_data["pregunta_0"] = "Colgo"
@@ -1906,28 +1921,20 @@ IMPORTANTE:
             self.lead_data["nivel_interes_clasificado"] = "NO APTO"
             print(f"🚫 OBJECIÓN TRUPER detectada - Marcando como NO APTO")
 
-            # Agregar despedida protocolizada al sistema
+            # FIX 34: Agregar respuesta de despedida INMEDIATA al historial
+            # para que GPT NO genere más preguntas
+            respuesta_truper = "Entiendo perfectamente. Truper es una excelente marca. Le agradezco mucho su tiempo y le deseo mucho éxito en su negocio. Que tenga un excelente día."
+
             self.conversation_history.append({
-                "role": "system",
-                "content": """⚠️⚠️⚠️ PROTOCOLO TRUPER DETECTADO - DESPEDIDA OBLIGATORIA INMEDIATA
-
-El cliente SOLO maneja productos Truper. Esta marca NO permite que sus socios comerciales distribuyan otras marcas.
-
-⚠️ CRÍTICO: NIOVAL NO MANEJA PRODUCTOS TRUPER. NO podemos ayudar a este cliente.
-
-ACCIÓN INMEDIATA:
-1. Despídete cortésmente SIN insistir
-2. ❌ NO ofrezcas catálogos de Truper (NO los tenemos)
-3. ❌ NO ofrezcas "información de Truper" (NO somos distribuidores Truper)
-4. ❌ NO preguntes nada más
-5. Termina la llamada INMEDIATAMENTE
-
-DESPEDIDA EXACTA (di esto y TERMINA):
-"Entiendo perfectamente. Truper es una excelente marca. Le agradezco mucho su tiempo y le deseo mucho éxito en su negocio. Que tenga un excelente día."
-
-DESPUÉS DE ESTA FRASE, LA LLAMADA DEBE TERMINAR. NO digas nada más."""
+                "role": "assistant",
+                "content": respuesta_truper
             })
-            return  # FIX 25: CRITICAL - Terminar función inmediatamente después de TRUPER
+
+            print(f"🚫 FIX 34: Protocolo TRUPER activado - respuesta de despedida agregada al historial")
+            print(f"🚫 Retornando despedida inmediata: '{respuesta_truper}'")
+
+            # Retornar la despedida INMEDIATAMENTE sin procesar con GPT
+            return respuesta_truper  # FIX 34: CRITICAL - Retornar despedida sin llamar a GPT
 
         # Detectar interés
         palabras_interes = ["sí", "si", "me interesa", "claro", "adelante", "ok", "envíe", "mándame"]
