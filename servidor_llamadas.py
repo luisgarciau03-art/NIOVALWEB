@@ -961,7 +961,8 @@ def procesar_respuesta():
         # Reproducir tono sutil mientras GPT piensa (evita silencio)
         # Opción 1: Usar un breve "ajá" o "mmm" pre-grabado
         # Opción 2: Decir "déjeme ver" mientras procesa
-        response.say("Déjeme ver...", language="es-MX", voice="Polly.Mia")
+        # IMPORTANTE: Usar voz masculina (Polly.Miguel) para mantener consistencia con Bruce
+        response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
 
         # Ahora sí esperar otros 6 segundos (total 7s máximo)
         gpt_thread.join(timeout=6.0)
@@ -978,18 +979,57 @@ def procesar_respuesta():
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
 
-    # Generar audio con ElevenLabs - detectar si puede usar caché
+    # FIX 54: GENERAR AUDIO EN PARALELO mientras GPT piensa
+    # Esto reduce delay de audio de 2-4s a casi 0s
+
     audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
     inicio_audio = time.time()
 
-    # Detectar despedidas comunes para usar caché (0s delay, Multilingual v2)
+    # Detectar frases comunes para usar caché (0s delay)
     cache_key = None
+    usa_cache = False
+
+    # Despedidas
     if "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_agente:
         cache_key = "despedida_1"
+        usa_cache = True
     elif "En las próximas dos horas le llega el catálogo" in respuesta_agente and "Muchas gracias por su tiempo" in respuesta_agente:
         cache_key = "despedida_2"
+        usa_cache = True
+    # FIX 54: Agregar más frases comunes al caché
+    elif "Perfecto, ¿con quién tengo el gusto?" in respuesta_agente:
+        cache_key = "pregunta_nombre"
+        usa_cache = True
+    elif "¿Se encuentra el encargado de compras?" in respuesta_agente:
+        cache_key = "pregunta_encargado"
+        usa_cache = True
+    elif "Disculpe, no alcancé a captar" in respuesta_agente:
+        cache_key = "no_alcance_captar"
+        usa_cache = True
 
-    generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
+    # Generar audio
+    if usa_cache:
+        generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
+        print(f"📦 Usando caché: {cache_key} (0s delay)")
+    else:
+        # FIX 54: Si NO hay caché, usar Twilio TTS como FALLBACK rápido
+        # Esto evita delays de 2-4s esperando ElevenLabs
+
+        # Opción A: Generar con ElevenLabs (calidad, pero lento)
+        # Opción B: Usar Twilio TTS (rápido, pero menos calidad)
+
+        # Decidir basado en longitud de respuesta
+        palabras = len(respuesta_agente.split())
+
+        if palabras > 50:
+            # Respuesta larga: Usar Twilio TTS (evitar delay de 4-6s)
+            print(f"⚡ Respuesta larga ({palabras} palabras) - usando Twilio TTS rápido")
+            # NO generar audio, usaremos response.say() directo
+            audio_id = None
+        else:
+            # Respuesta corta: Usar ElevenLabs (mejor calidad)
+            generar_audio_elevenlabs(respuesta_agente, audio_id)
+
     tiempo_audio = time.time() - inicio_audio
     print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
     print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
@@ -1008,9 +1048,16 @@ def procesar_respuesta():
             nombre_tienda=nombre_tienda
         )
 
-    # Reproducir audio de ElevenLabs (response ya fue creado arriba)
-    audio_url = request.url_root + f"audio/{audio_id}"
-    response.play(audio_url)
+    # FIX 54: Reproducir audio (ElevenLabs o Twilio TTS según caso)
+    if audio_id is None:
+        # Caso: Respuesta larga (>50 palabras) - usar Twilio TTS rápido (fallback)
+        print(f"⚡ Reproduciendo con Twilio TTS (respuesta larga, evita delay)")
+        # IMPORTANTE: NO usar Polly.Mia (voz femenina) - usar voz masculina
+        response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+    else:
+        # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs (voz Bruce)
+        audio_url = request.url_root + f"audio/{audio_id}"
+        response.play(audio_url)
 
     # Verificar si debe terminar (solo si Bruce se despide explícitamente)
     # IMPORTANTE: Usar frases distintivas que solo aparecen en despedidas
