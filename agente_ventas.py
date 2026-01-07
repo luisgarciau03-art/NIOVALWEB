@@ -2005,10 +2005,11 @@ IMPORTANTE:
                 if match.lastindex and match.lastindex >= 1:
                     nombre_referido = match.group(1).strip()
 
-                    # FIX 20: Filtrar palabras no válidas como nombres (productos, marcas, despedidas)
+                    # FIX 38: Filtrar palabras no válidas como nombres (productos, marcas, despedidas, pronombres)
                     palabras_invalidas = [
                         'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información',
                         'gracias', 'hasta', 'luego', 'adiós', 'bye', 'bueno', 'favor', 'tiempo', 'momento',
+                        'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',  # FIX 38: Pronombres
                         'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                         'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
                         'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
@@ -2109,9 +2110,10 @@ IMPORTANTE:
                     match = re.search(patron, texto, re.IGNORECASE)
                     if match:
                         nombre = match.group(1).strip()
-                        # FIX 20: Lista expandida - NO capturar productos ni marcas como nombres
+                        # FIX 38: Lista expandida - NO capturar productos, marcas ni pronombres como nombres
                         palabras_invalidas = [
                             'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'dato', 'información', 'ese', 'este',
+                            'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',  # FIX 38: Pronombres
                             'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                             'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
                             'cinta', 'cintas', 'grifo', 'grifos', 'grifería', 'griferías', 'tubos', 'tubo',
@@ -2400,9 +2402,11 @@ IMPORTANTE:
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
                 nombre_corregido = match.group(1).strip()
-                # FIX 20: Verificar que sea un nombre válido (NO productos ni marcas)
+                # FIX 38: Verificar que sea un nombre válido (NO productos, marcas ni pronombres)
                 palabras_invalidas = [
                     'número', 'telefono', 'contacto', 'whatsapp', 'correo', 'email', 'verdad', 'cierto',
+                    # FIX 38: Pronombres
+                    'nosotros', 'ustedes', 'ellos', 'ellas', 'él', 'ella', 'yo', 'tú', 'usted',
                     # Productos de ferretería
                     'herrajes', 'herraje', 'tornillos', 'tornillo', 'tuercas', 'tuerca', 'clavos', 'clavo',
                     'candados', 'candado', 'llaves', 'llave', 'cerraduras', 'cerradura', 'bisagras', 'bisagra',
