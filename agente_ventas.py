@@ -1588,6 +1588,14 @@ class AgenteVentas:
             # PROMPT DINÁMICO: Solo enviar secciones relevantes según estado de conversación
             prompt_optimizado = self._construir_prompt_dinamico()
 
+            # FIX 55: ULTRA-OPTIMIZACIÓN para reducir delay de 7-10s
+            # Límite de conversación a últimos 10 mensajes para reducir tokens
+            MAX_MENSAJES = 10
+            if len(historial_completo) > MAX_MENSAJES:
+                # Mantener solo los mensajes más recientes
+                historial_completo = historial_completo[-MAX_MENSAJES:]
+                print(f"🔧 FIX 55: Historial reducido a {MAX_MENSAJES} mensajes para velocidad")
+
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
@@ -1595,10 +1603,12 @@ class AgenteVentas:
                     *historial_completo
                 ],
                 temperature=0.7,
-                max_tokens=100,  # Reducido de 150 a 100 para respuestas más rápidas
-                presence_penalty=0.6,  # Evita repetición
-                frequency_penalty=0.3,  # Respuestas más directas
-                timeout=7  # Timeout aumentado a 7 segundos (era 5s)
+                max_tokens=60,  # FIX 55: Reducido de 80 a 60 (más conciso aún)
+                presence_penalty=0.6,
+                frequency_penalty=0.3,
+                timeout=4,  # FIX 55: Reducido de 5s a 4s (ultra-agresivo)
+                stream=False,
+                top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )
 
             duracion_gpt = time.time() - inicio_gpt
