@@ -749,6 +749,45 @@ def procesar_respuesta():
         if request.form.get("Digits"):
             print(f"   Digits: {request.form.get('Digits')}")
 
+    # FIX 28: Corrección de transcripciones comunes de Twilio (homofonías en español)
+    # Twilio confunde palabras que suenan similar pero tienen significados diferentes
+    if speech_result:
+        speech_original = speech_result  # Guardar original para debug
+
+        # Mapa de correcciones: palabra_incorrecta -> palabra_correcta
+        # Solo aplicar en contexto de ferretería/hardware
+        TRANSCRIPTION_CORRECTIONS = {
+            'chiapas': 'chapas',       # Estado mexicano → cerraduras/herrajes
+            'Chiapas': 'chapas',
+            'CHIAPAS': 'chapas',
+            'trupper': 'truper',       # Marca incorrecta → marca correcta
+            'Trupper': 'Truper',
+            'TRUPPER': 'TRUPER',
+            'tuvo': 'tubo',            # Verbo → tubo PVC
+            'candado': 'candados',     # Singular → plural (más común en ventas)
+            'cerradura': 'cerraduras',
+            'bisagra': 'bisagras',
+            'tornillo': 'tornillos',
+            'clavo': 'clavos'
+        }
+
+        # Aplicar correcciones palabra por palabra
+        palabras = speech_result.split()
+        palabras_corregidas = []
+
+        for palabra in palabras:
+            # Buscar si esta palabra necesita corrección
+            palabra_corregida = TRANSCRIPTION_CORRECTIONS.get(palabra, palabra)
+            palabras_corregidas.append(palabra_corregida)
+
+        speech_result = ' '.join(palabras_corregidas)
+
+        # Log si hubo correcciones
+        if speech_result != speech_original:
+            print(f"🔧 FIX 28 - Transcripción corregida:")
+            print(f"   Original: '{speech_original}'")
+            print(f"   Corregida: '{speech_result}'")
+
     # Verificar si Twilio detectó buzón de voz (AnsweredBy=machine_start)
     if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
         print(f"📞 Buzón de voz detectado automáticamente por Twilio: {answered_by}")
