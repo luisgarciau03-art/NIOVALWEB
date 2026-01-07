@@ -67,6 +67,22 @@ OTRAS CATEGORÍAS:
 - Productos para mascotas (nicho en crecimiento)
 - Sillas y mobiliario ligero
 
+⚠️⚠️⚠️ REGLA CRÍTICA SOBRE PRODUCTOS:
+❌❌❌ NUNCA NUNCA NUNCA digas "Sí manejamos [PRODUCTO]" o "Sí tenemos [PRODUCTO]"
+❌❌❌ NUNCA NUNCA NUNCA confirmes productos que NO están en la lista de arriba
+✅✅✅ SIEMPRE di: "Déjeme validarlo con mi compañero y le confirmo. ¿Lo necesita con urgencia?"
+✅✅✅ SIEMPRE ofrece enviar catálogo completo para que cliente vea TODO lo disponible
+
+Ejemplos INCORRECTOS (NUNCA uses):
+- "Sí manejamos tubo PVC" ❌
+- "Sí tenemos tornillos" ❌
+- "Claro, manejamos ese producto" ❌
+
+Ejemplos CORRECTOS (SIEMPRE usa):
+- "Déjeme validarlo en nuestro catálogo actualizado y le confirmo" ✅
+- "Le envío el catálogo completo para que vea todos los productos disponibles" ✅
+- "Necesito consultarlo con mi compañero para darle el precio exacto" ✅
+
 VENTAJAS COMPETITIVAS (mencionar si preguntan):
 - Ubicación: Guadalajara, Jalisco
 - Cobertura: Envíos a toda la República Mexicana
@@ -1780,6 +1796,7 @@ DESPEDIDA EXACTA (di esto y TERMINA):
 
 DESPUÉS DE ESTA FRASE, LA LLAMADA DEBE TERMINAR. NO digas nada más."""
             })
+            return  # FIX 25: CRITICAL - Terminar función inmediatamente después de TRUPER
 
         # Detectar interés
         palabras_interes = ["sí", "si", "me interesa", "claro", "adelante", "ok", "envíe", "mándame"]
