@@ -1933,11 +1933,29 @@ IMPORTANTE:
         ]
         tiene_frase_exclusividad = any(frase in texto_lower for frase in frases_exclusividad)
 
+        # FIX 39: EXCLUSIÓN - NO activar si cliente menciona OTRAS marcas además de Truper
+        # Si dice "Truper y Urrea" o "Truper como otras marcas" → NO es exclusivo
+        marcas_competencia = [
+            'urrea', 'pretul', 'stanley', 'dewalt', 'surtek', 'evans', 'foset',
+            'milwaukee', 'makita', 'bosch', 'hermex', 'toolcraft'
+        ]
+
+        # Palabras que indican MÚLTIPLES marcas (no exclusividad)
+        palabras_multiples_marcas = [
+            'diferentes marcas', 'varias marcas', 'otras marcas', 'distintas marcas',
+            'y', 'como', 'también', 'además', 'junto con', 'entre ellas'
+        ]
+
+        menciona_otras_marcas = any(marca in texto_lower for marca in marcas_competencia)
+        indica_multiples = any(palabra in texto_lower for palabra in palabras_multiples_marcas)
+
         # DETECCIÓN FINAL: 3 formas de detectar TRUPER exclusivo
+        # PERO si menciona otras marcas O indica múltiples → NO es exclusivo
         es_truper_exclusivo = (
-            any(frase in texto_lower for frase in frases_solo_truper) or  # Forma 1: Listas directas
-            any(frase in texto_lower for frase in frases_trabajamos_truper) or  # Forma 2: "trabajamos con truper"
-            (mencion_truper and tiene_frase_exclusividad)  # Forma 3: Combinación
+            (any(frase in texto_lower for frase in frases_solo_truper) or  # Forma 1: Listas directas
+             any(frase in texto_lower for frase in frases_trabajamos_truper) or  # Forma 2: "trabajamos con truper"
+             (mencion_truper and tiene_frase_exclusividad))  # Forma 3: Combinación
+            and not (menciona_otras_marcas or indica_multiples)  # FIX 39: EXCLUSIÓN crítica
         )
 
         if es_truper_exclusivo:
