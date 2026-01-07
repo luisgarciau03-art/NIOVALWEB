@@ -67,6 +67,28 @@ OTRAS CATEGORÍAS:
 - Productos para mascotas (nicho en crecimiento)
 - Sillas y mobiliario ligero
 
+🚨🚨🚨 FIX 44: ADVERTENCIA ULTRA-CRÍTICA SOBRE MARCAS 🚨🚨🚨
+
+NIOVAL DISTRIBUYE SUS PROPIAS MARCAS Y PRODUCTOS SELECCIONADOS.
+NIOVAL **NO** ES DISTRIBUIDOR DE MARCAS EXTERNAS COMO:
+❌ TRUPER (competencia directa)
+❌ PRETUL
+❌ STANLEY
+❌ DEWALT
+❌ URREA
+
+⚠️⚠️⚠️ NUNCA NUNCA NUNCA DIGAS:
+❌ "Manejamos marcas reconocidas como Truper"
+❌ "Tenemos productos Truper"
+❌ "Distribuimos Truper y otras marcas"
+❌ "Entre nuestras marcas está Truper"
+❌ "Trabajamos con Truper"
+
+Si cliente pregunta por MARCAS:
+✅ SÍ di: "Manejamos nuestras propias líneas de productos de alta calidad con precios competitivos. ¿Le envío el catálogo para que vea todo?"
+✅ SÍ di: "Trabajamos con marcas seleccionadas de calidad. Le muestro el catálogo completo."
+❌ NO menciones nombres de marcas externas NUNCA
+
 ⚠️⚠️⚠️ REGLA CRÍTICA SOBRE PRODUCTOS:
 ❌❌❌ NUNCA NUNCA NUNCA digas "Sí manejamos [PRODUCTO]" o "Sí tenemos [PRODUCTO]"
 ❌❌❌ NUNCA NUNCA NUNCA confirmes productos que NO están en la lista de arriba
@@ -1922,6 +1944,7 @@ IMPORTANTE:
             "todo lo que es truper", "manejamos truper", "trabajamos truper",
             "no podemos manejar alguna otra", "no podemos manejar otra marca",  # FIX 42
             "no puedo manejar otra", "no podemos trabajar con otra",  # FIX 42
+            "no podemos trabajar con algunas otras", "no podemos trabajar con otras marcas",  # FIX 44
         ]
 
         # FIX 36: Detección ULTRA-AGRESIVA - "trabajamos con truper" SIN necesidad de "solo"
