@@ -660,10 +660,10 @@ Cuando el cliente te dé información, SIEMPRE confirma:
   2. Si tiene caracteres especiales o letras confusas, DELETREA
   3. Confirma el dominio por separado
 
-  Ejemplo básico: "Perfecto, entonces el correo es juan.perez@gmail.com. ¿Es correcto?"
+  Ejemplo básico: "Perfecto, entonces el correo es [REPITE EL CORREO QUE TE DIERON]. ¿Es correcto?"
 
-  Ejemplo con deletreo: "Perfecto, anoto el correo: javier - PUNTO - garcia - ARROBA - hotmail - PUNTO - com.
-  ¿Es correcto? Para confirmar, es javier.garcia@hotmail.com"
+  Ejemplo con deletreo: "Perfecto, anoto el correo: [NOMBRE] - PUNTO - [APELLIDO] - ARROBA - [DOMINIO] - PUNTO - com.
+  ¿Es correcto? Para confirmar, es [NOMBRE.APELLIDO@DOMINIO.com]"
 
   TÉCNICAS PARA EVITAR ERRORES:
   - Si tiene números: "Es maria23 con el NÚMERO 23, arroba gmail punto com"
@@ -1695,6 +1695,137 @@ YA ESTÁS HABLANDO CON EL ENCARGADO. NO LO VUELVAS A BUSCAR."""
                 })
 
         # ============================================================
+        # FIX 33: DETECCIÓN DE FRUSTRACIÓN DEL CLIENTE
+        # ============================================================
+        # Detectar cuando el cliente dice "ya te lo dije", "ya te pasé", "eso ya te lo mencioné"
+        frases_frustracion = [
+            "ya te lo dije", "ya te dije", "ya te lo mencioné", "ya te lo mencione",
+            "ya te pasé", "ya te pase", "ya te lo pasé", "ya te lo pase",
+            "eso ya te lo dije", "eso ya te lo dije", "te lo acabo de decir",
+            "ya te lo comenté", "ya te lo comente", "te lo acabo de dar",
+            "ya te di", "ya te lo di", "acabas de preguntarme eso",
+            "ya respondí eso", "ya respondi eso", "me estas repitiendo"
+        ]
+
+        if any(frase in texto_lower for frase in frases_frustracion):
+            print(f"😤 FIX 33: Cliente muestra FRUSTRACIÓN - '{texto[:60]}...'")
+
+            self.conversation_history.append({
+                "role": "system",
+                "content": """⚠️⚠️⚠️ [SISTEMA] ALERTA: EL CLIENTE ESTÁ FRUSTRADO
+
+El cliente acaba de decir "ya te lo dije" o similar. Esto significa que:
+1. YA dio esta información anteriormente en la conversación
+2. Estás preguntando algo que YA preguntaste antes
+3. El cliente se está molestando por repetir información
+
+ACCIÓN INMEDIATA OBLIGATORIA:
+1. REVISA el historial de conversación COMPLETO antes de responder
+2. BUSCA la información que el cliente dice que ya dio
+3. NO vuelvas a pedir esa información - confírma que ya la tienes
+4. DISCULPATE por la confusión: "Disculpe, tiene razón. Ya me lo había mencionado."
+5. AVANZA a la siguiente pregunta SIN volver a pedir información ya capturada
+
+INFORMACIÓN YA CAPTURADA:
+- Nombre: {nombre}
+- WhatsApp: {whatsapp}
+- Email: {email}
+- Productos de interés: {productos}
+
+❌ NO vuelvas a preguntar por NADA de lo de arriba
+✅ AVANZA con la conversación usando la info que YA TIENES""".format(
+                    nombre=self.lead_data.get('nombre_contacto', 'No capturado'),
+                    whatsapp=self.lead_data.get('whatsapp', 'No capturado'),
+                    email=self.lead_data.get('email', 'No capturado'),
+                    productos=self.lead_data.get('productos_interes', 'No capturados')
+                )
+            })
+
+        # ============================================================
+        # FIX 31: DETECTAR SI YA SE PREGUNTÓ POR TAMAÑO/PROVEEDORES
+        # ============================================================
+        # Buscar en el historial si Bruce ya preguntó por tamaño de negocio o proveedores
+        preguntas_tamano = [
+            "qué tamaño de negocio", "que tamaño de negocio", "tamaño del negocio",
+            "si es una ferretería local", "tienen varias sucursales",
+            "son distribuidor mayorista", "qué tipo de negocio"
+        ]
+
+        preguntas_proveedores = [
+            "trabajan con varios proveedores", "tienen uno principal",
+            "proveedores actuales", "su proveedor principal"
+        ]
+
+        # Revisar mensajes del asistente en el historial
+        mensajes_bruce = [msg['content'] for msg in self.conversation_history if msg['role'] == 'assistant']
+        texto_completo_bruce = ' '.join(mensajes_bruce).lower()
+
+        ya_pregunto_tamano = any(frase in texto_completo_bruce for frase in preguntas_tamano)
+        ya_pregunto_proveedores = any(frase in texto_completo_bruce for frase in preguntas_proveedores)
+
+        if ya_pregunto_tamano and not hasattr(self, 'flag_pregunta_tamano_advertida'):
+            self.flag_pregunta_tamano_advertida = True
+            print(f"✋ FIX 31: Ya preguntaste por TAMAÑO DE NEGOCIO - NO volver a preguntar")
+
+            self.conversation_history.append({
+                "role": "system",
+                "content": """⚠️⚠️⚠️ [SISTEMA] YA PREGUNTASTE POR TAMAÑO DE NEGOCIO
+
+Detecté que YA preguntaste sobre el tamaño del negocio anteriormente.
+
+❌ NO vuelvas a preguntar: "¿Qué tamaño de negocio tienen?"
+❌ NO vuelvas a preguntar: "¿Si es ferretería local o distribuidora?"
+✅ YA TIENES esta información en el contexto de la conversación
+✅ AVANZA a la siguiente pregunta o tema
+
+Si el cliente no respondió claramente la primera vez, está bien. NO insistas."""
+            })
+
+        if ya_pregunto_proveedores and not hasattr(self, 'flag_pregunta_proveedores_advertida'):
+            self.flag_pregunta_proveedores_advertida = True
+            print(f"✋ FIX 31: Ya preguntaste por PROVEEDORES - NO volver a preguntar")
+
+            self.conversation_history.append({
+                "role": "system",
+                "content": """⚠️⚠️⚠️ [SISTEMA] YA PREGUNTASTE POR PROVEEDORES
+
+Detecté que YA preguntaste sobre los proveedores actuales.
+
+❌ NO vuelvas a preguntar: "¿Trabajan con varios proveedores?"
+❌ NO vuelvas a preguntar: "¿Tienen uno principal?"
+✅ YA TIENES esta información en el contexto de la conversación
+✅ AVANZA a la siguiente pregunta o tema
+
+Si el cliente no respondió claramente la primera vez, está bien. NO insistas."""
+            })
+
+        # ============================================================
+        # FIX 32: DETECTAR SI CLIENTE YA DIO CORREO
+        # ============================================================
+        # Si ya tenemos email capturado, NO volver a pedirlo
+        if self.lead_data.get("email") and not hasattr(self, 'flag_email_capturado_advertido'):
+            self.flag_email_capturado_advertido = True
+            print(f"✋ FIX 32: Ya tienes EMAIL capturado - NO volver a pedir")
+
+            self.conversation_history.append({
+                "role": "system",
+                "content": f"""⚠️⚠️⚠️ [SISTEMA] YA TIENES EL EMAIL DEL CLIENTE
+
+Email capturado: {self.lead_data.get("email")}
+
+❌ NO vuelvas a pedir el correo electrónico
+❌ NO digas "¿Me podría dar su correo?"
+❌ NO digas "¿Tiene correo electrónico?"
+✅ YA LO TIENES: {self.lead_data.get("email")}
+✅ AVANZA con la conversación
+
+Si necesitas CONFIRMAR que está correcto, puedes decir:
+"Para confirmar, el correo es {self.lead_data.get("email")}. ¿Correcto?"
+
+Pero NO lo vuelvas a PEDIR desde cero."""
+            })
+
+        # ============================================================
         # FIX 16: DETECCIÓN - YA TENGO NOMBRE, NO VOLVER A PEDIRLO
         # ============================================================
         # Si ya tenemos nombre_contacto guardado, advertir a GPT que NO lo vuelva a pedir
@@ -2146,9 +2277,9 @@ Debes REPETIR el email letra por letra al cliente para confirmar que está corre
 FORMATO DE CONFIRMACIÓN:
 "Perfecto, déjeme confirmar el correo: {email_detectado} - eso es [DELETREAR PARTE ANTES DE @] arroba [DELETREAR DOMINIO]. ¿Es correcto?"
 
-Ejemplo real:
-Si el email es "juan.perez@gmail.com", di:
-"Perfecto, déjeme confirmar: j-u-a-n punto p-e-r-e-z arroba g-m-a-i-l punto com. ¿Es correcto?"
+⚠️⚠️⚠️ FIX 29: NUNCA NUNCA NUNCA uses ejemplos inventados o de otros clientes
+❌ INCORRECTO: "Por ejemplo: j-u-a-n-punto-p-e-r-e-z-arroba..."
+✅ CORRECTO: Deletrea el correo REAL que el cliente te dio, NO inventes ejemplos
 
 IMPORTANTE:
 - SIEMPRE deletrea el email completo
@@ -2171,7 +2302,8 @@ Detecté que el cliente podría estar proporcionando un email, pero no se captur
 ACCIÓN REQUERIDA:
 1. Pide al cliente que repita el correo LETRA POR LETRA
 2. NO intentes adivinar o completar el email
-3. Ejemplo: "Disculpe, no alcancé a captar el correo completo. ¿Me lo podría deletrear letra por letra? Por ejemplo: j-u-a-n-punto-p-e-r-e-z-arroba-g-m-a-i-l-punto-c-o-m"
+3. ⚠️⚠️⚠️ FIX 29: NO des ejemplos inventados - SOLO pide el correo real
+4. Di exactamente: "Disculpe, no alcancé a captar el correo completo. ¿Me lo podría deletrear letra por letra, por favor?"
 
 IMPORTANTE:
 - Escucha cada letra con atención

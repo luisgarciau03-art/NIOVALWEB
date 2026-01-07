@@ -782,9 +782,43 @@ def procesar_respuesta():
 
         speech_result = ' '.join(palabras_corregidas)
 
+        # FIX 30: Detectar instrucciones de ortografía ("con z", "con s", etc.)
+        # Cliente dice: "YahirSam con z" → Debe entenderse como "YahirZam"
+        import re
+
+        # Patrón: [palabra] con [letra]
+        patron_ortografia = r'(\w+)\s+con\s+([a-zA-Z])\b'
+        matches_ortografia = list(re.finditer(patron_ortografia, speech_result, re.IGNORECASE))
+
+        if matches_ortografia:
+            for match in reversed(matches_ortografia):  # Iterar al revés para no afectar índices
+                palabra_original = match.group(1)
+                letra_correcta = match.group(2).lower()
+
+                # Buscar la última consonante diferente a letra_correcta y reemplazarla
+                # Ejemplo: "Sam con z" → buscar 'm' (última letra), no es 'z', entonces reemplazar
+                palabra_corregida = palabra_original
+                for i in range(len(palabra_original) - 1, -1, -1):
+                    letra_actual = palabra_original[i].lower()
+                    if letra_actual != letra_correcta and letra_actual.isalpha():
+                        # Reemplazar esta letra por la letra correcta (mantener mayúscula si era mayúscula)
+                        if palabra_original[i].isupper():
+                            letra_reemplazo = letra_correcta.upper()
+                        else:
+                            letra_reemplazo = letra_correcta
+
+                        palabra_corregida = palabra_original[:i] + letra_reemplazo + palabra_original[i+1:]
+                        break
+
+                # Reemplazar en el texto completo (eliminar " con [letra]")
+                speech_result = speech_result[:match.start()] + palabra_corregida + speech_result[match.end():]
+
+                print(f"🔧 FIX 30 - Corrección ortográfica:")
+                print(f"   '{palabra_original} con {letra_correcta}' → '{palabra_corregida}'")
+
         # Log si hubo correcciones
         if speech_result != speech_original:
-            print(f"🔧 FIX 28 - Transcripción corregida:")
+            print(f"🔧 FIX 28/30 - Transcripción corregida:")
             print(f"   Original: '{speech_original}'")
             print(f"   Corregida: '{speech_result}'")
 
