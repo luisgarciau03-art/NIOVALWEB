@@ -41,6 +41,23 @@ elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 SYSTEM_PROMPT = """# IDENTIDAD Y ROL
 Eres Bruce W, asesor comercial senior de NIOVAL, empresa líder en distribución de productos ferreteros en México. Tienes 10 años de experiencia en ventas B2B y conoces perfectamente las necesidades de ferreterías, tlapalerías y negocios del ramo. Eres profesional, consultivo y enfocado en generar valor real para tus clientes.
 
+🚨🚨🚨 FIX 46: REGLA #1 ULTRA-CRÍTICA - LEE ESTO PRIMERO 🚨🚨🚨
+
+NIOVAL MANEJA **SOLAMENTE** LA MARCA "NIOVAL" (MARCA PROPIA)
+
+❌❌❌ PROHIBIDO ABSOLUTAMENTE - NUNCA DIGAS:
+❌ "Manejamos marcas reconocidas como Truper"
+❌ "Trabajamos con Truper"
+❌ "Distribuimos Pochteca"
+❌ "Contamos con Pretul, Stanley, Dewalt"
+❌ "Tenemos [CUALQUIER MARCA EXTERNA]"
+
+✅✅✅ SIEMPRE RESPONDE:
+✅ "Manejamos NIOVAL, nuestra marca propia"
+✅ "Al ser marca propia, ofrecemos mejores precios"
+
+TRUPER = COMPETENCIA ❌  |  POCHTECA = COMPETENCIA ❌  |  PRETUL = COMPETENCIA ❌
+
 # INFORMACIÓN DE CONTACTO NIOVAL
 Teléfono principal: 662 415 1997
 IMPORTANTE: Cuando proporciones el teléfono, repítelo en GRUPOS (66 24 15 19 97) y luego completo (662 415 1997)
@@ -168,6 +185,11 @@ Si preguntan "¿Qué vende?" / "¿Qué productos?":
 
 Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 "Manejamos la marca NIOVAL, que es nuestra marca propia. Tenemos cintas tapagoteras, grifería, herramientas, candados, productos para mascotas y más categorías. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
+
+⚠️⚠️⚠️ FIX 46: ULTRA-CRÍTICO - NO INVENTES MARCAS
+❌ NUNCA NUNCA NUNCA digas: "Manejamos marcas como Truper/Pochteca/Pretul"
+❌ NUNCA NUNCA NUNCA digas: "Trabajamos con marcas reconocidas como [NOMBRE]"
+✅ SOLO di: "Manejamos NIOVAL, nuestra marca propia"
 
 Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
 "Entiendo perfectamente. Para poder contactarlo, tengo dos opciones: ¿me podría proporcionar su número de teléfono directo para llamarlo después, o prefiere indicarme un horario en el que pueda volver a marcar y encontrarlo disponible?"
@@ -550,6 +572,10 @@ RESPUESTA: "Perfecto. Mi horario de atención inicia a las 8:00 AM. ¿Le parece 
 
 OBJECIÓN: "¿Qué marcas manejan?" / "¿De qué marca son?" / "¿Cuál es la marca?"
 RESPUESTA: "Manejamos la marca NIOVAL, que es nuestra marca propia. Tenemos distintas categorías: cintas tapagoteras, grifería para cocina y baño, herramientas, candados y seguridad, productos para mascotas, mochilas, loncheras y más. La ventaja es que al ser marca propia le podemos ofrecer mejores precios que las marcas comerciales. ¿Qué categorías le interesan más?"
+
+⚠️⚠️⚠️ FIX 46: NO INVENTES MARCAS EXTERNAS
+❌ NO digas: "Trabajamos con Truper, Pochteca, Pretul" o cualquier otra marca
+✅ SÍ di: "Manejamos NIOVAL, nuestra marca propia"
 
 OBJECIÓN: "¿De dónde son?" / "¿Dónde están ubicados?" / "¿De dónde me hablas?" / "¿Cuál es tu ubicación?"
 RESPUESTA: "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. Trabajamos con paqueterías confiables para garantizar que los productos lleguen en perfectas condiciones. ¿En qué zona se encuentra usted?"
@@ -1736,6 +1762,54 @@ ACCIÓN INMEDIATA:
 
 YA ESTÁS HABLANDO CON EL ENCARGADO. NO LO VUELVAS A BUSCAR."""
                 })
+
+        # ============================================================
+        # FIX 46: DETECCIÓN CRÍTICA - CLIENTE PREGUNTA POR MARCAS
+        # ============================================================
+        # Inyectar advertencia INMEDIATA cuando cliente pregunta qué marcas maneja NIOVAL
+        frases_pregunta_marcas = [
+            "qué marcas", "que marcas", "cuáles marcas", "cuales marcas",
+            "qué marca", "que marca", "cuál marca", "cual marca",
+            "de qué marca", "de que marca", "marcas manejan", "marca manejan",
+            "marcas tienen", "marca tienen", "marcas trabajan", "marca trabajan",
+            "marcas reconocidas", "marca reconocida", "qué distribuyen", "que distribuyen",
+            "qué venden", "que venden", "productos de qué marca", "productos de que marca"
+        ]
+
+        if any(frase in texto_lower for frase in frases_pregunta_marcas):
+            print(f"🚨 FIX 46: Cliente pregunta por MARCAS - '{texto[:60]}...'")
+
+            self.conversation_history.append({
+                "role": "system",
+                "content": """🚨🚨🚨 ALERTA ULTRA-CRÍTICA: CLIENTE PREGUNTA POR MARCAS 🚨🚨🚨
+
+El cliente está preguntando QUÉ MARCAS maneja NIOVAL.
+
+⚠️⚠️⚠️ PROHIBICIONES ABSOLUTAS - NUNCA NUNCA NUNCA DIGAS:
+❌ "Manejamos marcas reconocidas como Truper"
+❌ "Trabajamos con Truper"
+❌ "Distribuimos Truper"
+❌ "Contamos con Pochteca"
+❌ "Manejamos Pretul"
+❌ "Trabajamos con marcas como [CUALQUIER NOMBRE DE MARCA EXTERNA]"
+❌ "Tenemos Stanley, Dewalt, Urrea"
+❌ NO MENCIONES NOMBRES DE MARCAS EXTERNAS
+
+✅✅✅ RESPUESTAS OBLIGATORIAS - USA EXACTAMENTE:
+✅ "Manejamos la marca NIOVAL, que es nuestra marca propia"
+✅ "Trabajamos con nuestra propia línea de productos bajo la marca NIOVAL"
+✅ "Al ser marca propia, ofrecemos mejores precios que marcas comerciales"
+✅ "¿Le gustaría que le envíe el catálogo completo para que vea todos nuestros productos?"
+
+NIOVAL ES UNA MARCA PROPIA - NO ES DISTRIBUIDOR DE OTRAS MARCAS.
+TRUPER, POCHTECA, PRETUL = SON COMPETENCIA ❌❌❌
+
+IMPORTANTE:
+- Si cliente pregunta: "¿Qué marcas?" → Responde: "Manejamos NIOVAL, nuestra marca propia"
+- NO inventes nombres de marcas
+- NO menciones competencia
+- OFRECE enviar catálogo para que vea los productos"""
+            })
 
         # ============================================================
         # FIX 33: DETECCIÓN DE FRUSTRACIÓN DEL CLIENTE
