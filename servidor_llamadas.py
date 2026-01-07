@@ -133,7 +133,7 @@ cache_respuestas_stats = {
 # FIX 57: AUTO-APRENDIZAJE DE CACHÉ (detecta preguntas frecuentes)
 # Diccionario: pregunta_normalizada → {count, respuestas, ultima_respuesta}
 preguntas_frecuentes = {}
-UMBRAL_AUTO_CACHE = 3  # Después de 3 veces, sugerir para caché
+UMBRAL_AUTO_CACHE = 2  # Después de 2 veces, sugerir para caché (más agresivo)
 candidatos_auto_cache = []  # Lista de preguntas que califican para caché automático
 
 
