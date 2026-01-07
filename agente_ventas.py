@@ -1901,16 +1901,29 @@ IMPORTANTE:
             "todo lo que es truper", "manejamos truper", "trabajamos truper"
         ]
 
-        # FIX 34: Detección adicional - "solo podemos manejar" + menciona Truper
-        mencion_truper = "truper" in texto_lower
-        solo_pueden_manejar = any(frase in texto_lower for frase in [
-            "solo podemos manejar", "solo podemos trabajar", "únicamente podemos",
-            "solamente podemos", "solo manejamos", "únicamente manejamos"
-        ])
+        # FIX 36: Detección ULTRA-AGRESIVA - "trabajamos con truper" SIN necesidad de "solo"
+        frases_trabajamos_truper = [
+            "trabajamos con truper", "trabajo con truper", "trabajamos truper",
+            "trabajamos directamente con truper", "compramos truper",
+            "compramos con truper", "trabajamos con trooper",  # Variación Trooper
+            "únicamente trabajamos con truper"
+        ]
 
-        # Si menciona Truper Y dice "solo podemos manejar", es NO APTO
-        es_truper_exclusivo = (any(frase in texto_lower for frase in frases_solo_truper) or
-                               (mencion_truper and solo_pueden_manejar))
+        # Detección combinada: menciona truper + frases de exclusividad
+        mencion_truper = "truper" in texto_lower or "trooper" in texto_lower
+        frases_exclusividad = [
+            "solo podemos", "únicamente podemos", "solamente podemos",
+            "solo manejamos", "únicamente manejamos", "solamente manejamos",
+            "solo trabajamos", "únicamente trabajamos", "trabajamos con"
+        ]
+        tiene_frase_exclusividad = any(frase in texto_lower for frase in frases_exclusividad)
+
+        # DETECCIÓN FINAL: 3 formas de detectar TRUPER exclusivo
+        es_truper_exclusivo = (
+            any(frase in texto_lower for frase in frases_solo_truper) or  # Forma 1: Listas directas
+            any(frase in texto_lower for frase in frases_trabajamos_truper) or  # Forma 2: "trabajamos con truper"
+            (mencion_truper and tiene_frase_exclusividad)  # Forma 3: Combinación
+        )
 
         if es_truper_exclusivo:
             # Marcar como NO APTO y preparar despedida
