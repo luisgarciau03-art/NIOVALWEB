@@ -686,13 +686,27 @@ def webhook_voz():
     # PAUSA DE 1 SEGUNDO - Dar tiempo al cliente de decir "Hola" primero
     response.pause(length=1)
 
-    # FIX 52: Usar Twilio TTS directo (instantáneo, 0s delay)
-    # Voz: Polly.Mia (español mexicano, mujer, natural)
-    response.say(
-        mensaje_inicial,
-        language="es-MX",
-        voice="Polly.Mia"
-    )
+    # FIX 53: VOLVER A ELEVENLABS PRE-GRABADO (voz masculina de Bruce)
+    # Problema FIX 52: Polly.Mia es FEMENINA (Bruce debe ser hombre)
+    # Solución: Usar caché de ElevenLabs (pre-generado al inicio, 0s delay)
+
+    audio_id = f"inicial_{call_sid}"
+
+    # Detectar si es el saludo estándar para usar caché
+    usa_cache_saludo = "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial
+
+    if usa_cache_saludo and "saludo_inicial" in audio_cache:
+        # Usar audio pre-generado del caché (0s delay, voz Bruce)
+        audio_files[audio_id] = audio_cache["saludo_inicial"]
+        print(f"📦 Saludo inicial desde caché (0s delay, voz Bruce)")
+    else:
+        # Fallback: generar con ElevenLabs si no hay caché
+        print(f"⚠️ Generando saludo inicial (caché no disponible)")
+        generar_audio_elevenlabs(mensaje_inicial, audio_id)
+
+    # Reproducir audio de ElevenLabs
+    audio_url = request.url_root + f"audio/{audio_id}"
+    response.play(audio_url)
 
     # Recopilar respuesta del cliente
     gather = Gather(
