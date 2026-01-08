@@ -1541,7 +1541,39 @@ class AgenteVentas:
             "role": "user",
             "content": respuesta_cliente
         })
-        
+
+        # FIX 74: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
+        respuesta_lower = respuesta_cliente.lower()
+
+        # Patrones de objeción definitiva (cliente NO quiere seguir)
+        objeciones_terminales = [
+            "únicamente truper", "solamente truper", "solo truper",
+            "únicamente trabajamos", "solamente trabajamos", "solo trabajamos",
+            "no podemos manejar otras marcas", "no manejamos otras marcas",
+            "tenemos contrato con", "somos distribuidores de",
+            "ya tenemos proveedor exclusivo", "contrato exclusivo"
+        ]
+
+        for objecion in objeciones_terminales:
+            if objecion in respuesta_lower:
+                print(f"🚨 FIX 74: OBJECIÓN TERMINAL DETECTADA - Finalizando conversación")
+                print(f"   Patrón: '{objecion}'")
+
+                # Marcar como no interesado
+                self.lead_data["interesado"] = False
+                self.lead_data["resultado"] = "NO INTERESADO"
+                self.lead_data["pregunta_7"] = "Cliente tiene proveedor exclusivo"
+
+                # Respuesta de despedida respetuosa y CORTA
+                respuesta_despedida = "Entiendo perfectamente. Muchas gracias por su tiempo. Que tenga excelente día."
+
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_despedida
+                })
+
+                return respuesta_despedida
+
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)
 
@@ -1606,10 +1638,10 @@ class AgenteVentas:
                     *mensajes_conversacion
                 ],
                 temperature=0.7,
-                max_tokens=80,  # FIX 66: Aumentado de 60 a 80 (evitar respuestas cortadas que se repiten)
+                max_tokens=150,  # FIX 74: CRÍTICO - Aumentado de 80 a 150 (respuestas más completas y contextuales)
                 presence_penalty=0.6,
-                frequency_penalty=1.2,  # FIX 66: CRÍTICO - Aumentado de 0.3 a 1.2 (penaliza FUERTEMENTE repeticiones)
-                timeout=4,  # FIX 55: Reducido de 5s a 4s (ultra-agresivo)
+                frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
+                timeout=5,  # FIX 74: Aumentado de 4s a 5s (dar más tiempo para respuestas complejas)
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )
