@@ -182,14 +182,17 @@ def cargar_cache_desde_disco():
     # FIX 57: Cargar respuestas cacheadas personalizadas
     respuestas_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
 
-    # FIX 59: Si no existe en Volume, copiar desde repo (primer deploy)
+    # FIX 59: Si no existe en Volume, copiar desde seed_data/ (primer deploy)
     if not os.path.exists(respuestas_file):
-        # Buscar el archivo en el directorio del repositorio
-        repo_respuestas_file = os.path.join(os.path.dirname(__file__), CACHE_DIR, "respuestas_cache.json")
+        # Buscar el archivo seed en el directorio del repositorio
+        # IMPORTANTE: No puede estar en audio_cache/ porque el Volume lo sobrescribe
+        repo_respuestas_file = os.path.join(os.path.dirname(__file__), "seed_data", "respuestas_cache.json")
         if os.path.exists(repo_respuestas_file):
             import shutil
             shutil.copy(repo_respuestas_file, respuestas_file)
-            print(f"📋 FIX 59: Copiado respuestas_cache.json desde repo a Volume\n")
+            print(f"📋 FIX 59: Copiado respuestas_cache.json desde seed_data/ a Volume ({respuestas_file})\n")
+        else:
+            print(f"⚠️ FIX 59: No se encontró seed_data/respuestas_cache.json - usando solo categorías hardcoded\n")
 
     if os.path.exists(respuestas_file):
         with open(respuestas_file, 'r', encoding='utf-8') as f:
