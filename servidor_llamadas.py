@@ -2492,6 +2492,21 @@ def generar_cache_manual():
         }, 500
 
 
+@app.route("/version", methods=["GET"])
+def check_version():
+    """
+    Endpoint para verificar qué versión del código está corriendo en Railway
+    """
+    return {
+        "version": "FIX 82",
+        "fix_79_activo": True,
+        "fix_81_debug_activo": True,
+        "despedida_calida": "Perfecto, comprendo que ya trabajan con un proveedor fijo...",
+        "git_commit": "74075a2",
+        "mensaje": "Si ves esto, Railway tiene el código actualizado"
+    }
+
+
 @app.route("/diagnostico-persistencia", methods=["GET"])
 def diagnostico_persistencia():
     """
