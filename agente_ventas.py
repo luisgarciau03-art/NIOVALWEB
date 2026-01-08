@@ -1575,32 +1575,35 @@ class AgenteVentas:
             import time
             inicio_gpt = time.time()
 
-            # IMPORTANTE: Separar mensajes de contexto (system) de la conversación
-            mensajes_contexto = [msg for msg in self.conversation_history if msg['role'] == 'system']
-            mensajes_conversacion = [msg for msg in self.conversation_history if msg['role'] != 'system']
+            # FIX 68: CRÍTICO - Reparar construcción de historial
+            # PROBLEMA: Se estaba duplicando system prompt y perdiendo historial
 
-            # Limitar solo la CONVERSACIÓN a últimos 6 mensajes (no el contexto)
-            conversacion_reciente = mensajes_conversacion[-6:] if len(mensajes_conversacion) > 6 else mensajes_conversacion
-
-            # Reconstruir historial: CONTEXTO + CONVERSACIÓN RECIENTE
-            historial_completo = mensajes_contexto + conversacion_reciente
-
-            # PROMPT DINÁMICO: Solo enviar secciones relevantes según estado de conversación
+            # 1. Construir prompt dinámico PRIMERO (incluye memoria de conversación)
             prompt_optimizado = self._construir_prompt_dinamico()
 
-            # FIX 55: ULTRA-OPTIMIZACIÓN para reducir delay de 7-10s
-            # Límite de conversación a últimos 10 mensajes para reducir tokens
-            MAX_MENSAJES = 10
-            if len(historial_completo) > MAX_MENSAJES:
-                # Mantener solo los mensajes más recientes
-                historial_completo = historial_completo[-MAX_MENSAJES:]
-                print(f"🔧 FIX 55: Historial reducido a {MAX_MENSAJES} mensajes para velocidad")
+            # 2. Filtrar SOLO mensajes user/assistant (NO system) del historial
+            mensajes_conversacion = [msg for msg in self.conversation_history
+                                    if msg['role'] in ['user', 'assistant']]
+
+            # 3. Limitar a últimos 12 mensajes (6 turnos completos user+assistant)
+            # AUMENTADO de 6 a 12 para mejor memoria
+            MAX_MENSAJES_CONVERSACION = 12
+            if len(mensajes_conversacion) > MAX_MENSAJES_CONVERSACION:
+                mensajes_conversacion = mensajes_conversacion[-MAX_MENSAJES_CONVERSACION:]
+                print(f"🔧 FIX 68: Historial limitado a últimos {MAX_MENSAJES_CONVERSACION} mensajes")
+
+            # 4. Debug: Imprimir últimos 2 mensajes para diagnóstico
+            if len(mensajes_conversacion) >= 2:
+                print(f"\n📝 FIX 68: Últimos 2 mensajes en historial:")
+                for msg in mensajes_conversacion[-2:]:
+                    preview = msg['content'][:60] + "..." if len(msg['content']) > 60 else msg['content']
+                    print(f"   {msg['role'].upper()}: {preview}")
 
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": prompt_optimizado},
-                    *historial_completo
+                    *mensajes_conversacion
                 ],
                 temperature=0.7,
                 max_tokens=80,  # FIX 66: Aumentado de 60 a 80 (evitar respuestas cortadas que se repiten)
