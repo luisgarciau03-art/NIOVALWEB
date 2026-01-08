@@ -950,14 +950,14 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # FIX 60/61/62: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
+    # FIX 60/61/62/63: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
     # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=5,  # FIX 62: Reducido de 8s a 5s (respuesta más rápida)
-        speech_timeout=2,  # FIX 62: Reducido de 3s a 2s (menos espera de silencio)
+        timeout=3,  # FIX 63: ULTRA-AGRESIVO - 5s→3s (respuesta rápida)
+        speech_timeout=1,  # FIX 63: ULTRA-AGRESIVO - 2s→1s (detectar fin inmediato)
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
@@ -1445,12 +1445,12 @@ def procesar_respuesta():
         return str(response)
 
     # Si NO es despedida, continuar conversación normal
-    # FIX 60/61/62: Usando Whisper API (mejor precisión + más barato)
+    # FIX 60/61/62/63: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=5,  # FIX 62: Reducido de 8s a 5s (respuesta más rápida)
-        speech_timeout=2,  # FIX 62: Reducido de 3s a 2s (menos espera de silencio)
+        timeout=3,  # FIX 63: ULTRA-AGRESIVO - 5s→3s (respuesta rápida)
+        speech_timeout=1,  # FIX 63: ULTRA-AGRESIVO - 2s→1s (detectar fin inmediato)
         action="/procesar-respuesta",
         method="POST",
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
