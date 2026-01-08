@@ -32,13 +32,13 @@ class SistemaLlamadasMasivas:
         self.sheets_adapter = NiovalSheetsAdapter()
         print("✅ Conectado a Google Sheets\n")
 
-    def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 30, pedir_confirmacion: bool = True):
+    def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 10, pedir_confirmacion: bool = True):
         """
-        Ejecuta un lote de llamadas reales vía Railway
+        FIX 88: Ejecuta llamadas CONSECUTIVAS (una tras otra, esperando a que termine cada una)
 
         Args:
             cantidad: Número de llamadas a realizar
-            delay_entre_llamadas: Segundos de espera entre llamadas (default: 30)
+            delay_entre_llamadas: Segundos de espera DESPUÉS de que termine una llamada (default: 10)
             pedir_confirmacion: Si False, omite mensaje de confirmación (default: True)
         """
         print("\n" + "=" * 60)
@@ -89,20 +89,26 @@ class SistemaLlamadasMasivas:
             print(f"📞 Fila {fila}: {nombre}")
             print(f"   Teléfono: {telefono}")
 
-            # Hacer llamada vía Railway (enviar contacto completo para cargar referencia y contexto)
-            exito = self._iniciar_llamada_railway(contacto)
+            # FIX 88: Hacer llamada vía Railway y obtener Call SID
+            call_sid = self._iniciar_llamada_railway(contacto)
 
-            if exito:
+            if call_sid:
                 resultados['exitosas'] += 1
                 print("✅ Llamada iniciada correctamente")
-                # NOTA: NO marcamos en columna F - los resultados se guardan en "HISTORIAL DE LLAMADAS"
+
+                # FIX 88: ESPERAR A QUE LA LLAMADA TERMINE (90 segundos aprox)
+                print(f"⏳ Esperando 90 segundos para que termine la llamada...")
+                if self._esperar_fin_llamada(call_sid):
+                    print("✅ Tiempo de espera completado")
+                else:
+                    print("⚠️  Error en espera")
             else:
                 resultados['fallidas'] += 1
                 print("❌ Error al iniciar llamada")
 
-            # Esperar antes de la siguiente llamada (excepto en la última)
+            # FIX 88: Esperar delay DESPUÉS de que termine la llamada (excepto en la última)
             if i < len(contactos):
-                print(f"\n⏳ Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
+                print(f"\n⏱️  Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
                 time.sleep(delay_entre_llamadas)
 
         # Resumen final
@@ -115,15 +121,15 @@ class SistemaLlamadasMasivas:
         print(f"📈 Tasa de éxito: {round(resultados['exitosas']/resultados['total']*100, 1)}%")
         print("=" * 60 + "\n")
 
-    def _iniciar_llamada_railway(self, contacto: dict) -> bool:
+    def _iniciar_llamada_railway(self, contacto: dict) -> str:
         """
-        Inicia una llamada a través de Railway
+        FIX 88: Inicia una llamada a través de Railway
 
         Args:
             contacto: Diccionario completo con toda la información del contacto
 
         Returns:
-            True si se inició correctamente, False si hubo error
+            Call SID si se inició correctamente, None si hubo error
         """
         try:
             url = f"{WEBHOOK_URL}/iniciar-llamada"
@@ -148,16 +154,35 @@ class SistemaLlamadasMasivas:
 
             if response.status_code == 200:
                 data = response.json()
-                call_sid = data.get('call_sid', 'N/A')
+                call_sid = data.get('call_sid', None)
                 print(f"📞 Call SID: {call_sid}")
-                return True
+                return call_sid  # FIX 88: Retornar Call SID
             else:
                 print(f"❌ Error HTTP {response.status_code}: {response.text}")
-                return False
+                return None
 
         except Exception as e:
             print(f"❌ Error al iniciar llamada: {e}")
+            return None
+
+    def _esperar_fin_llamada(self, call_sid: str, tiempo_espera: int = 90) -> bool:
+        """
+        Espera un tiempo fijo para que termine la llamada
+        
+        Args:
+            call_sid: ID de la llamada de Twilio (para referencia)
+            tiempo_espera: Tiempo de espera en segundos (default: 90 segundos)
+            
+        Returns:
+            True (siempre, después de esperar el tiempo especificado)
+        """
+        if not call_sid:
             return False
+        
+        # Esperar el tiempo especificado (promedio de duración de una llamada)
+        # Esto permite que la llamada se complete antes de iniciar la siguiente
+        time.sleep(tiempo_espera)
+        return True
 
     def ver_estadisticas(self):
         """Muestra estadísticas de contactos"""

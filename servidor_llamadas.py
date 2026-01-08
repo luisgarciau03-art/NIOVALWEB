@@ -2526,6 +2526,66 @@ def check_version():
     }
 
 
+@app.route("/estado-llamada/<call_sid>", methods=["GET"])
+def estado_llamada(call_sid):
+    """
+    FIX 88: Endpoint para consultar el estado actual de una llamada
+    Permite al script de llamadas masivas esperar a que termine una llamada antes de iniciar la siguiente
+
+    Retorna:
+        - activa: True si la llamada sigue activa
+        - estado: "completed", "in-progress", "no-encontrada"
+        - duracion: segundos de duración (si está disponible)
+    """
+    try:
+        # Verificar si la conversación sigue activa en memoria
+        if call_sid in conversaciones_activas:
+            agente = conversaciones_activas[call_sid]
+            return {
+                "call_sid": call_sid,
+                "activa": True,
+                "estado": "in-progress",
+                "nombre_negocio": agente.lead_data.get("nombre_negocio", "N/A"),
+                "mensaje": "Llamada en progreso"
+            }
+
+        # Llamada no está activa en memoria (terminó o nunca existió)
+        # Consultar Twilio para ver el estado real
+        if twilio_client:
+            try:
+                call = twilio_client.calls(call_sid).fetch()
+                return {
+                    "call_sid": call_sid,
+                    "activa": False,
+                    "estado": call.status,
+                    "duracion": call.duration,
+                    "mensaje": f"Llamada {call.status}"
+                }
+            except Exception as e:
+                return {
+                    "call_sid": call_sid,
+                    "activa": False,
+                    "estado": "no-encontrada",
+                    "error": str(e),
+                    "mensaje": "Llamada no encontrada en Twilio"
+                }
+        else:
+            return {
+                "call_sid": call_sid,
+                "activa": False,
+                "estado": "completed",
+                "mensaje": "Llamada no activa (Twilio no disponible)"
+            }
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "call_sid": call_sid,
+            "activa": False,
+            "estado": "error"
+        }, 500
+
+
 @app.route("/diagnostico-persistencia", methods=["GET"])
 def diagnostico_persistencia():
     """
