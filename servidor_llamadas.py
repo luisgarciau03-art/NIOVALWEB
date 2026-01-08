@@ -185,20 +185,41 @@ def cargar_cache_desde_disco():
             preguntas_frecuentes = json.load(f)
         print(f"🔍 {len(preguntas_frecuentes)} preguntas frecuentes cargadas desde disco\n")
 
-    # FIX 57: Cargar respuestas cacheadas personalizadas
+    # FIX 57/59/64: Cargar respuestas cacheadas personalizadas
     respuestas_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
+    repo_respuestas_file = os.path.join(os.path.dirname(__file__), "seed_data", "respuestas_cache.json")
 
-    # FIX 59: Si no existe en Volume, copiar desde seed_data/ (primer deploy)
-    if not os.path.exists(respuestas_file):
-        # Buscar el archivo seed en el directorio del repositorio
-        # IMPORTANTE: No puede estar en audio_cache/ porque el Volume lo sobrescribe
-        repo_respuestas_file = os.path.join(os.path.dirname(__file__), "seed_data", "respuestas_cache.json")
-        if os.path.exists(repo_respuestas_file):
-            import shutil
+    # FIX 64: SIEMPRE actualizar desde seed_data/ si existe y es diferente
+    # Esto permite actualizar patrones sin borrar el Volume
+    import shutil
+    if os.path.exists(repo_respuestas_file):
+        # Comparar contenido para evitar copias innecesarias
+        debe_actualizar = True
+        if os.path.exists(respuestas_file):
+            try:
+                with open(repo_respuestas_file, 'r', encoding='utf-8') as f1:
+                    seed_content = json.load(f1)
+                with open(respuestas_file, 'r', encoding='utf-8') as f2:
+                    volume_content = json.load(f2)
+
+                # Comparar número de categorías y patrones
+                if len(seed_content) == len(volume_content):
+                    # Verificar si los patrones son iguales
+                    if all(
+                        key in volume_content and
+                        volume_content[key].get('patrones') == seed_content[key].get('patrones')
+                        for key in seed_content
+                    ):
+                        debe_actualizar = False
+                        print(f"✅ FIX 64: respuestas_cache.json ya está actualizado ({len(seed_content)} categorías)\n")
+            except:
+                debe_actualizar = True
+
+        if debe_actualizar:
             shutil.copy(repo_respuestas_file, respuestas_file)
-            print(f"📋 FIX 59: Copiado respuestas_cache.json desde seed_data/ a Volume ({respuestas_file})\n")
-        else:
-            print(f"⚠️ FIX 59: No se encontró seed_data/respuestas_cache.json - usando solo categorías hardcoded\n")
+            print(f"📋 FIX 64: Actualizado respuestas_cache.json desde seed_data/ a Volume\n")
+    else:
+        print(f"⚠️ FIX 64: No se encontró seed_data/respuestas_cache.json\n")
 
     if os.path.exists(respuestas_file):
         with open(respuestas_file, 'r', encoding='utf-8') as f:
