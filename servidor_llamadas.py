@@ -2497,13 +2497,27 @@ def check_version():
     """
     Endpoint para verificar qué versión del código está corriendo en Railway
     """
+    # Verificar si agente_ventas.py tiene el código FIX 81
+    import inspect
+    from agente_ventas import AgenteVentas
+
+    # Obtener el código fuente del método procesar_respuesta
+    source_code = inspect.getsource(AgenteVentas.procesar_respuesta)
+
+    # Verificar si tiene los FIX esperados
+    tiene_fix_81 = "FIX 81 DEBUG" in source_code
+    tiene_fix_79 = "Perfecto, comprendo que ya trabajan con un proveedor fijo" in source_code
+    tiene_patron_truper = '"truper"' in source_code or "'truper'" in source_code
+
     return {
-        "version": "FIX 82",
-        "fix_79_activo": True,
-        "fix_81_debug_activo": True,
+        "version": "FIX 84",
+        "servidor_actualizado": True,
+        "agente_ventas_fix_81": tiene_fix_81,
+        "agente_ventas_fix_79": tiene_fix_79,
+        "agente_ventas_patron_truper": tiene_patron_truper,
         "despedida_calida": "Perfecto, comprendo que ya trabajan con un proveedor fijo...",
-        "git_commit": "74075a2",
-        "mensaje": "Si ves esto, Railway tiene el código actualizado"
+        "git_commit": "c5d78c4",
+        "mensaje": "Verificando si agente_ventas.py está actualizado" if not tiene_fix_81 else "Todo actualizado correctamente"
     }
 
 
