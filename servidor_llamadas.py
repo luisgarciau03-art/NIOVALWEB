@@ -1078,13 +1078,13 @@ def procesar_respuesta():
     elif not OPENAI_API_KEY:
         print(f"   ℹ️  OPENAI_API_KEY no configurada - usando Twilio Speech Recognition")
 
-    # FIX 28: Corrección de transcripciones comunes de Twilio (homofonías en español)
-    # Twilio confunde palabras que suenan similar pero tienen significados diferentes
+    # FIX 28/94: Corrección de transcripciones comunes de Whisper/Twilio
+    # Whisper confunde palabras que suenan similar pero tienen significados diferentes
     if speech_result:
         speech_original = speech_result  # Guardar original para debug
 
-        # Mapa de correcciones: palabra_incorrecta -> palabra_correcta
-        # Solo aplicar en contexto de ferretería/hardware
+        # Mapa de correcciones: palabra_incorrecta → palabra_correcta
+        # Solo aplicar en contexto de ferretería/hardware y llamadas comerciales
         TRANSCRIPTION_CORRECTIONS = {
             'chiapas': 'chapas',       # Estado mexicano → cerraduras/herrajes
             'Chiapas': 'chapas',
@@ -1097,7 +1097,10 @@ def procesar_respuesta():
             'cerradura': 'cerraduras',
             'bisagra': 'bisagras',
             'tornillo': 'tornillos',
-            'clavo': 'clavos'
+            'clavo': 'clavos',
+            # FIX 94: Correcciones de frases comunes mal transcritas
+            'fuiste': 'gusta',         # "fuiste a dejar" → "gusta dejar"
+            'Fuiste': 'Gusta',
         }
 
         # Aplicar correcciones palabra por palabra
