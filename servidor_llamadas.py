@@ -1207,13 +1207,49 @@ def procesar_respuesta():
         nombre_tienda = agente.lead_data.get('nombre_negocio', '')
         logs_manager.registrar_mensaje_cliente(agente.bruce_id, speech_result, nombre_tienda)
 
-    # Detectar respuestas vacías consecutivas (cliente ya no está en línea)
+    # FIX 92: Detectar respuestas vacías y pedir repetición antes de colgar
     if not speech_result or speech_result.strip() == "":
         agente.respuestas_vacias_consecutivas += 1
         print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
-        # Si hay 3 respuestas vacías consecutivas, cliente probablemente colgó
-        if agente.respuestas_vacias_consecutivas >= 3:
+        # Primera o segunda vez: Pedir amablemente que repitan
+        if agente.respuestas_vacias_consecutivas <= 2:
+            print(f"🎙️ Bruce pedirá que le repitan (intento #{agente.respuestas_vacias_consecutivas})")
+
+            # Frases variadas para pedir repetición
+            frases_repeticion = [
+                "Disculpa, no te escuché bien, ¿me puedes repetir?",
+                "Perdón, no logré escucharte, ¿me lo repites por favor?",
+                "No alcancé a escucharte, ¿me lo dices de nuevo?"
+            ]
+
+            # Alternar entre las frases según el intento
+            respuesta_agente = frases_repeticion[(agente.respuestas_vacias_consecutivas - 1) % len(frases_repeticion)]
+
+            # Generar audio y responder
+            response = VoiceResponse()
+            audio_url = agente.generar_audio_elevenlabs(respuesta_agente)
+
+            if audio_url:
+                response.play(audio_url)
+            else:
+                response.say(respuesta_agente, voice="Polly.Mia", language="es-MX")
+
+            # Esperar respuesta del cliente
+            gather = response.gather(
+                input="speech",
+                action="/procesar-respuesta",
+                method="POST",
+                language="es-MX",
+                speechTimeout="auto",
+                timeout=10
+            )
+
+            print(f"✅ Bruce pidió que le repitan")
+            return Response(str(response), mimetype="text/xml")
+
+        # Tercera vez: Cliente probablemente colgó
+        else:
             print(f"📞 Detectadas 3 respuestas vacías consecutivas")
             print(f"💬 Cliente probablemente colgó o no responde")
 
