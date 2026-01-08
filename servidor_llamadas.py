@@ -449,6 +449,9 @@ def pre_generar_audios_cache():
         # Despedidas comunes
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
         "despedida_2": "Perfecto. En las próximas dos horas le llega el catálogo completo por WhatsApp. Muchas gracias por su tiempo. Que tenga excelente tarde.",
+
+        # FIX 76: Despedida específica para objeciones terminales (Truper/proveedor exclusivo)
+        "despedida_objecion": "Entiendo perfectamente. Muchas gracias por su tiempo. Que tenga excelente día.",
     }
 
     # FIX 59: Agregar respuestas cacheadas de respuestas_cache para pre-generación
@@ -1347,13 +1350,30 @@ def procesar_respuesta():
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
 
-    # FIX 75: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
+    # FIX 75/76: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
     if agente.lead_data["estado_llamada"] == "Colgo":
-        print(f"🚨🚨🚨 FIX 75: Estado 'Colgo' detectado - Terminando llamada INMEDIATAMENTE")
+        print(f"🚨🚨🚨 FIX 75: Estado 'Colgo' detectado - Terminando llamada después de despedida")
         print(f"   Razón: {agente.lead_data.get('pregunta_7', 'Objeción terminal')}")
 
-        # Reproducir mensaje de despedida y colgar SIN esperar respuesta
-        response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+        # FIX 76: Generar audio con voz de Bruce (ElevenLabs) usando caché
+        audio_id_despedida = f"respuesta_{call_sid}_objecion_final"
+        cache_key_despedida = "despedida_objecion"  # Caché para "Entiendo perfectamente. Muchas gracias..."
+
+        # Intentar usar caché, si no existe generar con ElevenLabs
+        result_despedida = generar_audio_elevenlabs(respuesta_agente, audio_id_despedida, usar_cache_key=cache_key_despedida)
+
+        if result_despedida is not None:
+            # Audio generado con ElevenLabs (voz Bruce)
+            audio_url_despedida = request.url_root + f"audio/{audio_id_despedida}"
+            print(f"✅ FIX 76: Usando voz Bruce (ElevenLabs) para despedida de objeción")
+            response.play(audio_url_despedida)
+        else:
+            # Fallback: Twilio TTS si ElevenLabs falla
+            print(f"⚠️ FIX 76: ElevenLabs falló, usando Twilio TTS")
+            response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+
+        # FIX 76: Agregar pausa de 1 segundo antes de colgar (evita sensación agresiva)
+        response.pause(length=1)
         response.hangup()
 
         # Guardar lead INMEDIATAMENTE
