@@ -14,6 +14,8 @@ import random
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
+from openai import OpenAI  # FIX 60: Para Whisper API
+import requests  # FIX 60: Para descargar grabaciones de Twilio
 
 load_dotenv()
 
@@ -56,8 +58,12 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
 
+# FIX 60: Configuración OpenAI (para Whisper API)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
+openai_client = OpenAI(api_key=OPENAI_API_KEY)  # FIX 60: Cliente para Whisper
 
 # Almacenar conversaciones activas (en producción usar Redis/DB)
 conversaciones_activas = {}
@@ -703,6 +709,71 @@ def servir_audio_cache(cache_key):
     return "Audio cache not found", 404
 
 
+def transcribir_con_whisper(recording_url):
+    """
+    FIX 60: Transcribe audio usando Whisper API de OpenAI
+
+    Args:
+        recording_url: URL de la grabación de Twilio
+
+    Returns:
+        str: Texto transcrito o None si falla
+    """
+    import time
+    inicio = time.time()
+
+    try:
+        print(f"🎙️ FIX 60: Descargando grabación de Twilio...")
+        print(f"   URL: {recording_url}")
+
+        # Descargar audio de Twilio con autenticación
+        response = requests.get(
+            recording_url,
+            auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
+            timeout=10
+        )
+        response.raise_for_status()
+
+        tiempo_descarga = time.time() - inicio
+        print(f"   ✅ Audio descargado en {tiempo_descarga:.3f}s ({len(response.content)} bytes)")
+
+        # Guardar temporalmente para Whisper
+        temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+        temp_audio.write(response.content)
+        temp_audio.close()
+
+        print(f"🤖 FIX 60: Transcribiendo con Whisper API...")
+        inicio_whisper = time.time()
+
+        # Transcribir con Whisper
+        with open(temp_audio.name, 'rb') as audio_file:
+            transcription = openai_client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                language="es",  # Español (mejor precisión)
+                response_format="text"
+            )
+
+        tiempo_whisper = time.time() - inicio_whisper
+        tiempo_total = time.time() - inicio
+
+        # Limpiar archivo temporal
+        os.unlink(temp_audio.name)
+
+        texto = transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
+
+        print(f"   ✅ Transcripción completada en {tiempo_whisper:.3f}s")
+        print(f"   ⏱️  Tiempo total: {tiempo_total:.3f}s (descarga: {tiempo_descarga:.3f}s + whisper: {tiempo_whisper:.3f}s)")
+        print(f"   📝 Texto: '{texto}'")
+
+        return texto
+
+    except Exception as e:
+        tiempo_total = time.time() - inicio
+        print(f"   ❌ Error en transcripción Whisper después de {tiempo_total:.3f}s: {e}")
+        return None
+
+
 @app.route("/iniciar-llamada", methods=["POST"])
 def iniciar_llamada():
     """
@@ -879,14 +950,17 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # Recopilar respuesta del cliente
+    # FIX 60: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
+    # CAMBIO: En lugar de speech recognition de Twilio, grabamos y transcribimos con Whisper
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=8,  # Tiempo de espera antes de timeout (aumentado para permitir deletreo)
-        speech_timeout=4,  # FIX 23: 4s después de que cliente deja de hablar (permite deletreo de email)
+        timeout=8,  # Tiempo de espera antes de timeout
+        speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
         action="/procesar-respuesta",
-        method="POST"
+        method="POST",
+        # FIX 60: Habilitar grabación para enviar a Whisper
+        action_on_empty_result=False  # No procesar si no hay respuesta
     )
     response.append(gather)
 
@@ -900,12 +974,14 @@ def webhook_voz():
 @app.route("/procesar-respuesta", methods=["GET", "POST"])
 def procesar_respuesta():
     """
-    Procesa la respuesta del cliente y continúa la conversación
+    FIX 60: Procesa la respuesta del cliente y continúa la conversación
+    ACTUALIZADO: Usa Whisper API si está disponible (mejor precisión + más barato)
     """
     # Twilio puede enviar GET o POST
     if request.method == "GET":
         call_sid = request.args.get("CallSid")
         speech_result = request.args.get("SpeechResult", "")
+        recording_url = request.args.get("RecordingUrl", "")  # FIX 60
         call_status = request.args.get("CallStatus", "")
         answered_by = request.args.get("AnsweredBy", "")
 
@@ -915,11 +991,13 @@ def procesar_respuesta():
         print(f"   CallStatus: {call_status}")
         print(f"   AnsweredBy: {answered_by}")
         print(f"   SpeechResult: '{speech_result}'")
+        print(f"   RecordingUrl: '{recording_url}'")  # FIX 60
         if request.args.get("Digits"):
             print(f"   Digits: {request.args.get('Digits')}")
     else:
         call_sid = request.form.get("CallSid")
         speech_result = request.form.get("SpeechResult", "")
+        recording_url = request.form.get("RecordingUrl", "")  # FIX 60
         call_status = request.form.get("CallStatus", "")
         answered_by = request.form.get("AnsweredBy", "")
 
@@ -929,8 +1007,37 @@ def procesar_respuesta():
         print(f"   CallStatus: {call_status}")
         print(f"   AnsweredBy: {answered_by}")
         print(f"   SpeechResult: '{speech_result}'")
+        print(f"   RecordingUrl: '{recording_url}'")  # FIX 60
         if request.form.get("Digits"):
             print(f"   Digits: {request.form.get('Digits')}")
+
+    # FIX 60: PRIORIZAR WHISPER API si está disponible
+    # Whisper tiene: mejor precisión (96-99% vs 85-90%) + más barato ($0.006/min vs $0.020/min)
+    usar_whisper = False
+    transcripcion_whisper = None
+
+    if recording_url and OPENAI_API_KEY:
+        print(f"\n🎯 FIX 60: RecordingUrl disponible - usando WHISPER API")
+        transcripcion_whisper = transcribir_con_whisper(recording_url)
+
+        if transcripcion_whisper:
+            usar_whisper = True
+            speech_original_twilio = speech_result  # Guardar transcripción de Twilio para comparación
+            speech_result = transcripcion_whisper  # Usar Whisper como principal
+
+            # Log de comparación (útil para validar mejora)
+            if speech_original_twilio:
+                print(f"\n📊 FIX 60: COMPARACIÓN DE TRANSCRIPCIONES:")
+                print(f"   🔵 Twilio: '{speech_original_twilio}'")
+                print(f"   🟢 Whisper: '{transcripcion_whisper}'")
+                if speech_original_twilio.lower() != transcripcion_whisper.lower():
+                    print(f"   ⚠️  DIFERENCIAS DETECTADAS - Whisper será más preciso")
+            else:
+                print(f"   ℹ️  Solo Whisper disponible (Twilio no transcribió)")
+        else:
+            print(f"   ⚠️  Whisper falló - fallback a transcripción de Twilio")
+    elif not OPENAI_API_KEY:
+        print(f"   ℹ️  OPENAI_API_KEY no configurada - usando Twilio Speech Recognition")
 
     # FIX 28: Corrección de transcripciones comunes de Twilio (homofonías en español)
     # Twilio confunde palabras que suenan similar pero tienen significados diferentes
@@ -1318,12 +1425,12 @@ def procesar_respuesta():
         # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
         print(f"⏳ Esperando despedida del cliente por cortesía...")
 
-        # Crear Gather para escuchar despedida del cliente
+        # FIX 60: Crear Gather para escuchar despedida del cliente (con Whisper)
         gather_despedida = Gather(
             input="speech",
             language="es-MX",
             timeout=3,  # Esperar hasta 3 segundos
-            speech_timeout=2,  # 2 segundos después de que termine de hablar
+            speech_timeout=2,  # FIX 60: Ya optimizado (corto para despedidas)
             action="/despedida-final",
             method="POST"
         )
@@ -1335,11 +1442,12 @@ def procesar_respuesta():
         return str(response)
 
     # Si NO es despedida, continuar conversación normal
+    # FIX 60: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=8,  # Tiempo de espera antes de timeout (aumentado para permitir deletreo)
-        speech_timeout=4,  # FIX 23: 4s después de que cliente deja de hablar (permite deletreo de email)
+        timeout=8,  # Tiempo de espera antes de timeout
+        speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
         action="/procesar-respuesta",
         method="POST"
     )
