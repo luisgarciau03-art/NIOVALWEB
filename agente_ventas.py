@@ -1681,13 +1681,23 @@ class AgenteVentas:
 
         texto_lower = texto.lower()
 
-        # Detectar estados de llamada sin respuesta
-        if any(palabra in texto_lower for palabra in ["buzon", "contestadora", "buzón"]):
+        # FIX 72: Detectar estados de llamada sin respuesta - MÁS ESTRICTO
+        # PROBLEMA: Detección muy sensible causaba falsos positivos
+        # SOLUCIÓN: Requerir frases completas, no palabras sueltas
+        frases_buzon = [
+            "buzón de voz", "buzon de voz", "entró el buzón", "entro el buzon",
+            "dejé el buzón", "deje el buzon", "cayó en buzón", "cayo en buzon",
+            "contestadora automática", "mensaje automático", "deje su mensaje",
+            "después del tono", "despues del tono"
+        ]
+
+        # Solo detectar si es una frase completa de buzón, no palabra suelta
+        if any(frase in texto_lower for frase in frases_buzon):
             self.lead_data["estado_llamada"] = "Buzon"
             self.lead_data["pregunta_0"] = "Buzon"
             self.lead_data["pregunta_7"] = "BUZON"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: Buzón de voz")
+            print(f"📝 FIX 72: Estado detectado: Buzón de voz - Frase: '{texto[:50]}'")
             return
 
         # FIX 24: Detección MÁS ESTRICTA de teléfono incorrecto

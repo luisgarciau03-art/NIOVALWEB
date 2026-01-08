@@ -3212,7 +3212,7 @@ def cache_manager():
                     const categoria = prompt('Ingresa un ID único para esta categoría (ej: horario_atencion):',
                         pregunta.toLowerCase()
                             .replace(/[¿?¡!]/g, '')
-                            .replace(/\s+/g, '_')
+                            .replace(/\\s+/g, '_')
                             .substring(0, 30)
                     );
 
