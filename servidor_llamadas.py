@@ -443,8 +443,8 @@ def pre_generar_audios_cache():
         "pensando_7": "Permítame un segundo...",
         "pensando_8": "Déjame verificar...",
 
-        # Saludo inicial (se usa en TODAS las llamadas) - CON PRONUNCIACIÓN CORRECTA
-        "saludo_inicial": "Hola, muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferre-teros. ¿Me comunico con el encargado de compras o con el dueño del negocio?",
+        # FIX 87: Saludo inicial CORTO para mantener atención del cliente
+        "saludo_inicial": "Hola, buen día. Le llamo de NIOVAL sobre productos de ferre-tería. ¿Se encuentra el encargado de compras?",
 
         # Despedidas comunes
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
@@ -961,8 +961,8 @@ def webhook_voz():
 
     audio_id = f"inicial_{call_sid}"
 
-    # Detectar si es el saludo estándar para usar caché
-    usa_cache_saludo = "Hola, muy buenas tardes. Mi nombre es Bruce W" in mensaje_inicial
+    # FIX 87: Detectar si es el saludo estándar para usar caché (versión corta)
+    usa_cache_saludo = "Hola, buen día. Le llamo de NIOVAL sobre productos de ferretería" in mensaje_inicial or "Hola, buen día. Le llamo de NIOVAL sobre productos de ferre-tería" in mensaje_inicial
 
     if usa_cache_saludo and "saludo_inicial" in audio_cache:
         # Usar audio pre-generado del caché (0s delay, voz Bruce)
