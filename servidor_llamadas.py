@@ -982,10 +982,10 @@ def webhook_voz():
         print(f"⚠️ Generando saludo inicial con ElevenLabs (caché no disponible - tardará 2-4s)")
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
-    # Reproducir audio de ElevenLabs
-    audio_url = request.url_root + f"audio/{audio_id}"
-    response.play(audio_url)
-
+    # FIX 96: Preparar grabación ANTES de reproducir audio (estar listo desde el primer sonido)
+    # IMPORTANTE: El <Gather> debe envolver al <Play> para que Twilio esté escuchando
+    # DESDE QUE EMPIEZA a reproducir el audio, no DESPUÉS de que termina
+    #
     # FIX 60/61/62/63/86: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
     # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
@@ -1001,6 +1001,13 @@ def webhook_voz():
         # FIX 61: CRÍTICO - Habilitar grabación para Whisper
         speech_model="experimental_conversations"  # Modelo que provee RecordingUrl
     )
+
+    # FIX 96: ANIDAR <Play> dentro de <Gather> para que esté listo ANTES de hablar
+    # Reproducir audio de ElevenLabs DENTRO del Gather
+    audio_url = request.url_root + f"audio/{audio_id}"
+    gather.play(audio_url)
+
+    # Agregar el Gather a la respuesta
     response.append(gather)
 
     # Si no hay respuesta (fallback a TTS de Twilio)
@@ -1529,17 +1536,6 @@ def procesar_respuesta():
             nombre_tienda=nombre_tienda
         )
 
-    # FIX 54: Reproducir audio (ElevenLabs o Twilio TTS según caso)
-    if audio_id is None:
-        # Caso: Respuesta larga (>50 palabras) - usar Twilio TTS rápido (fallback)
-        print(f"⚡ Reproduciendo con Twilio TTS (respuesta larga, evita delay)")
-        # IMPORTANTE: NO usar Polly.Mia (voz femenina) - usar voz masculina
-        response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
-    else:
-        # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs (voz Bruce)
-        audio_url = request.url_root + f"audio/{audio_id}"
-        response.play(audio_url)
-
     # Verificar si debe terminar (solo si Bruce se despide explícitamente)
     # IMPORTANTE: Usar frases distintivas que solo aparecen en despedidas
     debe_terminar = False
@@ -1575,6 +1571,17 @@ def procesar_respuesta():
             method="POST",
             speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
         )
+
+        # FIX 96: Reproducir audio DENTRO del Gather para estar listo desde que empieza
+        if audio_id is None:
+            # Caso: Respuesta larga - usar Twilio TTS rápido
+            print(f"⚡ Reproduciendo despedida con Twilio TTS")
+            gather_despedida.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+        else:
+            # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs
+            audio_url = request.url_root + f"audio/{audio_id}"
+            gather_despedida.play(audio_url)
+
         response.append(gather_despedida)
 
         # Si no responde en 3 segundos, terminar igual
@@ -1582,7 +1589,8 @@ def procesar_respuesta():
 
         return str(response)
 
-    # Si NO es despedida, continuar conversación normal
+    # FIX 96: Si NO es despedida, continuar conversación normal
+    # IMPORTANTE: Preparar Gather PRIMERO, luego reproducir audio DENTRO del Gather
     # FIX 60/61/62/63/86: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
@@ -1593,6 +1601,18 @@ def procesar_respuesta():
         method="POST",
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
     )
+
+    # FIX 96: Reproducir audio (ElevenLabs o Twilio TTS) DENTRO del Gather
+    if audio_id is None:
+        # Caso: Respuesta larga (>100 palabras) - usar Twilio TTS rápido (fallback)
+        print(f"⚡ Reproduciendo con Twilio TTS (respuesta larga, evita delay)")
+        # IMPORTANTE: NO usar Polly.Mia (voz femenina) - usar voz masculina
+        gather.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+    else:
+        # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs (voz Bruce)
+        audio_url = request.url_root + f"audio/{audio_id}"
+        gather.play(audio_url)
+
     response.append(gather)
 
     # Fallback si no hay respuesta - usar CACHÉ (0s delay, acento perfecto)
