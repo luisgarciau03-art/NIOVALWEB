@@ -1,0 +1,135 @@
+{
+  "que_marcas": {
+    "patrones": [
+      "qué marcas",
+      "que marcas",
+      "cuáles marcas",
+      "cuales marcas",
+      "qué marca",
+      "que marca",
+      "cuál marca",
+      "cual marca",
+      "marcas maneja",
+      "marcas tienen",
+      "marcas reconocidas",
+      "marca propia",
+      "de qué marca",
+      "de que marca",
+      "marcas manejan disculpa",
+      "qué marca reconocidas"
+    ],
+    "respuesta": "Manejamos la marca NIOVAL, que es nuestra marca propia. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
+  },
+  "que_necesita": {
+    "patrones": [
+      "qué necesita",
+      "que necesita",
+      "qué necesitaban",
+      "que necesitaban",
+      "qué se le ofrece",
+      "que se le ofrece",
+      "dígame",
+      "digame",
+      "qué necesito",
+      "que necesito",
+      "dígame qué necesita",
+      "soy yo dígame",
+      "soy yo qué necesita"
+    ],
+    "respuesta": "Mi nombre es Bruce W, le llamo de NIOVAL. Somos distribuidores especializados en productos de ferretería. Queremos ofrecerle información sobre nuestros productos. ¿Se encuentra el encargado de compras?"
+  },
+  "de_donde_habla": {
+    "patrones": [
+      "de dónde",
+      "de donde",
+      "dónde están",
+      "donde están",
+      "ubicados",
+      "ubicación",
+      "dónde está",
+      "donde esta",
+      "de qué ciudad",
+      "de que ciudad",
+      "dónde está ubicada su fábrica",
+      "donde esta ubicada",
+      "de dónde me hablas",
+      "de donde me hablas"
+    ],
+    "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Se encuentra el encargado de compras?"
+  },
+  "que_productos": {
+    "patrones": [
+      "qué productos",
+      "que productos",
+      "qué maneja",
+      "que maneja",
+      "qué vende",
+      "que vende",
+      "productos manejan",
+      "qué ofrece",
+      "que ofrece",
+      "qué productos manejan ustedes",
+      "que productos además de esos"
+    ],
+    "respuesta": "Distribuimos productos de ferretería: cinta para goteras, griferías, herramientas, candados y más de 15 categorías. ¿Se encuentra el encargado de compras?"
+  },
+  "linea_credito": {
+    "patrones": [
+      "línea de crédito",
+      "linea de credito",
+      "crédito",
+      "credito",
+      "cómo se manejan",
+      "como se manejan",
+      "qué nos pueden ofrecer",
+      "que nos pueden ofrecer",
+      "maneja líneas de crédito",
+      "proceso para la línea de crédito"
+    ],
+    "respuesta": "Sí, ofrecemos línea de crédito para clientes recurrentes. También aceptamos pago con tarjeta sin comisión y ofrecemos envío gratis desde cinco mil pesos. ¿Le gustaría que le envíe más información por WhatsApp?"
+  },
+  "selladores_silicones": {
+    "patrones": [
+      "selladores",
+      "silicones",
+      "silicón",
+      "silicon",
+      "manejan selladores",
+      "manejan silicones",
+      "qué marca de selladores",
+      "marca de selladores manejas"
+    ],
+    "respuesta": "Déjeme validarlo con mi compañero y le confirmo en el catálogo completo. Manejamos más de 15 categorías de ferretería. ¿Le envío el catálogo por WhatsApp para que vea todo lo disponible?"
+  },
+  "chapas": {
+    "patrones": [
+      "chapas",
+      "manejan chapas",
+      "qué chapas",
+      "que chapas",
+      "modelos de chapas",
+      "usted manejan chapas"
+    ],
+    "respuesta": "Déjeme validarlo en nuestro catálogo actualizado. Contamos con varias opciones de chapas. ¿Le envío el catálogo completo por WhatsApp para que vea todos los modelos disponibles?"
+  },
+  "visitar_fabrica": {
+    "patrones": [
+      "visitar su fábrica",
+      "visitar fábrica",
+      "se puede visitar",
+      "manera de que pueda visitar",
+      "pueden visitar la fábrica"
+    ],
+    "respuesta": "La fábrica no está abierta al público para visitas, ya que se enfoca en producción. Pero con gusto le envío nuestro catálogo digital completo. ¿Me puede proporcionar su WhatsApp?"
+  },
+  "fabrican_mexico": {
+    "patrones": [
+      "fabrican aquí en méxico",
+      "fabrican en méxico",
+      "de dónde son sus productos",
+      "fabrican en algún otro lado",
+      "son distribuidores ustedes fabrican"
+    ],
+    "respuesta": "Nuestros productos son fabricados en México. NIOVAL es marca propia con producción nacional. ¿Le gustaría recibir el catálogo completo por WhatsApp?"
+  }
+}
