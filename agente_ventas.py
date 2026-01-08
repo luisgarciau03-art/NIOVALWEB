@@ -1542,27 +1542,39 @@ class AgenteVentas:
             "content": respuesta_cliente
         })
 
-        # FIX 74: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
+        # FIX 75: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
+        # CRÍTICO: Detectar CUALQUIER mención de proveedor exclusivo/Truper y COLGAR
         respuesta_lower = respuesta_cliente.lower()
 
         # Patrones de objeción definitiva (cliente NO quiere seguir)
+        # FIX 75: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
         objeciones_terminales = [
-            "únicamente truper", "solamente truper", "solo truper",
+            # Truper específico
+            "truper", "trúper", "tru per",
+            # Solo/únicamente/solamente trabajamos
             "únicamente trabajamos", "solamente trabajamos", "solo trabajamos",
-            "no podemos manejar otras marcas", "no manejamos otras marcas",
+            "únicamente manejamos", "solamente manejamos", "solo manejamos",
+            "únicamente productos", "solamente productos", "solo productos",
+            # No podemos
+            "no podemos manejar otras", "no podemos manejar más",
+            "no manejamos otras marcas", "no queremos otras marcas",
+            # Contrato/proveedor exclusivo
             "tenemos contrato con", "somos distribuidores de",
-            "ya tenemos proveedor exclusivo", "contrato exclusivo"
+            "ya tenemos proveedor exclusivo", "contrato exclusivo",
+            "proveedor fijo", "ya tenemos proveedor"
         ]
 
         for objecion in objeciones_terminales:
             if objecion in respuesta_lower:
-                print(f"🚨 FIX 74: OBJECIÓN TERMINAL DETECTADA - Finalizando conversación")
-                print(f"   Patrón: '{objecion}'")
+                print(f"🚨🚨🚨 FIX 75: OBJECIÓN TERMINAL DETECTADA - COLGANDO INMEDIATAMENTE")
+                print(f"   Patrón detectado: '{objecion}'")
+                print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
-                # Marcar como no interesado
+                # FIX 75: Marcar como no interesado Y estado Colgo
                 self.lead_data["interesado"] = False
                 self.lead_data["resultado"] = "NO INTERESADO"
-                self.lead_data["pregunta_7"] = "Cliente tiene proveedor exclusivo"
+                self.lead_data["pregunta_7"] = "Cliente tiene proveedor exclusivo (Truper u otro)"
+                self.lead_data["estado_llamada"] = "Colgo"  # FIX 75: Esto fuerza el hangup
 
                 # Respuesta de despedida respetuosa y CORTA
                 respuesta_despedida = "Entiendo perfectamente. Muchas gracias por su tiempo. Que tenga excelente día."

@@ -1347,6 +1347,20 @@ def procesar_respuesta():
     print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
 
+    # FIX 75: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
+    if agente.lead_data["estado_llamada"] == "Colgo":
+        print(f"🚨🚨🚨 FIX 75: Estado 'Colgo' detectado - Terminando llamada INMEDIATAMENTE")
+        print(f"   Razón: {agente.lead_data.get('pregunta_7', 'Objeción terminal')}")
+
+        # Reproducir mensaje de despedida y colgar SIN esperar respuesta
+        response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+        response.hangup()
+
+        # Guardar lead INMEDIATAMENTE
+        agente.guardar_llamada_y_lead()
+
+        return Response(str(response), mimetype="text/xml")
+
     # FIX 57: Registrar pregunta-respuesta para auto-aprendizaje de caché
     # Solo registrar si NO vino del caché (las cacheadas ya están optimizadas)
     if not respuesta_container.get("desde_cache", False):
