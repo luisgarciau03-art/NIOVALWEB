@@ -3328,6 +3328,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
     print("=" * 60)
+    print("\n🚀 SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)")
+    print("=" * 60)
     print("\n📞 Endpoints disponibles:")
     print("  POST /iniciar-llamada            - Inicia una llamada individual")
     print("  POST /llamadas-masivas           - Inicia múltiples llamadas")
@@ -3338,6 +3340,8 @@ if __name__ == "__main__":
     print("\n🌐 URLs de acceso:")
     print("  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
     print("  🔍 Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia")
+    print("\n✅ FIX 79: Despedida cálida activa (deja puerta abierta)")
+    print("✅ FIX 81: Debug de detección de Truper activo")
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
