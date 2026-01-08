@@ -3193,12 +3193,44 @@ Responde SOLO en este formato JSON:
                 for i, resp_bruce in enumerate(ultimas_bruce, 1):
                     memoria_corto_plazo += f"   {i}. TÚ DIJISTE: \"{resp_bruce['content']}\"\n"
 
-            memoria_corto_plazo += "\n🚨🚨🚨 REGLAS ANTI-REPETICIÓN CRÍTICAS:\n"
+            # FIX 67: Detectar objeciones y señales de desinterés
+            tiene_objeciones = False
+            objeciones_detectadas = []
+
+            frases_no_interesado = [
+                "no me interesa", "no nos interesa", "no estoy interesado", "no estamos interesados",
+                "ya tenemos proveedor", "ya trabajamos con", "solo trabajamos con", "solamente trabajamos",
+                "únicamente trabajamos", "no necesitamos", "no requerimos", "estamos bien así",
+                "no queremos", "no buscamos", "ya tenemos todo", "no gracias"
+            ]
+
+            for resp in ultimas_3:
+                texto_cliente = resp['content'].lower()
+                for frase in frases_no_interesado:
+                    if frase in texto_cliente:
+                        tiene_objeciones = True
+                        objeciones_detectadas.append(frase)
+                        break
+
+            memoria_corto_plazo += "\n🚨🚨🚨 REGLAS CRÍTICAS DE CONVERSACIÓN:\n"
+
+            if tiene_objeciones:
+                memoria_corto_plazo += f"⚠️⚠️⚠️ ALERTA: El cliente mostró DESINTERÉS/OBJECIÓN\n"
+                memoria_corto_plazo += f"   Dijeron: '{objeciones_detectadas[0]}'\n"
+                memoria_corto_plazo += "   ACCIÓN REQUERIDA:\n"
+                memoria_corto_plazo += "   1. RECONOCE su objeción profesionalmente\n"
+                memoria_corto_plazo += "   2. RESPETA su decisión (no insistas)\n"
+                memoria_corto_plazo += "   3. OFRECE dejar información por si cambian de opinión\n"
+                memoria_corto_plazo += "   4. DESPÍDETE cortésmente\n"
+                memoria_corto_plazo += "   EJEMPLO: 'Entiendo perfecto. Por si en el futuro necesitan comparar precios, ¿le puedo dejar mi contacto?'\n\n"
+
+            memoria_corto_plazo += "REGLAS ANTI-REPETICIÓN:\n"
             memoria_corto_plazo += "1. SI ya preguntaste algo en tus últimas 3 respuestas, NO LO VUELVAS A PREGUNTAR\n"
             memoria_corto_plazo += "2. SI el cliente ya respondió algo, NO repitas la pregunta\n"
             memoria_corto_plazo += "3. SI ya dijeron 'soy yo' o 'está hablando conmigo', NO vuelvas a preguntar si está el encargado\n"
             memoria_corto_plazo += "4. AVANZA en la conversación, NO te quedes en loop\n"
-            memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n\n"
+            memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n"
+            memoria_corto_plazo += "6. SI el cliente dice 'ya te dije', es porque estás repitiendo - PARA y cambia de tema\n\n"
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
         prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
