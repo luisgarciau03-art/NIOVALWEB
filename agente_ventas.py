@@ -1570,14 +1570,15 @@ class AgenteVentas:
                 print(f"   Patrón detectado: '{objecion}'")
                 print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
-                # FIX 75: Marcar como no interesado Y estado Colgo
+                # FIX 75/79: Marcar como no interesado Y estado Colgo
                 self.lead_data["interesado"] = False
                 self.lead_data["resultado"] = "NO INTERESADO"
                 self.lead_data["pregunta_7"] = "Cliente tiene proveedor exclusivo (Truper u otro)"
                 self.lead_data["estado_llamada"] = "Colgo"  # FIX 75: Esto fuerza el hangup
 
-                # Respuesta de despedida respetuosa y CORTA
-                respuesta_despedida = "Entiendo perfectamente. Muchas gracias por su tiempo. Que tenga excelente día."
+                # FIX 79: Despedida más cálida y profesional que deja la puerta abierta
+                # Evita tono seco y agresivo cuando cliente menciona proveedor exclusivo
+                respuesta_despedida = "Perfecto, comprendo que ya trabajan con un proveedor fijo. Le agradezco mucho su tiempo y por la información. Si en el futuro necesitan comparar precios o buscan un proveedor adicional, con gusto pueden contactarnos. Que tenga excelente día."
 
                 self.conversation_history.append({
                     "role": "assistant",
@@ -3380,22 +3381,31 @@ RESPUESTA: "Sí, manejamos bocinas para auto y cables para bocina. ¿Le envío e
 PREGUNTA: "¿Manejan mochilas / loncheras?"
 RESPUESTA: "Sí, manejamos 13 modelos de mochilas para laptop, loncheras térmicas, maletines. ¿Le envío el catálogo?"
 
-⚠️ PRODUCTOS QUE NO TENEMOS:
+⚠️ PRODUCTOS QUE NO TENEMOS - SIEMPRE OFRECE EL CATÁLOGO:
 
 PREGUNTA: "¿Manejan tubo PVC / tubería / codos?"
-RESPUESTA: "Actualmente no manejamos tubería. Nos especializamos en grifería, herramientas, cintas y candados. ¿Le gustaría ver nuestro catálogo?"
+RESPUESTA: "Actualmente no manejamos tubería. Pero le envío el catálogo completo para que vea nuestras categorías de grifería, herramientas y cintas, por si le interesa algo más. ¿Cuál es su WhatsApp?"
 
 PREGUNTA: "¿Manejan selladores / silicones / silicón?"
-RESPUESTA: "No manejamos selladores ni silicones. Tenemos cintas adhesivas y para goteras. ¿Le envío el catálogo para que vea nuestras opciones?"
+RESPUESTA: "No manejamos selladores. Tenemos cintas adhesivas y para goteras que podrían interesarle. Le envío el catálogo completo para que vea todo. ¿Cuál es su WhatsApp?"
 
 PREGUNTA: "¿Manejan pinturas / brochas?"
-RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas y cintas. ¿Le envío el catálogo?"
+RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas y cintas. De todos modos le envío el catálogo por si algo le interesa para el futuro. ¿Cuál es su WhatsApp?"
+
+⚠️ REGLA CRÍTICA CUANDO NO TIENES EL PRODUCTO:
+1. Sé honesto: "No manejamos [producto]"
+2. Menciona qué SÍ tienes relacionado: "Pero tenemos [categoría relacionada]"
+3. SIEMPRE ofrece el catálogo: "Le envío el catálogo completo por si le interesa algo más"
+4. Pide WhatsApp inmediatamente: "¿Cuál es su WhatsApp?"
+5. NUNCA termines la conversación solo porque no tienes UN producto
+6. El cliente puede interesarse en OTROS productos del catálogo
 
 ⚠️ REGLA GENERAL:
-- Si el producto ESTÁ en las 7 categorías → Confirma con entusiasmo
-- Si el producto NO está listado → Di honestamente "No manejamos X, pero tenemos..."
+- Si el producto ESTÁ en las 7 categorías → Confirma con entusiasmo y ofrece catálogo
+- Si el producto NO está listado → Di honestamente "No manejamos X, pero..." y SIEMPRE ofrece catálogo
 - NUNCA inventes productos
-- SIEMPRE ofrece enviar el catálogo completo
+- NUNCA dejes ir al cliente sin ofrecerle el catálogo completo
+- Incluso si no tienes lo que busca, pueden interesarse en OTROS productos
 
 # VENTAJAS
 - Envíos a toda la República desde Guadalajara

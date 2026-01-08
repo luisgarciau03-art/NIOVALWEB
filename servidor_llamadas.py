@@ -450,8 +450,9 @@ def pre_generar_audios_cache():
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
         "despedida_2": "Perfecto. En las próximas dos horas le llega el catálogo completo por WhatsApp. Muchas gracias por su tiempo. Que tenga excelente tarde.",
 
-        # FIX 76: Despedida específica para objeciones terminales (Truper/proveedor exclusivo)
-        "despedida_objecion": "Entiendo perfectamente. Muchas gracias por su tiempo. Que tenga excelente día.",
+        # FIX 76/79: Despedida específica para objeciones terminales (Truper/proveedor exclusivo)
+        # FIX 79: Cambiada a despedida más cálida y profesional que deja la puerta abierta
+        "despedida_objecion": "Perfecto, comprendo que ya trabajan con un proveedor fijo. Le agradezco mucho su tiempo y por la información. Si en el futuro necesitan comparar precios o buscan un proveedor adicional, con gusto pueden contactarnos. Que tenga excelente día.",
     }
 
     # FIX 59: Agregar respuestas cacheadas de respuestas_cache para pre-generación
