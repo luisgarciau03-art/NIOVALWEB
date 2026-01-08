@@ -1438,13 +1438,14 @@ class AgenteVentas:
             if any(keyword in referencia for keyword in keywords_encargado):
                 es_encargado_confirmado = True
 
+        # FIX 91: Saludo más corto para evitar que el cliente cuelgue
         # Ajustar saludo inicial según si ya sabemos que es el encargado
         if es_encargado_confirmado:
-            # YA sabemos que es el encargado - NO preguntar
-            mensaje_inicial = "Hola, muy buen día. Soy Bruce W de NIOVAL, distribuidores de productos de ferretería. ¿Con quién tengo el gusto?"
+            # YA sabemos que es el encargado - mensaje corto y directo
+            mensaje_inicial = "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?"
         else:
-            # NO sabemos si es el encargado - preguntar como siempre
-            mensaje_inicial = "Hola, buen día. Le llamo de NIOVAL sobre productos de ferretería. ¿Se encuentra el encargado de compras?"
+            # NO sabemos si es el encargado - preguntar directamente
+            mensaje_inicial = "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?"
 
         self.conversation_history.append({
             "role": "assistant",
