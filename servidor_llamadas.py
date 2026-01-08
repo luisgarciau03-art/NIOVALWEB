@@ -977,14 +977,15 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # FIX 60/61/62/63: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
+    # FIX 60/61/62/63/86: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
     # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
+    # FIX 86: Aumentar timeouts para saludo inicial - clientes necesitan más tiempo para responder
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=3,  # FIX 63: ULTRA-AGRESIVO - 5s→3s (respuesta rápida)
-        speech_timeout=1,  # FIX 63: ULTRA-AGRESIVO - 2s→1s (detectar fin inmediato)
+        timeout=6,  # FIX 86: 3s→6s - Dar tiempo al cliente para procesar pregunta y responder
+        speech_timeout=3,  # FIX 86: 1s→3s - Permitir pausas naturales mientras cliente habla
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
@@ -1528,12 +1529,12 @@ def procesar_respuesta():
         return str(response)
 
     # Si NO es despedida, continuar conversación normal
-    # FIX 60/61/62/63: Usando Whisper API (mejor precisión + más barato)
+    # FIX 60/61/62/63/86: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=3,  # FIX 63: ULTRA-AGRESIVO - 5s→3s (respuesta rápida)
-        speech_timeout=1,  # FIX 63: ULTRA-AGRESIVO - 2s→1s (detectar fin inmediato)
+        timeout=6,  # FIX 86: 3s→6s - Dar tiempo al cliente para procesar pregunta y responder
+        speech_timeout=3,  # FIX 86: 1s→3s - Permitir pausas naturales mientras cliente habla
         action="/procesar-respuesta",
         method="POST",
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
@@ -2512,14 +2513,16 @@ def check_version():
     tiene_patron_truper = '"truper"' in source_code or "'truper'" in source_code
 
     return {
-        "version": "FIX 84",
+        "version": "FIX 86 - Timeouts aumentados para evitar hangup inmediato",
         "servidor_actualizado": True,
         "agente_ventas_fix_81": tiene_fix_81,
         "agente_ventas_fix_79": tiene_fix_79,
         "agente_ventas_patron_truper": tiene_patron_truper,
+        "gather_timeout": "6s (antes 3s)",
+        "gather_speech_timeout": "3s (antes 1s)",
         "despedida_calida": "Perfecto, comprendo que ya trabajan con un proveedor fijo...",
-        "git_commit": "c5d78c4",
-        "mensaje": "Verificando si agente_ventas.py está actualizado" if not tiene_fix_81 else "Todo actualizado correctamente"
+        "git_commit": "FIX_86",
+        "mensaje": "Timeouts aumentados para dar más tiempo al cliente de responder"
     }
 
 
