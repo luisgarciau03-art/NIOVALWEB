@@ -1547,21 +1547,26 @@ class AgenteVentas:
         respuesta_lower = respuesta_cliente.lower()
 
         # Patrones de objeción definitiva (cliente NO quiere seguir)
-        # FIX 75: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
+        # FIX 75/80: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
         objeciones_terminales = [
-            # Truper específico
+            # Truper específico - CUALQUIER mención
             "truper", "trúper", "tru per",
-            # Solo/únicamente/solamente trabajamos
+            "productos truper", "producto truper",
+            "trabajamos truper", "manejamos truper",
+            "solo truper", "solamente truper", "únicamente truper",
+            # Solo/únicamente/solamente trabajamos/manejamos
             "únicamente trabajamos", "solamente trabajamos", "solo trabajamos",
             "únicamente manejamos", "solamente manejamos", "solo manejamos",
             "únicamente productos", "solamente productos", "solo productos",
-            # No podemos
-            "no podemos manejar otras", "no podemos manejar más",
-            "no manejamos otras marcas", "no queremos otras marcas",
-            # Contrato/proveedor exclusivo
+            "trabajamos productos", "manejamos productos",  # FIX 80: Agregado
+            # Proveedor exclusivo
+            "proveedor principal", "principal proveedor",  # FIX 80: Agregado
+            "proveedor fijo", "ya tenemos proveedor",
             "tenemos contrato con", "somos distribuidores de",
             "ya tenemos proveedor exclusivo", "contrato exclusivo",
-            "proveedor fijo", "ya tenemos proveedor"
+            # No podemos
+            "no podemos manejar otras", "no podemos manejar más",
+            "no manejamos otras marcas", "no queremos otras marcas"
         ]
 
         for objecion in objeciones_terminales:
