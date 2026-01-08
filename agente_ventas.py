@@ -1603,9 +1603,9 @@ class AgenteVentas:
                     *historial_completo
                 ],
                 temperature=0.7,
-                max_tokens=60,  # FIX 55: Reducido de 80 a 60 (más conciso aún)
+                max_tokens=80,  # FIX 66: Aumentado de 60 a 80 (evitar respuestas cortadas que se repiten)
                 presence_penalty=0.6,
-                frequency_penalty=0.3,
+                frequency_penalty=1.2,  # FIX 66: CRÍTICO - Aumentado de 0.3 a 1.2 (penaliza FUERTEMENTE repeticiones)
                 timeout=4,  # FIX 55: Reducido de 5s a 4s (ultra-agresivo)
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
@@ -3183,7 +3183,22 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "El cliente acaba de decir:\n"
             for i, resp in enumerate(ultimas_3, 1):
                 memoria_corto_plazo += f"{i}. \"{resp['content']}\"\n"
-            memoria_corto_plazo += "\nIMPORTANTE: NO repitas preguntas que ya respondieron. Si ya dijeron 'no está', NO vuelvas a preguntar si está.\n\n"
+
+            # FIX 66: Detectar respuestas previas de Bruce para evitar loops
+            respuestas_bruce = [msg for msg in self.conversation_history if msg["role"] == "assistant"]
+            ultimas_bruce = respuestas_bruce[-3:] if len(respuestas_bruce) > 0 else []
+
+            if ultimas_bruce:
+                memoria_corto_plazo += "\n🚨 FIX 66: TUS ÚLTIMAS RESPUESTAS FUERON:\n"
+                for i, resp_bruce in enumerate(ultimas_bruce, 1):
+                    memoria_corto_plazo += f"   {i}. TÚ DIJISTE: \"{resp_bruce['content']}\"\n"
+
+            memoria_corto_plazo += "\n🚨🚨🚨 REGLAS ANTI-REPETICIÓN CRÍTICAS:\n"
+            memoria_corto_plazo += "1. SI ya preguntaste algo en tus últimas 3 respuestas, NO LO VUELVAS A PREGUNTAR\n"
+            memoria_corto_plazo += "2. SI el cliente ya respondió algo, NO repitas la pregunta\n"
+            memoria_corto_plazo += "3. SI ya dijeron 'soy yo' o 'está hablando conmigo', NO vuelvas a preguntar si está el encargado\n"
+            memoria_corto_plazo += "4. AVANZA en la conversación, NO te quedes en loop\n"
+            memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n\n"
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
         prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
