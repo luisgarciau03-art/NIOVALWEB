@@ -2768,7 +2768,17 @@ def cache_manager():
                 with open(cache_file, 'w', encoding='utf-8') as f:
                     json.dump(respuestas_cache, f, ensure_ascii=False, indent=2)
 
-                return {"success": True, "message": f"Categoría '{categoria}' agregada"}
+                # FIX 65: Pre-generar audio automáticamente para la nueva respuesta
+                try:
+                    print(f"\n🎯 FIX 65: Pre-generando audio para nueva categoría '{categoria}'...")
+                    audio_id = f"cache_{categoria}"
+                    generar_audio_elevenlabs(respuesta, audio_id, usar_cache_key=categoria)
+                    print(f"   ✅ Audio pre-generado exitosamente")
+                except Exception as e:
+                    print(f"   ⚠️ Error pre-generando audio: {e}")
+                    # No fallar si el audio falla, solo advertir
+
+                return {"success": True, "message": f"Categoría '{categoria}' agregada y audio pre-generado"}
 
             elif accion == "eliminar":
                 categoria = data.get("categoria")
@@ -3054,21 +3064,29 @@ def cache_manager():
                     pregunta_orig = datos["pregunta_original"]
                     ultima_resp = datos["ultima_respuesta"]
 
+                    # Escapar comillas para JavaScript
+                    pregunta_safe = pregunta_orig.replace('"', '\\"').replace("'", "\\'")
+                    respuesta_safe = ultima_resp.replace('"', '\\"').replace("'", "\\'")
+
                     html += f"""
                     <div class="category-item" style="border-left-color: #f39c12;">
                         <div class="category-header">
                             <span class="category-name" style="color: #f39c12;">🔥 "{pregunta_orig[:50]}..."</span>
                             <div>
                                 <span class="usage-badge" style="background: #f39c12;">{count} veces</span>
+                                <button class="btn-add-cache" onclick="agregarAlCache('{pregunta_safe}', '{respuesta_safe}')" style="margin-left: 10px; background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                    ➕ Agregar al Caché
+                                </button>
                             </div>
                         </div>
                         <div class="response-box">
                             <strong>Última respuesta de Bruce:</strong><br>
                             "{ultima_resp}"
                         </div>
-                        <p class="help-text" style="margin-top: 10px;">
-                            💡 Usa el formulario abajo para agregar esta respuesta al caché permanente
-                        </p>
+                        <div class="response-box" style="margin-top: 10px; background: #e8f5e9;">
+                            <strong>Pregunta completa:</strong><br>
+                            "{pregunta_orig}"
+                        </div>
                     </div>
                     """
 
@@ -3163,6 +3181,46 @@ def cache_manager():
                         alert('❌ Error: ' + error.message);
                     }
                 });
+
+                // FIX 65: Agregar candidato al caché con un click
+                async function agregarAlCache(pregunta, respuesta) {
+                    // Pre-llenar el formulario con los datos del candidato
+                    const categoria = prompt('Ingresa un ID único para esta categoría (ej: horario_atencion):',
+                        pregunta.toLowerCase()
+                            .replace(/[¿?¡!]/g, '')
+                            .replace(/\s+/g, '_')
+                            .substring(0, 30)
+                    );
+
+                    if (!categoria) return;
+
+                    // Usar la pregunta como patrón principal
+                    const patrones = [pregunta.toLowerCase().replace(/[¿?¡!]/g, '').trim()];
+
+                    try {
+                        const response = await fetch('/cache-manager', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                accion: 'agregar',
+                                categoria: categoria,
+                                patrones: patrones,
+                                respuesta: respuesta
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            alert('✅ Agregado al caché! El audio se pre-generará automáticamente.');
+                            location.reload();
+                        } else {
+                            alert('❌ Error: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('❌ Error: ' + error.message);
+                    }
+                }
 
                 // Eliminar categoría
                 async function eliminarCategoria(categoria) {
