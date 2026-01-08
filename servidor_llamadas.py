@@ -1987,6 +1987,65 @@ def status_callback():
                 else:
                     print(f"   ⚠️ No se pudo obtener agente para guardar buzón")
 
+    # FIX 95: Manejo de llamadas FALLIDAS (failed, busy, canceled)
+    if call_status in ["failed", "busy", "canceled"]:
+        print(f"   ⚠️ Llamada fallida - Estado: {call_status}")
+
+        # Obtener info del contacto
+        contacto_info = None
+        if call_sid in conversaciones_activas:
+            contacto_info = conversaciones_activas[call_sid].contacto_info
+        elif call_sid in contactos_llamadas:
+            contacto_info = contactos_llamadas[call_sid]
+
+        if contacto_info:
+            fila = contacto_info.get('fila') or contacto_info.get('ID')
+            telefono = contacto_info.get('telefono', 'desconocido')
+            nombre_negocio = contacto_info.get('nombre_negocio', 'desconocido')
+
+            # Obtener código de error de Twilio
+            sip_code = request.args.get("SipResponseCode") if request.method == "GET" else request.form.get("SipResponseCode")
+
+            print(f"   📋 Fila {fila}: {nombre_negocio} - {telefono}")
+            if sip_code:
+                print(f"   ⚠️ SIP Response Code: {sip_code}")
+
+            # Crear agente temporal para guardar el resultado
+            try:
+                from agente_ventas import AgenteVentas
+                agente = AgenteVentas(
+                    contacto_info=contacto_info,
+                    sheets_manager=sheets_manager,
+                    resultados_manager=resultados_manager,
+                    whatsapp_validator=whatsapp_validator
+                )
+                agente.call_sid = call_sid
+
+                # Determinar el estado según el tipo de fallo
+                if call_status == "busy":
+                    estado = "Ocupado"
+                elif call_status == "failed":
+                    if sip_code == "500":
+                        estado = "Numero Invalido"
+                    else:
+                        estado = "Fallo Tecnico"
+                else:  # canceled
+                    estado = "Cancelado"
+
+                agente.lead_data["estado_llamada"] = estado
+                agente.lead_data["pregunta_0"] = estado
+                agente.lead_data["pregunta_7"] = estado.upper()
+                agente.lead_data["resultado"] = "NEGADO"
+
+                # Guardar en "Respuestas de formulario 1"
+                agente.guardar_llamada_y_lead()
+                print(f"   ✅ Llamada fallida guardada: {estado}")
+
+            except Exception as e:
+                print(f"   ❌ Error guardando llamada fallida: {e}")
+                import traceback
+                traceback.print_exc()
+
     # Si la llamada terminó y el agente aún existe en memoria
     if call_status == "completed" and call_sid in conversaciones_activas:
         agente = conversaciones_activas[call_sid]
