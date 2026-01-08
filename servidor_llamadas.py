@@ -1352,16 +1352,70 @@ def procesar_respuesta():
     #                 respuesta_desde_cache = datos["respuesta"]
     #                 ...
 
+    # FIX 97: Preparar contenedor para audio generado en paralelo
+    audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
+
     # Solo llamar a GPT si NO hay respuesta en caché
     if not respuesta_desde_cache:
         cache_respuestas_stats["cache_misses"] += 1
 
-        def procesar_gpt():
+        def procesar_gpt_y_audio():
+            """FIX 97: Procesar GPT y cuando termine, iniciar audio INMEDIATAMENTE"""
+            # 1. Procesar con GPT (3-5s)
             respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
             respuesta_container["completado"] = True
 
-        # Iniciar procesamiento de GPT en thread separado
-        gpt_thread = threading.Thread(target=procesar_gpt)
+            # 2. Apenas GPT termina, detectar si hay caché de audio disponible
+            respuesta_texto = respuesta_container["respuesta"]
+
+            # Detectar frases comunes para caché de audio
+            usa_cache_audio = False
+            cache_key_audio = None
+
+            if "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_texto:
+                cache_key_audio = "despedida_1"
+                usa_cache_audio = True
+            elif "En las próximas dos horas le llega el catálogo" in respuesta_texto and "Muchas gracias por su tiempo" in respuesta_texto:
+                cache_key_audio = "despedida_2"
+                usa_cache_audio = True
+            elif "Perfecto, ¿con quién tengo el gusto?" in respuesta_texto:
+                cache_key_audio = "pregunta_nombre"
+                usa_cache_audio = True
+            elif "¿Se encuentra el encargado de compras?" in respuesta_texto:
+                cache_key_audio = "pregunta_encargado"
+                usa_cache_audio = True
+            elif "Disculpe, no alcancé a captar" in respuesta_texto:
+                cache_key_audio = "no_alcance_captar"
+                usa_cache_audio = True
+
+            # 3. Generar audio (si hay caché es instantáneo, si no 2-4s)
+            audio_id_temp = f"respuesta_{call_sid}_{len(audio_files)}"
+
+            if usa_cache_audio:
+                print(f"🎯 FIX 97: Audio cacheado detectado: {cache_key_audio}")
+                result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp, usar_cache_key=cache_key_audio)
+            else:
+                # Solo generar si la respuesta es corta (<100 palabras)
+                palabras = len(respuesta_texto.split())
+                if palabras <= 100:
+                    print(f"🎵 FIX 97: Generando audio con ElevenLabs ({palabras} palabras)")
+                    result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp)
+                else:
+                    print(f"⚡ FIX 97: Respuesta larga ({palabras} palabras) - usar Twilio TTS")
+                    result = None
+
+            # Guardar resultado en contenedor
+            if result is not None:
+                audio_container["audio_id"] = audio_id_temp
+                audio_container["usa_cache"] = usa_cache_audio
+                audio_container["cache_key"] = cache_key_audio
+            else:
+                audio_container["audio_id"] = None  # Usar Twilio TTS
+
+            audio_container["completado"] = True
+
+        # FIX 97: Iniciar procesamiento GPT + audio en thread separado
+        gpt_thread = threading.Thread(target=procesar_gpt_y_audio)
         gpt_thread.start()
     else:
         # Crear thread dummy para mantener compatibilidad con código existente
@@ -1371,18 +1425,19 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
-    # FIX 58: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
+    # FIX 58/97: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
     # El caché es instantáneo (0s), no necesita señal auditiva
     if not respuesta_container.get("desde_cache", False):
-        # FIX 50: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
+        # FIX 50/97: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
         # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
-        # Esperar máximo 1 segundo por GPT antes de dar señal auditiva
-        gpt_thread.join(timeout=1.0)
+        # FIX 97: Esperar máximo 2 segundos por GPT antes de dar señal auditiva
+        # (aumentado de 1s a 2s para dar más tiempo antes de interrumpir)
+        gpt_thread.join(timeout=2.0)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
-        # GPT aún procesando después de 1s - dar señal auditiva
-        print(f"⏳ GPT procesando (>1s) - reproduciendo tono de pensando...")
+        # GPT aún procesando después de 2s - dar señal auditiva
+        print(f"⏳ GPT procesando (>2s) - reproduciendo tono de pensando...")
 
         # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
         # Seleccionar aleatoriamente una de las 8 frases de "pensando"
@@ -1400,12 +1455,12 @@ def procesar_respuesta():
             print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
             response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
 
-        # Ahora sí esperar otros 6 segundos (total 7s máximo)
-        gpt_thread.join(timeout=6.0)
+        # FIX 97: Esperar otros 8 segundos (total 10s máximo)
+        gpt_thread.join(timeout=8.0)
 
         if not respuesta_container["completado"]:
-            # GPT tardó más de 7 segundos total - timeout real
-            print(f"❌ GPT timeout después de 7s")
+            # GPT tardó más de 10 segundos total - timeout real
+            print(f"❌ GPT timeout después de 10s")
             response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
             response.hangup()
             return Response(str(response), mimetype="text/xml")
@@ -1451,88 +1506,34 @@ def procesar_respuesta():
     if not respuesta_container.get("desde_cache", False):
         registrar_pregunta_respuesta(speech_result, respuesta_agente)
 
-    # FIX 54: GENERAR AUDIO EN PARALELO mientras GPT piensa
-    # Esto reduce delay de audio de 2-4s a casi 0s
+    # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
+    # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
+    audio_id = audio_container.get("audio_id")
+    usa_cache = audio_container.get("usa_cache", False)
+    cache_key = audio_container.get("cache_key")
 
-    audio_id = f"respuesta_{call_sid}_{len(audio_files)}"
-    inicio_audio = time.time()
+    tiempo_total = time.time() - inicio
+    print(f"⏱️ TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
 
-    # Detectar frases comunes para usar caché (0s delay)
-    cache_key = None
-    usa_cache = False
-
-    # FIX 59: Si la respuesta viene del caché de respuestas, usar audio pre-generado
-    if respuesta_container.get("desde_cache", False) and respuesta_container.get("categoria_cache"):
-        categoria_cache = respuesta_container["categoria_cache"]
-        cache_key = f"respuesta_cache_{categoria_cache}"
-        usa_cache = True
-        print(f"🎯 FIX 59: Usando audio pre-generado para caché '{categoria_cache}' (0s delay total)")
-    # Despedidas
-    elif "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_agente:
-        cache_key = "despedida_1"
-        usa_cache = True
-    elif "En las próximas dos horas le llega el catálogo" in respuesta_agente and "Muchas gracias por su tiempo" in respuesta_agente:
-        cache_key = "despedida_2"
-        usa_cache = True
-    # FIX 54: Agregar más frases comunes al caché
-    elif "Perfecto, ¿con quién tengo el gusto?" in respuesta_agente:
-        cache_key = "pregunta_nombre"
-        usa_cache = True
-    elif "¿Se encuentra el encargado de compras?" in respuesta_agente:
-        cache_key = "pregunta_encargado"
-        usa_cache = True
-    elif "Disculpe, no alcancé a captar" in respuesta_agente:
-        cache_key = "no_alcance_captar"
-        usa_cache = True
-
-    # Generar audio
-    audio_generado_ok = False
-    if usa_cache:
-        result = generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
-        audio_generado_ok = (result is not None)
-        if audio_generado_ok:
-            print(f"📦 Usando caché: {cache_key} (0s delay)")
+    if audio_id:
+        if usa_cache:
+            print(f"📦 FIX 97: Audio desde caché: {cache_key} (generado en paralelo)")
         else:
-            print(f"⚠️ FIX 69: Caché falló, usando fallback TTS")
+            print(f"🎵 FIX 97: Audio ElevenLabs (generado en paralelo)")
     else:
-        # FIX 54: Si NO hay caché, usar Twilio TTS como FALLBACK rápido
-        # Esto evita delays de 2-4s esperando ElevenLabs
-
-        # Opción A: Generar con ElevenLabs (calidad, pero lento)
-        # Opción B: Usar Twilio TTS (rápido, pero menos calidad)
-
-        # FIX 73: Decidir basado en longitud de respuesta
-        palabras = len(respuesta_agente.split())
-
-        if palabras > 100:
-            # FIX 73: Aumentado de 50 a 100 palabras (evitar cambios de voz frecuentes)
-            # Respuesta MUY larga: Usar Twilio TTS (evitar delay de 6-8s)
-            print(f"⚡ Respuesta MUY larga ({palabras} palabras) - usando Twilio TTS rápido")
-            # NO generar audio, usaremos response.say() directo
-            audio_id = None
-        else:
-            # Respuesta normal: Usar ElevenLabs (mejor calidad, consistencia de voz)
-            result = generar_audio_elevenlabs(respuesta_agente, audio_id)
-            audio_generado_ok = (result is not None)
-            if not audio_generado_ok:
-                print(f"⚠️ FIX 69: ElevenLabs falló, usando fallback TTS")
-                audio_id = None
-
-    tiempo_audio = time.time() - inicio_audio
-    print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
-    print(f"⏱️ TOTAL delay: {(time.time() - inicio):.2f}s")
+        print(f"⚡ FIX 97: Usar Twilio TTS (respuesta larga o error)")
 
     # Registrar mensaje de Bruce en LOGS (con info de cache)
     if logs_manager and agente.bruce_id:
-        # Determinar si vino del caché
-        desde_cache = (tiempo_audio < 0.1)  # Si tardó menos de 0.1s, vino del caché
+        # FIX 97: Determinar si vino del caché basado en tiempo total
+        desde_cache = usa_cache or (tiempo_total < 3.0)  # Caché si <3s total
         nombre_tienda = agente.lead_data.get('nombre_negocio', '')
         logs_manager.registrar_mensaje_bruce(
             agente.bruce_id,
             respuesta_agente,
             desde_cache=desde_cache,
             cache_key=cache_key,
-            tiempo_generacion=tiempo_audio if not desde_cache else None,
+            tiempo_generacion=tiempo_total if not desde_cache else None,
             nombre_tienda=nombre_tienda
         )
 
