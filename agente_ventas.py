@@ -1542,12 +1542,15 @@ class AgenteVentas:
             "content": respuesta_cliente
         })
 
-        # FIX 75: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
+        # FIX 75/81: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
         # CRÍTICO: Detectar CUALQUIER mención de proveedor exclusivo/Truper y COLGAR
         respuesta_lower = respuesta_cliente.lower()
 
+        # FIX 81: DEBUG - Imprimir SIEMPRE para verificar que este código se ejecuta
+        print(f"🔍 FIX 81 DEBUG: Verificando objeciones en: '{respuesta_cliente[:80]}'")
+
         # Patrones de objeción definitiva (cliente NO quiere seguir)
-        # FIX 75/80: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
+        # FIX 75/80/81: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
         objeciones_terminales = [
             # Truper específico - CUALQUIER mención
             "truper", "trúper", "tru per",
@@ -1591,6 +1594,9 @@ class AgenteVentas:
                 })
 
                 return respuesta_despedida
+
+        # FIX 81: DEBUG - Si llegamos aquí, NO se detectó ninguna objeción
+        print(f"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.")
 
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)
