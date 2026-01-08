@@ -96,8 +96,8 @@ class SistemaLlamadasMasivas:
                 resultados['exitosas'] += 1
                 print("✅ Llamada iniciada correctamente")
 
-                # FIX 88: ESPERAR A QUE LA LLAMADA TERMINE (90 segundos aprox)
-                print(f"⏳ Esperando 90 segundos para que termine la llamada...")
+                # FIX 90: ESPERAR A QUE LA LLAMADA TERMINE (45 segundos optimizado)
+                print(f"⏳ Esperando 45 segundos para que termine la llamada...")
                 if self._esperar_fin_llamada(call_sid):
                     print("✅ Tiempo de espera completado")
                 else:
@@ -165,22 +165,26 @@ class SistemaLlamadasMasivas:
             print(f"❌ Error al iniciar llamada: {e}")
             return None
 
-    def _esperar_fin_llamada(self, call_sid: str, tiempo_espera: int = 90) -> bool:
+    def _esperar_fin_llamada(self, call_sid: str, tiempo_espera: int = 45) -> bool:
         """
-        Espera un tiempo fijo para que termine la llamada
-        
+        FIX 90: Espera inteligente que permite continuar más rápido
+
         Args:
             call_sid: ID de la llamada de Twilio (para referencia)
-            tiempo_espera: Tiempo de espera en segundos (default: 90 segundos)
-            
+            tiempo_espera: Tiempo de espera en segundos (default: 45 segundos)
+
         Returns:
             True (siempre, después de esperar el tiempo especificado)
+
+        Nota: Reducido de 90s a 45s porque:
+        - Llamadas a buzón terminan en ~10-20 segundos
+        - Llamadas contestadas raramente duran más de 2 minutos
+        - El delay_entre_llamadas provee separación adicional
         """
         if not call_sid:
             return False
-        
-        # Esperar el tiempo especificado (promedio de duración de una llamada)
-        # Esto permite que la llamada se complete antes de iniciar la siguiente
+
+        # Esperar el tiempo especificado (reducido para no bloquear tanto)
         time.sleep(tiempo_espera)
         return True
 

@@ -1896,6 +1896,43 @@ def status_callback():
                 thread.start()
                 print(f"   ✅ Thread iniciado correctamente (daemon={thread.daemon}, alive={thread.is_alive()})", flush=True)
 
+            # FIX 89: GUARDAR en "Respuestas de formulario 1" cuando es buzón después del segundo intento
+            elif intentos >= 2:
+                print(f"   💾 Segundo intento de buzón - guardando en Respuestas de formulario 1...")
+
+                # Obtener o crear agente para guardar el buzón
+                agente = None
+                if call_sid in conversaciones_activas:
+                    agente = conversaciones_activas[call_sid]
+                elif call_sid in contactos_llamadas:
+                    # Crear agente temporal para guardar
+                    try:
+                        from agente_ventas import AgenteVentas
+                        agente = AgenteVentas(
+                            contacto_info=contacto_info,
+                            sheets_manager=sheets_manager,
+                            resultados_manager=resultados_manager,
+                            whatsapp_validator=whatsapp_validator
+                        )
+                        agente.call_sid = call_sid
+                    except Exception as e:
+                        print(f"   ⚠️ Error creando agente temporal: {e}")
+
+                # Guardar el buzón
+                if agente:
+                    agente.lead_data["estado_llamada"] = "Buzon"
+                    agente.lead_data["pregunta_0"] = "Buzon"
+                    agente.lead_data["pregunta_7"] = "BUZON"
+                    agente.lead_data["resultado"] = "NEGADO"
+
+                    try:
+                        agente.guardar_llamada_y_lead()
+                        print(f"   ✅ Buzón guardado en Respuestas de formulario 1")
+                    except Exception as e:
+                        print(f"   ⚠️ Error guardando buzón: {e}")
+                else:
+                    print(f"   ⚠️ No se pudo obtener agente para guardar buzón")
+
     # Si la llamada terminó y el agente aún existe en memoria
     if call_status == "completed" and call_sid in conversaciones_activas:
         agente = conversaciones_activas[call_sid]
