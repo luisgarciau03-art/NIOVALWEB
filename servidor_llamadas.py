@@ -1237,11 +1237,17 @@ def procesar_respuesta():
 
             # Generar audio y responder
             response = VoiceResponse()
-            audio_url = agente.generar_audio_elevenlabs(respuesta_agente)
+            audio_id = f"repeticion_{call_sid}_{agente.respuestas_vacias_consecutivas}"
 
-            if audio_url:
+            # Usar función global generar_audio_elevenlabs (no es método de agente)
+            result = generar_audio_elevenlabs(respuesta_agente, audio_id)
+
+            if result is not None:
+                # Audio generado exitosamente
+                audio_url = request.url_root + f"audio/{audio_id}"
                 response.play(audio_url)
             else:
+                # Fallback a Polly si ElevenLabs falla
                 response.say(respuesta_agente, voice="Polly.Mia", language="es-MX")
 
             # Esperar respuesta del cliente
