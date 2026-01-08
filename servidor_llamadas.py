@@ -2512,14 +2512,17 @@ def generar_cache_manual():
         for frase_data in frases:
             texto = frase_data.get("texto")
             key = frase_data.get("key")
+            force = frase_data.get("force", False)  # FIX 93: Permitir forzar regeneración
 
             if not texto or not key:
                 continue
 
-            # Verificar si ya existe en caché
-            if key in audio_cache:
+            # Verificar si ya existe en caché (skip si no es forzado)
+            if key in audio_cache and not force:
                 print(f"⏭️ Omitido: {key} (ya está en caché)")
                 continue
+            elif key in audio_cache and force:
+                print(f"🔄 Regenerando: {key} (force=True)")
 
             try:
                 print(f"\n🎤 Generando audio para: {texto[:50]}...")
