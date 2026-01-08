@@ -443,8 +443,12 @@ def pre_generar_audios_cache():
         "pensando_7": "Permítame un segundo...",
         "pensando_8": "Déjame verificar...",
 
-        # FIX 87: Saludo inicial CORTO para mantener atención del cliente
-        "saludo_inicial": "Hola, buen día. Le llamo de NIOVAL sobre productos de ferre-tería. ¿Se encuentra el encargado de compras?",
+        # FIX 93: Saludo inicial ACTUALIZADO (FIX 91) - más corto y natural
+        # Versión 1: Cuando NO sabemos si es encargado (más común)
+        "saludo_inicial": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?",
+
+        # Versión 2: Cuando YA sabemos que es encargado (menos común)
+        "saludo_inicial_encargado": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?",
 
         # Despedidas comunes
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
@@ -961,16 +965,21 @@ def webhook_voz():
 
     audio_id = f"inicial_{call_sid}"
 
-    # FIX 87: Detectar si es el saludo estándar para usar caché (versión corta)
-    usa_cache_saludo = "Hola, buen día. Le llamo de NIOVAL sobre productos de ferretería" in mensaje_inicial or "Hola, buen día. Le llamo de NIOVAL sobre productos de ferre-tería" in mensaje_inicial
+    # FIX 93: Detectar si es el saludo estándar para usar caché (versión actualizada FIX 91)
+    usa_cache_saludo_normal = "me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado" in mensaje_inicial
+    usa_cache_saludo_encargado = "me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto" in mensaje_inicial
 
-    if usa_cache_saludo and "saludo_inicial" in audio_cache:
-        # Usar audio pre-generado del caché (0s delay, voz Bruce)
+    if usa_cache_saludo_normal and "saludo_inicial" in audio_cache:
+        # Usar audio pre-generado del caché - versión normal (0s delay, voz Bruce)
         audio_files[audio_id] = audio_cache["saludo_inicial"]
-        print(f"📦 Saludo inicial desde caché (0s delay, voz Bruce)")
+        print(f"📦 Saludo inicial (normal) desde caché (0s delay, voz Bruce)")
+    elif usa_cache_saludo_encargado and "saludo_inicial_encargado" in audio_cache:
+        # Usar audio pre-generado del caché - versión encargado (0s delay, voz Bruce)
+        audio_files[audio_id] = audio_cache["saludo_inicial_encargado"]
+        print(f"📦 Saludo inicial (encargado) desde caché (0s delay, voz Bruce)")
     else:
         # Fallback: generar con ElevenLabs si no hay caché
-        print(f"⚠️ Generando saludo inicial (caché no disponible)")
+        print(f"⚠️ Generando saludo inicial con ElevenLabs (caché no disponible - tardará 2-4s)")
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
     # Reproducir audio de ElevenLabs
