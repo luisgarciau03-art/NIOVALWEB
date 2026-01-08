@@ -829,15 +829,17 @@ def iniciar_llamada():
 
         print(f"🔍 DEBUG 4: Iniciando llamada Twilio a {telefono_destino}")
 
-        # Crear llamada con Twilio (con grabación y detección de buzón automática)
+        # FIX 85: DESHABILITAR machine_detection para reducir delay de 11s a 2-3s
+        # PROBLEMA: DetectMessageEnd hace que Twilio ESPERE 5-10s antes de hablar
+        # SOLUCIÓN: Deshabilitar y detectar buzón por transcripción (ya implementado en agente_ventas.py)
         call = twilio_client.calls.create(
             to=telefono_destino,
             from_=TWILIO_PHONE_NUMBER,
             url=request.url_root + "webhook-voz",
             method="POST",
             record=True,  # Grabar llamada automáticamente
-            machine_detection="DetectMessageEnd",  # Detectar buzón de voz automáticamente
-            machine_detection_timeout=5,  # Timeout de 5 segundos para detectar
+            # machine_detection="DetectMessageEnd",  # FIX 85: DESHABILITADO (causaba delay de 11s)
+            # machine_detection_timeout=5,  # FIX 85: DESHABILITADO
             status_callback=request.url_root + "status-callback",  # Webhook para estado de llamada
             status_callback_event=["completed"]  # Notificar cuando termine
         )
