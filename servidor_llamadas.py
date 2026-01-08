@@ -1372,9 +1372,14 @@ def procesar_respuesta():
         usa_cache = True
 
     # Generar audio
+    audio_generado_ok = False
     if usa_cache:
-        generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
-        print(f"📦 Usando caché: {cache_key} (0s delay)")
+        result = generar_audio_elevenlabs(respuesta_agente, audio_id, usar_cache_key=cache_key)
+        audio_generado_ok = (result is not None)
+        if audio_generado_ok:
+            print(f"📦 Usando caché: {cache_key} (0s delay)")
+        else:
+            print(f"⚠️ FIX 69: Caché falló, usando fallback TTS")
     else:
         # FIX 54: Si NO hay caché, usar Twilio TTS como FALLBACK rápido
         # Esto evita delays de 2-4s esperando ElevenLabs
@@ -1392,7 +1397,11 @@ def procesar_respuesta():
             audio_id = None
         else:
             # Respuesta corta: Usar ElevenLabs (mejor calidad)
-            generar_audio_elevenlabs(respuesta_agente, audio_id)
+            result = generar_audio_elevenlabs(respuesta_agente, audio_id)
+            audio_generado_ok = (result is not None)
+            if not audio_generado_ok:
+                print(f"⚠️ FIX 69: ElevenLabs falló, usando fallback TTS")
+                audio_id = None
 
     tiempo_audio = time.time() - inicio_audio
     print(f"⏱️ Audio tardó: {tiempo_audio:.2f}s")
