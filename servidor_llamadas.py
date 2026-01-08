@@ -181,13 +181,24 @@ def cargar_cache_desde_disco():
 
     # FIX 57: Cargar respuestas cacheadas personalizadas
     respuestas_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
+
+    # FIX 59: Si no existe en Volume, copiar desde repo (primer deploy)
+    if not os.path.exists(respuestas_file):
+        # Buscar el archivo en el directorio del repositorio
+        repo_respuestas_file = os.path.join(os.path.dirname(__file__), CACHE_DIR, "respuestas_cache.json")
+        if os.path.exists(repo_respuestas_file):
+            import shutil
+            shutil.copy(repo_respuestas_file, respuestas_file)
+            print(f"📋 FIX 59: Copiado respuestas_cache.json desde repo a Volume\n")
+
     if os.path.exists(respuestas_file):
         with open(respuestas_file, 'r', encoding='utf-8') as f:
             global respuestas_cache
             cache_personalizado = json.load(f)
             # Merge con las respuestas por defecto (prioridad a las personalizadas)
             respuestas_cache.update(cache_personalizado)
-        print(f"💾 {len(cache_personalizado)} respuestas personalizadas cargadas desde disco\n")
+        print(f"💾 {len(cache_personalizado)} respuestas personalizadas cargadas desde disco")
+        print(f"📊 TOTAL de categorías en caché: {len(respuestas_cache)}\n")
 
 
 def guardar_cache_en_disco(key, texto, audio_path):
@@ -410,7 +421,14 @@ def pre_generar_audios_cache():
         "despedida_2": "Perfecto. En las próximas dos horas le llega el catálogo completo por WhatsApp. Muchas gracias por su tiempo. Que tenga excelente tarde.",
     }
 
+    # FIX 59: Agregar respuestas cacheadas de respuestas_cache para pre-generación
+    # Esto hace que las respuestas comunes sean INSTANTÁNEAS (0s delay)
     print("🔧 Pre-generando caché de audios con Multilingual v2...")
+    print(f"📋 Agregando {len(respuestas_cache)} respuestas cacheadas al pre-generado...")
+    for categoria, datos in respuestas_cache.items():
+        cache_key = f"respuesta_cache_{categoria}"
+        frases_comunes[cache_key] = datos["respuesta"]
+
     for key, texto in frases_comunes.items():
         # IMPORTANTE: Solo generar si NO existe en cache (ahorra créditos)
         if key in audio_cache:
@@ -1085,7 +1103,7 @@ def procesar_respuesta():
     inicio = time.time()
 
     # Variable para almacenar la respuesta cuando termine GPT
-    respuesta_container = {"respuesta": None, "completado": False, "desde_cache": False}
+    respuesta_container = {"respuesta": None, "completado": False, "desde_cache": False, "categoria_cache": None}
 
     # Detectar si la pregunta está en el caché
     respuesta_desde_cache = None
@@ -1108,6 +1126,7 @@ def procesar_respuesta():
                 respuesta_container["respuesta"] = respuesta_desde_cache
                 respuesta_container["completado"] = True
                 respuesta_container["desde_cache"] = True
+                respuesta_container["categoria_cache"] = categoria  # FIX 59: Guardar categoría para audio
 
                 # FIX 58: Log del tiempo de caché (debería ser ~0s)
                 tiempo_cache = time.time() - inicio
@@ -1195,8 +1214,14 @@ def procesar_respuesta():
     cache_key = None
     usa_cache = False
 
+    # FIX 59: Si la respuesta viene del caché de respuestas, usar audio pre-generado
+    if respuesta_container.get("desde_cache", False) and respuesta_container.get("categoria_cache"):
+        categoria_cache = respuesta_container["categoria_cache"]
+        cache_key = f"respuesta_cache_{categoria_cache}"
+        usa_cache = True
+        print(f"🎯 FIX 59: Usando audio pre-generado para caché '{categoria_cache}' (0s delay total)")
     # Despedidas
-    if "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_agente:
+    elif "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto" in respuesta_agente:
         cache_key = "despedida_1"
         usa_cache = True
     elif "En las próximas dos horas le llega el catálogo" in respuesta_agente and "Muchas gracias por su tiempo" in respuesta_agente:
