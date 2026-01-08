@@ -726,11 +726,11 @@ def transcribir_con_whisper(recording_url):
         print(f"🎙️ FIX 60: Descargando grabación de Twilio...")
         print(f"   URL: {recording_url}")
 
-        # Descargar audio de Twilio con autenticación
+        # FIX 62: Descargar audio de Twilio con autenticación (timeout agresivo)
         response = requests.get(
             recording_url,
             auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
-            timeout=10
+            timeout=5  # FIX 62: Reducido de 10s a 5s
         )
         response.raise_for_status()
 
@@ -950,14 +950,14 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # FIX 60/61: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
+    # FIX 60/61/62: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
     # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=8,  # Tiempo de espera antes de timeout
-        speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
+        timeout=5,  # FIX 62: Reducido de 8s a 5s (respuesta más rápida)
+        speech_timeout=2,  # FIX 62: Reducido de 3s a 2s (menos espera de silencio)
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
@@ -1445,12 +1445,12 @@ def procesar_respuesta():
         return str(response)
 
     # Si NO es despedida, continuar conversación normal
-    # FIX 60/61: Usando Whisper API (mejor precisión + más barato)
+    # FIX 60/61/62: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=8,  # Tiempo de espera antes de timeout
-        speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
+        timeout=5,  # FIX 62: Reducido de 8s a 5s (respuesta más rápida)
+        speech_timeout=2,  # FIX 62: Reducido de 3s a 2s (menos espera de silencio)
         action="/procesar-respuesta",
         method="POST",
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
