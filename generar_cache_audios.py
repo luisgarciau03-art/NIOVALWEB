@@ -25,11 +25,27 @@ input("Presiona ENTER para continuar...")
 
 print("\nEnviando request a Railway...")
 
+# FIX 93: Pre-generar los 2 saludos iniciales nuevos
+frases_a_generar = [
+    {
+        "key": "saludo_inicial",
+        "texto": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?"
+    },
+    {
+        "key": "saludo_inicial_encargado",
+        "texto": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?"
+    }
+]
+
+print(f"\n📋 Frases a generar: {len(frases_a_generar)}")
+for i, frase in enumerate(frases_a_generar, 1):
+    print(f"   {i}. {frase['key']}: {frase['texto'][:60]}...")
+
 try:
-    # El endpoint /generate-cache pre-genera todos los audios
+    # El endpoint /generate-cache pre-genera los audios especificados
     response = requests.post(
         f"{RAILWAY_URL}/generate-cache",
-        json={},
+        json={"frases": frases_a_generar},
         timeout=120  # 2 minutos timeout (puede tardar generando audios)
     )
 
