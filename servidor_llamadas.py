@@ -950,8 +950,9 @@ def webhook_voz():
     audio_url = request.url_root + f"audio/{audio_id}"
     response.play(audio_url)
 
-    # FIX 60: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
-    # CAMBIO: En lugar de speech recognition de Twilio, grabamos y transcribimos con Whisper
+    # FIX 60/61: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
+    # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
+    # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
     gather = Gather(
         input="speech",
         language="es-MX",
@@ -959,8 +960,9 @@ def webhook_voz():
         speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
         action="/procesar-respuesta",
         method="POST",
-        # FIX 60: Habilitar grabación para enviar a Whisper
-        action_on_empty_result=False  # No procesar si no hay respuesta
+        action_on_empty_result=False,  # No procesar si no hay respuesta
+        # FIX 61: CRÍTICO - Habilitar grabación para Whisper
+        speech_model="experimental_conversations"  # Modelo que provee RecordingUrl
     )
     response.append(gather)
 
@@ -1425,14 +1427,15 @@ def procesar_respuesta():
         # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
         print(f"⏳ Esperando despedida del cliente por cortesía...")
 
-        # FIX 60: Crear Gather para escuchar despedida del cliente (con Whisper)
+        # FIX 60/61: Crear Gather para escuchar despedida del cliente (con Whisper)
         gather_despedida = Gather(
             input="speech",
             language="es-MX",
             timeout=3,  # Esperar hasta 3 segundos
             speech_timeout=2,  # FIX 60: Ya optimizado (corto para despedidas)
             action="/despedida-final",
-            method="POST"
+            method="POST",
+            speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
         )
         response.append(gather_despedida)
 
@@ -1442,14 +1445,15 @@ def procesar_respuesta():
         return str(response)
 
     # Si NO es despedida, continuar conversación normal
-    # FIX 60: Usando Whisper API (mejor precisión + más barato)
+    # FIX 60/61: Usando Whisper API (mejor precisión + más barato)
     gather = Gather(
         input="speech",
         language="es-MX",
         timeout=8,  # Tiempo de espera antes de timeout
         speech_timeout=3,  # FIX 60: Reducido de 4s a 3s (compensar latencia de Whisper)
         action="/procesar-respuesta",
-        method="POST"
+        method="POST",
+        speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
     )
     response.append(gather)
 
