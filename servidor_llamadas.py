@@ -1402,16 +1402,17 @@ def procesar_respuesta():
         # Opción A: Generar con ElevenLabs (calidad, pero lento)
         # Opción B: Usar Twilio TTS (rápido, pero menos calidad)
 
-        # Decidir basado en longitud de respuesta
+        # FIX 73: Decidir basado en longitud de respuesta
         palabras = len(respuesta_agente.split())
 
-        if palabras > 50:
-            # Respuesta larga: Usar Twilio TTS (evitar delay de 4-6s)
-            print(f"⚡ Respuesta larga ({palabras} palabras) - usando Twilio TTS rápido")
+        if palabras > 100:
+            # FIX 73: Aumentado de 50 a 100 palabras (evitar cambios de voz frecuentes)
+            # Respuesta MUY larga: Usar Twilio TTS (evitar delay de 6-8s)
+            print(f"⚡ Respuesta MUY larga ({palabras} palabras) - usando Twilio TTS rápido")
             # NO generar audio, usaremos response.say() directo
             audio_id = None
         else:
-            # Respuesta corta: Usar ElevenLabs (mejor calidad)
+            # Respuesta normal: Usar ElevenLabs (mejor calidad, consistencia de voz)
             result = generar_audio_elevenlabs(respuesta_agente, audio_id)
             audio_generado_ok = (result is not None)
             if not audio_generado_ok:
