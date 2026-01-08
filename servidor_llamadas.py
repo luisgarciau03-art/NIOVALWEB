@@ -1268,33 +1268,21 @@ def procesar_respuesta():
         if tiene_objeciones_activas:
             break
 
-    # Solo usar cache si NO hay objeciones activas
-    if not tiene_objeciones_activas:
-        for categoria, datos in respuestas_cache.items():
-            for patron in datos["patrones"]:
-                if patron in speech_lower:
-                    respuesta_desde_cache = datos["respuesta"]
-                    cache_respuestas_stats["cache_hits"] += 1
-                    cache_respuestas_stats["por_categoria"][categoria] = cache_respuestas_stats["por_categoria"].get(categoria, 0) + 1
-                    print(f"🎯 FIX 56: Respuesta desde caché (0s delay) - Categoría: '{categoria}'")
-                    print(f"   Pregunta: '{speech_result}'")
-                    print(f"   Respuesta: '{respuesta_desde_cache[:60]}...'")
+    # FIX 71: DESHABILITAR CACHE COMPLETAMENTE hasta resolver loops
+    # El cache estaba causando respuestas sin contexto que ignoraban objeciones
+    print(f"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo")
+    print(f"   Razón: Cache causaba loops y respuestas sin contexto")
 
-                    # Marcar como completado inmediatamente
-                    respuesta_container["respuesta"] = respuesta_desde_cache
-                    respuesta_container["completado"] = True
-                    respuesta_container["desde_cache"] = True
-                    respuesta_container["categoria_cache"] = categoria  # FIX 59: Guardar categoría para audio
+    # TODO: Re-habilitar cache cuando se resuelvan los loops de repetición
+    # El cache es beneficioso (0s delay) pero solo si respeta el contexto
 
-                    # FIX 58: Log del tiempo de caché (debería ser ~0s)
-                    tiempo_cache = time.time() - inicio
-                    print(f"⚡ Tiempo de caché: {tiempo_cache:.4f}s (debe ser <0.01s)")
-                    break
-
-            if respuesta_desde_cache:
-                break
-    else:
-        print(f"⚠️ FIX 70: Cache deshabilitado - Cliente tiene objeciones activas, usando GPT con contexto")
+    # COMENTADO TEMPORALMENTE:
+    # if not tiene_objeciones_activas:
+    #     for categoria, datos in respuestas_cache.items():
+    #         for patron in datos["patrones"]:
+    #             if patron in speech_lower:
+    #                 respuesta_desde_cache = datos["respuesta"]
+    #                 ...
 
     # Solo llamar a GPT si NO hay respuesta en caché
     if not respuesta_desde_cache:
