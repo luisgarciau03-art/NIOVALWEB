@@ -1230,7 +1230,7 @@ def procesar_respuesta():
         # Resetear contador si hubo respuesta
         agente.respuestas_vacias_consecutivas = 0
 
-    # FIX 56: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
+    # FIX 56/70: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
     import time
     import threading
     inicio = time.time()
@@ -1245,29 +1245,56 @@ def procesar_respuesta():
     global cache_respuestas_stats
     cache_respuestas_stats["total_consultas"] += 1
 
-    for categoria, datos in respuestas_cache.items():
-        for patron in datos["patrones"]:
-            if patron in speech_lower:
-                respuesta_desde_cache = datos["respuesta"]
-                cache_respuestas_stats["cache_hits"] += 1
-                cache_respuestas_stats["por_categoria"][categoria] = cache_respuestas_stats["por_categoria"].get(categoria, 0) + 1
-                print(f"🎯 FIX 56: Respuesta desde caché (0s delay) - Categoría: '{categoria}'")
-                print(f"   Pregunta: '{speech_result}'")
-                print(f"   Respuesta: '{respuesta_desde_cache[:60]}...'")
+    # FIX 70: Detectar objeciones en el historial reciente para DESHABILITAR CACHE
+    tiene_objeciones_activas = False
+    frases_objecion = [
+        "ya tenemos proveedor", "solo trabajamos con", "solamente trabajamos",
+        "únicamente trabajamos", "no nos interesa", "no queremos",
+        "no podemos", "tenemos contrato", "somos distribuidores de"
+    ]
 
-                # Marcar como completado inmediatamente
-                respuesta_container["respuesta"] = respuesta_desde_cache
-                respuesta_container["completado"] = True
-                respuesta_container["desde_cache"] = True
-                respuesta_container["categoria_cache"] = categoria  # FIX 59: Guardar categoría para audio
+    # Revisar las últimas 3 respuestas del cliente
+    mensajes_cliente = [msg for msg in agente.conversation_history if msg['role'] == 'user']
+    ultimas_respuestas = mensajes_cliente[-3:] if len(mensajes_cliente) >= 3 else mensajes_cliente
 
-                # FIX 58: Log del tiempo de caché (debería ser ~0s)
-                tiempo_cache = time.time() - inicio
-                print(f"⚡ Tiempo de caché: {tiempo_cache:.4f}s (debe ser <0.01s)")
+    for msg in ultimas_respuestas:
+        texto = msg['content'].lower()
+        for frase_obj in frases_objecion:
+            if frase_obj in texto:
+                tiene_objeciones_activas = True
+                print(f"🚨 FIX 70: Objeción detectada en historial - DESHABILITANDO CACHE")
+                print(f"   Frase: '{frase_obj}'")
                 break
-
-        if respuesta_desde_cache:
+        if tiene_objeciones_activas:
             break
+
+    # Solo usar cache si NO hay objeciones activas
+    if not tiene_objeciones_activas:
+        for categoria, datos in respuestas_cache.items():
+            for patron in datos["patrones"]:
+                if patron in speech_lower:
+                    respuesta_desde_cache = datos["respuesta"]
+                    cache_respuestas_stats["cache_hits"] += 1
+                    cache_respuestas_stats["por_categoria"][categoria] = cache_respuestas_stats["por_categoria"].get(categoria, 0) + 1
+                    print(f"🎯 FIX 56: Respuesta desde caché (0s delay) - Categoría: '{categoria}'")
+                    print(f"   Pregunta: '{speech_result}'")
+                    print(f"   Respuesta: '{respuesta_desde_cache[:60]}...'")
+
+                    # Marcar como completado inmediatamente
+                    respuesta_container["respuesta"] = respuesta_desde_cache
+                    respuesta_container["completado"] = True
+                    respuesta_container["desde_cache"] = True
+                    respuesta_container["categoria_cache"] = categoria  # FIX 59: Guardar categoría para audio
+
+                    # FIX 58: Log del tiempo de caché (debería ser ~0s)
+                    tiempo_cache = time.time() - inicio
+                    print(f"⚡ Tiempo de caché: {tiempo_cache:.4f}s (debe ser <0.01s)")
+                    break
+
+            if respuesta_desde_cache:
+                break
+    else:
+        print(f"⚠️ FIX 70: Cache deshabilitado - Cliente tiene objeciones activas, usando GPT con contexto")
 
     # Solo llamar a GPT si NO hay respuesta en caché
     if not respuesta_desde_cache:
