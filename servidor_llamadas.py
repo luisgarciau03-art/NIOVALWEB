@@ -1434,16 +1434,17 @@ def procesar_respuesta():
     # FIX 58/97: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
     # El caché es instantáneo (0s), no necesita señal auditiva
     if not respuesta_container.get("desde_cache", False):
-        # FIX 50/97: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
+        # FIX 50/97/102: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
         # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
-        # FIX 97: Esperar máximo 2 segundos por GPT antes de dar señal auditiva
-        # (aumentado de 1s a 2s para dar más tiempo antes de interrumpir)
-        gpt_thread.join(timeout=2.0)
+        # FIX 102: Esperar máximo 5 segundos por GPT+Audio antes de dar señal auditiva
+        # Típicamente: GPT=2-3s + Audio ElevenLabs=1-2s = 3-5s total
+        # Si termina antes de 5s, no reproducimos "pensando" y respondemos directo
+        gpt_thread.join(timeout=5.0)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
-        # GPT aún procesando después de 2s - dar señal auditiva
-        print(f"⏳ GPT procesando (>2s) - reproduciendo tono de pensando...")
+        # GPT+Audio aún procesando después de 5s - dar señal auditiva
+        print(f"⏳ GPT+Audio procesando (>5s) - reproduciendo tono de pensando...")
 
         # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
         # Seleccionar aleatoriamente una de las 8 frases de "pensando"
@@ -1461,8 +1462,8 @@ def procesar_respuesta():
             print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
             response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
 
-        # FIX 97: Esperar otros 8 segundos (total 10s máximo)
-        gpt_thread.join(timeout=8.0)
+        # FIX 102: Esperar otros 5 segundos (total 10s máximo)
+        gpt_thread.join(timeout=5.0)
 
         if not respuesta_container["completado"]:
             # GPT tardó más de 10 segundos total - timeout real
@@ -1513,6 +1514,22 @@ def procesar_respuesta():
     # Solo registrar si NO vino del caché (las cacheadas ya están optimizadas)
     if not respuesta_container.get("desde_cache", False):
         registrar_pregunta_respuesta(speech_result, respuesta_agente)
+
+    # FIX 102: Esperar a que el audio termine de generarse (máximo 3s adicionales)
+    # Si GPT terminó pero audio aún está generándose, esperar a que complete
+    if not audio_container.get("completado", False):
+        print(f"⏳ FIX 102: Esperando que audio ElevenLabs termine de generarse...")
+        import time
+        max_wait = 3.0  # Esperar máximo 3 segundos adicionales por el audio
+        waited = 0
+        while not audio_container.get("completado", False) and waited < max_wait:
+            time.sleep(0.1)
+            waited += 0.1
+
+        if audio_container.get("completado", False):
+            print(f"✅ FIX 102: Audio completado después de {waited:.1f}s adicionales")
+        else:
+            print(f"⚠️ FIX 102: Audio NO completó después de {max_wait}s - usará Twilio TTS")
 
     # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
     # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
