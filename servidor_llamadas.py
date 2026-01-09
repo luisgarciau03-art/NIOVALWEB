@@ -1390,13 +1390,16 @@ def procesar_respuesta():
         # Resetear contador si hubo respuesta
         agente.respuestas_vacias_consecutivas = 0
 
-    # FIX 115: DETECCIÓN RÁPIDA DE SALUDOS PARA SEGUNDA PARTE (FIX 112)
+    # FIX 121: DETECCIÓN RÁPIDA DE SALUDOS PARA SEGUNDA PARTE (FIX 112)
     # Si el cliente responde con saludo simple después de "Hola, buen dia",
     # responder INMEDIATAMENTE con segunda parte desde caché (0s delay GPT)
     speech_lower = speech_result.lower().strip()
 
-    # Detectar si esta es la primera respuesta del cliente (después del saludo inicial)
-    es_primera_respuesta = len(agente.conversation_history) <= 1
+    # FIX 121: Detectar si esta es la primera respuesta del cliente contando solo mensajes USER
+    mensajes_usuario = [msg for msg in agente.conversation_history if msg['role'] == 'user']
+    es_primera_respuesta = len(mensajes_usuario) == 0
+
+    print(f"🔍 FIX 121 DEBUG: len(conversation_history)={len(agente.conversation_history)}, mensajes_usuario={len(mensajes_usuario)}, es_primera_respuesta={es_primera_respuesta}")
 
     # Saludos simples del cliente
     saludos_simples = [
@@ -1405,14 +1408,14 @@ def procesar_respuesta():
         "qué onda", "que onda", "mande", "a sus órdenes", "a sus ordenes"
     ]
 
-    # FIX 115: Si es saludo simple en primera respuesta, usar caché inmediato
+    # FIX 121: Si es saludo simple en primera respuesta, usar caché inmediato
     usa_segunda_parte_saludo = False
     if es_primera_respuesta and any(saludo in speech_lower for saludo in saludos_simples):
         # Verificar que la respuesta sea SOLO el saludo (no más de 5 palabras)
         palabras = speech_result.split()
         if len(palabras) <= 5:
             usa_segunda_parte_saludo = True
-            print(f"🚀 FIX 115: Saludo simple detectado en primera respuesta: '{speech_result}'")
+            print(f"🚀 FIX 121: Saludo simple detectado en primera respuesta: '{speech_result}'")
             print(f"   Usando CACHE de segunda_parte_saludo para respuesta instantánea (0s GPT)")
 
     # FIX 56/70: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
@@ -1468,8 +1471,11 @@ def procesar_respuesta():
     #                 respuesta_desde_cache = datos["respuesta"]
     #                 ...
 
-    # FIX 115: Si detectamos saludo simple, usar caché directo sin GPT
+    # FIX 115/121: Si detectamos saludo simple, usar caché directo sin GPT
     if usa_segunda_parte_saludo:
+        timestamp_inicio_cache = time.time()
+        print(f"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...")
+
         # Texto de la segunda parte del saludo (pre-generado en cache)
         respuesta_desde_cache = "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
@@ -1492,7 +1498,8 @@ def procesar_respuesta():
         respuesta_container["categoria_cache"] = "segunda_parte_saludo_fix115"
 
         cache_respuestas_stats["cache_hits"] += 1
-        print(f"✅ FIX 115: Respuesta instantánea desde caché (0s GPT, 0s ElevenLabs)")
+        tiempo_cache = time.time() - timestamp_inicio_cache
+        print(f"✅ FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
 
     # FIX 97: Preparar contenedor para audio generado en paralelo
     audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
