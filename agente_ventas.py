@@ -2655,10 +2655,17 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
         texto_email_procesado = re.sub(r'\b(guion bajo|guión bajo|underscore|bajo)\b', '_', texto_email_procesado)
 
         # Paso 2: Detectar y reconstruir email deletreado
-        # Patrón: [palabras/letras] @ [palabras/letras] . [dominio]
+        # Patrón 1: [palabras/letras] @ [palabras/letras] . [dominio]
         # Ejemplo: "yahir sam rodriguez @ gmail . com"
         patron_email_deletreado = r'([a-z0-9._-]+(?:\s+[a-z0-9._-]+)*)\s*@\s*([a-z0-9.-]+(?:\s+[a-z0-9.-]+)*)\s*\.\s*([a-z]{2,})'
         match_deletreado = re.search(patron_email_deletreado, texto_email_procesado)
+
+        # FIX 117: Patrón 2: Solo dominio sin arroba (ej: "coprofesa punto net")
+        # Cliente a veces solo dice el dominio asumiendo que ya dijo el usuario antes
+        patron_solo_dominio = r'\b([a-z0-9._-]+(?:\s+[a-z0-9._-]+)*)\s*\.\s*(net|com|org|mx|edu|gob)\b'
+        match_solo_dominio = None
+        if not match_deletreado:
+            match_solo_dominio = re.search(patron_solo_dominio, texto_email_procesado)
 
         if match_deletreado:
             # Reconstruir email eliminando espacios
@@ -2701,9 +2708,29 @@ IMPORTANTE:
 - Despedida corta y profesional"""
             })
 
+        # FIX 117: Manejar cuando solo se dice dominio (ej: "coprofesa punto net")
+        elif match_solo_dominio:
+            dominio_completo = match_solo_dominio.group(1).replace(' ', '') + '.' + match_solo_dominio.group(2)
+            print(f"🔧 FIX 117 - Dominio parcial detectado: {dominio_completo}")
+            print(f"   Original: '{texto[:80]}...'")
+
+            # Pedir el usuario del email
+            self.conversation_history.append({
+                "role": "system",
+                "content": f"""[SISTEMA] ⚠️ Email incompleto detectado: {dominio_completo}
+
+El cliente proporcionó solo el DOMINIO ({dominio_completo}) pero falta el USUARIO antes del @.
+
+ACCIÓN REQUERIDA:
+Di EXACTAMENTE: "Perfecto, tengo {dominio_completo}. ¿Cuál es la primera parte del correo, antes del arroba?"
+
+Ejemplo esperado del cliente: "sandra" o "info" o "ventas"
+Entonces formarás el email completo: [usuario]@{dominio_completo}"""
+            })
+
         # Patrón estricto para emails válidos (detectar emails que ya vienen formateados)
         # Solo procesar si NO se detectó email deletreado anteriormente
-        if not match_deletreado:
+        if not match_deletreado and not match_solo_dominio:
             patron_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
             match_email = re.search(patron_email, texto)
 
