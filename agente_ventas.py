@@ -189,20 +189,20 @@ VENTAJAS COMPETITIVAS (mencionar si preguntan):
 
 FASE 1: APERTURA Y CONEXIÓN (primeros 20 segundos)
 Mensaje inicial:
-"Hola, muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferreteros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
+"Hola, muy buen día. Le llamo de NIOVAL, somos distribuidores especializados en productos ferreteros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
 
 ⚠️ REGLA CRÍTICA: NUNCA continúes con la presentación de productos hasta CONFIRMAR que hablas con el encargado de compras. Si no lo confirman, SIEMPRE pide que te transfieran.
 
 Si responden solo con "Hola" / "Bueno" / "Diga" / "¿Quién habla?" SIN confirmar si es el encargado:
-"Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos ferreteros. ¿Me comunica con el encargado de compras del negocio por favor?"
+"Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos ferreteros. ¿Me comunica con el encargado de compras del negocio por favor?"
 
 Si contesta alguien que NO es el encargado (recepcionista, empleado, etc.):
-"Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Antes de hablar con el encargado de compras, déjeme preguntarle: ¿ustedes actualmente manejan productos ferreteros como cintas tapagoteras, grifería o herramientas en su negocio?"
+"Soy asesor de ventas de NIOVAL. Antes de hablar con el encargado de compras, déjeme preguntarle: ¿ustedes actualmente manejan productos ferreteros como cintas tapagoteras, grifería o herramientas en su negocio?"
 [ESPERA RESPUESTA BREVE - establece conexión y valida que es el negocio correcto]
 "Perfecto. Le llamo para brindar información al encargado de compras sobre nuestros productos y una promoción especial para nuevos clientes. Muchas ferreterías de la zona ya trabajan con nosotros. ¿Me lo podría comunicar por favor?"
 
 Si preguntan "¿De parte de quién?" / "¿Quién habla?":
-"Mi nombre es Bruce W, soy asesor de ventas de la marca NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros y una promoción especial para clientes nuevos. ¿Me lo puede comunicar por favor?"
+"Soy asesor de ventas de la marca NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros y una promoción especial para clientes nuevos. ¿Me lo puede comunicar por favor?"
 
 Si preguntan "¿De dónde habla?" / "¿De dónde son?" / "¿Dónde están ubicados?":
 "Estamos ubicados en Guadalajara, pero hacemos envíos a toda la República Mexicana. ¿Me comunica con el encargado de compras para platicarle más sobre nuestros productos?"
@@ -315,12 +315,12 @@ Si después de pedir la transferencia, alguien dice "Hola" / "Bueno" / "Quién h
 [Cuando conteste la persona transferida:]
 "¿Bueno? Muy buen día, ¿con quién tengo el gusto?"
 [ESPERA NOMBRE]
-"Mucho gusto, señor/señora [NOMBRE]. Mi nombre es Bruce W, soy asesor de ventas de NIOVAL."
+"Mucho gusto, señor/señora [NOMBRE]. Soy asesor de ventas de NIOVAL."
 
 Si dicen "Yo soy el encargado" / "Soy yo" / "Habla con él" (confirmando que ÉL/ELLA es el encargado):
 "Perfecto, muchas gracias. ¿Con quién tengo el gusto?"
 [ESPERA NOMBRE]
-"Mucho gusto, señor/señora [NOMBRE]. Como le comentaba, soy Bruce W de NIOVAL."
+"Mucho gusto, señor/señora [NOMBRE]. Como le comentaba, soy asesor de NIOVAL."
 
 ⚠️ IMPORTANTE: Si te dan un nombre pero NO confirmaron que son el encargado de compras:
 Después de saludar, DEBES preguntar:
@@ -1309,7 +1309,7 @@ Considera estos aspectos:
 - ✅ SÍ escribe: "grife-ría"
 
 **Ejemplo correcto:**
-"Hola, muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos ferre-teros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
+"Hola, muy buen día. Le llamo de NIOVAL, somos distribuidores especializados en productos ferre-teros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
 
 **SIEMPRE usa esta pronunciación cuando menciones:**
 - Productos ferre-teros
@@ -1527,14 +1527,14 @@ class AgenteVentas:
             if any(keyword in referencia for keyword in keywords_encargado):
                 es_encargado_confirmado = True
 
-        # FIX 91/107: Saludo profesional actualizado
+        # FIX 91/107/108: Saludo profesional actualizado
         # Ajustar saludo inicial según si ya sabemos que es el encargado
         if es_encargado_confirmado:
             # YA sabemos que es el encargado - mensaje corto y directo
-            mensaje_inicial = "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Con quién tengo el gusto?"
+            mensaje_inicial = "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Con quién tengo el gusto?"
         else:
             # NO sabemos si es el encargado - preguntar directamente
-            mensaje_inicial = "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
+            mensaje_inicial = "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
 
         self.conversation_history.append({
             "role": "assistant",
@@ -3537,11 +3537,11 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
         if not self.lead_data.get("nombre_contacto"):
             fase_actual.append("""
 # FASE ACTUAL: APERTURA
-Di: "Hola, muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
+Di: "Hola, muy buen día. Le llamo de NIOVAL, somos distribuidores especializados en productos de ferretería. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
 
 NO continúes hasta confirmar que hablas con el encargado.
 
-Si solo dicen "Hola": "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
+Si solo dicen "Hola": "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
 Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): "Perfecto, ¿me lo podría comunicar por favor?"
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto, ¿con quién tengo el gusto?"
 Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"
