@@ -11,6 +11,7 @@ import tempfile
 import threading
 import json
 import random
+import traceback  # FIX 102: Para logging de errores detallados
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
@@ -685,8 +686,8 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         print(f"❌ FIX 102: Error generando audio ElevenLabs: {e}")
         print(f"   Tipo de error: {type(e).__name__}")
         print(f"   Texto que causó error: {texto[:100]}...")
-        import traceback
-        print(f"   Traceback: {traceback.format_exc()}")
+        print(f"   Traceback completo:")
+        traceback.print_exc()
         return None
 
 
@@ -1404,13 +1405,18 @@ def procesar_respuesta():
                 print(f"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE ({palabras} palabras)")
                 result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp)
 
+            # FIX 102: Logging detallado del resultado
+            print(f"🔍 FIX 102 DEBUG: result = {result}, type = {type(result)}")
+
             # Guardar resultado en contenedor
             if result is not None:
                 audio_container["audio_id"] = audio_id_temp
                 audio_container["usa_cache"] = usa_cache_audio
                 audio_container["cache_key"] = cache_key_audio
+                print(f"✅ FIX 102: Audio container guardado - audio_id={audio_id_temp}")
             else:
                 audio_container["audio_id"] = None  # Usar Twilio TTS
+                print(f"⚠️ FIX 102: generar_audio_elevenlabs() retornó None - usará Twilio TTS")
 
             audio_container["completado"] = True
 
