@@ -1003,8 +1003,8 @@ def webhook_voz():
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
-        # FIX 61: CRÍTICO - Habilitar grabación para Whisper
-        speech_model="experimental_conversations"  # Modelo que provee RecordingUrl
+        speech_model="experimental_conversations",  # FIX 61: CRÍTICO - Habilitar grabación para Whisper
+        barge_in=False  # FIX 104: Cliente NO puede interrumpir mientras Bruce habla
     )
 
     # FIX 96: ANIDAR <Play> dentro de <Gather> para que esté listo ANTES de hablar
@@ -1180,6 +1180,42 @@ def procesar_respuesta():
             agente.lead_data["pregunta_7"] = "BUZON"
             agente.lead_data["resultado"] = "NEGADO"
             print(f"📝 Estado actualizado: Buzón detectado automáticamente")
+
+            # Guardar la llamada
+            agente.guardar_llamada_y_lead()
+
+        # Terminar con respuesta TwiML
+        response = VoiceResponse()
+        response.say("Disculpe, parece que entró el buzón de voz. Le llamaré en otro momento. Que tenga buen día.", language="es-MX")
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
+
+    # FIX 105: Detectar buzón por contenido del SpeechResult (cuando Twilio no lo detecta por AMD)
+    # Keywords comunes en mensajes de buzón de voz en México
+    keywords_buzon = [
+        "buzón de voz", "buzon de voz", "deje su mensaje", "deja tu mensaje",
+        "dejar un mensaje", "dejar mensaje", "después del tono", "despues del tono",
+        "no puede atender", "no disponible en este momento", "mailbox is full",
+        "buzón está lleno", "buzon esta lleno", "no se puede dejar", "intente más tarde"
+    ]
+
+    speech_lower = speech_result.lower() if speech_result else ""
+    es_buzon_por_contenido = any(keyword in speech_lower for keyword in keywords_buzon)
+
+    if es_buzon_por_contenido:
+        print(f"📞 FIX 105: Buzón detectado por contenido del SpeechResult")
+        print(f"   Mensaje: '{speech_result[:100]}...'")
+        print(f"💬 Marcando como BUZON")
+
+        # Obtener agente si existe
+        agente = conversaciones_activas.get(call_sid)
+        if agente:
+            # Marcar como "Buzon"
+            agente.lead_data["estado_llamada"] = "Buzon"
+            agente.lead_data["pregunta_0"] = "Buzon"
+            agente.lead_data["pregunta_7"] = "BUZON"
+            agente.lead_data["resultado"] = "NEGADO"
+            print(f"📝 Estado actualizado: Buzón detectado por análisis de contenido")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -1627,7 +1663,8 @@ def procesar_respuesta():
         speech_timeout=1,  # FIX 103: 3s→1s - Reducir delay total (cliente termina → Bruce responde)
         action="/procesar-respuesta",
         method="POST",
-        speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
+        speech_model="experimental_conversations",  # FIX 61: RecordingUrl para Whisper
+        barge_in=False  # FIX 104: Cliente NO puede interrumpir mientras Bruce habla
     )
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
