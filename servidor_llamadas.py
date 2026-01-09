@@ -1226,6 +1226,48 @@ def procesar_respuesta():
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
+    # FIX 109: Detectar operadora/contestadora automática por contenido
+    keywords_operadora = [
+        "número que usted marcó", "numero que usted marco",
+        "el número marcado", "el numero marcado",
+        "comuníquese más tarde", "comuniquese mas tarde",
+        "no se encuentra disponible en este momento",
+        "marque la extensión", "marque la extension",
+        "oprima", "presione", "pulse",  # IVR típico
+        "para español", "para inglés",  # Menú de idiomas
+        "si desea hablar", "si conoce la extensión",
+        "todas nuestras líneas están ocupadas", "todas nuestras lineas",
+        "su llamada es importante", "por favor espere",
+        "gracias por llamar", "bienvenido a"
+    ]
+
+    speech_lower = speech_result.lower() if speech_result else ""
+    es_operadora = any(keyword in speech_lower for keyword in keywords_operadora)
+
+    if es_operadora:
+        print(f"📞 FIX 109: Operadora/IVR detectada por contenido del SpeechResult")
+        print(f"   Mensaje: '{speech_result[:100]}...'")
+        print(f"💬 Marcando como OPERADORA")
+
+        # Obtener agente si existe
+        agente = conversaciones_activas.get(call_sid)
+        if agente:
+            # Marcar como "Operadora" (similar a Buzón)
+            agente.lead_data["estado_llamada"] = "Operadora"
+            agente.lead_data["pregunta_0"] = "Operadora"
+            agente.lead_data["pregunta_7"] = "OPERADORA"
+            agente.lead_data["resultado"] = "NEGADO"
+            print(f"📝 Estado actualizado: Operadora/IVR detectada")
+
+            # Guardar la llamada
+            agente.guardar_llamada_y_lead()
+
+        # Terminar con respuesta TwiML
+        response = VoiceResponse()
+        response.say("Disculpe, parece que entró la operadora automática. Le llamaré en otro momento. Que tenga buen día.", language="es-MX")
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
+
     # Verificar si la llamada ya terminó (cliente colgó)
     if call_status in ["completed", "busy", "no-answer", "canceled", "failed"]:
         print(f"📞 Llamada terminada - Estado: {call_status}")
@@ -1730,14 +1772,17 @@ def despedida_final():
             if sheets_manager and agente.contacto_info:
                 fila = agente.contacto_info.get('fila') or agente.contacto_info.get('ID')
 
-                # 1. Manejo de BUZÓN - Marcar intentos y reintentar
-                if agente.lead_data.get("estado_llamada") == "Buzon" and fila:
-                    print(f"\n📞 Llamada cayó en buzón - manejando reintento...")
+                # 1. Manejo de BUZÓN/OPERADORA - Marcar intentos y reintentar
+                # FIX 109: Incluir Operadora en sistema de reintentos
+                estado = agente.lead_data.get("estado_llamada")
+                if estado in ["Buzon", "Operadora"] and fila:
+                    tipo_deteccion = "buzón" if estado == "Buzon" else "operadora"
+                    print(f"\n📞 Llamada cayó en {tipo_deteccion} - manejando reintento...")
                     intentos = sheets_manager.marcar_intento_buzon(fila)
 
                     if intentos == 1:
-                        # PRIMER intento de buzón - REINTENTO INMEDIATO
-                        print(f"📞 Primer intento de buzón - iniciando reintento inmediato...")
+                        # PRIMER intento de buzón/operadora - REINTENTO INMEDIATO
+                        print(f"📞 Primer intento de {tipo_deteccion} - iniciando reintento inmediato...")
                         print(f"⏰ Esperando 30 segundos antes de reintentar...")
 
                         # Capturar url_root ANTES del thread (Flask context)
