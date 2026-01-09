@@ -1015,9 +1015,10 @@ def webhook_voz():
     # Agregar el Gather a la respuesta
     response.append(gather)
 
-    # Si no hay respuesta (fallback a TTS de Twilio)
-    response.say("No escuché su respuesta. Le llamaremos más tarde.", language="es-MX")
-    response.hangup()
+    # FIX 110: Si no hay respuesta, redirigir a /procesar-respuesta con SpeechResult vacío
+    # Esto permite que el FIX 92 maneje la respuesta vacía (pedir repetición)
+    # en lugar de colgar directamente
+    response.redirect(url="/procesar-respuesta?CallSid=" + call_sid + "&SpeechResult=", method="POST")
 
     return Response(str(response), mimetype="text/xml")
 
