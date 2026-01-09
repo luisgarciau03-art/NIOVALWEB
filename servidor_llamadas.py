@@ -999,7 +999,7 @@ def webhook_voz():
         input="speech",
         language="es-MX",
         timeout=6,  # FIX 86: 3s→6s - Dar tiempo al cliente para procesar pregunta y responder
-        speech_timeout=3,  # FIX 86: 1s→3s - Permitir pausas naturales mientras cliente habla
+        speech_timeout=1,  # FIX 103: 3s→1s - Reducir delay total (cliente termina → Bruce responde)
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
@@ -1624,7 +1624,7 @@ def procesar_respuesta():
         input="speech",
         language="es-MX",
         timeout=6,  # FIX 86: 3s→6s - Dar tiempo al cliente para procesar pregunta y responder
-        speech_timeout=3,  # FIX 86: 1s→3s - Permitir pausas naturales mientras cliente habla
+        speech_timeout=1,  # FIX 103: 3s→1s - Reducir delay total (cliente termina → Bruce responde)
         action="/procesar-respuesta",
         method="POST",
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
