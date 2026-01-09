@@ -1809,6 +1809,11 @@ def procesar_respuesta():
         timeout_gather = 1  # 1s para conversación normal (rápido)
         print(f"⏱️ FIX 124: Timeout={timeout_gather}s (conversación normal)")
 
+    # FIX 125: Permitir interrupciones en primeros 3 mensajes (cliente responde rápido)
+    # Problema: Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
+    # Después de mensaje 3, deshabilitar barge_in para que Bruce termine de explicar
+    permitir_interrupcion = num_mensajes_bruce <= 3
+
     gather = Gather(
         input="speech",
         language="es-MX",
@@ -1817,8 +1822,10 @@ def procesar_respuesta():
         action="/procesar-respuesta",
         method="POST",
         speech_model="experimental_conversations",  # FIX 61: RecordingUrl para Whisper
-        barge_in=False  # FIX 104: Cliente NO puede interrumpir mientras Bruce habla
+        barge_in=permitir_interrupcion  # FIX 125: True para primeros 3 mensajes, False después
     )
+
+    print(f"🎙️ FIX 125: barge_in={permitir_interrupcion} (mensaje #{num_mensajes_bruce})")
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
