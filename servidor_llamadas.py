@@ -1784,9 +1784,9 @@ def procesar_respuesta():
         timeout_gather = 4
         print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 5-8: conversación media)")
     else:
-        # Mensajes 9+: lento (deletreo de correos, confirmaciones finales)
-        timeout_gather = 5
-        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 9+: deletreo/confirmaciones)")
+        # Mensajes 9+: máximo 4s (FIX 118 maneja el deletreo de correos específicamente)
+        timeout_gather = 4
+        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 9+: máximo 4s)")
 
     # FIX 118: +1s adicional si Bruce acaba de pedir correo
     # Cliente deletrea más lento y necesita más tiempo sin interrupciones
