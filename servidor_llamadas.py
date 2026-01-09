@@ -970,11 +970,19 @@ def webhook_voz():
 
     audio_id = f"inicial_{call_sid}"
 
-    # FIX 93: Detectar si es el saludo estándar para usar caché (versión actualizada FIX 91)
+    # FIX 114: Detectar saludo corto del FIX 112 para usar caché
+    # Después del FIX 112, el saludo inicial es solo "Hola, buen dia"
+    usa_cache_saludo_corto = mensaje_inicial.strip().lower() == "hola, buen dia"
+
+    # Mantener compatibilidad con versiones antiguas (por si acaso)
     usa_cache_saludo_normal = "me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado" in mensaje_inicial
     usa_cache_saludo_encargado = "me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto" in mensaje_inicial
 
-    if usa_cache_saludo_normal and "saludo_inicial" in audio_cache:
+    if usa_cache_saludo_corto and "saludo_inicial" in audio_cache:
+        # FIX 114: Usar audio pre-generado del saludo corto FIX 112 (0s delay, voz Bruce)
+        audio_files[audio_id] = audio_cache["saludo_inicial"]
+        print(f"📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)")
+    elif usa_cache_saludo_normal and "saludo_inicial" in audio_cache:
         # Usar audio pre-generado del caché - versión normal (0s delay, voz Bruce)
         audio_files[audio_id] = audio_cache["saludo_inicial"]
         print(f"📦 Saludo inicial (normal) desde caché (0s delay, voz Bruce)")
