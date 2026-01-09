@@ -1788,24 +1788,8 @@ def procesar_respuesta():
         timeout_gather = 4
         print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 9+: máximo 4s)")
 
-    # FIX 118: +1s adicional si Bruce acaba de pedir correo
-    # Cliente deletrea más lento y necesita más tiempo sin interrupciones
-    keywords_pide_correo = [
-        "correo", "email", "e-mail", "dirección electrónica",
-        "deletrear", "letra por letra", "¿cuál es el correo",
-        "proporcionar.*correo", "pasar.*correo"
-    ]
-
-    # Revisar último mensaje de Bruce
-    ultimo_mensaje_bruce = None
-    for msg in reversed(agente.conversation_history):
-        if msg['role'] == 'assistant':
-            ultimo_mensaje_bruce = msg['content'].lower()
-            break
-
-    if ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather += 1  # +1s adicional para deletreo de correo
-        print(f"⏱️ FIX 118: +1s adicional (deletreo de correo) → Timeout={timeout_gather}s")
+    # FIX 118.1: Timeout fijo sin incrementos adicionales (3-4s máximo)
+    # El usuario solicitó reducir el timeout total a 3s cuando se pide correo
 
     gather = Gather(
         input="speech",
