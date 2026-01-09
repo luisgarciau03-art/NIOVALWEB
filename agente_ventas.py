@@ -2182,18 +2182,27 @@ Continúa la conversación usando su nombre: {nombre_actual}"""
                 })
 
         # ============================================================
-        # FIX 11: DETECCIÓN CRÍTICA - "NO, POR WHATSAPP" / "MÁNDAMELO POR WHATSAPP"
+        # FIX 127: DETECCIÓN CRÍTICA - "NO, POR WHATSAPP" / "MÁNDAMELO POR WHATSAPP"
         # ============================================================
         # Detectar cuando cliente RECHAZA correo y pide WhatsApp repetidamente
-        frases_pide_whatsapp = [
-            "no, mándamelo por whatsapp", "mándamelo por whatsapp", "envialo por whatsapp",
-            "no es por whatsapp", "no, es whatsapp", "por whatsapp",
-            "mejor whatsapp", "prefiero whatsapp", "whatsapp mejor",
-            "no por correo", "no, por correo no", "no correo",
-            "tengo whatsapp", "mejor el whatsapp", "dame tu whatsapp"
+
+        # FIX 127: Primero verificar si cliente dice que NO tiene/quiere WhatsApp
+        frases_rechaza_whatsapp = [
+            "no tengo whatsapp", "no manejo whatsapp", "no uso whatsapp",
+            "no agarro whatsapp", "no, por whatsapp no", "whatsapp no",
+            "no me funciona whatsapp", "no puedo whatsapp"
         ]
 
-        if any(frase in texto_lower for frase in frases_pide_whatsapp):
+        cliente_rechaza_whatsapp = any(frase in texto_lower for frase in frases_rechaza_whatsapp)
+
+        frases_pide_whatsapp = [
+            "mándamelo por whatsapp", "envialo por whatsapp",
+            "mejor whatsapp", "prefiero whatsapp", "whatsapp mejor",
+            "tengo whatsapp", "mejor el whatsapp", "dame tu whatsapp",
+            "si whatsapp", "sí whatsapp", "por whatsapp si", "por whatsapp sí"
+        ]
+
+        if not cliente_rechaza_whatsapp and any(frase in texto_lower for frase in frases_pide_whatsapp):
             if not hasattr(self, 'cliente_confirmo_whatsapp'):
                 self.cliente_confirmo_whatsapp = True
                 print(f"✅ CRÍTICO: Cliente CONFIRMÓ que quiere WhatsApp (NO correo)")

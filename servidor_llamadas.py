@@ -1814,8 +1814,8 @@ def procesar_respuesta():
         timeout_gather = 8  # FIX 126: 8s cuando cliente pide "un momento"
         print(f"⏱️ FIX 126: Timeout={timeout_gather}s (cliente pidió un momento)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather = 2  # FIX 122: 2s cuando pide correo
-        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (deletreo de correo)")
+        timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo)
+        print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
     elif es_segundo_mensaje:
         timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
         print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
