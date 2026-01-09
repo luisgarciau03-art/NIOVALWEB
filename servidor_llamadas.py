@@ -1767,13 +1767,31 @@ def procesar_respuesta():
 
         return str(response)
 
-    # FIX 96/112: Si NO es despedida, continuar conversación normal
+    # FIX 96/112/116: Si NO es despedida, continuar conversación normal
     # IMPORTANTE: Preparar Gather PRIMERO, luego reproducir audio DENTRO del Gather
     # FIX 60/61/62/63/86/112: Usando Whisper API (mejor precisión + más barato)
+
+    # FIX 116: Timeouts progresivos según avance de conversación
+    # Después de varios mensajes, el cliente habla más lento y con más atención
+    num_mensajes = len(agente.conversation_history)
+
+    if num_mensajes <= 4:
+        # Primeros 4 mensajes: rápido (saludo, confirmación inicial)
+        timeout_gather = 3
+        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 1-4: conversación inicial rápida)")
+    elif num_mensajes <= 8:
+        # Mensajes 5-8: medio (preguntas sobre productos, captura de datos)
+        timeout_gather = 4
+        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 5-8: conversación media)")
+    else:
+        # Mensajes 9+: lento (deletreo de correos, confirmaciones finales)
+        timeout_gather = 5
+        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 9+: deletreo/confirmaciones)")
+
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=3,  # FIX 112: 6s→3s - Optimizado para respuestas más rápidas
+        timeout=timeout_gather,  # FIX 116: Progresivo según num_mensajes
         speech_timeout="auto",  # FIX 112: 1s→auto - Twilio detecta fin automáticamente
         action="/procesar-respuesta",
         method="POST",
