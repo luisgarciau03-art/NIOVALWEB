@@ -222,7 +222,12 @@ Si preguntan "¿Qué marcas?" / "¿De qué marca?":
 ✅ SOLO di: "Manejamos NIOVAL, nuestra marca propia"
 
 Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
-"Entendido. ¿Me puede dar su número directo o un horario para volverle a marcar?"
+"Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"
+
+⚠️ IMPORTANTE: Si proporcionan WhatsApp o correo en esta situación:
+- El sistema clasificará automáticamente como "Revisara el Catalogo" (APROBADO)
+- Confirma el dato (repite número/correo)
+- Despídete: "Perfecto, le envío la información. Que tenga buen día."
 
 ⚠️⚠️⚠️ FIX 99: SI OFRECEN CORREO, ACEPTARLO INMEDIATAMENTE ⚠️⚠️⚠️
 
@@ -1522,14 +1527,14 @@ class AgenteVentas:
             if any(keyword in referencia for keyword in keywords_encargado):
                 es_encargado_confirmado = True
 
-        # FIX 91: Saludo más corto para evitar que el cliente cuelgue
+        # FIX 91/107: Saludo profesional actualizado
         # Ajustar saludo inicial según si ya sabemos que es el encargado
         if es_encargado_confirmado:
             # YA sabemos que es el encargado - mensaje corto y directo
-            mensaje_inicial = "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?"
+            mensaje_inicial = "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Con quién tengo el gusto?"
         else:
             # NO sabemos si es el encargado - preguntar directamente
-            mensaje_inicial = "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?"
+            mensaje_inicial = "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
 
         self.conversation_history.append({
             "role": "assistant",
@@ -3539,7 +3544,7 @@ NO continúes hasta confirmar que hablas con el encargado.
 Si solo dicen "Hola": "Muy buen día. Mi nombre es Bruce W, le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?"
 Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): "Perfecto, ¿me lo podría comunicar por favor?"
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto, ¿con quién tengo el gusto?"
-Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me puede dar su número directo o un horario para volverle a marcar?"
+Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"
 
 ⚠️⚠️⚠️ FIX 99/101: SI OFRECEN CORREO, ACEPTARLO Y DESPEDIRSE INMEDIATAMENTE
 Si el cliente ofrece dar el CORREO del encargado:
