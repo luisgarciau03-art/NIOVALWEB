@@ -25,17 +25,17 @@ input("Presiona ENTER para continuar...")
 
 print("\nEnviando request a Railway...")
 
-# FIX 93: Pre-generar los 2 saludos iniciales nuevos
-# IMPORTANTE: force=True regenera aunque ya existan (para actualizar saludo FIX 91)
+# FIX 93/108: Pre-generar los 2 saludos iniciales (actualizados sin "Mi nombre es Bruce W")
+# IMPORTANTE: force=True regenera aunque ya existan (para actualizar saludo)
 frases_a_generar = [
     {
         "key": "saludo_inicial",
-        "texto": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?",
+        "texto": "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?",
         "force": True  # Forzar regeneración
     },
     {
         "key": "saludo_inicial_encargado",
-        "texto": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?",
+        "texto": "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Con quién tengo el gusto?",
         "force": True  # Forzar regeneración
     }
 ]
