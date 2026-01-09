@@ -84,6 +84,29 @@ OTRAS CATEGORÍAS:
 - Productos para mascotas (nicho en crecimiento)
 - Sillas y mobiliario ligero
 
+🚨🚨🚨 FIX 98: CONTEXTO CRÍTICO - CLIENTE OCUPADO EN MOSTRADOR 🚨🚨🚨
+
+⚠️⚠️⚠️ IMPORTANTE - EL CLIENTE ESTÁ OCUPADO:
+- La persona que atiende está en MOSTRADOR con CLIENTES esperando
+- Necesita RESOLVER RÁPIDO (máximo 2-3 minutos)
+- NO tiene tiempo para conversaciones largas
+- Está ESTRESADO y APURADO
+
+✅ OBJETIVO: Obtener NOMBRE + CORREO y despedirse RÁPIDO
+✅ Ir DIRECTO al grano - sin preguntas largas
+✅ Respuestas CORTAS y CONCISAS
+✅ Máximo 3-4 intercambios antes de despedirse
+
+❌ NO hacer 3-4 preguntas sobre productos, proveedores, necesidades
+❌ NO saturar con información
+❌ NO extender la llamada innecesariamente
+
+FLUJO IDEAL (RÁPIDO):
+1. Saludo + ¿Está el encargado?
+2. Pedir nombre del contacto
+3. Pedir correo para enviar catálogo
+4. Despedirse (TOTAL: 3-4 intercambios máximo)
+
 🚨🚨🚨 FIX 44: ADVERTENCIA ULTRA-CRÍTICA SOBRE MARCAS 🚨🚨🚨
 
 NIOVAL DISTRIBUYE SUS PROPIAS MARCAS Y PRODUCTOS SELECCIONADOS.
@@ -202,30 +225,28 @@ Si dicen "No está" / "No se encuentra" / "Está ocupado" / "No, no está":
 [OPCIÓN A - Si dan el número de teléfono:]
 "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 
-⚠️ FLUJO OBLIGATORIO DESPUÉS DE OBTENER NOMBRE - SIGUE EXACTAMENTE ESTE ORDEN:
+⚠️⚠️⚠️ FIX 98: FLUJO SIMPLIFICADO - CLIENTE OCUPADO EN MOSTRADOR ⚠️⚠️⚠️
+
+CONTEXTO CRÍTICO:
+- La persona que atiende está en MOSTRADOR atendiendo CLIENTES
+- Necesita RESOLVER RÁPIDO
+- NO tiene tiempo para responder 3-4 preguntas largas
+- La prioridad es OBTENER CORREO y DESPEDIRSE rápido
 
 [PASO 1 - Después de obtener el nombre]
-DEBES DECIR EXACTAMENTE:
-"Gracias [NOMBRE]. Para prepararle mejor propuesta al encargado, ¿qué tipo de productos manejan más? ¿Es ferretería local, tienen sucursales, o son mayorista?"
-[ESPERA RESPUESTA DEL CLIENTE]
+DEBES DECIR EXACTAMENTE (CORTO Y DIRECTO):
+"Gracias [NOMBRE]. Perfecto, le enviaré el catálogo completo por correo electrónico para que el encargado lo revise con calma. ¿Me confirma el correo?"
+[ESPERA CORREO DEL CLIENTE]
 
-[PASO 2 - Después de obtener contexto de productos y tamaño]
-DEBES PREGUNTAR:
-"Perfecto, eso ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen uno principal?"
-[ESPERA RESPUESTA DEL CLIENTE]
+[PASO 2 - Después de recibir el correo]
+DEBES DESPEDIRTE INMEDIATAMENTE:
+"Perfecto, anotado: [REPITE EL CORREO]. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
+[FIN DE LLAMADA]
 
-[PASO 3 - Después de obtener info de proveedores]
-DEBES PREGUNTAR:
-"Entendido. Una última pregunta: ¿sabe si actualmente tienen alguna necesidad inmediata de producto o están buscando mejorar precios con sus proveedores actuales?"
-[ESPERA RESPUESTA DEL CLIENTE]
-
-[PASO 4 - Después de obtener info de necesidad inmediata]
-DEBES DESPEDIRTE:
-"Perfecto, aprecio mucho toda la información. Me comunicaré con el encargado para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
-
-❌ NUNCA digas "Estaré en contacto con él" sin hacer las 3 preguntas de contexto
-❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS 3 PREGUNTAS ESPECÍFICAS DE ARRIBA
-❌ NUNCA te saltes ninguna de las 3 preguntas (productos+tamaño, proveedores, necesidad inmediata)
+❌ NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades)
+❌ NUNCA preguntes "¿Qué tipo de productos manejan? ¿Son ferretería local o mayorista?"
+❌ La persona está OCUPADA - ir DIRECTO al correo y despedirse
+✅ Solo necesitas: Nombre → Correo → Despedida (3 pasos máximo)
 
 [OPCIÓN B - Si dan un horario:]
 "Perfecto, anotado. Volveré a comunicarme [en el horario indicado]. Muchas gracias por su tiempo."
@@ -2593,23 +2614,27 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             self.lead_data["email"] = email_detectado
             print(f"📧 Email detectado (deletreado): {email_detectado}")
 
-            # IMPORTANTE: Siempre confirmar el email con el cliente
+            # FIX 98: DESPEDIRSE INMEDIATAMENTE después de capturar email
             self.conversation_history.append({
                 "role": "system",
                 "content": f"""[SISTEMA] ✅ Email capturado (deletreado): {email_detectado}
 
-⚠️ CONFIRMACIÓN OBLIGATORIA:
-Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
+⚠️⚠️⚠️ FIX 98: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
 
-FORMATO DE CONFIRMACIÓN:
-"Perfecto, déjeme confirmar el correo: {email_detectado} - ¿es correcto?"
+El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
-⚠️⚠️⚠️ FIX 29: NUNCA uses ejemplos inventados
-✅ CORRECTO: Deletrea el correo REAL que el cliente te dio
+DEBES DESPEDIRTE AHORA:
+"Perfecto, anotado: {email_detectado}. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+
+❌ NO hagas más preguntas
+❌ NO pidas confirmación del correo (ya lo tienes)
+❌ NO preguntes sobre productos, proveedores, etc.
+✅ DESPEDIRSE INMEDIATAMENTE y COLGAR
 
 IMPORTANTE:
-- SIEMPRE confirma que el email esté correcto
-- Si el cliente dice que hay un error, pide que lo repita letra por letra"""
+- El cliente está OCUPADO - termina la llamada YA
+- Ya tienes nombre + email = SUFICIENTE
+- Despedida corta y profesional"""
             })
 
         # Patrón estricto para emails válidos (detectar emails que ya vienen formateados)
@@ -2623,26 +2648,27 @@ IMPORTANTE:
                 self.lead_data["email"] = email_detectado
                 print(f"📧 Email detectado: {email_detectado}")
 
-                # IMPORTANTE: Siempre confirmar el email con el cliente
-                # Los emails dictados verbalmente pueden tener errores
+                # FIX 98: DESPEDIRSE INMEDIATAMENTE después de capturar email
                 self.conversation_history.append({
                     "role": "system",
                     "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
 
-⚠️ CONFIRMACIÓN OBLIGATORIA:
-Debes REPETIR el email letra por letra al cliente para confirmar que está correcto.
+⚠️⚠️⚠️ FIX 98: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
 
-FORMATO DE CONFIRMACIÓN:
-"Perfecto, déjeme confirmar el correo: {email_detectado} - eso es [DELETREAR PARTE ANTES DE @] arroba [DELETREAR DOMINIO]. ¿Es correcto?"
+El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
-⚠️⚠️⚠️ FIX 29: NUNCA NUNCA NUNCA uses ejemplos inventados o de otros clientes
-❌ INCORRECTO: "Por ejemplo: j-u-a-n-punto-p-e-r-e-z-arroba..."
-✅ CORRECTO: Deletrea el correo REAL que el cliente te dio, NO inventes ejemplos
+DEBES DESPEDIRTE AHORA:
+"Perfecto, anotado: {email_detectado}. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+
+❌ NO hagas más preguntas
+❌ NO pidas confirmación del correo (ya lo tienes)
+❌ NO preguntes sobre productos, proveedores, etc.
+✅ DESPEDIRSE INMEDIATAMENTE y COLGAR
 
 IMPORTANTE:
-- SIEMPRE deletrea el email completo
-- Confirma con el cliente que está correcto
-- Si el cliente dice que hay un error, pide que lo repita letra por letra"""
+- El cliente está OCUPADO - termina la llamada YA
+- Ya tienes nombre + email = SUFICIENTE
+- Despedida corta y profesional"""
                 })
             else:
                 # Detectar posibles emails incompletos o malformados
@@ -3473,23 +3499,21 @@ IMPORTANTE - Si el cliente ofrece dar el número:
 
 ⚠️ FLUJO OBLIGATORIO SI DAN NÚMERO DE CONTACTO DE REFERENCIA:
 [Si dan número de teléfono del encargado]
+⚠️⚠️⚠️ FIX 98: FLUJO ULTRA-RÁPIDO - CLIENTE OCUPADO ⚠️⚠️⚠️
+
 PASO 1: "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 [Esperar nombre]
 
-PASO 2: "Gracias [NOMBRE]. Para prepararle mejor propuesta al encargado, ¿qué tipo de productos manejan más? ¿Es ferretería local, tienen sucursales, o son mayorista?"
-[Esperar respuesta sobre productos y tamaño]
+PASO 2 (SIMPLIFICADO): "Gracias [NOMBRE]. Perfecto, le enviaré el catálogo completo por correo electrónico para que el encargado lo revise con calma. ¿Me confirma el correo?"
+[Esperar correo]
 
-PASO 3: "Perfecto, eso ayuda mucho. ¿Actualmente trabajan con varios proveedores o tienen uno principal? Y aprovechando, ¿en qué horario suele estar disponible el encargado para contactarlo directamente?"
-[Esperar respuesta sobre proveedores y horario]
+PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, anotado: [REPITE EL CORREO]. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
+[FIN DE LLAMADA]
 
-PASO 4: "Entendido. Una última pregunta: ¿sabe si actualmente tienen alguna necesidad inmediata de producto o están buscando mejorar precios con sus proveedores actuales?"
-[Esperar respuesta sobre necesidad inmediata]
-
-PASO 5: "Perfecto, aprecio mucho toda la información. Me comunicaré con el encargado en [HORARIO MENCIONADO] para ofrecerle nuestros productos que mejor se ajusten a lo que manejan. Muchas gracias por su tiempo y ayuda, [NOMBRE]. Que tenga un excelente día."
-
-❌ NUNCA digas "Estaré en contacto con él" sin hacer las 3 preguntas de contexto
-❌ NUNCA digas "¿Hay algún otro dato?" - HAZ LAS 3 PREGUNTAS ESPECÍFICAS DE ARRIBA
-❌ NUNCA te saltes ninguna de las 3 preguntas (productos+tamaño, proveedores+horario, necesidad inmediata)
+❌ NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades, horarios)
+❌ NUNCA preguntes "¿Qué tipo de productos manejan? ¿Son ferretería local o mayorista?"
+❌ La persona está OCUPADA en mostrador - ir DIRECTO al correo
+✅ Solo: Nombre → Correo → Despedida (máximo 3 intercambios)
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor

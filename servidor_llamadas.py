@@ -1395,14 +1395,10 @@ def procesar_respuesta():
                 print(f"🎯 FIX 97: Audio cacheado detectado: {cache_key_audio}")
                 result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp, usar_cache_key=cache_key_audio)
             else:
-                # Solo generar si la respuesta es corta (<100 palabras)
+                # FIX 98: SIEMPRE usar voz de Bruce (ElevenLabs), sin importar longitud
                 palabras = len(respuesta_texto.split())
-                if palabras <= 100:
-                    print(f"🎵 FIX 97: Generando audio con ElevenLabs ({palabras} palabras)")
-                    result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp)
-                else:
-                    print(f"⚡ FIX 97: Respuesta larga ({palabras} palabras) - usar Twilio TTS")
-                    result = None
+                print(f"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE ({palabras} palabras)")
+                result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp)
 
             # Guardar resultado en contenedor
             if result is not None:
@@ -1603,14 +1599,13 @@ def procesar_respuesta():
         speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
     )
 
-    # FIX 96: Reproducir audio (ElevenLabs o Twilio TTS) DENTRO del Gather
+    # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
-        # Caso: Respuesta larga (>100 palabras) - usar Twilio TTS rápido (fallback)
-        print(f"⚡ Reproduciendo con Twilio TTS (respuesta larga, evita delay)")
-        # IMPORTANTE: NO usar Polly.Mia (voz femenina) - usar voz masculina
+        # FIX 98: Fallback a Twilio TTS SOLO si ElevenLabs falló completamente
+        print(f"⚠️ FIX 98: ElevenLabs falló - usando Twilio TTS (Polly.Miguel)")
         gather.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
     else:
-        # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs (voz Bruce)
+        # Usar audio de ElevenLabs (voz Bruce) - SIEMPRE preferido
         audio_url = request.url_root + f"audio/{audio_id}"
         gather.play(audio_url)
 
