@@ -1779,8 +1779,7 @@ def procesar_respuesta():
     # IMPORTANTE: Preparar Gather PRIMERO, luego reproducir audio DENTRO del Gather
     # FIX 60/61/62/63/86/112: Usando Whisper API (mejor precisión + más barato)
 
-    # FIX 120: Timeout SOLO de 3s cuando se pide correo, 2s en el resto
-    # Usuario solicitó: "unicamente debe de esperar 3seg en los mensajes donde le esten proporcionado correo"
+    # FIX 124: Timeouts ajustados según tipo de mensaje y posición en conversación
 
     # Detectar si Bruce acaba de pedir correo
     keywords_pide_correo = [
@@ -1796,12 +1795,19 @@ def procesar_respuesta():
             ultimo_mensaje_bruce = msg['content'].lower()
             break
 
+    # FIX 124: Detectar si es el segundo mensaje (después del saludo inicial)
+    num_mensajes_bruce = len([msg for msg in agente.conversation_history if msg['role'] == 'assistant'])
+    es_segundo_mensaje = num_mensajes_bruce == 2  # "Me comunico de la marca nioval..."
+
     if ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather = 2  # FIX 122: 2s cuando pide correo (antes 3s, usuario reportó que >5s total es demasiado)
-        print(f"⏱️ FIX 122: Timeout={timeout_gather}s (deletreo de correo)")
+        timeout_gather = 2  # FIX 122: 2s cuando pide correo
+        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (deletreo de correo)")
+    elif es_segundo_mensaje:
+        timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
+        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
     else:
-        timeout_gather = 1  # 1s para toda conversación normal (muy rápido)
-        print(f"⏱️ FIX 122: Timeout={timeout_gather}s (conversación normal)")
+        timeout_gather = 1  # 1s para conversación normal (rápido)
+        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (conversación normal)")
 
     gather = Gather(
         input="speech",
