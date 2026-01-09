@@ -1652,23 +1652,8 @@ def procesar_respuesta():
     if not respuesta_container.get("desde_cache", False):
         registrar_pregunta_respuesta(speech_result, respuesta_agente)
 
-    # FIX 102: Esperar a que el audio termine de generarse (máximo 3s adicionales)
-    # Si GPT terminó pero audio aún está generándose, esperar a que complete
-    if not audio_container.get("completado", False):
-        print(f"⏳ FIX 102: Esperando que audio ElevenLabs termine de generarse...")
-        import time
-        max_wait = 3.0  # Esperar máximo 3 segundos adicionales por el audio
-        waited = 0
-        while not audio_container.get("completado", False) and waited < max_wait:
-            time.sleep(0.1)
-            waited += 0.1
-
-        if audio_container.get("completado", False):
-            print(f"✅ FIX 102: Audio completado después de {waited:.1f}s adicionales")
-        else:
-            print(f"⚠️ FIX 102: Audio NO completó después de {max_wait}s - usará Twilio TTS")
-
-    # FIX 115: Si usamos caché de segunda parte del saludo, usar audio pre-generado
+    # FIX 119: Si usamos caché de segunda parte del saludo, usar audio pre-generado
+    # VERIFICAR ESTO ANTES de esperar (0s delay total)
     if usa_segunda_parte_saludo and "segunda_parte_saludo" in audio_cache:
         # Usar audio pre-generado de la segunda parte (0s delay total)
         audio_id = f"segunda_parte_saludo_{call_sid}"
@@ -1679,8 +1664,24 @@ def procesar_respuesta():
         audio_container["usa_cache"] = True
         audio_container["cache_key"] = cache_key
         audio_container["completado"] = True
-        print(f"📦 FIX 115: Audio de segunda_parte_saludo desde caché (0s ElevenLabs)")
+        print(f"📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)")
     else:
+        # FIX 102: Esperar a que el audio termine de generarse (máximo 3s adicionales)
+        # Si GPT terminó pero audio aún está generándose, esperar a que complete
+        if not audio_container.get("completado", False):
+            print(f"⏳ FIX 102: Esperando que audio ElevenLabs termine de generarse...")
+            import time
+            max_wait = 3.0  # Esperar máximo 3 segundos adicionales por el audio
+            waited = 0
+            while not audio_container.get("completado", False) and waited < max_wait:
+                time.sleep(0.1)
+                waited += 0.1
+
+            if audio_container.get("completado", False):
+                print(f"✅ FIX 102: Audio completado después de {waited:.1f}s adicionales")
+            else:
+                print(f"⚠️ FIX 102: Audio NO completó después de {max_wait}s - usará Twilio TTS")
+
         # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
         # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
         audio_id = audio_container.get("audio_id")
