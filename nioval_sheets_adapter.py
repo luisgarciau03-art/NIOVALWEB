@@ -388,16 +388,20 @@ class NiovalSheetsAdapter:
 
     def registrar_email_capturado(self, fila: int, email: str):
         """
-        Registra el email capturado en columna T
+        FIX 100: Registra el email capturado en columnas T y AA
 
         Args:
             fila: Número de fila
             email: Email capturado
         """
         try:
-            # Columna T (índice 20)
+            # Columna T (índice 20) - email principal
             self.hoja_contactos.update_cell(fila, 20, email)
             print(f"✅ Email registrado en fila {fila} (columna T): {email}")
+
+            # FIX 100: También guardar en columna AA (índice 27)
+            self.hoja_contactos.update_cell(fila, 27, email)
+            print(f"✅ Email registrado en fila {fila} (columna AA): {email}")
         except Exception as e:
             print(f"❌ Error al registrar email: {e}")
 
