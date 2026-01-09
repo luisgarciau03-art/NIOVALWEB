@@ -682,7 +682,11 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         return audio_id
 
     except Exception as e:
-        print(f"❌ Error generando audio: {e}")
+        print(f"❌ FIX 102: Error generando audio ElevenLabs: {e}")
+        print(f"   Tipo de error: {type(e).__name__}")
+        print(f"   Texto que causó error: {texto[:100]}...")
+        import traceback
+        print(f"   Traceback: {traceback.format_exc()}")
         return None
 
 
@@ -1485,7 +1489,9 @@ def procesar_respuesta():
             response.play(audio_url_despedida)
         else:
             # Fallback: Twilio TTS si ElevenLabs falla
-            print(f"⚠️ FIX 76: ElevenLabs falló, usando Twilio TTS")
+            print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ en despedida - usando Twilio TTS")
+            print(f"   Despedida que falló: {respuesta_agente[:100]}...")
+            print(f"   Call SID: {call_sid}")
             response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
 
         # FIX 76: Agregar pausa de 1 segundo antes de colgar (evita sensación agresiva)
@@ -1571,8 +1577,10 @@ def procesar_respuesta():
 
         # FIX 96: Reproducir audio DENTRO del Gather para estar listo desde que empieza
         if audio_id is None:
-            # Caso: Respuesta larga - usar Twilio TTS rápido
-            print(f"⚡ Reproduciendo despedida con Twilio TTS")
+            # FIX 102: Caso: ElevenLabs falló - usar Twilio TTS
+            print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ en despedida gather - usando Twilio TTS")
+            print(f"   Despedida que falló: {respuesta_agente[:100]}...")
+            print(f"   Call SID: {call_sid}")
             gather_despedida.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
         else:
             # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs
@@ -1601,8 +1609,10 @@ def procesar_respuesta():
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
-        # FIX 98: Fallback a Twilio TTS SOLO si ElevenLabs falló completamente
-        print(f"⚠️ FIX 98: ElevenLabs falló - usando Twilio TTS (Polly.Miguel)")
+        # FIX 102: Fallback a Twilio TTS SOLO si ElevenLabs falló completamente
+        print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ - usando Twilio TTS (Polly.Miguel)")
+        print(f"   Respuesta que falló: {respuesta_agente[:100]}...")
+        print(f"   Call SID: {call_sid}")
         gather.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
     else:
         # Usar audio de ElevenLabs (voz Bruce) - SIEMPRE preferido
