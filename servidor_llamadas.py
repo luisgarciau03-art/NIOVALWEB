@@ -1772,25 +1772,29 @@ def procesar_respuesta():
     # IMPORTANTE: Preparar Gather PRIMERO, luego reproducir audio DENTRO del Gather
     # FIX 60/61/62/63/86/112: Usando Whisper API (mejor precisión + más barato)
 
-    # FIX 116/118: Timeouts progresivos según avance de conversación
-    # Después de varios mensajes, el cliente habla más lento y con más atención
-    num_mensajes = len(agente.conversation_history)
+    # FIX 120: Timeout SOLO de 3s cuando se pide correo, 2s en el resto
+    # Usuario solicitó: "unicamente debe de esperar 3seg en los mensajes donde le esten proporcionado correo"
 
-    if num_mensajes <= 4:
-        # Primeros 4 mensajes: rápido (saludo, confirmación inicial)
-        timeout_gather = 3
-        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 1-4: conversación inicial rápida)")
-    elif num_mensajes <= 8:
-        # Mensajes 5-8: medio (preguntas sobre productos, captura de datos)
-        timeout_gather = 4
-        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 5-8: conversación media)")
+    # Detectar si Bruce acaba de pedir correo
+    keywords_pide_correo = [
+        "correo", "email", "e-mail", "dirección electrónica",
+        "deletrear", "letra por letra", "¿cuál es el correo",
+        "proporcionar.*correo", "pasar.*correo"
+    ]
+
+    # Revisar último mensaje de Bruce
+    ultimo_mensaje_bruce = None
+    for msg in reversed(agente.conversation_history):
+        if msg['role'] == 'assistant':
+            ultimo_mensaje_bruce = msg['content'].lower()
+            break
+
+    if ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
+        timeout_gather = 3  # 3s solo cuando está proporcionando correo
+        print(f"⏱️ FIX 120: Timeout={timeout_gather}s (deletreo de correo)")
     else:
-        # Mensajes 9+: máximo 4s (FIX 118 maneja el deletreo de correos específicamente)
-        timeout_gather = 4
-        print(f"⏱️ FIX 116: Timeout={timeout_gather}s (mensajes 9+: máximo 4s)")
-
-    # FIX 118.1: Timeout fijo sin incrementos adicionales (3-4s máximo)
-    # El usuario solicitó reducir el timeout total a 3s cuando se pide correo
+        timeout_gather = 1  # 1s para toda conversación normal (muy rápido)
+        print(f"⏱️ FIX 120: Timeout={timeout_gather}s (conversación normal)")
 
     gather = Gather(
         input="speech",
