@@ -250,7 +250,7 @@ DEBES RESPONDER INMEDIATAMENTE:
 [ESPERA EL CORREO - NO PIDAS NÚMERO NI HORARIO]
 
 FIX 101: Después de recibir el correo - DESPEDIDA INMEDIATA (SIN PEDIR NOMBRE):
-"Perfecto, anotado: [REPITE EL CORREO]. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+"Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 [TERMINA LLAMADA - NO PIDAS NOMBRE]
 
 IMPORTANTE:
@@ -287,7 +287,7 @@ DEBES DECIR EXACTAMENTE (CORTO Y DIRECTO):
 
 [PASO 2 - Después de recibir el correo]
 DEBES DESPEDIRTE INMEDIATAMENTE:
-"Perfecto, anotado: [REPITE EL CORREO]. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
+"Perfecto, ya lo tengo anotado. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
 [FIN DE LLAMADA]
 
 ❌ NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades)
@@ -2685,18 +2685,21 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             self.lead_data["email"] = email_detectado
             print(f"📧 Email detectado (deletreado): {email_detectado}")
 
-            # FIX 98: DESPEDIRSE INMEDIATAMENTE después de capturar email
+            # FIX 98/118: DESPEDIRSE INMEDIATAMENTE después de capturar email
             self.conversation_history.append({
                 "role": "system",
                 "content": f"""[SISTEMA] ✅ Email capturado (deletreado): {email_detectado}
 
-⚠️⚠️⚠️ FIX 98: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
+⚠️⚠️⚠️ FIX 98/118: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
 
 El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
 DEBES DESPEDIRTE AHORA:
-"Perfecto, anotado: {email_detectado}. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+"Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 
+🚨 FIX 118: NO REPITAS EL CORREO
+❌ NUNCA digas el correo de vuelta (riesgo de deletrearlo mal)
+❌ Solo di: "ya lo tengo anotado" o "perfecto, anotado"
 ❌ NO hagas más preguntas
 ❌ NO pidas confirmación del correo (ya lo tienes)
 ❌ NO preguntes sobre productos, proveedores, etc.
@@ -2705,7 +2708,8 @@ DEBES DESPEDIRTE AHORA:
 IMPORTANTE:
 - El cliente está OCUPADO - termina la llamada YA
 - Ya tienes nombre + email = SUFICIENTE
-- Despedida corta y profesional"""
+- Despedida corta y profesional
+- NO repetir el correo evita errores de transcripción"""
             })
 
         # FIX 117: Manejar cuando solo se dice dominio (ej: "coprofesa punto net")
@@ -2749,7 +2753,7 @@ Entonces formarás el email completo: [usuario]@{dominio_completo}"""
 El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
 DEBES DESPEDIRTE AHORA:
-"Perfecto, anotado: {email_detectado}. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+"Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 
 ❌ NO hagas más preguntas
 ❌ NO pidas confirmación del correo (ya lo tienes)
@@ -3590,7 +3594,7 @@ RESPONDE: "Perfecto, excelente. Por favor, adelante con el correo."
 [ESPERA EL CORREO]
 
 FIX 101: Después de recibir correo - DESPEDIDA INMEDIATA (SIN PEDIR NOMBRE):
-"Perfecto, anotado: [CORREO]. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
+"Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 [TERMINA LLAMADA - NO PIDAS NOMBRE]
 
 ❌ NO preguntes el nombre (abruma al cliente que no es de compras)
@@ -3619,7 +3623,7 @@ PASO 1: "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder menci
 PASO 2 (SIMPLIFICADO): "Gracias [NOMBRE]. Perfecto, le enviaré el catálogo completo por correo electrónico para que el encargado lo revise con calma. ¿Me confirma el correo?"
 [Esperar correo]
 
-PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, anotado: [REPITE EL CORREO]. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
+PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
 [FIN DE LLAMADA]
 
 ❌ NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades, horarios)
