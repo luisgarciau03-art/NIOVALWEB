@@ -17,11 +17,17 @@ print("GENERADOR DE CACHE - NUEVO SALUDO (FIX 108)")
 print("=" * 70 + "\n")
 
 # FIX 112: Saludo corto dividido en 2 partes (no saturar al cliente)
-# Solo "Hola, buen dia" inicial - El resto después del saludo del cliente
+# Parte 1: "Hola, buen dia" inicial
+# Parte 2: Segunda parte después del saludo del cliente
 frases_a_generar = [
     {
         "key": "saludo_inicial",
         "texto": "Hola, buen dia",
+        "force": True  # Forzar regeneración
+    },
+    {
+        "key": "segunda_parte_saludo",
+        "texto": "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?",
         "force": True  # Forzar regeneración
     }
 ]
