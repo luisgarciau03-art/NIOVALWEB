@@ -1799,7 +1799,21 @@ def procesar_respuesta():
     num_mensajes_bruce = len([msg for msg in agente.conversation_history if msg['role'] == 'assistant'])
     es_segundo_mensaje = num_mensajes_bruce == 2  # "Me comunico de la marca nioval..."
 
-    if ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
+    # FIX 126: Detectar si cliente pidió "un momento" en su último mensaje
+    ultimo_mensaje_cliente = None
+    mensajes_cliente = [msg for msg in agente.conversation_history if msg['role'] == 'user']
+    if mensajes_cliente:
+        ultimo_mensaje_cliente = mensajes_cliente[-1]['content'].lower()
+
+    cliente_pidio_momento = False
+    if ultimo_mensaje_cliente:
+        frases_espera = ["un momento", "espere", "espéreme", "dame un momento", "aguarda", "aguarde"]
+        cliente_pidio_momento = any(frase in ultimo_mensaje_cliente for frase in frases_espera)
+
+    if cliente_pidio_momento:
+        timeout_gather = 8  # FIX 126: 8s cuando cliente pide "un momento"
+        print(f"⏱️ FIX 126: Timeout={timeout_gather}s (cliente pidió un momento)")
+    elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 2  # FIX 122: 2s cuando pide correo
         print(f"⏱️ FIX 124: Timeout={timeout_gather}s (deletreo de correo)")
     elif es_segundo_mensaje:
