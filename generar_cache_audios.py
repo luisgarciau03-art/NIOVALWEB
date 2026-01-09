@@ -25,17 +25,13 @@ input("Presiona ENTER para continuar...")
 
 print("\nEnviando request a Railway...")
 
-# FIX 93/108/111: Pre-generar los 2 saludos iniciales (más natural y cercano)
+# FIX 93/108/111/112: Saludo corto inicial (dividido en 2 partes)
 # IMPORTANTE: force=True regenera aunque ya existan (para actualizar saludo)
+# NUEVO: Solo "Hola, buen dia" - El resto se dice después del saludo del cliente
 frases_a_generar = [
     {
         "key": "saludo_inicial",
-        "texto": "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado de compras?",
-        "force": True  # Forzar regeneración
-    },
-    {
-        "key": "saludo_inicial_encargado",
-        "texto": "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?",
+        "texto": "Hola, buen dia",
         "force": True  # Forzar regeneración
     }
 ]

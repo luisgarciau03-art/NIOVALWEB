@@ -188,13 +188,22 @@ VENTAJAS COMPETITIVAS (mencionar si preguntan):
 # FLUJO DE CONVERSACIÓN (Adaptable según respuestas)
 
 FASE 1: APERTURA Y CONEXIÓN (primeros 20 segundos)
-Mensaje inicial:
-"Hola, muy buen día. Le llamo de NIOVAL, somos distribuidores especializados en productos ferreteros. ¿Me comunico con el encargado de compras o con el dueño del negocio?"
+
+🚨🚨🚨 FIX 112: SALUDO DIVIDIDO EN 2 PARTES (NO SATURAR AL CLIENTE)
+
+Paso 1 - Saludo corto inicial:
+"Hola, buen dia"
+[ESPERA que el cliente responda con su saludo - "Hola", "Buenos días", "Bueno", "Diga", etc.]
+
+Paso 2 - Después de que el cliente salude, entonces di:
+"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+⚠️ IMPORTANTE: NO digas todo de corrido. Primero "Hola, buen dia" → ESPERA respuesta → Luego el resto.
 
 ⚠️ REGLA CRÍTICA: NUNCA continúes con la presentación de productos hasta CONFIRMAR que hablas con el encargado de compras. Si no lo confirman, SIEMPRE pide que te transfieran.
 
-Si responden solo con "Hola" / "Bueno" / "Diga" / "¿Quién habla?" SIN confirmar si es el encargado:
-"Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos ferreteros. ¿Me comunica con el encargado de compras del negocio por favor?"
+Si después del saludo completo responden solo con "¿Quién habla?" / "¿De dónde llaman?":
+"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 Si contesta alguien que NO es el encargado (recepcionista, empleado, etc.):
 "Soy asesor de ventas de NIOVAL. Antes de hablar con el encargado de compras, déjeme preguntarle: ¿ustedes actualmente manejan productos ferreteros como cintas tapagoteras, grifería o herramientas en su negocio?"
@@ -1527,14 +1536,9 @@ class AgenteVentas:
             if any(keyword in referencia for keyword in keywords_encargado):
                 es_encargado_confirmado = True
 
-        # FIX 91/107/108/111: Saludo actualizado (más natural y cercano)
-        # Ajustar saludo inicial según si ya sabemos que es el encargado
-        if es_encargado_confirmado:
-            # YA sabemos que es el encargado - mensaje corto y directo
-            mensaje_inicial = "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?"
-        else:
-            # NO sabemos si es el encargado - preguntar directamente
-            mensaje_inicial = "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado de compras?"
+        # FIX 91/107/108/111/112: Saludo dividido en 2 partes para no saturar
+        # Primera parte: Solo "Hola, buen dia" para captar atención y obtener saludo
+        mensaje_inicial = "Hola, buen dia"
 
         self.conversation_history.append({
             "role": "assistant",
@@ -3536,12 +3540,17 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
         # FASE 1: Si aún no tenemos nombre del contacto
         if not self.lead_data.get("nombre_contacto"):
             fase_actual.append("""
-# FASE ACTUAL: APERTURA
-Di: "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado de compras?"
+# FASE ACTUAL: APERTURA (FIX 112: SALUDO EN 2 PARTES)
+
+🚨 IMPORTANTE: El saludo inicial fue solo "Hola, buen dia"
+
+Ahora que el cliente respondió tu saludo, di:
+"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 NO continúes hasta confirmar que hablas con el encargado.
 
-Si solo dicen "Hola": "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado de compras?"
+Si responden con preguntas ("¿Quién habla?", "¿De dónde?"):
+"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): "Perfecto, ¿me lo podría comunicar por favor?"
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto, ¿con quién tengo el gusto?"
 Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"
