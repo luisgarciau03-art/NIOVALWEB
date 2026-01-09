@@ -1797,11 +1797,11 @@ def procesar_respuesta():
             break
 
     if ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather = 3  # 3s solo cuando está proporcionando correo
-        print(f"⏱️ FIX 120: Timeout={timeout_gather}s (deletreo de correo)")
+        timeout_gather = 2  # FIX 122: 2s cuando pide correo (antes 3s, usuario reportó que >5s total es demasiado)
+        print(f"⏱️ FIX 122: Timeout={timeout_gather}s (deletreo de correo)")
     else:
         timeout_gather = 1  # 1s para toda conversación normal (muy rápido)
-        print(f"⏱️ FIX 120: Timeout={timeout_gather}s (conversación normal)")
+        print(f"⏱️ FIX 122: Timeout={timeout_gather}s (conversación normal)")
 
     gather = Gather(
         input="speech",
