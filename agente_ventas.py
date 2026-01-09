@@ -1675,9 +1675,55 @@ class AgenteVentas:
             "content": respuesta_cliente
         })
 
+        # FIX 128: DETECCIÓN DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
+        respuesta_lower = respuesta_cliente.lower()
+
+        # Detectar interrupciones cortas (cliente dice algo mientras Bruce habla)
+        palabras_interrupcion = respuesta_cliente.strip().split()
+        es_interrupcion_corta = len(palabras_interrupcion) <= 3 and len(self.conversation_history) <= 6
+
+        # Detectar transcripciones erróneas comunes de Whisper
+        transcripciones_erroneas = [
+            "que no me hablas", "no me hablas", "que me hablas",
+            "que marca es la que", "cual marca es la que",
+            "de que marca", "qué marca"
+        ]
+
+        es_transcripcion_erronea = any(frase in respuesta_lower for frase in transcripciones_erroneas)
+
+        # Si detectamos interrupción o transcripción errónea, agregar indicación para usar nexo
+        if (es_interrupcion_corta or es_transcripcion_erronea) and len(self.conversation_history) >= 3:
+            ultimo_mensaje_bruce = None
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'assistant':
+                    ultimo_mensaje_bruce = msg['content']
+                    break
+
+            if ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
+                # Bruce estaba diciendo algo largo cuando fue interrumpido
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""[SISTEMA - FIX 128] ⚠️ INTERRUPCIÓN DETECTADA
+
+Cliente interrumpió mientras hablabas. Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
+
+DEBES usar una frase de NEXO para retomar naturalmente:
+- "Como le comentaba..."
+- "Lo que le decía..."
+- "Entonces, como le mencionaba..."
+- "Perfecto, entonces..."
+
+NO repitas el mensaje completo desde el inicio.
+NO ignores la interrupción.
+
+Ejemplo correcto:
+"Perfecto, entonces como le comentaba, me comunico de NIOVAL sobre productos ferreteros..."
+"""
+                })
+                print(f"🔄 FIX 128: Interrupción detectada - forzando uso de nexo")
+
         # FIX 75/81: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
         # CRÍTICO: Detectar CUALQUIER mención de proveedor exclusivo/Truper y COLGAR
-        respuesta_lower = respuesta_cliente.lower()
 
         # FIX 81: DEBUG - Imprimir SIEMPRE para verificar que este código se ejecuta
         print(f"🔍 FIX 81 DEBUG: Verificando objeciones en: '{respuesta_cliente[:80]}'")
