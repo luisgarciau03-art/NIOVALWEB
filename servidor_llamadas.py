@@ -1390,6 +1390,31 @@ def procesar_respuesta():
         # Resetear contador si hubo respuesta
         agente.respuestas_vacias_consecutivas = 0
 
+    # FIX 115: DETECCIÓN RÁPIDA DE SALUDOS PARA SEGUNDA PARTE (FIX 112)
+    # Si el cliente responde con saludo simple después de "Hola, buen dia",
+    # responder INMEDIATAMENTE con segunda parte desde caché (0s delay GPT)
+    speech_lower = speech_result.lower().strip()
+
+    # Detectar si esta es la primera respuesta del cliente (después del saludo inicial)
+    es_primera_respuesta = len(agente.conversation_history) <= 1
+
+    # Saludos simples del cliente
+    saludos_simples = [
+        "hola", "bueno", "buenos días", "buenos dias", "buen día", "buen dia",
+        "diga", "dígame", "digame", "sí", "si", "aló", "alo", "buenas",
+        "qué onda", "que onda", "mande", "a sus órdenes", "a sus ordenes"
+    ]
+
+    # FIX 115: Si es saludo simple en primera respuesta, usar caché inmediato
+    usa_segunda_parte_saludo = False
+    if es_primera_respuesta and any(saludo in speech_lower for saludo in saludos_simples):
+        # Verificar que la respuesta sea SOLO el saludo (no más de 5 palabras)
+        palabras = speech_result.split()
+        if len(palabras) <= 5:
+            usa_segunda_parte_saludo = True
+            print(f"🚀 FIX 115: Saludo simple detectado en primera respuesta: '{speech_result}'")
+            print(f"   Usando CACHE de segunda_parte_saludo para respuesta instantánea (0s GPT)")
+
     # FIX 56/70: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
     import time
     import threading
@@ -1400,7 +1425,6 @@ def procesar_respuesta():
 
     # Detectar si la pregunta está en el caché
     respuesta_desde_cache = None
-    speech_lower = speech_result.lower()
 
     global cache_respuestas_stats
     cache_respuestas_stats["total_consultas"] += 1
@@ -1443,6 +1467,32 @@ def procesar_respuesta():
     #             if patron in speech_lower:
     #                 respuesta_desde_cache = datos["respuesta"]
     #                 ...
+
+    # FIX 115: Si detectamos saludo simple, usar caché directo sin GPT
+    if usa_segunda_parte_saludo:
+        # Texto de la segunda parte del saludo (pre-generado en cache)
+        respuesta_desde_cache = "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+        # Agregar la respuesta del cliente al historial
+        agente.conversation_history.append({
+            "role": "user",
+            "content": speech_result
+        })
+
+        # Agregar la respuesta de Bruce al historial
+        agente.conversation_history.append({
+            "role": "assistant",
+            "content": respuesta_desde_cache
+        })
+
+        # Marcar como respuesta desde caché
+        respuesta_container["respuesta"] = respuesta_desde_cache
+        respuesta_container["completado"] = True
+        respuesta_container["desde_cache"] = True
+        respuesta_container["categoria_cache"] = "segunda_parte_saludo_fix115"
+
+        cache_respuestas_stats["cache_hits"] += 1
+        print(f"✅ FIX 115: Respuesta instantánea desde caché (0s GPT, 0s ElevenLabs)")
 
     # FIX 97: Preparar contenedor para audio generado en paralelo
     audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
@@ -1618,11 +1668,24 @@ def procesar_respuesta():
         else:
             print(f"⚠️ FIX 102: Audio NO completó después de {max_wait}s - usará Twilio TTS")
 
-    # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
-    # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
-    audio_id = audio_container.get("audio_id")
-    usa_cache = audio_container.get("usa_cache", False)
-    cache_key = audio_container.get("cache_key")
+    # FIX 115: Si usamos caché de segunda parte del saludo, usar audio pre-generado
+    if usa_segunda_parte_saludo and "segunda_parte_saludo" in audio_cache:
+        # Usar audio pre-generado de la segunda parte (0s delay total)
+        audio_id = f"segunda_parte_saludo_{call_sid}"
+        audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
+        usa_cache = True
+        cache_key = "segunda_parte_saludo"
+        audio_container["audio_id"] = audio_id
+        audio_container["usa_cache"] = True
+        audio_container["cache_key"] = cache_key
+        audio_container["completado"] = True
+        print(f"📦 FIX 115: Audio de segunda_parte_saludo desde caché (0s ElevenLabs)")
+    else:
+        # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
+        # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
+        audio_id = audio_container.get("audio_id")
+        usa_cache = audio_container.get("usa_cache", False)
+        cache_key = audio_container.get("cache_key")
 
     tiempo_total = time.time() - inicio
     print(f"⏱️ TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
