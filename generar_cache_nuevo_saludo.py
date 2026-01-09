@@ -16,16 +16,16 @@ print("\n" + "=" * 70)
 print("GENERADOR DE CACHE - NUEVO SALUDO (FIX 108)")
 print("=" * 70 + "\n")
 
-# FIX 108: Nuevo saludo sin "Mi nombre es Bruce W"
+# FIX 111: Saludo más natural y cercano
 frases_a_generar = [
     {
         "key": "saludo_inicial",
-        "texto": "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Me comunica con el encargado de compras por favor?",
+        "texto": "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado de compras?",
         "force": True  # Forzar regeneración
     },
     {
         "key": "saludo_inicial_encargado",
-        "texto": "Muy buen día. Le llamo de NIOVAL sobre una propuesta comercial de productos de ferretería. ¿Con quién tengo el gusto?",
+        "texto": "Hola, buen dia me comunico de la marca nioval, mas queda queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?",
         "force": True  # Forzar regeneración
     }
 ]
