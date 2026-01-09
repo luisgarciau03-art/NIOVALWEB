@@ -1675,21 +1675,104 @@ class AgenteVentas:
             "content": respuesta_cliente
         })
 
-        # FIX 128: DETECCIÓN DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
+        # FIX 128/129: DETECCIÓN AVANZADA DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
         respuesta_lower = respuesta_cliente.lower()
+        respuesta_stripped = respuesta_cliente.strip()
 
         # Detectar interrupciones cortas (cliente dice algo mientras Bruce habla)
-        palabras_interrupcion = respuesta_cliente.strip().split()
+        palabras_interrupcion = respuesta_stripped.split()
         es_interrupcion_corta = len(palabras_interrupcion) <= 3 and len(self.conversation_history) <= 6
 
-        # Detectar transcripciones erróneas comunes de Whisper
+        # FIX 129: LISTA EXPANDIDA de transcripciones erróneas comunes de Whisper
+        # Basado en análisis de logs reales
         transcripciones_erroneas = [
+            # Errores críticos de sintaxis/gramática
             "que no me hablas", "no me hablas", "que me hablas",
+            "la que no me hablas", "qué marca es la que no me hablas",
             "que marca es la que", "cual marca es la que",
-            "de que marca", "qué marca"
+            "de que marca", "qué marca",
+            "y peso para servirle",  # Debería ser "A sus órdenes"
+            "mas queda nada",  # Debería ser "más que nada"
+
+            # Frases contradictorias o sin sentido
+            "si no por correo no no agarro nada",
+            "si no, por correo no, no agarro",
+            "ahorita no muchachos no se encuentran",
+            "no, que no te puedo no es por correo",
+            "sí sí aquí estamos de este a ver",
+
+            # Respuestas muy cortas sospechosas
+            "oc",  # Debería ser "ok"
+            "camarón",  # Sin contexto
+            "moneda",  # Sin contexto
+
+            # Fragmentaciones extrañas de emails
+            "arroba punto com",  # Email incompleto
+            "punto leos",  # Fragmento de email
+            "compras a roberto",  # "arroba" transcrito como "a"
+            "arroba el primerito",
+
+            # Contextos incorrectos
+            "el gerente de tienda de armas",  # En contexto ferretería
+            "siri dime un trabalenguas",  # Cliente activó Siri
+
+            # Sistemas IVR mal transcritos
+            "matriz si conoce el número de extensión",
+            "grabes un mensaje marque la tecla gato",
+            "marque la tecla gato",
+
+            # Nombres mal transcritos (patrones comunes)
+            "o jedi",  # Debería ser "Yahir"
+            "jail",  # Debería ser "Jair"
         ]
 
+        # FIX 129: ENFOQUE 2 - Análisis de contexto y coherencia
         es_transcripcion_erronea = any(frase in respuesta_lower for frase in transcripciones_erroneas)
+
+        # Validaciones adicionales de coherencia
+        es_respuesta_muy_corta_sospechosa = (
+            len(respuesta_stripped) <= 3 and
+            respuesta_lower not in ["sí", "si", "no", "ok"] and
+            len(self.conversation_history) > 3
+        )
+
+        # Detectar respuestas vacías o solo espacios
+        es_respuesta_vacia = len(respuesta_stripped) == 0
+
+        # Detectar múltiples negaciones (signo de error de transcripción)
+        tiene_negaciones_multiples = (
+            respuesta_lower.count("no no") > 0 or
+            respuesta_lower.count("no, no") > 0 or
+            respuesta_lower.count("no no no") > 0
+        )
+
+        # Detectar fragmentos de email sin @ (error común de Whisper)
+        tiene_fragmento_email_sin_arroba = (
+            ("arroba" in respuesta_lower or "punto com" in respuesta_lower) and
+            "@" not in respuesta_cliente and
+            "." not in respuesta_cliente
+        )
+
+        # Combinar todas las detecciones
+        es_transcripcion_erronea = (
+            es_transcripcion_erronea or
+            es_respuesta_muy_corta_sospechosa or
+            tiene_negaciones_multiples or
+            tiene_fragmento_email_sin_arroba
+        )
+
+        # Debug: Reportar qué tipo de error se detectó
+        if es_transcripcion_erronea:
+            razones = []
+            if any(frase in respuesta_lower for frase in transcripciones_erroneas):
+                razones.append("patrón conocido")
+            if es_respuesta_muy_corta_sospechosa:
+                razones.append("respuesta muy corta")
+            if tiene_negaciones_multiples:
+                razones.append("negaciones múltiples")
+            if tiene_fragmento_email_sin_arroba:
+                razones.append("fragmento email")
+            print(f"⚠️ FIX 129: Posible error Whisper detectado: {', '.join(razones)}")
 
         # Si detectamos interrupción o transcripción errónea, agregar indicación para usar nexo
         if (es_interrupcion_corta or es_transcripcion_erronea) and len(self.conversation_history) >= 3:
@@ -1699,11 +1782,38 @@ class AgenteVentas:
                     ultimo_mensaje_bruce = msg['content']
                     break
 
-            if ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
-                # Bruce estaba diciendo algo largo cuando fue interrumpido
+            # FIX 129: Mensajes más específicos según el tipo de error detectado
+            if es_transcripcion_erronea and not es_interrupcion_corta:
+                # Error de transcripción de Whisper detectado
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""[SISTEMA - FIX 128] ⚠️ INTERRUPCIÓN DETECTADA
+                    "content": f"""[SISTEMA - FIX 129] ⚠️ ERROR DE TRANSCRIPCIÓN WHISPER DETECTADO
+
+La respuesta del cliente parece tener errores de transcripción: "{respuesta_cliente}"
+
+ACCIONES REQUERIDAS:
+1. Interpreta la INTENCIÓN del cliente, no las palabras literales
+2. Si no tiene sentido, pide CORTÉSMENTE que repita:
+   - "Disculpe, no le escuché bien, ¿me lo podría repetir?"
+   - "Perdón, se cortó un poco, ¿puede repetir?"
+
+3. Si parece interrupción, usa frase de NEXO:
+   - "Como le comentaba..."
+   - "Lo que le decía..."
+   - "Perfecto, entonces..."
+
+NO hagas preguntas sobre palabras sin sentido ("camarón", "moneda", etc.)
+NO repitas preguntas que ya hiciste
+INTERPRETA la intención general del cliente
+"""
+                })
+                print(f"🔄 FIX 129: Error Whisper detectado - instruyendo a GPT")
+
+            elif es_interrupcion_corta and ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
+                # Interrupción corta mientras Bruce hablaba
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""[SISTEMA - FIX 128/129] ⚠️ INTERRUPCIÓN DETECTADA
 
 Cliente interrumpió mientras hablabas. Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
 
