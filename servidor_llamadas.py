@@ -1913,6 +1913,9 @@ def procesar_respuesta():
     if cliente_pidio_momento:
         timeout_gather = 10  # FIX 131: 10s cuando cliente pide "un momento" o variantes (antes 8s)
         print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
+    elif cliente_desesperado:
+        timeout_gather = 5  # FIX 135: 5s cuando cliente está desesperado (necesita procesar confirmación)
+        print(f"⏱️ FIX 135: Timeout={timeout_gather}s (cliente desesperado - dio confirmación)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo)
         print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
@@ -1941,11 +1944,32 @@ def procesar_respuesta():
 
     print(f"🎙️ FIX 125: barge_in={permitir_interrupcion} (mensaje #{num_mensajes_bruce})")
 
-    # FIX 134: Si cliente está desesperado, agregar confirmación ANTES de la respuesta
+    # FIX 135: Si cliente está desesperado, agregar confirmación ANTES de la respuesta
     if cliente_desesperado:
-        print(f"🚨 FIX 134: Agregando confirmación inmediata ANTES de respuesta principal")
-        # Agregar "Sí, estoy aquí" ANTES del Gather para confirmar presencia inmediatamente
-        response.say("Sí, estoy aquí.", language="es-MX", voice="Polly.Miguel")
+        print(f"🚨 FIX 135: Agregando confirmación inmediata con VOZ DE BRUCE")
+
+        # Generar audio con voz de Bruce (ElevenLabs) para "Sí, estoy aquí"
+        confirmacion_texto = "Sí, estoy aquí."
+
+        # Verificar si existe en caché
+        if "claro,_tómese_su_tiempo._estoy_aquí_esperando." in audio_cache:
+            # Usar audio pre-cacheado
+            audio_url_confirmacion = request.url_root + "audio_cache/claro,_tómese_su_tiempo._estoy_aquí_esperando."
+            print(f"📦 FIX 135: Usando confirmación desde caché (voz Bruce)")
+            response.play(audio_url_confirmacion)
+        else:
+            # Generar con ElevenLabs en tiempo real
+            audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
+            result_confirmacion = generar_audio_elevenlabs(confirmacion_texto, audio_id_confirmacion)
+
+            if result_confirmacion:
+                audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
+                print(f"🎵 FIX 135: Confirmación generada con ElevenLabs (voz Bruce)")
+                response.play(audio_url_confirmacion)
+            else:
+                # Fallback a Twilio si ElevenLabs falla
+                print(f"⚠️ FIX 135: ElevenLabs falló - usando Twilio")
+                response.say(confirmacion_texto, language="es-MX", voice="Polly.Miguel")
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
