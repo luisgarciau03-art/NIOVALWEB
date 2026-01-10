@@ -1966,14 +1966,26 @@ def procesar_respuesta():
         ]
         cliente_pidio_momento = any(frase in ultimo_mensaje_cliente for frase in frases_espera)
 
+    # FIX 155: Detectar si cliente está DICTANDO correo (no solo pensando)
+    cliente_dictando_correo = False
+    if ultimo_mensaje_cliente:
+        indicadores_dictado_correo = [
+            "se lo paso", "le paso", "es ", "arroba", "@", "punto com", ".com",
+            "gmail", "hotmail", "outlook", "yahoo", "guión", "-", "underscore", "_"
+        ]
+        cliente_dictando_correo = any(ind in ultimo_mensaje_cliente.lower() for ind in indicadores_dictado_correo)
+
     if cliente_pidio_momento:
         timeout_gather = 10  # FIX 131: 10s cuando cliente pide "un momento" o variantes (antes 8s)
         print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
+    elif cliente_dictando_correo:
+        timeout_gather = 15  # FIX 155: 15s cuando cliente está DICTANDO correo (email completo puede tomar 10-15s)
+        print(f"⏱️ FIX 155: Timeout={timeout_gather}s (cliente dictando correo - NO interrumpir)")
     elif cliente_desesperado:
         timeout_gather = 5  # FIX 135: 5s cuando cliente está desesperado (necesita procesar confirmación)
         print(f"⏱️ FIX 135: Timeout={timeout_gather}s (cliente desesperado - dio confirmación)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo)
+        timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo PARA PENSAR)
         print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
     elif es_segundo_mensaje:
         timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
