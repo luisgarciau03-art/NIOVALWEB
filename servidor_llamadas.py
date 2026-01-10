@@ -1994,12 +1994,13 @@ def procesar_respuesta():
         timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
         print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
 
-    # FIX 125/154: Permitir interrupciones solo en primeros 2 mensajes
-    # FIX 154: REDUCIDO de 3 a 2 para evitar ciclos de interrupciones mutuas
+    # FIX 125/154/156: Permitir interrupciones SOLO en saludo inicial (mensaje #1)
+    # FIX 156: REDUCIDO de 2 a 1 - ciclo persiste con barge_in en mensaje #2
     # Problema original (FIX 125): Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
-    # Problema nuevo (FIX 154): barge_in=True en mensajes 2-3 causa ciclo cuando cliente interrumpe
-    #   Cliente interrumpe → Bruce repite → Cliente vuelve a interrumpir → ciclo infinito
-    permitir_interrupcion = num_mensajes_bruce <= 2
+    # FIX 154: Reducido de 3 a 2 - no fue suficiente
+    # FIX 156: Solo mensaje #1 - cliente desesperado detectado en saludo, después NO interrumpir
+    #   Si cliente interrumpe mensaje #2+, causa ciclo: interrumpe → Bruce repite → interrumpe de nuevo
+    permitir_interrupcion = num_mensajes_bruce == 1  # FIX 156: Solo saludo inicial
 
     gather = Gather(
         input="speech",

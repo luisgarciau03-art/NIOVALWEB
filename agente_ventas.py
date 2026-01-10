@@ -1701,18 +1701,22 @@ class AgenteVentas:
         # MEJORADO: NO detectar como interrupción si cliente responde apropiadamente
         palabras_interrupcion = respuesta_stripped.split()
 
-        # Saludos y respuestas válidas que NO son interrupciones
-        respuestas_validas_cortas = [
-            "hola", "bueno", "diga", "dígame", "digame", "si", "sí", "no",
+        # FIX 156: Palabras clave de respuestas válidas (MEJORADO - búsqueda parcial)
+        # Si la respuesta CONTIENE estas palabras, NO es interrupción
+        palabras_validas = [
+            "hola", "bueno", "diga", "dígame", "digame", "adelante",
             "buenos días", "buenos dias", "buen día", "buen dia",
-            "claro", "adelante", "ok", "vale", "perfecto"
+            "claro", "ok", "vale", "perfecto", "si", "sí", "no",
+            "aló", "alo", "buenas", "qué onda", "que onda", "mande",
+            "a sus órdenes", "ordenes", "qué necesita", "que necesita"
         ]
 
-        es_respuesta_valida = respuesta_lower in respuestas_validas_cortas
+        # Verificar si la respuesta CONTIENE alguna palabra válida (no exacta)
+        es_respuesta_valida = any(palabra in respuesta_lower for palabra in palabras_validas)
 
-        # Solo es interrupción si:
+        # FIX 156: Solo es interrupción si:
         # 1. Es corta (<=3 palabras)
-        # 2. NO es una respuesta válida
+        # 2. NO contiene palabras válidas
         # 3. Conversación temprana (<=6 mensajes)
         es_interrupcion_corta = (
             len(palabras_interrupcion) <= 3 and
