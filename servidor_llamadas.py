@@ -1002,12 +1002,13 @@ def webhook_voz():
     # FIX 60/61/62/63/86: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
     # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
-    # FIX 86/112: Timeouts optimizados para saludo corto "Hola, buen dia"
+    # FIX 86/112/149: Timeouts MUY AGRESIVOS para detectar cliente desesperado RÁPIDO
+    # Cliente desesperado habla 5-30s continuamente → Necesitamos cortar en primera pausa
     gather = Gather(
         input="speech",
         language="es-MX",
         timeout=2,  # FIX 145: 2s - Balance entre clientes normales (2-3s) y desesperados
-        speech_timeout=1,  # FIX 142: 1s - Cortar rápido cuando cliente hace pausa
+        speech_timeout=0.5,  # FIX 149: 0.5s - ULTRA AGRESIVO para cortar cliente desesperado en primera pausa
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
