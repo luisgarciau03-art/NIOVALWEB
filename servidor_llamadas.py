@@ -1383,6 +1383,12 @@ def procesar_respuesta():
             # Alternar entre las frases según el intento
             respuesta_agente = frases_repeticion[(agente.respuestas_vacias_consecutivas - 1) % len(frases_repeticion)]
 
+            # FIX 152: LOG cuando se reproduce "Disculpa no te escuché bien"
+            print(f"🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN")
+            print(f"   Mensaje: '{respuesta_agente}'")
+            print(f"   Razón: Timeout expiró sin respuesta del cliente")
+            print(f"   Intento: #{agente.respuestas_vacias_consecutivas}")
+
             # Generar audio y responder
             response = VoiceResponse()
             audio_id = f"repeticion_{call_sid}_{agente.respuestas_vacias_consecutivas}"
@@ -1397,6 +1403,9 @@ def procesar_respuesta():
             else:
                 # Fallback a Polly si ElevenLabs falla
                 response.say(respuesta_agente, voice="Polly.Mia", language="es-MX")
+
+            # FIX 152: LOG adicional después de generar
+            print(f"✅ Bruce pidió que le repitan")
 
             # Esperar respuesta del cliente
             gather = response.gather(
@@ -1970,8 +1979,8 @@ def procesar_respuesta():
         timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
         print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
     else:
-        timeout_gather = 1  # 1s para conversación normal (rápido)
-        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (conversación normal)")
+        timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
+        print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
 
     # FIX 125: Permitir interrupciones en primeros 3 mensajes (cliente responde rápido)
     # Problema: Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
