@@ -1007,7 +1007,7 @@ def webhook_voz():
         input="speech",
         language="es-MX",
         timeout=3,  # FIX 112: 6s→3s - Saludo corto necesita menos tiempo de espera
-        speech_timeout=2,  # FIX 140: 2s agresivo - cortar rápido cuando cliente habla sin pausas
+        speech_timeout=1,  # FIX 142: 1s MUY agresivo - detectar cliente desesperado en ~3s
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
