@@ -1599,36 +1599,76 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
+    # FIX 132: Detectar si cliente está desesperado (repite saludos múltiples veces)
+    cliente_desesperado = False
+    if len(speech_result.split()) >= 5:
+        # Cliente dijo 5+ palabras
+        speech_lower = speech_result.lower()
+        # Buscar repeticiones de saludos/preguntas
+        patrones_desesperacion = [
+            "hola", "buenos días", "buen día", "me escuchas", "me escucha",
+            "está ahí", "estas ahi", "hay alguien", "bueno", "aló"
+        ]
+
+        # Contar cuántos patrones aparecen
+        count_patrones = sum(1 for patron in patrones_desesperacion if patron in speech_lower)
+
+        # Si aparecen 2+ patrones diferentes, cliente está desesperado
+        if count_patrones >= 2:
+            cliente_desesperado = True
+            print(f"⚠️ FIX 132: Cliente desesperado detectado - '{speech_result}'")
+            print(f"   Reduciendo timeout de espera a 0.5s para responder INMEDIATAMENTE")
+
     # FIX 58/97: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
     # El caché es instantáneo (0s), no necesita señal auditiva
     if not respuesta_container.get("desde_cache", False):
         # FIX 50/97/102: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
         # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
-        # FIX 102: Esperar máximo 5 segundos por GPT+Audio antes de dar señal auditiva
-        # Típicamente: GPT=2-3s + Audio ElevenLabs=1-2s = 3-5s total
-        # Si termina antes de 5s, no reproducimos "pensando" y respondemos directo
-        gpt_thread.join(timeout=5.0)
+        # FIX 132: Si cliente está desesperado, esperar solo 0.5s antes de dar señal
+        # Si es saludo simple en primera respuesta, esperar solo 1s
+        # Sino, esperar 5s normal
+        if cliente_desesperado:
+            timeout_espera = 0.5  # Responder INMEDIATAMENTE
+        elif usa_segunda_parte_saludo or es_primera_respuesta:
+            timeout_espera = 1.0  # Saludo simple - responder rápido (antes 5s)
+        else:
+            timeout_espera = 5.0  # Normal
+
+        print(f"⏱️ FIX 132: Esperando {timeout_espera}s antes de señal auditiva")
+        gpt_thread.join(timeout=timeout_espera)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
-        # GPT+Audio aún procesando después de 5s - dar señal auditiva
-        print(f"⏳ GPT+Audio procesando (>5s) - reproduciendo tono de pensando...")
+        # GPT+Audio aún procesando - dar señal auditiva
 
-        # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
-        # Seleccionar aleatoriamente una de las 8 frases de "pensando"
-        pensando_keys = [f"pensando_{i}" for i in range(1, 9)]
-        pensando_key = random.choice(pensando_keys)
-
-        # Verificar si existe en caché
-        if pensando_key in audio_cache:
-            # Reproducir audio pre-generado con voz de Bruce (0s delay)
-            audio_url = request.url_root + f"audio_cache/{pensando_key}"
-            print(f"💭 Bruce dice (voz Bruce): '{pensando_key}' desde caché")
-            response.play(audio_url)
+        # FIX 132: Si cliente está desesperado, responder INMEDIATAMENTE con confirmación
+        if cliente_desesperado:
+            print(f"🚨 FIX 132: Cliente desesperado - respondiendo INMEDIATAMENTE")
+            # Usar audio de confirmación pre-cacheado
+            if "claro,_tómese_su_tiempo._estoy_aquí_esperando." in audio_cache:
+                audio_url = request.url_root + f"audio_cache/claro,_tómese_su_tiempo._estoy_aquí_esperando."
+                print(f"💭 FIX 132: Bruce confirma presencia desde caché")
+                response.play(audio_url)
+            else:
+                # Fallback a TTS
+                response.say("Sí, estoy aquí. Disculpe.", language="es-MX", voice="Polly.Miguel")
         else:
-            # Fallback si no está en caché (no debería pasar)
-            print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
-            response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
+            print(f"⏳ GPT+Audio procesando - reproduciendo tono de pensando...")
+            # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
+            # Seleccionar aleatoriamente una de las 8 frases de "pensando"
+            pensando_keys = [f"pensando_{i}" for i in range(1, 9)]
+            pensando_key = random.choice(pensando_keys)
+
+            # Verificar si existe en caché
+            if pensando_key in audio_cache:
+                # Reproducir audio pre-generado con voz de Bruce (0s delay)
+                audio_url = request.url_root + f"audio_cache/{pensando_key}"
+                print(f"💭 Bruce dice (voz Bruce): '{pensando_key}' desde caché")
+                response.play(audio_url)
+            else:
+                # Fallback si no está en caché (no debería pasar)
+                print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
+                response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
 
         # FIX 102: Esperar otros 5 segundos (total 10s máximo)
         gpt_thread.join(timeout=5.0)
