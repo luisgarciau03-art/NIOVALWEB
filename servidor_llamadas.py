@@ -1006,7 +1006,7 @@ def webhook_voz():
     gather = Gather(
         input="speech",
         language="es-MX",
-        timeout=1,  # FIX 144: 1s - Procesar RÁPIDO si cliente empieza a hablar
+        timeout=2,  # FIX 145: 2s - Balance entre clientes normales (2-3s) y desesperados
         speech_timeout=1,  # FIX 142: 1s - Cortar rápido cuando cliente hace pausa
         action="/procesar-respuesta",
         method="POST",
@@ -1322,6 +1322,30 @@ def procesar_respuesta():
     if not speech_result or speech_result.strip() == "":
         agente.respuestas_vacias_consecutivas += 1
         print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
+
+        # FIX 145: Si es el PRIMER mensaje y está vacío, NO pedir repetición
+        # Cliente normal necesita 2-3s para procesar "Hola, buen dia"
+        # Contar mensajes de usuario para detectar si es primera respuesta
+        mensajes_usuario = [msg for msg in agente.conversation_history if msg['role'] == 'user']
+        es_primer_mensaje = len(mensajes_usuario) == 0
+
+        if es_primer_mensaje:
+            print(f"🚨 FIX 145: Primer mensaje vacío - Cliente necesita más tiempo para procesar saludo")
+            print(f"   NO pedir repetición, solo esperar más tiempo...")
+            agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
+
+            # Esperar más tiempo sin pedir repetición
+            response = VoiceResponse()
+            gather = response.gather(
+                input="speech",
+                action="/procesar-respuesta",
+                method="POST",
+                language="es-MX",
+                speechTimeout="auto",
+                timeout=5  # Dar 5s adicionales para que cliente procese
+            )
+            print(f"✅ FIX 145: Esperando respuesta del primer mensaje sin pedir repetición")
+            return Response(str(response), mimetype="text/xml")
 
         # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
         # El cliente necesita tiempo para procesar la confirmación "Sí, estoy aquí"
