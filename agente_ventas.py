@@ -97,6 +97,13 @@ OTRAS CATEGORÍAS:
 ✅ Respuestas CORTAS y CONCISAS
 ✅ Máximo 3-4 intercambios antes de despedirse
 
+🚨 FIX 138C: VARÍA TUS RESPUESTAS - NO REPITAS "Perfecto"
+❌ NO digas "Perfecto" en cada mensaje - suena robótico
+✅ VARÍA tus confirmaciones: "Entendido", "Claro", "De acuerdo", "Muy bien", "Excelente"
+✅ A veces NO uses confirmación - ve directo al punto
+Ejemplo MALO: "Perfecto. ¿Con quién tengo el gusto?" → "Perfecto, Don Luis..." → "Perfecto, le envío..."
+Ejemplo BUENO: "¿Con quién tengo el gusto?" → "Mucho gusto, Don Luis..." → "Le envío la información..."
+
 ❌ NO hacer 3-4 preguntas sobre productos, proveedores, necesidades
 ❌ NO saturar con información
 ❌ NO extender la llamada innecesariamente
@@ -1739,12 +1746,24 @@ class AgenteVentas:
         # Detectar respuestas vacías o solo espacios
         es_respuesta_vacia = len(respuesta_stripped) == 0
 
-        # Detectar múltiples negaciones (signo de error de transcripción)
-        tiene_negaciones_multiples = (
-            respuesta_lower.count("no no") > 0 or
-            respuesta_lower.count("no, no") > 0 or
-            respuesta_lower.count("no no no") > 0
-        )
+        # FIX 138D: Detectar múltiples negaciones (signo de error de transcripción)
+        # MEJORADO: Ignorar casos válidos como "Así no, no está" o "Ahorita no, no puedo"
+        tiene_negaciones_multiples = False
+
+        # Contar "no" repetido (más de 2 veces seguidas es sospechoso)
+        if respuesta_lower.count("no no no") > 0:
+            tiene_negaciones_multiples = True
+
+        # "no no" sin contexto válido
+        elif "no no" in respuesta_lower:
+            # Verificar si NO es un caso válido como "así no, no está"
+            casos_validos = [
+                "así no, no", "ahorita no, no", "ahora no, no",
+                "todavía no, no", "pues no, no", "no sé, no",
+                "creo que no, no", "por ahora no, no"
+            ]
+            if not any(caso in respuesta_lower for caso in casos_validos):
+                tiene_negaciones_multiples = True
 
         # Detectar fragmentos de email sin @ (error común de Whisper)
         tiene_fragmento_email_sin_arroba = (
