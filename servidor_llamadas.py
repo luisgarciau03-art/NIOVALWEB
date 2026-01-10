@@ -1941,6 +1941,12 @@ def procesar_respuesta():
 
     print(f"🎙️ FIX 125: barge_in={permitir_interrupcion} (mensaje #{num_mensajes_bruce})")
 
+    # FIX 134: Si cliente está desesperado, agregar confirmación ANTES de la respuesta
+    if cliente_desesperado:
+        print(f"🚨 FIX 134: Agregando confirmación inmediata ANTES de respuesta principal")
+        # Agregar "Sí, estoy aquí" ANTES del Gather para confirmar presencia inmediatamente
+        response.say("Sí, estoy aquí.", language="es-MX", voice="Polly.Miguel")
+
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
         # FIX 102: Fallback a Twilio TTS SOLO si ElevenLabs falló completamente
