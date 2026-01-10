@@ -1471,35 +1471,59 @@ def procesar_respuesta():
     #                 respuesta_desde_cache = datos["respuesta"]
     #                 ...
 
-    # FIX 115/121: Si detectamos saludo simple, usar caché directo sin GPT
+    # FIX 115/121/131: Si detectamos saludo simple, usar caché directo sin GPT
     if usa_segunda_parte_saludo:
         timestamp_inicio_cache = time.time()
         print(f"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...")
 
-        # Texto de la segunda parte del saludo (pre-generado en cache)
-        respuesta_desde_cache = "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+        # FIX 131: Verificar si Bruce YA dijo la segunda parte (cliente interrumpió)
+        # Si hay 2+ mensajes de Bruce, significa que ya se dijo la segunda parte
+        mensajes_bruce_previos = [msg for msg in agente.conversation_history if msg['role'] == 'assistant']
+        bruce_ya_dijo_segunda_parte = len(mensajes_bruce_previos) >= 2
 
-        # Agregar la respuesta del cliente al historial
-        agente.conversation_history.append({
-            "role": "user",
-            "content": speech_result
-        })
+        if bruce_ya_dijo_segunda_parte:
+            # Cliente interrumpió mientras Bruce hablaba el 2do mensaje
+            # NO usar caché, usar GPT para responder con nexo
+            print(f"⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché")
+            print(f"   Cliente dijo: '{speech_result}' mientras Bruce hablaba segunda parte")
+            print(f"   Usando GPT con instrucción de nexo en lugar de caché")
 
-        # Agregar la respuesta de Bruce al historial
-        agente.conversation_history.append({
-            "role": "assistant",
-            "content": respuesta_desde_cache
-        })
+            # Deshabilitar caché para que use GPT normal con detección de interrupción
+            usa_segunda_parte_saludo = False
 
-        # Marcar como respuesta desde caché
-        respuesta_container["respuesta"] = respuesta_desde_cache
-        respuesta_container["completado"] = True
-        respuesta_container["desde_cache"] = True
-        respuesta_container["categoria_cache"] = "segunda_parte_saludo_fix115"
+            # Agregar mensaje del cliente al historial ANTES de GPT
+            agente.conversation_history.append({
+                "role": "user",
+                "content": speech_result
+            })
 
-        cache_respuestas_stats["cache_hits"] += 1
-        tiempo_cache = time.time() - timestamp_inicio_cache
-        print(f"✅ FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
+            # No continuar con caché - dejar que GPT procese con detección de interrupción
+        else:
+            # Primera vez que cliente responde - usar caché normal
+            # Texto de la segunda parte del saludo (pre-generado en cache)
+            respuesta_desde_cache = "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+            # Agregar la respuesta del cliente al historial
+            agente.conversation_history.append({
+                "role": "user",
+                "content": speech_result
+            })
+
+            # Agregar la respuesta de Bruce al historial
+            agente.conversation_history.append({
+                "role": "assistant",
+                "content": respuesta_desde_cache
+            })
+
+            # Marcar como respuesta desde caché SOLO si NO fue interrupción
+            respuesta_container["respuesta"] = respuesta_desde_cache
+            respuesta_container["completado"] = True
+            respuesta_container["desde_cache"] = True
+            respuesta_container["categoria_cache"] = "segunda_parte_saludo_fix115"
+
+            cache_respuestas_stats["cache_hits"] += 1
+            tiempo_cache = time.time() - timestamp_inicio_cache
+            print(f"✅ FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
 
     # FIX 97: Preparar contenedor para audio generado en paralelo
     audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
@@ -1834,8 +1858,8 @@ def procesar_respuesta():
         cliente_pidio_momento = any(frase in ultimo_mensaje_cliente for frase in frases_espera)
 
     if cliente_pidio_momento:
-        timeout_gather = 8  # FIX 126/130: 8s cuando cliente pide "un momento" o variantes
-        print(f"⏱️ FIX 130: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
+        timeout_gather = 10  # FIX 131: 10s cuando cliente pide "un momento" o variantes (antes 8s)
+        print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo)
         print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
