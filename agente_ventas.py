@@ -1697,9 +1697,28 @@ class AgenteVentas:
         respuesta_lower = respuesta_cliente.lower()
         respuesta_stripped = respuesta_cliente.strip()
 
-        # Detectar interrupciones cortas (cliente dice algo mientras Bruce habla)
+        # FIX 153: Detectar interrupciones cortas (cliente dice algo mientras Bruce habla)
+        # MEJORADO: NO detectar como interrupción si cliente responde apropiadamente
         palabras_interrupcion = respuesta_stripped.split()
-        es_interrupcion_corta = len(palabras_interrupcion) <= 3 and len(self.conversation_history) <= 6
+
+        # Saludos y respuestas válidas que NO son interrupciones
+        respuestas_validas_cortas = [
+            "hola", "bueno", "diga", "dígame", "digame", "si", "sí", "no",
+            "buenos días", "buenos dias", "buen día", "buen dia",
+            "claro", "adelante", "ok", "vale", "perfecto"
+        ]
+
+        es_respuesta_valida = respuesta_lower in respuestas_validas_cortas
+
+        # Solo es interrupción si:
+        # 1. Es corta (<=3 palabras)
+        # 2. NO es una respuesta válida
+        # 3. Conversación temprana (<=6 mensajes)
+        es_interrupcion_corta = (
+            len(palabras_interrupcion) <= 3 and
+            not es_respuesta_valida and
+            len(self.conversation_history) <= 6
+        )
 
         # FIX 129: LISTA EXPANDIDA de transcripciones erróneas comunes de Whisper
         # Basado en análisis de logs reales
