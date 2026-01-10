@@ -1641,17 +1641,30 @@ def procesar_respuesta():
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
         # GPT+Audio aún procesando - dar señal auditiva
 
-        # FIX 132: Si cliente está desesperado, responder INMEDIATAMENTE con confirmación
+        # FIX 133: Si cliente está desesperado, responder INMEDIATAMENTE y esperar GPT
         if cliente_desesperado:
-            print(f"🚨 FIX 132: Cliente desesperado - respondiendo INMEDIATAMENTE")
-            # Usar audio de confirmación pre-cacheado
-            if "claro,_tómese_su_tiempo._estoy_aquí_esperando." in audio_cache:
-                audio_url = request.url_root + f"audio_cache/claro,_tómese_su_tiempo._estoy_aquí_esperando."
-                print(f"💭 FIX 132: Bruce confirma presencia desde caché")
-                response.play(audio_url)
-            else:
-                # Fallback a TTS
-                response.say("Sí, estoy aquí. Disculpe.", language="es-MX", voice="Polly.Miguel")
+            print(f"🚨 FIX 133: Cliente desesperado - confirmando presencia INMEDIATAMENTE")
+
+            # Esperar a que GPT termine (máximo 5s más)
+            gpt_thread.join(timeout=5.0)
+
+            if not respuesta_container["completado"]:
+                # GPT aún no termina - dar confirmación y seguir esperando
+                print(f"⏳ FIX 133: GPT aún procesando - confirmando presencia mientras espera")
+                response.say("Sí, estoy aquí. Un momento por favor.", language="es-MX", voice="Polly.Miguel")
+
+                # Esperar otros 5s (total 10.5s máximo)
+                gpt_thread.join(timeout=5.0)
+
+                if not respuesta_container["completado"]:
+                    # GPT tardó más de 10.5s - timeout
+                    print(f"❌ FIX 133: GPT timeout después de 10.5s")
+                    response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+                    response.hangup()
+                    return Response(str(response), mimetype="text/xml")
+
+            # GPT terminó - continuar con respuesta normal
+            print(f"✅ FIX 133: GPT completado - continuando con respuesta")
         else:
             print(f"⏳ GPT+Audio procesando - reproduciendo tono de pensando...")
             # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
