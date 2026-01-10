@@ -1994,13 +1994,15 @@ def procesar_respuesta():
         timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
         print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
 
-    # FIX 125/154/156: Permitir interrupciones SOLO en saludo inicial (mensaje #1)
+    # FIX 125/154/156/157: Permitir interrupciones SOLO en saludo inicial
     # FIX 156: REDUCIDO de 2 a 1 - ciclo persiste con barge_in en mensaje #2
+    # FIX 157: DESHABILITADO completamente - ni siquiera en mensaje #1
     # Problema original (FIX 125): Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
     # FIX 154: Reducido de 3 a 2 - no fue suficiente
     # FIX 156: Solo mensaje #1 - cliente desesperado detectado en saludo, después NO interrumpir
-    #   Si cliente interrumpe mensaje #2+, causa ciclo: interrumpe → Bruce repite → interrumpe de nuevo
-    permitir_interrupcion = num_mensajes_bruce == 1  # FIX 156: Solo saludo inicial
+    # FIX 157: Ciclo PERSISTE incluso con mensaje #1 - respuestas válidas ("dígame", "hola") detectadas como interrupción
+    #   SOLUCIÓN: barge_in=False SIEMPRE - cliente puede interrumpir presionando tecla, pero no por voz
+    permitir_interrupcion = False  # FIX 157: Deshabilitado completamente - elimina ciclo de interrupciones
 
     gather = Gather(
         input="speech",
@@ -2013,7 +2015,7 @@ def procesar_respuesta():
         barge_in=permitir_interrupcion  # FIX 125: True para primeros 3 mensajes, False después
     )
 
-    print(f"🎙️ FIX 125: barge_in={permitir_interrupcion} (mensaje #{num_mensajes_bruce})")
+    print(f"🎙️ FIX 157: barge_in={permitir_interrupcion} DESHABILITADO (mensaje #{num_mensajes_bruce} - elimina ciclo)")
 
     # FIX 141: Si cliente está desesperado, agregar confirmación DENTRO del Gather ANTES de respuesta
     if cliente_desesperado:
@@ -2526,24 +2528,33 @@ def status_callback():
 
         # Si no fue buzón, determinar si colgó o no respondió
         elif agente.lead_data["estado_llamada"] == "Respondio":
-            # Verificar si hubo intercambio de conversación
-            # Si hay menos de 2 mensajes en el historial, el cliente nunca respondió
-            num_mensajes = len(agente.conversation_history)
+            # FIX 158: NO sobrescribir si Bruce YA se despidió primero
+            # Verificar si Bruce terminó con despedida
+            bruce_se_despidio = agente.en_despedida or agente.despedida_enviada
 
-            if num_mensajes <= 1:
-                # Cliente nunca respondió al saludo inicial
-                print(f"   📞 Cliente no respondió - detectado por status callback (solo {num_mensajes} mensaje)")
-                agente.lead_data["estado_llamada"] = "No Respondio"
-                agente.lead_data["pregunta_0"] = "No Respondio"
-                agente.lead_data["pregunta_7"] = "No Respondio"
-                agente.lead_data["resultado"] = "NEGADO"
+            if bruce_se_despidio:
+                print(f"   ✅ FIX 158: Bruce se despidió primero - NO clasificar como 'Colgó'")
+                print(f"   📞 Llamada terminó normalmente - cliente respondió y Bruce completó despedida")
+                # NO cambiar estado - mantener "Respondio" y el resultado que Bruce determinó
             else:
-                # Hubo conversación, entonces sí colgó
-                print(f"   💬 Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
-                agente.lead_data["estado_llamada"] = "Colgo"
-                agente.lead_data["pregunta_0"] = "Colgo"
-                agente.lead_data["pregunta_7"] = "Colgo"
-                agente.lead_data["resultado"] = "NEGADO"
+                # Verificar si hubo intercambio de conversación
+                # Si hay menos de 2 mensajes en el historial, el cliente nunca respondió
+                num_mensajes = len(agente.conversation_history)
+
+                if num_mensajes <= 1:
+                    # Cliente nunca respondió al saludo inicial
+                    print(f"   📞 Cliente no respondió - detectado por status callback (solo {num_mensajes} mensaje)")
+                    agente.lead_data["estado_llamada"] = "No Respondio"
+                    agente.lead_data["pregunta_0"] = "No Respondio"
+                    agente.lead_data["pregunta_7"] = "No Respondio"
+                    agente.lead_data["resultado"] = "NEGADO"
+                else:
+                    # Hubo conversación, entonces sí colgó
+                    print(f"   💬 Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
+                    agente.lead_data["estado_llamada"] = "Colgo"
+                    agente.lead_data["pregunta_0"] = "Colgo"
+                    agente.lead_data["pregunta_7"] = "Colgo"
+                    agente.lead_data["resultado"] = "NEGADO"
 
             # Guardar la llamada
             try:
