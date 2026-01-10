@@ -1671,15 +1671,15 @@ def procesar_respuesta():
         # FIX 50/97/102: REDUCIR DELAY - Mientras GPT piensa, reproducir sonido de "pensando"
         # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
-        # FIX 132: Si cliente está desesperado, esperar solo 0.5s antes de dar señal
+        # FIX 146: Reducir delay para cliente desesperado de 0.5s a 0s (meta: 3s total)
         # Si es saludo simple en primera respuesta, esperar solo 1s
-        # Sino, esperar 5s normal
+        # Sino, esperar 3s normal (antes 5s)
         if cliente_desesperado:
-            timeout_espera = 0.5  # Responder INMEDIATAMENTE
+            timeout_espera = 0  # FIX 146: Responder INMEDIATAMENTE (0s) - meta 3s total
         elif usa_segunda_parte_saludo or es_primera_respuesta:
-            timeout_espera = 1.0  # Saludo simple - responder rápido (antes 5s)
+            timeout_espera = 1.0  # Saludo simple - responder rápido
         else:
-            timeout_espera = 5.0  # Normal
+            timeout_espera = 3.0  # FIX 147: Normal 5s→3s - reducir delays generales
 
         print(f"⏱️ FIX 132: Esperando {timeout_espera}s antes de señal auditiva")
         gpt_thread.join(timeout=timeout_espera)
