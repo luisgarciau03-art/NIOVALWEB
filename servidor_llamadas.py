@@ -1807,12 +1807,35 @@ def procesar_respuesta():
 
     cliente_pidio_momento = False
     if ultimo_mensaje_cliente:
-        frases_espera = ["un momento", "espere", "espéreme", "dame un momento", "aguarda", "aguarde"]
+        # FIX 130: Lista ampliada con todas las variantes de "esperar"
+        frases_espera = [
+            # "Un momento" y variantes
+            "un momento", "un momentito", "un minuto", "un minutito", "un segundo", "un segundito",
+            "dame un momento", "dame un minuto", "dame un segundo", "deme un momento", "deme un minuto", "deme un segundo",
+
+            # "Espere/Espera" y variantes
+            "espere", "espéreme", "espera", "espérame", "esperame",
+            "aguarda", "aguarde", "aguárdame", "aguárdeme",
+
+            # "Permítame/Déjame" y variantes
+            "permítame", "permíteme", "permitame", "permiteme",
+            "déjame", "déjeme", "dejame", "dejeme",
+
+            # Cliente ocupado
+            "ahorita le marco", "le marco", "le hablo", "ahorita le hablo",
+            "en un momento", "en un rato", "más tarde", "después te llamo",
+            "luego te marco", "luego le marco", "te llamo luego", "le llamo luego",
+
+            # Indirectas de ocupado
+            "está ocupado", "no puede en este momento", "no puede ahorita",
+            "está en junta", "está en una junta", "no está disponible",
+            "está con un cliente", "ahorita está ocupado"
+        ]
         cliente_pidio_momento = any(frase in ultimo_mensaje_cliente for frase in frases_espera)
 
     if cliente_pidio_momento:
-        timeout_gather = 8  # FIX 126: 8s cuando cliente pide "un momento"
-        print(f"⏱️ FIX 126: Timeout={timeout_gather}s (cliente pidió un momento)")
+        timeout_gather = 8  # FIX 126/130: 8s cuando cliente pide "un momento" o variantes
+        print(f"⏱️ FIX 130: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo)
         print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
