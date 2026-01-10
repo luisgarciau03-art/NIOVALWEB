@@ -27,7 +27,7 @@ frases_a_generar = [
     },
     {
         "key": "segunda_parte_saludo",
-        "texto": "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?",
+        "texto": "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?",
         "force": True  # Forzar regeneración
     }
 ]

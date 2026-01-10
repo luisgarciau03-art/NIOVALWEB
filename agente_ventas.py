@@ -213,7 +213,7 @@ Paso 1 - Saludo corto inicial:
 [ESPERA que el cliente responda con su saludo - "Hola", "Buenos días", "Bueno", "Diga", etc.]
 
 Paso 2 - Después de que el cliente salude, entonces di:
-"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 ⚠️ IMPORTANTE: NO digas todo de corrido. Primero "Hola, buen dia" → ESPERA respuesta → Luego el resto.
 
@@ -231,7 +231,7 @@ Frases de nexo (elige una):
 - "Sí, como le iba diciendo..."
 
 Ejemplo de flujo con interrupción:
-Bruce: "Me comunico de la marca nioval, mas queda nada—"
+Bruce: "Me comunico de la marca nioval, más que nada—"
 Cliente (interrumpe): "Sí dígame"
 Bruce: "Perfecto, entonces como le comentaba, le llamo de NIOVAL sobre productos ferreteros. ¿Se encontrará el encargado de compras?"
 
@@ -242,7 +242,7 @@ Bruce: "Perfecto, entonces como le comentaba, le llamo de NIOVAL sobre productos
 ⚠️ REGLA CRÍTICA: NUNCA continúes con la presentación de productos hasta CONFIRMAR que hablas con el encargado de compras. Si no lo confirman, SIEMPRE pide que te transfieran.
 
 Si después del saludo completo responden solo con "¿Quién habla?" / "¿De dónde llaman?":
-"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 Si contesta alguien que NO es el encargado (recepcionista, empleado, etc.):
 "Soy asesor de ventas de NIOVAL. Antes de hablar con el encargado de compras, déjeme preguntarle: ¿ustedes actualmente manejan productos ferreteros como cintas tapagoteras, grifería o herramientas en su negocio?"
@@ -1733,7 +1733,7 @@ class AgenteVentas:
             "que marca es la que", "cual marca es la que",
             "de que marca", "qué marca",
             "y peso para servirle",  # Debería ser "A sus órdenes"
-            "mas queda nada",  # Debería ser "más que nada"
+            "más que nada",  # Debería ser "más que nada"
 
             # Frases contradictorias o sin sentido
             "si no por correo no no agarro nada",
@@ -2869,12 +2869,18 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             # Lista de palabras a eliminar (nombres propios y palabras comunes usadas como ayudas)
             palabras_ayuda = [
                 # Preposiciones/conectores
-                'de', 'del', 'con', 'como', 'para', 'por', 'sin', 'bajo',
+                'de', 'del', 'con', 'como', 'para', 'por', 'sin', 'bajo', 'el', 'la', 'los', 'las', 'es', 'son',
+                # FIX 160: Contextuales de correo
+                'correo', 'email', 'mail', 'electrónico', 'electronico',
                 # Nombres comunes en alfabeto radiofónico informal
                 'mama', 'mamá', 'papa', 'papá', 'gato', 'casa', 'perro', 'vaca', 'burro',
                 'rosa', 'ana', 'oscar', 'óscar', 'carlos', 'daniel', 'elena', 'fernando',
                 'rogelio', 'armando', 'ricardo', 'sandra', 'teresa', 'ursula', 'vicente',
                 'william', 'xavier', 'yolanda', 'zorro', 'antonio', 'beatriz',
+                # FIX 160: Nombres propios comunes en correos
+                'luis', 'garcía', 'garcia', 'uva', 'juan', 'jose', 'maría', 'maria', 'pedro',
+                'miguel', 'angel', 'lopez', 'lópez', 'martinez', 'martínez', 'rodriguez', 'rodríguez',
+                'gonzalez', 'gonzález', 'hernández', 'hernandez', 'ramirez', 'ramírez',
                 # Palabras descriptivas comunes
                 'latina', 'latino', 'grande', 'chico', 'ring', 'heredado', 'vedado',
                 'acento', 'tilde', 'mayúscula', 'mayuscula', 'minúscula', 'minuscula',
@@ -3833,12 +3839,12 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 🚨 IMPORTANTE: El saludo inicial fue solo "Hola, buen dia"
 
 Ahora que el cliente respondió tu saludo, di:
-"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 NO continúes hasta confirmar que hablas con el encargado.
 
 Si responden con preguntas ("¿Quién habla?", "¿De dónde?"):
-"Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): "Perfecto, ¿me lo podría comunicar por favor?"
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto, ¿con quién tengo el gusto?"
 Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"

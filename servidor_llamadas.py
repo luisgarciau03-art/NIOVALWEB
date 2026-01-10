@@ -1556,7 +1556,7 @@ def procesar_respuesta():
         else:
             # Primera vez que cliente responde - usar caché normal
             # Texto de la segunda parte del saludo (pre-generado en cache)
-            respuesta_desde_cache = "Me comunico de la marca nioval, mas queda nada queria brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+            respuesta_desde_cache = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
             # Agregar la respuesta del cliente al historial
             agente.conversation_history.append({
@@ -1874,6 +1874,9 @@ def procesar_respuesta():
 
     if debe_terminar:
         print(f"🔚 Detectada despedida en: {respuesta_agente[:50]}...")
+
+        # FIX 158: Marcar que Bruce se despidió primero
+        agente.bruce_se_despidio = True
 
         # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
         print(f"⏳ Esperando despedida del cliente por cortesía...")
@@ -2530,7 +2533,7 @@ def status_callback():
         elif agente.lead_data["estado_llamada"] == "Respondio":
             # FIX 158: NO sobrescribir si Bruce YA se despidió primero
             # Verificar si Bruce terminó con despedida
-            bruce_se_despidio = agente.en_despedida or agente.despedida_enviada
+            bruce_se_despidio = getattr(agente, 'bruce_se_despidio', False)
 
             if bruce_se_despidio:
                 print(f"   ✅ FIX 158: Bruce se despidió primero - NO clasificar como 'Colgó'")
