@@ -1323,6 +1323,27 @@ def procesar_respuesta():
         agente.respuestas_vacias_consecutivas += 1
         print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
+        # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
+        # El cliente necesita tiempo para procesar la confirmación "Sí, estoy aquí"
+        if agente.acaba_de_responder_desesperado:
+            print(f"🚨 FIX 143: Cliente desesperado acaba de recibir confirmación - NO pedir repetición")
+            print(f"   Esperando a que cliente procese y responda...")
+            agente.acaba_de_responder_desesperado = False  # Resetear flag
+            agente.respuestas_vacias_consecutivas = 0  # Resetear contador
+
+            # Simplemente esperar más tiempo sin pedir repetición
+            response = VoiceResponse()
+            gather = response.gather(
+                input="speech",
+                action="/procesar-respuesta",
+                method="POST",
+                language="es-MX",
+                speechTimeout="auto",
+                timeout=8  # Dar 8s para que cliente procese
+            )
+            print(f"✅ FIX 143: Esperando respuesta sin pedir repetición")
+            return Response(str(response), mimetype="text/xml")
+
         # Primera o segunda vez: Pedir amablemente que repitan
         if agente.respuestas_vacias_consecutivas <= 2:
             print(f"🎙️ Bruce pedirá que le repitan (intento #{agente.respuestas_vacias_consecutivas})")
@@ -1616,6 +1637,7 @@ def procesar_respuesta():
         # Si aparecen 2+ patrones diferentes, cliente está desesperado
         if count_patrones >= 2:
             cliente_desesperado = True
+            agente.acaba_de_responder_desesperado = True  # FIX 143: Marcar para no pedir repetición después
             print(f"⚠️ FIX 132: Cliente desesperado detectado - '{speech_result}'")
             print(f"   Reduciendo timeout de espera a 0.5s para responder INMEDIATAMENTE")
 

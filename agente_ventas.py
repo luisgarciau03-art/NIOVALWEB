@@ -1479,6 +1479,7 @@ class AgenteVentas:
         self.resultados_manager = resultados_manager
         self.whatsapp_validator = whatsapp_validator
         self.respuestas_vacias_consecutivas = 0  # Contador para detectar cuelgue
+        self.acaba_de_responder_desesperado = False  # FIX 143: Flag para no pedir repetición después de confirmar presencia
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
