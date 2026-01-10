@@ -431,7 +431,6 @@ def pre_generar_audios_cache():
     """Pre-genera frases comunes con Multilingual v2 para acento perfecto"""
     frases_comunes = {
         # Frases de sistema
-        "timeout": "¿Sigue ahí?",
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
 
         # FIX 54B: Múltiples frases de "pensando" con voz de Bruce (variables)
@@ -1981,11 +1980,8 @@ def procesar_respuesta():
 
     response.append(gather)
 
-    # Fallback si no hay respuesta - usar CACHÉ (0s delay, acento perfecto)
-    audio_id_timeout = f"timeout_{call_sid}_{len(audio_files)}"
-    generar_audio_elevenlabs("¿Sigue ahí?", audio_id_timeout, usar_cache_key="timeout")
-    audio_url_timeout = request.url_root + f"audio/{audio_id_timeout}"
-    response.play(audio_url_timeout)
+    # FIX 137: Eliminado "¿Sigue ahí?" - causaba confusión y bugs
+    # Si cliente no responde, redirigir directamente a procesar-respuesta (timeout)
     response.redirect("/procesar-respuesta")
 
     return Response(str(response), mimetype="text/xml")
