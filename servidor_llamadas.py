@@ -1951,25 +1951,21 @@ def procesar_respuesta():
         # Generar audio con voz de Bruce (ElevenLabs) para "Sí, estoy aquí"
         confirmacion_texto = "Sí, estoy aquí."
 
-        # Verificar si existe en caché
-        if "claro,_tómese_su_tiempo._estoy_aquí_esperando." in audio_cache:
-            # Usar audio pre-cacheado
-            audio_url_confirmacion = request.url_root + "audio_cache/claro,_tómese_su_tiempo._estoy_aquí_esperando."
-            print(f"📦 FIX 135: Usando confirmación desde caché (voz Bruce)")
+        # FIX 136: Generar audio simple en tiempo real (más confiable que buscar en caché)
+        # El audio "Sí, estoy aquí." es corto (~1s) y se genera rápido
+        audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
+
+        print(f"🎵 FIX 136: Generando 'Sí, estoy aquí.' con ElevenLabs...")
+        result_confirmacion = generar_audio_elevenlabs(confirmacion_texto, audio_id_confirmacion)
+
+        if result_confirmacion:
+            audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
+            print(f"✅ FIX 136: Confirmación generada con ElevenLabs (voz Bruce)")
             response.play(audio_url_confirmacion)
         else:
-            # Generar con ElevenLabs en tiempo real
-            audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
-            result_confirmacion = generar_audio_elevenlabs(confirmacion_texto, audio_id_confirmacion)
-
-            if result_confirmacion:
-                audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
-                print(f"🎵 FIX 135: Confirmación generada con ElevenLabs (voz Bruce)")
-                response.play(audio_url_confirmacion)
-            else:
-                # Fallback a Twilio si ElevenLabs falla
-                print(f"⚠️ FIX 135: ElevenLabs falló - usando Twilio")
-                response.say(confirmacion_texto, language="es-MX", voice="Polly.Miguel")
+            # Fallback a Twilio si ElevenLabs falla
+            print(f"⚠️ FIX 136: ElevenLabs falló - usando Twilio")
+            response.say(confirmacion_texto, language="es-MX", voice="Polly.Miguel")
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
