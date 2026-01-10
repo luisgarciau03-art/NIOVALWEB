@@ -1944,9 +1944,9 @@ def procesar_respuesta():
 
     print(f"🎙️ FIX 125: barge_in={permitir_interrupcion} (mensaje #{num_mensajes_bruce})")
 
-    # FIX 135/138A: Si cliente está desesperado, agregar confirmación ANTES de la respuesta
+    # FIX 141: Si cliente está desesperado, agregar confirmación DENTRO del Gather ANTES de respuesta
     if cliente_desesperado:
-        print(f"🚨 FIX 135/138A: Agregando confirmación INSTANTÁNEA desde caché (0s delay)")
+        print(f"🚨 FIX 141: Agregando confirmación DENTRO de Gather (se reproduce ANTES de respuesta)")
 
         # FIX 138A: Usar caché para respuesta instantánea (0s en lugar de 0.91s)
         audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
@@ -1960,12 +1960,13 @@ def procesar_respuesta():
 
         if result_confirmacion:
             audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
-            print(f"✅ FIX 138A: Confirmación desde caché (voz Bruce, 0s delay)")
-            response.play(audio_url_confirmacion)
+            print(f"✅ FIX 141: Confirmación generada - agregando DENTRO de Gather")
+            # FIX 141: Agregar DENTRO del Gather para que se reproduzca en secuencia
+            gather.play(audio_url_confirmacion)
         else:
             # Fallback a Twilio si ElevenLabs falla
-            print(f"⚠️ FIX 138A: Caché falló - usando Twilio")
-            response.say("Sí, estoy aquí.", language="es-MX", voice="Polly.Miguel")
+            print(f"⚠️ FIX 141: Caché falló - usando Twilio DENTRO de Gather")
+            gather.say("Sí, estoy aquí.", language="es-MX", voice="Polly.Miguel")
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
