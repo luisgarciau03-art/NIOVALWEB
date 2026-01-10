@@ -1007,12 +1007,12 @@ def webhook_voz():
         input="speech",
         language="es-MX",
         timeout=3,  # FIX 112: 6s→3s - Saludo corto necesita menos tiempo de espera
-        speech_timeout="auto",  # FIX 112: auto en lugar de 1s - Twilio detecta fin de frase automáticamente
+        speech_timeout=5,  # FIX 139: 5s máximo - si cliente habla >5s seguidos, cortar y procesar
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
         speech_model="experimental_conversations",  # FIX 61: CRÍTICO - Habilitar grabación para Whisper
-        barge_in=False  # FIX 104: Cliente NO puede interrumpir mientras Bruce habla
+        barge_in=True  # FIX 139: Permitir interrupciones en saludo para detectar clientes desesperados rápido
     )
 
     # FIX 96: ANIDAR <Play> dentro de <Gather> para que esté listo ANTES de hablar
