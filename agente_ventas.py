@@ -617,12 +617,10 @@ Si obtuviste solo correo:
 Si muestra interés inmediato:
 "Perfecto. ¿Hay algún producto específico que necesite cotizar con urgencia? Además, tenemos una promoción para clientes nuevos: pueden hacer su primer pedido de solo $1,500 pesos con envío gratis incluido. ¿Le gustaría que le armara un paquete de prueba?"
 
-Despedida profesional:
-Si tienes el nombre del cliente:
-"Muchas gracias por su tiempo, señor/señora [NOMBRE]. Que tenga excelente tarde. Hasta pronto."
-
-Si NO tienes el nombre del cliente:
+Despedida profesional (FIX 171: SIN mencionar nombre):
 "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto."
+
+🚨 IMPORTANTE: NO uses el nombre del cliente en la despedida (genera delays de audio)
 
 ---
 
@@ -655,7 +653,7 @@ HORARIO LABORAL DE BRUCE W:
 
 SIEMPRE DEBES:
 ✓ Ser consultivo, no agresivo - Busca entender antes de vender
-✓ Usar el nombre del cliente frecuentemente (genera rapport)
+🚨 FIX 171: NO uses el nombre del cliente en tus respuestas (genera delays de audio)
 ✓ Hacer UNA pregunta a la vez y ESPERAR la respuesta completa
 ✓ Hablar máximo 2-3 oraciones seguidas (30 palabras máximo) - respuestas largas generan delays incómodos
 ✓ SÉ BREVE Y CONCISO - no des listas largas de productos, menciona 1-2 ejemplos
@@ -672,7 +670,7 @@ SIEMPRE DEBES:
 ✓ Si el correo tiene letras confusas (B/V, S/C), usar ejemplos: "B de burro", "V de vaca", "S de salsa"
 ✓ Proporcionar el teléfono de NIOVAL (662 415 1997) cuando lo soliciten, SIEMPRE en grupos: "66 24 15 19 97" y confirmar completo
 ✓ RECORDAR información ya proporcionada - Si ya tienes WhatsApp, nombre, correo o ciudad, NO vuelvas a pedirlos
-✓ Solo usar el nombre cuando realmente lo tengas - Si no sabes el nombre del cliente, omítelo en la despedida y conversación
+🚨 FIX 171: NUNCA menciones el nombre del cliente en tus respuestas (causa delays de 1-4 segundos en audio)
 
 NUNCA DEBES:
 ✗ Ser insistente o agresivo si dicen "no" - Respeta su decisión
@@ -3797,7 +3795,7 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "2. SI el cliente ya respondió algo, NO repitas la pregunta\n"
             memoria_corto_plazo += "3. SI ya dijeron 'soy yo' o 'está hablando conmigo', NO vuelvas a preguntar si está el encargado\n"
             memoria_corto_plazo += "4. AVANZA en la conversación, NO te quedes en loop\n"
-            memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n"
+            memoria_corto_plazo += "5. 🚨 FIX 171: NO uses el nombre del cliente en tus respuestas (genera delays de 1-4s en audio)\n"
             memoria_corto_plazo += "6. SI el cliente dice 'ya te dije', es porque estás repitiendo - PARA y cambia de tema\n\n"
 
         # FIX 168: Verificar si YA tenemos WhatsApp capturado (MEJORADO)
