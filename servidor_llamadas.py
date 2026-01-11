@@ -1404,6 +1404,27 @@ def procesar_respuesta():
             print(f"✅ FIX 143: Esperando respuesta sin pedir repetición")
             return Response(str(response), mimetype="text/xml")
 
+        # FIX 170: Si cliente va a pasar al encargado, esperar MÁS tiempo
+        # El cliente necesita 15-20s para localizar y pasar al encargado
+        if agente.esperando_transferencia:
+            print(f"📞 FIX 170: Cliente va a pasar al encargado - Esperando transferencia...")
+            print(f"   Timeout extendido a 20s para dar tiempo a la transferencia")
+            agente.esperando_transferencia = False  # Resetear flag después de primer timeout
+            agente.respuestas_vacias_consecutivas = 0  # Resetear contador
+
+            # Esperar 20 segundos para que pase al encargado
+            response = VoiceResponse()
+            gather = response.gather(
+                input="speech",
+                action="/procesar-respuesta",
+                method="POST",
+                language="es-MX",
+                speechTimeout="auto",
+                timeout=20  # 20s para transferencia
+            )
+            print(f"✅ FIX 170: Esperando hasta 20s para que cliente pase al encargado")
+            return Response(str(response), mimetype="text/xml")
+
         # Primera o segunda vez: Pedir amablemente que repitan
         if agente.respuestas_vacias_consecutivas <= 2:
             print(f"🎙️ Bruce pedirá que le repitan (intento #{agente.respuestas_vacias_consecutivas})")

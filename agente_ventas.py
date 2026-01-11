@@ -1520,6 +1520,7 @@ class AgenteVentas:
         self.whatsapp_validator = whatsapp_validator
         self.respuestas_vacias_consecutivas = 0  # Contador para detectar cuelgue
         self.acaba_de_responder_desesperado = False  # FIX 143: Flag para no pedir repetición después de confirmar presencia
+        self.esperando_transferencia = False  # FIX 170: Flag cuando cliente va a pasar al encargado
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
@@ -2001,6 +2002,41 @@ Ejemplo correcto:
 
         # FIX 81: DEBUG - Si llegamos aquí, NO se detectó ninguna objeción
         print(f"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.")
+
+        # FIX 170: Detectar cuando cliente va a PASAR al encargado (AHORA)
+        # Estas frases indican transferencia INMEDIATA, NO futura
+        patrones_transferencia_inmediata = [
+            # Transferencia directa
+            "te puedo pasar", "te paso", "le paso", "se lo paso",
+            "te lo paso", "ahorita te lo paso", "te comunico",
+            "me lo comunica", "me lo pasa", "pásamelo",
+            # Solicitud de espera
+            "dame un momento", "espera un momento", "espérame", "un segundito",
+            "permíteme", "permiteme", "déjame ver", "dejame ver",
+            # Confirmación de disponibilidad + acción
+            "sí está aquí", "está aquí", "está disponible",
+            "ya viene", "ahorita viene", "está por aquí"
+        ]
+
+        for patron in patrones_transferencia_inmediata:
+            if patron in respuesta_lower:
+                print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
+                print(f"   Patrón detectado: '{patron}'")
+                print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+
+                # Marcar flag de transferencia
+                self.esperando_transferencia = True
+
+                # Respuesta simple de espera
+                respuesta_espera = "Claro, espero."
+
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_espera
+                })
+
+                print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
+                return respuesta_espera
 
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)
