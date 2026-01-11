@@ -129,10 +129,15 @@ Ejemplo BUENO: "¿Con quién tengo el gusto?" → "Mucho gusto, Don Luis..." →
 
 FLUJO IDEAL (RÁPIDO):
 1. Saludo + ¿Está el encargado?
-2. Pedir nombre del contacto (opcional - solo si fluye natural)
-3. Pedir WhatsApp para enviar catálogo (PRIORIDAD #1)
-4. Si no tiene WhatsApp, pedir correo como alternativa
-5. Despedirse (TOTAL: 3-4 intercambios máximo)
+2. Pedir WhatsApp para enviar catálogo (PRIORIDAD #1) 🚨 NO PIDAS NOMBRE
+3. Si no tiene WhatsApp, pedir correo como alternativa
+4. Despedirse INMEDIATAMENTE (TOTAL: 2-3 intercambios máximo)
+
+🚨 FIX 169: NO PEDIR NOMBRE DEL CLIENTE
+❌ NUNCA pidas el nombre del contacto (innecesario, genera fricción)
+❌ NUNCA preguntes "¿me podría decir su nombre?"
+✅ SOLO pide WhatsApp → Despídete
+✅ El nombre NO es necesario para enviar catálogo
 
 🚨 REGLA CRÍTICA DE CONTACTO:
 ❌ NUNCA pidas correo si el cliente está ofreciendo WhatsApp
@@ -2899,9 +2904,11 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
                         self.lead_data["whatsapp_valido"] = True
                         print(f"   ✅ Formato válido (10 dígitos)")
                         print(f"   💾 WhatsApp guardado: {numero_completo}")
-                        print(f"   🎯 FIX 167: WhatsApp guardado - próxima respuesta GPT incluirá instrucción de despedida")
+                        print(f"   🎯 FIX 168: WhatsApp guardado - PRÓXIMA respuesta incluirá ANTI-CORREO + DESPEDIDA")
+                        print(f"   🚨 FIX 168: FLAG whatsapp_valido=True → GPT NO debe pedir correo ni WhatsApp")
 
-                        # FIX 167: Ya NO usamos mensaje [SISTEMA] (se filtra en línea 2040)
+                        # FIX 168: Mejorado de FIX 167
+                        # Ya NO usamos mensaje [SISTEMA] (se filtra en línea 2040)
                         # Ahora la instrucción se agrega directamente en el SYSTEM PROMPT dinámico
                         # Ver línea 3770+ en _construir_prompt_dinamico()
 
@@ -3757,24 +3764,40 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n"
             memoria_corto_plazo += "6. SI el cliente dice 'ya te dije', es porque estás repitiendo - PARA y cambia de tema\n\n"
 
-        # FIX 167: Verificar si YA tenemos WhatsApp capturado
+        # FIX 168: Verificar si YA tenemos WhatsApp capturado (MEJORADO)
         instruccion_whatsapp_capturado = ""
         if self.lead_data.get("whatsapp") and self.lead_data.get("whatsapp_valido"):
             whatsapp_capturado = self.lead_data["whatsapp"]
+            print(f"   ⚡ FIX 168: Agregando instrucción ANTI-CORREO al prompt (WhatsApp: {whatsapp_capturado})")
             instruccion_whatsapp_capturado = f"""
-🚨🚨🚨 FIX 167 - WHATSAPP YA CAPTURADO: {whatsapp_capturado}
 
-INSTRUCCIÓN CRÍTICA MÁXIMA PRIORIDAD:
-✅ Ya tienes el WhatsApp del cliente guardado: {whatsapp_capturado}
-❌❌❌ NO vuelvas a pedir WhatsApp (YA LO TIENES)
-❌❌❌ NO pidas correo electrónico (WhatsApp es suficiente)
-✅✅✅ DESPÍDETE INMEDIATAMENTE confirmando que le enviarás el catálogo
+═══════════════════════════════════════════════════════════════
+🚨🚨🚨 FIX 168 - WHATSAPP YA CAPTURADO: {whatsapp_capturado} 🚨🚨🚨
+═══════════════════════════════════════════════════════════════
 
-DESPEDIDA OBLIGATORIA:
-"Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas por WhatsApp. Muchas gracias por su tiempo. Que tenga un excelente día."
+⚠️⚠️⚠️ INSTRUCCIÓN CRÍTICA - MÁXIMA PRIORIDAD - NO IGNORAR ⚠️⚠️⚠️
 
-SI EL CLIENTE DICE "YA TE LO PASÉ":
-Confirma el número que tienes ({whatsapp_capturado}) y despídete inmediatamente.
+✅ CONFIRMACIÓN: Ya tienes el WhatsApp del cliente: {whatsapp_capturado}
+
+🛑 PROHIBIDO ABSOLUTAMENTE:
+   ❌ NO pidas WhatsApp nuevamente (YA LO TIENES GUARDADO)
+   ❌ NO pidas correo electrónico (WhatsApp es SUFICIENTE)
+   ❌ NO pidas nombre (innecesario para envío de catálogo)
+   ❌ NO hagas MÁS preguntas sobre datos de contacto
+
+✅ ACCIÓN OBLIGATORIA INMEDIATA:
+   → DESPÍDETE AHORA confirmando envío por WhatsApp
+   → USA esta frase EXACTA:
+
+   "Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas
+    por WhatsApp al {whatsapp_capturado}. Muchas gracias por su tiempo.
+    Que tenga un excelente día."
+
+⚠️ SI EL CLIENTE DICE "YA TE LO PASÉ" o "YA TE DI EL NÚMERO":
+   1. Confirma: "Sí, tengo su número {whatsapp_capturado}"
+   2. Despídete INMEDIATAMENTE (NO hagas más preguntas)
+
+═══════════════════════════════════════════════════════════════
 
 """
 
