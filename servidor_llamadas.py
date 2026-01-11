@@ -22,6 +22,18 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# FIX 164: Sistema de logging condicional para reducir rate limit
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+
+def debug_print(*args, **kwargs):
+    """FIX 164: Print solo si DEBUG_MODE está activado"""
+    if DEBUG_MODE:
+        print(*args, **kwargs)
+
+def info_print(*args, **kwargs):
+    """FIX 164: Print para logs importantes (siempre se muestran)"""
+    print(*args, **kwargs)
+
 # Inicializar Google Sheets Managers y WhatsApp Validator (solo una vez al arrancar)
 sheets_manager = None
 resultados_manager = None
@@ -844,7 +856,7 @@ def iniciar_llamada():
     }
     """
     try:
-        print(f"\n🔍 DEBUG 1: /iniciar-llamada - Request recibido")
+        debug_print(f"\n🔍 DEBUG 1: /iniciar-llamada - Request recibido")
 
         data = request.json
         print(f"🔍 DEBUG 2: JSON parseado correctamente")
@@ -1659,7 +1671,7 @@ def procesar_respuesta():
                 audio_container["audio_id"] = audio_id_temp
                 audio_container["usa_cache"] = usa_cache_audio
                 audio_container["cache_key"] = cache_key_audio
-                print(f"✅ FIX 102: Audio container guardado - audio_id={audio_id_temp}")
+                debug_print(f"✅ FIX 102: Audio container guardado - audio_id={audio_id_temp}")
             else:
                 audio_container["audio_id"] = None  # Usar Twilio TTS
                 print(f"⚠️ FIX 102: generar_audio_elevenlabs() retornó None - usará Twilio TTS")
@@ -1714,7 +1726,7 @@ def procesar_respuesta():
         else:
             timeout_espera = 3.0  # FIX 147: Normal 5s→3s - reducir delays generales
 
-        print(f"⏱️ FIX 132: Esperando {timeout_espera}s antes de señal auditiva")
+        debug_print(f"⏱️ FIX 132: Esperando {timeout_espera}s antes de señal auditiva")
         gpt_thread.join(timeout=timeout_espera)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
@@ -1784,7 +1796,7 @@ def procesar_respuesta():
 
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
-    print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
+    debug_print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
 
     # FIX 75/76: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
@@ -1842,21 +1854,27 @@ def procesar_respuesta():
         audio_container["completado"] = True
         print(f"📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)")
     else:
-        # FIX 102: Esperar a que el audio termine de generarse (máximo 3s adicionales)
-        # Si GPT terminó pero audio aún está generándose, esperar a que complete
+        # FIX 165: Timeout dinámico según longitud del mensaje
+        # Mensajes largos necesitan más tiempo para generar audio
         if not audio_container.get("completado", False):
-            print(f"⏳ FIX 102: Esperando que audio ElevenLabs termine de generarse...")
             import time
-            max_wait = 3.0  # Esperar máximo 3 segundos adicionales por el audio
+
+            # FIX 165: Calcular timeout según palabras
+            palabras = len(respuesta_agente.split())
+            # Fórmula: 0.08s por palabra + 1s base
+            # 20 palabras = 2.6s, 40 palabras = 4.2s, 60 palabras = 5.8s
+            max_wait = min(1.0 + (palabras * 0.08), 8.0)  # Máximo 8s
+
+            print(f"⏳ FIX 165: Esperando audio ({palabras} palabras, timeout={max_wait:.1f}s)...")
             waited = 0
             while not audio_container.get("completado", False) and waited < max_wait:
                 time.sleep(0.1)
                 waited += 0.1
 
             if audio_container.get("completado", False):
-                print(f"✅ FIX 102: Audio completado después de {waited:.1f}s adicionales")
+                debug_print(f"✅ FIX 165: Audio completado después de {waited:.1f}s")
             else:
-                print(f"⚠️ FIX 102: Audio NO completó después de {max_wait}s - usará Twilio TTS")
+                print(f"⚠️ FIX 165: Audio NO completó después de {max_wait:.1f}s - usará audio de relleno")
 
         # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
         # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
@@ -1865,7 +1883,7 @@ def procesar_respuesta():
         cache_key = audio_container.get("cache_key")
 
     tiempo_total = time.time() - inicio
-    print(f"⏱️ TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
+    debug_print(f"⏱️ TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
 
     if audio_id:
         if usa_cache:
@@ -2019,22 +2037,22 @@ def procesar_respuesta():
 
     if cliente_pidio_momento:
         timeout_gather = 10  # FIX 131: 10s cuando cliente pide "un momento" o variantes (antes 8s)
-        print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
+        debug_print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
     elif cliente_dictando_correo:
         timeout_gather = 15  # FIX 155: 15s cuando cliente está DICTANDO correo (email completo puede tomar 10-15s)
-        print(f"⏱️ FIX 155: Timeout={timeout_gather}s (cliente dictando correo - NO interrumpir)")
+        debug_print(f"⏱️ FIX 155: Timeout={timeout_gather}s (cliente dictando correo - NO interrumpir)")
     elif cliente_desesperado:
         timeout_gather = 5  # FIX 135: 5s cuando cliente está desesperado (necesita procesar confirmación)
-        print(f"⏱️ FIX 135: Timeout={timeout_gather}s (cliente desesperado - dio confirmación)")
+        debug_print(f"⏱️ FIX 135: Timeout={timeout_gather}s (cliente desesperado - dio confirmación)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo PARA PENSAR)
-        print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
+        debug_print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
     elif es_segundo_mensaje:
         timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
-        print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
+        debug_print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
     else:
         timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
-        print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
+        debug_print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
 
     # FIX 125/154/156/157: Permitir interrupciones SOLO en saludo inicial
     # FIX 156: REDUCIDO de 2 a 1 - ciclo persiste con barge_in en mensaje #2
