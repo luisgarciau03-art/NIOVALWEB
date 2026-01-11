@@ -2899,21 +2899,11 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
                         self.lead_data["whatsapp_valido"] = True
                         print(f"   ✅ Formato válido (10 dígitos)")
                         print(f"   💾 WhatsApp guardado: {numero_completo}")
+                        print(f"   🎯 FIX 167: WhatsApp guardado - próxima respuesta GPT incluirá instrucción de despedida")
 
-                        # FIX 166: Informar a GPT que YA capturamos WhatsApp
-                        self.conversation_history.append({
-                            "role": "system",
-                            "content": f"""[SISTEMA] ✅ WhatsApp capturado: {numero_completo}
-
-FIX 166 - INSTRUCCIÓN CRÍTICA:
-Ya tienes el WhatsApp del cliente. NO vuelvas a pedirlo.
-NO pidas correo (WhatsApp es suficiente).
-DESPÍDETE INMEDIATAMENTE y confirma que le enviarás el catálogo.
-
-Ejemplo de despedida correcta:
-"Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas por WhatsApp. Muchas gracias por su tiempo. Que tenga un excelente día."
-"""
-                        })
+                        # FIX 167: Ya NO usamos mensaje [SISTEMA] (se filtra en línea 2040)
+                        # Ahora la instrucción se agrega directamente en el SYSTEM PROMPT dinámico
+                        # Ver línea 3770+ en _construir_prompt_dinamico()
 
                     break
         else:
@@ -3767,8 +3757,29 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "5. Si ya sabes el nombre del cliente, úsalo en vez de preguntar de nuevo\n"
             memoria_corto_plazo += "6. SI el cliente dice 'ya te dije', es porque estás repitiendo - PARA y cambia de tema\n\n"
 
+        # FIX 167: Verificar si YA tenemos WhatsApp capturado
+        instruccion_whatsapp_capturado = ""
+        if self.lead_data.get("whatsapp") and self.lead_data.get("whatsapp_valido"):
+            whatsapp_capturado = self.lead_data["whatsapp"]
+            instruccion_whatsapp_capturado = f"""
+🚨🚨🚨 FIX 167 - WHATSAPP YA CAPTURADO: {whatsapp_capturado}
+
+INSTRUCCIÓN CRÍTICA MÁXIMA PRIORIDAD:
+✅ Ya tienes el WhatsApp del cliente guardado: {whatsapp_capturado}
+❌❌❌ NO vuelvas a pedir WhatsApp (YA LO TIENES)
+❌❌❌ NO pidas correo electrónico (WhatsApp es suficiente)
+✅✅✅ DESPÍDETE INMEDIATAMENTE confirmando que le enviarás el catálogo
+
+DESPEDIDA OBLIGATORIA:
+"Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas por WhatsApp. Muchas gracias por su tiempo. Que tenga un excelente día."
+
+SI EL CLIENTE DICE "YA TE LO PASÉ":
+Confirma el número que tienes ({whatsapp_capturado}) y despídete inmediatamente.
+
+"""
+
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
-        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + """# IDENTIDAD
+        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + """# IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
 Teléfono: 662 415 1997 (di: seis seis dos, cuatro uno cinco, uno nueve nueve siete)
 
