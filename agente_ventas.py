@@ -1547,28 +1547,60 @@ class AgenteVentas:
         # Contador para alternar frases de relleno (hace la conversación más natural)
         self.indice_frase_relleno = 0
 
-    def _obtener_frase_relleno(self) -> str:
+    def _obtener_frase_relleno(self, delay_segundos: float = 3.0) -> str:
         """
-        Obtiene una frase de relleno natural para ganar tiempo cuando GPT tarda >3s.
+        FIX 163: Obtiene una frase de relleno natural para ganar tiempo cuando GPT tarda.
         Alterna entre diferentes frases para que suene natural y no repetitivo.
 
+        Args:
+            delay_segundos: Tiempo que tardó GPT en responder
+
         Returns:
-            Frase de relleno en español mexicano
+            Frase de relleno en español mexicano (varía según delay)
         """
-        frases_relleno = [
+        # FIX 163: Frases para delays 3-5 segundos (cortas)
+        frases_cortas = [
             "Ajá, déjeme ver...",
             "Mmm, perfecto...",
             "Entiendo, sí...",
             "Ajá, mire...",
-            "Eso está bien, déjeme comentarle...",
             "Mmm, está claro...",
             "Perfecto, permítame...",
             "Ajá, exacto...",
             "Entendido, pues...",
             "Mmm, muy bien...",
-            "Eso sí, déjeme...",
             "Ajá, claro...",
         ]
+
+        # FIX 163: Frases para delays 5-8 segundos (medias - más elaboradas)
+        frases_medias = [
+            "Déjeme ver eso con calma...",
+            "Un momento, lo reviso...",
+            "Permítame verificar...",
+            "Déjeme consultarlo...",
+            "Un segundito, lo verifico...",
+            "Déjeme checar eso...",
+            "Ajá, déjeme revisar bien...",
+            "Mmm, permítame confirmarlo...",
+        ]
+
+        # FIX 163: Frases para delays >8 segundos (largas - más justificación)
+        frases_largas = [
+            "Déjeme revisar bien toda la información...",
+            "Un momento por favor, verifico los detalles...",
+            "Permítame consultar esto con cuidado...",
+            "Déjeme ver todos los detalles...",
+            "Un segundito, reviso toda la información...",
+            "Mmm, déjeme verificar todo bien...",
+        ]
+
+        # FIX 163: Seleccionar lista según delay
+        if delay_segundos > 8.0:
+            frases_relleno = frases_largas
+        elif delay_segundos > 5.0:
+            frases_relleno = frases_medias
+        else:
+            frases_relleno = frases_cortas
 
         # Obtener frase actual y avanzar el índice
         frase = frases_relleno[self.indice_frase_relleno % len(frases_relleno)]
@@ -2023,11 +2055,11 @@ Ejemplo correcto:
 
             duracion_gpt = time.time() - inicio_gpt
 
-            # Si GPT tardó más de 3 segundos, agregar frase de relleno ANTES de la respuesta
+            # FIX 163: Si GPT tardó más de 3 segundos, agregar frase de relleno ANTES de la respuesta
             frase_relleno = ""
             if duracion_gpt > 3.0:
-                frase_relleno = self._obtener_frase_relleno()
-                print(f"⏱️ GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
+                frase_relleno = self._obtener_frase_relleno(duracion_gpt)
+                print(f"⏱️ FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
 
             respuesta_agente = response.choices[0].message.content
 

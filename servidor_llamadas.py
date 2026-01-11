@@ -659,35 +659,58 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         modelo = "eleven_multilingual_v2"
         print(f"🎙️ Usando Multilingual v2 ({palabras} palabras)")
 
-        # Generar audio
-        audio_generator = elevenlabs_client.text_to_speech.convert(
-            voice_id=ELEVENLABS_VOICE_ID,
-            text=texto_corregido,
-            model_id=modelo,
-            output_format="mp3_44100_128"
-        )
+        # FIX 162A: Generar audio con retry automático
+        max_intentos = 2
+        intento = 1
 
-        # Guardar en archivo temporal con streaming
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-        chunk_count = 0
-        for chunk in audio_generator:
-            temp_file.write(chunk)
-            chunk_count += 1
-            if chunk_count == 1:
-                print(f"🎵 Primer chunk en {(time.time() - inicio):.2f}s")
-        temp_file.close()
+        while intento <= max_intentos:
+            try:
+                print(f"🎵 FIX 162A: Generando audio (intento {intento}/{max_intentos})")
 
-        # Guardar ruta del archivo
-        audio_files[audio_id] = temp_file.name
-        print(f"✅ Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
-        return audio_id
+                audio_generator = elevenlabs_client.text_to_speech.convert(
+                    voice_id=ELEVENLABS_VOICE_ID,
+                    text=texto_corregido,
+                    model_id=modelo,
+                    output_format="mp3_44100_128"
+                )
+
+                # Guardar en archivo temporal con streaming
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+                chunk_count = 0
+                for chunk in audio_generator:
+                    temp_file.write(chunk)
+                    chunk_count += 1
+                    if chunk_count == 1:
+                        print(f"🎵 Primer chunk en {(time.time() - inicio):.2f}s")
+                temp_file.close()
+
+                # Guardar ruta del archivo
+                audio_files[audio_id] = temp_file.name
+                print(f"✅ Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
+
+                if intento > 1:
+                    print(f"✅ FIX 162A: Audio generado exitosamente en intento {intento}")
+
+                return audio_id
+
+            except Exception as e_retry:
+                print(f"⚠️ FIX 162A: Error en intento {intento}/{max_intentos}: {type(e_retry).__name__}")
+
+                if intento < max_intentos:
+                    print(f"🔄 FIX 162A: Reintentando en 1 segundo...")
+                    time.sleep(1)
+                    intento += 1
+                else:
+                    # Último intento falló - lanzar excepción para que la maneje el except principal
+                    raise e_retry
 
     except Exception as e:
-        print(f"❌ FIX 102: Error generando audio ElevenLabs: {e}")
+        print(f"❌ FIX 162A: Error generando audio ElevenLabs después de {max_intentos} intentos: {e}")
         print(f"   Tipo de error: {type(e).__name__}")
         print(f"   Texto que causó error: {texto[:100]}...")
         print(f"   Traceback completo:")
         traceback.print_exc()
+        print(f"🚨 FIX 162A: CRÍTICO - NO usar fallback Twilio (causa desconfianza)")
         return None
 
 
@@ -1706,8 +1729,14 @@ def procesar_respuesta():
 
             if not respuesta_container["completado"]:
                 # GPT aún no termina - dar confirmación y seguir esperando
-                print(f"⏳ FIX 133: GPT aún procesando - confirmando presencia mientras espera")
-                response.say("Sí, estoy aquí. Un momento por favor.", language="es-MX", voice="Polly.Miguel")
+                print(f"⏳ FIX 133 + FIX 162A: GPT aún procesando - usando audio de relleno")
+                # FIX 162A: Usar audio de relleno en lugar de Twilio
+                if "un_momento" in audio_cache:
+                    audio_url = request.url_root + "audio_cache/un_momento"
+                    response.play(audio_url)
+                elif "pensando_1" in audio_cache:
+                    audio_url = request.url_root + "audio_cache/pensando_1"
+                    response.play(audio_url)
 
                 # Esperar otros 5s (total 10.5s máximo)
                 gpt_thread.join(timeout=5.0)
@@ -1735,9 +1764,13 @@ def procesar_respuesta():
                 print(f"💭 Bruce dice (voz Bruce): '{pensando_key}' desde caché")
                 response.play(audio_url)
             else:
-                # Fallback si no está en caché (no debería pasar)
-                print(f"⚠️ '{pensando_key}' no en caché, usando Polly.Miguel")
-                response.say("Déjeme ver...", language="es-MX", voice="Polly.Miguel")
+                # FIX 162A: Si no está en caché, usar cualquier audio de relleno disponible
+                print(f"⚠️ FIX 162A: '{pensando_key}' no en caché, buscando alternativa")
+                if "dejeme_ver" in audio_cache:
+                    response.play(request.url_root + "audio_cache/dejeme_ver")
+                elif "un_momento" in audio_cache:
+                    response.play(request.url_root + "audio_cache/un_momento")
+                # Si no hay ninguno, continuar sin audio
 
         # FIX 102: Esperar otros 5 segundos (total 10s máximo)
         gpt_thread.join(timeout=5.0)
@@ -1772,11 +1805,14 @@ def procesar_respuesta():
             print(f"✅ FIX 76: Usando voz Bruce (ElevenLabs) para despedida de objeción")
             response.play(audio_url_despedida)
         else:
-            # Fallback: Twilio TTS si ElevenLabs falla
-            print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ en despedida - usando Twilio TTS")
+            # FIX 162A: ElevenLabs falló - usar despedida simple pre-cacheada
+            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida simple")
             print(f"   Despedida que falló: {respuesta_agente[:100]}...")
             print(f"   Call SID: {call_sid}")
-            response.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+            # Usar despedida simple del caché
+            if "despedida_simple" in audio_cache:
+                response.play(request.url_root + "audio_cache/despedida_simple")
+            # Si no hay despedida en caché, colgar sin audio (mejor que cambiar voz)
 
         # FIX 76: Agregar pausa de 1 segundo antes de colgar (evita sensación agresiva)
         response.pause(length=1)
@@ -1894,11 +1930,14 @@ def procesar_respuesta():
 
         # FIX 96: Reproducir audio DENTRO del Gather para estar listo desde que empieza
         if audio_id is None:
-            # FIX 102: Caso: ElevenLabs falló - usar Twilio TTS
-            print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ en despedida gather - usando Twilio TTS")
+            # FIX 162A: ElevenLabs falló - usar despedida simple pre-cacheada
+            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida gather - usando caché de despedida")
             print(f"   Despedida que falló: {respuesta_agente[:100]}...")
             print(f"   Call SID: {call_sid}")
-            gather_despedida.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+            # Usar despedida simple del caché
+            if "despedida_simple" in audio_cache:
+                gather_despedida.play(request.url_root + "audio_cache/despedida_simple")
+            # Si no hay despedida, continuar sin audio (mejor que cambiar voz)
         else:
             # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs
             audio_url = request.url_root + f"audio/{audio_id}"
@@ -2040,17 +2079,27 @@ def procesar_respuesta():
             # FIX 141: Agregar DENTRO del Gather para que se reproduzca en secuencia
             gather.play(audio_url_confirmacion)
         else:
-            # Fallback a Twilio si ElevenLabs falla
-            print(f"⚠️ FIX 141: Caché falló - usando Twilio DENTRO de Gather")
-            gather.say("Sí, estoy aquí.", language="es-MX", voice="Polly.Miguel")
+            # FIX 162A: NO usar Twilio - usar audio de relleno
+            print(f"⚠️ FIX 162A: Caché falló - usando audio de relleno")
+            if "pensando_1" in audio_cache:
+                gather.play(request.url_root + "audio_cache/pensando_1")
+            # Si falla, continuar sin audio (mejor que cambiar de voz)
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
     if audio_id is None:
-        # FIX 102: Fallback a Twilio TTS SOLO si ElevenLabs falló completamente
-        print(f"⚠️⚠️⚠️ FIX 102: ElevenLabs FALLÓ - usando Twilio TTS (Polly.Miguel)")
+        # FIX 162A: ElevenLabs falló - NO usar Twilio, usar audio de relleno
+        print(f"🚨 FIX 162A: ElevenLabs FALLÓ después de retry - usando audio de relleno")
         print(f"   Respuesta que falló: {respuesta_agente[:100]}...")
         print(f"   Call SID: {call_sid}")
-        gather.say(respuesta_agente, language="es-MX", voice="Polly.Miguel")
+
+        # Usar audio de relleno en lugar de Twilio
+        if "dejeme_ver" in audio_cache:
+            print(f"🎵 FIX 162A: Usando audio de relleno 'dejeme_ver'")
+            gather.play(request.url_root + "audio_cache/dejeme_ver")
+        elif "un_momento" in audio_cache:
+            print(f"🎵 FIX 162A: Usando audio de relleno 'un_momento'")
+            gather.play(request.url_root + "audio_cache/un_momento")
+        # Si no hay audios de relleno, continuar sin audio (mejor que voz Twilio)
     else:
         # Usar audio de ElevenLabs (voz Bruce) - SIEMPRE preferido
         audio_url = request.url_root + f"audio/{audio_id}"

@@ -49,14 +49,14 @@ try:
         result = response.json()
         print("✅ Cache generado exitosamente\n")
         print(f"📊 Resultados:")
-        print(f"   • Audios generados: {result.get('generados', 0)}")
-        print(f"   • Ya existían: {result.get('existentes', 0)}")
-        print(f"   • Errores: {result.get('errores', 0)}")
+        print(f"   • Audios generados: {result.get('generated', 0)}")
+        print(f"   • Total solicitados: {result.get('total_requested', 0)}")
+        print(f"   • Errores: {len(result.get('errors', []) or [])}")
 
-        if result.get('detalles'):
-            print(f"\n📝 Detalles:")
-            for detalle in result['detalles']:
-                print(f"   • {detalle}")
+        if result.get('errors'):
+            print(f"\n❌ Errores:")
+            for error in result['errors']:
+                print(f"   • {error}")
     else:
         print(f"❌ Error: {response.status_code}")
         print(f"   Respuesta: {response.text}")
