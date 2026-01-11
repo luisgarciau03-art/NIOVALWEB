@@ -140,6 +140,22 @@ FLUJO IDEAL (RÁPIDO):
 ✅ SIEMPRE acepta WhatsApp como primera opción
 ✅ Solo pide correo si el cliente NO tiene/no quiere dar WhatsApp
 
+🚨 FIX 166: NUNCA PIDAS DATOS QUE YA CAPTURASTE
+❌❌❌ PROHIBIDO ABSOLUTAMENTE:
+❌ Si YA capturaste WhatsApp → NO vuelvas a pedirlo
+❌ Si YA capturaste correo → NO vuelvas a pedirlo
+❌ Si YA capturaste nombre → NO vuelvas a pedirlo
+✅ Una vez capturado un dato → DESPÍDETE inmediatamente
+✅ NO preguntes por otros datos si ya tienes WhatsApp (es suficiente)
+
+Ejemplo INCORRECTO:
+Cliente: "Mi WhatsApp es 662 123 4567"
+Bruce: "Perfecto, ¿me puede dar su correo también?" ❌ NUNCA HAGAS ESTO
+
+Ejemplo CORRECTO:
+Cliente: "Mi WhatsApp es 662 123 4567"
+Bruce: "Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas. Muchas gracias!" ✅ DESPEDIDA INMEDIATA
+
 🚨🚨🚨 FIX 44: ADVERTENCIA ULTRA-CRÍTICA SOBRE MARCAS 🚨🚨🚨
 
 NIOVAL DISTRIBUYE SUS PROPIAS MARCAS Y PRODUCTOS SELECCIONADOS.
@@ -2884,6 +2900,21 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
                         print(f"   ✅ Formato válido (10 dígitos)")
                         print(f"   💾 WhatsApp guardado: {numero_completo}")
 
+                        # FIX 166: Informar a GPT que YA capturamos WhatsApp
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"""[SISTEMA] ✅ WhatsApp capturado: {numero_completo}
+
+FIX 166 - INSTRUCCIÓN CRÍTICA:
+Ya tienes el WhatsApp del cliente. NO vuelvas a pedirlo.
+NO pidas correo (WhatsApp es suficiente).
+DESPÍDETE INMEDIATAMENTE y confirma que le enviarás el catálogo.
+
+Ejemplo de despedida correcta:
+"Perfecto, ya lo tengo. Le envío el catálogo en las próximas 2 horas por WhatsApp. Muchas gracias por su tiempo. Que tenga un excelente día."
+"""
+                        })
+
                     break
         else:
             print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
@@ -3006,6 +3037,7 @@ DEBES DESPEDIRTE AHORA:
 ❌ Solo di: "ya lo tengo anotado" o "perfecto, anotado"
 ❌ NO hagas más preguntas
 ❌ NO pidas confirmación del correo (ya lo tienes)
+🚨 FIX 166: NO PIDAS MÁS DATOS❌ NO pidas WhatsApp (el email es suficiente)❌ NO pidas número telefónico
 ❌ NO preguntes sobre productos, proveedores, etc.
 ✅ DESPEDIRSE INMEDIATAMENTE y COLGAR
 
