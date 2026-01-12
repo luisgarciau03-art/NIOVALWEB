@@ -159,7 +159,9 @@ class SistemaLlamadasMasivas:
             payload = {
                 "telefono": contacto['telefono'],
                 "nombre_negocio": contacto['nombre_negocio'],
-                "contacto_info": contacto  # Enviar TODO el diccionario
+                "contacto_info": contacto,  # Enviar TODO el diccionario
+                # FIX 179: Deshabilitar reintentos automáticos para evitar empalmes
+                "deshabilitar_reintentos": True
             }
 
             print(f"🌐 Enviando solicitud a Railway: {url}")

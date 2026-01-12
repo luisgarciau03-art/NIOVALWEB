@@ -881,8 +881,12 @@ def iniciar_llamada():
         telefono_destino = data.get("telefono")
         nombre_negocio = data.get("nombre_negocio", "cliente")
         contacto_info = data.get("contacto_info", None)
+        # FIX 179: Flag para deshabilitar reintentos automáticos (usado por llamadas masivas)
+        deshabilitar_reintentos = data.get("deshabilitar_reintentos", False)
 
         print(f"🔍 DEBUG 3: Datos extraídos - Tel: {telefono_destino}, Negocio: {nombre_negocio}")
+        if deshabilitar_reintentos:
+            print(f"🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada")
 
         if not telefono_destino:
             print(f"❌ ERROR: Teléfono no proporcionado")
@@ -911,12 +915,16 @@ def iniciar_llamada():
         if contacto_info:
             # Si se envió contacto_info completo, usarlo
             contactos_llamadas[call.sid] = contacto_info
+            # FIX 179: Guardar flag de reintentos
+            contactos_llamadas[call.sid]['deshabilitar_reintentos'] = deshabilitar_reintentos
             print(f"📋 Contacto completo guardado para Call SID {call.sid[:10]}... (fila {contacto_info.get('fila', 'N/A')})")
         else:
             # Si no, guardar solo lo básico (compatibilidad con llamadas antiguas)
             contactos_llamadas[call.sid] = {
                 "telefono": telefono_destino,
-                "nombre_negocio": nombre_negocio
+                "nombre_negocio": nombre_negocio,
+                # FIX 179: Guardar flag de reintentos
+                "deshabilitar_reintentos": deshabilitar_reintentos
             }
             print(f"📋 Contacto básico guardado para Call SID {call.sid[:10]}...")
 
@@ -2251,7 +2259,10 @@ def despedida_final():
                     print(f"\n📞 Llamada cayó en {tipo_deteccion} - manejando reintento...")
                     intentos = sheets_manager.marcar_intento_buzon(fila)
 
-                    if intentos == 1:
+                    # FIX 179: Verificar si los reintentos están deshabilitados
+                    deshabilitar_reintentos = agente.contacto_info.get('deshabilitar_reintentos', False)
+
+                    if intentos == 1 and not deshabilitar_reintentos:
                         # PRIMER intento de buzón/operadora - REINTENTO INMEDIATO
                         print(f"📞 Primer intento de {tipo_deteccion} - iniciando reintento inmediato...")
                         print(f"⏰ Esperando 30 segundos antes de reintentar...")
@@ -2294,6 +2305,9 @@ def despedida_final():
                         thread.daemon = True
                         thread.start()
 
+                    elif intentos == 1 and deshabilitar_reintentos:
+                        # FIX 179: Reintentos deshabilitados (llamadas masivas)
+                        print(f"🚫 FIX 179: Primer intento de {tipo_deteccion} pero reintentos DESHABILITADOS (llamadas masivas)")
                     else:
                         print(f"📞 Intento de buzón #{intentos} - no se hará reintento automático")
 
@@ -2506,7 +2520,10 @@ def status_callback():
             intentos = sheets_manager.marcar_intento_buzon(fila)
             print(f"   📞 Intento de buzón #{intentos} registrado")
 
-            if intentos == 1:
+            # FIX 179: Verificar si los reintentos están deshabilitados
+            deshabilitar_reintentos = contacto_info.get('deshabilitar_reintentos', False)
+
+            if intentos == 1 and not deshabilitar_reintentos:
                 # PRIMER intento - REINTENTO INMEDIATO
                 print(f"   🔄 Primer buzón - programando reintento inmediato...", flush=True)
                 print(f"   ⏰ Esperando 30 segundos...", flush=True)
@@ -2551,6 +2568,10 @@ def status_callback():
                 thread.daemon = True
                 thread.start()
                 print(f"   ✅ Thread iniciado correctamente (daemon={thread.daemon}, alive={thread.is_alive()})", flush=True)
+
+            elif intentos == 1 and deshabilitar_reintentos:
+                # FIX 179: Reintentos deshabilitados (llamadas masivas)
+                print(f"   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)", flush=True)
 
             # FIX 89: GUARDAR en "Respuestas de formulario 1" cuando es buzón después del segundo intento
             elif intentos >= 2:
