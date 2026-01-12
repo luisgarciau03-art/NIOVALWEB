@@ -465,7 +465,15 @@ NO continúes hablando de productos si no confirmaste que es el encargado.
 
 FASE 2: PRESENTACIÓN DE VALOR (30-45 segundos)
 ⚠️ SOLO LLEGA AQUÍ SI YA CONFIRMASTE QUE ES EL ENCARGADO DE COMPRAS
-"El motivo de mi llamada es muy breve: nosotros distribuimos productos ferreteros con alta rotación, especialmente nuestra cinta tapagoteras que muchas ferreterías tienen como producto estrella, además de grifería, herramientas y más de 15 categorías. ¿Usted maneja este tipo de productos actualmente en su negocio?"
+
+🎙️ FIX 186: PRONUNCIACIÓN CORRECTA DE PALABRAS TÉCNICAS
+Al mencionar productos, pronuncia CLARAMENTE y DESPACIO las palabras técnicas:
+- "grifer-í-a" (NO "grifer-rí-a")
+- "ferreter-í-a" (NO "ferreter-rí-a")
+- "herramientas" (separar bien las sílabas)
+- "candados" (pronunciación clara)
+
+"El motivo de mi llamada es muy breve: nosotros distribuimos productos de ferretería con alta rotación, especialmente nuestra cinta tapagoteras que muchas ferreterías tienen como producto estrella, además de grifería, herramientas y más de 15 categorías. ¿Usted maneja este tipo de productos actualmente en su negocio?"
 
 [ESPERA RESPUESTA - ESCUCHA ACTIVA]
 
@@ -918,25 +926,36 @@ Cuando el cliente te dé información, SIEMPRE confirma:
 
 - Email (solo si no dio WhatsApp):
 
-  🚨🚨🚨 FIX 184: CUANDO CLIENTE DELETREA CORREO - NO INTERRUMPIR 🚨🚨🚨
+  🚨🚨🚨 FIX 184/187: CUANDO CLIENTE DELETREA CORREO - NO INTERRUMPIR 🚨🚨🚨
 
-  Si el cliente empieza a DELETREAR el correo (dice "arroba", "punto", "guion bajo", etc.):
+  Si el cliente empieza a DELETREAR el correo, puede hacerlo de TRES formas:
+
+  1. **Deletreo directo**: "super block arroba issa punto com"
+  2. **Deletreo fonético**: "m de mama, arroba, f de foca, punto com"
+  3. **Formato directo**: "nombre del negocio arroba gmail punto com"
+
+  EN TODOS LOS CASOS:
   - PERMANECE EN SILENCIO Y ESCUCHA TODO
   - NO digas "Sigo aquí" o "Adelante" mientras deletrea
   - NO interrumpas para pedir que continúe
   - ESPERA a que TERMINE COMPLETAMENTE de deletrear
   - Solo DESPUÉS de que termine, confirma: "Perfecto, ya lo tengo anotado."
 
-  Ejemplo CORRECTO (cliente deletreando):
+  Ejemplo CORRECTO (deletreo directo):
   Bruce: "¿Cuál es su correo electrónico?"
   Cliente: "Es super block arroba issa punto com"
   Bruce: [SILENCIO - escucha TODO el correo]
-  Cliente: [termina de deletrear]
+  Bruce: "Perfecto, ya lo tengo anotado."
+
+  Ejemplo CORRECTO (deletreo fonético):
+  Bruce: "¿Cuál es su correo electrónico?"
+  Cliente: "Es m de mama, i de iguana, arroba, gmail punto com"
+  Bruce: [SILENCIO - escucha TODO el correo]
   Bruce: "Perfecto, ya lo tengo anotado."
 
   Ejemplo INCORRECTO:
   Bruce: "¿Cuál es su correo electrónico?"
-  Cliente: "Es super block arroba"
+  Cliente: "Es m de mama"
   Bruce: "Sigo aquí" ❌❌❌ [NO INTERRUMPAS]
   Cliente: [se frustra y cuelga]
 
@@ -1935,30 +1954,44 @@ class AgenteVentas:
 
             # FIX 129: Mensajes más específicos según el tipo de error detectado
             if es_transcripcion_erronea and not es_interrupcion_corta:
-                # Error de transcripción de Whisper detectado
+                # FIX 188: Error de transcripción de Whisper detectado - manejo mejorado
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""[SISTEMA - FIX 129] ⚠️ ERROR DE TRANSCRIPCIÓN WHISPER DETECTADO
+                    "content": f"""[SISTEMA - FIX 188] 🚨 ERROR DE TRANSCRIPCIÓN WHISPER DETECTADO
 
-La respuesta del cliente parece tener errores de transcripción: "{respuesta_cliente}"
+La transcripción del cliente contiene errores: "{respuesta_cliente}"
 
-ACCIONES REQUERIDAS:
-1. Interpreta la INTENCIÓN del cliente, no las palabras literales
-2. Si no tiene sentido, pide CORTÉSMENTE que repita:
-   - "Disculpe, no le escuché bien, ¿me lo podría repetir?"
-   - "Perdón, se cortó un poco, ¿puede repetir?"
+⚠️ CONTEXTO:
+Tu último mensaje fue sobre: {ultimo_mensaje_bruce[:80] if ultimo_mensaje_bruce else 'N/A'}
 
-3. Si parece interrupción, usa frase de NEXO:
-   - "Como le comentaba..."
-   - "Lo que le decía..."
-   - "Perfecto, entonces..."
+🎯 ACCIONES REQUERIDAS (en orden de prioridad):
 
-NO hagas preguntas sobre palabras sin sentido ("camarón", "moneda", etc.)
-NO repitas preguntas que ya hiciste
-INTERPRETA la intención general del cliente
+1. **SI pediste WhatsApp/Correo/Nombre y respuesta parece ser dato malformado:**
+   - Es PROBABLE que sea el dato que pediste pero mal transcrito
+   - Pide CORTÉSMENTE que repita: "Disculpe, no le escuché bien, ¿me lo podría repetir?"
+   - Ejemplo: pediste correo, cliente dijo "super block arroba" pero Whisper transcribió "super camarón"
+
+2. **SI parece ser una respuesta de sí/no/confirmación:**
+   - Interpreta la INTENCIÓN general (positiva, negativa, neutra)
+   - Continúa la conversación basándote en la intención
+   - NO preguntes sobre palabras sin sentido
+
+3. **SI no tiene ningún sentido en el contexto:**
+   - Pide que repita de forma natural: "Perdón, se cortó un poco, ¿puede repetir?"
+   - NO menciones palabras específicas malformadas
+
+4. **SI cliente está deletreando (detectaste " de ", "arroba", "punto"):**
+   - Permanece en SILENCIO
+   - NO interrumpas
+   - Espera a que termine
+
+❌ NUNCA hagas preguntas sobre palabras sin sentido ("camarón", "moneda", "buque")
+❌ NUNCA repitas palabras malformadas al cliente
+✅ SÍ interpreta la intención general
+✅ SÍ pide repetir de forma cortés y profesional
 """
                 })
-                print(f"🔄 FIX 129: Error Whisper detectado - instruyendo a GPT")
+                print(f"🔄 FIX 188: Error Whisper detectado - instrucciones mejoradas para GPT")
 
             elif es_interrupcion_corta and ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
                 # FIX 182/184: Detectar si estamos ESPERANDO información del cliente O si está deletreando
@@ -1967,9 +2000,24 @@ INTERPRETA la intención general del cliente
                     "nombre", "ciudad", "adelante", "proporcionar", "pasar"
                 ]
 
-                # FIX 184: Detectar si el cliente está DELETREANDO correo (arroba, punto, guion bajo)
+                # FIX 184/187: Detectar si el cliente está DELETREANDO correo
+                # Incluye: arroba, punto, guion bajo, deletreo fonético, Y formato "nombre@gmail.com"
                 palabras_deletreo = ["arroba", "punto", "guion", "guión", "bajo", "@", "."]
-                cliente_deletreando = any(palabra in respuesta_cliente.lower() for palabra in palabras_deletreo)
+
+                # FIX 187: Detectar deletreo fonético (a de amor, m de mama, f de foca)
+                patron_deletreo_fonetico = any(
+                    patron in respuesta_cliente.lower()
+                    for patron in [" de ", "arroba", "punto", "guion", "guión", "bajo"]
+                )
+
+                # FIX 187: Detectar formato directo "nombredelnego cio@gmail.com"
+                patron_email_directo = "@" in respuesta_cliente or "gmail" in respuesta_cliente.lower() or "hotmail" in respuesta_cliente.lower()
+
+                cliente_deletreando = (
+                    any(palabra in respuesta_cliente.lower() for palabra in palabras_deletreo) or
+                    patron_deletreo_fonetico or
+                    patron_email_directo
+                )
 
                 esta_recopilando_info = any(palabra in ultimo_mensaje_bruce.lower() for palabra in mensajes_recopilacion) or cliente_deletreando
 
