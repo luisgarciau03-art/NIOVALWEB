@@ -93,32 +93,40 @@ class SistemaLlamadasMasivas:
 
         for i, contacto in enumerate(contactos, 1):
             print("\n" + "=" * 60)
-            print(f"📞 LLAMADA {i}/{len(contactos)}")
+            print(f"📞 LLAMADA {i}/{len(contactos)} - PROGRESO: {round(i/len(contactos)*100)}%")
             print("=" * 60 + "\n")
 
             fila = contacto['fila']
             nombre = contacto['nombre_negocio']
             telefono = contacto['telefono']
 
-            print(f"📞 Fila {fila}: {nombre}")
+            print(f"📋 Contacto #{i}:")
+            print(f"   Fila: {fila}")
+            print(f"   Negocio: {nombre}")
             print(f"   Teléfono: {telefono}")
+            print(f"   Progreso: {i}/{len(contactos)} ({round(i/len(contactos)*100)}%)")
 
             # FIX 88: Hacer llamada vía Railway y obtener Call SID
+            print(f"\n🚀 Iniciando llamada...")
             call_sid = self._iniciar_llamada_railway(contacto)
 
             if call_sid:
                 resultados['exitosas'] += 1
-                print("✅ Llamada iniciada correctamente")
+                print(f"✅ Llamada iniciada - Call SID: {call_sid[:15]}...")
 
                 # FIX 178: ESPERAR A QUE LA LLAMADA TERMINE VERIFICANDO ESTADO REAL
-                duracion = self._esperar_fin_llamada(call_sid)
+                print(f"⏳ Esperando finalización de llamada...")
+                duracion = self._esperar_fin_llamada(call_sid, contacto)
                 if duracion is not None:
-                    print(f"✅ Llamada completada (duración: {duracion}s)")
+                    print(f"✅ Llamada completada - Duración: {duracion}s")
                 else:
                     print("⚠️  No se pudo verificar finalización de llamada")
             else:
                 resultados['fallidas'] += 1
                 print("❌ Error al iniciar llamada")
+
+            # Mostrar resumen parcial
+            print(f"\n📊 Resumen parcial: {resultados['exitosas']} exitosas / {resultados['fallidas']} fallidas de {i} llamadas")
 
             # FIX 88: Esperar delay DESPUÉS de que termine la llamada (excepto en la última)
             if i < len(contactos):
@@ -181,12 +189,14 @@ class SistemaLlamadasMasivas:
             print(f"❌ Error al iniciar llamada: {e}")
             return None
 
-    def _esperar_fin_llamada(self, call_sid: str, max_tiempo_espera: int = 180) -> int:
+    def _esperar_fin_llamada(self, call_sid: str, contacto: dict, max_tiempo_espera: int = 180) -> int:
         """
         FIX 178: Verifica el estado REAL de la llamada en Twilio hasta que termine
+        FIX 180: Muestra información detallada del contacto y estado de la llamada
 
         Args:
             call_sid: ID de la llamada de Twilio
+            contacto: Diccionario con información del contacto
             max_tiempo_espera: Tiempo máximo a esperar (default: 180s = 3 minutos)
 
         Returns:
@@ -208,7 +218,8 @@ class SistemaLlamadasMasivas:
             time.sleep(45)
             return None
 
-        print(f"🔍 Verificando estado de llamada {call_sid}...")
+        nombre_negocio = contacto.get('nombre_negocio', 'Desconocido')
+        telefono = contacto.get('telefono', 'N/A')
 
         inicio = time.time()
         tiempo_transcurrido = 0
@@ -216,6 +227,18 @@ class SistemaLlamadasMasivas:
 
         # Estados que indican que la llamada terminó
         estados_finales = ["completed", "busy", "failed", "no-answer", "canceled"]
+
+        # Mapeo de estados a español para mejor visualización
+        estados_es = {
+            "queued": "En cola",
+            "ringing": "Timbrando",
+            "in-progress": "En conversación",
+            "completed": "Completada",
+            "busy": "Ocupado",
+            "failed": "Falló",
+            "no-answer": "No contestó",
+            "canceled": "Cancelada"
+        }
 
         while tiempo_transcurrido < max_tiempo_espera:
             try:
@@ -226,13 +249,19 @@ class SistemaLlamadasMasivas:
 
                 # Mostrar cambio de estado
                 if estado_actual != ultimo_estado:
-                    print(f"   📞 Estado: {estado_actual}")
+                    estado_texto = estados_es.get(estado_actual, estado_actual)
+                    print(f"   📞 Estado: {estado_texto}")
+                    print(f"      Contacto: {nombre_negocio} ({telefono})")
+                    print(f"      Tiempo transcurrido: {int(tiempo_transcurrido)}s")
                     ultimo_estado = estado_actual
 
                 # Verificar si la llamada terminó
                 if estado_actual in estados_finales:
                     duracion_total = int(duracion) if duracion else 0
-                    print(f"   ✅ Llamada finalizada: {estado_actual} (duración: {duracion_total}s)")
+                    estado_texto = estados_es.get(estado_actual, estado_actual)
+                    print(f"\n   ✅ Llamada finalizada: {estado_texto}")
+                    print(f"      Duración total: {duracion_total}s")
+                    print(f"      Contacto: {nombre_negocio}")
                     return duracion_total
 
                 # Esperar 3 segundos antes de volver a consultar
@@ -247,6 +276,7 @@ class SistemaLlamadasMasivas:
 
         # Si llegamos aquí, se agotó el tiempo máximo
         print(f"   ⚠️  Timeout alcanzado ({max_tiempo_espera}s) - continuando de todas formas")
+        print(f"      Contacto: {nombre_negocio}")
         return None
 
     def ver_estadisticas(self):
