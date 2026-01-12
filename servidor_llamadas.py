@@ -1797,16 +1797,15 @@ def procesar_respuesta():
         # Esto mantiene al cliente en la línea y evita que piense que Bruce colgó
 
         # FIX 146: Reducir delay para cliente desesperado de 0.5s a 0s (meta: 3s total)
-        # Si es saludo simple en primera respuesta, esperar solo 1s
-        # Sino, esperar 3s normal (antes 5s)
+        # FIX 183: Reducir timeout de respuesta - cliente se pone agresivo con delays >3s
         if cliente_desesperado:
             timeout_espera = 0  # FIX 146: Responder INMEDIATAMENTE (0s) - meta 3s total
         elif usa_segunda_parte_saludo or es_primera_respuesta:
-            timeout_espera = 1.0  # Saludo simple - responder rápido
+            timeout_espera = 0.8  # FIX 183: Saludo simple - responder MÁS rápido (1.0s→0.8s)
         else:
-            timeout_espera = 3.0  # FIX 147: Normal 5s→3s - reducir delays generales
+            timeout_espera = 2.0  # FIX 183: Normal 3s→2s - delays >3s hacen al cliente agresivo
 
-        debug_print(f"⏱️ FIX 132: Esperando {timeout_espera}s antes de señal auditiva")
+        debug_print(f"⏱️ FIX 183: Esperando {timeout_espera}s antes de señal auditiva (máx 2s)")
         gpt_thread.join(timeout=timeout_espera)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):

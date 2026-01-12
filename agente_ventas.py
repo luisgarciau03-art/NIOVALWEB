@@ -247,27 +247,39 @@ Paso 2 - Después de que el cliente salude, entonces di:
 
 ⚠️ IMPORTANTE: NO digas todo de corrido. Primero "Hola, buen dia" → ESPERA respuesta → Luego el resto.
 
-⚠️⚠️⚠️ FIX 126: MANEJAR INTERRUPCIONES CON FRASES DE NEXO ⚠️⚠️⚠️
+⚠️⚠️⚠️ FIX 182: MANEJAR INTERRUPCIONES SEGÚN CONTEXTO ⚠️⚠️⚠️
 
-Si el cliente te interrumpe mientras hablas (dice algo corto como "Sí", "Dígame", "Ajá", "Okay"):
-- El sistema detecta la interrupción y te da su respuesta
-- DEBES usar una frase de nexo para retomar naturalmente:
+IMPORTANTE: Las interrupciones deben manejarse según el CONTEXTO de la conversación:
 
-Frases de nexo (elige una):
-- "Como le comentaba..."
-- "Lo que le decía..."
-- "Entonces, como le mencionaba..."
-- "Perfecto, entonces..."
-- "Sí, como le iba diciendo..."
+1. Si estás ESPERANDO información del cliente (WhatsApp, correo, nombre):
+   - El cliente está PROPORCIONANDO lo que pediste
+   - NO es una interrupción, es LA RESPUESTA
+   - NO uses frases de nexo como "Perfecto me lo podra comunicar"
+   - SOLO di: "Sigo aquí" o "Adelante por favor" o "Lo estoy anotando"
 
-Ejemplo de flujo con interrupción:
+2. Si el cliente te interrumpe durante tu PRESENTACIÓN inicial:
+   - Cliente dice algo corto como "Sí", "Dígame", "Ajá", "Okay"
+   - USA frases de nexo para retomar:
+     * "Como le comentaba..."
+     * "Lo que le decía..."
+     * "Perfecto, entonces..."
+
+Ejemplo CORRECTO (cliente deletreando correo):
+Bruce: "¿Cuál es su correo electrónico?"
+Cliente: "Super block arroba"
+Bruce: "Sigo aquí" [NO "Perfecto me lo podra comunicar"]
+Cliente: "issa punto com"
+Bruce: "Perfecto, ya lo tengo anotado."
+
+Ejemplo CORRECTO (interrupción en presentación):
 Bruce: "Me comunico de la marca nioval, más que nada—"
 Cliente (interrumpe): "Sí dígame"
-Bruce: "Perfecto, entonces como le comentaba, le llamo de NIOVAL sobre productos ferreteros. ¿Se encontrará el encargado de compras?"
+Bruce: "Perfecto, entonces como le comentaba, le llamo de NIOVAL sobre productos ferreteros."
 
-❌ NO ignores la interrupción y sigas hablando sin reconocerla
-❌ NO repitas todo desde el inicio
-✅ SÍ usa un nexo y continúa desde donde te quedaste
+❌ NO uses frases de nexo cuando el cliente está RESPONDIENDO tu pregunta
+❌ NO ignores el contexto de la conversación
+✅ SÍ detecta si estás ESPERANDO información del cliente
+✅ SÍ da continuidad simple ("Sigo aquí", "Adelante") cuando recopiles datos
 
 ⚠️ REGLA CRÍTICA: NUNCA continúes con la presentación de productos hasta CONFIRMAR que hablas con el encargado de compras. Si no lo confirman, SIEMPRE pide que te transfieran.
 
@@ -905,12 +917,36 @@ Cuando el cliente te dé información, SIEMPRE confirma:
   6. NUNCA repitas el número en voz durante la validación
 
 - Email (solo si no dio WhatsApp):
-  IMPORTANTE: Repite el correo DESPACIO, DELETREANDO las partes complicadas
+
+  🚨🚨🚨 FIX 184: CUANDO CLIENTE DELETREA CORREO - NO INTERRUMPIR 🚨🚨🚨
+
+  Si el cliente empieza a DELETREAR el correo (dice "arroba", "punto", "guion bajo", etc.):
+  - PERMANECE EN SILENCIO Y ESCUCHA TODO
+  - NO digas "Sigo aquí" o "Adelante" mientras deletrea
+  - NO interrumpas para pedir que continúe
+  - ESPERA a que TERMINE COMPLETAMENTE de deletrear
+  - Solo DESPUÉS de que termine, confirma: "Perfecto, ya lo tengo anotado."
+
+  Ejemplo CORRECTO (cliente deletreando):
+  Bruce: "¿Cuál es su correo electrónico?"
+  Cliente: "Es super block arroba issa punto com"
+  Bruce: [SILENCIO - escucha TODO el correo]
+  Cliente: [termina de deletrear]
+  Bruce: "Perfecto, ya lo tengo anotado."
+
+  Ejemplo INCORRECTO:
+  Bruce: "¿Cuál es su correo electrónico?"
+  Cliente: "Es super block arroba"
+  Bruce: "Sigo aquí" ❌❌❌ [NO INTERRUMPAS]
+  Cliente: [se frustra y cuelga]
+
+  IMPORTANTE: Repite el correo DESPACIO, DELETREANDO las partes complicadas SOLO AL CONFIRMAR
 
   Estructura de validación:
-  1. Repite el correo completo primero
-  2. Si tiene caracteres especiales o letras confusas, DELETREA
-  3. Confirma el dominio por separado
+  1. ESCUCHA TODO el correo primero SIN INTERRUMPIR
+  2. Repite el correo completo
+  3. Si tiene caracteres especiales o letras confusas, DELETREA al confirmar
+  4. Confirma el dominio por separado
 
   Ejemplo básico: "Perfecto, entonces el correo es [REPITE EL CORREO QUE TE DIERON]. ¿Es correcto?"
 
@@ -1925,10 +1961,74 @@ INTERPRETA la intención general del cliente
                 print(f"🔄 FIX 129: Error Whisper detectado - instruyendo a GPT")
 
             elif es_interrupcion_corta and ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
-                # Interrupción corta mientras Bruce hablaba
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": f"""[SISTEMA - FIX 128/129] ⚠️ INTERRUPCIÓN DETECTADA
+                # FIX 182/184: Detectar si estamos ESPERANDO información del cliente O si está deletreando
+                mensajes_recopilacion = [
+                    "whatsapp", "correo", "email", "teléfono", "telefono", "número", "numero",
+                    "nombre", "ciudad", "adelante", "proporcionar", "pasar"
+                ]
+
+                # FIX 184: Detectar si el cliente está DELETREANDO correo (arroba, punto, guion bajo)
+                palabras_deletreo = ["arroba", "punto", "guion", "guión", "bajo", "@", "."]
+                cliente_deletreando = any(palabra in respuesta_cliente.lower() for palabra in palabras_deletreo)
+
+                esta_recopilando_info = any(palabra in ultimo_mensaje_bruce.lower() for palabra in mensajes_recopilacion) or cliente_deletreando
+
+                if esta_recopilando_info:
+                    # Estamos recopilando información - el cliente está RESPONDIENDO o DELETREANDO
+                    if cliente_deletreando:
+                        # FIX 184: Cliente está DELETREANDO - NO interrumpir
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"""[SISTEMA - FIX 184] 🚨 CLIENTE ESTÁ DELETREANDO CORREO - NO INTERRUMPIR
+
+El cliente está DELETREANDO su correo electrónico: "{respuesta_cliente}"
+
+⚠️ CRÍTICO:
+- NO digas NADA mientras deletrea (NO "Sigo aquí", NO "Adelante")
+- PERMANECE EN SILENCIO TOTAL
+- ESPERA a que TERMINE de deletrear COMPLETAMENTE
+- Solo DESPUÉS de que termine, di: "Perfecto, ya lo tengo anotado."
+
+Si interrumpes, el cliente se FRUSTRA y CUELGA.
+
+EJEMPLO:
+Cliente: "super block arroba issa punto com"
+Bruce: [SILENCIO - NO INTERRUMPIR]
+(Sistema espera siguiente input del cliente o fin de deletreo)
+"""
+                        })
+                        print(f"🔄 FIX 184: Cliente DELETREANDO correo - NO INTERRUMPIR")
+                    else:
+                        # Cliente está respondiendo pregunta normal
+                        self.conversation_history.append({
+                            "role": "system",
+                            "content": f"""[SISTEMA - FIX 182] ⚠️ CLIENTE ESTÁ RESPONDIENDO TU PREGUNTA
+
+Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
+
+El cliente está PROPORCIONANDO la información que pediste (WhatsApp, correo, nombre, etc.).
+
+NO uses frases de nexo como "Perfecto me lo podrá comunicar"
+SOLO di frases de CONTINUIDAD:
+- "Sigo aquí"
+- "Adelante por favor"
+- "Lo estoy anotando"
+- "Perfecto, continúe"
+
+Ejemplo CORRECTO:
+Bruce: "¿Cuál es su correo?"
+Cliente: "Super block arroba"
+Bruce: "Sigo aquí" (NO "Perfecto me lo podrá comunicar")
+Cliente: "issa punto com"
+Bruce: "Perfecto, ya lo tengo anotado."
+"""
+                        })
+                        print(f"🔄 FIX 182: Cliente respondiendo pregunta - usando continuidad simple")
+                else:
+                    # Interrupción corta durante PRESENTACIÓN
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": f"""[SISTEMA - FIX 128/182] ⚠️ INTERRUPCIÓN EN PRESENTACIÓN
 
 Cliente interrumpió mientras hablabas. Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
 
@@ -1939,13 +2039,12 @@ DEBES usar una frase de NEXO para retomar naturalmente:
 - "Perfecto, entonces..."
 
 NO repitas el mensaje completo desde el inicio.
-NO ignores la interrupción.
 
 Ejemplo correcto:
 "Perfecto, entonces como le comentaba, me comunico de NIOVAL sobre productos ferreteros..."
 """
-                })
-                print(f"🔄 FIX 128: Interrupción detectada - forzando uso de nexo")
+                    })
+                    print(f"🔄 FIX 128/182: Interrupción en presentación - forzando uso de nexo")
 
         # FIX 75/81: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
         # CRÍTICO: Detectar CUALQUIER mención de proveedor exclusivo/Truper y COLGAR
