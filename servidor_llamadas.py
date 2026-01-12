@@ -1342,13 +1342,30 @@ def procesar_respuesta():
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
         if agente:
-            # Marcar como "Colgo" si no hay otro estado especial
-            if agente.lead_data["estado_llamada"] == "Respondio":
+            # FIX 176: NO sobrescribir si ya se capturó información valiosa
+            # Verificar si se capturó WhatsApp, email o referencia ANTES de marcar como "Colgo"
+            tiene_dato_capturado = (
+                agente.lead_data.get("whatsapp") or
+                agente.lead_data.get("email") or
+                agente.lead_data.get("referencia_telefono")
+            )
+
+            # Solo marcar como "Colgo" si NO hay datos capturados
+            if agente.lead_data["estado_llamada"] == "Respondio" and not tiene_dato_capturado:
                 agente.lead_data["estado_llamada"] = "Colgo"
                 agente.lead_data["pregunta_0"] = "Colgo"
                 agente.lead_data["pregunta_7"] = "Colgo"
                 agente.lead_data["resultado"] = "NEGADO"
-                print(f"📝 Estado actualizado: Cliente colgó")
+                print(f"📝 Estado actualizado: Cliente colgó (sin datos capturados)")
+            elif tiene_dato_capturado:
+                # FIX 176: Si hay datos capturados, determinar conclusión correcta
+                print(f"📝 FIX 176: Cliente colgó pero SÍ capturamos datos:")
+                print(f"   WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
+                print(f"   Email: {bool(agente.lead_data.get('email'))}")
+                print(f"   Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
+                # Forzar determinación de conclusión correcta
+                agente._determinar_conclusion()
+                print(f"   Conclusión final: {agente.lead_data.get('pregunta_7')} ({agente.lead_data.get('resultado')})")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -1502,14 +1519,26 @@ def procesar_respuesta():
             print(f"📞 Detectadas 3 respuestas vacías consecutivas")
             print(f"💬 Cliente probablemente colgó o no responde")
 
+            # FIX 176: Verificar si se capturaron datos antes de marcar como "Colgo"
+            tiene_dato_capturado = (
+                agente.lead_data.get("whatsapp") or
+                agente.lead_data.get("email") or
+                agente.lead_data.get("referencia_telefono")
+            )
+
             # Marcar como "Colgo" o "No Contesta" según el caso
-            if agente.lead_data["estado_llamada"] == "Respondio":
+            if agente.lead_data["estado_llamada"] == "Respondio" and not tiene_dato_capturado:
                 # Si había respondido antes, probablemente colgó
                 agente.lead_data["estado_llamada"] = "Colgo"
                 agente.lead_data["pregunta_0"] = "Colgo"
                 agente.lead_data["pregunta_7"] = "Colgo"
                 agente.lead_data["resultado"] = "NEGADO"
-                print(f"📝 Estado actualizado: Cliente colgó (3 silencios)")
+                print(f"📝 Estado actualizado: Cliente colgó (3 silencios, sin datos)")
+            elif tiene_dato_capturado:
+                # FIX 176: Si hay datos, determinar conclusión correcta
+                print(f"📝 FIX 176: 3 silencios pero SÍ hay datos capturados")
+                agente._determinar_conclusion()
+                print(f"   Conclusión: {agente.lead_data.get('pregunta_7')}")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -2661,12 +2690,31 @@ def status_callback():
                     agente.lead_data["pregunta_7"] = "No Respondio"
                     agente.lead_data["resultado"] = "NEGADO"
                 else:
+                    # FIX 176: Verificar si se capturaron datos antes de marcar como "Colgo"
+                    tiene_dato_capturado = (
+                        agente.lead_data.get("whatsapp") or
+                        agente.lead_data.get("email") or
+                        agente.lead_data.get("referencia_telefono")
+                    )
+
                     # Hubo conversación, entonces sí colgó
                     print(f"   💬 Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
-                    agente.lead_data["estado_llamada"] = "Colgo"
-                    agente.lead_data["pregunta_0"] = "Colgo"
-                    agente.lead_data["pregunta_7"] = "Colgo"
-                    agente.lead_data["resultado"] = "NEGADO"
+
+                    if not tiene_dato_capturado:
+                        # Sin datos capturados → Marcar como "Colgo"
+                        agente.lead_data["estado_llamada"] = "Colgo"
+                        agente.lead_data["pregunta_0"] = "Colgo"
+                        agente.lead_data["pregunta_7"] = "Colgo"
+                        agente.lead_data["resultado"] = "NEGADO"
+                        print(f"   📝 Clasificado como 'Colgó' (sin datos capturados)")
+                    else:
+                        # FIX 176: Con datos capturados → Determinar conclusión correcta
+                        print(f"   📝 FIX 176: Cliente colgó pero SÍ capturamos datos:")
+                        print(f"      WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
+                        print(f"      Email: {bool(agente.lead_data.get('email'))}")
+                        print(f"      Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
+                        agente._determinar_conclusion()
+                        print(f"      Conclusión: {agente.lead_data.get('pregunta_7')} ({agente.lead_data.get('resultado')})")
 
             # Guardar la llamada
             try:
