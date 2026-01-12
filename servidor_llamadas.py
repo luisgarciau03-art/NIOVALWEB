@@ -67,6 +67,23 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
+# FIX 173: Logging de diagnóstico de credenciales (sin exponer token completo)
+print("🔍 FIX 173: Verificando credenciales de Twilio...")
+if TWILIO_ACCOUNT_SID:
+    print(f"   ✅ TWILIO_ACCOUNT_SID encontrado: {TWILIO_ACCOUNT_SID[:10]}...{TWILIO_ACCOUNT_SID[-4:]}")
+else:
+    print("   ❌ TWILIO_ACCOUNT_SID NO ENCONTRADO")
+
+if TWILIO_AUTH_TOKEN:
+    print(f"   ✅ TWILIO_AUTH_TOKEN encontrado: {TWILIO_AUTH_TOKEN[:8]}...{TWILIO_AUTH_TOKEN[-4:]}")
+else:
+    print("   ❌ TWILIO_AUTH_TOKEN NO ENCONTRADO")
+
+if TWILIO_PHONE_NUMBER:
+    print(f"   ✅ TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
+else:
+    print("   ❌ TWILIO_PHONE_NUMBER NO ENCONTRADO")
+
 # Configuración ElevenLabs
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
