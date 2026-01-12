@@ -10,6 +10,7 @@ import requests
 import time
 from dotenv import load_dotenv
 from nioval_sheets_adapter import NiovalSheetsAdapter
+from twilio.rest import Client
 
 # Configurar encoding UTF-8 para Windows
 if sys.platform == 'win32':
@@ -22,14 +23,27 @@ load_dotenv()
 # URL del servidor en Railway
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://nioval-webhook-server-production.up.railway.app")
 
+# Credenciales Twilio
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+
 
 class SistemaLlamadasMasivas:
     """Sistema para hacer llamadas masivas en producción"""
 
     def __init__(self):
-        """Inicializa conexión con Google Sheets"""
+        """Inicializa conexión con Google Sheets y Twilio"""
         print("\n🚀 Inicializando Sistema de Llamadas Masivas...")
         self.sheets_adapter = NiovalSheetsAdapter()
+
+        # FIX 178: Inicializar cliente Twilio para verificar estado de llamadas
+        if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+            self.twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+            print("✅ Cliente Twilio inicializado")
+        else:
+            self.twilio_client = None
+            print("⚠️  Cliente Twilio no disponible (credenciales faltantes)")
+
         print("✅ Conectado a Google Sheets\n")
 
     def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 10, pedir_confirmacion: bool = True):
@@ -96,12 +110,12 @@ class SistemaLlamadasMasivas:
                 resultados['exitosas'] += 1
                 print("✅ Llamada iniciada correctamente")
 
-                # FIX 90: ESPERAR A QUE LA LLAMADA TERMINE (45 segundos optimizado)
-                print(f"⏳ Esperando 45 segundos para que termine la llamada...")
-                if self._esperar_fin_llamada(call_sid):
-                    print("✅ Tiempo de espera completado")
+                # FIX 178: ESPERAR A QUE LA LLAMADA TERMINE VERIFICANDO ESTADO REAL
+                duracion = self._esperar_fin_llamada(call_sid)
+                if duracion is not None:
+                    print(f"✅ Llamada completada (duración: {duracion}s)")
                 else:
-                    print("⚠️  Error en espera")
+                    print("⚠️  No se pudo verificar finalización de llamada")
             else:
                 resultados['fallidas'] += 1
                 print("❌ Error al iniciar llamada")
@@ -165,28 +179,73 @@ class SistemaLlamadasMasivas:
             print(f"❌ Error al iniciar llamada: {e}")
             return None
 
-    def _esperar_fin_llamada(self, call_sid: str, tiempo_espera: int = 45) -> bool:
+    def _esperar_fin_llamada(self, call_sid: str, max_tiempo_espera: int = 180) -> int:
         """
-        FIX 90: Espera inteligente que permite continuar más rápido
+        FIX 178: Verifica el estado REAL de la llamada en Twilio hasta que termine
 
         Args:
-            call_sid: ID de la llamada de Twilio (para referencia)
-            tiempo_espera: Tiempo de espera en segundos (default: 45 segundos)
+            call_sid: ID de la llamada de Twilio
+            max_tiempo_espera: Tiempo máximo a esperar (default: 180s = 3 minutos)
 
         Returns:
-            True (siempre, después de esperar el tiempo especificado)
+            Duración de la llamada en segundos, o None si hubo error
 
-        Nota: Reducido de 90s a 45s porque:
-        - Llamadas a buzón terminan en ~10-20 segundos
-        - Llamadas contestadas raramente duran más de 2 minutos
-        - El delay_entre_llamadas provee separación adicional
+        Estados de llamada en Twilio:
+        - queued: En cola
+        - ringing: Timbrando
+        - in-progress: En progreso (conversación activa)
+        - completed: Completada
+        - busy: Ocupado
+        - failed: Falló
+        - no-answer: No respondió
+        - canceled: Cancelada
         """
-        if not call_sid:
-            return False
+        if not call_sid or not self.twilio_client:
+            print("⚠️  No se puede verificar estado (Call SID o cliente Twilio faltante)")
+            # Fallback: esperar tiempo fijo
+            time.sleep(45)
+            return None
 
-        # Esperar el tiempo especificado (reducido para no bloquear tanto)
-        time.sleep(tiempo_espera)
-        return True
+        print(f"🔍 Verificando estado de llamada {call_sid}...")
+
+        inicio = time.time()
+        tiempo_transcurrido = 0
+        ultimo_estado = None
+
+        # Estados que indican que la llamada terminó
+        estados_finales = ["completed", "busy", "failed", "no-answer", "canceled"]
+
+        while tiempo_transcurrido < max_tiempo_espera:
+            try:
+                # Consultar estado actual de la llamada
+                call = self.twilio_client.calls(call_sid).fetch()
+                estado_actual = call.status
+                duracion = call.duration  # Duración en segundos (None si aún no termina)
+
+                # Mostrar cambio de estado
+                if estado_actual != ultimo_estado:
+                    print(f"   📞 Estado: {estado_actual}")
+                    ultimo_estado = estado_actual
+
+                # Verificar si la llamada terminó
+                if estado_actual in estados_finales:
+                    duracion_total = int(duracion) if duracion else 0
+                    print(f"   ✅ Llamada finalizada: {estado_actual} (duración: {duracion_total}s)")
+                    return duracion_total
+
+                # Esperar 3 segundos antes de volver a consultar
+                time.sleep(3)
+                tiempo_transcurrido = int(time.time() - inicio)
+
+            except Exception as e:
+                print(f"   ⚠️  Error consultando estado: {e}")
+                # Esperar y reintentar
+                time.sleep(5)
+                tiempo_transcurrido = int(time.time() - inicio)
+
+        # Si llegamos aquí, se agotó el tiempo máximo
+        print(f"   ⚠️  Timeout alcanzado ({max_tiempo_espera}s) - continuando de todas formas")
+        return None
 
     def ver_estadisticas(self):
         """Muestra estadísticas de contactos"""
