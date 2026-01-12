@@ -3594,10 +3594,13 @@ Responde SOLO en este formato JSON:
             self.lead_data["nivel_interes_clasificado"] = "Medio"
             self.lead_data["opinion_bruce"] = "Análisis no disponible."
 
-    def _determinar_conclusion(self):
+    def _determinar_conclusion(self, forzar_recalculo=False):
         """
         Determina automáticamente la conclusión (Pregunta 7) basándose en
         el flujo de la conversación y las respuestas anteriores
+
+        Args:
+            forzar_recalculo: Si es True, recalcula incluso si ya hay una conclusión
         """
         # Primero inferir respuestas faltantes
         self._inferir_respuestas_faltantes()
@@ -3605,9 +3608,18 @@ Responde SOLO en este formato JSON:
         # Analizar estado de ánimo e interés
         self._analizar_estado_animo_e_interes()
 
-        # Si ya fue determinado, no sobreescribir
-        if self.lead_data["pregunta_7"]:
-            return
+        # FIX 177: Solo hacer early return si NO se fuerza recálculo
+        # Y si la conclusión NO es temporal (Colgo, Nulo, BUZON, etc.)
+        conclusiones_temporales = ["Colgo", "Nulo", "BUZON", "OPERADORA", "No Respondio", "TELEFONO INCORRECTO"]
+
+        if not forzar_recalculo and self.lead_data["pregunta_7"]:
+            # Si ya tiene conclusión DEFINITIVA (no temporal), no recalcular
+            if self.lead_data["pregunta_7"] not in conclusiones_temporales:
+                print(f"📝 Conclusión ya determinada: {self.lead_data['pregunta_7']} (no recalcular)")
+                return
+            else:
+                # Si es temporal, permitir recálculo
+                print(f"📝 FIX 177: Conclusión temporal '{self.lead_data['pregunta_7']}' - recalculando con datos capturados...")
 
         # Opciones de conclusión:
         # - "Pedido" - Cliente va a hacer un pedido

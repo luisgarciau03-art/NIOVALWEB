@@ -1363,8 +1363,8 @@ def procesar_respuesta():
                 print(f"   WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
                 print(f"   Email: {bool(agente.lead_data.get('email'))}")
                 print(f"   Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
-                # Forzar determinación de conclusión correcta
-                agente._determinar_conclusion()
+                # FIX 177: Forzar recálculo para sobrescribir "Colgo" temporal
+                agente._determinar_conclusion(forzar_recalculo=True)
                 print(f"   Conclusión final: {agente.lead_data.get('pregunta_7')} ({agente.lead_data.get('resultado')})")
 
             # Guardar la llamada
@@ -1537,7 +1537,8 @@ def procesar_respuesta():
             elif tiene_dato_capturado:
                 # FIX 176: Si hay datos, determinar conclusión correcta
                 print(f"📝 FIX 176: 3 silencios pero SÍ hay datos capturados")
-                agente._determinar_conclusion()
+                # FIX 177: Forzar recálculo para sobrescribir "Colgo" temporal
+                agente._determinar_conclusion(forzar_recalculo=True)
                 print(f"   Conclusión: {agente.lead_data.get('pregunta_7')}")
 
             # Guardar la llamada
@@ -2713,7 +2714,8 @@ def status_callback():
                         print(f"      WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
                         print(f"      Email: {bool(agente.lead_data.get('email'))}")
                         print(f"      Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
-                        agente._determinar_conclusion()
+                        # FIX 177: Forzar recálculo para sobrescribir "Colgo" temporal
+                        agente._determinar_conclusion(forzar_recalculo=True)
                         print(f"      Conclusión: {agente.lead_data.get('pregunta_7')} ({agente.lead_data.get('resultado')})")
 
             # Guardar la llamada
