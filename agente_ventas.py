@@ -653,8 +653,9 @@ SIEMPRE DEBES:
 ✓ Ser consultivo, no agresivo - Busca entender antes de vender
 🚨 FIX 171: NO uses el nombre del cliente en tus respuestas (genera delays de audio)
 ✓ Hacer UNA pregunta a la vez y ESPERAR la respuesta completa
-✓ Hablar máximo 2-3 oraciones seguidas (30 palabras máximo) - respuestas largas generan delays incómodos
-✓ SÉ BREVE Y CONCISO - no des listas largas de productos, menciona 1-2 ejemplos
+✓ FIX 175: MÁXIMO 25 PALABRAS POR RESPUESTA - respuestas largas causan delays de 7-17 segundos
+✓ SÉ EXTREMADAMENTE BREVE - cada segundo cuenta, el cliente puede colgar
+✓ Hablar máximo 2 oraciones cortas - no des listas largas de productos, menciona 1-2 ejemplos
 ✓ Validar lo que dice: "Entiendo...", "Perfecto...", "Tiene razón..."
 ✓ Usar lenguaje de colaboración: "podríamos", "me gustaría", "¿le parece?"
 ✓ Adaptar tu lenguaje: "señor/señora" para respeto, "usted" siempre
@@ -2724,7 +2725,17 @@ IMPORTANTE:
                         numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                            "content": f"""[SISTEMA] ✅ Número completo capturado: {numero_formateado}
+
+🚨 FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
+1. DEBES repetir el número EXACTAMENTE como lo capturaste: {numero_formateado}
+2. NO conviertas a palabras como "ochenta y siete" - USA SOLO DÍGITOS
+3. Di EXACTAMENTE: "Perfecto, el número es {numero_formateado}, ¿es correcto?"
+4. NUNCA digas un número diferente - causa confusión y pérdida del cliente
+5. Ejemplo CORRECTO: "el número es 87 18 97 02 31"
+6. Ejemplo INCORRECTO: "el número es ochenta y siete dieciocho noventa y dos treinta y uno"
+
+REPITE TEXTUALMENTE: {numero_formateado}"""
                         })
                     else:
                         # Número incorrecto (6-9 dígitos o 11+ dígitos)
@@ -2812,7 +2823,17 @@ IMPORTANTE:
                         numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"[SISTEMA] ✅ Número completo capturado: {numero_formateado}. Debes REPETIR el número al cliente para confirmar que está correcto. Di algo como: 'Perfecto, el número es {numero_formateado}, ¿es correcto?' o 'Excelente, entonces el número es {numero_formateado}. Muchas gracias por la información.'"
+                            "content": f"""[SISTEMA] ✅ Número completo capturado: {numero_formateado}
+
+🚨 FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
+1. DEBES repetir el número EXACTAMENTE como lo capturaste: {numero_formateado}
+2. NO conviertas a palabras como "ochenta y siete" - USA SOLO DÍGITOS
+3. Di EXACTAMENTE: "Perfecto, el número es {numero_formateado}, ¿es correcto?"
+4. NUNCA digas un número diferente - causa confusión y pérdida del cliente
+5. Ejemplo CORRECTO: "el número es 87 18 97 02 31"
+6. Ejemplo INCORRECTO: "el número es ochenta y siete dieciocho noventa y dos treinta y uno"
+
+REPITE TEXTUALMENTE: {numero_formateado}"""
                         })
                     else:
                         # Número incorrecto (6-9 dígitos o 11+ dígitos)
@@ -3636,11 +3657,14 @@ Responde SOLO en este formato JSON:
             self.lead_data["resultado"] = "NEGADO"
             print(f"📝 Conclusión determinada: Nulo (NEGADO)")
 
-        # Default: Si hay algún dato capturado, considerar APROBADO
-        elif self.lead_data["whatsapp"] or self.lead_data["email"]:
+        # FIX 175: Incluir referencia_telefono en clasificación
+        # Default: Si hay algún dato capturado (WhatsApp, email O referencia), considerar APROBADO
+        elif (self.lead_data["whatsapp"] or
+              self.lead_data["email"] or
+              self.lead_data.get("referencia_telefono")):
             self.lead_data["pregunta_7"] = "Revisara el Catalogo"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Revisara el Catalogo (APROBADO)")
+            print(f"📝 Conclusión determinada: Revisara el Catalogo (APROBADO) - Dato capturado: WhatsApp={bool(self.lead_data['whatsapp'])}, Email={bool(self.lead_data['email'])}, Ref={bool(self.lead_data.get('referencia_telefono'))}")
 
         # Si no hay nada, es Nulo
         else:
