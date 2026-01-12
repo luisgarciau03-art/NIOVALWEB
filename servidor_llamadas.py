@@ -1052,19 +1052,23 @@ def webhook_voz():
     # DESDE QUE EMPIEZA a reproducir el audio, no DESPUÉS de que termina
     #
     # FIX 60/61/62/63/86: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
-    # IMPORTANTE: input="speech" + recordingStatusCallback genera GRABACIÓN automáticamente
+    # FIX 174: 🚨 CRÍTICO - REMOVIDO speech_model para ahorrar 80% de costos
+    #   PROBLEMA: speech_model="experimental_conversations" activa transcripción de Twilio ($$$)
+    #   SOLUCIÓN: input="speech" SIN speech_model = solo graba, NO transcribe
+    #   Whisper transcribe la grabación → Ahorro 80% en costos
+    # IMPORTANTE: input="speech" detecta voz y genera RecordingUrl automáticamente
     # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
     # FIX 86/112/149: Timeouts MUY AGRESIVOS para detectar cliente desesperado RÁPIDO
     # Cliente desesperado habla 5-30s continuamente → Necesitamos cortar en primera pausa
     gather = Gather(
-        input="speech",
+        input="speech",  # FIX 174: SIN speech_model = no transcribe, solo graba
         language="es-MX",
         timeout=2,  # FIX 145: 2s - Balance entre clientes normales (2-3s) y desesperados
         speech_timeout=0.5,  # FIX 149: 0.5s - ULTRA AGRESIVO para cortar cliente desesperado en primera pausa
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
-        speech_model="experimental_conversations",  # FIX 61: CRÍTICO - Habilitar grabación para Whisper
+        # FIX 174: REMOVIDO speech_model="experimental_conversations" - causaba doble cobro
         barge_in=True  # FIX 139: Permitir interrupciones en saludo para detectar clientes desesperados rápido
     )
 
@@ -1980,8 +1984,8 @@ def procesar_respuesta():
             timeout=3,  # Esperar hasta 3 segundos
             speech_timeout=2,  # FIX 60: Ya optimizado (corto para despedidas)
             action="/despedida-final",
-            method="POST",
-            speech_model="experimental_conversations"  # FIX 61: RecordingUrl para Whisper
+            method="POST"
+            # FIX 174: REMOVIDO speech_model - causaba doble cobro de transcripción
         )
 
         # FIX 96: Reproducir audio DENTRO del Gather para estar listo desde que empieza
@@ -2109,7 +2113,7 @@ def procesar_respuesta():
         speech_timeout="auto",  # FIX 112: 1s→auto - Twilio detecta fin automáticamente
         action="/procesar-respuesta",
         method="POST",
-        speech_model="experimental_conversations",  # FIX 61: RecordingUrl para Whisper
+        # FIX 174: REMOVIDO speech_model="experimental_conversations" - causaba doble cobro
         barge_in=permitir_interrupcion  # FIX 125: True para primeros 3 mensajes, False después
     )
 
