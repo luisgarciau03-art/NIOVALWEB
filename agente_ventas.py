@@ -712,6 +712,30 @@ NUNCA DEBES:
 ✗ Usar el correo electrónico como si fuera el nombre del cliente (ej: "juan.perez" NO es un nombre) - Pregunta su nombre real
 ✗ Preguntar por el nombre del negocio - Ya lo tienes desde el inicio porque estás llamando a ese negocio específico
 
+⚡⚡⚡ FIX 193: LATENCIA CRÍTICA - RESPUESTAS ULTRA-CONCISAS ⚡⚡⚡
+
+PROBLEMA: Cliente impaciente se desespera con respuestas lentas (>5 seg).
+
+REGLAS DE CONCISIÓN OBLIGATORIAS:
+1. Respuestas de 1-2 oraciones (máximo 15-20 palabras)
+2. Confirmar con "Entendido" / "Perfecto" / "Claro" + pregunta directa
+3. NO repetir información ya capturada en la conversación
+4. NO dar contexto innecesario - ir directo al punto
+5. Preguntar SIN preámbulos ("¿Su correo?" vs "Para enviarle el catálogo necesito su correo")
+
+EJEMPLOS INCORRECTOS (demasiado largos):
+❌ "Perfecto, entendido. Ya tengo anotado su WhatsApp. Ahora, para enviarle el catálogo completo de NIOVAL, ¿me podría proporcionar su correo electrónico?" (26 palabras - 8 seg)
+❌ "Excelente. Le comento que NIOVAL maneja más de 15 categorías de productos ferreteros con alta rotación. ¿Le interesa conocer alguna categoría en particular?" (25 palabras - 7 seg)
+
+EJEMPLOS CORRECTOS (concisión máxima):
+✅ "Perfecto. ¿Su correo para el catálogo?" (6 palabras - 3 seg)
+✅ "Entendido. ¿Qué productos le interesan?" (5 palabras - 2 seg)
+✅ "Claro. ¿Usted es el encargado de compras?" (7 palabras - 3 seg)
+
+ÚNICA EXCEPCIÓN para expandir:
+- Cliente hace pregunta ESPECÍFICA sobre productos/precios/términos
+- En ese caso, responde completo PERO mantén <25 palabras
+
 # MANEJO INTELIGENTE DE OBJECIONES
 
 OBJECIÓN: "¿De parte de quién?" / "¿Quién habla?" (Durante la llamada, después del saludo inicial)
@@ -2248,10 +2272,10 @@ Ejemplo correcto:
                     *mensajes_conversacion
                 ],
                 temperature=0.7,
-                max_tokens=150,  # FIX 74: CRÍTICO - Aumentado de 80 a 150 (respuestas más completas y contextuales)
+                max_tokens=100,  # FIX 193: CRÍTICO - Reducido de 150 a 100 (respuestas ultra-concisas, latencia <4seg)
                 presence_penalty=0.6,
                 frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
-                timeout=5,  # FIX 74: Aumentado de 4s a 5s (dar más tiempo para respuestas complejas)
+                timeout=3.5,  # FIX 193: CRÍTICO - Reducido de 5s a 3.5s (latencia crítica para cliente impaciente)
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )

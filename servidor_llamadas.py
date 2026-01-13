@@ -112,7 +112,7 @@ frase_stats = {}  # Contador de frecuencia de frases
 # Railway monta el Volume en /app/audio_cache por defecto
 # En local usa ./audio_cache
 CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable de entorno
-FRECUENCIA_MIN_CACHE = 2  # Auto-generar caché después de N usos (reducido de 3 a 2)
+FRECUENCIA_MIN_CACHE = 1  # FIX 193: Auto-generar caché después de 1 uso (reducir latencia)
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
 # FIX 56: CACHÉ DE RESPUESTAS DE GPT (0s delay para preguntas comunes)
@@ -155,6 +155,28 @@ respuestas_cache = {
             "quién es", "quien es", "su nombre", "cómo se llama", "como se llama"
         ],
         "respuesta": "Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
+    },
+
+    # FIX 194: Respuestas de presencia (cliente confundido/siente abandono)
+    "presencia_aqui": {
+        "patrones": ["hola", "oiga", "bueno"],
+        "respuesta": "Sí, estoy aquí, dígame.",
+        "categoria": "presencia"
+    },
+    "presencia_escucho": {
+        "patrones": ["me escucha", "me oye"],
+        "respuesta": "Claro, lo escucho.",
+        "categoria": "presencia"
+    },
+    "presencia_ayudo": {
+        "patrones": ["sigue ahí", "está ahí"],
+        "respuesta": "Aquí estoy, ¿qué necesita?",
+        "categoria": "presencia"
+    },
+    "presencia_digame": {
+        "patrones": ["bruce"],
+        "respuesta": "Sí, ¿en qué le ayudo?",
+        "categoria": "presencia"
     },
 }
 
@@ -2146,15 +2168,26 @@ def procesar_respuesta():
         timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
         debug_print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
 
-    # FIX 125/154/156/157: Permitir interrupciones SOLO en saludo inicial
-    # FIX 156: REDUCIDO de 2 a 1 - ciclo persiste con barge_in en mensaje #2
-    # FIX 157: DESHABILITADO completamente - ni siquiera en mensaje #1
+    # FIX 125/154/156/157/194: Manejo inteligente de interrupciones
+    # FIX 157: barge_in=False para evitar ciclo de saludos
+    # FIX 194: Habilitar barge_in progresivamente para detectar confusión del cliente
+    #
     # Problema original (FIX 125): Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
-    # FIX 154: Reducido de 3 a 2 - no fue suficiente
-    # FIX 156: Solo mensaje #1 - cliente desesperado detectado en saludo, después NO interrumpir
-    # FIX 157: Ciclo PERSISTE incluso con mensaje #1 - respuestas válidas ("dígame", "hola") detectadas como interrupción
-    #   SOLUCIÓN: barge_in=False SIEMPRE - cliente puede interrumpir presionando tecla, pero no por voz
-    permitir_interrupcion = False  # FIX 157: Deshabilitado completamente - elimina ciclo de interrupciones
+    # Problema FIX 157: Cliente confundido dice "¿Hola?" y Bruce no responde → siente abandono
+    # Solución FIX 194: barge_in=True solo después de mensaje #8 (conversación larga, posible confusión)
+
+    if num_mensajes_bruce <= 2:
+        # Primeros 2 mensajes: NO permitir (evitar ciclo FIX 157)
+        permitir_interrupcion = False
+        debug_print(f"🔇 FIX 194: barge_in=False (saludo inicial, evitar ciclo)")
+    elif num_mensajes_bruce >= 8:
+        # Después de 8 mensajes: Permitir para detectar confusión
+        permitir_interrupcion = True
+        debug_print(f"🎙️ FIX 194: barge_in=True (conversación larga, detectar confusión/abandono)")
+    else:
+        # Mensajes 3-7: NO permitir (conversación fluida)
+        permitir_interrupcion = False
+        debug_print(f"🔇 FIX 194: barge_in=False (conversación fluida)")
 
     gather = Gather(
         input="speech",
