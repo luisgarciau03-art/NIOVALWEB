@@ -1834,9 +1834,28 @@ class AgenteVentas:
             "content": respuesta_cliente
         })
 
-        # FIX 128/129: DETECCIÓN AVANZADA DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
+        # FIX 196: Detectar objeciones cortas LEGÍTIMAS (NO son colgadas ni errores)
+        # Cliente dice "pero", "espera", "no", etc. → quiere interrumpir/objetar
         respuesta_lower = respuesta_cliente.lower()
         respuesta_stripped = respuesta_cliente.strip()
+
+        objeciones_cortas_legitimas = ["pero", "espera", "espere", "no", "qué", "que", "eh", "mande", "cómo", "como"]
+
+        es_objecion_corta = respuesta_stripped.lower() in objeciones_cortas_legitimas
+
+        if es_objecion_corta:
+            # Cliente quiere interrumpir/objetar - NO es fin de llamada
+            print(f"🚨 FIX 196: Objeción corta detectada: '{respuesta_cliente}' - continuando conversación")
+
+            # Agregar contexto para que GPT maneje la objeción apropiadamente
+            self.conversation_history.append({
+                "role": "system",
+                "content": f"[SISTEMA] Cliente dijo '{respuesta_cliente}' (objeción/duda/interrupción). Responde apropiadamente: si es 'pero' pide que continúe ('¿Sí, dígame?'), si es 'espera' confirma que esperas, si es 'no' pregunta qué duda tiene, si es 'qué/mande/cómo' repite brevemente lo último que dijiste."
+            })
+
+            print(f"   ✅ FIX 196: Contexto agregado para GPT - manejará objeción corta")
+
+        # FIX 128/129: DETECCIÓN AVANZADA DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
 
         # FIX 153: Detectar interrupciones cortas (cliente dice algo mientras Bruce habla)
         # MEJORADO: NO detectar como interrupción si cliente responde apropiadamente

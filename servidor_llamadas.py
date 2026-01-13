@@ -718,10 +718,19 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         # Aplicar correcciones fonéticas
         texto_corregido = corregir_pronunciacion(texto)
 
-        # SIEMPRE usar Multilingual v2 (mejor acento mexicano)
+        # FIX 196: Selección inteligente de modelo según longitud
+        # Turbo v2: 2x más rápido (0.5-1s) para respuestas cortas
+        # Multilingual v2: Mejor calidad para respuestas largas
         palabras = len(texto_corregido.split())
-        modelo = "eleven_multilingual_v2"
-        print(f"🎙️ Usando Multilingual v2 ({palabras} palabras)")
+
+        if palabras <= 25:
+            # Respuestas cortas: Usar Turbo v2 (más rápido)
+            modelo = "eleven_turbo_v2"
+            print(f"⚡ FIX 196: Usando Turbo v2 ({palabras} palabras) - latencia ~1-2s")
+        else:
+            # Respuestas largas: Usar Multilingual v2 (mejor calidad)
+            modelo = "eleven_multilingual_v2"
+            print(f"🎙️ Usando Multilingual v2 ({palabras} palabras) - latencia ~2-3s")
 
         # FIX 162A: Generar audio con retry automático
         max_intentos = 2
@@ -2194,21 +2203,23 @@ def procesar_respuesta():
     # FIX 125/154/156/157/194: Manejo inteligente de interrupciones
     # FIX 157: barge_in=False para evitar ciclo de saludos
     # FIX 194: Habilitar barge_in progresivamente para detectar confusión del cliente
+    # FIX 196: REDUCIR umbral de #8 a #5 - detectar objeciones ANTES de despedida
     #
     # Problema original (FIX 125): Cliente dice "Sí dígame" mientras Bruce habla, no se detecta → silencio 14s
     # Problema FIX 157: Cliente confundido dice "¿Hola?" y Bruce no responde → siente abandono
-    # Solución FIX 194: barge_in=True solo después de mensaje #8 (conversación larga, posible confusión)
+    # Problema FIX 196: Cliente dice "pero" en mensaje #6-7 y Bruce NO lo detecta (barge_in=False)
+    # Solución FIX 196: barge_in=True desde mensaje #5 (permite detectar objeciones como "pero" ANTES de despedida)
 
     if num_mensajes_bruce <= 2:
         # Primeros 2 mensajes: NO permitir (evitar ciclo FIX 157)
         permitir_interrupcion = False
         debug_print(f"🔇 FIX 194: barge_in=False (saludo inicial, evitar ciclo)")
-    elif num_mensajes_bruce >= 8:
-        # Después de 8 mensajes: Permitir para detectar confusión
+    elif num_mensajes_bruce >= 5:
+        # FIX 196: Desde mensaje #5: Permitir para detectar objeciones Y confusión
         permitir_interrupcion = True
-        debug_print(f"🎙️ FIX 194: barge_in=True (conversación larga, detectar confusión/abandono)")
+        debug_print(f"🎙️ FIX 196: barge_in=True (mensaje #{num_mensajes_bruce}, detectar objeciones/confusión)")
     else:
-        # Mensajes 3-7: NO permitir (conversación fluida)
+        # Mensajes 3-4: NO permitir (conversación fluida temprana)
         permitir_interrupcion = False
         debug_print(f"🔇 FIX 194: barge_in=False (conversación fluida)")
 
