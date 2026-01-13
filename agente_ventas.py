@@ -2291,10 +2291,10 @@ Ejemplo correcto:
                     *mensajes_conversacion
                 ],
                 temperature=0.7,
-                max_tokens=100,  # FIX 193: CRÍTICO - Reducido de 150 a 100 (respuestas ultra-concisas, latencia <4seg)
+                max_tokens=80,  # FIX 197: CRÍTICO - Reducido de 100 a 80 (respuestas ULTRA-concisas, target <4seg total)
                 presence_penalty=0.6,
                 frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
-                timeout=3.5,  # FIX 193: CRÍTICO - Reducido de 5s a 3.5s (latencia crítica para cliente impaciente)
+                timeout=2.8,  # FIX 197: CRÍTICO - Reducido de 3.5s a 2.8s (target 4-5s total con ElevenLabs)
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )

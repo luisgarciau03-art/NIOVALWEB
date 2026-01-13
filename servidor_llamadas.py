@@ -718,19 +718,12 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         # Aplicar correcciones fonéticas
         texto_corregido = corregir_pronunciacion(texto)
 
-        # FIX 196: Selección inteligente de modelo según longitud
-        # Turbo v2: 2x más rápido (0.5-1s) para respuestas cortas
-        # Multilingual v2: Mejor calidad para respuestas largas
+        # FIX 197: SIEMPRE usar Multilingual v2 (acento mexicano natural)
+        # Turbo v2 es más rápido PERO pierde acento mexicano → suena extranjero
+        # Prioridad: CALIDAD DE ACENTO > VELOCIDAD
         palabras = len(texto_corregido.split())
-
-        if palabras <= 25:
-            # Respuestas cortas: Usar Turbo v2 (más rápido)
-            modelo = "eleven_turbo_v2"
-            print(f"⚡ FIX 196: Usando Turbo v2 ({palabras} palabras) - latencia ~1-2s")
-        else:
-            # Respuestas largas: Usar Multilingual v2 (mejor calidad)
-            modelo = "eleven_multilingual_v2"
-            print(f"🎙️ Usando Multilingual v2 ({palabras} palabras) - latencia ~2-3s")
+        modelo = "eleven_multilingual_v2"
+        print(f"🎙️ FIX 197: Usando Multilingual v2 ({palabras} palabras, acento mexicano)")
 
         # FIX 162A: Generar audio con retry automático
         max_intentos = 2
