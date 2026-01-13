@@ -1995,46 +1995,107 @@ class AgenteVentas:
                     ultimo_mensaje_bruce = msg['content']
                     break
 
-            # FIX 129: Mensajes más específicos según el tipo de error detectado
+            # FIX 129/188/198: Mensajes específicos según SEVERIDAD del error detectado
             if es_transcripcion_erronea and not es_interrupcion_corta:
-                # FIX 188: Error de transcripción de Whisper detectado - manejo mejorado
-                self.conversation_history.append({
-                    "role": "system",
-                    "content": f"""[SISTEMA - FIX 188] 🚨 ERROR DE TRANSCRIPCIÓN WHISPER DETECTADO
+                # FIX 198: Clasificar severidad del error en 3 niveles
 
-La transcripción del cliente contiene errores: "{respuesta_cliente}"
+                # NIVEL 1: Errores CRÍTICOS (no se entiende NADA)
+                errores_criticos = [
+                    "que no me hablas", "no me hablas", "qué marca es la que no me hablas",
+                    "y peso para servirle", "camarón", "moneda", "o jedi", "jail"
+                ]
+                es_error_critico = any(err in respuesta_lower for err in errores_criticos)
+
+                # NIVEL 2: Error PARCIAL en dato solicitado (WhatsApp/Email)
+                estaba_pidiendo_dato = any(kw in ultimo_mensaje_bruce.lower() for kw in
+                                          ["whatsapp", "correo", "email", "teléfono", "telefono", "número", "numero"])
+
+                # NIVEL 3: Error LEVE (respuesta con sentido pero palabras extrañas)
+                # Este es el nivel por defecto si no es crítico ni dato solicitado
+
+                if es_error_critico:
+                    # NIVEL 1: ERROR CRÍTICO → Pedir repetir cortésmente
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 1] 🚨 ERROR CRÍTICO DE TRANSCRIPCIÓN
+
+El cliente dijo algo pero la transcripción no tiene sentido: "{respuesta_cliente}"
 
 ⚠️ CONTEXTO:
-Tu último mensaje fue sobre: {ultimo_mensaje_bruce[:80] if ultimo_mensaje_bruce else 'N/A'}
+Tu último mensaje: {ultimo_mensaje_bruce[:80] if ultimo_mensaje_bruce else 'N/A'}
 
-🎯 ACCIONES REQUERIDAS (en orden de prioridad):
+🎯 ACCIÓN REQUERIDA:
+Pide cortésmente que repita: "Disculpe, no le escuché bien por la línea, ¿me lo podría repetir?"
 
-1. **SI pediste WhatsApp/Correo/Nombre y respuesta parece ser dato malformado:**
-   - Es PROBABLE que sea el dato que pediste pero mal transcrito
-   - Pide CORTÉSMENTE que repita: "Disculpe, no le escuché bien, ¿me lo podría repetir?"
-   - Ejemplo: pediste correo, cliente dijo "super block arroba" pero Whisper transcribió "super camarón"
-
-2. **SI parece ser una respuesta de sí/no/confirmación:**
-   - Interpreta la INTENCIÓN general (positiva, negativa, neutra)
-   - Continúa la conversación basándote en la intención
-   - NO preguntes sobre palabras sin sentido
-
-3. **SI no tiene ningún sentido en el contexto:**
-   - Pide que repita de forma natural: "Perdón, se cortó un poco, ¿puede repetir?"
-   - NO menciones palabras específicas malformadas
-
-4. **SI cliente está deletreando (detectaste " de ", "arroba", "punto"):**
-   - Permanece en SILENCIO
-   - NO interrumpas
-   - Espera a que termine
-
-❌ NUNCA hagas preguntas sobre palabras sin sentido ("camarón", "moneda", "buque")
-❌ NUNCA repitas palabras malformadas al cliente
-✅ SÍ interpreta la intención general
-✅ SÍ pide repetir de forma cortés y profesional
+❌ NO menciones palabras de la transcripción errónea
+❌ NO repitas tu pregunta anterior textualmente (usa palabras diferentes)
+✅ SÍ usa frase genérica de "no escuché bien"
+✅ SÍ mantén tono profesional y cortés
 """
-                })
-                print(f"🔄 FIX 188: Error Whisper detectado - instrucciones mejoradas para GPT")
+                    })
+                    print(f"🚨 FIX 198 NIVEL 1: Error crítico Whisper → pedir repetir")
+
+                elif estaba_pidiendo_dato:
+                    # NIVEL 2: ERROR PARCIAL EN DATO → Intentar interpretar PRIMERO
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 2] ⚠️ ERROR PARCIAL EN DATO SOLICITADO
+
+Estabas pidiendo: {ultimo_mensaje_bruce[:50]}...
+Cliente respondió (con posibles errores): "{respuesta_cliente}"
+
+🎯 ESTRATEGIA DE 3 PASOS:
+
+1. **PRIMERO: Intenta interpretar el dato**
+   - Si parece WhatsApp (contiene números): Extrae los dígitos visibles
+   - Si parece email (tiene palabras como gmail, hotmail, arroba): Intenta reconstruir
+   - Ejemplo: "tres tres uno camarón cinco" → 331X5 (falta 1 dígito)
+
+2. **SI lograste interpretar ≥70% del dato:**
+   - Confirma lo que entendiste: "Perfecto, solo para confirmar, ¿es el [DATO QUE INTERPRETASTE]?"
+   - Ejemplo: "Entonces el WhatsApp es 331-XXX-5678, ¿correcto?"
+   - Ejemplo: "El correo es nombre@gmail.com, ¿correcto?"
+
+3. **SI NO lograste interpretar ≥70%:**
+   - Pide repetir MÁS DESPACIO: "Disculpe, no le escuché completo, ¿me lo podría repetir más despacio?"
+
+❌ NO digas "ya lo tengo" si NO lo tienes completo
+❌ NO repitas palabras erróneas al cliente
+✅ SÍ confirma el dato si lo interpretaste parcialmente
+✅ SÍ pide repetir SOLO si interpretación es <70%
+✅ SÍ mantén tono profesional (no hagas sentir mal al cliente)
+"""
+                    })
+                    print(f"⚠️ FIX 198 NIVEL 2: Error parcial en dato → intentar interpretar")
+
+                else:
+                    # NIVEL 3: ERROR LEVE → Interpretar intención y continuar
+                    self.conversation_history.append({
+                        "role": "system",
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 3] ℹ️ ERROR LEVE DE TRANSCRIPCIÓN
+
+Cliente respondió (con errores leves): "{respuesta_cliente}"
+
+🎯 ESTRATEGIA:
+1. Interpreta la INTENCIÓN general (positivo/negativo/pregunta/duda)
+2. Continúa la conversación basándote en la intención
+3. NO menciones las palabras erróneas
+4. NO pidas repetir por errores leves
+
+Ejemplo de interpretación:
+- Transcripción: "oc, así a ver" → Intención: Confirmación positiva ("ok, sí, a ver")
+- Transcripción: "pero no sé" → Intención: Duda/inseguridad
+- Transcripción: "y eso que es" → Intención: Pregunta de aclaración
+
+❌ NO preguntes sobre palabras sin sentido
+❌ NO pidas repetir (es error leve, intención es clara)
+❌ NO hagas sentir al cliente que no lo entiendes
+✅ SÍ continúa la conversación fluidamente
+✅ SÍ responde basándote en la intención general
+✅ SÍ mantén naturalidad en la conversación
+"""
+                    })
+                    print(f"✅ FIX 198 NIVEL 3: Error leve → interpretar intención y continuar")
 
             elif es_interrupcion_corta and ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
                 # FIX 182/184: Detectar si estamos ESPERANDO información del cliente O si está deletreando
@@ -2628,30 +2689,68 @@ Si el cliente no respondió claramente la primera vez, está bien. NO insistas."
             })
 
         # ============================================================
-        # FIX 32: DETECTAR SI CLIENTE YA DIO CORREO
+        # FIX 32 + FIX 198: DETECTAR SI CLIENTE YA DIO CORREO (VERIFICACIÓN CONTINUA)
         # ============================================================
-        # Si ya tenemos email capturado, NO volver a pedirlo
-        if self.lead_data.get("email") and not hasattr(self, 'flag_email_capturado_advertido'):
-            self.flag_email_capturado_advertido = True
-            print(f"✋ FIX 32: Ya tienes EMAIL capturado - NO volver a pedir")
+        # FIX 198: SIEMPRE verificar si email ya existe (no usar flag de una sola vez)
+        if self.lead_data.get("email"):
+            # Verificar si este email YA estaba en el historial ANTES de esta respuesta
+            email_actual = self.lead_data["email"]
 
-            self.conversation_history.append({
-                "role": "system",
-                "content": f"""⚠️⚠️⚠️ [SISTEMA] YA TIENES EL EMAIL DEL CLIENTE
+            # Buscar en historial si ya se mencionó este email
+            email_ya_mencionado = False
+            num_mensaje_anterior = None
 
-Email capturado: {self.lead_data.get("email")}
+            for i, msg in enumerate(self.conversation_history[:-1]):  # Excluir mensaje actual
+                if msg['role'] == 'user' and email_actual.lower() in msg['content'].lower():
+                    email_ya_mencionado = True
+                    num_mensaje_anterior = (i + 1) // 2  # Calcular número de mensaje
+                    break
+
+            if email_ya_mencionado:
+                print(f"⚠️ FIX 198: Email '{email_actual}' YA fue mencionado en mensaje #{num_mensaje_anterior}")
+                print(f"   Cliente está REPITIENDO el email (no es la primera vez)")
+
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""⚠️⚠️⚠️ [SISTEMA] EMAIL DUPLICADO DETECTADO - FIX 198
+
+El cliente acaba de mencionar el email: {email_actual}
+
+🚨 IMPORTANTE: Este email YA fue proporcionado anteriormente en mensaje #{num_mensaje_anterior}
+
+🎯 ACCIÓN REQUERIDA:
+- ✅ Responde: "Perfecto, ya lo tengo anotado desde antes. Muchas gracias."
+- ✅ NO pidas confirmación (ya lo tienes)
+- ✅ NO digas "adelante con el correo" (ya te lo dieron)
+- ✅ DESPIDE INMEDIATAMENTE
+
+❌ NUNCA pidas el email de nuevo
+❌ NUNCA digas "perfecto, adelante" (ya está adelante)
+❌ NUNCA actúes como si fuera la primera vez
+
+El cliente ya te dio este dato antes. Reconócelo y termina la llamada."""
+                })
+                print(f"   ✅ FIX 198: Contexto agregado para GPT - manejar email duplicado")
+            else:
+                # Primera vez que se menciona este email
+                print(f"✅ FIX 198: Email '{email_actual}' es NUEVO - primera mención")
+
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""✅ [SISTEMA] NUEVO EMAIL CAPTURADO
+
+Email capturado: {email_actual}
 
 ❌ NO vuelvas a pedir el correo electrónico
 ❌ NO digas "¿Me podría dar su correo?"
 ❌ NO digas "¿Tiene correo electrónico?"
-✅ YA LO TIENES: {self.lead_data.get("email")}
+✅ YA LO TIENES: {email_actual}
 ✅ AVANZA con la conversación
 
-Si necesitas CONFIRMAR que está correcto, puedes decir:
-"Para confirmar, el correo es {self.lead_data.get("email")}. ¿Correcto?"
+Responde: "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas."
 
-Pero NO lo vuelvas a PEDIR desde cero."""
-            })
+DESPIDE INMEDIATAMENTE y COLGAR."""
+                })
 
         # ============================================================
         # FIX 16 + FIX 172: DETECCIÓN - NUNCA PEDIR NOMBRE (genera delays de audio)
@@ -4219,12 +4318,30 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 
         # FASE 1: Si aún no tenemos nombre del contacto
         if not self.lead_data.get("nombre_contacto"):
-            fase_actual.append("""
+            # FIX 198: Validar si cliente respondió con saludo apropiado
+            saludos_validos = [
+                "hola", "bueno", "buenas", "diga", "dígame", "digame",
+                "adelante", "mande", "qué", "que", "aló", "alo",
+                "buenos días", "buenos dias", "buen día", "buen dia",
+                "si", "sí", "a sus órdenes", "ordenes"
+            ]
+
+            respuesta_lower = respuesta_cliente.lower() if respuesta_cliente else ""
+            cliente_saludo_apropiadamente = any(sal in respuesta_lower for sal in saludos_validos)
+
+            # Detectar si es pregunta en lugar de saludo
+            es_pregunta = any(q in respuesta_lower for q in ["quién", "quien", "de dónde", "de donde", "qué", "que"])
+
+            if cliente_saludo_apropiadamente and not es_pregunta:
+                # Cliente SÍ saludó apropiadamente → continuar con segunda parte
+                fase_actual.append("""
 # FASE ACTUAL: APERTURA (FIX 112: SALUDO EN 2 PARTES)
 
 🚨 IMPORTANTE: El saludo inicial fue solo "Hola, buen dia"
 
-Ahora que el cliente respondió tu saludo, di:
+✅ FIX 198: El cliente respondió apropiadamente al saludo.
+
+Ahora di la segunda parte:
 "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
 NO continúes hasta confirmar que hablas con el encargado.
@@ -4280,6 +4397,33 @@ PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las
 ❌ NUNCA preguntes "¿Qué tipo de productos manejan? ¿Son ferretería local o mayorista?"
 ❌ La persona está OCUPADA en mostrador - ir DIRECTO al correo
 ✅ Solo: Nombre → Correo → Despedida (máximo 3 intercambios)
+""")
+            else:
+                # FIX 198: Cliente NO respondió con saludo estándar
+                fase_actual.append(f"""
+# FASE ACTUAL: APERTURA - FIX 198: MANEJO DE RESPUESTA NO ESTÁNDAR
+
+🚨 El cliente NO respondió con un saludo estándar.
+
+Cliente dijo: "{respuesta_cliente}"
+
+🎯 ANÁLISIS Y ACCIÓN:
+
+Si parece una PREGUNTA ("¿Quién habla?", "¿De dónde?", "¿Qué desea?"):
+→ Responde la pregunta Y LUEGO di tu presentación completa:
+   "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+Si parece CONFUSIÓN o NO ENTENDIÓ (respuesta sin sentido, silencio, ruido):
+→ Repite tu saludo de forma más clara y completa:
+   "¿Bueno? Buenos días. Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+Si parece RECHAZO ("Ocupado", "No me interesa", "No tengo tiempo"):
+→ Respeta su tiempo y ofrece alternativa rápida:
+   "Entiendo que está ocupado. ¿Le gustaría que le envíe el catálogo por WhatsApp o correo para revisarlo cuando tenga tiempo?"
+
+✅ SIEMPRE termina preguntando por el encargado de compras
+✅ NO insistas si muestran rechazo claro
+✅ Mantén tono profesional y respetuoso
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor

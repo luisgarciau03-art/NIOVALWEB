@@ -832,12 +832,62 @@ def servir_audio_cache(cache_key):
     return "Audio cache not found", 404
 
 
-def transcribir_con_whisper(recording_url):
+def post_procesar_transcripcion_email(texto_transcrito):
+    """
+    FIX 198: Reconstruye emails a partir de transcripciones verbales
+    Ejemplo: "juan punto garcia arroba gmail punto com" → "juan.garcia@gmail.com"
+    """
+    import re
+
+    texto = texto_transcrito.lower()
+
+    # Reemplazar palabras verbales por símbolos
+    replacements = {
+        " arroba ": "@",
+        " punto com": ".com",
+        " punto es": ".es",
+        " punto mx": ".mx",
+        " guión bajo ": "_",
+        " guion bajo ": "_",
+        " guión medio ": "-",
+        " guion medio ": "-",
+        " guión ": "-",
+        " guion ": "-",
+    }
+
+    for palabra, simbolo in replacements.items():
+        texto = texto.replace(palabra, simbolo)
+
+    # Detectar proveedores comunes y reconstruir
+    proveedores = ["gmail", "hotmail", "yahoo", "outlook", "live", "icloud"]
+
+    for proveedor in proveedores:
+        # Detectar patrones como "nombre gmail com" → "nombre@gmail.com"
+        pattern = rf"(\S+)\s+{proveedor}\s+com"
+        match = re.search(pattern, texto)
+        if match:
+            nombre = match.group(1)
+            email_reconstruido = f"{nombre}@{proveedor}.com"
+            texto = re.sub(pattern, email_reconstruido, texto)
+            print(f"   ✅ FIX 198: Email reconstruido: {email_reconstruido}")
+
+    # Reemplazar " punto " en contextos de email
+    # Solo si ya detectamos @ (para no afectar conversación normal)
+    if "@" in texto:
+        texto = texto.replace(" punto ", ".")
+
+    return texto
+
+
+def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_email=False):
     """
     FIX 60: Transcribe audio usando Whisper API de OpenAI
+    FIX 198: Agrega soporte para prompt contextual y post-procesamiento de emails
 
     Args:
         recording_url: URL de la grabación de Twilio
+        whisper_prompt: Prompt contextual para mejorar transcripción (FIX 198)
+        post_procesar_email: Si True, aplica post-procesamiento de emails (FIX 198)
 
     Returns:
         str: Texto transcrito o None si falla
@@ -866,16 +916,27 @@ def transcribir_con_whisper(recording_url):
         temp_audio.close()
 
         print(f"🤖 FIX 60: Transcribiendo con Whisper API...")
+        if whisper_prompt:
+            print(f"   🎯 FIX 198: Usando prompt contextual")
         inicio_whisper = time.time()
 
-        # Transcribir con Whisper
+        # FIX 198: Transcribir con Whisper con prompt contextual opcional
         with open(temp_audio.name, 'rb') as audio_file:
-            transcription = openai_client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                language="es",  # Español (mejor precisión)
-                response_format="text"
-            )
+            if whisper_prompt:
+                transcription = openai_client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="es",
+                    prompt=whisper_prompt,  # FIX 198: Prompt para mejorar transcripción
+                    response_format="text"
+                )
+            else:
+                transcription = openai_client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="es",
+                    response_format="text"
+                )
 
         tiempo_whisper = time.time() - inicio_whisper
         tiempo_total = time.time() - inicio
@@ -884,6 +945,16 @@ def transcribir_con_whisper(recording_url):
         os.unlink(temp_audio.name)
 
         texto = transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
+
+        # FIX 198: Post-procesamiento de emails si está activado
+        if post_procesar_email and texto:
+            texto_original = texto
+            texto = post_procesar_transcripcion_email(texto)
+
+            if texto_original != texto:
+                print(f"   🔄 FIX 198: Transcripción mejorada")
+                print(f"      Antes: '{texto_original}'")
+                print(f"      Después: '{texto}'")
 
         print(f"   ✅ Transcripción completada en {tiempo_whisper:.3f}s")
         print(f"   ⏱️  Tiempo total: {tiempo_total:.3f}s (descarga: {tiempo_descarga:.3f}s + whisper: {tiempo_whisper:.3f}s)")
@@ -1180,7 +1251,43 @@ def procesar_respuesta():
 
     if recording_url and OPENAI_API_KEY:
         print(f"\n🎯 FIX 60: RecordingUrl disponible - usando WHISPER API")
-        transcripcion_whisper = transcribir_con_whisper(recording_url)
+
+        # FIX 198: Detectar contexto para mejorar transcripción de Whisper
+        whisper_prompt = None
+        post_procesar_email = False
+
+        # Obtener el agente actual para revisar el contexto
+        agente = conversaciones_activas.get(call_sid)
+        if agente and agente.conversation_history:
+            # Buscar el último mensaje de Bruce
+            ultimo_msg_bruce = ""
+            for msg in reversed(agente.conversation_history):
+                if msg['role'] == 'assistant':
+                    ultimo_msg_bruce = msg['content'].lower()
+                    break
+
+            # Detectar si estábamos pidiendo email
+            estaba_pidiendo_email = any(kw in ultimo_msg_bruce for kw in ["correo", "email", "electrónico", "correo electrónico"])
+
+            # Detectar si estábamos pidiendo WhatsApp
+            estaba_pidiendo_whatsapp = any(kw in ultimo_msg_bruce for kw in ["whatsapp", "número", "telefono", "teléfono"])
+
+            if estaba_pidiendo_email:
+                # FIX 198: Prompt específico para emails
+                whisper_prompt = "El cliente está deletreando su correo electrónico. Palabras clave: arroba, @, punto, com, gmail, hotmail, yahoo, guión bajo, guión medio."
+                post_procesar_email = True
+                print(f"🎯 FIX 198: Contexto EMAIL detectado - mejorando transcripción")
+
+            elif estaba_pidiendo_whatsapp:
+                # Prompt para números telefónicos
+                whisper_prompt = "El cliente está dictando su número de WhatsApp o teléfono en español. Números del 0 al 9."
+                print(f"🎯 FIX 198: Contexto WHATSAPP detectado - mejorando transcripción")
+
+        transcripcion_whisper = transcribir_con_whisper(
+            recording_url,
+            whisper_prompt=whisper_prompt,
+            post_procesar_email=post_procesar_email
+        )
 
         if transcripcion_whisper:
             usar_whisper = True
