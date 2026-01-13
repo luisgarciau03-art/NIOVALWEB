@@ -669,13 +669,26 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                 print(f"ℹ️ Plantilla no en caché, generando completo...")
 
         # PASO 3: Buscar en caché auto-generado (sin nombre)
-        palabras_inicio = " ".join(texto.split()[:8]).lower()
-        frase_key = "_".join(palabras_inicio.split())
+        # FIX 191: NUNCA usar caché si el texto contiene despedidas de cierre
+        # Esto previene que Bruce diga "ya lo tengo anotado" cuando el cliente SIGUE deletreando
+        palabras_cierre = ["perfecto ya lo tengo anotado", "perfecto, ya lo tengo anotado",
+                          "le llegará el catálogo", "muchas gracias por su tiempo"]
 
-        if frase_key in audio_cache:
-            audio_files[audio_id] = audio_cache[frase_key]
-            print(f"📦 Caché AUTO: {frase_key[:40]}... (0s delay)")
-            return audio_id
+        texto_lower = texto.lower()
+        es_despedida_cierre = any(palabra in texto_lower for palabra in palabras_cierre)
+
+        if es_despedida_cierre:
+            print(f"🚫 FIX 191: Bloqueando caché de despedida - cliente aún puede estar hablando")
+            print(f"   Texto: '{texto[:60]}...'")
+            # NO usar caché - dejar que GPT decida si es momento de despedirse
+        else:
+            palabras_inicio = " ".join(texto.split()[:8]).lower()
+            frase_key = "_".join(palabras_inicio.split())
+
+            if frase_key in audio_cache:
+                audio_files[audio_id] = audio_cache[frase_key]
+                print(f"📦 Caché AUTO: {frase_key[:40]}... (0s delay)")
+                return audio_id
 
         # PASO 4: Registrar frase para estadísticas (auto-genera caché si es frecuente)
         registrar_frase_usada(texto)

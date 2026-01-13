@@ -3138,8 +3138,8 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
         # Necesitamos eliminar: nombres propios, frases descriptivas, TODO excepto letras/números
 
         if 'arroba' in texto_email_procesado or any(dom in texto_email_procesado for dom in ['gmail', 'hotmail', 'outlook', 'yahoo', 'live', 'icloud']):
-            # FIX 48B: ESTRATEGIA AGRESIVA - Eliminar TODAS las palabras largas (3+ letras)
-            # que sean ayudas mnemotécnicas comunes en español
+            # FIX 48B/192: ESTRATEGIA AGRESIVA - Eliminar TODAS las ayudas mnemotécnicas
+            # Patrón: "X de [Palabra]" donde X es una letra y [Palabra] es la ayuda
 
             # Lista de palabras a eliminar (nombres propios y palabras comunes usadas como ayudas)
             palabras_ayuda = [
@@ -3152,29 +3152,37 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
                 'rosa', 'ana', 'oscar', 'óscar', 'carlos', 'daniel', 'elena', 'fernando',
                 'rogelio', 'armando', 'ricardo', 'sandra', 'teresa', 'ursula', 'vicente',
                 'william', 'xavier', 'yolanda', 'zorro', 'antonio', 'beatriz',
-                # FIX 160: Nombres propios comunes en correos
-                'luis', 'garcía', 'garcia', 'uva', 'juan', 'jose', 'maría', 'maria', 'pedro',
-                'miguel', 'angel', 'lopez', 'lópez', 'martinez', 'martínez', 'rodriguez', 'rodríguez',
+                # FIX 160/192: Nombres propios comunes en correos y ayudas
+                'luis', 'garcía', 'garcia', 'uva', 'juan', 'jose', 'josé', 'maría', 'maria', 'pedro',
+                'miguel', 'angel', 'ángel', 'lopez', 'lópez', 'martinez', 'martínez', 'rodriguez', 'rodríguez',
                 'gonzalez', 'gonzález', 'hernández', 'hernandez', 'ramirez', 'ramírez',
+                'beto', 'memo', 'pepe', 'paco', 'pancho', 'lupe', 'chuy', 'toño', 'tono',
+                'bruce', 'wayne', 'clark', 'peter', 'tony', 'steve', 'diana', 'bruce',
                 # Palabras descriptivas comunes
                 'latina', 'latino', 'grande', 'chico', 'ring', 'heredado', 'vedado',
                 'acento', 'tilde', 'mayúscula', 'mayuscula', 'minúscula', 'minuscula',
                 # Números escritos (a veces se mezclan)
-                'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'cero'
+                'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'cero',
+                'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'
             ]
 
-            # Construir patrón regex que elimine estas palabras
-            patron_palabras_ayuda = r'\b(' + '|'.join(palabras_ayuda) + r')\b'
+            # FIX 192: PASO 1 - Eliminar patrón "X de [Palabra]" (ayudas mnemotécnicas explícitas)
+            # Ejemplo: "b de Beto" → "b", "m de mamá" → "m"
             texto_original_debug = texto_email_procesado
+            patron_letra_de_ayuda = r'\b([a-z0-9])\s+de\s+\w+\b'
+            texto_email_procesado = re.sub(patron_letra_de_ayuda, r'\1', texto_email_procesado, flags=re.IGNORECASE)
+
+            # FIX 192: PASO 2 - Eliminar lista de palabras de ayuda comunes
+            patron_palabras_ayuda = r'\b(' + '|'.join(palabras_ayuda) + r')\b'
             texto_email_procesado = re.sub(patron_palabras_ayuda, '', texto_email_procesado, flags=re.IGNORECASE)
 
             # Limpiar espacios múltiples que quedan después de eliminar ayudas
             texto_email_procesado = re.sub(r'\s+', ' ', texto_email_procesado).strip()
 
-            print(f"🔧 FIX 48B - Ayudas mnemotécnicas eliminadas (AGRESIVO)")
+            print(f"🔧 FIX 48B/192 - Ayudas mnemotécnicas eliminadas (AGRESIVO)")
             print(f"   Original: '{texto[:100]}...'")
-            print(f"   Procesado: '{texto_original_debug[:100]}...'")
-            print(f"   Sin ayudas: '{texto_email_procesado[:100]}...'")
+            print(f"   Paso 1 (X de Palabra): '{texto_original_debug[:100]}...'")
+            print(f"   Paso 2 (sin ayudas): '{texto_email_procesado[:100]}...'")
 
         # Paso 1: Reemplazar palabras clave por símbolos
         # "arroba" → "@"
@@ -3347,20 +3355,27 @@ IMPORTANTE:
                         # Primer intento fallido - pedir una vez más
                         self.conversation_history.append({
                             "role": "system",
-                            "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO O MAL CAPTURADO
+                            "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO - EL CLIENTE ESTÁ DELETREANDO
 
-Detecté que el cliente podría estar proporcionando un email, pero no se capturó correctamente.
+Detecté que el cliente está proporcionando un email letra por letra, pero aún NO está completo.
+
+🚫🚫🚫 FIX 191: PROHIBIDO DECIR "PERFECTO, YA LO TENGO ANOTADO"
+El cliente AÚN está hablando. NO lo interrumpas con despedidas.
 
 ACCIÓN REQUERIDA:
-1. Pide al cliente que repita el correo LETRA POR LETRA
-2. NO intentes adivinar o completar el email
-3. ⚠️⚠️⚠️ FIX 29: NO des ejemplos inventados - SOLO pide el correo real
-4. Di exactamente: "Disculpe, no alcancé a captar el correo completo. ¿Me lo podría deletrear letra por letra, por favor?"
+1. Pide al cliente que CONTINÚE con el resto del correo
+2. Di algo como: "Perfecto, excelente. Por favor, adelante con el correo."
+3. O: "Entiendo, ¿me podría proporcionar el correo electrónico para enviar la información?"
 
-IMPORTANTE:
-- Escucha cada letra con atención
-- Repite el email completo al final para confirmar
-- Asegúrate de captar correctamente el dominio (@gmail.com, @hotmail.com, etc.)"""
+❌ NO HACER:
+- NO digas "ya lo tengo anotado" (NO lo tienes completo)
+- NO te despidas (el cliente sigue hablando)
+- NO inventes el correo
+
+✅ HACER:
+- Escucha pacientemente cada letra
+- Deja que el cliente termine de deletrear
+- Solo cuando tengas el correo COMPLETO (ej: juan@gmail.com), ahí sí confirma"""
                         })
 
         # Detectar productos de interés
