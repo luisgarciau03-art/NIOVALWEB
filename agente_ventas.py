@@ -4319,6 +4319,13 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
         # FASE 1: Si aún no tenemos nombre del contacto
         if not self.lead_data.get("nombre_contacto"):
             # FIX 198: Validar si cliente respondió con saludo apropiado
+            # FIX 198.1: Obtener última respuesta del cliente desde el historial
+            ultima_respuesta_cliente = ""
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    ultima_respuesta_cliente = msg['content']
+                    break
+
             saludos_validos = [
                 "hola", "bueno", "buenas", "diga", "dígame", "digame",
                 "adelante", "mande", "qué", "que", "aló", "alo",
@@ -4326,7 +4333,7 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
                 "si", "sí", "a sus órdenes", "ordenes"
             ]
 
-            respuesta_lower = respuesta_cliente.lower() if respuesta_cliente else ""
+            respuesta_lower = ultima_respuesta_cliente.lower() if ultima_respuesta_cliente else ""
             cliente_saludo_apropiadamente = any(sal in respuesta_lower for sal in saludos_validos)
 
             # Detectar si es pregunta en lugar de saludo
@@ -4405,7 +4412,7 @@ PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las
 
 🚨 El cliente NO respondió con un saludo estándar.
 
-Cliente dijo: "{respuesta_cliente}"
+Cliente dijo: "{ultima_respuesta_cliente}"
 
 🎯 ANÁLISIS Y ACCIÓN:
 
