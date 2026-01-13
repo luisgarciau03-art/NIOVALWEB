@@ -1377,10 +1377,21 @@ def procesar_respuesta():
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
-    # Verificar si la llamada ya terminó (cliente colgó)
-    if call_status in ["completed", "busy", "no-answer", "canceled", "failed"]:
-        print(f"📞 Llamada terminada - Estado: {call_status}")
-        print(f"💬 Cliente colgó o llamada desconectada")
+    # FIX 195: SOLO procesar si llamada está ACTIVA
+    # "completed" significa que llamada YA terminó (no que cliente está colgando ahora)
+    # Twilio puede enviar múltiples requests: primero "in-progress" luego "completed"
+    estados_llamada_terminada = ["completed", "busy", "no-answer", "canceled", "failed"]
+
+    if call_status in estados_llamada_terminada:
+        print(f"📞 Llamada YA terminada - Estado: {call_status}")
+
+        # FIX 195: Verificar si hay SpeechResult para procesar
+        if speech_result and speech_result.strip():
+            print(f"⚠️ FIX 195: Llamada terminada pero hay transcripción: '{speech_result}'")
+            print(f"   Esto indica request duplicado de Twilio - transcripción ya procesada")
+            # NO procesar de nuevo - ya se procesó en request "in-progress"
+        else:
+            print(f"💬 Cliente colgó o llamada desconectada")
 
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
@@ -1417,6 +1428,18 @@ def procesar_respuesta():
         response = VoiceResponse()
         response.hangup()
         return Response(str(response), mimetype="text/xml")
+
+    # FIX 195: Verificar que CallStatus sea válido para procesar
+    # Solo procesar si la llamada está ACTIVA (in-progress, ringing, answered)
+    estados_validos = ["in-progress", "ringing", "answered", ""]  # "" = sin status (primera llamada)
+
+    if call_status and call_status not in estados_validos:
+        print(f"⚠️ FIX 195: CallStatus inválido para procesar: '{call_status}' - ignorando")
+        response = VoiceResponse()
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
+
+    print(f"✅ FIX 195: CallStatus válido ('{call_status}' o vacío) - procesando transcripción")
 
     # Obtener agente de esta conversación
     agente = conversaciones_activas.get(call_sid)
