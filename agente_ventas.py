@@ -11,6 +11,7 @@ from openai import OpenAI
 from elevenlabs import ElevenLabs, VoiceSettings
 import pandas as pd
 from dotenv import load_dotenv
+from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -1600,6 +1601,7 @@ class AgenteVentas:
         self.acaba_de_responder_desesperado = False  # FIX 143: Flag para no pedir repetición después de confirmar presencia
         self.esperando_transferencia = False  # FIX 170: Flag cuando cliente va a pasar al encargado
         self.segunda_parte_saludo_dicha = False  # FIX 201: Flag para evitar repetir segunda parte del saludo
+        self.detector_ivr = DetectorIVR()  # FIX 202: Detector de sistemas IVR/contestadoras automáticas
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
@@ -1822,10 +1824,10 @@ class AgenteVentas:
     def procesar_respuesta(self, respuesta_cliente: str) -> str:
         """
         Procesa la respuesta del cliente y genera una respuesta del agente
-        
+
         Args:
             respuesta_cliente: Lo que dijo el cliente
-            
+
         Returns:
             Respuesta del agente
         """
@@ -1834,6 +1836,48 @@ class AgenteVentas:
             "role": "user",
             "content": respuesta_cliente
         })
+
+        # ============================================================
+        # FIX 202: DETECTAR IVR/CONTESTADORAS AUTOMÁTICAS
+        # ============================================================
+        # Verificar si es la primera o segunda respuesta del cliente
+        num_respuestas_cliente = sum(1 for msg in self.conversation_history if msg['role'] == 'user')
+        es_primera_respuesta = (num_respuestas_cliente == 1)
+
+        # Analizar respuesta con detector de IVR
+        resultado_ivr = self.detector_ivr.analizar_respuesta(
+            respuesta_cliente,
+            es_primera_respuesta=es_primera_respuesta
+        )
+
+        # Logging de detección
+        if resultado_ivr["confianza"] >= 0.3:
+            emoji = "🚨" if resultado_ivr["es_ivr"] else "⚠️"
+            print(f"\n{emoji} FIX 202: Análisis IVR")
+            print(f"   Confianza: {resultado_ivr['confianza']:.0%}")
+            print(f"   Acción: {resultado_ivr['accion'].upper()}")
+            print(f"   Razón: {resultado_ivr['razon']}")
+            if resultado_ivr['categorias']:
+                print(f"   Categorías: {', '.join(resultado_ivr['categorias'])}")
+
+        # Si se detectó IVR con alta confianza → Colgar inmediatamente
+        if resultado_ivr["accion"] == "colgar":
+            print(f"\n🚨🚨🚨 FIX 202: IVR/CONTESTADORA DETECTADO 🚨🚨🚨")
+            print(f"   Confianza: {resultado_ivr['confianza']:.0%}")
+            print(f"   Transcripción: \"{respuesta_cliente[:100]}...\"")
+            print(f"   Categorías detectadas: {', '.join(resultado_ivr['categorias'])}")
+            print(f"   → TERMINANDO LLAMADA AUTOMÁTICAMENTE")
+
+            # Guardar en lead_data como IVR detectado
+            self.lead_data["resultado_llamada"] = "IVR/Buzón detectado"
+            self.lead_data["notas_adicionales"] = (
+                f"Sistema automatizado detectado. "
+                f"Confianza: {resultado_ivr['confianza']:.0%}. "
+                f"Razón: {resultado_ivr['razon'][:100]}"
+            )
+
+            # NO generar respuesta de Bruce, terminar directamente
+            return None  # None indica que la llamada debe terminar
 
         # FIX 196: Detectar objeciones cortas LEGÍTIMAS (NO son colgadas ni errores)
         # Cliente dice "pero", "espera", "no", etc. → quiere interrumpir/objetar
