@@ -3124,7 +3124,7 @@ def ver_estadisticas():
             <style>
                 body {{
                     font-family: Arial, sans-serif;
-                    max-width: 1200px;
+                    max-width: 95%;
                     margin: 0 auto;
                     padding: 20px;
                     background: #f5f5f5;
@@ -3184,8 +3184,10 @@ def ver_estadisticas():
                     color: #999;
                 }}
                 .frase-text {{
-                    max-width: 600px;
+                    max-width: none;
                     word-wrap: break-word;
+                    white-space: normal;
+                    min-width: 400px;
                 }}
                 .download-section {{
                     background: white;
@@ -3291,8 +3293,8 @@ def ver_estadisticas():
             en_cache = frase_normalizada in audio_cache
             estado = '<span class="cached">✅ En caché</span>' if en_cache else '<span class="not-cached">⏳ No cacheado</span>'
 
-            # Limitar longitud de frase para visualización
-            frase_display = texto if len(texto) <= 100 else texto[:100] + "..."
+            # Mostrar frase completa (sin limitar)
+            frase_display = texto
 
             # Checkbox deshabilitado si ya está en caché
             checkbox_disabled = 'disabled' if en_cache else ''
