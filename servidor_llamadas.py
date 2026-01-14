@@ -777,6 +777,8 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         print(f"   Traceback completo:")
         traceback.print_exc()
         print(f"🚨 FIX 162A: CRÍTICO - NO usar fallback Twilio (causa desconfianza)")
+        # FIX 208: Registrar error en buffer
+        log_evento(f"ERROR ELEVENLABS: {type(e).__name__} - {str(e)[:200]}", "ERROR")
         return None
 
 
@@ -1018,6 +1020,9 @@ def iniciar_llamada():
         )
 
         print(f"🔍 DEBUG 5: Llamada Twilio creada - SID: {call.sid}")
+        # FIX 208: Registrar inicio de llamada
+        bruce_id_log = contacto_info.get("bruce_id", "N/A") if contacto_info else "N/A"
+        log_evento(f"BRUCE{bruce_id_log} - LLAMADA INICIADA a {telefono_destino} ({nombre_negocio})", "LLAMADA")
 
         # Guardar info del contacto para usar en el webhook
         if contacto_info:
@@ -1561,6 +1566,9 @@ def procesar_respuesta():
 
     # LOG: Mostrar lo que dijo el cliente
     print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
+    # FIX 208: Registrar en buffer de logs
+    bruce_id_cliente = agente.lead_data.get("bruce_id", "N/A") if agente else "N/A"
+    log_evento(f"BRUCE{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
 
     # Registrar mensaje del cliente en LOGS
     if logs_manager and speech_result and agente.bruce_id:
@@ -2044,6 +2052,9 @@ def procesar_respuesta():
     tiempo_gpt = time.time() - inicio
     debug_print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
+    # FIX 208: Registrar en buffer de logs
+    bruce_id = agente.lead_data.get("bruce_id", "N/A")
+    log_evento(f"BRUCE{bruce_id} DICE: \"{respuesta_agente}\"", "BRUCE")
 
     # FIX 75/76: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
     if agente.lead_data["estado_llamada"] == "Colgo":
@@ -2675,6 +2686,9 @@ def status_callback():
     print(f"   Duración: {call_duration}s")
     if answered_by:
         print(f"   AnsweredBy: {answered_by}")
+
+    # FIX 208: Registrar fin de llamada
+    log_evento(f"LLAMADA TERMINADA - Estado: {call_status}, Duración: {call_duration}s", "LLAMADA")
 
     # NUEVO: Manejo de buzón detectado por Twilio - REINTENTO INMEDIATO
     # Detectar buzón por AnsweredBy O por call_status="no-answer"
@@ -4761,46 +4775,33 @@ def cache_manager():
 
 # ============================================================================
 # FIX 208: SISTEMA DE LOGS DESCARGABLES
-# Guarda todos los logs en memoria y permite descargarlos via HTTP
+# Guarda eventos importantes en memoria y permite descargarlos via HTTP
+# NO intercepta stdout para evitar conflictos con Gunicorn
 # ============================================================================
 
-from collections import deque
 import threading
-import io
-import sys
 
 # Buffer circular para logs (últimas 5000 líneas)
 log_buffer = deque(maxlen=5000)
 log_lock = threading.Lock()
 
-class LogCapture:
-    """Captura stdout/stderr y los guarda en el buffer"""
-    def __init__(self, original_stream, buffer, lock):
-        self.original = original_stream
-        self.buffer = buffer
-        self.lock = lock
+def log_evento(mensaje, tipo="INFO"):
+    """
+    Registra un evento en el buffer de logs
+    Usar esta función para eventos importantes que queremos rastrear
 
-    def write(self, text):
-        if text.strip():  # Solo guardar líneas no vacías
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with self.lock:
-                self.buffer.append(f"[{timestamp}] {text.rstrip()}")
-        self.original.write(text)
+    Args:
+        mensaje: El mensaje a registrar
+        tipo: INFO, ERROR, WARNING, BRUCE, CLIENTE, etc.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{tipo}] {mensaje}"
 
-    def flush(self):
-        self.original.flush()
+    with log_lock:
+        log_buffer.append(log_entry)
 
-# Variable para controlar si ya se activó la captura
-_log_capture_active = False
-
-def activar_captura_logs():
-    """Activa la captura de logs (solo una vez)"""
-    global _log_capture_active
-    if not _log_capture_active:
-        sys.stdout = LogCapture(sys.stdout, log_buffer, log_lock)
-        sys.stderr = LogCapture(sys.stderr, log_buffer, log_lock)
-        _log_capture_active = True
-        print("📝 FIX 208: Sistema de captura de logs activado")
+    # También imprimir para logs de Railway
+    print(log_entry)
 
 
 @app.route("/logs/download", methods=["GET"])
@@ -4998,8 +4999,8 @@ def logs_api():
 
 
 if __name__ == "__main__":
-    # Activar captura de logs antes de cualquier print
-    activar_captura_logs()
+    # FIX 208: Registrar inicio del servidor
+    log_evento("Servidor iniciando...", "SISTEMA")
 
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
