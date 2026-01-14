@@ -2419,6 +2419,79 @@ Ejemplo correcto:
             if frase_relleno:
                 respuesta_agente = f"{frase_relleno} {respuesta_agente}"
 
+            # ============================================================
+            # FIX 204: DETECTAR Y PREVENIR REPETICIONES IDÉNTICAS
+            # ============================================================
+            # Verificar si Bruce está a punto de repetir el mismo mensaje
+            ultimas_respuestas_bruce = [
+                msg['content'] for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+
+            # Normalizar para comparación (sin puntuación ni mayúsculas)
+            import re
+            respuesta_normalizada = re.sub(r'[^\w\s]', '', respuesta_agente.lower()).strip()
+
+            # Verificar si esta respuesta ya se dijo en las últimas 3 respuestas
+            repeticion_detectada = False
+            for i, resp_previa in enumerate(ultimas_respuestas_bruce[-3:], 1):
+                resp_previa_normalizada = re.sub(r'[^\w\s]', '', resp_previa.lower()).strip()
+
+                # Si la respuesta es >80% similar (o idéntica)
+                if respuesta_normalizada == resp_previa_normalizada:
+                    repeticion_detectada = True
+                    print(f"\n🚨🚨🚨 FIX 204: REPETICIÓN IDÉNTICA DETECTADA 🚨🚨🚨")
+                    print(f"   Bruce intentó repetir: \"{respuesta_agente[:60]}...\"")
+                    print(f"   Ya se dijo hace {i} respuesta(s)")
+                    print(f"   → Modificando respuesta para evitar repetición")
+                    break
+
+            if repeticion_detectada:
+                # Modificar la respuesta para que GPT genere algo diferente
+                self.conversation_history.append({
+                    "role": "system",
+                    "content": f"""🚨 [SISTEMA - FIX 204] REPETICIÓN DETECTADA
+
+Estabas a punto de decir EXACTAMENTE lo mismo que ya dijiste antes:
+"{respuesta_agente[:100]}..."
+
+🛑 NO repitas esto. El cliente YA lo escuchó.
+
+✅ OPCIONES VÁLIDAS:
+1. Si el cliente no respondió tu pregunta: Reformula de manera DIFERENTE
+2. Si el cliente está ocupado: Ofrece despedirte o llamar después
+3. Si no te entiende: Usa palabras más simples
+
+💡 EJEMPLO DE REFORMULACIÓN:
+ORIGINAL: "¿Le gustaría que le envíe el catálogo por WhatsApp?"
+REFORMULADO: "¿Tiene WhatsApp donde le pueda enviar información?"
+REFORMULADO 2: "¿Prefiere que le llame en otro momento?"
+
+Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
+                })
+
+                # Regenerar respuesta con contexto de no repetir
+                print(f"🔄 FIX 204: Regenerando respuesta sin repetición...")
+                try:
+                    response_reintento = openai_client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=self.conversation_history,
+                        temperature=0.9,  # Más creatividad para evitar repetición
+                        max_tokens=80,
+                        presence_penalty=0.8,  # Penalizar tokens ya usados
+                        frequency_penalty=2.0,  # MÁXIMA penalización de repeticiones
+                        timeout=2.8,
+                        stream=False,
+                        top_p=0.9
+                    )
+
+                    respuesta_agente = response_reintento.choices[0].message.content
+                    print(f"✅ FIX 204: Nueva respuesta generada: \"{respuesta_agente[:60]}...\"")
+
+                except Exception as e:
+                    print(f"⚠️ FIX 204: Error al regenerar, usando despedida genérica")
+                    respuesta_agente = "Entiendo. ¿Prefiere que le llame en otro momento más conveniente?"
+
             # Agregar al historial
             self.conversation_history.append({
                 "role": "assistant",
