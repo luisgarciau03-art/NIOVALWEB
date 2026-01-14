@@ -76,10 +76,14 @@ class AnalizadorLogsRailway:
 
         except FileNotFoundError:
             print("❌ Railway CLI no encontrado")
-            print("\n📝 Instalación:")
+            print("\n📝 OPCIÓN 1 - Instalación Railway CLI:")
             print("   1. Instalar: npm i -g @railway/cli")
             print("   2. Login: railway login")
             print("   3. Link proyecto: railway link")
+            print("\n📝 OPCIÓN 2 - Descarga Manual (Más Fácil):")
+            print("   1. Ejecuta: python descargar_logs_web.py")
+            print("   2. O ejecuta: descargar_logs_manual.bat")
+            print("   3. Sigue las instrucciones en pantalla")
             print("\n")
             return None
         except Exception as e:
@@ -372,9 +376,15 @@ def main():
 
         if not logs:
             print("\n❌ No se pudieron descargar los logs")
-            print("\n💡 Alternativas:")
-            print("   1. Instalar Railway CLI: npm i -g @railway/cli")
-            print("   2. Usar archivo local: python analizar_logs_railway.py logs.txt")
+            print("\n💡 SOLUCIONES:")
+            print("\n   OPCIÓN 1 - Descarga Manual (Recomendado):")
+            print("      python descargar_logs_web.py")
+            print("      O doble clic en: descargar_logs_manual.bat")
+            print("\n   OPCIÓN 2 - Instalar Railway CLI:")
+            print("      npm i -g @railway/cli")
+            print("\n   OPCIÓN 3 - Usar archivo existente:")
+            print("      python analizar_logs_railway.py LOGS\\archivo.txt")
+            print("\n")
             return
 
     # Análisis completo
