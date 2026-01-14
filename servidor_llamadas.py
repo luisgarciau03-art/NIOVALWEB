@@ -4,13 +4,15 @@ Integración: Twilio → GPT-4o → ElevenLabs → Cliente
 """
 
 from flask import Flask, request, Response, send_file
-from twilio.twiml.voice_response import VoiceResponse, Gather, Play
+from twilio.twiml.voice_response import VoiceResponse, Gather, Play, Start, Stream
 from twilio.rest import Client
 import os
 import tempfile
 import threading
 import json
 import random
+import base64
+import asyncio
 import traceback  # FIX 102: Para logging de errores detallados
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
@@ -18,9 +20,48 @@ from elevenlabs import ElevenLabs
 from openai import OpenAI  # FIX 60: Para Whisper API
 import requests  # FIX 60: Para descargar grabaciones de Twilio
 
+# FIX 212: Flask-Sock para WebSocket (Deepgram streaming)
+try:
+    from flask_sock import Sock
+    FLASK_SOCK_AVAILABLE = True
+except ImportError:
+    FLASK_SOCK_AVAILABLE = False
+    print("⚠️ FIX 212: flask-sock no instalado. WebSocket no disponible.")
+
 load_dotenv()
 
 app = Flask(__name__)
+
+# FIX 212: Inicializar WebSocket para Deepgram streaming
+sock = None
+if FLASK_SOCK_AVAILABLE:
+    sock = Sock(app)
+    print("✅ FIX 212: Flask-Sock inicializado para WebSocket")
+
+# FIX 212: Importar módulo de Deepgram
+deepgram_transcriber = None
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+USE_DEEPGRAM = os.getenv("USE_DEEPGRAM", "true").lower() == "true"
+
+try:
+    from deepgram_transcriber import (
+        DeepgramTranscriber,
+        crear_transcriber,
+        obtener_transcriber,
+        eliminar_transcriber,
+        verificar_configuracion as verificar_deepgram
+    )
+    DEEPGRAM_AVAILABLE = verificar_deepgram() if DEEPGRAM_API_KEY else False
+    if DEEPGRAM_AVAILABLE:
+        print("✅ FIX 212: Deepgram configurado y listo")
+    else:
+        print("⚠️ FIX 212: Deepgram no configurado - usando Whisper como fallback")
+except ImportError as e:
+    DEEPGRAM_AVAILABLE = False
+    print(f"⚠️ FIX 212: Módulo deepgram_transcriber no disponible: {e}")
+
+# Almacenamiento de transcripciones pendientes de Deepgram
+deepgram_transcripciones = {}  # call_sid -> transcripción
 
 # FIX 164: Sistema de logging condicional para reducir rate limit
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
@@ -1199,24 +1240,41 @@ def webhook_voz():
         print(f"⚠️ Generando saludo inicial con ElevenLabs (caché no disponible - tardará 2-4s)")
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
+    # FIX 212: DEEPGRAM STREAMING - Transcripción en tiempo real
+    # Iniciar MediaStream hacia nuestro servidor WebSocket para Deepgram
+    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+        print(f"🎙️ FIX 212: Iniciando MediaStream para Deepgram")
+
+        # Obtener URL base del servidor (para WebSocket)
+        # En Railway: wss://nioval-webhook-server-production.up.railway.app/media-stream
+        ws_url = os.getenv("WEBSOCKET_URL")
+        if not ws_url:
+            # Construir URL automáticamente
+            base_url = request.url_root.replace("http://", "wss://").replace("https://", "wss://")
+            ws_url = base_url.rstrip("/") + "/media-stream"
+
+        # Agregar <Start><Stream> para enviar audio a Deepgram
+        start = Start()
+        stream = Stream(url=ws_url)
+        stream.parameter(name="CallSid", value=call_sid)
+        start.append(stream)
+        response.append(start)
+
+        print(f"   WebSocket URL: {ws_url}")
+
     # FIX 96: Preparar grabación ANTES de reproducir audio (estar listo desde el primer sonido)
     # IMPORTANTE: El <Gather> debe envolver al <Play> para que Twilio esté escuchando
     # DESDE QUE EMPIEZA a reproducir el audio, no DESPUÉS de que termina
     #
-    # FIX 60/61/62/63/86: Recopilar respuesta del cliente con WHISPER API (mejor precisión + más barato)
-    # FIX 174: 🚨 CRÍTICO - REMOVIDO speech_model para ahorrar 80% de costos
-    #   PROBLEMA: speech_model="experimental_conversations" activa transcripción de Twilio ($$$)
-    #   SOLUCIÓN: input="speech" SIN speech_model = solo graba, NO transcribe
-    #   Whisper transcribe la grabación → Ahorro 80% en costos
-    # IMPORTANTE: input="speech" detecta voz y genera RecordingUrl automáticamente
-    # Twilio enviará RecordingUrl en el webhook para que Whisper lo transcriba
-    # FIX 86/112/149: Timeouts MUY AGRESIVOS para detectar cliente desesperado RÁPIDO
-    # Cliente desesperado habla 5-30s continuamente → Necesitamos cortar en primera pausa
+    # FIX 212: Ahora usamos Deepgram para transcripción en tiempo real
+    # FIX 60/61/62/63/86: Fallback a Whisper si Deepgram no está disponible
+    # FIX 174: SIN speech_model = no transcribe con Twilio, ahorra costos
+    # FIX 86/112/149: Timeouts para detectar cliente desesperado RÁPIDO
     gather = Gather(
-        input="speech",  # FIX 174: SIN speech_model = no transcribe, solo graba
+        input="speech",  # FIX 174: SIN speech_model = no transcribe, solo detecta voz
         language="es-MX",
-        timeout=2,  # FIX 145: 2s - Balance entre clientes normales (2-3s) y desesperados
-        speech_timeout=0.5,  # FIX 149: 0.5s - ULTRA AGRESIVO para cortar cliente desesperado en primera pausa
+        timeout=3,  # FIX 212: 3s - Aumentado para dar tiempo a Deepgram
+        speech_timeout=1.5,  # FIX 212: 1.5s - Más tiempo para transcripción precisa
         action="/procesar-respuesta",
         method="POST",
         action_on_empty_result=False,  # No procesar si no hay respuesta
@@ -1280,12 +1338,34 @@ def procesar_respuesta():
         if request.form.get("Digits"):
             print(f"   Digits: {request.form.get('Digits')}")
 
-    # FIX 60: PRIORIZAR WHISPER API si está disponible
-    # Whisper tiene: mejor precisión (96-99% vs 85-90%) + más barato ($0.006/min vs $0.020/min)
+    # FIX 212: PRIORIZAR DEEPGRAM si está disponible (tiempo real, 90%+ precisión)
+    # Fallback: Whisper API (96-99% precisión, pero con delay)
+    # Último recurso: Transcripción de Twilio
+    usar_deepgram = False
     usar_whisper = False
+    transcripcion_deepgram = None
     transcripcion_whisper = None
 
-    if recording_url and OPENAI_API_KEY:
+    # FIX 212: Verificar si hay transcripción de Deepgram disponible
+    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM and call_sid in deepgram_transcripciones:
+        transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
+        if transcripciones_dg:
+            # Tomar la última transcripción (o todas concatenadas)
+            transcripcion_deepgram = " ".join(transcripciones_dg)
+            usar_deepgram = True
+            speech_original_twilio = speech_result
+            speech_result = transcripcion_deepgram
+
+            print(f"\n🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM")
+            print(f"   🟢 Deepgram: '{transcripcion_deepgram}'")
+            if speech_original_twilio:
+                print(f"   🔵 Twilio: '{speech_original_twilio}'")
+
+            # Limpiar transcripciones usadas
+            deepgram_transcripciones[call_sid] = []
+
+    # FIX 60: Fallback a WHISPER API si Deepgram no está disponible
+    if not usar_deepgram and recording_url and OPENAI_API_KEY:
         print(f"\n🎯 FIX 60: RecordingUrl disponible - usando WHISPER API")
 
         # FIX 198: Detectar contexto para mejorar transcripción de Whisper
@@ -5098,6 +5178,107 @@ def logs_api():
         return {"error": str(e)}, 500
 
 
+# ============================================================================
+# FIX 212: WEBSOCKET ENDPOINT PARA DEEPGRAM STREAMING
+# ============================================================================
+
+# Callback que se llama cuando Deepgram completa una transcripción
+def on_deepgram_transcript(call_sid, texto, is_final):
+    """
+    Callback llamado por DeepgramTranscriber cuando hay una transcripción
+    """
+    if is_final and texto.strip():
+        print(f"📝 FIX 212: Transcripción Deepgram para {call_sid}: '{texto}'")
+        # Guardar transcripción para que /procesar-respuesta la use
+        if call_sid not in deepgram_transcripciones:
+            deepgram_transcripciones[call_sid] = []
+        deepgram_transcripciones[call_sid].append(texto)
+
+
+# WebSocket handler para recibir audio de Twilio
+if FLASK_SOCK_AVAILABLE and sock:
+    @sock.route('/media-stream')
+    def media_stream(ws):
+        """
+        FIX 212: WebSocket endpoint para recibir MediaStream de Twilio
+        y enviarlo a Deepgram para transcripción en tiempo real
+        """
+        print(f"\n🔌 FIX 212: Nueva conexión WebSocket /media-stream")
+
+        call_sid = None
+        transcriber = None
+        stream_sid = None
+
+        try:
+            while True:
+                # Recibir mensaje de Twilio
+                message = ws.receive()
+                if message is None:
+                    break
+
+                data = json.loads(message)
+                event = data.get('event')
+
+                if event == 'connected':
+                    print(f"🟢 FIX 212: MediaStream conectado")
+
+                elif event == 'start':
+                    # Inicio del stream - obtener metadata
+                    start_data = data.get('start', {})
+                    stream_sid = start_data.get('streamSid')
+                    call_sid = start_data.get('callSid')
+
+                    print(f"▶️ FIX 212: MediaStream iniciado")
+                    print(f"   StreamSid: {stream_sid}")
+                    print(f"   CallSid: {call_sid}")
+
+                    # Crear transcriber de Deepgram para esta llamada
+                    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+                        transcriber = crear_transcriber(call_sid, on_deepgram_transcript)
+                        if transcriber:
+                            # Conectar a Deepgram (sync wrapper para async)
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            connected = loop.run_until_complete(transcriber.connect())
+                            if connected:
+                                print(f"✅ FIX 212: Deepgram conectado para {call_sid}")
+                            else:
+                                print(f"❌ FIX 212: Error conectando Deepgram para {call_sid}")
+                                transcriber = None
+
+                elif event == 'media':
+                    # Audio chunk recibido de Twilio
+                    media_data = data.get('media', {})
+                    payload = media_data.get('payload')  # Audio en base64
+
+                    if payload and transcriber and transcriber.is_connected:
+                        # Enviar audio a Deepgram
+                        transcriber.send_audio_base64(payload)
+
+                elif event == 'stop':
+                    print(f"⏹️ FIX 212: MediaStream detenido - CallSid: {call_sid}")
+                    break
+
+        except Exception as e:
+            print(f"❌ FIX 212: Error en WebSocket: {e}")
+            traceback.print_exc()
+
+        finally:
+            # Limpiar recursos
+            if transcriber:
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(transcriber.close())
+                except:
+                    pass
+
+                if call_sid:
+                    eliminar_transcriber(call_sid)
+
+            print(f"🔌 FIX 212: WebSocket cerrado - CallSid: {call_sid}")
+
+
 if __name__ == "__main__":
     # FIX 208: Registrar inicio del servidor
     log_evento("Servidor iniciando...", "SISTEMA")
@@ -5114,11 +5295,22 @@ if __name__ == "__main__":
     print("  GET  /stats                      - Ver estadísticas de caché")
     print("  POST /generate-cache             - Generar audios manualmente")
     print("  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente")
+    print("  WS   /media-stream               - FIX 212: WebSocket para Deepgram")
     print("\n🌐 URLs de acceso:")
     print("  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
     print("  🔍 Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia")
     print("\n✅ FIX 79: Despedida cálida activa (deja puerta abierta)")
     print("✅ FIX 81: Debug de detección de Truper activo")
+
+    # FIX 212: Estado de Deepgram
+    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+        print("✅ FIX 212: Deepgram ACTIVO - Transcripción en tiempo real")
+        print(f"   WebSocket: /media-stream")
+    else:
+        print("⚠️ FIX 212: Deepgram NO disponible - Usando Whisper como fallback")
+        if not DEEPGRAM_API_KEY:
+            print("   Falta: DEEPGRAM_API_KEY en variables de entorno")
+
     print("\n⚠️  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
