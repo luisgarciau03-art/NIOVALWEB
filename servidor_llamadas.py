@@ -3931,16 +3931,19 @@ def ver_dashboard():
     try:
         formato = request.args.get('formato', 'html')
 
-        # Obtener llamadas activas
+        # Obtener llamadas activas desde conversaciones_activas
         llamadas_activas_lista = []
-        for call_sid, datos in llamadas_activas.items():
-            llamadas_activas_lista.append({
-                "call_sid": call_sid[:20] + "...",
-                "bruce_id": datos.get("bruce_id", "N/A"),
-                "telefono": datos.get("telefono", "N/A"),
-                "negocio": datos.get("nombre_negocio", "N/A"),
-                "inicio": datos.get("inicio", "N/A")
-            })
+        for call_sid, agente in conversaciones_activas.items():
+            try:
+                llamadas_activas_lista.append({
+                    "call_sid": call_sid[:20] + "...",
+                    "bruce_id": agente.lead_data.get("bruce_id", "N/A") if hasattr(agente, 'lead_data') else "N/A",
+                    "telefono": agente.lead_data.get("telefono", "N/A") if hasattr(agente, 'lead_data') else "N/A",
+                    "negocio": agente.lead_data.get("nombre_negocio", "N/A") if hasattr(agente, 'lead_data') else "N/A",
+                    "inicio": "En curso"
+                })
+            except:
+                pass
 
         # Obtener historial reciente
         historial = list(historial_llamadas)[-50:]  # Últimas 50
@@ -3956,7 +3959,7 @@ def ver_dashboard():
         info_sistema = {
             "audios_en_cache": len(audio_cache),
             "frases_registradas": len(frase_stats),
-            "llamadas_activas": len(llamadas_activas),
+            "llamadas_activas": len(conversaciones_activas),
             "historial_total": total_llamadas
         }
 
@@ -4113,7 +4116,7 @@ def ver_dashboard():
 
             <div class="stats">
                 <div class="stat-box stat-activas">
-                    <span class="number">{len(llamadas_activas)}</span>
+                    <span class="number">{len(conversaciones_activas)}</span>
                     <span class="label">Llamadas Activas</span>
                 </div>
                 <div class="stat-box stat-exitosas">
