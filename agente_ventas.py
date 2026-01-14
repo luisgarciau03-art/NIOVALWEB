@@ -1599,6 +1599,7 @@ class AgenteVentas:
         self.respuestas_vacias_consecutivas = 0  # Contador para detectar cuelgue
         self.acaba_de_responder_desesperado = False  # FIX 143: Flag para no pedir repetición después de confirmar presencia
         self.esperando_transferencia = False  # FIX 170: Flag cuando cliente va a pasar al encargado
+        self.segunda_parte_saludo_dicha = False  # FIX 201: Flag para evitar repetir segunda parte del saludo
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
@@ -4339,7 +4340,8 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
             # Detectar si es pregunta en lugar de saludo
             es_pregunta = any(q in respuesta_lower for q in ["quién", "quien", "de dónde", "de donde", "qué", "que"])
 
-            if cliente_saludo_apropiadamente and not es_pregunta:
+            # FIX 201: Verificar si ya se dijo la segunda parte del saludo para evitar repetirla
+            if cliente_saludo_apropiadamente and not es_pregunta and not self.segunda_parte_saludo_dicha:
                 # Cliente SÍ saludó apropiadamente → continuar con segunda parte
                 fase_actual.append("""
 # FASE ACTUAL: APERTURA (FIX 112: SALUDO EN 2 PARTES)
@@ -4405,6 +4407,37 @@ PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las
 ❌ La persona está OCUPADA en mostrador - ir DIRECTO al correo
 ✅ Solo: Nombre → Correo → Despedida (máximo 3 intercambios)
 """)
+                # FIX 201: Marcar que se dijo la segunda parte del saludo
+                self.segunda_parte_saludo_dicha = True
+                print(f"✅ FIX 201: Se activó la segunda parte del saludo. No se repetirá.")
+
+            elif self.segunda_parte_saludo_dicha:
+                # FIX 201: Cliente dijo "Dígame" u otro saludo DESPUÉS de que ya se dijo la segunda parte
+                # NO repetir la introducción, continuar con la conversación
+                fase_actual.append(f"""
+# FASE ACTUAL: CONTINUACIÓN DESPUÉS DEL SALUDO - FIX 201
+
+🚨 IMPORTANTE: Ya dijiste la presentación completa anteriormente.
+
+Cliente dijo: "{ultima_respuesta_cliente}"
+
+🎯 ANÁLISIS:
+El cliente está diciendo "{ultima_respuesta_cliente}" como una forma de decir "continúa" o "te escucho".
+
+✅ NO repitas tu presentación
+✅ NO vuelvas a decir "Me comunico de la marca nioval..."
+✅ YA lo dijiste antes
+
+🎯 ACCIÓN CORRECTA:
+Si preguntaste por el encargado de compras y el cliente dice "Dígame":
+→ Interpreta esto como que ÉL ES el encargado o está escuchando
+→ Continúa con: "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+
+Si no has preguntado por el encargado aún:
+→ Pregunta directamente: "¿Se encuentra el encargado o encargada de compras?"
+""")
+                print(f"✅ FIX 201: Cliente dijo '{ultima_respuesta_cliente}' después de la segunda parte. NO se repetirá la introducción.")
+
             else:
                 # FIX 198: Cliente NO respondió con saludo estándar
                 fase_actual.append(f"""
