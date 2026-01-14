@@ -3881,6 +3881,316 @@ def diagnostico_persistencia():
         }, 500
 
 
+# ============================================================================
+# FIX 207: ENDPOINT PARA VER LOGS EN TIEMPO REAL
+# ============================================================================
+
+# Buffer circular para almacenar logs recientes
+from collections import deque
+import threading
+
+# Buffer de logs (últimos 500 mensajes)
+logs_buffer = deque(maxlen=500)
+logs_lock = threading.Lock()
+
+def agregar_log(mensaje, nivel="INFO"):
+    """Agrega un mensaje al buffer de logs"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with logs_lock:
+        logs_buffer.append({
+            "timestamp": timestamp,
+            "nivel": nivel,
+            "mensaje": mensaje
+        })
+
+# Función para interceptar prints y agregarlos al buffer
+class LogCapture:
+    def __init__(self, original_stdout):
+        self.original_stdout = original_stdout
+
+    def write(self, message):
+        if message.strip():  # Ignorar líneas vacías
+            # Detectar nivel basado en emojis/palabras clave
+            nivel = "INFO"
+            if "❌" in message or "ERROR" in message or "error" in message.lower():
+                nivel = "ERROR"
+            elif "⚠️" in message or "WARNING" in message:
+                nivel = "WARNING"
+            elif "✅" in message:
+                nivel = "SUCCESS"
+            elif "🎤" in message or "🤖" in message:
+                nivel = "AUDIO"
+            elif "📞" in message or "BRUCE" in message:
+                nivel = "CALL"
+
+            agregar_log(message.strip(), nivel)
+
+        self.original_stdout.write(message)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+# Activar captura de logs (solo si no está ya activado)
+import sys
+if not isinstance(sys.stdout, LogCapture):
+    sys.stdout = LogCapture(sys.stdout)
+
+
+@app.route("/logs", methods=["GET"])
+def ver_logs():
+    """
+    FIX 207: Endpoint para ver logs en tiempo real desde el navegador
+    Acceso: GET https://tu-dominio.railway.app/logs
+    Parámetros opcionales:
+    - nivel: filtrar por nivel (ERROR, WARNING, INFO, SUCCESS, AUDIO, CALL)
+    - buscar: buscar texto en los mensajes
+    - limite: número máximo de logs a mostrar (default: 200)
+    """
+    try:
+        # Obtener parámetros
+        nivel_filtro = request.args.get('nivel', '').upper()
+        buscar = request.args.get('buscar', '').lower()
+        limite = int(request.args.get('limite', 200))
+        formato = request.args.get('formato', 'html')  # html o json
+
+        # Obtener logs del buffer
+        with logs_lock:
+            logs = list(logs_buffer)
+
+        # Filtrar por nivel
+        if nivel_filtro:
+            logs = [l for l in logs if l['nivel'] == nivel_filtro]
+
+        # Filtrar por búsqueda
+        if buscar:
+            logs = [l for l in logs if buscar in l['mensaje'].lower()]
+
+        # Limitar cantidad
+        logs = logs[-limite:]
+
+        # Invertir para mostrar más recientes primero
+        logs = list(reversed(logs))
+
+        # Si piden JSON, devolver JSON
+        if formato == 'json':
+            return {
+                "total": len(logs),
+                "logs": logs
+            }
+
+        # Contar por nivel
+        conteo = {
+            "ERROR": sum(1 for l in logs if l['nivel'] == 'ERROR'),
+            "WARNING": sum(1 for l in logs if l['nivel'] == 'WARNING'),
+            "SUCCESS": sum(1 for l in logs if l['nivel'] == 'SUCCESS'),
+            "CALL": sum(1 for l in logs if l['nivel'] == 'CALL'),
+            "AUDIO": sum(1 for l in logs if l['nivel'] == 'AUDIO'),
+            "INFO": sum(1 for l in logs if l['nivel'] == 'INFO'),
+        }
+
+        # Generar HTML
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>📋 Logs en Tiempo Real - Bruce W</title>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="10">
+            <style>
+                body {{
+                    font-family: 'Courier New', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                h1 {{
+                    color: #4CAF50;
+                    border-bottom: 2px solid #4CAF50;
+                    padding-bottom: 10px;
+                }}
+                .stats {{
+                    display: flex;
+                    gap: 15px;
+                    margin: 20px 0;
+                    flex-wrap: wrap;
+                }}
+                .stat-box {{
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: bold;
+                }}
+                .stat-error {{ background: #ff4444; }}
+                .stat-warning {{ background: #ff9800; color: #000; }}
+                .stat-success {{ background: #4CAF50; }}
+                .stat-call {{ background: #2196F3; }}
+                .stat-audio {{ background: #9c27b0; }}
+                .stat-info {{ background: #607d8b; }}
+
+                .filters {{
+                    background: #16213e;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }}
+                .filters input, .filters select, .filters button {{
+                    padding: 8px 12px;
+                    margin: 5px;
+                    border-radius: 4px;
+                    border: none;
+                }}
+                .filters input {{ width: 200px; background: #1a1a2e; color: #fff; }}
+                .filters select {{ background: #1a1a2e; color: #fff; }}
+                .filters button {{ background: #4CAF50; color: #fff; cursor: pointer; }}
+                .filters button:hover {{ background: #45a049; }}
+
+                .log-container {{
+                    background: #0f0f23;
+                    border-radius: 8px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }}
+                .log-entry {{
+                    padding: 8px 12px;
+                    margin: 4px 0;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    border-left: 4px solid;
+                }}
+                .log-ERROR {{ background: #2d1f1f; border-color: #ff4444; }}
+                .log-WARNING {{ background: #2d2a1f; border-color: #ff9800; }}
+                .log-SUCCESS {{ background: #1f2d1f; border-color: #4CAF50; }}
+                .log-CALL {{ background: #1f2433; border-color: #2196F3; }}
+                .log-AUDIO {{ background: #291f33; border-color: #9c27b0; }}
+                .log-INFO {{ background: #1f2427; border-color: #607d8b; }}
+
+                .timestamp {{ color: #888; font-size: 11px; }}
+                .nivel {{ font-weight: bold; margin: 0 10px; }}
+                .nivel-ERROR {{ color: #ff4444; }}
+                .nivel-WARNING {{ color: #ff9800; }}
+                .nivel-SUCCESS {{ color: #4CAF50; }}
+                .nivel-CALL {{ color: #2196F3; }}
+                .nivel-AUDIO {{ color: #9c27b0; }}
+                .nivel-INFO {{ color: #607d8b; }}
+
+                .auto-refresh {{
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #16213e;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                }}
+                .refresh-dot {{
+                    display: inline-block;
+                    width: 10px;
+                    height: 10px;
+                    background: #4CAF50;
+                    border-radius: 50%;
+                    animation: pulse 2s infinite;
+                }}
+                @keyframes pulse {{
+                    0% {{ opacity: 1; }}
+                    50% {{ opacity: 0.3; }}
+                    100% {{ opacity: 1; }}
+                }}
+
+                .empty-state {{
+                    text-align: center;
+                    padding: 50px;
+                    color: #666;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="auto-refresh">
+                <span class="refresh-dot"></span> Auto-refresh cada 10s
+            </div>
+
+            <h1>📋 Logs en Tiempo Real - Bruce W</h1>
+
+            <div class="stats">
+                <div class="stat-box stat-error">❌ Errores: {conteo['ERROR']}</div>
+                <div class="stat-box stat-warning">⚠️ Warnings: {conteo['WARNING']}</div>
+                <div class="stat-box stat-success">✅ Éxitos: {conteo['SUCCESS']}</div>
+                <div class="stat-box stat-call">📞 Llamadas: {conteo['CALL']}</div>
+                <div class="stat-box stat-audio">🎤 Audio: {conteo['AUDIO']}</div>
+                <div class="stat-box stat-info">ℹ️ Info: {conteo['INFO']}</div>
+            </div>
+
+            <div class="filters">
+                <form method="GET" action="/logs">
+                    <input type="text" name="buscar" placeholder="🔍 Buscar en logs..." value="{buscar}">
+                    <select name="nivel">
+                        <option value="">Todos los niveles</option>
+                        <option value="ERROR" {'selected' if nivel_filtro == 'ERROR' else ''}>❌ ERROR</option>
+                        <option value="WARNING" {'selected' if nivel_filtro == 'WARNING' else ''}>⚠️ WARNING</option>
+                        <option value="SUCCESS" {'selected' if nivel_filtro == 'SUCCESS' else ''}>✅ SUCCESS</option>
+                        <option value="CALL" {'selected' if nivel_filtro == 'CALL' else ''}>📞 CALL</option>
+                        <option value="AUDIO" {'selected' if nivel_filtro == 'AUDIO' else ''}>🎤 AUDIO</option>
+                        <option value="INFO" {'selected' if nivel_filtro == 'INFO' else ''}>ℹ️ INFO</option>
+                    </select>
+                    <select name="limite">
+                        <option value="50" {'selected' if limite == 50 else ''}>50 logs</option>
+                        <option value="100" {'selected' if limite == 100 else ''}>100 logs</option>
+                        <option value="200" {'selected' if limite == 200 else ''}>200 logs</option>
+                        <option value="500" {'selected' if limite == 500 else ''}>500 logs</option>
+                    </select>
+                    <button type="submit">Filtrar</button>
+                    <button type="button" onclick="location.href='/logs'">Limpiar</button>
+                    <button type="button" onclick="location.reload()">🔄 Refrescar</button>
+                </form>
+            </div>
+
+            <div class="log-container">
+        """
+
+        if not logs:
+            html += """
+                <div class="empty-state">
+                    <h2>📭 No hay logs disponibles</h2>
+                    <p>Los logs aparecerán aquí cuando haya actividad en el sistema.</p>
+                    <p>Esta página se actualiza automáticamente cada 10 segundos.</p>
+                </div>
+            """
+        else:
+            for log in logs:
+                mensaje_escaped = log['mensaje'].replace('<', '&lt;').replace('>', '&gt;')
+                html += f"""
+                <div class="log-entry log-{log['nivel']}">
+                    <span class="timestamp">{log['timestamp']}</span>
+                    <span class="nivel nivel-{log['nivel']}">[{log['nivel']}]</span>
+                    <span class="mensaje">{mensaje_escaped}</span>
+                </div>
+                """
+
+        html += """
+            </div>
+
+            <p style="text-align: center; color: #666; margin-top: 20px;">
+                💡 Tip: Los logs se guardan en memoria (últimos 500).
+                Para análisis completo, usa el script local: python analizar_logs_railway.py
+            </p>
+
+            <p style="text-align: center; color: #666;">
+                📊 <a href="/stats" style="color: #4CAF50;">Ver Estadísticas de Caché</a> |
+                🔍 <a href="/diagnostico-persistencia" style="color: #4CAF50;">Diagnóstico de Persistencia</a>
+            </p>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "message": "Error al obtener logs"
+        }, 500
+
+
 @app.route("/cache-manager", methods=["GET", "POST"])
 def cache_manager():
     """
