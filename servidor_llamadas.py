@@ -4759,7 +4759,248 @@ def cache_manager():
         }, 500
 
 
+# ============================================================================
+# FIX 208: SISTEMA DE LOGS DESCARGABLES
+# Guarda todos los logs en memoria y permite descargarlos via HTTP
+# ============================================================================
+
+from collections import deque
+import threading
+import io
+import sys
+
+# Buffer circular para logs (últimas 5000 líneas)
+log_buffer = deque(maxlen=5000)
+log_lock = threading.Lock()
+
+class LogCapture:
+    """Captura stdout/stderr y los guarda en el buffer"""
+    def __init__(self, original_stream, buffer, lock):
+        self.original = original_stream
+        self.buffer = buffer
+        self.lock = lock
+
+    def write(self, text):
+        if text.strip():  # Solo guardar líneas no vacías
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with self.lock:
+                self.buffer.append(f"[{timestamp}] {text.rstrip()}")
+        self.original.write(text)
+
+    def flush(self):
+        self.original.flush()
+
+# Variable para controlar si ya se activó la captura
+_log_capture_active = False
+
+def activar_captura_logs():
+    """Activa la captura de logs (solo una vez)"""
+    global _log_capture_active
+    if not _log_capture_active:
+        sys.stdout = LogCapture(sys.stdout, log_buffer, log_lock)
+        sys.stderr = LogCapture(sys.stderr, log_buffer, log_lock)
+        _log_capture_active = True
+        print("📝 FIX 208: Sistema de captura de logs activado")
+
+
+@app.route("/logs/download", methods=["GET"])
+def descargar_logs():
+    """
+    FIX 208: Endpoint para descargar logs del servidor
+    Permite descargar los últimos logs como archivo de texto
+
+    Params:
+        - lineas: número de líneas a descargar (default: 1000, max: 5000)
+        - formato: 'txt' o 'json' (default: txt)
+    """
+    try:
+        lineas = min(int(request.args.get('lineas', 1000)), 5000)
+        formato = request.args.get('formato', 'txt')
+
+        with log_lock:
+            logs_list = list(log_buffer)[-lineas:]
+
+        if formato == 'json':
+            return {
+                "total_logs": len(log_buffer),
+                "logs_solicitados": lineas,
+                "logs": logs_list
+            }
+
+        # Formato texto plano para descarga
+        logs_texto = "\n".join(logs_list)
+
+        # Crear respuesta con headers para descarga
+        response = app.response_class(
+            response=logs_texto,
+            status=200,
+            mimetype='text/plain'
+        )
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        response.headers['Content-Disposition'] = f'attachment; filename=logs_bruce_{timestamp}.txt'
+
+        return response
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/logs/view", methods=["GET"])
+def ver_logs_texto():
+    """
+    FIX 208: Ver logs en texto plano en el navegador
+    Útil para copiar/pegar o ver en tiempo real
+    """
+    try:
+        lineas = min(int(request.args.get('lineas', 500)), 5000)
+        filtro = request.args.get('filtro', '').lower()
+
+        with log_lock:
+            logs_list = list(log_buffer)[-lineas:]
+
+        # Aplicar filtro si existe
+        if filtro:
+            logs_list = [l for l in logs_list if filtro in l.lower()]
+
+        # HTML simple para visualizar
+        logs_html = "<br>".join(logs_list[-500:])  # Limitar a 500 en HTML
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>📜 Logs Bruce W</title>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="10">
+            <style>
+                body {{
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1e1e1e;
+                    color: #d4d4d4;
+                    padding: 20px;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }}
+                h1 {{
+                    color: #4EC9B0;
+                    font-family: Arial, sans-serif;
+                }}
+                .controls {{
+                    background: #2d2d2d;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                }}
+                .controls a {{
+                    color: #569cd6;
+                    margin-right: 20px;
+                }}
+                input {{
+                    background: #3c3c3c;
+                    border: 1px solid #555;
+                    color: white;
+                    padding: 8px;
+                    border-radius: 4px;
+                    margin-left: 10px;
+                }}
+                .logs {{
+                    background: #1e1e1e;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #333;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                }}
+                .highlight-error {{ color: #f44747; }}
+                .highlight-warning {{ color: #dcdcaa; }}
+                .highlight-bruce {{ color: #4ec9b0; }}
+                .highlight-cliente {{ color: #ce9178; }}
+            </style>
+        </head>
+        <body>
+            <h1>📜 Logs en Tiempo Real - Bruce W</h1>
+
+            <div class="controls">
+                <strong>Descargar:</strong>
+                <a href="/logs/download?lineas=1000">📥 Últimos 1000</a>
+                <a href="/logs/download?lineas=5000">📥 Todos (5000)</a>
+                <a href="/logs/download?formato=json&lineas=1000">📥 JSON</a>
+                |
+                <strong>Filtrar:</strong>
+                <form style="display:inline" method="get">
+                    <input type="text" name="filtro" placeholder="ej: BRUCE, error, cliente" value="{filtro}">
+                    <input type="hidden" name="lineas" value="{lineas}">
+                    <button type="submit">Filtrar</button>
+                </form>
+                |
+                <a href="/logs/view?lineas=100">100 líneas</a>
+                <a href="/logs/view?lineas=500">500 líneas</a>
+                <a href="/logs/view?lineas=2000">2000 líneas</a>
+            </div>
+
+            <div class="logs">
+                <strong>📊 Total en buffer: {len(log_buffer)} | Mostrando: {len(logs_list)} líneas</strong>
+                <br><br>
+                {logs_html}
+            </div>
+
+            <script>
+                // Scroll al final automáticamente
+                var logsDiv = document.querySelector('.logs');
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            </script>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/logs/api", methods=["GET"])
+def logs_api():
+    """
+    FIX 208: API JSON para obtener logs programáticamente
+    Ideal para scripts de análisis automático
+    """
+    try:
+        lineas = min(int(request.args.get('lineas', 500)), 5000)
+        filtro = request.args.get('filtro', '').lower()
+        bruce_id = request.args.get('bruce_id', '')
+
+        with log_lock:
+            logs_list = list(log_buffer)[-lineas:]
+
+        # Filtrar por texto
+        if filtro:
+            logs_list = [l for l in logs_list if filtro in l.lower()]
+
+        # Filtrar por BRUCE ID
+        if bruce_id:
+            logs_list = [l for l in logs_list if f"BRUCE{bruce_id}" in l or f"bruce{bruce_id}" in l.lower()]
+
+        return {
+            "success": True,
+            "total_en_buffer": len(log_buffer),
+            "logs_filtrados": len(logs_list),
+            "filtro": filtro,
+            "bruce_id": bruce_id,
+            "logs": logs_list
+        }
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 if __name__ == "__main__":
+    # Activar captura de logs antes de cualquier print
+    activar_captura_logs()
+
     print("\n" + "=" * 60)
     print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
     print("=" * 60)
