@@ -3885,56 +3885,37 @@ def diagnostico_persistencia():
 # FIX 207: ENDPOINT PARA VER LOGS EN TIEMPO REAL
 # ============================================================================
 
-# Buffer circular para almacenar logs recientes
 from collections import deque
-import threading
+from datetime import datetime
 
 # Buffer de logs (últimos 500 mensajes)
 logs_buffer = deque(maxlen=500)
-logs_lock = threading.Lock()
 
-def agregar_log(mensaje, nivel="INFO"):
-    """Agrega un mensaje al buffer de logs"""
-    from datetime import datetime
+def log_evento(mensaje, nivel="INFO"):
+    """Agrega un mensaje al buffer de logs para visualización web"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with logs_lock:
-        logs_buffer.append({
-            "timestamp": timestamp,
-            "nivel": nivel,
-            "mensaje": mensaje
-        })
 
-# Función para interceptar prints y agregarlos al buffer
-class LogCapture:
-    def __init__(self, original_stdout):
-        self.original_stdout = original_stdout
+    # Detectar nivel basado en emojis/palabras clave si no se especifica
+    if nivel == "INFO":
+        if "❌" in str(mensaje) or "ERROR" in str(mensaje):
+            nivel = "ERROR"
+        elif "⚠️" in str(mensaje) or "WARNING" in str(mensaje):
+            nivel = "WARNING"
+        elif "✅" in str(mensaje):
+            nivel = "SUCCESS"
+        elif "🎤" in str(mensaje) or "🤖" in str(mensaje):
+            nivel = "AUDIO"
+        elif "📞" in str(mensaje) or "BRUCE" in str(mensaje):
+            nivel = "CALL"
 
-    def write(self, message):
-        if message.strip():  # Ignorar líneas vacías
-            # Detectar nivel basado en emojis/palabras clave
-            nivel = "INFO"
-            if "❌" in message or "ERROR" in message or "error" in message.lower():
-                nivel = "ERROR"
-            elif "⚠️" in message or "WARNING" in message:
-                nivel = "WARNING"
-            elif "✅" in message:
-                nivel = "SUCCESS"
-            elif "🎤" in message or "🤖" in message:
-                nivel = "AUDIO"
-            elif "📞" in message or "BRUCE" in message:
-                nivel = "CALL"
+    logs_buffer.append({
+        "timestamp": timestamp,
+        "nivel": nivel,
+        "mensaje": str(mensaje)
+    })
 
-            agregar_log(message.strip(), nivel)
-
-        self.original_stdout.write(message)
-
-    def flush(self):
-        self.original_stdout.flush()
-
-# Activar captura de logs (solo si no está ya activado)
-import sys
-if not isinstance(sys.stdout, LogCapture):
-    sys.stdout = LogCapture(sys.stdout)
+    # También imprimir en consola
+    print(mensaje)
 
 
 @app.route("/logs", methods=["GET"])
@@ -3955,8 +3936,7 @@ def ver_logs():
         formato = request.args.get('formato', 'html')  # html o json
 
         # Obtener logs del buffer
-        with logs_lock:
-            logs = list(logs_buffer)
+        logs = list(logs_buffer)
 
         # Filtrar por nivel
         if nivel_filtro:
