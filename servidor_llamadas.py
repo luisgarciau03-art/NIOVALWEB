@@ -154,7 +154,7 @@ respuestas_cache = {
             "quién habla", "quien habla", "de parte de quién", "de parte de quien",
             "quién es", "quien es", "su nombre", "cómo se llama", "como se llama"
         ],
-        "respuesta": "Mi nombre es Bruce W, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
+        "respuesta": "Mi nombre es Bruce, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
     },
 
     # FIX 194: Respuestas de presencia (cliente confundido/siente abandono)
@@ -177,6 +177,32 @@ respuestas_cache = {
         "patrones": ["bruce"],
         "respuesta": "Sí, ¿en qué le ayudo?",
         "categoria": "presencia"
+    },
+
+    # FIX 209: Respuestas adicionales para reducir latencia
+    "encargado_si": {
+        "patrones": ["sí soy", "si soy", "con él", "con el", "el mismo", "soy yo", "a sus órdenes", "a sus ordenes", "dígame", "digame"],
+        "respuesta": "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+    },
+    "encargado_no": {
+        "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos"],
+        "respuesta": "Entiendo. ¿A qué hora sería mejor llamarle?"
+    },
+    "whatsapp_si": {
+        "patrones": ["whatsapp", "wasa", "número es", "numero es", "mi cel", "mi teléfono", "mi telefono"],
+        "respuesta": "Perfecto. ¿Me lo puede confirmar? Lo anoto."
+    },
+    "correo_si": {
+        "patrones": ["correo", "email", "mándalo", "mandalo", "envíalo", "envialo", "le paso"],
+        "respuesta": "Perfecto, ¿me lo puede deletrear por favor?"
+    },
+    "no_interesa": {
+        "patrones": ["no me interesa", "no gracias", "no necesito", "ya tenemos", "estamos bien"],
+        "respuesta": "Entiendo perfectamente. Solo quisiera enviarle nuestro catálogo sin compromiso para que lo tenga como referencia. ¿Le parece bien por WhatsApp?"
+    },
+    "ocupado": {
+        "patrones": ["estoy ocupado", "no tengo tiempo", "ahora no puedo", "llámame después", "llamame despues"],
+        "respuesta": "Por supuesto, lo entiendo. ¿Prefiere que le llame mañana por la mañana? O si gusta, le envío el catálogo por WhatsApp y lo revisa cuando pueda."
     },
 }
 
@@ -1449,7 +1475,8 @@ def procesar_respuesta():
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
-    # FIX 109: Detectar operadora/contestadora automática por contenido
+    # FIX 109/209: Detectar operadora/contestadora automática por contenido
+    # FIX 209: Mejorar detección de IVR con más patrones
     keywords_operadora = [
         "número que usted marcó", "numero que usted marco",
         "el número marcado", "el numero marcado",
@@ -1461,7 +1488,22 @@ def procesar_respuesta():
         "si desea hablar", "si conoce la extensión",
         "todas nuestras líneas están ocupadas", "todas nuestras lineas",
         "su llamada es importante", "por favor espere",
-        "gracias por llamar", "bienvenido a"
+        "gracias por llamar", "bienvenido a",
+        # FIX 209: Nuevos patrones de IVR detectados en llamadas reales
+        "marca 1", "marca 2", "marca 3", "marca 4", "marca 5",
+        "marca uno", "marca dos", "marca tres",
+        "marque 1", "marque 2", "marque 3",
+        "marque uno", "marque dos", "marque tres",
+        "signo de número", "signo de numero",
+        "para escuchar el mensaje",
+        "para continuar con la grabación", "para continuar con la grabacion",
+        "para eliminar este mensaje",
+        "para enviar el mensaje",
+        "para volver a grabar",
+        "espera instrucciones",
+        "correo de voz",
+        "atención al cliente", "atencion al cliente",
+        "línea de atención", "linea de atencion"
     ]
 
     speech_lower = speech_result.lower() if speech_result else ""
