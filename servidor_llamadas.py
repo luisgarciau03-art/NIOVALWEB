@@ -1634,21 +1634,58 @@ def procesar_respuesta():
         es_primer_mensaje = len(mensajes_usuario) == 0
 
         if es_primer_mensaje:
-            print(f"🚨 FIX 145: Primer mensaje vacío - Cliente necesita más tiempo para procesar saludo")
-            print(f"   NO pedir repetición, solo esperar más tiempo...")
+            print(f"🚨 FIX 211: Primer mensaje vacío - Asumiendo que cliente respondió pero no se transcribió")
+            print(f"   Reproduciendo segunda parte del saludo directamente...")
             agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
 
-            # Esperar más tiempo sin pedir repetición
+            # FIX 211: En lugar de esperar, reproducir la segunda parte del saludo
+            # El cliente probablemente ya dijo "bueno" o "sí" pero Whisper no lo captó
+            segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+            # Agregar al historial como si hubiera respondido
+            agente.conversation_history.append({
+                "role": "user",
+                "content": "[Cliente respondió - no transcrito]"
+            })
+            agente.conversation_history.append({
+                "role": "assistant",
+                "content": segunda_parte
+            })
+
             response = VoiceResponse()
+
+            # Usar audio pre-generado si existe
+            if "segunda_parte_saludo" in audio_cache:
+                audio_id = f"segunda_parte_vacio_{call_sid}"
+                audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
+                audio_url = request.url_root + f"audio/{audio_id}"
+                print(f"📦 FIX 211: Usando audio pre-generado de segunda_parte_saludo")
+                response.play(audio_url)
+            else:
+                # Generar audio si no está en caché
+                audio_id = f"segunda_parte_vacio_{call_sid}"
+                result = generar_audio_elevenlabs(segunda_parte, audio_id)
+                if result:
+                    audio_url = request.url_root + f"audio/{audio_id}"
+                    response.play(audio_url)
+                else:
+                    response.say(segunda_parte, voice="alice", language="es-MX")
+
+            # Gather para siguiente respuesta
             gather = response.gather(
                 input="speech",
                 action="/procesar-respuesta",
                 method="POST",
                 language="es-MX",
                 speechTimeout="auto",
-                timeout=5  # Dar 5s adicionales para que cliente procese
+                timeout=8
             )
-            print(f"✅ FIX 145: Esperando respuesta del primer mensaje sin pedir repetición")
+
+            # Registrar en logs
+            bruce_id = agente.lead_data.get("bruce_id", "N/A")
+            log_evento(f"BRUCE{bruce_id} DICE: \"{segunda_parte}\" (FIX 211: primer mensaje vacío)", "BRUCE")
+
+            print(f"✅ FIX 211: Segunda parte del saludo reproducida aunque cliente no fue transcrito")
             return Response(str(response), mimetype="text/xml")
 
         # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
