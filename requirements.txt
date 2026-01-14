@@ -1,6 +1,7 @@
 # ============================================
 # REQUIREMENTS - NIOVAL Sistema de Llamadas
 # Agente de Ventas Bruce W + Automatización
+# FIX 212: Actualizado 2026-01-14 - Deepgram SDK
 # ============================================
 
 # ===== CORE AI =====
