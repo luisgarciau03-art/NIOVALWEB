@@ -4352,11 +4352,16 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 ✓ Evita palabras difíciles de pronunciar, usa sinónimos
 ✓ UNA pregunta a la vez
 ✓ Máximo 2-3 oraciones por turno (30 palabras máximo)
-✓ SÉ BREVE Y CONCISO - respuestas largas generan delays incómodos
 ✗ CERO inglés - todo en español
 ✗ NO uses "ferreteros", di "de ferretería"
 ✗ NO digas que no puedes enviar catálogos (SÍ puedes)
-✗ NO des listas largas de productos - menciona 1-2 ejemplos máximo"""
+✗ NO des listas largas de productos - menciona 1-2 ejemplos máximo
+
+🔥 FIX 203 - BREVEDAD CRÍTICA (Prevenir delays de 8-12s):
+⏱️ LÍMITE ESTRICTO: 15-25 palabras por respuesta (NUNCA más de 30)
+✅ CORRECTO (18 palabras): "Entiendo. ¿Hay un mejor momento para llamar y hablar con el encargado de compras?"
+❌ INCORRECTO (44 palabras): "Entiendo, es importante respetar esos tiempos. El motivo de mi llamada es muy breve: nosotros distribuimos productos de ferretería con alta rotación, especialmente nuestra cinta para goteras..."
+💡 ESTRATEGIA: Una idea + una pregunta. NO monólogos. Conversación = ping-pong."""
 
         # Determinar fase actual según datos capturados
         fase_actual = []

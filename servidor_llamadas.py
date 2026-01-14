@@ -2105,13 +2105,19 @@ def procesar_respuesta():
         if not audio_container.get("completado", False):
             import time
 
-            # FIX 165: Calcular timeout según palabras
+            # FIX 165 + FIX 203: Calcular timeout según palabras (ajustado para Multilingual v2)
             palabras = len(respuesta_agente.split())
-            # Fórmula: 0.08s por palabra + 1s base
-            # 20 palabras = 2.6s, 40 palabras = 4.2s, 60 palabras = 5.8s
-            max_wait = min(1.0 + (palabras * 0.08), 8.0)  # Máximo 8s
+            # FIX 203: Fórmula actualizada basada en benchmarks reales de Multilingual v2:
+            # - 10 palabras: ~2s → timeout 5s (mínimo)
+            # - 20 palabras: ~4s → timeout 6s
+            # - 30 palabras: ~6s → timeout 8s
+            # - 40 palabras: ~8s → timeout 10s
+            # - 50 palabras: ~10s → timeout 12s
+            # Fórmula: 0.2s por palabra + 2s buffer, mínimo 5s, máximo 15s
+            timeout_calculado = (palabras * 0.2) + 2.0
+            max_wait = max(5.0, min(timeout_calculado, 15.0))
 
-            print(f"⏳ FIX 165: Esperando audio ({palabras} palabras, timeout={max_wait:.1f}s)...")
+            print(f"⏳ FIX 165 + FIX 203: Esperando audio ({palabras} palabras, timeout={max_wait:.1f}s)...")
             waited = 0
             while not audio_container.get("completado", False) and waited < max_wait:
                 time.sleep(0.1)
