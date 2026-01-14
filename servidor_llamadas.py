@@ -3882,104 +3882,90 @@ def diagnostico_persistencia():
 
 
 # ============================================================================
-# FIX 207: ENDPOINT PARA VER LOGS EN TIEMPO REAL
+# FIX 207: DASHBOARD DE MONITOREO EN TIEMPO REAL
 # ============================================================================
 
 from collections import deque
 from datetime import datetime
 
-# Buffer de logs (últimos 500 mensajes)
-logs_buffer = deque(maxlen=500)
+# Historial de llamadas recientes (últimas 100)
+historial_llamadas = deque(maxlen=100)
 
-def log_evento(mensaje, nivel="INFO"):
-    """Agrega un mensaje al buffer de logs para visualización web"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Detectar nivel basado en emojis/palabras clave si no se especifica
-    if nivel == "INFO":
-        if "❌" in str(mensaje) or "ERROR" in str(mensaje):
-            nivel = "ERROR"
-        elif "⚠️" in str(mensaje) or "WARNING" in str(mensaje):
-            nivel = "WARNING"
-        elif "✅" in str(mensaje):
-            nivel = "SUCCESS"
-        elif "🎤" in str(mensaje) or "🤖" in str(mensaje):
-            nivel = "AUDIO"
-        elif "📞" in str(mensaje) or "BRUCE" in str(mensaje):
-            nivel = "CALL"
-
-    logs_buffer.append({
-        "timestamp": timestamp,
-        "nivel": nivel,
-        "mensaje": str(mensaje)
+def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detalles=None):
+    """Registra una llamada en el historial para el dashboard"""
+    historial_llamadas.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "bruce_id": bruce_id,
+        "telefono": telefono,
+        "negocio": negocio,
+        "resultado": resultado,
+        "duracion": duracion,
+        "detalles": detalles or {}
     })
-
-    # También imprimir en consola
-    print(mensaje)
 
 
 @app.route("/logs", methods=["GET"])
-def ver_logs():
+def ver_dashboard():
     """
-    FIX 207: Endpoint para ver logs en tiempo real desde el navegador
-    Acceso: GET https://tu-dominio.railway.app/logs
-    Parámetros opcionales:
-    - nivel: filtrar por nivel (ERROR, WARNING, INFO, SUCCESS, AUDIO, CALL)
-    - buscar: buscar texto en los mensajes
-    - limite: número máximo de logs a mostrar (default: 200)
+    FIX 207: Dashboard de monitoreo en tiempo real
+    Muestra: llamadas activas, historial reciente, estadísticas del sistema
     """
     try:
-        # Obtener parámetros
-        nivel_filtro = request.args.get('nivel', '').upper()
-        buscar = request.args.get('buscar', '').lower()
-        limite = int(request.args.get('limite', 200))
-        formato = request.args.get('formato', 'html')  # html o json
+        formato = request.args.get('formato', 'html')
 
-        # Obtener logs del buffer
-        logs = list(logs_buffer)
+        # Obtener llamadas activas
+        llamadas_activas_lista = []
+        for call_sid, datos in llamadas_activas.items():
+            llamadas_activas_lista.append({
+                "call_sid": call_sid[:20] + "...",
+                "bruce_id": datos.get("bruce_id", "N/A"),
+                "telefono": datos.get("telefono", "N/A"),
+                "negocio": datos.get("nombre_negocio", "N/A"),
+                "inicio": datos.get("inicio", "N/A")
+            })
 
-        # Filtrar por nivel
-        if nivel_filtro:
-            logs = [l for l in logs if l['nivel'] == nivel_filtro]
+        # Obtener historial reciente
+        historial = list(historial_llamadas)[-50:]  # Últimas 50
+        historial = list(reversed(historial))  # Más recientes primero
 
-        # Filtrar por búsqueda
-        if buscar:
-            logs = [l for l in logs if buscar in l['mensaje'].lower()]
+        # Estadísticas
+        total_llamadas = len(historial_llamadas)
+        exitosas = sum(1 for l in historial_llamadas if "catálogo" in str(l.get("resultado", "")).lower() or "éxito" in str(l.get("resultado", "")).lower())
+        ivr_detectados = sum(1 for l in historial_llamadas if "ivr" in str(l.get("resultado", "")).lower())
+        no_contesto = sum(1 for l in historial_llamadas if "no contestó" in str(l.get("resultado", "")).lower())
 
-        # Limitar cantidad
-        logs = logs[-limite:]
+        # Info del sistema
+        info_sistema = {
+            "audios_en_cache": len(audio_cache),
+            "frases_registradas": len(frase_stats),
+            "llamadas_activas": len(llamadas_activas),
+            "historial_total": total_llamadas
+        }
 
-        # Invertir para mostrar más recientes primero
-        logs = list(reversed(logs))
-
-        # Si piden JSON, devolver JSON
         if formato == 'json':
             return {
-                "total": len(logs),
-                "logs": logs
+                "llamadas_activas": llamadas_activas_lista,
+                "historial": historial,
+                "estadisticas": {
+                    "total": total_llamadas,
+                    "exitosas": exitosas,
+                    "ivr": ivr_detectados,
+                    "no_contesto": no_contesto
+                },
+                "sistema": info_sistema
             }
-
-        # Contar por nivel
-        conteo = {
-            "ERROR": sum(1 for l in logs if l['nivel'] == 'ERROR'),
-            "WARNING": sum(1 for l in logs if l['nivel'] == 'WARNING'),
-            "SUCCESS": sum(1 for l in logs if l['nivel'] == 'SUCCESS'),
-            "CALL": sum(1 for l in logs if l['nivel'] == 'CALL'),
-            "AUDIO": sum(1 for l in logs if l['nivel'] == 'AUDIO'),
-            "INFO": sum(1 for l in logs if l['nivel'] == 'INFO'),
-        }
 
         # Generar HTML
         html = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <title>📋 Logs en Tiempo Real - Bruce W</title>
+            <title>📊 Dashboard Bruce W - Monitoreo</title>
             <meta charset="UTF-8">
-            <meta http-equiv="refresh" content="10">
+            <meta http-equiv="refresh" content="15">
             <style>
                 body {{
-                    font-family: 'Courier New', monospace;
+                    font-family: 'Segoe UI', Arial, sans-serif;
                     background: #1a1a2e;
                     color: #eee;
                     margin: 0;
@@ -3990,6 +3976,10 @@ def ver_logs():
                     border-bottom: 2px solid #4CAF50;
                     padding-bottom: 10px;
                 }}
+                h2 {{
+                    color: #2196F3;
+                    margin-top: 30px;
+                }}
                 .stats {{
                     display: flex;
                     gap: 15px;
@@ -3997,166 +3987,214 @@ def ver_logs():
                     flex-wrap: wrap;
                 }}
                 .stat-box {{
-                    padding: 10px 20px;
-                    border-radius: 8px;
+                    padding: 15px 25px;
+                    border-radius: 10px;
                     font-weight: bold;
+                    min-width: 120px;
+                    text-align: center;
                 }}
-                .stat-error {{ background: #ff4444; }}
-                .stat-warning {{ background: #ff9800; color: #000; }}
-                .stat-success {{ background: #4CAF50; }}
-                .stat-call {{ background: #2196F3; }}
-                .stat-audio {{ background: #9c27b0; }}
-                .stat-info {{ background: #607d8b; }}
+                .stat-box .number {{
+                    font-size: 2em;
+                    display: block;
+                }}
+                .stat-box .label {{
+                    font-size: 0.9em;
+                    opacity: 0.8;
+                }}
+                .stat-activas {{ background: #2196F3; }}
+                .stat-exitosas {{ background: #4CAF50; }}
+                .stat-ivr {{ background: #ff9800; }}
+                .stat-nocontesto {{ background: #9e9e9e; }}
+                .stat-cache {{ background: #9c27b0; }}
 
-                .filters {{
+                table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
                     background: #16213e;
-                    padding: 15px;
-                    border-radius: 8px;
-                    margin: 20px 0;
+                    border-radius: 10px;
+                    overflow: hidden;
                 }}
-                .filters input, .filters select, .filters button {{
-                    padding: 8px 12px;
-                    margin: 5px;
-                    border-radius: 4px;
-                    border: none;
+                th {{
+                    background: #0f3460;
+                    padding: 12px;
+                    text-align: left;
                 }}
-                .filters input {{ width: 200px; background: #1a1a2e; color: #fff; }}
-                .filters select {{ background: #1a1a2e; color: #fff; }}
-                .filters button {{ background: #4CAF50; color: #fff; cursor: pointer; }}
-                .filters button:hover {{ background: #45a049; }}
+                td {{
+                    padding: 10px 12px;
+                    border-bottom: 1px solid #1a1a2e;
+                }}
+                tr:hover {{
+                    background: #1f4287;
+                }}
+                .resultado-exito {{ color: #4CAF50; }}
+                .resultado-ivr {{ color: #ff9800; }}
+                .resultado-nocontesto {{ color: #9e9e9e; }}
+                .resultado-error {{ color: #f44336; }}
 
-                .log-container {{
-                    background: #0f0f23;
-                    border-radius: 8px;
-                    padding: 15px;
-                    max-height: 70vh;
-                    overflow-y: auto;
-                }}
-                .log-entry {{
-                    padding: 8px 12px;
-                    margin: 4px 0;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    border-left: 4px solid;
-                }}
-                .log-ERROR {{ background: #2d1f1f; border-color: #ff4444; }}
-                .log-WARNING {{ background: #2d2a1f; border-color: #ff9800; }}
-                .log-SUCCESS {{ background: #1f2d1f; border-color: #4CAF50; }}
-                .log-CALL {{ background: #1f2433; border-color: #2196F3; }}
-                .log-AUDIO {{ background: #291f33; border-color: #9c27b0; }}
-                .log-INFO {{ background: #1f2427; border-color: #607d8b; }}
-
-                .timestamp {{ color: #888; font-size: 11px; }}
-                .nivel {{ font-weight: bold; margin: 0 10px; }}
-                .nivel-ERROR {{ color: #ff4444; }}
-                .nivel-WARNING {{ color: #ff9800; }}
-                .nivel-SUCCESS {{ color: #4CAF50; }}
-                .nivel-CALL {{ color: #2196F3; }}
-                .nivel-AUDIO {{ color: #9c27b0; }}
-                .nivel-INFO {{ color: #607d8b; }}
-
-                .auto-refresh {{
+                .refresh-indicator {{
                     position: fixed;
                     top: 20px;
                     right: 20px;
                     background: #16213e;
                     padding: 10px 15px;
                     border-radius: 8px;
+                    font-size: 12px;
                 }}
-                .refresh-dot {{
+                .pulse {{
                     display: inline-block;
                     width: 10px;
                     height: 10px;
                     background: #4CAF50;
                     border-radius: 50%;
                     animation: pulse 2s infinite;
+                    margin-right: 8px;
                 }}
                 @keyframes pulse {{
-                    0% {{ opacity: 1; }}
-                    50% {{ opacity: 0.3; }}
-                    100% {{ opacity: 1; }}
+                    0% {{ opacity: 1; transform: scale(1); }}
+                    50% {{ opacity: 0.5; transform: scale(1.2); }}
+                    100% {{ opacity: 1; transform: scale(1); }}
                 }}
 
                 .empty-state {{
                     text-align: center;
-                    padding: 50px;
+                    padding: 30px;
                     color: #666;
+                    background: #16213e;
+                    border-radius: 10px;
+                }}
+
+                .nav-links {{
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #16213e;
+                    border-radius: 10px;
+                }}
+                .nav-links a {{
+                    color: #4CAF50;
+                    margin-right: 20px;
+                    text-decoration: none;
+                }}
+                .nav-links a:hover {{
+                    text-decoration: underline;
                 }}
             </style>
         </head>
         <body>
-            <div class="auto-refresh">
-                <span class="refresh-dot"></span> Auto-refresh cada 10s
+            <div class="refresh-indicator">
+                <span class="pulse"></span> Auto-refresh 15s
             </div>
 
-            <h1>📋 Logs en Tiempo Real - Bruce W</h1>
+            <h1>📊 Dashboard de Monitoreo - Bruce W</h1>
+
+            <div class="nav-links">
+                📊 <a href="/stats">Estadísticas de Caché</a>
+                🔍 <a href="/diagnostico-persistencia">Diagnóstico</a>
+                🔄 <a href="/logs" onclick="location.reload(); return false;">Refrescar</a>
+            </div>
 
             <div class="stats">
-                <div class="stat-box stat-error">❌ Errores: {conteo['ERROR']}</div>
-                <div class="stat-box stat-warning">⚠️ Warnings: {conteo['WARNING']}</div>
-                <div class="stat-box stat-success">✅ Éxitos: {conteo['SUCCESS']}</div>
-                <div class="stat-box stat-call">📞 Llamadas: {conteo['CALL']}</div>
-                <div class="stat-box stat-audio">🎤 Audio: {conteo['AUDIO']}</div>
-                <div class="stat-box stat-info">ℹ️ Info: {conteo['INFO']}</div>
+                <div class="stat-box stat-activas">
+                    <span class="number">{len(llamadas_activas)}</span>
+                    <span class="label">Llamadas Activas</span>
+                </div>
+                <div class="stat-box stat-exitosas">
+                    <span class="number">{exitosas}</span>
+                    <span class="label">Exitosas</span>
+                </div>
+                <div class="stat-box stat-ivr">
+                    <span class="number">{ivr_detectados}</span>
+                    <span class="label">IVR Detectados</span>
+                </div>
+                <div class="stat-box stat-nocontesto">
+                    <span class="number">{no_contesto}</span>
+                    <span class="label">No Contestó</span>
+                </div>
+                <div class="stat-box stat-cache">
+                    <span class="number">{info_sistema['audios_en_cache']}</span>
+                    <span class="label">Audios en Caché</span>
+                </div>
             </div>
 
-            <div class="filters">
-                <form method="GET" action="/logs">
-                    <input type="text" name="buscar" placeholder="🔍 Buscar en logs..." value="{buscar}">
-                    <select name="nivel">
-                        <option value="">Todos los niveles</option>
-                        <option value="ERROR" {'selected' if nivel_filtro == 'ERROR' else ''}>❌ ERROR</option>
-                        <option value="WARNING" {'selected' if nivel_filtro == 'WARNING' else ''}>⚠️ WARNING</option>
-                        <option value="SUCCESS" {'selected' if nivel_filtro == 'SUCCESS' else ''}>✅ SUCCESS</option>
-                        <option value="CALL" {'selected' if nivel_filtro == 'CALL' else ''}>📞 CALL</option>
-                        <option value="AUDIO" {'selected' if nivel_filtro == 'AUDIO' else ''}>🎤 AUDIO</option>
-                        <option value="INFO" {'selected' if nivel_filtro == 'INFO' else ''}>ℹ️ INFO</option>
-                    </select>
-                    <select name="limite">
-                        <option value="50" {'selected' if limite == 50 else ''}>50 logs</option>
-                        <option value="100" {'selected' if limite == 100 else ''}>100 logs</option>
-                        <option value="200" {'selected' if limite == 200 else ''}>200 logs</option>
-                        <option value="500" {'selected' if limite == 500 else ''}>500 logs</option>
-                    </select>
-                    <button type="submit">Filtrar</button>
-                    <button type="button" onclick="location.href='/logs'">Limpiar</button>
-                    <button type="button" onclick="location.reload()">🔄 Refrescar</button>
-                </form>
-            </div>
-
-            <div class="log-container">
+            <h2>📞 Llamadas Activas ({len(llamadas_activas_lista)})</h2>
         """
 
-        if not logs:
+        if llamadas_activas_lista:
             html += """
-                <div class="empty-state">
-                    <h2>📭 No hay logs disponibles</h2>
-                    <p>Los logs aparecerán aquí cuando haya actividad en el sistema.</p>
-                    <p>Esta página se actualiza automáticamente cada 10 segundos.</p>
-                </div>
+            <table>
+                <tr>
+                    <th>BRUCE ID</th>
+                    <th>Teléfono</th>
+                    <th>Negocio</th>
+                    <th>Call SID</th>
+                </tr>
             """
-        else:
-            for log in logs:
-                mensaje_escaped = log['mensaje'].replace('<', '&lt;').replace('>', '&gt;')
+            for llamada in llamadas_activas_lista:
                 html += f"""
-                <div class="log-entry log-{log['nivel']}">
-                    <span class="timestamp">{log['timestamp']}</span>
-                    <span class="nivel nivel-{log['nivel']}">[{log['nivel']}]</span>
-                    <span class="mensaje">{mensaje_escaped}</span>
-                </div>
+                <tr>
+                    <td><strong>{llamada['bruce_id']}</strong></td>
+                    <td>{llamada['telefono']}</td>
+                    <td>{llamada['negocio']}</td>
+                    <td style="font-size: 11px; color: #888;">{llamada['call_sid']}</td>
+                </tr>
                 """
-
-        html += """
+            html += "</table>"
+        else:
+            html += """
+            <div class="empty-state">
+                No hay llamadas activas en este momento.
             </div>
+            """
 
-            <p style="text-align: center; color: #666; margin-top: 20px;">
-                💡 Tip: Los logs se guardan en memoria (últimos 500).
-                Para análisis completo, usa el script local: python analizar_logs_railway.py
-            </p>
+        html += f"""
+            <h2>📜 Historial Reciente ({total_llamadas} total)</h2>
+        """
 
-            <p style="text-align: center; color: #666;">
-                📊 <a href="/stats" style="color: #4CAF50;">Ver Estadísticas de Caché</a> |
-                🔍 <a href="/diagnostico-persistencia" style="color: #4CAF50;">Diagnóstico de Persistencia</a>
+        if historial:
+            html += """
+            <table>
+                <tr>
+                    <th>Hora</th>
+                    <th>BRUCE ID</th>
+                    <th>Teléfono</th>
+                    <th>Negocio</th>
+                    <th>Resultado</th>
+                </tr>
+            """
+            for llamada in historial[:30]:
+                resultado = llamada.get('resultado', 'N/A')
+                clase_resultado = 'resultado-exito' if 'catálogo' in resultado.lower() else 'resultado-ivr' if 'ivr' in resultado.lower() else 'resultado-nocontesto' if 'no contestó' in resultado.lower() else ''
+                html += f"""
+                <tr>
+                    <td style="font-size: 12px;">{llamada.get('timestamp', 'N/A')}</td>
+                    <td><strong>{llamada.get('bruce_id', 'N/A')}</strong></td>
+                    <td>{llamada.get('telefono', 'N/A')}</td>
+                    <td>{llamada.get('negocio', 'N/A')[:30]}</td>
+                    <td class="{clase_resultado}">{resultado[:40]}</td>
+                </tr>
+                """
+            html += "</table>"
+        else:
+            html += """
+            <div class="empty-state">
+                <h3>📭 No hay historial de llamadas aún</h3>
+                <p>El historial aparecerá aquí cuando se realicen llamadas.</p>
+                <p>Las estadísticas se acumulan mientras el servidor esté activo.</p>
+            </div>
+            """
+
+        html += f"""
+            <h2>💾 Estado del Sistema</h2>
+            <table>
+                <tr><td>Audios en Caché</td><td><strong>{info_sistema['audios_en_cache']}</strong></td></tr>
+                <tr><td>Frases Registradas</td><td><strong>{info_sistema['frases_registradas']}</strong></td></tr>
+                <tr><td>Llamadas Activas</td><td><strong>{info_sistema['llamadas_activas']}</strong></td></tr>
+                <tr><td>Total en Historial</td><td><strong>{info_sistema['historial_total']}</strong></td></tr>
+            </table>
+
+            <p style="text-align: center; color: #666; margin-top: 30px;">
+                💡 El historial se guarda en memoria mientras el servidor esté activo.<br>
+                Para ver logs completos de Railway, copia los logs desde el Dashboard de Railway.
             </p>
         </body>
         </html>
@@ -4167,7 +4205,7 @@ def ver_logs():
     except Exception as e:
         return {
             "error": str(e),
-            "message": "Error al obtener logs"
+            "message": "Error al cargar dashboard"
         }, 500
 
 
