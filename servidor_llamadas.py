@@ -2931,6 +2931,24 @@ def status_callback():
             except Exception as e:
                 print(f"   ⚠️ Error guardando desde status callback: {e}")
 
+        # FIX 207: Registrar en historial para dashboard web
+        try:
+            registrar_llamada(
+                bruce_id=agente.lead_data.get("bruce_id", "N/A"),
+                telefono=agente.lead_data.get("telefono", "N/A"),
+                negocio=agente.lead_data.get("nombre_negocio", "N/A"),
+                resultado=agente.lead_data.get("pregunta_7", agente.lead_data.get("estado_llamada", "N/A")),
+                duracion=int(call_duration) if call_duration else 0,
+                detalles={
+                    "estado": agente.lead_data.get("estado_llamada"),
+                    "whatsapp": bool(agente.lead_data.get("whatsapp")),
+                    "email": bool(agente.lead_data.get("email"))
+                }
+            )
+            print(f"   📊 FIX 207: Llamada registrada en dashboard")
+        except Exception as e:
+            print(f"   ⚠️ Error registrando en dashboard: {e}")
+
     return Response("OK", status=200)
 
 
