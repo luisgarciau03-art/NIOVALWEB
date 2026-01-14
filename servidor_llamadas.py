@@ -535,6 +535,11 @@ def pre_generar_audios_cache():
         # FIX 76/79: Despedida específica para objeciones terminales (Truper/proveedor exclusivo)
         # FIX 79: Cambiada a despedida más cálida y profesional que deja la puerta abierta
         "despedida_objecion": "Perfecto, comprendo que ya trabajan con un proveedor fijo. Le agradezco mucho su tiempo y por la información. Si en el futuro necesitan comparar precios o buscan un proveedor adicional, con gusto pueden contactarnos. Que tenga excelente día.",
+
+        # FIX 210: Segunda parte del saludo (cuando cliente responde "bueno", "sí", etc.)
+        # Esta frase se usa cuando el cliente ya respondió al "Hola buen día"
+        # Pre-generada para respuesta INSTANTÁNEA (0s delay)
+        "segunda_parte_saludo": "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?",
     }
 
     # FIX 59: Agregar respuestas cacheadas de respuestas_cache para pre-generación
@@ -1788,11 +1793,27 @@ def procesar_respuesta():
 
     print(f"🔍 FIX 121 DEBUG: len(conversation_history)={len(agente.conversation_history)}, mensajes_usuario={len(mensajes_usuario)}, es_primera_respuesta={es_primera_respuesta}")
 
-    # Saludos simples del cliente
+    # FIX 210: Saludos simples del cliente - AMPLIADO
+    # Cuando el cliente responde con cualquiera de estos al primer saludo,
+    # Bruce debe responder INMEDIATAMENTE con la segunda parte del saludo
     saludos_simples = [
+        # Saludos básicos
         "hola", "bueno", "buenos días", "buenos dias", "buen día", "buen dia",
-        "diga", "dígame", "digame", "sí", "si", "aló", "alo", "buenas",
-        "qué onda", "que onda", "mande", "a sus órdenes", "a sus ordenes"
+        "buenas tardes", "buenas noches", "buenas",
+        # Confirmaciones/Atención
+        "diga", "dígame", "digame", "sí", "si", "aló", "alo",
+        "qué onda", "que onda", "mande", "a sus órdenes", "a sus ordenes",
+        # FIX 210: Nuevos saludos detectados en llamadas reales
+        "qué tal", "que tal", "qué hubo", "que hubo", "quihúbole", "quiubole",
+        "qué pasó", "que paso", "qué pasa", "que pasa",
+        "adelante", "a ver", "sí diga", "si diga", "sí dígame", "si digame",
+        "qué se le ofrece", "que se le ofrece", "en qué le ayudo", "en que le ayudo",
+        "con quién hablo", "con quien hablo", "quién es", "quien es",
+        # Saludos formales
+        "muy buenas", "muy buenas tardes", "muy buenos días", "muy buenos dias",
+        # Respuestas cortas de atención
+        "aquí", "aqui", "presente", "escucho", "le escucho", "lo escucho",
+        "dígame en qué le ayudo", "digame en que le ayudo"
     ]
 
     # FIX 121: Si es saludo simple en primera respuesta, usar caché inmediato
