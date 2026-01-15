@@ -1375,7 +1375,17 @@ def procesar_respuesta():
             if call_sid in deepgram_transcripciones:
                 transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
                 if transcripciones_dg:
-                    transcripcion_deepgram = " ".join(transcripciones_dg)
+                    # FIX 239: Si hay múltiples transcripciones acumuladas, usar solo la última
+                    # Esto evita concatenar mensajes de diferentes momentos de la llamada
+                    if len(transcripciones_dg) > 1:
+                        print(f"⚠️ FIX 239: {len(transcripciones_dg)} transcripciones acumuladas - usando solo la última")
+                        for i, t in enumerate(transcripciones_dg):
+                            print(f"   [{i}] '{t}'")
+                        # Usar solo la última transcripción (la más reciente)
+                        transcripcion_deepgram = transcripciones_dg[-1]
+                    else:
+                        transcripcion_deepgram = transcripciones_dg[0]
+
                     usar_deepgram = True
                     speech_original_twilio = speech_result
                     speech_result = transcripcion_deepgram

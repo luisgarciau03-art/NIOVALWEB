@@ -1973,15 +1973,16 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 7 (FIX 228/236): Evitar repetir el saludo/presentación
+        # FILTRO 7 (FIX 228/236/240): Evitar repetir el saludo/presentación
+        # FIX 240: Patrones más específicos para evitar falsos positivos
         # ============================================================
         if not filtro_aplicado:
-            # Patrones que indican que Bruce está repitiendo el saludo
+            # Patrones que indican que Bruce está repitiendo el SALUDO INICIAL completo
+            # FIX 240: Removido "encargado" porque preguntar por el encargado es válido
             patrones_saludo_repetido = [
                 r'me\s+comunico\s+de\s+(la\s+)?marca\s+nioval',
-                r'quería\s+brindar\s+informaci[oó]n',
-                r'productos\s+(de\s+)?ferreter[oíi]',
-                r'se\s+encontrar[aá]\s+el\s+encargad[oa]',
+                r'quería\s+brindar\s+informaci[oó]n\s+sobre',  # FIX 240: Más específico
+                r'productos\s+de\s+ferreter[ií]a.*se\s+encontrar',  # FIX 240: Combo específico
             ]
 
             # Verificar si ya dijimos algo similar antes
@@ -1995,7 +1996,8 @@ class AgenteVentas:
                     # FIX 236: Buscar en TODOS los mensajes anteriores, no solo los últimos
                     ya_dicho = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
                     if ya_dicho:
-                        print(f"\n🚨 FIX 228/236: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
+                        print(f"\n🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
+                        print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                         respuesta = "¿Me escucha? Estoy aquí para ayudarle."
                         filtro_aplicado = True
