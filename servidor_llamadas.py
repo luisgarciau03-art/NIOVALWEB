@@ -1362,23 +1362,35 @@ def procesar_respuesta():
     transcripcion_deepgram = None
     transcripcion_whisper = None
 
-    # FIX 212: Verificar si hay transcripción de Deepgram disponible
-    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM and call_sid in deepgram_transcripciones:
-        transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
-        if transcripciones_dg:
-            # Tomar la última transcripción (o todas concatenadas)
-            transcripcion_deepgram = " ".join(transcripciones_dg)
-            usar_deepgram = True
-            speech_original_twilio = speech_result
-            speech_result = transcripcion_deepgram
+    # FIX 212/217: Verificar si hay transcripción de Deepgram disponible
+    # FIX 217: Esperar brevemente (max 500ms) por transcripción de Deepgram antes de usar Whisper
+    import time
+    max_wait_deepgram = 0.5  # 500ms máximo
+    wait_interval = 0.1  # Revisar cada 100ms
+    tiempo_esperado = 0
 
-            print(f"\n🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM")
-            print(f"   🟢 Deepgram: '{transcripcion_deepgram}'")
-            if speech_original_twilio:
-                print(f"   🔵 Twilio: '{speech_original_twilio}'")
+    if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+        while tiempo_esperado < max_wait_deepgram:
+            if call_sid in deepgram_transcripciones:
+                transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
+                if transcripciones_dg:
+                    transcripcion_deepgram = " ".join(transcripciones_dg)
+                    usar_deepgram = True
+                    speech_original_twilio = speech_result
+                    speech_result = transcripcion_deepgram
 
-            # Limpiar transcripciones usadas
-            deepgram_transcripciones[call_sid] = []
+                    print(f"\n🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó {tiempo_esperado:.1f}s)")
+                    print(f"   🟢 Deepgram: '{transcripcion_deepgram}'")
+                    if speech_original_twilio:
+                        print(f"   🔵 Twilio: '{speech_original_twilio}'")
+
+                    deepgram_transcripciones[call_sid] = []
+                    break
+            time.sleep(wait_interval)
+            tiempo_esperado += wait_interval
+
+        if not usar_deepgram:
+            print(f"⚠️ FIX 217: Deepgram no respondió en {max_wait_deepgram}s - usando Whisper")
 
     # FIX 60: Fallback a WHISPER API si Deepgram no está disponible
     if not usar_deepgram and recording_url and OPENAI_API_KEY:
