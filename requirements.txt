@@ -1,18 +1,15 @@
-# ============================================
 # REQUIREMENTS - NIOVAL Sistema de Llamadas
-# Agente de Ventas Bruce W + Automatización
-# FIX 212: Actualizado 2026-01-14 - Deepgram SDK
-# ============================================
+# FIX 212: Actualizado 2026-01-14
 
-# ===== CORE AI =====
-openai>=1.12.0              # GPT-4o para conversaciones
-anthropic>=0.25.0           # Claude (opcional, para análisis)
+# CRITICO: Deepgram primero para asegurar instalación
+deepgram-sdk==3.7.0
 
-# ===== TEXT-TO-SPEECH =====
-elevenlabs>=1.0.0           # Voz de Bruce W
+# Core AI
+openai>=1.12.0
+anthropic>=0.25.0
 
-# ===== SPEECH-TO-TEXT =====
-deepgram-sdk>=3.0.0         # FIX 212: Transcripción en tiempo real (reemplaza Whisper)
+# Text-to-Speech
+elevenlabs>=1.0.0
 
 # ===== TELEPHONY =====
 twilio>=8.10.0              # Sistema de llamadas
