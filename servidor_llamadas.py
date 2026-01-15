@@ -1262,47 +1262,62 @@ def webhook_voz():
 
         print(f"   WebSocket URL: {ws_url}")
 
-    # FIX 96: Preparar grabación ANTES de reproducir audio (estar listo desde el primer sonido)
-    # IMPORTANTE: El <Gather> debe envolver al <Play> para que Twilio esté escuchando
-    # DESDE QUE EMPIEZA a reproducir el audio, no DESPUÉS de que termina
+    # FIX 214: ELIMINAR COSTOS DE TWILIO SPEECH RECOGNITION
+    # Twilio cobra por usar input="speech" con language (Speech Recognition)
+    # Ahora usamos SOLO Deepgram para transcripción (más barato y preciso)
     #
-    # FIX 212: Ahora usamos Deepgram para transcripción en tiempo real
-    # FIX 60/61/62/63/86: Fallback a Whisper si Deepgram no está disponible
-    # FIX 174: SIN speech_model = no transcribe con Twilio, ahorra costos
-    # FIX 86/112/149: Timeouts para detectar cliente desesperado RÁPIDO
-    gather = Gather(
-        input="speech",  # FIX 174: SIN speech_model = no transcribe, solo detecta voz
-        language="es-MX",
-        timeout=3,  # FIX 212: 3s - Aumentado para dar tiempo a Deepgram
-        speech_timeout=1.5,  # FIX 212: 1.5s - Más tiempo para transcripción precisa
+    # Arquitectura FIX 214:
+    # 1. Reproducir audio con <Play>
+    # 2. Usar <Record> para capturar respuesta del cliente (NO cobra speech)
+    # 3. Deepgram transcribe en tiempo real vía MediaStream
+    # 4. Record termina por silencio, callback a /procesar-respuesta
+
+    # Reproducir el audio primero
+    audio_url = request.url_root + f"audio/{audio_id}"
+    response.play(audio_url)
+
+    # FIX 214: Usar Record en lugar de Gather para evitar cobros de Speech Recognition
+    # Record solo cobra minutos de voz (mucho más barato que Speech Recognition)
+    # Deepgram MediaStream ya está transcribiendo en paralelo
+    from twilio.twiml.voice_response import Record
+
+    response.record(
         action="/procesar-respuesta",
         method="POST",
-        action_on_empty_result=False,  # No procesar si no hay respuesta
-        # FIX 174: REMOVIDO speech_model="experimental_conversations" - causaba doble cobro
-        barge_in=True  # FIX 139: Permitir interrupciones en saludo para detectar clientes desesperados rápido
+        max_length=30,  # Máximo 30 segundos por respuesta
+        timeout=3,  # 3 segundos de silencio = fin de respuesta
+        play_beep=False,  # Sin beep (experiencia natural)
+        trim="trim-silence",  # Eliminar silencio al inicio/fin
+        recording_status_callback="/grabacion-status",  # Opcional: status de grabación
+        recording_status_callback_method="POST"
     )
 
-    # FIX 96: ANIDAR <Play> dentro de <Gather> para que esté listo ANTES de hablar
-    # Reproducir audio de ElevenLabs DENTRO del Gather
-    audio_url = request.url_root + f"audio/{audio_id}"
-    gather.play(audio_url)
-
-    # Agregar el Gather a la respuesta
-    response.append(gather)
-
-    # FIX 110: Si no hay respuesta, redirigir a /procesar-respuesta con SpeechResult vacío
-    # Esto permite que el FIX 92 maneje la respuesta vacía (pedir repetición)
-    # en lugar de colgar directamente
-    response.redirect(url="/procesar-respuesta?CallSid=" + call_sid + "&SpeechResult=", method="POST")
+    print(f"   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)")
 
     return Response(str(response), mimetype="text/xml")
+
+
+@app.route("/grabacion-status", methods=["POST"])
+def grabacion_status():
+    """FIX 214: Callback para status de grabación (opcional, para debugging)"""
+    recording_sid = request.form.get("RecordingSid", "")
+    recording_status = request.form.get("RecordingStatus", "")
+    recording_url = request.form.get("RecordingUrl", "")
+    call_sid = request.form.get("CallSid", "")
+
+    print(f"📼 FIX 214: Grabación {recording_status} - CallSid: {call_sid}")
+    if recording_url:
+        print(f"   URL: {recording_url}")
+
+    return Response("OK", mimetype="text/plain")
 
 
 @app.route("/procesar-respuesta", methods=["GET", "POST"])
 def procesar_respuesta():
     """
-    FIX 60: Procesa la respuesta del cliente y continúa la conversación
-    ACTUALIZADO: Usa Whisper API si está disponible (mejor precisión + más barato)
+    FIX 60/214: Procesa la respuesta del cliente y continúa la conversación
+    ACTUALIZADO FIX 214: Ya no usa SpeechResult de Twilio (ahorra costos)
+    Prioridad: Deepgram (tiempo real) > Whisper (RecordingUrl) > vacío
     """
     # Twilio puede enviar GET o POST
     if request.method == "GET":
@@ -1751,14 +1766,14 @@ def procesar_respuesta():
                 else:
                     response.say(segunda_parte, voice="alice", language="es-MX")
 
-            # Gather para siguiente respuesta
-            gather = response.gather(
-                input="speech",
+            # FIX 214: Record en lugar de Gather (elimina costos de Speech Recognition)
+            response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                language="es-MX",
-                speechTimeout="auto",
-                timeout=8
+                max_length=30,
+                timeout=8,
+                play_beep=False,
+                trim="trim-silence"
             )
 
             # Registrar en logs
@@ -1776,17 +1791,17 @@ def procesar_respuesta():
             agente.acaba_de_responder_desesperado = False  # Resetear flag
             agente.respuestas_vacias_consecutivas = 0  # Resetear contador
 
-            # Simplemente esperar más tiempo sin pedir repetición
+            # FIX 214: Simplemente esperar más tiempo sin pedir repetición (Record + Deepgram)
             response = VoiceResponse()
-            gather = response.gather(
-                input="speech",
+            response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                language="es-MX",
-                speechTimeout="auto",
-                timeout=8  # Dar 8s para que cliente procese
+                max_length=30,
+                timeout=8,  # Dar 8s para que cliente procese
+                play_beep=False,
+                trim="trim-silence"
             )
-            print(f"✅ FIX 143: Esperando respuesta sin pedir repetición")
+            print(f"✅ FIX 143: Esperando respuesta sin pedir repetición (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # FIX 170: Si cliente va a pasar al encargado, esperar MÁS tiempo
@@ -1797,17 +1812,17 @@ def procesar_respuesta():
             agente.esperando_transferencia = False  # Resetear flag después de primer timeout
             agente.respuestas_vacias_consecutivas = 0  # Resetear contador
 
-            # Esperar 20 segundos para que pase al encargado
+            # FIX 214: Esperar 20 segundos para que pase al encargado (Record + Deepgram)
             response = VoiceResponse()
-            gather = response.gather(
-                input="speech",
+            response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                language="es-MX",
-                speechTimeout="auto",
-                timeout=20  # 20s para transferencia
+                max_length=30,
+                timeout=20,  # 20s para transferencia
+                play_beep=False,
+                trim="trim-silence"
             )
-            print(f"✅ FIX 170: Esperando hasta 20s para que cliente pase al encargado")
+            print(f"✅ FIX 170: Esperando hasta 20s para que cliente pase al encargado (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # Primera o segunda vez: Pedir amablemente que repitan
@@ -1848,17 +1863,17 @@ def procesar_respuesta():
             # FIX 152: LOG adicional después de generar
             print(f"✅ Bruce pidió que le repitan")
 
-            # Esperar respuesta del cliente
-            gather = response.gather(
-                input="speech",
+            # FIX 214: Esperar respuesta del cliente (Record + Deepgram)
+            response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                language="es-MX",
-                speechTimeout="auto",
-                timeout=10
+                max_length=30,
+                timeout=10,
+                play_beep=False,
+                trim="trim-silence"
             )
 
-            print(f"✅ Bruce pidió que le repitan")
+            print(f"✅ Bruce pidió que le repitan (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # Tercera vez: Cliente probablemente colgó
@@ -2378,33 +2393,28 @@ def procesar_respuesta():
         # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
         print(f"⏳ Esperando despedida del cliente por cortesía...")
 
-        # FIX 60/61: Crear Gather para escuchar despedida del cliente (con Whisper)
-        gather_despedida = Gather(
-            input="speech",
-            language="es-MX",
-            timeout=3,  # Esperar hasta 3 segundos
-            speech_timeout=2,  # FIX 60: Ya optimizado (corto para despedidas)
-            action="/despedida-final",
-            method="POST"
-            # FIX 174: REMOVIDO speech_model - causaba doble cobro de transcripción
-        )
-
-        # FIX 96: Reproducir audio DENTRO del Gather para estar listo desde que empieza
+        # FIX 214: Usar Record en lugar de Gather para despedida (ahorra costos Speech Recognition)
+        # Reproducir audio primero
         if audio_id is None:
             # FIX 162A: ElevenLabs falló - usar despedida simple pre-cacheada
-            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida gather - usando caché de despedida")
+            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida")
             print(f"   Despedida que falló: {respuesta_agente[:100]}...")
             print(f"   Call SID: {call_sid}")
-            # Usar despedida simple del caché
             if "despedida_simple" in audio_cache:
-                gather_despedida.play(request.url_root + "audio_cache/despedida_simple")
-            # Si no hay despedida, continuar sin audio (mejor que cambiar voz)
+                response.play(request.url_root + "audio_cache/despedida_simple")
         else:
-            # Caso: Respuesta corta o cacheada - usar audio de ElevenLabs
             audio_url = request.url_root + f"audio/{audio_id}"
-            gather_despedida.play(audio_url)
+            response.play(audio_url)
 
-        response.append(gather_despedida)
+        # FIX 214: Record corto para escuchar despedida del cliente
+        response.record(
+            action="/despedida-final",
+            method="POST",
+            max_length=5,  # Máximo 5 segundos para despedida
+            timeout=3,  # 3 segundos de silencio = fin
+            play_beep=False,
+            trim="trim-silence"
+        )
 
         # Si no responde en 3 segundos, terminar igual
         response.hangup()
@@ -2520,70 +2530,55 @@ def procesar_respuesta():
         permitir_interrupcion = False
         debug_print(f"🔇 FIX 194: barge_in=False (conversación fluida)")
 
-    gather = Gather(
-        input="speech",
-        language="es-MX",
-        timeout=timeout_gather,  # FIX 116: Progresivo según num_mensajes
-        speech_timeout="auto",  # FIX 112: 1s→auto - Twilio detecta fin automáticamente
-        action="/procesar-respuesta",
-        method="POST",
-        # FIX 174: REMOVIDO speech_model="experimental_conversations" - causaba doble cobro
-        barge_in=permitir_interrupcion  # FIX 125: True para primeros 3 mensajes, False después
-    )
+    # FIX 214: Usar Record en lugar de Gather para ELIMINAR COSTOS de Twilio Speech Recognition
+    # Deepgram transcribe en tiempo real vía MediaStream, Record solo captura audio
+    print(f"🎯 FIX 214: Usando Record + Deepgram (mensaje #{num_mensajes_bruce})")
 
-    print(f"🎙️ FIX 157: barge_in={permitir_interrupcion} DESHABILITADO (mensaje #{num_mensajes_bruce} - elimina ciclo)")
-
-    # FIX 141: Si cliente está desesperado, agregar confirmación DENTRO del Gather ANTES de respuesta
+    # FIX 141: Si cliente está desesperado, reproducir confirmación ANTES de respuesta
     if cliente_desesperado:
-        print(f"🚨 FIX 141: Agregando confirmación DENTRO de Gather (se reproduce ANTES de respuesta)")
+        print(f"🚨 FIX 141: Agregando confirmación (cliente desesperado)")
 
-        # FIX 138A: Usar caché para respuesta instantánea (0s en lugar de 0.91s)
         audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
-
-        # Generar usando caché (0s delay)
         result_confirmacion = generar_audio_elevenlabs(
             "Sí, estoy aquí.",
             audio_id_confirmacion,
-            usar_cache_key="confirmacion_presencia"  # FIX 138A: Caché pregenerado
+            usar_cache_key="confirmacion_presencia"
         )
 
         if result_confirmacion:
             audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
-            print(f"✅ FIX 141: Confirmación generada - agregando DENTRO de Gather")
-            # FIX 141: Agregar DENTRO del Gather para que se reproduzca en secuencia
-            gather.play(audio_url_confirmacion)
+            print(f"✅ FIX 141: Confirmación generada")
+            response.play(audio_url_confirmacion)
         else:
-            # FIX 162A: NO usar Twilio - usar audio de relleno
             print(f"⚠️ FIX 162A: Caché falló - usando audio de relleno")
             if "pensando_1" in audio_cache:
-                gather.play(request.url_root + "audio_cache/pensando_1")
-            # Si falla, continuar sin audio (mejor que cambiar de voz)
+                response.play(request.url_root + "audio_cache/pensando_1")
 
-    # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs) DENTRO del Gather
+    # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs)
     if audio_id is None:
-        # FIX 162A: ElevenLabs falló - NO usar Twilio, usar audio de relleno
-        print(f"🚨 FIX 162A: ElevenLabs FALLÓ después de retry - usando audio de relleno")
+        print(f"🚨 FIX 162A: ElevenLabs FALLÓ - usando audio de relleno")
         print(f"   Respuesta que falló: {respuesta_agente[:100]}...")
         print(f"   Call SID: {call_sid}")
 
-        # Usar audio de relleno en lugar de Twilio
         if "dejeme_ver" in audio_cache:
             print(f"🎵 FIX 162A: Usando audio de relleno 'dejeme_ver'")
-            gather.play(request.url_root + "audio_cache/dejeme_ver")
+            response.play(request.url_root + "audio_cache/dejeme_ver")
         elif "un_momento" in audio_cache:
             print(f"🎵 FIX 162A: Usando audio de relleno 'un_momento'")
-            gather.play(request.url_root + "audio_cache/un_momento")
-        # Si no hay audios de relleno, continuar sin audio (mejor que voz Twilio)
+            response.play(request.url_root + "audio_cache/un_momento")
     else:
-        # Usar audio de ElevenLabs (voz Bruce) - SIEMPRE preferido
         audio_url = request.url_root + f"audio/{audio_id}"
-        gather.play(audio_url)
+        response.play(audio_url)
 
-    response.append(gather)
-
-    # FIX 137: Eliminado "¿Sigue ahí?" - causaba confusión y bugs
-    # Si cliente no responde, redirigir directamente a procesar-respuesta (timeout)
-    response.redirect("/procesar-respuesta")
+    # FIX 214: Record para capturar respuesta del cliente (Deepgram transcribe en paralelo)
+    response.record(
+        action="/procesar-respuesta",
+        method="POST",
+        max_length=30,  # Máximo 30 segundos por respuesta
+        timeout=timeout_gather,  # FIX 116: Timeout progresivo según num_mensajes
+        play_beep=False,
+        trim="trim-silence"
+    )
 
     return Response(str(response), mimetype="text/xml")
 
