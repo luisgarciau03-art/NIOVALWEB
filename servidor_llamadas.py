@@ -1281,14 +1281,15 @@ def webhook_voz():
     # Deepgram MediaStream ya está transcribiendo en paralelo
     from twilio.twiml.voice_response import Record
 
+    # FIX 215: Reducir timeout de 3s a 1.5s para respuesta más rápida
     response.record(
         action="/procesar-respuesta",
         method="POST",
         max_length=30,  # Máximo 30 segundos por respuesta
-        timeout=3,  # 3 segundos de silencio = fin de respuesta
+        timeout=1,  # FIX 215: 1s de silencio = fin (antes 3s)
         play_beep=False,  # Sin beep (experiencia natural)
         trim="trim-silence",  # Eliminar silencio al inicio/fin
-        recording_status_callback="/grabacion-status",  # Opcional: status de grabación
+        recording_status_callback="/grabacion-status",
         recording_status_callback_method="POST"
     )
 
@@ -1766,12 +1767,12 @@ def procesar_respuesta():
                 else:
                     response.say(segunda_parte, voice="alice", language="es-MX")
 
-            # FIX 214: Record en lugar de Gather (elimina costos de Speech Recognition)
+            # FIX 214/215: Record en lugar de Gather (elimina costos de Speech Recognition)
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
                 max_length=30,
-                timeout=8,
+                timeout=2,  # FIX 215: Reducido de 8s a 2s
                 play_beep=False,
                 trim="trim-silence"
             )
@@ -1791,13 +1792,13 @@ def procesar_respuesta():
             agente.acaba_de_responder_desesperado = False  # Resetear flag
             agente.respuestas_vacias_consecutivas = 0  # Resetear contador
 
-            # FIX 214: Simplemente esperar más tiempo sin pedir repetición (Record + Deepgram)
+            # FIX 214/215: Simplemente esperar sin pedir repetición (Record + Deepgram)
             response = VoiceResponse()
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
                 max_length=30,
-                timeout=8,  # Dar 8s para que cliente procese
+                timeout=3,  # FIX 215: Reducido de 8s a 3s
                 play_beep=False,
                 trim="trim-silence"
             )
@@ -1863,12 +1864,12 @@ def procesar_respuesta():
             # FIX 152: LOG adicional después de generar
             print(f"✅ Bruce pidió que le repitan")
 
-            # FIX 214: Esperar respuesta del cliente (Record + Deepgram)
+            # FIX 214/215: Esperar respuesta del cliente (Record + Deepgram)
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
                 max_length=30,
-                timeout=10,
+                timeout=3,  # FIX 215: Reducido de 10s a 3s
                 play_beep=False,
                 trim="trim-silence"
             )
@@ -2406,12 +2407,12 @@ def procesar_respuesta():
             audio_url = request.url_root + f"audio/{audio_id}"
             response.play(audio_url)
 
-        # FIX 214: Record corto para escuchar despedida del cliente
+        # FIX 214/215: Record corto para escuchar despedida del cliente
         response.record(
             action="/despedida-final",
             method="POST",
             max_length=5,  # Máximo 5 segundos para despedida
-            timeout=3,  # 3 segundos de silencio = fin
+            timeout=2,  # FIX 215: Reducido de 3s a 2s
             play_beep=False,
             trim="trim-silence"
         )
@@ -2488,24 +2489,26 @@ def procesar_respuesta():
         ]
         cliente_dictando_correo = any(ind in ultimo_mensaje_cliente.lower() for ind in indicadores_dictado_correo)
 
+    # FIX 215: Reducir todos los timeouts para respuesta más rápida
+    # Record timeout = silencio después de que cliente termina de hablar
     if cliente_pidio_momento:
-        timeout_gather = 10  # FIX 131: 10s cuando cliente pide "un momento" o variantes (antes 8s)
-        debug_print(f"⏱️ FIX 131: Timeout={timeout_gather}s (cliente pidió esperar: '{ultimo_mensaje_cliente}')")
+        timeout_gather = 5  # FIX 215: Reducido de 10s a 5s
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente pidió esperar)")
     elif cliente_dictando_correo:
-        timeout_gather = 15  # FIX 155: 15s cuando cliente está DICTANDO correo (email completo puede tomar 10-15s)
-        debug_print(f"⏱️ FIX 155: Timeout={timeout_gather}s (cliente dictando correo - NO interrumpir)")
+        timeout_gather = 8  # FIX 215: Reducido de 15s a 8s (correo largo)
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente dictando correo)")
     elif cliente_desesperado:
-        timeout_gather = 5  # FIX 135: 5s cuando cliente está desesperado (necesita procesar confirmación)
-        debug_print(f"⏱️ FIX 135: Timeout={timeout_gather}s (cliente desesperado - dio confirmación)")
+        timeout_gather = 2  # FIX 215: Reducido de 5s a 2s (respuesta rápida)
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente desesperado)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
-        timeout_gather = 4  # FIX 127: 4s cuando pide correo (antes 2s, cliente necesita tiempo PARA PENSAR)
-        debug_print(f"⏱️ FIX 127: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
+        timeout_gather = 3  # FIX 215: Reducido de 4s a 3s
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
     elif es_segundo_mensaje:
-        timeout_gather = 3  # FIX 124: 3s para segundo mensaje (largo, cliente necesita procesar)
-        debug_print(f"⏱️ FIX 124: Timeout={timeout_gather}s (segundo mensaje inicial - 25 palabras)")
+        timeout_gather = 2  # FIX 215: Reducido de 3s a 2s
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (segundo mensaje)")
     else:
-        timeout_gather = 4  # FIX 151: 4s conversación normal (antes 1s - causaba "Disculpa no te escuché bien" innecesario)
-        debug_print(f"⏱️ FIX 151: Timeout={timeout_gather}s (conversación normal - dar tiempo para procesar)")
+        timeout_gather = 2  # FIX 215: Reducido de 4s a 2s (conversación normal)
+        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (conversación normal)")
 
     # FIX 125/154/156/157/194: Manejo inteligente de interrupciones
     # FIX 157: barge_in=False para evitar ciclo de saludos
