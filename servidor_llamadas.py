@@ -1362,11 +1362,11 @@ def procesar_respuesta():
     transcripcion_deepgram = None
     transcripcion_whisper = None
 
-    # FIX 212/217/218: Verificar si hay transcripción de Deepgram disponible
-    # FIX 218: Esperar hasta 1s por Deepgram (ahora incluye parciales)
+    # FIX 212/217/218/219: Verificar si hay transcripción de Deepgram disponible
+    # FIX 219: Reducir wait a 300ms - si Deepgram no responde rápido, usar Whisper
     import time
-    max_wait_deepgram = 1.0  # FIX 218: Aumentado a 1s (Deepgram envía parciales ahora)
-    wait_interval = 0.1  # Revisar cada 100ms
+    max_wait_deepgram = 0.3  # FIX 219: Reducido de 1s a 300ms (evitar sumar latencia)
+    wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
 
     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:

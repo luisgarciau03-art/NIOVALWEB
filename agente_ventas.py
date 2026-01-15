@@ -354,14 +354,18 @@ DEBES RESPONDER INMEDIATAMENTE:
 "Perfecto, excelente. Por favor, adelante con el correo."
 [ESPERA EL CORREO - NO PIDAS NÚMERO NI HORARIO]
 
-FIX 101: Después de recibir el correo - DESPEDIDA INMEDIATA (SIN PEDIR NOMBRE):
+FIX 101/220: Después de recibir el correo - DESPEDIDA INMEDIATA (SIN PEDIR NOMBRE):
 "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 [TERMINA LLAMADA - NO PIDAS NOMBRE]
 
-IMPORTANTE:
+IMPORTANTE - FIX 220:
+❌ NUNCA repitas el correo de vuelta al cliente (puedes equivocarte al deletrearlo)
+❌ NO digas "Le enviaré el catálogo a [correo]" - solo di "ya lo tengo anotado"
 ❌ NO preguntes el nombre de quien te dio el correo (lo abruma, no es de compras)
 ❌ NO digas "para mencionarle que usted me facilitó su contacto"
 ❌ NO insistas en número telefónico si ya te ofrecieron correo
+❌ NO preguntes "¿Es correcto?" después de repetir el correo
+✅ Solo di "Perfecto, ya lo tengo anotado" y despídete
 ✅ El correo es SUFICIENTE - Despedida inmediata y profesional
 ✅ Cliente se siente ayudado, NO comprometido
 
@@ -3422,6 +3426,56 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
         # Necesitamos convertir a: "yahirsamrodriguez@gmail.com"
 
         texto_email_procesado = texto.lower()
+
+        # FIX 221: CORREGIR TRANSCRIPCIONES INCORRECTAS DE DELETREO
+        # Whisper/Deepgram a veces transcriben mal las ayudas mnemotécnicas:
+        # - "U de Uva" → "udv" o "u de uva" o "uva"
+        # - "B de Burro" → "bdb" o "b de burro"
+        # Solución: Detectar patrones y extraer solo la letra inicial
+
+        # Patrones comunes de ayudas mnemotécnicas mal transcritas
+        ayudas_mnemotecnicas = {
+            # "X de [Palabra]" - la primera letra es la correcta
+            r'\bu\s*de\s*uva\b': 'u',
+            r'\bb\s*de\s*burro\b': 'b',
+            r'\bv\s*de\s*vaca\b': 'v',
+            r'\bs\s*de\s*sol\b': 's',
+            r'\bc\s*de\s*casa\b': 'c',
+            r'\bd\s*de\s*dado\b': 'd',
+            r'\be\s*de\s*elefante\b': 'e',
+            r'\bf\s*de\s*foco\b': 'f',
+            r'\bg\s*de\s*gato\b': 'g',
+            r'\bh\s*de\s*hotel\b': 'h',
+            r'\bi\s*de\s*iglesia\b': 'i',
+            r'\bj\s*de\s*jarra\b': 'j',
+            r'\bk\s*de\s*kilo\b': 'k',
+            r'\bl\s*de\s*luna\b': 'l',
+            r'\bm\s*de\s*mama\b': 'm', r'\bm\s*de\s*mamá\b': 'm',
+            r'\bn\s*de\s*naranja\b': 'n',
+            r'\bo\s*de\s*oso\b': 'o',
+            r'\bp\s*de\s*papa\b': 'p', r'\bp\s*de\s*papá\b': 'p',
+            r'\bq\s*de\s*queso\b': 'q',
+            r'\br\s*de\s*rosa\b': 'r',
+            r'\bt\s*de\s*toro\b': 't',
+            r'\bw\s*de\s*washington\b': 'w',
+            r'\bx\s*de\s*xilofono\b': 'x',
+            r'\by\s*de\s*yoyo\b': 'y',
+            r'\bz\s*de\s*zapato\b': 'z',
+            # Transcripciones pegadas (Whisper junta las letras)
+            r'\budv\b': 'u',  # "U de Uva" transcrito como "udv"
+            r'\bbdb\b': 'b',  # "B de Burro" transcrito como "bdb"
+            r'\bvdv\b': 'v',  # "V de Vaca" transcrito como "vdv"
+            r'\bsds\b': 's',  # "S de Sol" transcrito como "sds"
+            r'\bcdc\b': 'c',  # "C de Casa" transcrito como "cdc"
+            r'\bgdg\b': 'g',  # "G de Gato" transcrito como "gdg"
+            r'\bmdm\b': 'm',  # "M de Mamá" transcrito como "mdm"
+        }
+
+        for patron, reemplazo in ayudas_mnemotecnicas.items():
+            if re.search(patron, texto_email_procesado, re.IGNORECASE):
+                texto_original = texto_email_procesado
+                texto_email_procesado = re.sub(patron, reemplazo, texto_email_procesado, flags=re.IGNORECASE)
+                print(f"🔧 FIX 221: Corregida ayuda mnemotécnica: '{texto_original}' → '{texto_email_procesado}'")
 
         # FIX 48: ELIMINAR AYUDAS MNEMOTÉCNICAS antes de procesar
         # Cliente dice: "Z a m de mamá r o D r y G de gato"
