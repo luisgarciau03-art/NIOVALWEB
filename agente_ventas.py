@@ -1905,11 +1905,13 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Patrones de horario/disponibilidad
+                # Patrones de horario/disponibilidad (FIX 230: agregados más patrones)
                 patrones_horario = [
                     r'después\s+de\s+mediodía',
                     r'en\s+la\s+tarde',
                     r'más\s+tarde',
+                    r'sería\s+más\s+tarde',  # FIX 230
+                    r'seria\s+mas\s+tarde',  # FIX 230 (sin acentos)
                     r'después\s+de\s+las?\s+\d',
                     r'a\s+las?\s+\d',
                     r'lo\s+puedes?\s+encontrar',
@@ -1919,6 +1921,10 @@ class AgenteVentas:
                     r'llega\s+a\s+las',
                     r'regresa\s+a\s+las',
                     r'no\s+está.*pero',
+                    r'no\s+se\s+encuentra.*tarde',  # FIX 230
+                    r'no\s+se\s+encuentra.*después',  # FIX 230
+                    r'llame\s+(más\s+)?tarde',  # FIX 230
+                    r'marque\s+(más\s+)?tarde',  # FIX 230
                 ]
 
                 cliente_dio_horario = any(re.search(p, ultimo_cliente) for p in patrones_horario)
@@ -2554,6 +2560,21 @@ Ejemplo correcto:
             "no viene", "no va a venir", "no puede", "no hay nadie"
         ]
 
+        # FIX 229: Patrones que indican que el cliente va a DAR INFORMACIÓN (NO transferencia)
+        # "Le paso el correo" = cliente va a dar correo, NO pasar al encargado
+        patrones_dar_info = [
+            "paso el correo", "paso mi correo", "paso un correo",
+            "doy el correo", "doy mi correo", "le doy el correo",
+            "paso el mail", "paso mi mail", "paso el email",
+            "te paso el número", "le paso el número", "paso mi número",
+            "te paso el whatsapp", "le paso el whatsapp", "paso mi whatsapp",
+            "te lo paso por correo", "se lo paso por correo",
+            "anota", "apunta", "toma nota",
+        ]
+
+        # FIX 229: Verificar si cliente va a dar información
+        cliente_da_info = any(info in respuesta_lower for info in patrones_dar_info)
+
         # FIX 216: Primero verificar si hay negación
         hay_negacion = any(neg in respuesta_lower for neg in patrones_negacion)
 
@@ -2561,6 +2582,10 @@ Ejemplo correcto:
             print(f"🚫 FIX 216: Detectada NEGACIÓN - NO es transferencia")
             print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
             # NO retornar "Claro, espero" - continuar con flujo normal
+        elif cliente_da_info:
+            print(f"📧 FIX 229: Cliente va a DAR INFORMACIÓN - NO es transferencia")
+            print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+            # NO retornar "Claro, espero" - dejar que GPT pida el correo/dato
         else:
             for patron in patrones_transferencia_inmediata:
                 if patron in respuesta_lower:
