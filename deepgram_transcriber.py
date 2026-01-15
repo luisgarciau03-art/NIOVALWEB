@@ -22,9 +22,13 @@ from collections import defaultdict
 try:
     from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions
     DEEPGRAM_AVAILABLE = True
-except ImportError:
+    print("✅ FIX 212: deepgram-sdk importado correctamente")
+except ImportError as e:
     DEEPGRAM_AVAILABLE = False
-    print("⚠️ FIX 212: deepgram-sdk no instalado. Ejecuta: pip install deepgram-sdk")
+    print(f"⚠️ FIX 212: deepgram-sdk no instalado: {e}")
+except Exception as e:
+    DEEPGRAM_AVAILABLE = False
+    print(f"❌ FIX 212: Error importando deepgram-sdk: {type(e).__name__}: {e}")
 
 # Configuración
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
