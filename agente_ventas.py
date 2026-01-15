@@ -1861,8 +1861,85 @@ class AgenteVentas:
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 4 (FIX 228): Evitar repetir el saludo/presentación
+        # ============================================================
+        if not filtro_aplicado:
+            # Patrones que indican que Bruce está repitiendo el saludo
+            patrones_saludo_repetido = [
+                r'me\s+comunico\s+de\s+(la\s+)?marca\s+nioval',
+                r'quería\s+brindar\s+informaci[oó]n',
+                r'productos\s+ferreter[oíi]',
+                r'se\s+encontrar[aá]\s+el\s+encargad[oa]',
+                r'encargad[oa]\s+de\s+compras',
+            ]
+
+            # Verificar si ya dijimos algo similar antes
+            ultimos_mensajes_bruce = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ]
+
+            for patron in patrones_saludo_repetido:
+                if re.search(patron, respuesta_lower):
+                    # Verificar si ya lo dijimos
+                    ya_dicho = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce[:-1])
+                    if ya_dicho:
+                        print(f"\n🚨 FIX 228: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
+                        print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                        respuesta = "Disculpe, ¿me decía algo? Estoy aquí para ayudarle."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+                        break
+
+        # ============================================================
+        # FILTRO 5 (FIX 227): Detectar horarios y responder apropiadamente
+        # ============================================================
+        if not filtro_aplicado:
+            # Ver si el último mensaje del cliente mencionó horarios
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones de horario/disponibilidad
+                patrones_horario = [
+                    r'después\s+de\s+mediodía',
+                    r'en\s+la\s+tarde',
+                    r'más\s+tarde',
+                    r'después\s+de\s+las?\s+\d',
+                    r'a\s+las?\s+\d',
+                    r'lo\s+puedes?\s+encontrar',
+                    r'lo\s+encuentras?',
+                    r'está\s+después',
+                    r'viene\s+después',
+                    r'llega\s+a\s+las',
+                    r'regresa\s+a\s+las',
+                    r'no\s+está.*pero',
+                ]
+
+                cliente_dio_horario = any(re.search(p, ultimo_cliente) for p in patrones_horario)
+
+                # Si cliente dio horario pero Bruce no responde sobre eso
+                if cliente_dio_horario:
+                    # Verificar si la respuesta de Bruce menciona el horario o reprogramación
+                    menciona_horario = any(word in respuesta_lower for word in [
+                        'mediodía', 'tarde', 'hora', 'llamar', 'comunic', 'anotado', 'perfecto'
+                    ])
+
+                    if not menciona_horario:
+                        print(f"\n🚨 FIX 227: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
+                        print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                        respuesta = "Perfecto, anotado. Le llamo entonces en ese horario. Muchas gracias por la información."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
