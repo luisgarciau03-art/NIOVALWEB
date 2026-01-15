@@ -1366,7 +1366,7 @@ def procesar_respuesta():
     # FIX 212/217/218/219: Verificar si hay transcripción de Deepgram disponible
     # FIX 219: Reducir wait a 300ms - si Deepgram no responde rápido, usar Whisper
     import time
-    max_wait_deepgram = 0.3  # FIX 219: Reducido de 1s a 300ms (evitar sumar latencia)
+    max_wait_deepgram = 2.0  # FIX 232: Aumentado de 0.3s a 2s - Deepgram tarda ~4s, mejor esperar que usar Whisper con basura
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
 
@@ -1435,19 +1435,53 @@ def procesar_respuesta():
         )
 
         if transcripcion_whisper:
-            usar_whisper = True
-            speech_original_twilio = speech_result  # Guardar transcripción de Twilio para comparación
-            speech_result = transcripcion_whisper  # Usar Whisper como principal
+            # FIX 233: Filtrar transcripciones basura de Whisper
+            # Cuando hay silencio o ruido, Whisper inventa texto como subtítulos de películas
+            transcripciones_basura = [
+                "subtítulos realizados por la comunidad de amara.org",
+                "subtítulos por la comunidad de amara.org",
+                "subtitulos realizados por la comunidad",
+                "gracias por ver el video",
+                "suscríbete al canal",
+                "like y suscríbete",
+                "muchas gracias por ver",
+                "nos vemos en el siguiente video",
+                "hasta la próxima",
+                "transcripción realizada por",
+                "audio no disponible",
+                "silencio",
+                "...",
+                "[música]",
+                "[aplausos]",
+                "[risas]",
+            ]
 
-            # Log de comparación (útil para validar mejora)
-            if speech_original_twilio:
-                print(f"\n📊 FIX 60: COMPARACIÓN DE TRANSCRIPCIONES:")
-                print(f"   🔵 Twilio: '{speech_original_twilio}'")
-                print(f"   🟢 Whisper: '{transcripcion_whisper}'")
-                if speech_original_twilio.lower() != transcripcion_whisper.lower():
-                    print(f"   ⚠️  DIFERENCIAS DETECTADAS - Whisper será más preciso")
+            transcripcion_lower = transcripcion_whisper.lower().strip()
+            es_basura = any(basura in transcripcion_lower for basura in transcripciones_basura)
+
+            # También detectar si es muy corto y sin sentido
+            if len(transcripcion_whisper.strip()) < 3:
+                es_basura = True
+
+            if es_basura:
+                print(f"\n🚫 FIX 233: Transcripción BASURA detectada de Whisper: '{transcripcion_whisper}'")
+                print(f"   Ignorando y esperando entrada válida del cliente...")
+                # NO usar esta transcripción - retornar TwiML para seguir escuchando
+                transcripcion_whisper = None
             else:
-                print(f"   ℹ️  Solo Whisper disponible (Twilio no transcribió)")
+                usar_whisper = True
+                speech_original_twilio = speech_result  # Guardar transcripción de Twilio para comparación
+                speech_result = transcripcion_whisper  # Usar Whisper como principal
+
+                # Log de comparación (útil para validar mejora)
+                if speech_original_twilio:
+                    print(f"\n📊 FIX 60: COMPARACIÓN DE TRANSCRIPCIONES:")
+                    print(f"   🔵 Twilio: '{speech_original_twilio}'")
+                    print(f"   🟢 Whisper: '{transcripcion_whisper}'")
+                    if speech_original_twilio.lower() != transcripcion_whisper.lower():
+                        print(f"   ⚠️  DIFERENCIAS DETECTADAS - Whisper será más preciso")
+                else:
+                    print(f"   ℹ️  Solo Whisper disponible (Twilio no transcribió)")
         else:
             print(f"   ⚠️  Whisper falló - fallback a transcripción de Twilio")
     elif not OPENAI_API_KEY:
