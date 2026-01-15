@@ -1286,7 +1286,7 @@ def webhook_voz():
     response.record(
         action="/procesar-respuesta",
         method="POST",
-        max_length=3,  # FIX 223: Reducido de 30s a 10s máximo
+        max_length=2,  # FIX 223: Reducido de 30s a 10s máximo
         timeout=2,  # FIX 223: 2s de silencio = fin
         play_beep=False,
         trim="trim-silence",
@@ -1784,7 +1784,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=3,
+                max_length=2,
                 timeout=2,  # FIX 215: Reducido de 8s a 2s
                 play_beep=False,
                 trim="trim-silence"
@@ -1810,7 +1810,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=3,
+                max_length=2,
                 timeout=3,  # FIX 215: Reducido de 8s a 3s
                 play_beep=False,
                 trim="trim-silence"
@@ -1831,7 +1831,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=3,
+                max_length=2,
                 timeout=20,  # 20s para transferencia
                 play_beep=False,
                 trim="trim-silence"
@@ -1881,7 +1881,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=3,
+                max_length=2,
                 timeout=3,  # FIX 215: Reducido de 10s a 3s
                 play_beep=False,
                 trim="trim-silence"
@@ -2592,7 +2592,7 @@ def procesar_respuesta():
     response.record(
         action="/procesar-respuesta",
         method="POST",
-        max_length=3,  # FIX 223: Reducido de 30s a 10s máximo
+        max_length=2,  # FIX 223: Reducido de 30s a 10s máximo
         timeout=timeout_gather,  # FIX 116: Timeout progresivo según num_mensajes
         play_beep=False,
         trim="trim-silence"
