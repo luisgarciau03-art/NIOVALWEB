@@ -1898,7 +1898,7 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 5 (FIX 235): Cliente dice "permítame/espere" - protocolo espera
+        # FILTRO 5 (FIX 235/237): Cliente dice "permítame/espere" - protocolo espera
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
@@ -1909,20 +1909,22 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Patrones que indican que cliente pide esperar
+                # FIX 237: Patrones más completos que indican que cliente pide esperar
                 patrones_espera = [
                     r'perm[ií]t[ae]me', r'perm[ií]tame',
+                    r'me\s+permite', r'me\s+permites',
                     r'esp[eé]r[ae]me', r'espera',
                     r'un\s+momento', r'un\s+segundito', r'un\s+segundo',
                     r'dame\s+chance', r'd[ée]jame',
                     r'aguanta', r'tantito',
+                    r'\bahorita\b',  # Solo "ahorita" como palabra completa
                 ]
 
                 cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
 
                 if cliente_pide_espera:
-                    print(f"\n⏳ FIX 235: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
-                    respuesta = "Claro, con gusto espero."
+                    print(f"\n⏳ FIX 235/237: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
+                    respuesta = "Claro, espero."
                     filtro_aplicado = True
                     print(f"   Respuesta: \"{respuesta}\"")
 
@@ -2644,16 +2646,22 @@ Ejemplo correcto:
         # FIX 81: DEBUG - Si llegamos aquí, NO se detectó ninguna objeción
         print(f"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.")
 
-        # FIX 170: Detectar cuando cliente va a PASAR al encargado (AHORA)
+        # FIX 170/237: Detectar cuando cliente va a PASAR al encargado (AHORA)
         # Estas frases indican transferencia INMEDIATA, NO futura
         patrones_transferencia_inmediata = [
             # Transferencia directa
             "te puedo pasar", "te paso", "le paso", "se lo paso",
             "te lo paso", "ahorita te lo paso", "te comunico",
             "me lo comunica", "me lo pasa", "pásamelo",
-            # Solicitud de espera
+            # FIX 237: Solicitud de espera - agregados más patrones
             "dame un momento", "espera un momento", "espérame", "un segundito",
             "permíteme", "permiteme", "déjame ver", "dejame ver",
+            "un momento",  # FIX 237: Solo "un momento" sin prefijo
+            "un segundo",  # FIX 237
+            "tantito",     # FIX 237: Mexicanismo
+            "ahorita",     # FIX 237: Cuando dice solo "ahorita" (va a hacer algo)
+            "me permite",  # FIX 237
+            "me permites", # FIX 237
             # Confirmación de disponibilidad + acción
             "sí está aquí", "está aquí", "está disponible",
             "ya viene", "ahorita viene", "está por aquí"
@@ -2714,6 +2722,39 @@ Ejemplo correcto:
 
                     print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
                     return respuesta_espera
+
+        # FIX 238: Detectar cuando encargado LLEGA después de esperar
+        # Si estábamos esperando transferencia y cliente dice "¿Bueno?" = encargado llegó
+        if self.esperando_transferencia:
+            patrones_encargado_llego = [
+                "bueno", "sí", "si", "diga", "hola", "alo", "aló",
+                "qué pasó", "que paso", "mande", "a ver"
+            ]
+
+            # Limpiar respuesta para comparar
+            respuesta_limpia = respuesta_lower.strip().replace("¿", "").replace("?", "").strip()
+
+            encargado_llego = any(patron == respuesta_limpia or patron in respuesta_limpia.split()
+                                  for patron in patrones_encargado_llego)
+
+            if encargado_llego:
+                print(f"\n📞 FIX 238: ENCARGADO LLEGÓ después de esperar")
+                print(f"   Cliente dijo: '{respuesta_cliente}'")
+                print(f"   Bruce estaba esperando transferencia")
+
+                # Reset flag de transferencia
+                self.esperando_transferencia = False
+
+                # Respuesta corta de presentación (ya nos presentamos antes)
+                respuesta_encargado = "Sí, buen día. Soy Bruce de la marca NIOVAL, productos de ferretería. ¿Usted es el encargado de compras?"
+
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_encargado
+                })
+
+                print(f"✅ FIX 238: Bruce se presenta al encargado")
+                return respuesta_encargado
 
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)
