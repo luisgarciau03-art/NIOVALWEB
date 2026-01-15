@@ -1,6 +1,7 @@
 """
 Adaptador específico para el Spreadsheet de NIOVAL
-Conecta con la hoja "LISTA DE CONTACTOS" existente
+Conecta con la hoja "Bruce" (antes "LISTA DE CONTACTOS")
+FIX 213: Renombrado de hoja 2026-01-14
 """
 
 import gspread
@@ -19,7 +20,8 @@ class NiovalSheetsAdapter:
         # Credenciales y configuración
         self.credentials_file = "C:\\Users\\PC 1\\bubbly-subject-412101-c969f4a975c5.json"
         self.spreadsheet_url = "https://docs.google.com/spreadsheets/d/1wgEentS16hJrcf6YdEnSpEBcp4SCBJ9TkOCZY439jV4/edit"
-        self.hoja_nombre = "LISTA DE CONTACTOS"
+        # FIX 213: Cambio de nombre de hoja "LISTA DE CONTACTOS" -> "Bruce"
+        self.hoja_nombre = "Bruce"
 
         # Definir alcances
         self.scopes = [
@@ -82,7 +84,7 @@ class NiovalSheetsAdapter:
             raise
 
     def _obtener_hoja_contactos(self):
-        """Obtiene la hoja LISTA DE CONTACTOS"""
+        """Obtiene la hoja Bruce (contactos)"""
         try:
             hoja = self.spreadsheet.worksheet(self.hoja_nombre)
             print(f"✅ Hoja encontrada: {self.hoja_nombre}")
@@ -738,6 +740,6 @@ if __name__ == "__main__":
         print("\n💡 Verifica:")
         print("   1. Que el archivo bubbly-subject-412101-c969f4a975c5.json existe")
         print("   2. Que el Service Account tiene acceso al spreadsheet")
-        print("   3. Que la hoja 'LISTA DE CONTACTOS' existe")
+        print("   3. Que la hoja 'Bruce' existe")
 
     print("\n" + "=" * 60)
