@@ -2327,25 +2327,42 @@ Ejemplo correcto:
             "ya viene", "ahorita viene", "está por aquí"
         ]
 
-        for patron in patrones_transferencia_inmediata:
-            if patron in respuesta_lower:
-                print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
-                print(f"   Patrón detectado: '{patron}'")
-                print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+        # FIX 216: Patrones que INVALIDAN la transferencia (negaciones)
+        # Si el cliente dice "NO está disponible", NO es transferencia
+        patrones_negacion = [
+            "no está disponible", "no esta disponible",
+            "no está aquí", "no esta aquí", "no esta aqui",
+            "no se encuentra", "no lo encuentro", "no la encuentro",
+            "no viene", "no va a venir", "no puede", "no hay nadie"
+        ]
 
-                # Marcar flag de transferencia
-                self.esperando_transferencia = True
+        # FIX 216: Primero verificar si hay negación
+        hay_negacion = any(neg in respuesta_lower for neg in patrones_negacion)
 
-                # Respuesta simple de espera
-                respuesta_espera = "Claro, espero."
+        if hay_negacion:
+            print(f"🚫 FIX 216: Detectada NEGACIÓN - NO es transferencia")
+            print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+            # NO retornar "Claro, espero" - continuar con flujo normal
+        else:
+            for patron in patrones_transferencia_inmediata:
+                if patron in respuesta_lower:
+                    print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
+                    print(f"   Patrón detectado: '{patron}'")
+                    print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
-                self.conversation_history.append({
-                    "role": "assistant",
-                    "content": respuesta_espera
-                })
+                    # Marcar flag de transferencia
+                    self.esperando_transferencia = True
 
-                print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
-                return respuesta_espera
+                    # Respuesta simple de espera
+                    respuesta_espera = "Claro, espero."
+
+                    self.conversation_history.append({
+                        "role": "assistant",
+                        "content": respuesta_espera
+                    })
+
+                    print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
+                    return respuesta_espera
 
         # Extraer información clave de la respuesta
         self._extraer_datos(respuesta_cliente)

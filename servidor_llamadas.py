@@ -2473,10 +2473,11 @@ def procesar_respuesta():
             "en un momento", "en un rato", "más tarde", "después te llamo",
             "luego te marco", "luego le marco", "te llamo luego", "le llamo luego",
 
-            # Indirectas de ocupado
+            # Indirectas de ocupado (cliente ocupado AHORA pero puede atender después)
             "está ocupado", "no puede en este momento", "no puede ahorita",
-            "está en junta", "está en una junta", "no está disponible",
+            "está en junta", "está en una junta",
             "está con un cliente", "ahorita está ocupado"
+            # FIX 216: REMOVIDO "no está disponible" - eso es rechazo, no espera
         ]
         cliente_pidio_momento = any(frase in ultimo_mensaje_cliente for frase in frases_espera)
 
