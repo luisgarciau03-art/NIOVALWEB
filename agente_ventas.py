@@ -1744,6 +1744,128 @@ class AgenteVentas:
 
         return frase
 
+    def _filtrar_respuesta_post_gpt(self, respuesta: str) -> str:
+        """
+        FIX 226: Filtro POST-GPT para forzar reglas que GPT no sigue consistentemente.
+
+        Problemas que resuelve:
+        1. Bruce repite el correo del cliente (riesgo de errores)
+        2. Bruce pregunta WhatsApp después de ya tener el correo
+        3. Bruce dice cosas sin sentido o números aleatorios
+
+        Args:
+            respuesta: Respuesta generada por GPT
+
+        Returns:
+            Respuesta filtrada/corregida
+        """
+        import re
+
+        respuesta_lower = respuesta.lower()
+        respuesta_original = respuesta
+        filtro_aplicado = False
+
+        # ============================================================
+        # FILTRO 1: Si ya tenemos correo, NO repetirlo ni pedir WhatsApp
+        # ============================================================
+        email_capturado = self.lead_data.get("email", "")
+        if email_capturado:
+            # Patrones que indican que Bruce está repitiendo el correo
+            patrones_repetir_correo = [
+                r'confirmar.*correo',
+                r'confirmar.*email',
+                r'confirmar.*es\s+\w+.*@',
+                r'enviar[ée].*al?\s+correo',
+                r'enviar[ée].*a\s+\w+.*@',
+                r'catálogo.*a\s+\w+.*@',
+                r'catálogo.*al?\s+correo',
+                r'@.*punto\s*com',
+                r'@.*gmail',
+                r'@.*hotmail',
+                r'@.*yahoo',
+                r'@.*outlook',
+                r'arroba',
+                r'puedo\s+confirmar',
+                r'le\s+confirmo\s+que',
+                r'es\s+correcto.*correo',
+            ]
+
+            for patron in patrones_repetir_correo:
+                if re.search(patron, respuesta_lower):
+                    print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce intentó repetir correo")
+                    print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                    respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+                    break
+
+            # Patrones que indican que Bruce pide WhatsApp cuando ya tiene correo
+            if not filtro_aplicado:
+                patrones_pedir_whatsapp = [
+                    r'whatsapp',
+                    r'wats',
+                    r'número.*celular',
+                    r'celular.*número',
+                    r'enviar.*por.*mensaje',
+                    r'mensaje.*texto',
+                    r'también.*por',
+                    r'además.*por',
+                ]
+
+                for patron in patrones_pedir_whatsapp:
+                    if re.search(patron, respuesta_lower):
+                        print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce pidió WhatsApp pero ya tiene correo")
+                        print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                        respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+                        break
+
+        # ============================================================
+        # FILTRO 2: Detectar números aleatorios/sin sentido
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si Bruce menciona un número de teléfono que no corresponde al cliente
+            numeros_en_respuesta = re.findall(r'\b\d{7,12}\b', respuesta)
+            if numeros_en_respuesta:
+                # Verificar si el número es del cliente actual
+                numero_cliente = self.lead_data.get('telefono', '') or ''
+                numero_cliente_limpio = re.sub(r'\D', '', numero_cliente)
+
+                for num in numeros_en_respuesta:
+                    if num not in numero_cliente_limpio and numero_cliente_limpio not in num:
+                        print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce mencionó número aleatorio: {num}")
+                        print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                        # Remover el número de la respuesta
+                        respuesta = re.sub(r'\b\d{7,12}\b', '', respuesta)
+                        respuesta = re.sub(r'\s+', ' ', respuesta).strip()
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 3: Respuestas muy largas o sin sentido
+        # ============================================================
+        if not filtro_aplicado:
+            # Si la respuesta es muy larga (>200 chars) y tiene patrón de repetición
+            if len(respuesta) > 200:
+                palabras = respuesta.split()
+                # Contar palabras repetidas
+                from collections import Counter
+                conteo = Counter(palabras)
+                palabras_repetidas = sum(1 for c in conteo.values() if c > 3)
+
+                if palabras_repetidas > 5:
+                    print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Respuesta con repeticiones excesivas")
+                    print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                    respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por correo electrónico?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        if filtro_aplicado:
+            print(f"✅ FIX 226: Filtro post-GPT aplicado exitosamente")
+
+        return respuesta
+
     def iniciar_conversacion(self):
         """Inicia la conversación con el mensaje de apertura"""
 
@@ -2468,6 +2590,11 @@ Ejemplo correcto:
             # Si hay frase de relleno, agregarla al inicio de la respuesta
             if frase_relleno:
                 respuesta_agente = f"{frase_relleno} {respuesta_agente}"
+
+            # ============================================================
+            # FIX 226: FILTRO POST-GPT - Forzar reglas que GPT no sigue
+            # ============================================================
+            respuesta_agente = self._filtrar_respuesta_post_gpt(respuesta_agente)
 
             # ============================================================
             # FIX 204: DETECTAR Y PREVENIR REPETICIONES IDÉNTICAS
