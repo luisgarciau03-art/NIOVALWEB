@@ -1281,14 +1281,15 @@ def webhook_voz():
     # Deepgram MediaStream ya está transcribiendo en paralelo
     from twilio.twiml.voice_response import Record
 
-    # FIX 215: Reducir timeout de 3s a 1.5s para respuesta más rápida
+    # FIX 223: Reducir max_length para evitar delays de 20-40s
+    # Problema: Cliente repite varias veces sin pausar → Record no termina
     response.record(
         action="/procesar-respuesta",
         method="POST",
-        max_length=30,  # Máximo 30 segundos por respuesta
-        timeout=1,  # FIX 215: 1s de silencio = fin (antes 3s)
-        play_beep=False,  # Sin beep (experiencia natural)
-        trim="trim-silence",  # Eliminar silencio al inicio/fin
+        max_length=10,  # FIX 223: Reducido de 30s a 10s máximo
+        timeout=2,  # FIX 223: 2s de silencio = fin
+        play_beep=False,
+        trim="trim-silence",
         recording_status_callback="/grabacion-status",
         recording_status_callback_method="POST"
     )
@@ -1783,7 +1784,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=30,
+                max_length=10,
                 timeout=2,  # FIX 215: Reducido de 8s a 2s
                 play_beep=False,
                 trim="trim-silence"
@@ -1809,7 +1810,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=30,
+                max_length=10,
                 timeout=3,  # FIX 215: Reducido de 8s a 3s
                 play_beep=False,
                 trim="trim-silence"
@@ -1830,7 +1831,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=30,
+                max_length=10,
                 timeout=20,  # 20s para transferencia
                 play_beep=False,
                 trim="trim-silence"
@@ -1880,7 +1881,7 @@ def procesar_respuesta():
             response.record(
                 action="/procesar-respuesta",
                 method="POST",
-                max_length=30,
+                max_length=10,
                 timeout=3,  # FIX 215: Reducido de 10s a 3s
                 play_beep=False,
                 trim="trim-silence"
@@ -2586,11 +2587,12 @@ def procesar_respuesta():
         audio_url = request.url_root + f"audio/{audio_id}"
         response.play(audio_url)
 
-    # FIX 214: Record para capturar respuesta del cliente (Deepgram transcribe en paralelo)
+    # FIX 214/223: Record para capturar respuesta del cliente
+    # FIX 223: max_length reducido para evitar delays
     response.record(
         action="/procesar-respuesta",
         method="POST",
-        max_length=30,  # Máximo 30 segundos por respuesta
+        max_length=10,  # FIX 223: Reducido de 30s a 10s máximo
         timeout=timeout_gather,  # FIX 116: Timeout progresivo según num_mensajes
         play_beep=False,
         trim="trim-silence"
