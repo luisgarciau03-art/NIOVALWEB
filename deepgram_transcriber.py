@@ -2,6 +2,7 @@
 """
 FIX 212: Integración de Deepgram para transcripción en tiempo real
 Reemplaza Whisper para mejor precisión (90%+) y latencia (<100ms)
+Actualizado: 2026-01-14
 
 Arquitectura:
 1. Twilio envía audio vía WebSocket (MediaStream)
