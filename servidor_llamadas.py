@@ -1362,10 +1362,10 @@ def procesar_respuesta():
     transcripcion_deepgram = None
     transcripcion_whisper = None
 
-    # FIX 212/217: Verificar si hay transcripción de Deepgram disponible
-    # FIX 217: Esperar brevemente (max 500ms) por transcripción de Deepgram antes de usar Whisper
+    # FIX 212/217/218: Verificar si hay transcripción de Deepgram disponible
+    # FIX 218: Esperar hasta 1s por Deepgram (ahora incluye parciales)
     import time
-    max_wait_deepgram = 0.5  # 500ms máximo
+    max_wait_deepgram = 1.0  # FIX 218: Aumentado a 1s (Deepgram envía parciales ahora)
     wait_interval = 0.1  # Revisar cada 100ms
     tiempo_esperado = 0
 
@@ -5196,14 +5196,31 @@ def logs_api():
 # Callback que se llama cuando Deepgram completa una transcripción
 def on_deepgram_transcript(call_sid, texto, is_final):
     """
-    Callback llamado por DeepgramTranscriber cuando hay una transcripción
+    FIX 218: Callback cuando Deepgram transcribe algo
+    Ahora maneja tanto transcripciones finales como parciales
     """
-    if is_final and texto.strip():
-        print(f"📝 FIX 212: Transcripción Deepgram para {call_sid}: '{texto}'")
-        # Guardar transcripción para que /procesar-respuesta la use
-        if call_sid not in deepgram_transcripciones:
-            deepgram_transcripciones[call_sid] = []
+    if not texto or not texto.strip():
+        return
+
+    texto = texto.strip()
+
+    if call_sid not in deepgram_transcripciones:
+        deepgram_transcripciones[call_sid] = []
+
+    if is_final:
+        # Transcripción final - agregar al array
+        print(f"📝 FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
         deepgram_transcripciones[call_sid].append(texto)
+    else:
+        # FIX 218: Transcripción parcial - reemplazar última entrada parcial
+        # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
+        if deepgram_transcripciones[call_sid]:
+            # Si la última entrada es más corta que la nueva, reemplazarla
+            ultima = deepgram_transcripciones[call_sid][-1]
+            if len(texto) > len(ultima):
+                deepgram_transcripciones[call_sid][-1] = texto
+        else:
+            deepgram_transcripciones[call_sid].append(texto)
 
 
 # WebSocket handler para recibir audio de Twilio

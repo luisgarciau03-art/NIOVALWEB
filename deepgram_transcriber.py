@@ -78,19 +78,22 @@ class DeepgramTranscriber:
         try:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
 
-            # Configuración optimizada para llamadas telefónicas en español MX
+            # FIX 218: Configuración OPTIMIZADA para llamadas telefónicas en español MX
+            # Objetivo: Reducir latencia y mejorar precisión
             options = LiveOptions(
-                model="nova-2",  # Modelo más preciso
+                model="nova-2",  # Modelo más preciso para español
                 language="es-419",  # Español Latinoamérica
                 encoding="mulaw",  # Formato de audio de Twilio
                 sample_rate=8000,  # Frecuencia de Twilio
                 channels=1,
                 punctuate=True,  # Agregar puntuación
-                interim_results=True,  # Resultados parciales para baja latencia
-                endpointing=300,  # 300ms de silencio = fin de frase
-                utterance_end_ms=1000,  # 1s máximo por utterance
+                interim_results=True,  # FIX 218: Resultados parciales para baja latencia
+                endpointing=200,  # FIX 218: Reducido de 300ms a 200ms para respuesta más rápida
+                utterance_end_ms=800,  # FIX 218: Reducido de 1000ms a 800ms
                 vad_events=True,  # Detección de actividad de voz
-                smart_format=True,  # Formato inteligente (números, fechas)
+                smart_format=True,  # Formato inteligente (números, fechas, WhatsApp)
+                filler_words=False,  # FIX 218: Ignorar muletillas ("eh", "um")
+                numerals=True,  # FIX 218: Convertir números hablados a dígitos
             )
 
             # Crear conexión de streaming
@@ -149,6 +152,7 @@ class DeepgramTranscriber:
 
             if is_final:
                 self.final_transcripts.append(transcript)
+                self.transcript_buffer = ""  # Limpiar buffer al recibir final
                 print(f"📝 FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms)")
 
                 # Llamar callback con transcripción final
@@ -156,11 +160,13 @@ class DeepgramTranscriber:
                     self.on_transcript_callback(self.call_sid, transcript, True)
             else:
                 self.transcript_buffer = transcript
-                print(f"📝 FIX 212: [PARCIAL] '{transcript}'")
+                # FIX 218: Solo loguear parciales largos para reducir spam
+                if len(transcript) > 10:
+                    print(f"📝 FIX 212: [PARCIAL] '{transcript}'")
 
-                # Llamar callback con transcripción parcial (opcional)
-                # if self.on_transcript_callback:
-                #     self.on_transcript_callback(self.call_sid, transcript, False)
+                # FIX 218: Llamar callback con transcripción parcial para tener datos más rápido
+                if self.on_transcript_callback and len(transcript) > 5:
+                    self.on_transcript_callback(self.call_sid, transcript, False)
 
         except Exception as e:
             print(f"❌ FIX 212: Error procesando transcripción: {e}")
