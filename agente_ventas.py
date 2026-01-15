@@ -1862,8 +1862,72 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 4 (FIX 231): Detectar cuando cliente quiere dar correo
-        # PRIORIDAD ALTA - antes del FIX 228
+        # FILTRO 4 (FIX 234): Cliente dice "¿Bueno?" repetidamente - no escuchó
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Detectar si el cliente solo dice "bueno" repetido (no escuchó)
+                patron_bueno_repetido = r'^[\s\?\¿]*bueno[\s\?\¿]*(?:bueno[\s\?\¿]*)*$'
+                solo_dice_bueno = bool(re.match(patron_bueno_repetido, ultimo_cliente.strip()))
+
+                # También detectar variaciones
+                patrones_no_escucho = [
+                    r'^\s*\¿?\s*bueno\s*\??\s*$',  # Solo "¿Bueno?"
+                    r'bueno.*bueno.*bueno',  # "¿Bueno? ¿Bueno? ¿Bueno?"
+                    r'^\s*\¿?\s*hola\s*\??\s*$',  # Solo "¿Hola?"
+                    r'^\s*\¿?\s*s[ií]\s*\??\s*$',  # Solo "¿Sí?"
+                    r'^\s*\¿?\s*alo\s*\??\s*$',  # Solo "¿Aló?"
+                    r'^\s*\¿?\s*diga\s*\??\s*$',  # Solo "¿Diga?"
+                ]
+
+                cliente_no_escucho = solo_dice_bueno or any(re.search(p, ultimo_cliente) for p in patrones_no_escucho)
+
+                # Si Bruce iba a repetir la presentación completa, mejor confirmar presencia
+                if cliente_no_escucho and 'nioval' in respuesta_lower:
+                    print(f"\n📞 FIX 234: FILTRO ACTIVADO - Cliente no escuchó, dice '{ultimo_cliente}'")
+                    print(f"   Bruce iba a repetir presentación")
+                    respuesta = "Sí, ¿me escucha? Le llamo de la marca NIOVAL."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 5 (FIX 235): Cliente dice "permítame/espere" - protocolo espera
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-2:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones que indican que cliente pide esperar
+                patrones_espera = [
+                    r'perm[ií]t[ae]me', r'perm[ií]tame',
+                    r'esp[eé]r[ae]me', r'espera',
+                    r'un\s+momento', r'un\s+segundito', r'un\s+segundo',
+                    r'dame\s+chance', r'd[ée]jame',
+                    r'aguanta', r'tantito',
+                ]
+
+                cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
+
+                if cliente_pide_espera:
+                    print(f"\n⏳ FIX 235: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
+                    respuesta = "Claro, con gusto espero."
+                    filtro_aplicado = True
+                    print(f"   Respuesta: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 6 (FIX 231): Detectar cuando cliente quiere dar correo
         # ============================================================
         if not filtro_aplicado:
             # Ver último mensaje del cliente
@@ -1907,38 +1971,37 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 5 (FIX 228): Evitar repetir el saludo/presentación
+        # FILTRO 7 (FIX 228/236): Evitar repetir el saludo/presentación
         # ============================================================
         if not filtro_aplicado:
             # Patrones que indican que Bruce está repitiendo el saludo
             patrones_saludo_repetido = [
                 r'me\s+comunico\s+de\s+(la\s+)?marca\s+nioval',
                 r'quería\s+brindar\s+informaci[oó]n',
-                r'productos\s+ferreter[oíi]',
+                r'productos\s+(de\s+)?ferreter[oíi]',
                 r'se\s+encontrar[aá]\s+el\s+encargad[oa]',
-                # REMOVIDO: r'encargad[oa]\s+de\s+compras' - causaba falsos positivos
             ]
 
             # Verificar si ya dijimos algo similar antes
             ultimos_mensajes_bruce = [
-                msg['content'].lower() for msg in self.conversation_history[-4:]
+                msg['content'].lower() for msg in self.conversation_history[-6:]
                 if msg['role'] == 'assistant'
             ]
 
             for patron in patrones_saludo_repetido:
                 if re.search(patron, respuesta_lower):
-                    # Verificar si ya lo dijimos
-                    ya_dicho = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce[:-1])
+                    # FIX 236: Buscar en TODOS los mensajes anteriores, no solo los últimos
+                    ya_dicho = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
                     if ya_dicho:
-                        print(f"\n🚨 FIX 228: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
+                        print(f"\n🚨 FIX 228/236: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
-                        respuesta = "Disculpe, ¿me decía algo? Estoy aquí para ayudarle."
+                        respuesta = "¿Me escucha? Estoy aquí para ayudarle."
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                         break
 
         # ============================================================
-        # FILTRO 6 (FIX 227): Detectar horarios y responder apropiadamente
+        # FILTRO 8 (FIX 227): Detectar horarios y responder apropiadamente
         # ============================================================
         if not filtro_aplicado:
             # Ver si el último mensaje del cliente mencionó horarios
