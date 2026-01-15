@@ -78,8 +78,8 @@ class DeepgramTranscriber:
         try:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
 
-            # FIX 218: Configuración OPTIMIZADA para llamadas telefónicas en español MX
-            # Objetivo: Reducir latencia y mejorar precisión
+            # FIX 222: Configuración SIMPLIFICADA para evitar HTTP 400
+            # Algunos parámetros pueden no estar disponibles para es-419
             options = LiveOptions(
                 model="nova-2",  # Modelo más preciso para español
                 language="es-419",  # Español Latinoamérica
@@ -87,13 +87,14 @@ class DeepgramTranscriber:
                 sample_rate=8000,  # Frecuencia de Twilio
                 channels=1,
                 punctuate=True,  # Agregar puntuación
-                interim_results=True,  # FIX 218: Resultados parciales para baja latencia
-                endpointing=200,  # FIX 218: Reducido de 300ms a 200ms para respuesta más rápida
-                utterance_end_ms=800,  # FIX 218: Reducido de 1000ms a 800ms
-                vad_events=True,  # Detección de actividad de voz
-                smart_format=True,  # Formato inteligente (números, fechas, WhatsApp)
-                filler_words=False,  # FIX 218: Ignorar muletillas ("eh", "um")
-                numerals=True,  # FIX 218: Convertir números hablados a dígitos
+                interim_results=True,  # Resultados parciales para baja latencia
+                endpointing=300,  # FIX 222: Volver a 300ms (más estable)
+                smart_format=True,  # Formato inteligente
+                # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
+                # - utterance_end_ms (puede no estar soportado)
+                # - vad_events (puede no estar soportado)
+                # - filler_words (puede no estar soportado para es-419)
+                # - numerals (puede no estar soportado para es-419)
             )
 
             # Crear conexión de streaming
@@ -105,17 +106,23 @@ class DeepgramTranscriber:
             self.dg_connection.on(LiveTranscriptionEvents.Error, self._on_error)
             self.dg_connection.on(LiveTranscriptionEvents.Close, self._on_close)
 
-            # Iniciar conexión
-            if self.dg_connection.start(options):
+            # FIX 222: Iniciar conexión con mejor manejo de errores
+            print(f"🔄 FIX 222: Iniciando conexión Deepgram...")
+            print(f"   Opciones: model={options.model}, language={options.language}, encoding={options.encoding}")
+
+            result = self.dg_connection.start(options)
+            if result:
                 self.is_connected = True
                 print(f"✅ FIX 212: Deepgram conectado para CallSid: {self.call_sid}")
                 return True
             else:
-                print(f"❌ FIX 212: Error al iniciar conexión Deepgram")
+                print(f"❌ FIX 222: Deepgram.start() retornó False")
                 return False
 
         except Exception as e:
-            print(f"❌ FIX 212: Error conectando a Deepgram: {e}")
+            import traceback
+            print(f"❌ FIX 222: Error conectando a Deepgram: {type(e).__name__}: {e}")
+            traceback.print_exc()
             return False
 
     def _on_open(self, *args, **kwargs):
