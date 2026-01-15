@@ -1862,7 +1862,52 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 4 (FIX 228): Evitar repetir el saludo/presentación
+        # FILTRO 4 (FIX 231): Detectar cuando cliente quiere dar correo
+        # PRIORIDAD ALTA - antes del FIX 228
+        # ============================================================
+        if not filtro_aplicado:
+            # Ver último mensaje del cliente
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones que indican que el cliente quiere dar su correo
+                patrones_dar_correo = [
+                    r'correo\s+electr[oó]nico',
+                    r'por\s+correo',
+                    r'mi\s+correo',
+                    r'el\s+correo',
+                    r'te\s+(doy|paso)\s+(el\s+)?correo',
+                    r'le\s+(doy|paso)\s+(el\s+)?correo',
+                    r'anota\s+(el\s+)?correo',
+                    r'apunta\s+(el\s+)?correo',
+                    r'email',
+                    r'mail',
+                    r'@',  # Si menciona arroba
+                ]
+
+                cliente_quiere_dar_correo = any(re.search(p, ultimo_cliente) for p in patrones_dar_correo)
+
+                # Verificar que Bruce no está pidiendo el correo apropiadamente
+                bruce_pide_correo = any(word in respuesta_lower for word in [
+                    'cuál es', 'cual es', 'dígame', 'digame', 'adelante', 'escucho',
+                    'anoto', 'me dice', 'por favor', 'correo'
+                ])
+
+                if cliente_quiere_dar_correo and not bruce_pide_correo:
+                    print(f"\n📧 FIX 231: FILTRO ACTIVADO - Cliente quiere dar correo")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Claro, dígame su correo electrónico por favor."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 5 (FIX 228): Evitar repetir el saludo/presentación
         # ============================================================
         if not filtro_aplicado:
             # Patrones que indican que Bruce está repitiendo el saludo
@@ -1871,7 +1916,7 @@ class AgenteVentas:
                 r'quería\s+brindar\s+informaci[oó]n',
                 r'productos\s+ferreter[oíi]',
                 r'se\s+encontrar[aá]\s+el\s+encargad[oa]',
-                r'encargad[oa]\s+de\s+compras',
+                # REMOVIDO: r'encargad[oa]\s+de\s+compras' - causaba falsos positivos
             ]
 
             # Verificar si ya dijimos algo similar antes
@@ -1893,7 +1938,7 @@ class AgenteVentas:
                         break
 
         # ============================================================
-        # FILTRO 5 (FIX 227): Detectar horarios y responder apropiadamente
+        # FILTRO 6 (FIX 227): Detectar horarios y responder apropiadamente
         # ============================================================
         if not filtro_aplicado:
             # Ver si el último mensaje del cliente mencionó horarios
