@@ -1375,14 +1375,45 @@ def procesar_respuesta():
             if call_sid in deepgram_transcripciones:
                 transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
                 if transcripciones_dg:
-                    # FIX 239: Si hay múltiples transcripciones acumuladas, usar solo la última
-                    # Esto evita concatenar mensajes de diferentes momentos de la llamada
+                    # FIX 239/242: Manejo inteligente de múltiples transcripciones
                     if len(transcripciones_dg) > 1:
-                        print(f"⚠️ FIX 239: {len(transcripciones_dg)} transcripciones acumuladas - usando solo la última")
+                        print(f"⚠️ FIX 239/242: {len(transcripciones_dg)} transcripciones acumuladas")
                         for i, t in enumerate(transcripciones_dg):
                             print(f"   [{i}] '{t}'")
-                        # Usar solo la última transcripción (la más reciente)
-                        transcripcion_deepgram = transcripciones_dg[-1]
+
+                        # FIX 242: Buscar la transcripción más completa
+                        # Si una transcripción contiene a las otras, es la más completa
+                        transcripcion_mas_larga = max(transcripciones_dg, key=len)
+
+                        # Verificar si la más larga contiene partes de las otras
+                        todas_contenidas = all(
+                            t.lower() in transcripcion_mas_larga.lower() or
+                            transcripcion_mas_larga.lower() in t.lower() or
+                            len(t) < 10  # Fragmentos muy cortos probablemente están contenidos
+                            for t in transcripciones_dg
+                        )
+
+                        if todas_contenidas:
+                            # Una transcripción ya tiene todo
+                            transcripcion_deepgram = transcripcion_mas_larga
+                            print(f"   ✅ FIX 242: Usando transcripción más completa: '{transcripcion_deepgram}'")
+                        else:
+                            # Son frases diferentes - concatenar manteniendo orden
+                            # Pero evitar duplicados (una contenida en otra)
+                            partes_unicas = []
+                            for t in transcripciones_dg:
+                                # Verificar si esta parte ya está contenida en alguna anterior
+                                ya_contenida = any(t.lower() in p.lower() for p in partes_unicas)
+                                # O si alguna anterior está contenida en esta (reemplazar)
+                                if not ya_contenida:
+                                    # Verificar si esta nueva contiene a alguna existente
+                                    partes_a_remover = [p for p in partes_unicas if p.lower() in t.lower()]
+                                    for p in partes_a_remover:
+                                        partes_unicas.remove(p)
+                                    partes_unicas.append(t)
+
+                            transcripcion_deepgram = " ".join(partes_unicas)
+                            print(f"   🔄 FIX 242: Concatenando partes únicas: '{transcripcion_deepgram}'")
                     else:
                         transcripcion_deepgram = transcripciones_dg[0]
 

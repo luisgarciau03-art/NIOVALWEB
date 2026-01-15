@@ -2056,8 +2056,81 @@ class AgenteVentas:
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 9 (FIX 241): Cliente menciona sucursal o ofrece teléfono de referencia
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones que indican que el cliente menciona sucursal o va a pasar teléfono
+                patrones_referencia_telefono = [
+                    r'(?:sucursal|otra\s+tienda|otra\s+sede)',  # Es sucursal
+                    r'(?:te\s+paso|le\s+paso|ah[ií]\s+te\s+paso)\s+(?:un\s+)?tel[eé]fono',  # Te paso un teléfono
+                    r'(?:llam[ae]|marca|habla)\s+a\s+(?:este|otro|al)\s+n[uú]mero',  # Llama a este número
+                    r'(?:te\s+doy|le\s+doy)\s+(?:un|el|otro)\s+tel[eé]fono',  # Te doy un teléfono
+                    r'(?:anota|apunta)\s+(?:el|este)\s+(?:n[uú]mero|tel[eé]fono)',  # Anota este número
+                ]
+
+                cliente_ofrece_telefono = any(re.search(p, ultimo_cliente) for p in patrones_referencia_telefono)
+
+                # Verificar que Bruce NO está pidiendo el número apropiadamente
+                bruce_pide_numero = any(word in respuesta_lower for word in [
+                    'cuál es', 'cual es', 'dígame', 'digame', 'adelante', 'anoto',
+                    'me dice', 'número', 'numero', 'teléfono', 'telefono', 'listo'
+                ])
+
+                if cliente_ofrece_telefono and not bruce_pide_numero:
+                    print(f"\n📞 FIX 241: FILTRO ACTIVADO - Cliente ofrece teléfono/sucursal")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Perfecto, dígame el número y lo anoto para llamar."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 10 (FIX 242): Cliente pregunta "¿de qué estado eres/son?"
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones que indican que el cliente pregunta por la ubicación/estado
+                patrones_ubicacion = [
+                    r'(?:qu[eé]\s+)?estado',  # "de qué estado" o "estado"
+                    r'd[oó]nde\s+(?:est[aá][ns]?|son|eres)',  # "de dónde son/están/eres"
+                    r'(?:de\s+)?d[oó]nde\s+(?:me\s+)?(?:llam|habl)',  # "de dónde me llaman"
+                    r'ubicaci[oó]n',  # "ubicación"
+                    r'(?:de\s+)?qu[eé]\s+(?:parte|ciudad|lugar)',  # "de qué parte/ciudad"
+                ]
+
+                cliente_pregunta_ubicacion = any(re.search(p, ultimo_cliente) for p in patrones_ubicacion)
+
+                # Verificar que Bruce NO está respondiendo sobre ubicación
+                bruce_responde_ubicacion = any(word in respuesta_lower for word in [
+                    'guadalajara', 'jalisco', 'ubicado', 'ubicados', 'estamos en', 'somos de'
+                ])
+
+                if cliente_pregunta_ubicacion and not bruce_responde_ubicacion:
+                    print(f"\n📍 FIX 242: FILTRO ACTIVADO - Cliente pregunta ubicación")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República. ¿En qué zona se encuentra usted?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
@@ -3489,6 +3562,12 @@ IMPORTANTE:
             r'(?:te puedo pasar|puedo pasar|puedo dar|te puedo dar)\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te puedo pasar su contacto" o "puedo pasar contacto"
             r'(?:le doy|te doy)\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te doy su número" o "te doy contacto"
             r'(?:te pas[oó]|le pas[oó])\s+(?:el |su )?\s*(?:contacto|n[uú]mero)',  # "te paso/pasó su número" o "te pasó contacto"
+
+            # FIX 241: Patrones adicionales para detectar ofrecimiento de teléfono
+            r'(?:te pas[oó]|le pas[oó]|ah[ií] te paso)\s+(?:un |el )?tel[eé]fono',  # "ahí te paso un teléfono"
+            r'(?:te doy|le doy)\s+(?:un |el |otro )?tel[eé]fono',  # "te doy un teléfono"
+            r'(?:llam[ae]|marca|habla)\s+(?:a |al )?(?:este |otro |al )?(?:n[uú]mero|tel[eé]fono)',  # "llama a este número"
+            r'(?:sucursal|otra tienda|otra sede)',  # "es una sucursal" - cliente sugiere llamar a otro lado
         ]
 
         for patron in patrones_referencia:
