@@ -2166,8 +2166,66 @@ class AgenteVentas:
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 12 (FIX 245): Validar número telefónico incompleto
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes = [
+                msg for msg in self.conversation_history[-4:]
+                if msg['role'] in ['user', 'assistant']
+            ]
+
+            if len(ultimos_mensajes) >= 2:
+                # Revisar si Bruce pidió un número de teléfono/WhatsApp/referencia
+                ultimo_bruce = ""
+                ultimo_cliente = ""
+
+                for msg in reversed(ultimos_mensajes):
+                    if msg['role'] == 'assistant' and not ultimo_bruce:
+                        ultimo_bruce = msg['content'].lower()
+                    elif msg['role'] == 'user' and not ultimo_cliente:
+                        ultimo_cliente = msg['content'].lower()
+
+                # Detectar si Bruce pidió número
+                bruce_pidio_numero = any(kw in ultimo_bruce for kw in [
+                    'número', 'numero', 'teléfono', 'telefono', 'whatsapp',
+                    'celular', 'dígame el número', 'digame el numero',
+                    'cuál es el número', 'cual es el numero'
+                ])
+
+                if bruce_pidio_numero and ultimo_cliente:
+                    # Extraer dígitos del mensaje del cliente
+                    digitos = re.findall(r'\d', ultimo_cliente)
+                    num_digitos = len(digitos)
+
+                    print(f"\n🔢 FIX 245 DEBUG: Cliente dio número con {num_digitos} dígitos")
+                    print(f"   Dígitos extraídos: {''.join(digitos)}")
+                    print(f"   Mensaje completo: \"{ultimo_cliente[:80]}...\"")
+
+                    # Números telefónicos en México tienen 10 dígitos
+                    # Números con lada internacional (52) tienen 12 dígitos
+                    numero_completo = num_digitos == 10 or num_digitos == 12
+
+                    # Verificar que Bruce NO está pidiendo repetición del número
+                    bruce_pide_repeticion = any(word in respuesta_lower for word in [
+                        'repetir', 'repita', 'de nuevo', 'otra vez', 'completo',
+                        'no escuché bien', 'no escuche bien', 'puede repetir'
+                    ])
+
+                    if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion:
+                        print(f"\n📞 FIX 245: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+
+                        if num_digitos < 10:
+                            respuesta = f"Disculpe, solo escuché {num_digitos} dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+                        else:  # num_digitos entre 11 y 11 (no es 10 ni 12)
+                            respuesta = "Disculpe, me puede repetir el número completo? Creo que faltó un dígito."
+
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
