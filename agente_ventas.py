@@ -1934,12 +1934,16 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # FIX 249: Detectar negaciones/rechazos que invalidan "ahorita"
+                # FIX 249/256: Detectar negaciones/rechazos que invalidan "ahorita"
                 # Si cliente dice "ahorita tenemos cerrado", NO es espera
                 patrones_negacion = [
                     r'cerrado', r'no\s+est[aá]', r'no\s+se\s+encuentra',
                     r'no\s+hay', r'no\s+tenemos', r'no\s+puede',
-                    r'ocupado', r'no\s+disponible'
+                    r'ocupado', r'no\s+disponible',
+                    # FIX 256: Patrones específicos para encargado
+                    r'(?:encargado|jefe|gerente).*(?:no\s+est[aá]|sali[oó]|se\s+fue)',
+                    r'(?:no\s+est[aá]|sali[oó]|se\s+fue).*(?:encargado|jefe|gerente)',
+                    r'ya\s+sali[oó]', r'se\s+fue', r'est[aá]\s+fuera'
                 ]
 
                 tiene_negacion = any(re.search(p, ultimo_cliente) for p in patrones_negacion)
@@ -1954,8 +1958,9 @@ class AgenteVentas:
                     r'aguanta', r'tantito',
                 ]
 
-                # FIX 249: Solo detectar "ahorita" si NO hay negación
-                if r'\bahorita\b' in ultimo_cliente and not tiene_negacion:
+                # FIX 249/256: Solo detectar "ahorita" si NO hay negación
+                # FIX 256: Corregir bug - usar regex en lugar de 'in'
+                if re.search(r'\bahorita\b', ultimo_cliente) and not tiene_negacion:
                     patrones_espera.append(r'\bahorita\b')
 
                 cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
@@ -2066,6 +2071,57 @@ class AgenteVentas:
                     respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 13 (FIX 257): Cliente dice que ÉL ES el encargado
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes = [
+                msg for msg in self.conversation_history[-4:]
+            ]
+
+            if len(ultimos_mensajes) >= 2:
+                # Último mensaje del cliente
+                ultimo_cliente = next((msg['content'].lower() for msg in reversed(ultimos_mensajes) if msg['role'] == 'user'), '')
+                # Último mensaje de Bruce
+                ultimo_bruce = next((msg['content'].lower() for msg in reversed(ultimos_mensajes) if msg['role'] == 'assistant'), '')
+
+                # Detectar si Bruce preguntó por el encargado
+                bruce_pregunto_encargado = any(kw in ultimo_bruce for kw in [
+                    'encargado de compras',
+                    'encargado',
+                    'jefe de compras',
+                    'gerente de compras',
+                    'responsable de compras'
+                ])
+
+                # Detectar si cliente dice que ÉL ES el encargado
+                patrones_yo_soy_encargado = [
+                    r'yo\s+soy\s+(?:el\s+)?(?:encargado|jefe|gerente|responsable)',
+                    r'soy\s+yo(?:\s+el)?(?:\s+encargado)?',
+                    r'le\s+habla\s+(?:el\s+)?(?:encargado|jefe)',
+                    r'habla\s+con\s+(?:el\s+)?(?:encargado|jefe)',
+                ]
+
+                cliente_es_encargado = any(re.search(p, ultimo_cliente) for p in patrones_yo_soy_encargado)
+
+                # Si Bruce preguntó por encargado Y cliente dice que ÉL ES
+                if bruce_pregunto_encargado and cliente_es_encargado:
+                    # Verificar que la respuesta de Bruce NO esté preguntando de nuevo por el encargado
+                    bruce_vuelve_preguntar = any(kw in respuesta_lower for kw in [
+                        'me podría comunicar',
+                        'me puede comunicar',
+                        'encargado de compras'
+                    ])
+
+                    if bruce_vuelve_preguntar or 'entendido' in respuesta_lower:
+                        print(f"\n🎯 FIX 257: FILTRO ACTIVADO - Cliente ES el encargado")
+                        print(f"   Bruce preguntó: \"{ultimo_bruce[:60]}...\"")
+                        print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                        respuesta = "Perfecto, mucho gusto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
         # FILTRO 7 (FIX 228/236/240): Evitar repetir el saludo/presentación
@@ -2351,8 +2407,44 @@ class AgenteVentas:
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 14 (FIX 258/259): Cliente dice "ahí le paso el número" pero Bruce NO pide el número
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Detectar si cliente ofreció dar el número
+                patrones_ofrecimiento_numero = [
+                    r'(?:ahí|ah[ií])\s+(?:le|te)\s+(?:paso|doy|mando)\s+(?:el|mi)\s+n[uú]mero',
+                    r'(?:le|te)\s+(?:paso|doy|mando)\s+(?:el|mi)\s+(?:n[uú]mero|whatsapp)',
+                    r'(?:dime|d[ií]game)\s+(?:d[oó]nde|a\s+d[oó]nde)\s+(?:te\s+lo|se\s+lo)\s+(?:paso|mando|env[ií]o)',
+                    r'(?:apunta|anota)\s+(?:el|mi)\s+n[uú]mero',
+                ]
+
+                cliente_ofrecio_numero = any(re.search(p, ultimo_cliente) for p in patrones_ofrecimiento_numero)
+
+                # Verificar si Bruce NO está pidiendo el número en su respuesta
+                bruce_pide_numero = any(kw in respuesta_lower for kw in [
+                    'dígame', 'digame', 'dime', 'cuál es', 'cual es',
+                    'número', 'numero', 'whatsapp', 'escuchando'
+                ])
+
+                if cliente_ofrecio_numero and not bruce_pide_numero:
+                    print(f"\n📱 FIX 258/259: FILTRO ACTIVADO - Cliente ofreció número pero Bruce NO lo pidió")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Perfecto, dígame su número por favor."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252/254: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252/254/256/257/258/259: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
