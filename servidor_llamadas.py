@@ -5758,7 +5758,7 @@ def historial_llamadas_dashboard():
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
                     <td>{llamada.get('duracion', 0)}s</td>
                     <td>
-                        {'<a href="' + link_grabacion + '" target="_blank" class="link-grabacion">🎧 Escuchar</a>' if link_grabacion else '<span style="color:#666">-</span>'}
+                        {'<audio controls preload="none" style="width:150px; height:32px;"><source src="' + link_grabacion + '" type="audio/mpeg">Tu navegador no soporta audio</audio>' if link_grabacion else '<span style="color:#666">-</span>'}
                     </td>
                     <td>
                         <div class="semaforo">
