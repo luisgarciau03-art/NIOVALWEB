@@ -1898,7 +1898,7 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 5 (FIX 235/237): Cliente dice "permítame/espere" - protocolo espera
+        # FILTRO 5 (FIX 235/237/249): Cliente dice "permítame/espere" - protocolo espera
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
@@ -1909,6 +1909,16 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
+                # FIX 249: Detectar negaciones/rechazos que invalidan "ahorita"
+                # Si cliente dice "ahorita tenemos cerrado", NO es espera
+                patrones_negacion = [
+                    r'cerrado', r'no\s+est[aá]', r'no\s+se\s+encuentra',
+                    r'no\s+hay', r'no\s+tenemos', r'no\s+puede',
+                    r'ocupado', r'no\s+disponible'
+                ]
+
+                tiene_negacion = any(re.search(p, ultimo_cliente) for p in patrones_negacion)
+
                 # FIX 237: Patrones más completos que indican que cliente pide esperar
                 patrones_espera = [
                     r'perm[ií]t[ae]me', r'perm[ií]tame',
@@ -1917,16 +1927,22 @@ class AgenteVentas:
                     r'un\s+momento', r'un\s+segundito', r'un\s+segundo',
                     r'dame\s+chance', r'd[ée]jame',
                     r'aguanta', r'tantito',
-                    r'\bahorita\b',  # Solo "ahorita" como palabra completa
                 ]
+
+                # FIX 249: Solo detectar "ahorita" si NO hay negación
+                if r'\bahorita\b' in ultimo_cliente and not tiene_negacion:
+                    patrones_espera.append(r'\bahorita\b')
 
                 cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
 
-                if cliente_pide_espera:
-                    print(f"\n⏳ FIX 235/237: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
+                # FIX 249: NO activar filtro si hay negación explícita
+                if cliente_pide_espera and not tiene_negacion:
+                    print(f"\n⏳ FIX 235/237/249: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
                     respuesta = "Claro, espero."
                     filtro_aplicado = True
                     print(f"   Respuesta: \"{respuesta}\"")
+                elif cliente_pide_espera and tiene_negacion:
+                    print(f"\n🚫 FIX 249: NO activar espera - Cliente dice 'ahorita' pero con negación: '{ultimo_cliente}'")
 
         # ============================================================
         # FILTRO 6 (FIX 231): Detectar cuando cliente quiere dar correo
@@ -2257,7 +2273,7 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245/246/247: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

@@ -1835,12 +1835,24 @@ def procesar_respuesta():
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 244: Frase corta ({palabras_nuevas} palabras) después de hablar")
 
-            # 2. Frase termina en preposición/artículo (indica continuación)
-            palabras_continuacion = ["a", "de", "en", "la", "el", "lo", "un", "una", "para", "por", "con"]
-            ultima_palabra = speech_result.strip().split()[-1].lower()
+            # 2. Frase termina en preposición/artículo/verbo copulativo (indica continuación)
+            # FIX 250: Agregar verbos copulativos y auxiliares que requieren complemento
+            palabras_continuacion = [
+                # Preposiciones
+                "a", "de", "en", "la", "el", "lo", "un", "una", "para", "por", "con",
+                # Verbos copulativos que requieren complemento
+                "está", "esta", "es", "son", "están", "estan", "era", "fueron",
+                # Verbos auxiliares
+                "va", "voy", "vas", "van", "iba", "puede", "pueden",
+                # Conjunciones
+                "y", "o", "pero", "mas",
+                # Negaciones que requieren verbo
+                "no", "ni", "tampoco"
+            ]
+            ultima_palabra = speech_result.strip().split()[-1].lower().rstrip('.,;:!?')
             if ultima_palabra in palabras_continuacion:
                 frase_parece_incompleta = True
-                print(f"   🚨 FIX 244: Frase termina en '{ultima_palabra}' (continuación esperada)")
+                print(f"   🚨 FIX 244/250: Frase termina en '{ultima_palabra}' (continuación esperada)")
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
             if tiempo_hablando < 2.0 and palabras_nuevas >= 2:
