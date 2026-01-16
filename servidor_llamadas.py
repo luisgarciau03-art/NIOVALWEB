@@ -3458,7 +3458,7 @@ def status_callback():
             except Exception as e:
                 print(f"   ⚠️ Error guardando desde status callback: {e}")
 
-        # FIX 207: Registrar en historial para dashboard web
+        # FIX 207/272: Registrar en historial para dashboard web
         try:
             registrar_llamada(
                 bruce_id=agente.lead_data.get("bruce_id", "N/A"),
@@ -3469,7 +3469,8 @@ def status_callback():
                 detalles={
                     "estado": agente.lead_data.get("estado_llamada"),
                     "whatsapp": bool(agente.lead_data.get("whatsapp")),
-                    "email": bool(agente.lead_data.get("email"))
+                    "email": bool(agente.lead_data.get("email")),
+                    "recording_url": agente.lead_data.get("recording_url", "")  # FIX 272: Link a grabación
                 }
             )
             print(f"   📊 FIX 207: Llamada registrada en dashboard")
@@ -4636,6 +4637,7 @@ def ver_dashboard():
             <h1>📊 Dashboard de Monitoreo - Bruce W</h1>
 
             <div class="nav-links">
+                📞 <a href="/historial-llamadas">Historial + Calificaciones</a>
                 📊 <a href="/stats">Estadísticas de Caché</a>
                 🔍 <a href="/diagnostico-persistencia">Diagnóstico</a>
                 🔄 <a href="/logs" onclick="location.reload(); return false;">Refrescar</a>
@@ -5315,6 +5317,490 @@ def log_evento(mensaje, tipo="INFO"):
 
     # También imprimir para logs de Railway
     print(log_entry)
+
+
+# ============================================================================
+# FIX 272: DASHBOARD DE HISTORIAL CON CALIFICACIONES Y SEMÁFOROS
+# ============================================================================
+
+# Archivo para persistir calificaciones entre deploys
+CALIFICACIONES_FILE = os.path.join(CACHE_DIR, "calificaciones_llamadas.json")
+
+def cargar_calificaciones():
+    """Carga las calificaciones guardadas desde el archivo JSON"""
+    try:
+        if os.path.exists(CALIFICACIONES_FILE):
+            with open(CALIFICACIONES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"⚠️ FIX 272: Error cargando calificaciones: {e}")
+    return {}
+
+def guardar_calificaciones(calificaciones):
+    """Guarda las calificaciones en archivo JSON para persistir entre deploys"""
+    try:
+        os.makedirs(os.path.dirname(CALIFICACIONES_FILE), exist_ok=True)
+        with open(CALIFICACIONES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(calificaciones, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"⚠️ FIX 272: Error guardando calificaciones: {e}")
+        return False
+
+# Cargar calificaciones al iniciar
+calificaciones_llamadas = cargar_calificaciones()
+print(f"📊 FIX 272: {len(calificaciones_llamadas)} calificaciones cargadas")
+
+
+@app.route("/historial-llamadas", methods=["GET"])
+def historial_llamadas_dashboard():
+    """
+    FIX 272: Dashboard de historial de llamadas con:
+    - Semáforos de calificación (Verde/Amarillo/Rojo)
+    - Campo de notas para errores
+    - Link directo a grabación de Twilio
+    - Persistencia entre deploys
+    """
+    global calificaciones_llamadas
+
+    # Recargar calificaciones por si cambiaron
+    calificaciones_llamadas = cargar_calificaciones()
+
+    # Obtener historial
+    historial = list(historial_llamadas)
+    historial = list(reversed(historial))  # Más recientes primero
+
+    # Estadísticas de semáforos
+    total = len(calificaciones_llamadas)
+    verdes = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'verde')
+    amarillos = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'amarillo')
+    rojos = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'rojo')
+    sin_calificar = len(historial) - total
+
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>📞 Historial de Llamadas - Bruce W</title>
+        <meta charset="UTF-8">
+        <style>
+            * { box-sizing: border-box; }
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: #eee;
+                margin: 0;
+                padding: 20px;
+                min-height: 100vh;
+            }
+            h1 {
+                color: #4CAF50;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+            .subtitle {
+                text-align: center;
+                color: #888;
+                margin-bottom: 30px;
+            }
+
+            /* Estadísticas de semáforos */
+            .stats-semaforos {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-bottom: 30px;
+                flex-wrap: wrap;
+            }
+            .stat-item {
+                padding: 15px 30px;
+                border-radius: 10px;
+                text-align: center;
+                min-width: 100px;
+            }
+            .stat-verde { background: rgba(76, 175, 80, 0.3); border: 2px solid #4CAF50; }
+            .stat-amarillo { background: rgba(255, 193, 7, 0.3); border: 2px solid #FFC107; }
+            .stat-rojo { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
+            .stat-gris { background: rgba(158, 158, 158, 0.3); border: 2px solid #9e9e9e; }
+            .stat-item .numero { font-size: 2em; font-weight: bold; display: block; }
+            .stat-item .label { font-size: 0.85em; opacity: 0.8; }
+
+            /* Tabla principal */
+            .tabla-container {
+                overflow-x: auto;
+                background: #16213e;
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th {
+                background: #0f3460;
+                padding: 15px 10px;
+                text-align: left;
+                font-weight: 600;
+                position: sticky;
+                top: 0;
+            }
+            td {
+                padding: 12px 10px;
+                border-bottom: 1px solid #1a1a2e;
+                vertical-align: middle;
+            }
+            tr:hover { background: rgba(33, 150, 243, 0.1); }
+
+            /* Semáforos */
+            .semaforo {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            .semaforo-btn {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 2px solid transparent;
+                cursor: pointer;
+                transition: all 0.2s;
+                opacity: 0.4;
+            }
+            .semaforo-btn:hover { opacity: 0.8; transform: scale(1.1); }
+            .semaforo-btn.activo { opacity: 1; border-color: white; box-shadow: 0 0 10px currentColor; }
+            .btn-verde { background: #4CAF50; }
+            .btn-amarillo { background: #FFC107; }
+            .btn-rojo { background: #f44336; }
+
+            /* Campo de notas */
+            .notas-input {
+                width: 100%;
+                min-width: 150px;
+                padding: 8px;
+                border: 1px solid #333;
+                border-radius: 5px;
+                background: #1a1a2e;
+                color: #eee;
+                font-size: 12px;
+                resize: vertical;
+            }
+            .notas-input:focus {
+                outline: none;
+                border-color: #4CAF50;
+            }
+
+            /* Link grabación */
+            .link-grabacion {
+                color: #2196F3;
+                text-decoration: none;
+                font-size: 12px;
+            }
+            .link-grabacion:hover { text-decoration: underline; }
+
+            /* Resultado badges */
+            .badge {
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            .badge-exito { background: #4CAF50; color: white; }
+            .badge-ivr { background: #ff9800; color: white; }
+            .badge-nocontesto { background: #9e9e9e; color: white; }
+            .badge-negado { background: #f44336; color: white; }
+
+            /* Botón guardar flotante */
+            .btn-guardar {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                padding: 15px 30px;
+                background: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 30px;
+                cursor: pointer;
+                font-size: 16px;
+                box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+                transition: all 0.3s;
+                z-index: 1000;
+            }
+            .btn-guardar:hover { transform: scale(1.05); background: #45a049; }
+            .btn-guardar:disabled { background: #666; cursor: not-allowed; }
+
+            /* Mensaje de guardado */
+            .mensaje-guardado {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: #4CAF50;
+                color: white;
+                border-radius: 10px;
+                display: none;
+                z-index: 1001;
+                animation: slideIn 0.3s ease;
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .stats-semaforos { gap: 10px; }
+                .stat-item { padding: 10px 20px; min-width: 70px; }
+                th, td { padding: 8px 5px; font-size: 12px; }
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 50px;
+                color: #666;
+            }
+
+            .nav-links {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .nav-links a {
+                color: #4CAF50;
+                margin: 0 15px;
+                text-decoration: none;
+            }
+            .nav-links a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <h1>📞 Historial de Llamadas - Bruce W</h1>
+        <p class="subtitle">Panel de calificación con semáforos y notas</p>
+
+        <div class="nav-links">
+            <a href="/logs">📊 Dashboard Principal</a>
+            <a href="/stats">📈 Estadísticas</a>
+            <a href="/historial-llamadas">🔄 Refrescar</a>
+        </div>
+
+        <div class="stats-semaforos">
+            <div class="stat-item stat-verde">
+                <span class="numero">""" + str(verdes) + """</span>
+                <span class="label">🟢 Bueno</span>
+            </div>
+            <div class="stat-item stat-amarillo">
+                <span class="numero">""" + str(amarillos) + """</span>
+                <span class="label">🟡 Medio</span>
+            </div>
+            <div class="stat-item stat-rojo">
+                <span class="numero">""" + str(rojos) + """</span>
+                <span class="label">🔴 Malo</span>
+            </div>
+            <div class="stat-item stat-gris">
+                <span class="numero">""" + str(max(0, sin_calificar)) + """</span>
+                <span class="label">⚪ Sin calificar</span>
+            </div>
+        </div>
+
+        <div class="mensaje-guardado" id="mensajeGuardado">✅ Calificaciones guardadas</div>
+
+        <div class="tabla-container">
+    """
+
+    if historial:
+        html += """
+            <table>
+                <tr>
+                    <th>Fecha/Hora</th>
+                    <th>BRUCE ID</th>
+                    <th>Negocio</th>
+                    <th>Teléfono</th>
+                    <th>Resultado</th>
+                    <th>Duración</th>
+                    <th>Grabación</th>
+                    <th>Semáforo</th>
+                    <th>Notas del Error</th>
+                </tr>
+        """
+
+        for llamada in historial[:100]:  # Últimas 100
+            bruce_id = llamada.get('bruce_id', 'N/A')
+            call_id = bruce_id  # Usar bruce_id como identificador único
+
+            # Obtener calificación guardada
+            calif = calificaciones_llamadas.get(call_id, {})
+            semaforo_actual = calif.get('semaforo', '')
+            notas_actual = calif.get('notas', '')
+
+            # Determinar badge de resultado
+            resultado = llamada.get('resultado', 'N/A')
+            resultado_lower = resultado.lower()
+            if 'catálogo' in resultado_lower or 'éxito' in resultado_lower:
+                badge_class = 'badge-exito'
+            elif 'ivr' in resultado_lower:
+                badge_class = 'badge-ivr'
+            elif 'no contestó' in resultado_lower:
+                badge_class = 'badge-nocontesto'
+            elif 'negado' in resultado_lower or 'rechaz' in resultado_lower:
+                badge_class = 'badge-negado'
+            else:
+                badge_class = ''
+
+            # URL de grabación
+            detalles = llamada.get('detalles', {})
+            recording_url = detalles.get('recording_url', '')
+
+            html += f"""
+                <tr data-call-id="{call_id}">
+                    <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
+                    <td><strong>{bruce_id}</strong></td>
+                    <td title="{llamada.get('negocio', 'N/A')}">{llamada.get('negocio', 'N/A')[:25]}...</td>
+                    <td style="font-size: 12px;">{llamada.get('telefono', 'N/A')}</td>
+                    <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
+                    <td>{llamada.get('duracion', 0)}s</td>
+                    <td>
+                        {'<a href="' + recording_url + '.mp3" target="_blank" class="link-grabacion">🎧 Escuchar</a>' if recording_url else '<span style="color:#666">-</span>'}
+                    </td>
+                    <td>
+                        <div class="semaforo">
+                            <button class="semaforo-btn btn-verde {'activo' if semaforo_actual == 'verde' else ''}"
+                                    onclick="setSemaforo('{call_id}', 'verde', this)" title="Bueno">
+                            </button>
+                            <button class="semaforo-btn btn-amarillo {'activo' if semaforo_actual == 'amarillo' else ''}"
+                                    onclick="setSemaforo('{call_id}', 'amarillo', this)" title="Medio">
+                            </button>
+                            <button class="semaforo-btn btn-rojo {'activo' if semaforo_actual == 'rojo' else ''}"
+                                    onclick="setSemaforo('{call_id}', 'rojo', this)" title="Malo">
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <textarea class="notas-input"
+                                  placeholder="Anotar error..."
+                                  onchange="setNotas('{call_id}', this.value)"
+                                  rows="2">{notas_actual}</textarea>
+                    </td>
+                </tr>
+            """
+
+        html += "</table>"
+    else:
+        html += """
+            <div class="empty-state">
+                <h3>📭 No hay historial de llamadas</h3>
+                <p>El historial aparecerá aquí cuando se realicen llamadas.</p>
+            </div>
+        """
+
+    html += """
+        </div>
+
+        <button class="btn-guardar" onclick="guardarTodo()">💾 Guardar Calificaciones</button>
+
+        <script>
+            // Almacenar cambios pendientes
+            let cambiosPendientes = {};
+
+            function setSemaforo(callId, color, btn) {
+                // Quitar activo de hermanos
+                const fila = btn.closest('tr');
+                fila.querySelectorAll('.semaforo-btn').forEach(b => b.classList.remove('activo'));
+                btn.classList.add('activo');
+
+                // Registrar cambio
+                if (!cambiosPendientes[callId]) cambiosPendientes[callId] = {};
+                cambiosPendientes[callId].semaforo = color;
+
+                // Indicador visual de cambio pendiente
+                btn.style.boxShadow = '0 0 15px ' + (color === 'verde' ? '#4CAF50' : color === 'amarillo' ? '#FFC107' : '#f44336');
+            }
+
+            function setNotas(callId, notas) {
+                if (!cambiosPendientes[callId]) cambiosPendientes[callId] = {};
+                cambiosPendientes[callId].notas = notas;
+            }
+
+            async function guardarTodo() {
+                const btn = document.querySelector('.btn-guardar');
+                btn.disabled = true;
+                btn.textContent = '⏳ Guardando...';
+
+                try {
+                    const response = await fetch('/historial-llamadas/guardar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cambiosPendientes)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Mostrar mensaje de éxito
+                        const msg = document.getElementById('mensajeGuardado');
+                        msg.style.display = 'block';
+                        setTimeout(() => { msg.style.display = 'none'; }, 3000);
+
+                        // Limpiar cambios pendientes
+                        cambiosPendientes = {};
+
+                        // Recargar para actualizar estadísticas
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        alert('Error al guardar: ' + data.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión: ' + e.message);
+                }
+
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar Calificaciones';
+            }
+        </script>
+    </body>
+    </html>
+    """
+
+    return html
+
+
+@app.route("/historial-llamadas/guardar", methods=["POST"])
+def guardar_calificaciones_endpoint():
+    """
+    FIX 272: Endpoint para guardar calificaciones de llamadas
+    Persiste en JSON para sobrevivir deploys
+    """
+    global calificaciones_llamadas
+
+    try:
+        datos = request.get_json()
+
+        if not datos:
+            return {"success": False, "error": "No hay datos"}, 400
+
+        # Recargar calificaciones actuales
+        calificaciones_llamadas = cargar_calificaciones()
+
+        # Actualizar con nuevos datos
+        for call_id, calif in datos.items():
+            if call_id not in calificaciones_llamadas:
+                calificaciones_llamadas[call_id] = {}
+
+            if 'semaforo' in calif:
+                calificaciones_llamadas[call_id]['semaforo'] = calif['semaforo']
+            if 'notas' in calif:
+                calificaciones_llamadas[call_id]['notas'] = calif['notas']
+
+            calificaciones_llamadas[call_id]['fecha_actualizacion'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Guardar en archivo
+        if guardar_calificaciones(calificaciones_llamadas):
+            print(f"✅ FIX 272: {len(datos)} calificaciones guardadas")
+            return {"success": True, "guardados": len(datos)}
+        else:
+            return {"success": False, "error": "Error al escribir archivo"}, 500
+
+    except Exception as e:
+        print(f"❌ FIX 272: Error guardando calificaciones: {e}")
+        return {"success": False, "error": str(e)}, 500
 
 
 @app.route("/logs/download", methods=["GET"])
