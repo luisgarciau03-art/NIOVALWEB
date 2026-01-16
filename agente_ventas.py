@@ -2129,8 +2129,45 @@ class AgenteVentas:
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 11 (FIX 243): Cliente pregunta "¿Con quién hablo?"
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Patrones que indican que el cliente pregunta con quién habla
+                patrones_nombre = [
+                    r'(?:con\s+)?qui[eé]n\s+(?:tengo\s+el\s+gusto|hablo|me\s+habla|est[aá]s?)',  # "con quién hablo", "quién eres"
+                    r'(?:cu[aá]l\s+es\s+)?(?:tu|su)\s+nombre',  # "cuál es tu nombre", "tu nombre"
+                    r'c[oó]mo\s+(?:te\s+llamas?|se\s+llama)',  # "cómo te llamas", "cómo se llama"
+                    r'(?:qui[eé]n\s+)?eres\s+(?:t[uú])?',  # "quién eres tú", "eres tú"
+                    r'a\s+qui[eé]n\s+(?:hablo|tengo)',  # "a quién hablo"
+                ]
+
+                cliente_pregunta_nombre = any(re.search(p, ultimo_cliente) for p in patrones_nombre)
+
+                # Verificar que Bruce NO se está presentando
+                bruce_se_presenta = any(word in respuesta_lower for word in [
+                    'soy bruce', 'me llamo bruce', 'mi nombre es bruce', 'habla bruce',
+                    'bruce de nioval', 'bruce, de nioval'
+                ])
+
+                if cliente_pregunta_nombre and not bruce_se_presenta:
+                    print(f"\n👤 FIX 243: FILTRO ACTIVADO - Cliente pregunta quién es Bruce")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Soy Bruce, me comunico de la empresa Nioval, especialistas en productos ferreteros. ¿Con quién tengo el gusto?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

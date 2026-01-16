@@ -142,6 +142,8 @@ conversaciones_activas = {}
 audio_files = {}
 # Mapear Call SID a información de contacto
 contactos_llamadas = {}
+# FIX 244: Tracking de habla activa para detectar interrupciones
+cliente_hablando_activo = {}  # call_sid -> {"inicio": timestamp, "palabras_dichas": int}
 
 # Caché de audios pre-generados con Multilingual v2 (mejor calidad)
 audio_cache = {}
@@ -1805,6 +1807,87 @@ def procesar_respuesta():
     if logs_manager and speech_result and agente.bruce_id:
         nombre_tienda = agente.lead_data.get('nombre_negocio', '')
         logs_manager.registrar_mensaje_cliente(agente.bruce_id, speech_result, nombre_tienda)
+
+    # ============================================================================
+    # FIX 244: Detectar si cliente está hablando pausadamente (frase incompleta)
+    # ============================================================================
+    if speech_result and speech_result.strip():
+        import time
+
+        # Verificar si el cliente tiene historial de habla activa
+        if call_sid in cliente_hablando_activo:
+            info_habla = cliente_hablando_activo[call_sid]
+            tiempo_hablando = time.time() - info_habla["inicio"]
+            palabras_nuevas = len(speech_result.split())
+
+            # Detectar si la frase parece incompleta
+            # Indicios: termina abruptamente, no tiene verbo final, es muy corta después de hablar
+            frase_parece_incompleta = False
+
+            # 1. Frase muy corta (<3 palabras) después de ya haber hablado (>3 palabras antes)
+            if palabras_nuevas < 3 and info_habla["palabras_dichas"] > 3:
+                frase_parece_incompleta = True
+                print(f"   🚨 FIX 244: Frase corta ({palabras_nuevas} palabras) después de hablar")
+
+            # 2. Frase termina en preposición/artículo (indica continuación)
+            palabras_continuacion = ["a", "de", "en", "la", "el", "lo", "un", "una", "para", "por", "con"]
+            ultima_palabra = speech_result.strip().split()[-1].lower()
+            if ultima_palabra in palabras_continuacion:
+                frase_parece_incompleta = True
+                print(f"   🚨 FIX 244: Frase termina en '{ultima_palabra}' (continuación esperada)")
+
+            # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
+            if tiempo_hablando < 2.0 and palabras_nuevas >= 2:
+                # Probablemente sigue hablando - el timeout de 2s lo interrumpió
+                frase_parece_incompleta = True
+                print(f"   🚨 FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
+
+            if frase_parece_incompleta:
+                print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
+                print(f"   Transcripción parcial: '{speech_result}'")
+                print(f"   Tiempo hablando: {tiempo_hablando:.1f}s")
+                print(f"   Palabras dichas: {palabras_nuevas} (historial: {info_habla['palabras_dichas']})")
+
+                # Almacenar esta transcripción parcial en el agente
+                if not hasattr(agente, 'transcripcion_parcial_acumulada'):
+                    agente.transcripcion_parcial_acumulada = []
+                agente.transcripcion_parcial_acumulada.append(speech_result)
+
+                # Generar TwiML para seguir escuchando SIN interrumpir
+                response = VoiceResponse()
+
+                # FIX 244: Timeout más largo (4s) porque sabemos que está hablando
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=4,  # 4s de silencio real = terminó de hablar
+                    play_beep=False,
+                    trim="trim-silence"
+                )
+
+                print(f"   ✅ FIX 244: Esperando continuación con timeout de 4s...")
+                return Response(str(response), mimetype="text/xml")
+
+        # Si llegó aquí y hay transcripciones parciales acumuladas, concatenar
+        if hasattr(agente, 'transcripcion_parcial_acumulada') and agente.transcripcion_parcial_acumulada:
+            print(f"\n🔄 FIX 244: Concatenando transcripciones parciales")
+            for i, parcial in enumerate(agente.transcripcion_parcial_acumulada):
+                print(f"   [{i}] '{parcial}'")
+
+            # Agregar la transcripción actual
+            agente.transcripcion_parcial_acumulada.append(speech_result)
+
+            # Concatenar todas las partes
+            speech_result = " ".join(agente.transcripcion_parcial_acumulada)
+            print(f"   ✅ FIX 244: Frase completa: '{speech_result}'")
+
+            # Limpiar acumulador
+            agente.transcripcion_parcial_acumulada = []
+
+        # Resetear tracking de habla activa (cliente terminó de hablar)
+        if call_sid in cliente_hablando_activo:
+            del cliente_hablando_activo[call_sid]
 
     # FIX 92: Detectar respuestas vacías y pedir repetición antes de colgar
     if not speech_result or speech_result.strip() == "":
@@ -5283,6 +5366,19 @@ def on_deepgram_transcript(call_sid, texto, is_final):
 
     if call_sid not in deepgram_transcripciones:
         deepgram_transcripciones[call_sid] = []
+
+    # FIX 244: Tracking de habla activa
+    import time
+    if call_sid not in cliente_hablando_activo:
+        cliente_hablando_activo[call_sid] = {
+            "inicio": time.time(),
+            "palabras_dichas": 0
+        }
+
+    # Contar palabras (aproximado)
+    num_palabras = len(texto.split())
+    if num_palabras > cliente_hablando_activo[call_sid]["palabras_dichas"]:
+        cliente_hablando_activo[call_sid]["palabras_dichas"] = num_palabras
 
     if is_final:
         # Transcripción final - agregar al array
