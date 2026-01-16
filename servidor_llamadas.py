@@ -1830,8 +1830,19 @@ def procesar_respuesta():
             # Indicios: termina abruptamente, no tiene verbo final, es muy corta después de hablar
             frase_parece_incompleta = False
 
+            # FIX 260: Pre-detectar si es una pregunta para evitar falsos positivos
+            frase_limpia = speech_result.strip().lower()
+            es_pregunta_rapida = (
+                frase_limpia.startswith('¿') or
+                frase_limpia.startswith('qué ') or frase_limpia.startswith('que ') or
+                frase_limpia.startswith('quién ') or frase_limpia.startswith('quien ') or
+                frase_limpia.startswith('cuál ') or frase_limpia.startswith('cual ') or
+                frase_limpia.startswith('cómo ') or frase_limpia.startswith('como ')
+            )
+
             # 1. Frase muy corta (<3 palabras) después de ya haber hablado (>3 palabras antes)
-            if palabras_nuevas < 3 and info_habla["palabras_dichas"] > 3:
+            # FIX 260: Pero NO si es una pregunta (preguntas cortas son válidas)
+            if palabras_nuevas < 3 and info_habla["palabras_dichas"] > 3 and not es_pregunta_rapida:
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 244: Frase corta ({palabras_nuevas} palabras) después de hablar")
 
@@ -1850,9 +1861,22 @@ def procesar_respuesta():
                 "no", "ni", "tampoco"
             ]
             ultima_palabra = speech_result.strip().split()[-1].lower().rstrip('.,;:!?')
-            if ultima_palabra in palabras_continuacion:
+
+            # FIX 260: Reutilizar detección de pregunta (ya calculada arriba)
+            # Agregar más palabras interrogativas para mayor cobertura
+            es_pregunta = es_pregunta_rapida or (
+                frase_limpia.startswith('dónde ') or frase_limpia.startswith('donde ') or
+                frase_limpia.startswith('cuándo ') or frase_limpia.startswith('cuando ') or
+                frase_limpia.startswith('cuánto ') or frase_limpia.startswith('cuanto ') or
+                frase_limpia.startswith('por qué ') or frase_limpia.startswith('por que ')
+            )
+
+            # FIX 260: Si es pregunta, NO marcar como incompleta aunque termine en "es"
+            if ultima_palabra in palabras_continuacion and not es_pregunta:
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 244/250: Frase termina en '{ultima_palabra}' (continuación esperada)")
+            elif ultima_palabra in palabras_continuacion and es_pregunta:
+                print(f"   ✅ FIX 260: Frase termina en '{ultima_palabra}' pero ES PREGUNTA - responder inmediatamente")
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
             if tiempo_hablando < 2.0 and palabras_nuevas >= 2:
