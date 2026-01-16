@@ -1096,11 +1096,8 @@ def iniciar_llamada():
             from_=TWILIO_PHONE_NUMBER,
             url=request.url_root + "webhook-voz",
             method="POST",
-            record=True,  # Grabar llamada completa automáticamente
-            # FIX 267: Agregar callback para grabaciones completas
-            recording_status_callback=request.url_root + "grabacion-llamada-completa",
-            recording_status_callback_event=["completed"],
-            recording_status_callback_method="POST",
+            # FIX 271: Removido record=True - ahora usamos <Start><Recording> en TwiML
+            # que es asíncrono y no interfiere con los <Record> de transcripción
             # machine_detection="DetectMessageEnd",  # FIX 85: DESHABILITADO (causaba delay de 11s)
             # machine_detection_timeout=5,  # FIX 85: DESHABILITADO
             status_callback=request.url_root + "status-callback",  # Webhook para estado de llamada
@@ -1277,6 +1274,18 @@ def webhook_voz():
         response.append(start)
 
         print(f"   WebSocket URL: {ws_url}")
+
+    # FIX 271: Grabar llamada COMPLETA con <Start><Recording> (asíncrono)
+    # Esto NO interfiere con los <Record> que usamos para transcripción
+    # La grabación continúa en background durante toda la llamada
+    start_recording = Start()
+    start_recording.recording(
+        recording_status_callback=request.url_root + "grabacion-llamada-completa",
+        recording_status_callback_method="POST",
+        recording_status_callback_event="completed"
+    )
+    response.append(start_recording)
+    print(f"   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada")
 
     # FIX 214: ELIMINAR COSTOS DE TWILIO SPEECH RECOGNITION
     # Twilio cobra por usar input="speech" con language (Speech Recognition)
@@ -3142,12 +3151,8 @@ def llamadas_masivas():
                 to=contacto["telefono"],
                 from_=TWILIO_PHONE_NUMBER,
                 url=request.url_root + "webhook-voz",
-                method="POST",
-                record=True,  # Grabar llamada completa automáticamente
-                # FIX 267: Agregar callback para grabaciones completas
-                recording_status_callback=request.url_root + "grabacion-llamada-completa",
-                recording_status_callback_event=["completed"],
-                recording_status_callback_method="POST"
+                method="POST"
+                # FIX 271: Removido record=True - ahora usamos <Start><Recording> en TwiML
             )
 
             resultados.append({
