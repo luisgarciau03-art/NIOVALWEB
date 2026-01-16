@@ -2113,6 +2113,15 @@ class AgenteVentas:
 
                 cliente_es_encargado = any(re.search(p, ultimo_cliente) for p in patrones_yo_soy_encargado)
 
+                # FIX 262: Detectar "Dígame" como señal de disposición a escuchar
+                # Si cliente dice "Dígame", "Mande", etc. después de que Bruce preguntó por encargado
+                patrones_digame = [
+                    r'^d[ií]game\b', r'^mande\b', r'^s[ií],?\s*d[ií]game',
+                    r'^a\s+sus\s+[oó]rdenes', r'^para\s+servirle',
+                    r'^en\s+qu[eé]\s+le\s+(?:ayudo|puedo\s+ayudar)',
+                ]
+                cliente_dice_digame = any(re.search(p, ultimo_cliente.strip()) for p in patrones_digame)
+
                 # Si Bruce preguntó por encargado Y cliente dice que ÉL ES
                 if bruce_pregunto_encargado and cliente_es_encargado:
                     # Verificar que la respuesta de Bruce NO esté preguntando de nuevo por el encargado
@@ -2128,6 +2137,24 @@ class AgenteVentas:
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                         respuesta = "Perfecto, mucho gusto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+
+                # FIX 262: Si Bruce preguntó por encargado Y cliente dice "Dígame/Mande"
+                # Esto indica que están listos para escuchar (probablemente ES el encargado)
+                elif bruce_pregunto_encargado and cliente_dice_digame:
+                    bruce_vuelve_preguntar = any(kw in respuesta_lower for kw in [
+                        'me podría comunicar',
+                        'me puede comunicar',
+                        'encargado de compras'
+                    ])
+
+                    if bruce_vuelve_preguntar:
+                        print(f"\n🎯 FIX 262: FILTRO ACTIVADO - Cliente dice 'Dígame' (está listo)")
+                        print(f"   Bruce preguntó: \"{ultimo_bruce[:60]}...\"")
+                        print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                        respuesta = "Sí, buen día. Soy Bruce de la marca NIOVAL, productos de ferretería. ¿Usted es el encargado de compras?"
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -3120,12 +3147,17 @@ Ejemplo correcto:
                     print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
                     return respuesta_espera
 
-        # FIX 238: Detectar cuando encargado LLEGA después de esperar
+        # FIX 238/262: Detectar cuando encargado LLEGA después de esperar
         # Si estábamos esperando transferencia y cliente dice "¿Bueno?" = encargado llegó
         if self.esperando_transferencia:
             patrones_encargado_llego = [
                 "bueno", "sí", "si", "diga", "hola", "alo", "aló",
-                "qué pasó", "que paso", "mande", "a ver"
+                "qué pasó", "que paso", "mande", "a ver",
+                # FIX 262: Agregar más patrones de "llegada"
+                "dígame", "digame", "sí dígame", "si digame",
+                "a sus órdenes", "a sus ordenes",
+                "para servirle", "en qué le ayudo", "en que le ayudo",
+                "sí bueno", "si bueno", "sí mande", "si mande"
             ]
 
             # Limpiar respuesta para comparar
