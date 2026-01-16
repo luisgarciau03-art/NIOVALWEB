@@ -1196,6 +1196,7 @@ def webhook_voz():
     )
     agente.call_sid = call_sid  # Guardar el Call SID de Twilio
     agente.bruce_id = bruce_id  # Guardar el ID BRUCE
+    agente.lead_data["bruce_id"] = bruce_id  # FIX 272.3: Guardar también en lead_data
     conversaciones_activas[call_sid] = agente
 
     # Mensaje inicial
