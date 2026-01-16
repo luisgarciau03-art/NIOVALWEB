@@ -2159,6 +2159,39 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 15 (FIX 263): Evitar volver a preguntar por encargado cuando ya avanzamos
+        # ============================================================
+        if not filtro_aplicado:
+            # Verificar si ya hablamos del catálogo/WhatsApp/correo (significa que ya pasamos esa etapa)
+            ultimos_mensajes = [
+                msg['content'].lower() for msg in self.conversation_history[-8:]
+            ]
+
+            # Detectar si ya se habló del catálogo/WhatsApp/correo
+            conversacion_avanzada = any(
+                any(kw in msg for kw in ['whatsapp', 'catálogo', 'catalogo', 'correo', 'email'])
+                for msg in ultimos_mensajes
+            )
+
+            # Detectar si Bruce está volviendo a preguntar por el encargado
+            bruce_pregunta_encargado = any(kw in respuesta_lower for kw in [
+                'se encontrará el encargado',
+                'se encontrara el encargado',
+                '¿se encuentra el encargado',
+                'se encuentra el encargado',
+                'me podría comunicar con el encargado',
+                'me puede comunicar con el encargado',
+            ])
+
+            if conversacion_avanzada and bruce_pregunta_encargado:
+                print(f"\n🚫 FIX 263: FILTRO ACTIVADO - Bruce pregunta por encargado cuando ya avanzamos")
+                print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
+                # Ofrecer continuar o despedirse
+                respuesta = "Perfecto. ¿Hay algo más en lo que le pueda ayudar?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 7 (FIX 228/236/240): Evitar repetir el saludo/presentación
         # FIX 240: Patrones más específicos para evitar falsos positivos
         # ============================================================
@@ -2186,6 +2219,40 @@ class AgenteVentas:
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                         respuesta = "¿Me escucha? Estoy aquí para ayudarle."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+                        break
+
+        # ============================================================
+        # FILTRO 16 (FIX 263B): Evitar repetir la misma pregunta exacta
+        # ============================================================
+        if not filtro_aplicado:
+            # Patrones de preguntas que NO deben repetirse
+            preguntas_unicas = [
+                r'(?:le\s+)?gustar[ií]a\s+recibir\s+(?:nuestro\s+)?cat[aá]logo',
+                r'por\s+whatsapp\s+o\s+correo',
+                r'¿cu[aá]l\s+es\s+su\s+n[uú]mero',
+                r'¿me\s+(?:puede|podr[ií]a)\s+dar\s+su\s+n[uú]mero',
+            ]
+
+            ultimos_mensajes_bruce = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+
+            for patron in preguntas_unicas:
+                if re.search(patron, respuesta_lower):
+                    # Verificar si ya preguntamos esto antes
+                    ya_preguntado = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
+                    if ya_preguntado:
+                        print(f"\n🚫 FIX 263B: FILTRO ACTIVADO - Bruce repitiendo pregunta")
+                        print(f"   Patrón repetido: '{patron}'")
+                        print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
+                        # Reformular en lugar de repetir
+                        if 'whatsapp' in patron or 'catálogo' in patron:
+                            respuesta = "¿Tiene alguna duda sobre el catálogo? Estoy para ayudarle."
+                        else:
+                            respuesta = "¿Hay algo más en lo que le pueda ayudar?"
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                         break
