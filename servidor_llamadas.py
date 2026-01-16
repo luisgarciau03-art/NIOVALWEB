@@ -5355,6 +5355,38 @@ import threading
 log_buffer = deque(maxlen=5000)
 log_lock = threading.Lock()
 
+# FIX 272.9: Archivo para persistir logs entre deploys
+LOGS_FILE = os.path.join(CACHE_DIR, "logs_llamadas.json")
+
+def cargar_logs():
+    """Carga los logs guardados desde archivo JSON"""
+    try:
+        if os.path.exists(LOGS_FILE):
+            with open(LOGS_FILE, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+                return deque(datos, maxlen=5000)
+    except Exception as e:
+        print(f"⚠️ FIX 272.9: Error cargando logs: {e}")
+    return deque(maxlen=5000)
+
+def guardar_logs():
+    """Guarda los logs en archivo JSON para persistir entre deploys"""
+    try:
+        os.makedirs(os.path.dirname(LOGS_FILE), exist_ok=True)
+        with open(LOGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(list(log_buffer), f, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"⚠️ FIX 272.9: Error guardando logs: {e}")
+        return False
+
+# Cargar logs al iniciar
+log_buffer = cargar_logs()
+print(f"📋 FIX 272.9: {len(log_buffer)} logs cargados")
+
+# Contador para guardar logs cada N entradas
+_log_counter = 0
+
 def log_evento(mensaje, tipo="INFO"):
     """
     Registra un evento en el buffer de logs
@@ -5364,11 +5396,18 @@ def log_evento(mensaje, tipo="INFO"):
         mensaje: El mensaje a registrar
         tipo: INFO, ERROR, WARNING, BRUCE, CLIENTE, etc.
     """
+    global _log_counter
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] [{tipo}] {mensaje}"
 
     with log_lock:
         log_buffer.append(log_entry)
+        _log_counter += 1
+
+        # FIX 272.9: Guardar cada 10 logs para no escribir en cada entrada
+        if _log_counter >= 10:
+            guardar_logs()
+            _log_counter = 0
 
     # También imprimir para logs de Railway
     print(log_entry)
