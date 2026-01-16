@@ -2167,31 +2167,37 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 12 (FIX 245): Validar número telefónico incompleto
+        # FILTRO 12 (FIX 245/246): Validar número telefónico incompleto
         # ============================================================
         if not filtro_aplicado:
+            # FIX 246: Revisar más mensajes atrás (últimos 6 en lugar de 4)
+            # para detectar si Bruce pidió número aunque haya habido interrupciones
             ultimos_mensajes = [
-                msg for msg in self.conversation_history[-4:]
+                msg for msg in self.conversation_history[-6:]
                 if msg['role'] in ['user', 'assistant']
             ]
 
             if len(ultimos_mensajes) >= 2:
                 # Revisar si Bruce pidió un número de teléfono/WhatsApp/referencia
-                ultimo_bruce = ""
+                # FIX 246: Revisar TODOS los mensajes de Bruce, no solo el último
+                mensajes_bruce = [msg['content'].lower() for msg in ultimos_mensajes if msg['role'] == 'assistant']
                 ultimo_cliente = ""
 
                 for msg in reversed(ultimos_mensajes):
-                    if msg['role'] == 'assistant' and not ultimo_bruce:
-                        ultimo_bruce = msg['content'].lower()
-                    elif msg['role'] == 'user' and not ultimo_cliente:
+                    if msg['role'] == 'user' and not ultimo_cliente:
                         ultimo_cliente = msg['content'].lower()
+                        break
 
-                # Detectar si Bruce pidió número
-                bruce_pidio_numero = any(kw in ultimo_bruce for kw in [
-                    'número', 'numero', 'teléfono', 'telefono', 'whatsapp',
-                    'celular', 'dígame el número', 'digame el numero',
-                    'cuál es el número', 'cual es el numero'
-                ])
+                # Detectar si Bruce pidió número EN CUALQUIERA de sus últimos mensajes
+                bruce_pidio_numero = any(
+                    any(kw in msg_bruce for kw in [
+                        'número', 'numero', 'teléfono', 'telefono', 'whatsapp',
+                        'celular', 'dígame el número', 'digame el numero',
+                        'cuál es el número', 'cual es el numero',
+                        'me puede dar', 'me da el', 'cuál es su'
+                    ])
+                    for msg_bruce in mensajes_bruce
+                )
 
                 if bruce_pidio_numero and ultimo_cliente:
                     # Extraer dígitos del mensaje del cliente
@@ -2206,14 +2212,20 @@ class AgenteVentas:
                     # Números con lada internacional (52) tienen 12 dígitos
                     numero_completo = num_digitos == 10 or num_digitos == 12
 
-                    # Verificar que Bruce NO está pidiendo repetición del número
+                    # Verificar que Bruce NO está pidiendo repetición/verificación del número
                     bruce_pide_repeticion = any(word in respuesta_lower for word in [
                         'repetir', 'repita', 'de nuevo', 'otra vez', 'completo',
                         'no escuché bien', 'no escuche bien', 'puede repetir'
                     ])
 
+                    bruce_verifica_numero = any(word in respuesta_lower for word in [
+                        'correcto', '¿correcto?', 'es el', 'confirmo', 'confirmar',
+                        'anotado como', 'entendido', 'anoto como'
+                    ])
+
+                    # FIX 245: Validar número incompleto
                     if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion:
-                        print(f"\n📞 FIX 245: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
+                        print(f"\n📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
                         if num_digitos < 10:
@@ -2224,8 +2236,28 @@ class AgenteVentas:
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
+                    # FIX 247: Verificar número completo (repetirlo para confirmar)
+                    elif numero_completo and num_digitos > 0 and not bruce_verifica_numero and not bruce_pide_repeticion:
+                        print(f"\n✅ FIX 247: FILTRO ACTIVADO - Verificar número completo ({num_digitos} dígitos)")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+
+                        # Formatear número con guiones para legibilidad
+                        numero_str = ''.join(digitos)
+                        if num_digitos == 10:
+                            # Formato: 3-3-2-2 (ej: 333-123-45-67)
+                            numero_formateado = f"{numero_str[0:3]}-{numero_str[3:6]}-{numero_str[6:8]}-{numero_str[8:10]}"
+                        elif num_digitos == 12:
+                            # Formato internacional: 52-3-3-2-2
+                            numero_formateado = f"{numero_str[0:2]}-{numero_str[2:5]}-{numero_str[5:8]}-{numero_str[8:10]}-{numero_str[10:12]}"
+                        else:
+                            numero_formateado = '-'.join([numero_str[i:i+2] for i in range(0, len(numero_str), 2)])
+
+                        respuesta = f"Perfecto, lo tengo anotado como {numero_formateado}, ¿es correcto?"
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245/246/247: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
