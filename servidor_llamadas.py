@@ -5625,6 +5625,34 @@ def historial_llamadas_dashboard():
                 text-decoration: none;
             }
             .nav-links a:hover { text-decoration: underline; }
+
+            /* FIX 272.4: Checkbox Solucionado */
+            .checkbox-solucionado {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+            .checkbox-solucionado input {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                accent-color: #4CAF50;
+            }
+            .fila-solucionada {
+                background: rgba(76, 175, 80, 0.15) !important;
+                opacity: 0.7;
+            }
+            .fila-solucionada td {
+                text-decoration: line-through;
+                color: #888;
+            }
+            .fila-solucionada .badge,
+            .fila-solucionada .semaforo-btn,
+            .fila-solucionada .notas-input,
+            .fila-solucionada .link-grabacion {
+                text-decoration: none;
+            }
         </style>
     </head>
     <body>
@@ -5674,6 +5702,7 @@ def historial_llamadas_dashboard():
                     <th>Grabación</th>
                     <th>Semáforo</th>
                     <th>Notas del Error</th>
+                    <th>Solucionado</th>
                 </tr>
         """
 
@@ -5685,6 +5714,7 @@ def historial_llamadas_dashboard():
             calif = calificaciones_llamadas.get(call_id, {})
             semaforo_actual = calif.get('semaforo', '')
             notas_actual = calif.get('notas', '')
+            solucionado_actual = calif.get('solucionado', False)  # FIX 272.4: Campo solucionado
 
             # Determinar badge de resultado
             resultado = llamada.get('resultado', 'N/A')
@@ -5704,8 +5734,11 @@ def historial_llamadas_dashboard():
             detalles = llamada.get('detalles', {})
             recording_url = detalles.get('recording_url', '') or grabaciones_por_bruce.get(bruce_id, '')
 
+            # FIX 272.4: Link directo a consola de Twilio
+            twilio_console_url = "https://console.twilio.com/us1/monitor/logs/call-recordings?frameUrl=%2Fconsole%2Fvoice%2Frecordings%2Frecording-logs%3Fx-target-region%3Dus1"
+
             html += f"""
-                <tr data-call-id="{call_id}">
+                <tr data-call-id="{call_id}" class="{'fila-solucionada' if solucionado_actual else ''}">
                     <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
                     <td><strong>{bruce_id}</strong></td>
                     <td title="{llamada.get('negocio', 'N/A')}">{llamada.get('negocio', 'N/A')[:25]}...</td>
@@ -5713,7 +5746,7 @@ def historial_llamadas_dashboard():
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
                     <td>{llamada.get('duracion', 0)}s</td>
                     <td>
-                        {'<a href="' + recording_url + '.mp3" target="_blank" class="link-grabacion">🎧 Escuchar</a>' if recording_url else '<span style="color:#666">-</span>'}
+                        <a href="{twilio_console_url}" target="_blank" class="link-grabacion">🎧 Twilio</a>
                     </td>
                     <td>
                         <div class="semaforo">
@@ -5733,6 +5766,13 @@ def historial_llamadas_dashboard():
                                   placeholder="Anotar error..."
                                   onchange="setNotas('{call_id}', this.value)"
                                   rows="2">{notas_actual}</textarea>
+                    </td>
+                    <td style="text-align: center;">
+                        <label class="checkbox-solucionado">
+                            <input type="checkbox" {'checked' if solucionado_actual else ''}
+                                   onchange="setSolucionado('{call_id}', this.checked)">
+                            <span class="checkmark"></span>
+                        </label>
                     </td>
                 </tr>
             """
@@ -5772,6 +5812,21 @@ def historial_llamadas_dashboard():
             function setNotas(callId, notas) {
                 if (!cambiosPendientes[callId]) cambiosPendientes[callId] = {};
                 cambiosPendientes[callId].notas = notas;
+            }
+
+            function setSolucionado(callId, checked) {
+                if (!cambiosPendientes[callId]) cambiosPendientes[callId] = {};
+                cambiosPendientes[callId].solucionado = checked;
+
+                // Actualizar visualmente la fila
+                const fila = document.querySelector(`tr[data-call-id="${callId}"]`);
+                if (fila) {
+                    if (checked) {
+                        fila.classList.add('fila-solucionada');
+                    } else {
+                        fila.classList.remove('fila-solucionada');
+                    }
+                }
             }
 
             async function guardarTodo() {
@@ -5843,6 +5898,8 @@ def guardar_calificaciones_endpoint():
                 calificaciones_llamadas[call_id]['semaforo'] = calif['semaforo']
             if 'notas' in calif:
                 calificaciones_llamadas[call_id]['notas'] = calif['notas']
+            if 'solucionado' in calif:  # FIX 272.4: Guardar campo solucionado
+                calificaciones_llamadas[call_id]['solucionado'] = calif['solucionado']
 
             calificaciones_llamadas[call_id]['fecha_actualizacion'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
