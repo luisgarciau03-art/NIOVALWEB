@@ -1330,17 +1330,26 @@ def grabacion_status():
     return Response("OK", mimetype="text/plain")
 
 
-@app.route("/grabacion-llamada-completa", methods=["POST"])
+@app.route("/grabacion-llamada-completa", methods=["GET", "POST"])
 def grabacion_llamada_completa():
     """
-    FIX 267: Callback para grabación COMPLETA de la llamada (record=True en calls.create)
+    FIX 267/269: Callback para grabación COMPLETA de la llamada (record=True en calls.create)
     Esta es la grabación de TODA la llamada, no los fragmentos de RecordVerb
+    FIX 269: Aceptar GET y POST porque Twilio puede enviar cualquiera de los dos
     """
-    recording_sid = request.form.get("RecordingSid", "")
-    recording_status = request.form.get("RecordingStatus", "")
-    recording_url = request.form.get("RecordingUrl", "")
-    recording_duration = request.form.get("RecordingDuration", "0")
-    call_sid = request.form.get("CallSid", "")
+    # FIX 269: Obtener parámetros de GET o POST
+    if request.method == "GET":
+        recording_sid = request.args.get("RecordingSid", "")
+        recording_status = request.args.get("RecordingStatus", "")
+        recording_url = request.args.get("RecordingUrl", "")
+        recording_duration = request.args.get("RecordingDuration", "0")
+        call_sid = request.args.get("CallSid", "")
+    else:
+        recording_sid = request.form.get("RecordingSid", "")
+        recording_status = request.form.get("RecordingStatus", "")
+        recording_url = request.form.get("RecordingUrl", "")
+        recording_duration = request.form.get("RecordingDuration", "0")
+        call_sid = request.form.get("CallSid", "")
 
     print(f"\n🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA")
     print(f"   CallSid: {call_sid}")
