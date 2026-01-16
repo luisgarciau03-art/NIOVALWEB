@@ -1376,6 +1376,19 @@ def grabacion_llamada_completa():
         else:
             print(f"   ⚠️ Agente no encontrado en conversaciones_activas (llamada ya terminó)")
 
+        # FIX 272: Guardar URL asociada al bruce_id para el historial
+        bruce_id = callsid_to_bruceid.get(call_sid)
+        if bruce_id:
+            grabaciones_por_bruce[bruce_id] = recording_url
+            print(f"   ✅ FIX 272: Grabación asociada a {bruce_id}")
+
+            # Actualizar historial existente
+            for llamada in historial_llamadas:
+                if llamada.get("bruce_id") == bruce_id:
+                    llamada["detalles"]["recording_url"] = recording_url
+                    print(f"   ✅ FIX 272: Historial actualizado con URL de grabación")
+                    break
+
     return Response("OK", mimetype="text/plain")
 
 
@@ -3471,7 +3484,8 @@ def status_callback():
                     "whatsapp": bool(agente.lead_data.get("whatsapp")),
                     "email": bool(agente.lead_data.get("email")),
                     "recording_url": agente.lead_data.get("recording_url", "")  # FIX 272: Link a grabación
-                }
+                },
+                call_sid=call_sid  # FIX 272: Para asociar grabación después
             )
             print(f"   📊 FIX 207: Llamada registrada en dashboard")
         except Exception as e:
@@ -4437,8 +4451,16 @@ from datetime import datetime
 # Historial de llamadas recientes (últimas 100)
 historial_llamadas = deque(maxlen=100)
 
-def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detalles=None):
+# FIX 272: Mapeo CallSid -> bruce_id para asociar grabaciones
+callsid_to_bruceid = {}  # call_sid -> bruce_id
+grabaciones_por_bruce = {}  # bruce_id -> recording_url
+
+def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detalles=None, call_sid=None):
     """Registra una llamada en el historial para el dashboard"""
+    # FIX 272: Guardar mapeo call_sid -> bruce_id
+    if call_sid and bruce_id:
+        callsid_to_bruceid[call_sid] = bruce_id
+
     historial_llamadas.append({
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "bruce_id": bruce_id,
@@ -4446,7 +4468,8 @@ def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detall
         "negocio": negocio,
         "resultado": resultado,
         "duracion": duracion,
-        "detalles": detalles or {}
+        "detalles": detalles or {},
+        "call_sid": call_sid  # FIX 272: Guardar para asociar grabación después
     })
 
 
@@ -5645,9 +5668,9 @@ def historial_llamadas_dashboard():
             else:
                 badge_class = ''
 
-            # URL de grabación
+            # URL de grabación - buscar en detalles o en mapeo global
             detalles = llamada.get('detalles', {})
-            recording_url = detalles.get('recording_url', '')
+            recording_url = detalles.get('recording_url', '') or grabaciones_por_bruce.get(bruce_id, '')
 
             html += f"""
                 <tr data-call-id="{call_id}">
