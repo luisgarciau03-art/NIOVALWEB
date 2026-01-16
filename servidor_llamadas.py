@@ -1879,10 +1879,14 @@ def procesar_respuesta():
                 print(f"   ✅ FIX 260: Frase termina en '{ultima_palabra}' pero ES PREGUNTA - responder inmediatamente")
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
-            if tiempo_hablando < 2.0 and palabras_nuevas >= 2:
+            # FIX 264: Pero NO si es una pregunta o termina en signo de interrogación
+            termina_en_pregunta = speech_result.strip().endswith('?') or '¿' in speech_result
+            if tiempo_hablando < 2.0 and palabras_nuevas >= 2 and not es_pregunta and not termina_en_pregunta:
                 # Probablemente sigue hablando - el timeout de 2s lo interrumpió
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
+            elif tiempo_hablando < 2.0 and (es_pregunta or termina_en_pregunta):
+                print(f"   ✅ FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente")
 
             # FIX 253: Detectar si cliente está deletreando email (arroba, punto, @)
             palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo"]
