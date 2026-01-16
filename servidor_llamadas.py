@@ -1387,6 +1387,8 @@ def grabacion_llamada_completa():
                 if llamada.get("bruce_id") == bruce_id:
                     llamada["detalles"]["recording_url"] = recording_url
                     print(f"   ✅ FIX 272: Historial actualizado con URL de grabación")
+                    # FIX 272.2: Persistir cambio en disco
+                    guardar_historial()
                     break
 
     return Response("OK", mimetype="text/plain")
@@ -4448,8 +4450,34 @@ def diagnostico_persistencia():
 from collections import deque
 from datetime import datetime
 
-# Historial de llamadas recientes (últimas 100)
-historial_llamadas = deque(maxlen=100)
+# FIX 272.2: Archivo para persistir historial entre deploys
+HISTORIAL_FILE = os.path.join(CACHE_DIR, "historial_llamadas.json")
+
+def cargar_historial():
+    """Carga el historial de llamadas desde archivo JSON"""
+    try:
+        if os.path.exists(HISTORIAL_FILE):
+            with open(HISTORIAL_FILE, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+                return deque(datos, maxlen=500)  # Últimas 500 llamadas
+    except Exception as e:
+        print(f"⚠️ FIX 272.2: Error cargando historial: {e}")
+    return deque(maxlen=500)
+
+def guardar_historial():
+    """Guarda el historial en archivo JSON para persistir entre deploys"""
+    try:
+        os.makedirs(os.path.dirname(HISTORIAL_FILE), exist_ok=True)
+        with open(HISTORIAL_FILE, 'w', encoding='utf-8') as f:
+            json.dump(list(historial_llamadas), f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"⚠️ FIX 272.2: Error guardando historial: {e}")
+        return False
+
+# Cargar historial al iniciar
+historial_llamadas = cargar_historial()
+print(f"📞 FIX 272.2: {len(historial_llamadas)} llamadas en historial cargadas")
 
 # FIX 272: Mapeo CallSid -> bruce_id para asociar grabaciones
 callsid_to_bruceid = {}  # call_sid -> bruce_id
@@ -4471,6 +4499,9 @@ def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detall
         "detalles": detalles or {},
         "call_sid": call_sid  # FIX 272: Guardar para asociar grabación después
     })
+
+    # FIX 272.2: Persistir historial en disco
+    guardar_historial()
 
 
 @app.route("/logs", methods=["GET"])
