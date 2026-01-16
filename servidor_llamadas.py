@@ -5741,8 +5741,13 @@ def historial_llamadas_dashboard():
             detalles = llamada.get('detalles', {})
             recording_url = detalles.get('recording_url', '') or grabaciones_por_bruce.get(bruce_id, '')
 
-            # FIX 272.4: Link directo a consola de Twilio
-            twilio_console_url = "https://console.twilio.com/us1/monitor/logs/call-recordings?frameUrl=%2Fconsole%2Fvoice%2Frecordings%2Frecording-logs%3Fx-target-region%3Dus1"
+            # FIX 272.6: Extraer Recording SID para link directo
+            recording_sid = ""
+            if recording_url and "/Recordings/" in recording_url:
+                recording_sid = recording_url.split("/Recordings/")[-1].split(".")[0]
+
+            # Link al proxy local que sirve el audio con autenticación
+            link_grabacion = f"/escuchar-grabacion/{recording_sid}" if recording_sid else ""
 
             html += f"""
                 <tr data-call-id="{call_id}" class="{'fila-solucionada' if solucionado_actual else ''}">
@@ -5753,7 +5758,7 @@ def historial_llamadas_dashboard():
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
                     <td>{llamada.get('duracion', 0)}s</td>
                     <td>
-                        <a href="{twilio_console_url}" target="_blank" class="link-grabacion">🎧 Twilio</a>
+                        {'<a href="' + link_grabacion + '" target="_blank" class="link-grabacion">🎧 Escuchar</a>' if link_grabacion else '<span style="color:#666">-</span>'}
                     </td>
                     <td>
                         <div class="semaforo">
@@ -5932,6 +5937,45 @@ def guardar_calificaciones_endpoint():
     except Exception as e:
         print(f"❌ FIX 272: Error guardando calificaciones: {e}")
         return {"success": False, "error": str(e)}, 500
+
+
+@app.route("/escuchar-grabacion/<recording_sid>", methods=["GET"])
+def escuchar_grabacion(recording_sid):
+    """
+    FIX 272.6: Proxy para servir grabaciones de Twilio con autenticación
+    Permite escuchar grabaciones directamente sin necesidad de login en Twilio
+    """
+    try:
+        if not recording_sid or recording_sid == "undefined":
+            return "Recording SID no válido", 400
+
+        # Construir URL de Twilio con autenticación
+        twilio_url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Recordings/{recording_sid}.mp3"
+
+        # Descargar audio con autenticación
+        response = requests.get(
+            twilio_url,
+            auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
+            stream=True,
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            # Servir el audio directamente
+            return Response(
+                response.content,
+                mimetype='audio/mpeg',
+                headers={
+                    'Content-Disposition': f'inline; filename="{recording_sid}.mp3"'
+                }
+            )
+        else:
+            print(f"⚠️ FIX 272.6: Error descargando grabación {recording_sid}: {response.status_code}")
+            return f"Error al obtener grabación: {response.status_code}", response.status_code
+
+    except Exception as e:
+        print(f"❌ FIX 272.6: Error en proxy de grabación: {e}")
+        return f"Error: {str(e)}", 500
 
 
 @app.route("/logs/download", methods=["GET"])
