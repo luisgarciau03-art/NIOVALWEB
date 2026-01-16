@@ -2014,6 +2014,51 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 6B (FIX 254): Cliente dice "no se encuentra" pero Bruce pide transferencia
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+
+                # Detectar si cliente dice que encargado NO está disponible
+                patrones_no_disponible = [
+                    r'no\s+se\s+encuentra',
+                    r'no\s+est[aá]',
+                    r'no\s+est[aá]\s+(?:disponible|aqu[ií]|en\s+este\s+momento)',
+                    r'no\s+(?:lo|la)\s+tengo',
+                    r'ya\s+sali[oó]',
+                    r'(?:est[aá]|se\s+fue)\s+(?:fuera|afuera)',
+                    r'(?:sali[oó]|se\s+fue)',
+                ]
+
+                cliente_dice_no_disponible = any(re.search(p, ultimo_cliente) for p in patrones_no_disponible)
+
+                # Detectar si Bruce está pidiendo transferencia/comunicar
+                bruce_pide_transferencia = any(kw in respuesta_lower for kw in [
+                    'me lo podría comunicar',
+                    'me lo puede comunicar',
+                    'me podría comunicar',
+                    'me puede pasar',
+                    'me lo pasa',
+                    'me comunica con',
+                    'transferir',
+                    'comunicar con'
+                ])
+
+                if cliente_dice_no_disponible and bruce_pide_transferencia:
+                    print(f"\n🚫 FIX 254: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce pide transferencia")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 7 (FIX 228/236/240): Evitar repetir el saludo/presentación
         # FIX 240: Patrones más específicos para evitar falsos positivos
         # ============================================================
@@ -2298,7 +2343,7 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252/254: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
