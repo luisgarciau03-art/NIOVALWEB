@@ -984,7 +984,17 @@ def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_em
         response.raise_for_status()
 
         tiempo_descarga = time.time() - inicio
-        print(f"   ✅ Audio descargado en {tiempo_descarga:.3f}s ({len(response.content)} bytes)")
+        audio_bytes = len(response.content)
+        print(f"   ✅ Audio descargado en {tiempo_descarga:.3f}s ({audio_bytes} bytes)")
+
+        # FIX 268: Validar tamaño mínimo de audio antes de enviar a Whisper
+        # Whisper requiere mínimo 0.1 segundos de audio (~1600 bytes para WAV mono 8kHz)
+        # Si el audio es muy pequeño, es silencio o ruido - no vale la pena transcribir
+        AUDIO_MIN_BYTES = 2000  # ~0.125 segundos de audio
+        if audio_bytes < AUDIO_MIN_BYTES:
+            print(f"   ⚠️ FIX 268: Audio muy corto ({audio_bytes} bytes < {AUDIO_MIN_BYTES}) - probablemente silencio")
+            print(f"   ℹ️ Saltando Whisper para evitar error 'audio_too_short'")
+            return None
 
         # Guardar temporalmente para Whisper
         temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
