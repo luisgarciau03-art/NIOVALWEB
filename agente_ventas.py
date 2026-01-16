@@ -1766,19 +1766,23 @@ class AgenteVentas:
         filtro_aplicado = False
 
         # ============================================================
-        # FILTRO 1: Si ya tenemos correo, NO repetirlo ni pedir WhatsApp
+        # FILTRO 1 (FIX 226/251): Si ya tenemos correo, NO repetirlo ni pedir WhatsApp
         # ============================================================
         email_capturado = self.lead_data.get("email", "")
         if email_capturado:
-            # Patrones que indican que Bruce está repitiendo el correo
+            # FIX 251: Patrones expandidos para detectar repetición de correo
             patrones_repetir_correo = [
                 r'confirmar.*correo',
                 r'confirmar.*email',
                 r'confirmar.*es\s+\w+.*@',
                 r'enviar[ée].*al?\s+correo',
+                r'enviar[ée].*por\s+correo',  # FIX 251: "enviaré por correo"
                 r'enviar[ée].*a\s+\w+.*@',
                 r'catálogo.*a\s+\w+.*@',
                 r'catálogo.*al?\s+correo',
+                r'catálogo.*por\s+correo',  # FIX 251: "catálogo por correo"
+                r'correo.*a\s+\w+\s*@',  # FIX 251: "correo a usuario@..."
+                r'por\s+correo\s+a\s+',  # FIX 251: "por correo a [email]"
                 r'@.*punto\s*com',
                 r'@.*gmail',
                 r'@.*hotmail',
@@ -1792,12 +1796,33 @@ class AgenteVentas:
 
             for patron in patrones_repetir_correo:
                 if re.search(patron, respuesta_lower):
-                    print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce intentó repetir correo")
+                    print(f"\n🚨 FIX 226/251: FILTRO ACTIVADO - Bruce intentó repetir correo")
                     print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                     respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
                     break
+
+            # FIX 252: Bloquear si Bruce menciona el email capturado literalmente
+            if not filtro_aplicado and email_capturado:
+                # Normalizar email para búsqueda (quitar espacios, hacer lowercase)
+                email_normalizado = email_capturado.lower().replace(" ", "")
+
+                # Buscar partes del email en la respuesta
+                # Ejemplo: "facturacion@gmail.com" → buscar "facturacion", "gmail"
+                partes_email = email_normalizado.split("@")
+                if len(partes_email) == 2:
+                    usuario = partes_email[0]  # "facturacion"
+                    dominio = partes_email[1].split(".")[0]  # "gmail"
+
+                    # Si Bruce menciona el nombre de usuario del email (>4 chars)
+                    if len(usuario) > 4 and usuario in respuesta_lower.replace(" ", ""):
+                        print(f"\n🚨 FIX 252: FILTRO ACTIVADO - Bruce mencionó email capturado ('{usuario}')")
+                        print(f"   Email capturado: {email_capturado}")
+                        print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                        respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
 
             # Patrones que indican que Bruce pide WhatsApp cuando ya tiene correo
             if not filtro_aplicado:
@@ -2273,7 +2298,7 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

@@ -1860,6 +1860,14 @@ def procesar_respuesta():
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
 
+            # FIX 253: Detectar si cliente está deletreando email (arroba, punto, @)
+            palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo"]
+            esta_deletreando_email = any(palabra in speech_result.lower() for palabra in palabras_deletreo_email)
+
+            if esta_deletreando_email:
+                frase_parece_incompleta = True
+                print(f"   🚨 FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
+
             if frase_parece_incompleta:
                 print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
                 print(f"   Transcripción parcial: '{speech_result}'")
