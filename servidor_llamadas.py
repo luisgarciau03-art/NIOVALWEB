@@ -5685,6 +5685,46 @@ if __name__ == "__main__":
     print(f"   • Ruta absoluta: {os.path.abspath(CACHE_DIR)}")
     print(f"   • Auto-caché después de {FRECUENCIA_MIN_CACHE} usos\n")
 
+    # FIX 270: Notificar a Telegram que el servidor está listo
+    def notificar_telegram_deploy():
+        """Envía notificación a Telegram cuando el servidor inicia"""
+        import datetime
+        TELEGRAM_BOTS = [
+            {
+                "token": "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE",
+                "chat_id": "7314842427",
+                "nombre": "Bot 1"
+            },
+            {
+                "token": "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI",
+                "chat_id": "5838212022",
+                "nombre": "Bot 2"
+            }
+        ]
+
+        fecha_hora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        mensaje = f"🚀 <b>Deploy completado</b>\n\n✅ Bruce Agent iniciado en Railway\n📅 {fecha_hora}\n📊 Audios en caché: {len(audio_cache)}"
+
+        for bot in TELEGRAM_BOTS:
+            try:
+                url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
+                data = {
+                    "chat_id": bot['chat_id'],
+                    "text": mensaje,
+                    "parse_mode": "HTML"
+                }
+                response = requests.post(url, data=data, timeout=10)
+                if response.status_code == 200:
+                    print(f"✅ FIX 270: Telegram {bot['nombre']} notificado")
+                else:
+                    print(f"⚠️ FIX 270: Error Telegram {bot['nombre']}: {response.status_code}")
+            except Exception as e:
+                print(f"⚠️ FIX 270: Error Telegram {bot['nombre']}: {e}")
+
+    # Ejecutar notificación en background para no bloquear inicio
+    import threading
+    threading.Thread(target=notificar_telegram_deploy, daemon=True).start()
+
     # Puerto dinámico para Render (usa PORT de env o 5000 por defecto)
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
