@@ -5653,6 +5653,12 @@ def historial_llamadas_dashboard():
             .fila-solucionada .link-grabacion {
                 text-decoration: none;
             }
+
+            /* Semáforo guardado */
+            .semaforo-guardado {
+                font-size: 24px;
+                display: inline-block;
+            }
         </style>
     </head>
     <body>
@@ -5703,6 +5709,7 @@ def historial_llamadas_dashboard():
                     <th>Semáforo</th>
                     <th>Notas del Error</th>
                     <th>Solucionado</th>
+                    <th>Estado</th>
                 </tr>
         """
 
@@ -5774,6 +5781,11 @@ def historial_llamadas_dashboard():
                             <span class="checkmark"></span>
                         </label>
                     </td>
+                    <td style="text-align: center;">
+                        <span class="semaforo-guardado" data-call-id="{call_id}">
+                            {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '🔴' if semaforo_actual == 'rojo' else '⚪'}
+                        </span>
+                    </td>
                 </tr>
             """
 
@@ -5807,6 +5819,13 @@ def historial_llamadas_dashboard():
 
                 // Indicador visual de cambio pendiente
                 btn.style.boxShadow = '0 0 15px ' + (color === 'verde' ? '#4CAF50' : color === 'amarillo' ? '#FFC107' : '#f44336');
+
+                // Actualizar el emoji del estado guardado
+                const estadoSpan = fila.querySelector('.semaforo-guardado');
+                if (estadoSpan) {
+                    const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '🔴' };
+                    estadoSpan.textContent = emojis[color] || '⚪';
+                }
             }
 
             function setNotas(callId, notas) {
