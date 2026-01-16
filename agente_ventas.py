@@ -2014,11 +2014,11 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 6B (FIX 254): Cliente dice "no se encuentra" pero Bruce pide transferencia
+        # FILTRO 6B (FIX 254/255): Cliente dice "no se encuentra" pero Bruce insiste
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
-                msg['content'].lower() for msg in self.conversation_history[-3:]
+                msg['content'].lower() for msg in self.conversation_history[-4:]
                 if msg['role'] == 'user'
             ]
 
@@ -2034,12 +2034,14 @@ class AgenteVentas:
                     r'ya\s+sali[oó]',
                     r'(?:est[aá]|se\s+fue)\s+(?:fuera|afuera)',
                     r'(?:sali[oó]|se\s+fue)',
+                    r'llamar\s+(?:m[aá]s\s+)?tarde',  # FIX 255: "llamar más tarde"
+                    r'llame\s+(?:m[aá]s\s+)?tarde',   # FIX 255: "llame más tarde"
                 ]
 
                 cliente_dice_no_disponible = any(re.search(p, ultimo_cliente) for p in patrones_no_disponible)
 
-                # Detectar si Bruce está pidiendo transferencia/comunicar
-                bruce_pide_transferencia = any(kw in respuesta_lower for kw in [
+                # FIX 255: Ampliar detección - Bruce pide transferencia O pregunta por mejor momento
+                bruce_insiste_contacto = any(kw in respuesta_lower for kw in [
                     'me lo podría comunicar',
                     'me lo puede comunicar',
                     'me podría comunicar',
@@ -2047,11 +2049,18 @@ class AgenteVentas:
                     'me lo pasa',
                     'me comunica con',
                     'transferir',
-                    'comunicar con'
+                    'comunicar con',
+                    # FIX 255: Nuevos patrones
+                    'mejor momento para llamar',
+                    'cuándo puedo llamar',
+                    'a qué hora',
+                    'qué hora puedo',
+                    'cuándo lo encuentro',
+                    'cuándo está disponible',
                 ])
 
-                if cliente_dice_no_disponible and bruce_pide_transferencia:
-                    print(f"\n🚫 FIX 254: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce pide transferencia")
+                if cliente_dice_no_disponible and bruce_insiste_contacto:
+                    print(f"\n🚫 FIX 254/255: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"

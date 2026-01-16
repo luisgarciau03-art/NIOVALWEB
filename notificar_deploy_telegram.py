@@ -5,7 +5,12 @@ Uso: python notificar_deploy_telegram.py "Mensaje personalizado"
 """
 
 import sys
+import os
 import requests
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # Configuración de bots de Telegram
 TELEGRAM_BOTS = [
