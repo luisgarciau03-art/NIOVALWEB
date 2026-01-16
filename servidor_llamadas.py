@@ -5749,10 +5749,13 @@ def historial_llamadas_dashboard():
             # Link al proxy local que sirve el audio con autenticación
             link_grabacion = f"/escuchar-grabacion/{recording_sid}" if recording_sid else ""
 
+            # FIX 272.8: Link a logs filtrados por bruce_id
+            link_logs = f"/logs/api?bruce_id={bruce_id.replace('BRUCE', '')}" if bruce_id and bruce_id != 'N/A' else ""
+
             html += f"""
                 <tr data-call-id="{call_id}" class="{'fila-solucionada' if solucionado_actual else ''}">
                     <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
-                    <td><strong>{bruce_id}</strong></td>
+                    <td><a href="{link_logs}" target="_blank" style="color: #4CAF50; text-decoration: none;" title="Ver logs de esta llamada"><strong>{bruce_id}</strong> 📋</a></td>
                     <td title="{llamada.get('negocio', 'N/A')}">{llamada.get('negocio', 'N/A')[:25]}...</td>
                     <td style="font-size: 12px;">{llamada.get('telefono', 'N/A')}</td>
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
@@ -6140,13 +6143,13 @@ def ver_logs_texto():
 @app.route("/logs/api", methods=["GET"])
 def logs_api():
     """
-    FIX 208: API JSON para obtener logs programáticamente
-    Ideal para scripts de análisis automático
+    FIX 208/272.8: API para obtener logs - ahora soporta HTML y JSON
     """
     try:
         lineas = min(int(request.args.get('lineas', 500)), 5000)
         filtro = request.args.get('filtro', '').lower()
         bruce_id = request.args.get('bruce_id', '')
+        formato = request.args.get('formato', 'html')  # FIX 272.8: Por defecto HTML
 
         with log_lock:
             logs_list = list(log_buffer)[-lineas:]
@@ -6159,14 +6162,97 @@ def logs_api():
         if bruce_id:
             logs_list = [l for l in logs_list if f"BRUCE{bruce_id}" in l or f"bruce{bruce_id}" in l.lower()]
 
-        return {
-            "success": True,
-            "total_en_buffer": len(log_buffer),
-            "logs_filtrados": len(logs_list),
-            "filtro": filtro,
-            "bruce_id": bruce_id,
-            "logs": logs_list
-        }
+        # FIX 272.8: Si formato es JSON, devolver JSON
+        if formato == 'json':
+            return {
+                "success": True,
+                "total_en_buffer": len(log_buffer),
+                "logs_filtrados": len(logs_list),
+                "filtro": filtro,
+                "bruce_id": bruce_id,
+                "logs": logs_list
+            }
+
+        # FIX 272.8: Por defecto devolver HTML bonito
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>📋 Logs BRUCE{bruce_id}</title>
+            <meta charset="UTF-8">
+            <style>
+                body {{
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                h1 {{ color: #4CAF50; }}
+                .nav {{ margin-bottom: 20px; }}
+                .nav a {{ color: #4CAF50; margin-right: 20px; text-decoration: none; }}
+                .nav a:hover {{ text-decoration: underline; }}
+                .stats {{ background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }}
+                .log-container {{
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }}
+                .log-line {{
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }}
+                .log-line:hover {{ background: #21262d; }}
+                .log-bruce {{ color: #58a6ff; }}
+                .log-cliente {{ color: #f0883e; }}
+                .log-llamada {{ color: #a371f7; }}
+                .log-error {{ color: #f85149; }}
+                .log-exito {{ color: #3fb950; }}
+            </style>
+        </head>
+        <body>
+            <h1>📋 Logs de BRUCE{bruce_id}</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs">📊 Dashboard</a>
+                <a href="/logs/api?bruce_id={bruce_id}&formato=json" target="_blank">📥 JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> {len(logs_list)} |
+                <strong>BRUCE ID:</strong> {bruce_id}
+            </div>
+            <div class="log-container">
+        """
+
+        for log in logs_list:
+            # Colorear según tipo de log
+            css_class = ""
+            if "[BRUCE" in log or "BRUCE DICE" in log.upper():
+                css_class = "log-bruce"
+            elif "[CLIENTE" in log or "CLIENTE DIJO" in log.upper():
+                css_class = "log-cliente"
+            elif "[LLAMADA" in log:
+                css_class = "log-llamada"
+            elif "error" in log.lower() or "❌" in log:
+                css_class = "log-error"
+            elif "✅" in log or "éxito" in log.lower():
+                css_class = "log-exito"
+
+            # Escapar HTML
+            log_escaped = log.replace("<", "&lt;").replace(">", "&gt;")
+            html += f'<div class="log-line {css_class}">{log_escaped}</div>'
+
+        html += """
+            </div>
+        </body>
+        </html>
+        """
+
+        return html
 
     except Exception as e:
         return {"error": str(e)}, 500
