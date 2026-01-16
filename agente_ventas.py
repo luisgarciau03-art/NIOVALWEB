@@ -1934,7 +1934,7 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # FIX 249/256: Detectar negaciones/rechazos que invalidan "ahorita"
+                # FIX 249/256/261: Detectar negaciones/rechazos que invalidan "ahorita"
                 # Si cliente dice "ahorita tenemos cerrado", NO es espera
                 patrones_negacion = [
                     r'cerrado', r'no\s+est[aá]', r'no\s+se\s+encuentra',
@@ -1943,7 +1943,15 @@ class AgenteVentas:
                     # FIX 256: Patrones específicos para encargado
                     r'(?:encargado|jefe|gerente).*(?:no\s+est[aá]|sali[oó]|se\s+fue)',
                     r'(?:no\s+est[aá]|sali[oó]|se\s+fue).*(?:encargado|jefe|gerente)',
-                    r'ya\s+sali[oó]', r'se\s+fue', r'est[aá]\s+fuera'
+                    r'ya\s+sali[oó]', r'se\s+fue', r'est[aá]\s+fuera',
+                    # FIX 261: Patrones de horario de llegada (implica que ahora NO está)
+                    r'(?:entra|llega|viene)\s+(?:a\s+las?|hasta\s+las?)\s*\d',
+                    r'(?:entra|llega|viene)\s+(?:en\s+la\s+)?(?:tarde|mañana|noche)',
+                    r'hasta\s+las?\s*\d',  # "hasta las 9"
+                    r'(?:después|despues)\s+de\s+las?\s*\d',  # "después de las 9"
+                    r'(?:m[aá]s\s+)?tarde',  # "más tarde"
+                    r'(?:en\s+)?(?:un\s+)?rato',  # "en un rato"
+                    r'(?:no\s+)?(?:tod[ao])?v[ií]a\s+no',  # "todavía no"
                 ]
 
                 tiene_negacion = any(re.search(p, ultimo_cliente) for p in patrones_negacion)
