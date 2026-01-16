@@ -1086,7 +1086,11 @@ def iniciar_llamada():
             from_=TWILIO_PHONE_NUMBER,
             url=request.url_root + "webhook-voz",
             method="POST",
-            record=True,  # Grabar llamada automáticamente
+            record=True,  # Grabar llamada completa automáticamente
+            # FIX 267: Agregar callback para grabaciones completas
+            recording_status_callback=request.url_root + "grabacion-llamada-completa",
+            recording_status_callback_event=["completed"],
+            recording_status_callback_method="POST",
             # machine_detection="DetectMessageEnd",  # FIX 85: DESHABILITADO (causaba delay de 11s)
             # machine_detection_timeout=5,  # FIX 85: DESHABILITADO
             status_callback=request.url_root + "status-callback",  # Webhook para estado de llamada
@@ -1303,15 +1307,46 @@ def webhook_voz():
 
 @app.route("/grabacion-status", methods=["POST"])
 def grabacion_status():
-    """FIX 214: Callback para status de grabación (opcional, para debugging)"""
+    """FIX 214: Callback para status de grabación (RecordVerb - fragmentos)"""
     recording_sid = request.form.get("RecordingSid", "")
     recording_status = request.form.get("RecordingStatus", "")
     recording_url = request.form.get("RecordingUrl", "")
     call_sid = request.form.get("CallSid", "")
 
-    print(f"📼 FIX 214: Grabación {recording_status} - CallSid: {call_sid}")
+    print(f"📼 FIX 214: Grabación fragmento {recording_status} - CallSid: {call_sid}")
     if recording_url:
         print(f"   URL: {recording_url}")
+
+    return Response("OK", mimetype="text/plain")
+
+
+@app.route("/grabacion-llamada-completa", methods=["POST"])
+def grabacion_llamada_completa():
+    """
+    FIX 267: Callback para grabación COMPLETA de la llamada (record=True en calls.create)
+    Esta es la grabación de TODA la llamada, no los fragmentos de RecordVerb
+    """
+    recording_sid = request.form.get("RecordingSid", "")
+    recording_status = request.form.get("RecordingStatus", "")
+    recording_url = request.form.get("RecordingUrl", "")
+    recording_duration = request.form.get("RecordingDuration", "0")
+    call_sid = request.form.get("CallSid", "")
+
+    print(f"\n🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA")
+    print(f"   CallSid: {call_sid}")
+    print(f"   RecordingSid: {recording_sid}")
+    print(f"   Status: {recording_status}")
+    print(f"   Duración: {recording_duration} segundos")
+    if recording_url:
+        print(f"   URL: {recording_url}")
+        # Guardar URL en el agente si está disponible
+        agente = conversaciones_activas.get(call_sid)
+        if agente:
+            agente.lead_data["recording_url"] = recording_url
+            agente.lead_data["recording_duration"] = recording_duration
+            print(f"   ✅ URL guardada en lead_data del agente")
+        else:
+            print(f"   ⚠️ Agente no encontrado en conversaciones_activas (llamada ya terminó)")
 
     return Response("OK", mimetype="text/plain")
 
@@ -1819,6 +1854,51 @@ def procesar_respuesta():
     # ============================================================================
     if speech_result and speech_result.strip():
         import time
+
+        # ============================================================================
+        # FIX 265: Detectar deletreo de email ANTES de verificar historial de habla
+        # Esto permite detectar "Es ventas 1 arroba provechisa punto com" incluso
+        # si es la primera vez que el cliente habla (sin historial previo)
+        # ============================================================================
+        frase_lower = speech_result.lower()
+        palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo", "outlook", ".com", ".mx", ".net"]
+        esta_deletreando_email = any(palabra in frase_lower for palabra in palabras_deletreo_email)
+
+        # FIX 265: Si está deletreando email, verificar si parece completo o incompleto
+        if esta_deletreando_email:
+            # Un email completo tiene: algo@algo.algo (arroba + punto + dominio)
+            tiene_arroba = "arroba" in frase_lower or "@" in frase_lower
+            tiene_punto = "punto" in frase_lower or "." in frase_lower
+            tiene_dominio = any(dom in frase_lower for dom in ["com", "mx", "net", "org", "edu", "gmail", "hotmail", "yahoo", "outlook"])
+
+            email_parece_completo = tiene_arroba and tiene_punto and tiene_dominio
+
+            if not email_parece_completo:
+                # Email incompleto - esperar más
+                print(f"\n📧 FIX 265: CLIENTE DELETREANDO EMAIL (incompleto)")
+                print(f"   Transcripción parcial: '{speech_result}'")
+                print(f"   tiene_arroba: {tiene_arroba}, tiene_punto: {tiene_punto}, tiene_dominio: {tiene_dominio}")
+
+                # Almacenar transcripción parcial
+                if not hasattr(agente, 'transcripcion_parcial_acumulada'):
+                    agente.transcripcion_parcial_acumulada = []
+                agente.transcripcion_parcial_acumulada.append(speech_result)
+
+                # Generar TwiML para seguir escuchando con timeout largo
+                response = VoiceResponse()
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=5,  # 5s de timeout para deletreo de email
+                    play_beep=False,
+                    trim="trim-silence"
+                )
+
+                print(f"   ✅ FIX 265: Esperando que termine el email con timeout de 5s...")
+                return Response(str(response), mimetype="text/xml")
+            else:
+                print(f"   ✅ FIX 265: Email parece completo - procesar normalmente")
 
         # Verificar si el cliente tiene historial de habla activa
         if call_sid in cliente_hablando_activo:
@@ -3044,7 +3124,11 @@ def llamadas_masivas():
                 from_=TWILIO_PHONE_NUMBER,
                 url=request.url_root + "webhook-voz",
                 method="POST",
-                record=True  # Grabar llamada automáticamente
+                record=True,  # Grabar llamada completa automáticamente
+                # FIX 267: Agregar callback para grabaciones completas
+                recording_status_callback=request.url_root + "grabacion-llamada-completa",
+                recording_status_callback_event=["completed"],
+                recording_status_callback_method="POST"
             )
 
             resultados.append({

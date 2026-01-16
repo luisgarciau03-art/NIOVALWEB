@@ -2510,7 +2510,7 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 14 (FIX 258/259): Cliente dice "ahí le paso el número" pero Bruce NO pide el número
+        # FILTRO 14 (FIX 258/259/266): Cliente dice "ahí le paso el número" o "lo puede enviar, le digo a dónde"
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
@@ -2521,12 +2521,19 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Detectar si cliente ofreció dar el número
+                # Detectar si cliente ofreció dar el número o dirección de envío
                 patrones_ofrecimiento_numero = [
                     r'(?:ahí|ah[ií])\s+(?:le|te)\s+(?:paso|doy|mando)\s+(?:el|mi)\s+n[uú]mero',
                     r'(?:le|te)\s+(?:paso|doy|mando)\s+(?:el|mi)\s+(?:n[uú]mero|whatsapp)',
                     r'(?:dime|d[ií]game)\s+(?:d[oó]nde|a\s+d[oó]nde)\s+(?:te\s+lo|se\s+lo)\s+(?:paso|mando|env[ií]o)',
                     r'(?:apunta|anota)\s+(?:el|mi)\s+n[uú]mero',
+                    # FIX 266: "Lo puede enviar, le digo a dónde" = cliente dará dirección/número
+                    r'(?:lo|la)\s+puede\s+enviar.*(?:le\s+)?digo\s+(?:a\s+)?d[oó]nde',
+                    r'(?:env[ií]e|mande).*(?:le\s+)?digo\s+(?:a\s+)?d[oó]nde',
+                    r'(?:ah[ií]|ahi)\s+le\s+digo',  # "ahí le digo" (el número/correo)
+                    r'(?:se\s+lo|te\s+lo)\s+(?:paso|doy|mando)',  # "se lo paso" (el número)
+                    r'le\s+digo\s+(?:a\s+)?d[oó]nde',  # "le digo a dónde" (enviar)
+                    r'(?:d[ií]game|dime)\s+(?:d[oó]nde|a\s+d[oó]nde)\s+(?:lo\s+)?(?:mando|env[ií]o)',
                 ]
 
                 cliente_ofrecio_numero = any(re.search(p, ultimo_cliente) for p in patrones_ofrecimiento_numero)
@@ -2538,7 +2545,7 @@ class AgenteVentas:
                 ])
 
                 if cliente_ofrecio_numero and not bruce_pide_numero:
-                    print(f"\n📱 FIX 258/259: FILTRO ACTIVADO - Cliente ofreció número pero Bruce NO lo pidió")
+                    print(f"\n📱 FIX 258/259/266: FILTRO ACTIVADO - Cliente ofreció número/dirección pero Bruce NO lo pidió")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Perfecto, dígame su número por favor."
@@ -2546,7 +2553,7 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226/227/228/241/242/243/245/246/247/249/251/252/254/256/257/258/259: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-266: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
