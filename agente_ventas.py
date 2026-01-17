@@ -2040,6 +2040,12 @@ class AgenteVentas:
                     r'email',
                     r'mail',
                     r'@',  # Si menciona arroba
+                    r'arroba',  # FIX 280: Detectar "arroba" como palabra
+                    r'punto\s*com',  # FIX 280: Detectar "punto com"
+                    r'gmail',
+                    r'hotmail',
+                    r'outlook',
+                    r'yahoo',
                 ]
 
                 cliente_quiere_dar_correo = any(re.search(p, ultimo_cliente) for p in patrones_dar_correo)
@@ -2277,14 +2283,14 @@ class AgenteVentas:
                     # Verificar si ya preguntamos esto antes
                     ya_preguntado = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
                     if ya_preguntado:
-                        print(f"\n🚫 FIX 263B: FILTRO ACTIVADO - Bruce repitiendo pregunta")
+                        print(f"\n🚫 FIX 263B/280: FILTRO ACTIVADO - Bruce repitiendo pregunta")
                         print(f"   Patrón repetido: '{patron}'")
                         print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
-                        # Reformular en lugar de repetir
-                        if 'whatsapp' in patron or 'catálogo' in patron:
-                            respuesta = "¿Tiene alguna duda sobre el catálogo? Estoy para ayudarle."
+                        # FIX 280: Reformular mejor - si ya preguntó por contacto, esperar respuesta
+                        if 'whatsapp' in patron or 'catálogo' in patron or 'correo' in patron:
+                            respuesta = "Sí, lo escucho. Adelante con el dato."
                         else:
-                            respuesta = "¿Hay algo más en lo que le pueda ayudar?"
+                            respuesta = "Sí, dígame."
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                         break
