@@ -2250,7 +2250,7 @@ class AgenteVentas:
                         print(f"\n🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
-                        respuesta = "¿Me escucha? Estoy aquí para ayudarle."
+                        respuesta = "¿Me escucha?"
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                         break
