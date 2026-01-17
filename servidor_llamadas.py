@@ -3576,6 +3576,69 @@ def regenerar_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/limpiar-audio", methods=["POST"])
+def limpiar_audio_especifico():
+    """
+    FIX 276: Elimina audios del caché que contengan cierta palabra/frase
+    Útil para regenerar audios con pronunciación incorrecta
+
+    POST /limpiar-audio
+    Body: {"palabra": "ferretería"} o {"frase": "variedad de productos"}
+    """
+    import os
+
+    try:
+        data = request.get_json() or {}
+        palabra = data.get('palabra', '').lower()
+        frase = data.get('frase', '').lower()
+
+        if not palabra and not frase:
+            return {"error": "Debe proporcionar 'palabra' o 'frase' en el body"}, 400
+
+        buscar = frase if frase else palabra
+        eliminados = []
+
+        # Buscar en audio_cache (memoria)
+        keys_a_eliminar = []
+        for key in audio_cache.keys():
+            if buscar in key.lower():
+                keys_a_eliminar.append(key)
+
+        for key in keys_a_eliminar:
+            del audio_cache[key]
+            eliminados.append(f"memoria:{key}")
+
+        # Buscar en archivos del disco
+        if os.path.exists(CACHE_DIR):
+            for archivo in os.listdir(CACHE_DIR):
+                if archivo.endswith('.mp3') and buscar.replace(' ', '_') in archivo.lower():
+                    filepath = os.path.join(CACHE_DIR, archivo)
+                    try:
+                        os.remove(filepath)
+                        eliminados.append(f"disco:{archivo}")
+                    except Exception as e:
+                        eliminados.append(f"error:{archivo}:{e}")
+
+        # También buscar en metadata
+        if buscar in str(cache_metadata).lower():
+            keys_metadata = [k for k in cache_metadata.keys() if buscar in k.lower()]
+            for k in keys_metadata:
+                if k in cache_metadata:
+                    del cache_metadata[k]
+                    eliminados.append(f"metadata:{k}")
+
+        return {
+            "success": True,
+            "busqueda": buscar,
+            "eliminados": eliminados,
+            "total": len(eliminados),
+            "mensaje": f"Se eliminarán {len(eliminados)} audios. La próxima vez que se use esta frase, se regenerará con pronunciación corregida."
+        }
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 @app.route("/listar-audios", methods=["GET"])
 def listar_audios():
     """Lista todos los audios disponibles en el cache"""
