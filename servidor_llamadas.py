@@ -233,7 +233,12 @@ respuestas_cache = {
     },
     "encargado_no": {
         "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos"],
-        "respuesta": "Entiendo. ¿A qué hora sería mejor llamarle?"
+        "respuesta": "Entiendo. ¿A qué hora puedo llamar para contactarlo? O si gusta, le puedo mandar el catálogo por WhatsApp o correo para que lo revise cuando regrese."
+    },
+    # FIX 273: Cuando no pueden dar información (no es el encargado)
+    "no_puede_decidir": {
+        "patrones": ["no sabría decirle", "no sabria decirle", "no puedo ayudarle", "no le puedo ayudar", "no sé", "no se", "no estoy seguro", "tendría que preguntar", "tendria que preguntar"],
+        "respuesta": "Entiendo perfectamente. ¿A qué hora puedo llamar para hablar con el encargado? O si prefiere, le dejo el catálogo por WhatsApp para que lo revise con calma."
     },
     "whatsapp_si": {
         "patrones": ["whatsapp", "wasa", "número es", "numero es", "mi cel", "mi teléfono", "mi telefono"],
