@@ -263,6 +263,14 @@ respuestas_cache = {
         "patrones": ["estoy ocupado", "no tengo tiempo", "ahora no puedo", "llámame después", "llamame despues"],
         "respuesta": "Por supuesto, lo entiendo. ¿Prefiere que le llame mañana por la mañana? O si gusta, le envío el catálogo por WhatsApp y lo revisa cuando pueda."
     },
+    # FIX 276: Detectar cuando no venden/manejan ferretería
+    "no_vende_ferreteria": {
+        "patrones": ["no vendo ferretería", "no vendo ferreteria", "no vendemos ferretería", "no vendemos ferreteria",
+                     "no manejo ferretería", "no manejo ferreteria", "no manejamos ferretería", "no manejamos ferreteria",
+                     "nada de ferretería", "nada de ferreteria", "no es ferretería", "no es ferreteria",
+                     "no tenemos ferretería", "no tenemos ferreteria", "no me dedico a", "no nos dedicamos"],
+        "respuesta": "Entiendo perfectamente, disculpe la molestia. Que tenga un excelente día, gracias por su tiempo."
+    },
 }
 
 # Estadísticas de uso del caché de respuestas

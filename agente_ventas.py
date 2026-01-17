@@ -1537,7 +1537,41 @@ def convertir_numeros_escritos_a_digitos(texto: str) -> str:
         "seis seis veintitrés 53 41 8" → "66 23 53 41 8"
         "tres tres uno dos" → "33 12"
         "sesenta y seis" → "66"
+        "treinta y uno" → "31"
     """
+    import re
+
+    texto_convertido = texto.lower()
+
+    # FIX 276: Primero convertir números compuestos "treinta y uno" → "31"
+    # Patrón: decena + "y" + unidad
+    compuestos = {
+        'treinta y uno': '31', 'treinta y dos': '32', 'treinta y tres': '33',
+        'treinta y cuatro': '34', 'treinta y cinco': '35', 'treinta y seis': '36',
+        'treinta y siete': '37', 'treinta y ocho': '38', 'treinta y nueve': '39',
+        'cuarenta y uno': '41', 'cuarenta y dos': '42', 'cuarenta y tres': '43',
+        'cuarenta y cuatro': '44', 'cuarenta y cinco': '45', 'cuarenta y seis': '46',
+        'cuarenta y siete': '47', 'cuarenta y ocho': '48', 'cuarenta y nueve': '49',
+        'cincuenta y uno': '51', 'cincuenta y dos': '52', 'cincuenta y tres': '53',
+        'cincuenta y cuatro': '54', 'cincuenta y cinco': '55', 'cincuenta y seis': '56',
+        'cincuenta y siete': '57', 'cincuenta y ocho': '58', 'cincuenta y nueve': '59',
+        'sesenta y uno': '61', 'sesenta y dos': '62', 'sesenta y tres': '63',
+        'sesenta y cuatro': '64', 'sesenta y cinco': '65', 'sesenta y seis': '66',
+        'sesenta y siete': '67', 'sesenta y ocho': '68', 'sesenta y nueve': '69',
+        'setenta y uno': '71', 'setenta y dos': '72', 'setenta y tres': '73',
+        'setenta y cuatro': '74', 'setenta y cinco': '75', 'setenta y seis': '76',
+        'setenta y siete': '77', 'setenta y ocho': '78', 'setenta y nueve': '79',
+        'ochenta y uno': '81', 'ochenta y dos': '82', 'ochenta y tres': '83',
+        'ochenta y cuatro': '84', 'ochenta y cinco': '85', 'ochenta y seis': '86',
+        'ochenta y siete': '87', 'ochenta y ocho': '88', 'ochenta y nueve': '89',
+        'noventa y uno': '91', 'noventa y dos': '92', 'noventa y tres': '93',
+        'noventa y cuatro': '94', 'noventa y cinco': '95', 'noventa y seis': '96',
+        'noventa y siete': '97', 'noventa y ocho': '98', 'noventa y nueve': '99',
+    }
+
+    for compuesto, digito in compuestos.items():
+        texto_convertido = texto_convertido.replace(compuesto, digito)
+
     # Mapeo de palabras a dígitos
     numeros_palabras = {
         # Números del 0-9
@@ -1557,8 +1591,6 @@ def convertir_numeros_escritos_a_digitos(texto: str) -> str:
         'treinta': '30', 'cuarenta': '40', 'cincuenta': '50',
         'sesenta': '60', 'setenta': '70', 'ochenta': '80', 'noventa': '90'
     }
-
-    texto_convertido = texto.lower()
 
     # Reemplazar cada palabra por su dígito
     for palabra, digito in numeros_palabras.items():
@@ -2453,8 +2485,12 @@ class AgenteVentas:
                 )
 
                 if bruce_pidio_numero and ultimo_cliente:
-                    # Extraer dígitos del mensaje del cliente
-                    digitos = re.findall(r'\d', ultimo_cliente)
+                    # FIX 276: Primero convertir números escritos a dígitos
+                    # Ej: "catorce" -> "14", "sesenta y uno" -> "61"
+                    ultimo_cliente_convertido = convertir_numeros_escritos_a_digitos(ultimo_cliente)
+
+                    # Extraer dígitos del mensaje del cliente (después de conversión)
+                    digitos = re.findall(r'\d', ultimo_cliente_convertido)
                     num_digitos = len(digitos)
 
                     print(f"\n🔢 FIX 245 DEBUG: Cliente dio número con {num_digitos} dígitos")
