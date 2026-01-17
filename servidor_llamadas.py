@@ -156,6 +156,9 @@ frase_stats = {}  # Contador de frecuencia de frases
 # En local usa ./audio_cache
 CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable de entorno
 FRECUENCIA_MIN_CACHE = 1  # FIX 193: Auto-generar caché después de 1 uso (reducir latencia)
+
+# FIX 272.10: Identificador único del deploy actual (fecha/hora de inicio del servidor)
+DEPLOY_ID = datetime.now().strftime("%Y-%m-%d %H:%M")
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
 # FIX 56: CACHÉ DE RESPUESTAS DE GPT (0s delay para preguntas comunes)
@@ -4498,7 +4501,8 @@ def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detall
         "resultado": resultado,
         "duracion": duracion,
         "detalles": detalles or {},
-        "call_sid": call_sid  # FIX 272: Guardar para asociar grabación después
+        "call_sid": call_sid,  # FIX 272: Guardar para asociar grabación después
+        "deploy_id": DEPLOY_ID  # FIX 272.10: Guardar deploy donde ocurrió la llamada
     })
 
     # FIX 272.2: Persistir historial en disco
@@ -5736,6 +5740,16 @@ def historial_llamadas_dashboard():
 
     if historial:
         html += """
+            <div class="filtros" style="margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 8px;">
+                <label style="color: #fff; margin-right: 10px;">🔍 Filtrar por Estado:</label>
+                <select id="filtroEstado" onchange="filtrarPorEstado()" style="padding: 8px; border-radius: 5px; background: #333; color: #fff; border: 1px solid #555;">
+                    <option value="todos">Todos</option>
+                    <option value="verde">🟢 Bueno</option>
+                    <option value="amarillo">🟡 Medio</option>
+                    <option value="rojo">🔴 Malo</option>
+                    <option value="sin_calificar">⚪ Sin calificar</option>
+                </select>
+            </div>
             <table>
                 <tr>
                     <th>Fecha/Hora</th>
@@ -5749,6 +5763,7 @@ def historial_llamadas_dashboard():
                     <th>Notas del Error</th>
                     <th>Solucionado</th>
                     <th>Estado</th>
+                    <th>Deploy</th>
                 </tr>
         """
 
@@ -5791,8 +5806,16 @@ def historial_llamadas_dashboard():
             # FIX 272.8: Link a logs filtrados por bruce_id
             link_logs = f"/logs/api?bruce_id={bruce_id.replace('BRUCE', '')}" if bruce_id and bruce_id != 'N/A' else ""
 
+            # FIX 272.10: Obtener deploy de la llamada
+            deploy_llamada = llamada.get('deploy_id', 'N/A')
+            # Formato corto: solo hora si es del mismo día
+            deploy_display = deploy_llamada[-5:] if deploy_llamada != 'N/A' else 'N/A'
+
+            # Estado para el filtro
+            estado_filtro = semaforo_actual if semaforo_actual else 'sin_calificar'
+
             html += f"""
-                <tr data-call-id="{call_id}" class="{'fila-solucionada' if solucionado_actual else ''}">
+                <tr data-call-id="{call_id}" data-estado="{estado_filtro}" class="{'fila-solucionada' if solucionado_actual else ''}">
                     <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
                     <td><a href="{link_logs}" target="_blank" style="color: #4CAF50; text-decoration: none;" title="Ver logs de esta llamada"><strong>{bruce_id}</strong> 📋</a></td>
                     <td title="{llamada.get('negocio', 'N/A')}">{llamada.get('negocio', 'N/A')[:25]}...</td>
@@ -5833,6 +5856,7 @@ def historial_llamadas_dashboard():
                             {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '🔴' if semaforo_actual == 'rojo' else '⚪'}
                         </span>
                     </td>
+                    <td style="font-size: 10px; color: #888;" title="{deploy_llamada}">{deploy_display}</td>
                 </tr>
             """
 
@@ -5854,6 +5878,21 @@ def historial_llamadas_dashboard():
             // Almacenar cambios pendientes
             let cambiosPendientes = {};
 
+            // FIX 272.10: Filtrar filas por estado del semáforo
+            function filtrarPorEstado() {
+                const filtro = document.getElementById('filtroEstado').value;
+                const filas = document.querySelectorAll('table tr[data-call-id]');
+
+                filas.forEach(fila => {
+                    const estado = fila.getAttribute('data-estado') || 'sin_calificar';
+                    if (filtro === 'todos' || estado === filtro) {
+                        fila.style.display = '';
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+            }
+
             function setSemaforo(callId, color, btn) {
                 // Quitar activo de hermanos
                 const fila = btn.closest('tr');
@@ -5873,6 +5912,9 @@ def historial_llamadas_dashboard():
                     const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '🔴' };
                     estadoSpan.textContent = emojis[color] || '⚪';
                 }
+
+                // FIX 272.10: Actualizar data-estado para el filtro
+                fila.setAttribute('data-estado', color);
             }
 
             function setNotas(callId, notas) {
