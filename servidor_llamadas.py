@@ -160,6 +160,19 @@ FRECUENCIA_MIN_CACHE = 1  # FIX 193: Auto-generar caché después de 1 uso (redu
 
 # FIX 272.10: Identificador único del deploy actual (fecha/hora de inicio del servidor)
 DEPLOY_ID = datetime.now().strftime("%Y-%m-%d %H:%M")
+# FIX 282: Nombre del deploy desde Railway (más legible)
+# Railway provee: RAILWAY_DEPLOYMENT_ID (hash), RAILWAY_GIT_COMMIT_SHA, RAILWAY_GIT_COMMIT_MESSAGE
+# Usamos: primeros 8 chars del commit message o del deployment ID como fallback
+_commit_msg = os.getenv("RAILWAY_GIT_COMMIT_MESSAGE", "")
+_deploy_id = os.getenv("RAILWAY_DEPLOYMENT_ID", "")
+# Extraer nombre legible: "FIX 282: ..." -> "FIX 282"
+if _commit_msg:
+    # Tomar primeras palabras hasta ":" o máximo 15 chars
+    DEPLOY_NAME = _commit_msg.split(":")[0][:15].strip() if ":" in _commit_msg else _commit_msg[:15].strip()
+elif _deploy_id:
+    DEPLOY_NAME = _deploy_id[:8]  # Primeros 8 caracteres del hash
+else:
+    DEPLOY_NAME = datetime.now().strftime("%m-%d %H:%M")
 cache_metadata = {}  # Metadata: frase → archivo MP3
 
 # FIX 56: CACHÉ DE RESPUESTAS DE GPT (0s delay para preguntas comunes)
@@ -4612,7 +4625,8 @@ def registrar_llamada(bruce_id, telefono, negocio, resultado, duracion=0, detall
         "duracion": duracion,
         "detalles": detalles or {},
         "call_sid": call_sid,  # FIX 272: Guardar para asociar grabación después
-        "deploy_id": DEPLOY_ID  # FIX 272.10: Guardar deploy donde ocurrió la llamada
+        "deploy_id": DEPLOY_ID,  # FIX 272.10: Guardar deploy donde ocurrió la llamada
+        "deploy_name": DEPLOY_NAME  # FIX 282: Nombre del deploy (más legible)
     })
 
     # FIX 272.2: Persistir historial en disco
@@ -5583,6 +5597,8 @@ def historial_llamadas_dashboard():
     verdes = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'verde')
     amarillos = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'amarillo')
     rojos = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'rojo')
+    naranjas = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'naranja')  # FIX 282: Buzón
+    azules = sum(1 for c in calificaciones_llamadas.values() if c.get('semaforo') == 'azul')  # FIX 282: Contestadora
     sin_calificar = len(historial) - total
 
     html = """
@@ -5629,6 +5645,8 @@ def historial_llamadas_dashboard():
             .stat-verde { background: rgba(76, 175, 80, 0.3); border: 2px solid #4CAF50; }
             .stat-amarillo { background: rgba(255, 193, 7, 0.3); border: 2px solid #FFC107; }
             .stat-rojo { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
+            .stat-naranja { background: rgba(255, 152, 0, 0.3); border: 2px solid #FF9800; }
+            .stat-azul { background: rgba(33, 150, 243, 0.3); border: 2px solid #2196F3; }
             .stat-gris { background: rgba(158, 158, 158, 0.3); border: 2px solid #9e9e9e; }
             .stat-item .numero { font-size: 2em; font-weight: bold; display: block; }
             .stat-item .label { font-size: 0.85em; opacity: 0.8; }
@@ -5680,6 +5698,8 @@ def historial_llamadas_dashboard():
             .btn-verde { background: #4CAF50; }
             .btn-amarillo { background: #FFC107; }
             .btn-rojo { background: #f44336; }
+            .btn-naranja { background: #FF9800; }
+            .btn-azul { background: #2196F3; }
 
             /* Campo de notas */
             .notas-input {
@@ -5837,6 +5857,14 @@ def historial_llamadas_dashboard():
                 <span class="numero">""" + str(rojos) + """</span>
                 <span class="label">🔴 Malo</span>
             </div>
+            <div class="stat-item stat-naranja">
+                <span class="numero">""" + str(naranjas) + """</span>
+                <span class="label">🟠 Buzón</span>
+            </div>
+            <div class="stat-item stat-azul">
+                <span class="numero">""" + str(azules) + """</span>
+                <span class="label">🔵 Contestadora</span>
+            </div>
             <div class="stat-item stat-gris">
                 <span class="numero">""" + str(max(0, sin_calificar)) + """</span>
                 <span class="label">⚪ Sin calificar</span>
@@ -5857,6 +5885,8 @@ def historial_llamadas_dashboard():
                     <option value="verde">🟢 Bueno</option>
                     <option value="amarillo">🟡 Medio</option>
                     <option value="rojo">🔴 Malo</option>
+                    <option value="naranja">🟠 Buzón</option>
+                    <option value="azul">🔵 Contestadora</option>
                     <option value="sin_calificar">⚪ Sin calificar</option>
                 </select>
             </div>
@@ -5916,11 +5946,14 @@ def historial_llamadas_dashboard():
             # FIX 272.8: Link a logs filtrados por bruce_id
             link_logs = f"/logs/api?bruce_id={bruce_id.replace('BRUCE', '')}" if bruce_id and bruce_id != 'N/A' else ""
 
-            # FIX 272.10: Obtener deploy de la llamada
+            # FIX 282: Obtener nombre del deploy de la llamada
+            deploy_name = llamada.get('deploy_name', '')
             deploy_llamada = llamada.get('deploy_id', '')
-            # Formato corto: solo hora si es del mismo día, o "Anterior" si no tiene
-            if deploy_llamada:
-                deploy_display = deploy_llamada[-5:]  # Solo HH:MM
+            # FIX 282: Prioridad: deploy_name > deploy_id > "Anterior"
+            if deploy_name:
+                deploy_display = deploy_name[:12]  # Máximo 12 caracteres
+            elif deploy_llamada:
+                deploy_display = deploy_llamada[-5:]  # Solo HH:MM como fallback
             else:
                 deploy_display = "Anterior"
                 deploy_llamada = "Pre-272.10"
@@ -5950,6 +5983,12 @@ def historial_llamadas_dashboard():
                             <button class="semaforo-btn btn-rojo {'activo' if semaforo_actual == 'rojo' else ''}"
                                     onclick="setSemaforo('{call_id}', 'rojo', this)" title="Malo">
                             </button>
+                            <button class="semaforo-btn btn-naranja {'activo' if semaforo_actual == 'naranja' else ''}"
+                                    onclick="setSemaforo('{call_id}', 'naranja', this)" title="Buzón">
+                            </button>
+                            <button class="semaforo-btn btn-azul {'activo' if semaforo_actual == 'azul' else ''}"
+                                    onclick="setSemaforo('{call_id}', 'azul', this)" title="Contestadora">
+                            </button>
                         </div>
                     </td>
                     <td>
@@ -5967,7 +6006,7 @@ def historial_llamadas_dashboard():
                     </td>
                     <td style="text-align: center;">
                         <span class="semaforo-guardado" data-call-id="{call_id}">
-                            {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '🔴' if semaforo_actual == 'rojo' else '⚪'}
+                            {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '🔴' if semaforo_actual == 'rojo' else '🟠' if semaforo_actual == 'naranja' else '🔵' if semaforo_actual == 'azul' else '⚪'}
                         </span>
                     </td>
                     <td style="font-size: 10px; color: #888;" title="{deploy_llamada}">{deploy_display}</td>
@@ -6018,12 +6057,13 @@ def historial_llamadas_dashboard():
                 cambiosPendientes[callId].semaforo = color;
 
                 // Indicador visual de cambio pendiente
-                btn.style.boxShadow = '0 0 15px ' + (color === 'verde' ? '#4CAF50' : color === 'amarillo' ? '#FFC107' : '#f44336');
+                const colores = { 'verde': '#4CAF50', 'amarillo': '#FFC107', 'rojo': '#f44336', 'naranja': '#FF9800', 'azul': '#2196F3' };
+                btn.style.boxShadow = '0 0 15px ' + (colores[color] || '#999');
 
                 // Actualizar el emoji del estado guardado
                 const estadoSpan = fila.querySelector('.semaforo-guardado');
                 if (estadoSpan) {
-                    const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '🔴' };
+                    const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '🔴', 'naranja': '🟠', 'azul': '🔵' };
                     estadoSpan.textContent = emojis[color] || '⚪';
                 }
 
