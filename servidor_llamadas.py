@@ -250,6 +250,13 @@ respuestas_cache = {
         "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos", "dejar recado", "dejar el recado", "gusta dejar", "dejarle recado", "dejar mensaje"],
         "respuesta": "Entiendo. ¿A qué hora puedo llamar para contactarlo? O si gusta, le puedo mandar el catálogo por WhatsApp o correo para que lo revise cuando regrese."
     },
+    # FIX 278: Cuando sugieren llamar en otro momento
+    "llamar_otro_momento": {
+        "patrones": ["marcarle en otro momento", "llamar en otro momento", "marque después", "marque despues",
+                     "llame después", "llame despues", "otro momento", "más tarde", "mas tarde",
+                     "regrese más tarde", "regrese mas tarde", "vuelva a llamar", "llame más tarde", "llame mas tarde"],
+        "respuesta": "Claro, con gusto. ¿A qué hora me recomienda llamar para encontrarlo?"
+    },
     # FIX 273: Cuando no pueden dar información (no es el encargado)
     "no_puede_decidir": {
         "patrones": ["no sabría decirle", "no sabria decirle", "no puedo ayudarle", "no le puedo ayudar", "no sé", "no se", "no estoy seguro", "tendría que preguntar", "tendria que preguntar"],
