@@ -204,25 +204,26 @@ respuestas_cache = {
         "respuesta": "Mi nombre es Bruce, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
     },
 
-    # FIX 194: Respuestas de presencia (cliente confundido/siente abandono)
+    # FIX 194/274: Respuestas de presencia (cliente confundido/siente abandono)
+    # FIX 274: Respuestas más cortas para no confundir
     "presencia_aqui": {
-        "patrones": ["hola", "oiga", "bueno"],
-        "respuesta": "Sí, estoy aquí, dígame.",
+        "patrones": ["oiga", "bueno"],
+        "respuesta": "Sí, dígame.",
         "categoria": "presencia"
     },
     "presencia_escucho": {
         "patrones": ["me escucha", "me oye"],
-        "respuesta": "Claro, lo escucho.",
+        "respuesta": "Sí, lo escucho perfectamente.",
         "categoria": "presencia"
     },
     "presencia_ayudo": {
         "patrones": ["sigue ahí", "está ahí"],
-        "respuesta": "Aquí estoy, ¿qué necesita?",
+        "respuesta": "Sí, aquí sigo.",
         "categoria": "presencia"
     },
     "presencia_digame": {
         "patrones": ["bruce"],
-        "respuesta": "Sí, ¿en qué le ayudo?",
+        "respuesta": "Sí, dígame.",
         "categoria": "presencia"
     },
 
@@ -232,7 +233,7 @@ respuestas_cache = {
         "respuesta": "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
     },
     "encargado_no": {
-        "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos"],
+        "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos", "dejar recado", "dejar el recado", "gusta dejar", "dejarle recado", "dejar mensaje"],
         "respuesta": "Entiendo. ¿A qué hora puedo llamar para contactarlo? O si gusta, le puedo mandar el catálogo por WhatsApp o correo para que lo revise cuando regrese."
     },
     # FIX 273: Cuando no pueden dar información (no es el encargado)
