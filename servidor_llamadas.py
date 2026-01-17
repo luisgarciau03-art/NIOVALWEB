@@ -14,6 +14,7 @@ import random
 import base64
 import asyncio
 import traceback  # FIX 102: Para logging de errores detallados
+from datetime import datetime  # FIX 272.10: Movido al inicio para DEPLOY_ID
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
@@ -4452,7 +4453,6 @@ def diagnostico_persistencia():
 # ============================================================================
 
 from collections import deque
-from datetime import datetime
 
 # FIX 272.2: Archivo para persistir historial entre deploys
 HISTORIAL_FILE = os.path.join(CACHE_DIR, "historial_llamadas.json")
