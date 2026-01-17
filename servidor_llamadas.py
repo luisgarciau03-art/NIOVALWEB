@@ -257,6 +257,15 @@ respuestas_cache = {
                      "regrese más tarde", "regrese mas tarde", "vuelva a llamar", "llame más tarde", "llame mas tarde"],
         "respuesta": "Claro, con gusto. ¿A qué hora me recomienda llamar para encontrarlo?"
     },
+    # FIX 281: Cuando mencionan día específico (fin de semana, lunes, etc.)
+    "llamar_dia_especifico": {
+        "patrones": ["es sábado", "es sabado", "es domingo", "hoy es sábado", "hoy es sabado", "hoy es domingo",
+                     "el lunes", "el martes", "el miércoles", "el miercoles", "el jueves", "el viernes",
+                     "hasta el lunes", "hasta el martes", "hasta el miércoles", "hasta el miercoles",
+                     "mañana lunes", "mañana martes", "pasado mañana", "la próxima semana", "la proxima semana",
+                     "no abrimos", "estamos cerrados", "no trabajamos", "no hay nadie", "no viene"],
+        "respuesta": "Perfecto, muchas gracias por la información. Le marco entonces. Que tenga excelente día."
+    },
     # FIX 273: Cuando no pueden dar información (no es el encargado)
     "no_puede_decidir": {
         "patrones": ["no sabría decirle", "no sabria decirle", "no puedo ayudarle", "no le puedo ayudar", "no sé", "no se", "no estoy seguro", "tendría que preguntar", "tendria que preguntar"],
@@ -2011,13 +2020,16 @@ def procesar_respuesta():
 
             # 2. Frase termina en preposición/artículo/verbo copulativo (indica continuación)
             # FIX 250: Agregar verbos copulativos y auxiliares que requieren complemento
+            # FIX 281: Agregar verbos en pretérito que indican continuación
             palabras_continuacion = [
                 # Preposiciones
                 "a", "de", "en", "la", "el", "lo", "un", "una", "para", "por", "con",
                 # Verbos copulativos que requieren complemento
                 "está", "esta", "es", "son", "están", "estan", "era", "fueron",
+                # FIX 281: Verbos en pretérito imperfecto (indican que falta el complemento)
+                "estaba", "estaban", "tenía", "tenia", "había", "habia", "iba",
                 # Verbos auxiliares
-                "va", "voy", "vas", "van", "iba", "puede", "pueden",
+                "va", "voy", "vas", "van", "puede", "pueden",
                 # Conjunciones
                 "y", "o", "pero", "mas",
                 # Negaciones que requieren verbo

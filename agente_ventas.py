@@ -2256,7 +2256,37 @@ class AgenteVentas:
                         print(f"\n🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
-                        respuesta = "¿Me escucha?"
+
+                        # FIX 281: Verificar contexto del último mensaje del cliente
+                        # Si el cliente dio información útil (día, hora, nombre, etc.), no usar "¿Me escucha?"
+                        ultimo_cliente_msg = ""
+                        for msg in reversed(self.conversation_history):
+                            if msg['role'] == 'user':
+                                ultimo_cliente_msg = msg['content'].lower()
+                                break
+
+                        # Detectar si cliente dio información de tiempo/día
+                        menciona_tiempo = any(palabra in ultimo_cliente_msg for palabra in [
+                            "lunes", "martes", "miércoles", "miercoles", "jueves", "viernes",
+                            "sábado", "sabado", "domingo", "mañana", "tarde", "noche",
+                            "semana", "hora", "día", "dia", "hoy", "ayer"
+                        ])
+
+                        # Detectar si cliente dio respuesta negativa (no está, salió, etc.)
+                        respuesta_negativa = any(palabra in ultimo_cliente_msg for palabra in [
+                            "no está", "no esta", "salió", "salio", "no se encuentra",
+                            "no hay", "no viene", "estaba", "cerrado"
+                        ])
+
+                        if menciona_tiempo:
+                            respuesta = "Perfecto, muchas gracias por la información. Le marco entonces. Que tenga excelente día."
+                            print(f"   FIX 281: Cliente mencionó tiempo/día - usando despedida apropiada")
+                        elif respuesta_negativa:
+                            respuesta = "Entiendo. ¿A qué hora puedo llamar para contactarlo?"
+                            print(f"   FIX 281: Cliente indicó ausencia - preguntando horario")
+                        else:
+                            respuesta = "¿Me escucha?"
+
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                         break
