@@ -5807,9 +5807,13 @@ def historial_llamadas_dashboard():
             link_logs = f"/logs/api?bruce_id={bruce_id.replace('BRUCE', '')}" if bruce_id and bruce_id != 'N/A' else ""
 
             # FIX 272.10: Obtener deploy de la llamada
-            deploy_llamada = llamada.get('deploy_id', 'N/A')
-            # Formato corto: solo hora si es del mismo día
-            deploy_display = deploy_llamada[-5:] if deploy_llamada != 'N/A' else 'N/A'
+            deploy_llamada = llamada.get('deploy_id', '')
+            # Formato corto: solo hora si es del mismo día, o "Anterior" si no tiene
+            if deploy_llamada:
+                deploy_display = deploy_llamada[-5:]  # Solo HH:MM
+            else:
+                deploy_display = "Anterior"
+                deploy_llamada = "Pre-272.10"
 
             # Estado para el filtro
             estado_filtro = semaforo_actual if semaforo_actual else 'sin_calificar'
