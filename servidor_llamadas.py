@@ -238,6 +238,14 @@ respuestas_cache = {
         "patrones": ["sí soy", "si soy", "con él", "con el", "el mismo", "soy yo", "a sus órdenes", "a sus ordenes", "dígame", "digame"],
         "respuesta": "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
     },
+    # FIX 277: Cuando están pasando la llamada al encargado (modo espera)
+    "pasando_llamada": {
+        "patrones": ["te lo comunico", "se lo comunico", "te lo paso", "se lo paso", "ahorita te lo paso",
+                     "ahorita se lo paso", "espéreme", "espereme", "un momento", "un momentito",
+                     "déjame ver", "dejame ver", "voy a ver", "le paso", "te paso", "espere"],
+        "respuesta": "Claro, aquí espero, gracias.",
+        "categoria": "espera"
+    },
     "encargado_no": {
         "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos", "dejar recado", "dejar el recado", "gusta dejar", "dejarle recado", "dejar mensaje"],
         "respuesta": "Entiendo. ¿A qué hora puedo llamar para contactarlo? O si gusta, le puedo mandar el catálogo por WhatsApp o correo para que lo revise cuando regrese."
