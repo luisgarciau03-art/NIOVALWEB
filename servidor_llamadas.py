@@ -204,8 +204,14 @@ respuestas_cache = {
         "respuesta": "Mi nombre es Bruce, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
     },
 
-    # FIX 194/274: Respuestas de presencia (cliente confundido/siente abandono)
+    # FIX 194/274/275: Respuestas de presencia (cliente confundido/siente abandono)
     # FIX 274: Respuestas más cortas para no confundir
+    # FIX 275: Agregar saludos para respuesta inmediata
+    "saludo_inicial": {
+        "patrones": ["buenos días", "buenos dias", "buen día", "buen dia", "buenas tardes", "buenas noches", "hola"],
+        "respuesta": "Hola, buenos días. Me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?",
+        "categoria": "saludo"
+    },
     "presencia_aqui": {
         "patrones": ["oiga", "bueno"],
         "respuesta": "Sí, dígame.",
