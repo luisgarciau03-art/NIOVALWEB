@@ -574,6 +574,45 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 5C (FIX 291): Cliente menciona sucursal/matriz
+        # Si GPT quiere despedirse pero cliente mencionó sucursal/matriz,
+        # Bruce debe pedir el número de la matriz en lugar de colgar
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                # Concatenar últimos mensajes para buscar contexto completo
+                contexto_cliente = ' '.join(ultimos_mensajes_cliente)
+
+                # Detectar si cliente menciona sucursal/matriz/oficinas
+                menciona_redireccion = any(
+                    frase in contexto_cliente
+                    for frase in ['sucursal', 'matriz', 'oficinas', 'corporativo', 'área de compras',
+                                  'no es de compras', 'no compramos aquí', 'no compramos aqui',
+                                  'ir a la', 'tendré que', 'tendre que', 'tendría que', 'tendria que']
+                )
+
+                # Detectar si GPT quiere despedirse/colgar por "número equivocado"
+                bruce_quiere_despedirse = any(
+                    frase in respuesta_lower
+                    for frase in ['error con el número', 'error con el numero', 'número equivocado', 'numero equivocado',
+                                  'disculpe las molestias', 'buen día', 'buen dia', 'hasta luego',
+                                  'gracias por su tiempo', 'que tenga']
+                )
+
+                if menciona_redireccion and bruce_quiere_despedirse:
+                    print(f"\n🏢 FIX 291: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz")
+                    print(f"   Contexto: '{contexto_cliente[:80]}...'")
+                    print(f"   Bruce iba a despedirse: '{respuesta[:60]}...'")
+                    respuesta = "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 6 (FIX 231): Detectar cuando cliente quiere dar correo
         # ============================================================
         if not filtro_aplicado:

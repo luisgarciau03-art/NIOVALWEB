@@ -322,13 +322,19 @@ respuestas_cache = {
                      "no tenemos ferretería", "no tenemos ferreteria", "no me dedico a", "no nos dedicamos"],
         "respuesta": "Entiendo perfectamente, disculpe la molestia. Que tenga un excelente día, gracias por su tiempo."
     },
-    # FIX 288: Cuando las compras se hacen en otro lugar (sucursal vs oficinas)
+    # FIX 288/291: Cuando las compras se hacen en otro lugar (sucursal vs oficinas/matriz)
     "compras_en_oficinas": {
         "patrones": ["sucursal no", "sucursales no", "aquí no se compra", "aqui no se compra", "no compramos aquí", "no compramos aqui",
                      "compras en oficinas", "compras en corporativo", "compras en matriz", "área de compras",
                      "oficinas centrales", "corporativo", "es en matriz", "es en oficinas",
-                     "no hacemos compras", "no se hacen compras", "no podemos comprar"],
-        "respuesta": "Entiendo, las compras se manejan en otro lugar. ¿Me podría proporcionar el número de las oficinas o del área de compras?"
+                     "no hacemos compras", "no se hacen compras", "no podemos comprar",
+                     # FIX 291: Más variantes de sucursal/matriz
+                     "es una sucursal", "somos sucursal", "esto es sucursal", "aquí es sucursal", "aqui es sucursal",
+                     "ir a la matriz", "ir a matriz", "tendría que ir", "tendria que ir", "tendré que ir", "tendre que ir",
+                     "a la matriz", "en la matriz", "llamar a matriz", "marcar a matriz",
+                     "aquí no es de compras", "aqui no es de compras", "no es de compras",
+                     "no se compra aquí", "no se compra aqui", "aquí no compramos", "aqui no compramos"],
+        "respuesta": "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
     },
 }
 
