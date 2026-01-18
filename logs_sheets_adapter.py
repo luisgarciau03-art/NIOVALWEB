@@ -1,91 +1,40 @@
 """
 Adaptador para registrar logs de conversación en Google Sheets
 Registra cada turno de conversación (BRUCE/CLIENTE) en la hoja LOGS
+
+MIGRADO: Ahora hereda de BaseGoogleSheetsAdapter para eliminar código duplicado
 """
 
 import gspread
-from google.oauth2.service_account import Credentials
 from datetime import datetime
 from typing import Optional
 
+# Importar clase base
+from adapters.google_sheets.base import BaseGoogleSheetsAdapter
 
-class LogsSheetsAdapter:
+
+class LogsSheetsAdapter(BaseGoogleSheetsAdapter):
     """Adaptador para escribir logs de conversación en Google Sheets"""
+
+    # Configuración del spreadsheet (usa ID en lugar de URL)
+    SPREADSHEET_ID = "1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg"
+    HOJA_NOMBRE = "LOGS"
 
     def __init__(self):
         """Inicializa la conexión con la hoja LOGS"""
-
-        # Spreadsheet ID de LOGS (Llamadas Nioval)
-        self.spreadsheet_id = "1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg"
-        self.hoja_nombre = "LOGS"
-
-        # Definir alcances
-        self.scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-
-        # Conectar
-        self.client = self._autenticar()
-        self.spreadsheet = self._abrir_spreadsheet()
-        self.hoja_logs = self._obtener_hoja_logs()
+        # Llamar al constructor de la clase base (usando ID en lugar de URL)
+        super().__init__(
+            spreadsheet_id=self.SPREADSHEET_ID,
+            hoja_nombre=self.HOJA_NOMBRE
+        )
+        # Alias para compatibilidad con código existente
+        self.hoja_logs = self.hoja
 
         # Contador de IDs BRUCE (se incrementa por cada nueva conversación)
         self.contador_bruce = self._obtener_ultimo_id_bruce()
 
         print(f"✅ Conectado a hoja LOGS para registro de conversaciones")
         print(f"📊 Último ID BRUCE: BRUCE{self.contador_bruce:02d}")
-
-    def _autenticar(self):
-        """Autentica con Google usando las credenciales (local o Railway/Render)"""
-        try:
-            import json
-            import os
-
-            # Intentar obtener credenciales desde variable de entorno (Railway/Render)
-            credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-
-            if credentials_json:
-                # Estamos en producción, usar credenciales desde env
-                print("🌐 Usando credenciales desde variable de entorno para LOGS")
-                credentials_dict = json.loads(credentials_json)
-                creds = Credentials.from_service_account_info(
-                    credentials_dict,
-                    scopes=self.scopes
-                )
-            else:
-                # Desarrollo local
-                print("💻 Usando credenciales locales para LOGS")
-                creds = Credentials.from_service_account_file(
-                    "bubbly-subject-412101-c969f4a975c5.json",
-                    scopes=self.scopes
-                )
-
-            return gspread.authorize(creds)
-
-        except Exception as e:
-            print(f"❌ Error autenticando con Google Sheets (LOGS): {e}")
-            raise
-
-    def _abrir_spreadsheet(self):
-        """Abre el spreadsheet de LOGS"""
-        try:
-            spreadsheet = self.client.open_by_key(self.spreadsheet_id)
-            print(f"✅ Spreadsheet LOGS abierto: {spreadsheet.title}")
-            return spreadsheet
-        except Exception as e:
-            print(f"❌ Error abriendo spreadsheet LOGS: {e}")
-            raise
-
-    def _obtener_hoja_logs(self):
-        """Obtiene la hoja LOGS del spreadsheet"""
-        try:
-            hoja = self.spreadsheet.worksheet(self.hoja_nombre)
-            print(f"✅ Hoja encontrada: {self.hoja_nombre}")
-            return hoja
-        except gspread.WorksheetNotFound:
-            print(f"❌ No se encontró la hoja '{self.hoja_nombre}'")
-            raise
 
     def _obtener_ultimo_id_bruce(self):
         """Obtiene el último ID BRUCE usado en la hoja"""

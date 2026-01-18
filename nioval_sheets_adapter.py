@@ -2,97 +2,36 @@
 Adaptador específico para el Spreadsheet de NIOVAL
 Conecta con la hoja "Bruce" (antes "LISTA DE CONTACTOS")
 FIX 213: Renombrado de hoja 2026-01-14
+
+MIGRADO: Ahora hereda de BaseGoogleSheetsAdapter para eliminar código duplicado
 """
 
-import gspread
-from google.oauth2.service_account import Credentials
 import re
 from typing import List, Dict, Optional
 from datetime import datetime
 
+# Importar clase base
+from adapters.google_sheets.base import BaseGoogleSheetsAdapter
 
-class NiovalSheetsAdapter:
+
+class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
     """Adaptador para trabajar con el spreadsheet existente de NIOVAL"""
+
+    # Configuración del spreadsheet
+    SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1wgEentS16hJrcf6YdEnSpEBcp4SCBJ9TkOCZY439jV4/edit"
+    # FIX 213: Cambio de nombre de hoja "LISTA DE CONTACTOS" -> "Bruce"
+    HOJA_NOMBRE = "Bruce"
 
     def __init__(self):
         """Inicializa la conexión con el spreadsheet de NIOVAL"""
-
-        # Credenciales y configuración
-        self.credentials_file = "C:\\Users\\PC 1\\bubbly-subject-412101-c969f4a975c5.json"
-        self.spreadsheet_url = "https://docs.google.com/spreadsheets/d/1wgEentS16hJrcf6YdEnSpEBcp4SCBJ9TkOCZY439jV4/edit"
-        # FIX 213: Cambio de nombre de hoja "LISTA DE CONTACTOS" -> "Bruce"
-        self.hoja_nombre = "Bruce"
-
-        # Definir alcances
-        self.scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-
-        # Conectar
-        self.client = self._autenticar()
-        self.spreadsheet = self._abrir_spreadsheet()
-        self.hoja_contactos = self._obtener_hoja_contactos()
-
+        # Llamar al constructor de la clase base
+        super().__init__(
+            spreadsheet_url=self.SPREADSHEET_URL,
+            hoja_nombre=self.HOJA_NOMBRE
+        )
+        # Alias para compatibilidad con código existente
+        self.hoja_contactos = self.hoja
         print(f"✅ Conectado a: {self.hoja_nombre}")
-
-    def _autenticar(self):
-        """Autentica con Google usando las credenciales (local o Render)"""
-        try:
-            import json
-            import os
-
-            # Intentar obtener credenciales desde variable de entorno (Render)
-            credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-
-            if credentials_json:
-                # Estamos en Render/producción, usar credenciales desde env
-                print("🌐 Usando credenciales desde variable de entorno (Render)")
-                credentials_dict = json.loads(credentials_json)
-                creds = Credentials.from_service_account_info(
-                    credentials_dict,
-                    scopes=self.scopes
-                )
-            else:
-                # Estamos en local, usar archivo
-                print("💻 Usando credenciales desde archivo local")
-                creds = Credentials.from_service_account_file(
-                    self.credentials_file,
-                    scopes=self.scopes
-                )
-
-            client = gspread.authorize(creds)
-            print("✅ Autenticado correctamente con Google Sheets")
-            return client
-        except Exception as e:
-            print(f"❌ Error al autenticar: {e}")
-            if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'):
-                print(f"   Verifica que el archivo existe: {self.credentials_file}")
-            else:
-                print(f"   Verifica que la variable GOOGLE_APPLICATION_CREDENTIALS_JSON sea válida")
-            raise
-
-    def _abrir_spreadsheet(self):
-        """Abre el spreadsheet por URL"""
-        try:
-            spreadsheet = self.client.open_by_url(self.spreadsheet_url)
-            print(f"✅ Spreadsheet abierto: {spreadsheet.title}")
-            return spreadsheet
-        except Exception as e:
-            print(f"❌ Error al abrir spreadsheet: {e}")
-            print(f"   Verifica que el Service Account tiene acceso al spreadsheet")
-            raise
-
-    def _obtener_hoja_contactos(self):
-        """Obtiene la hoja Bruce (contactos)"""
-        try:
-            hoja = self.spreadsheet.worksheet(self.hoja_nombre)
-            print(f"✅ Hoja encontrada: {self.hoja_nombre}")
-            return hoja
-        except Exception as e:
-            print(f"❌ Error: No se encontró la hoja '{self.hoja_nombre}'")
-            print(f"   Hojas disponibles: {[ws.title for ws in self.spreadsheet.worksheets()]}")
-            raise
 
     def normalizar_numero(self, numero: str) -> Optional[str]:
         """

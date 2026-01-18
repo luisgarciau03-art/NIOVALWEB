@@ -138,8 +138,8 @@ class TaberoNiovalAdapter:
             if pd.isna(value) or value == '' or str(value).strip() == '':
                 return None
             return str(value).strip()
-        except:
-            return None
+        except Exception:
+            return None  # Columna no existe o valor inválido
 
     def enriquecer_contacto(self, contacto_base: Dict) -> Dict:
         """

@@ -1,0 +1,67 @@
+```
+# Archivos temporales de Claude
+tmpclaude-*
+
+# Cache de audios (son archivos binarios, no código)
+audio_cache/
+
+# Logs
+LOGS/
+*.log
+*.txt
+
+# Análisis antiguos
+analisis_bruce_*.xlsx
+leads_nioval_backup.xlsx
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Entorno virtual (si tienes)
+venv/
+env/
+ENV/
+
+# Credenciales y secretos
+*.json
+!respuestas_cache.json
+!seed_data/respuestas_cache.json
+.env
+.env.*
+temp_credentials.json
+bubbly-subject-*.json
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos temporales de Windows
+Thumbs.db
+desktop.ini
+nul
+
+# Archivos de deployment
+.railway_token
+
+# Documentación de fixes antiguos (opcional)
+FIX_*.md
+RESUMEN_*.md
+
+# Archivos de prueba de voces
+pruebas_voces/
+
+# Node modules si los tienes
+node_modules/
+
+# Builds
+dist/
+build/
+*.egg-info/

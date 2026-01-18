@@ -1,94 +1,34 @@
 """
 Adaptador para el Spreadsheet de RESULTADOS
 Guarda las respuestas del formulario de 7 preguntas en "Respuestas de formulario 1"
+
+MIGRADO: Ahora hereda de BaseGoogleSheetsAdapter para eliminar código duplicado
 """
 
-import gspread
-from google.oauth2.service_account import Credentials
 from typing import Dict, Optional
 from datetime import datetime
 
+# Importar clase base
+from adapters.google_sheets.base import BaseGoogleSheetsAdapter
 
-class ResultadosSheetsAdapter:
+
+class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
     """Adaptador para guardar resultados de llamadas en Google Sheets"""
+
+    # Configuración del spreadsheet
+    SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg/edit"
+    HOJA_NOMBRE = "Respuestas de formulario 1"
 
     def __init__(self):
         """Inicializa la conexión con el spreadsheet de resultados"""
-
-        # Credenciales y configuración
-        self.credentials_file = "C:\\Users\\PC 1\\bubbly-subject-412101-c969f4a975c5.json"
-        self.spreadsheet_url = "https://docs.google.com/spreadsheets/d/1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg/edit"
-        self.hoja_nombre = "Respuestas de formulario 1"
-
-        # Definir alcances
-        self.scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-
-        # Conectar
-        self.client = self._autenticar()
-        self.spreadsheet = self._abrir_spreadsheet()
-        self.hoja_resultados = self._obtener_hoja_resultados()
-
+        # Llamar al constructor de la clase base
+        super().__init__(
+            spreadsheet_url=self.SPREADSHEET_URL,
+            hoja_nombre=self.HOJA_NOMBRE
+        )
+        # Alias para compatibilidad con código existente
+        self.hoja_resultados = self.hoja
         print(f"✅ Conectado a spreadsheet de resultados: {self.hoja_nombre}")
-
-    def _autenticar(self):
-        """Autentica con Google usando las credenciales (local o Render)"""
-        try:
-            import json
-            import os
-
-            # Intentar obtener credenciales desde variable de entorno (Render)
-            credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
-
-            if credentials_json:
-                # Estamos en Render/producción, usar credenciales desde env
-                print("🌐 Usando credenciales desde variable de entorno (Render)")
-                credentials_dict = json.loads(credentials_json)
-                creds = Credentials.from_service_account_info(
-                    credentials_dict,
-                    scopes=self.scopes
-                )
-            else:
-                # Estamos en local, usar archivo
-                print("💻 Usando credenciales desde archivo local")
-                creds = Credentials.from_service_account_file(
-                    self.credentials_file,
-                    scopes=self.scopes
-                )
-
-            client = gspread.authorize(creds)
-            print("✅ Autenticado correctamente (spreadsheet resultados)")
-            return client
-        except Exception as e:
-            print(f"❌ Error al autenticar: {e}")
-            if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'):
-                print(f"   Verifica que el archivo existe: {self.credentials_file}")
-            else:
-                print(f"   Verifica que la variable GOOGLE_APPLICATION_CREDENTIALS_JSON sea válida")
-            raise
-
-    def _abrir_spreadsheet(self):
-        """Abre el spreadsheet por URL"""
-        try:
-            spreadsheet = self.client.open_by_url(self.spreadsheet_url)
-            print(f"✅ Spreadsheet de resultados abierto: {spreadsheet.title}")
-            return spreadsheet
-        except Exception as e:
-            print(f"❌ Error al abrir spreadsheet de resultados: {e}")
-            raise
-
-    def _obtener_hoja_resultados(self):
-        """Obtiene la hoja de resultados"""
-        try:
-            hoja = self.spreadsheet.worksheet(self.hoja_nombre)
-            print(f"✅ Hoja de resultados encontrada: {self.hoja_nombre}")
-            return hoja
-        except Exception as e:
-            print(f"❌ Error: No se encontró la hoja '{self.hoja_nombre}'")
-            print(f"   Hojas disponibles: {[ws.title for ws in self.spreadsheet.worksheets()]}")
-            raise
 
     def guardar_resultado_llamada(self, datos: Dict) -> bool:
         """

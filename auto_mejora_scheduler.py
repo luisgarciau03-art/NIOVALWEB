@@ -190,8 +190,8 @@ def generar_excel_analisis(analisis, mejoras_seleccionadas=None):
                 try:
                     if len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
-                except:
-                    pass
+                except Exception:
+                    pass  # Celda vacía o sin valor, ignorar
 
             adjusted_width = min(max_length + 2, 80)
             ws.column_dimensions[column_letter].width = adjusted_width
@@ -370,8 +370,8 @@ def solicitar_autorizacion():
         mejoras_seleccionadas = [int(n.strip()) for n in partes.split(",")]
         print(f"\n✅ Autorización recibida para mejoras: {mejoras_seleccionadas}")
         return True, mejoras_seleccionadas
-    except:
-        print("\n❌ Formato inválido. Proceso cancelado.")
+    except Exception as e:
+        print(f"\n❌ Formato inválido ({e}). Proceso cancelado.")
         return False, []
 
 

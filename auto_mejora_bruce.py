@@ -119,8 +119,8 @@ class AutoMejoraBruce:
                         # Solo últimos 7 días
                         if timestamp < hace_7_dias:
                             continue
-                except:
-                    continue
+                except Exception:
+                    continue  # Formato de fecha inválido, saltar fila
 
                 total_llamadas += 1
 

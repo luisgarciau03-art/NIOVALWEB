@@ -133,8 +133,8 @@ def main():
                 print("⚠️  ADVERTENCIA: Créditos insuficientes para generar todos los cachés")
                 print("   Se generarán tantos como sea posible")
                 print()
-    except:
-        pass
+    except Exception as e:
+        print(f"⚠️ No se pudo verificar créditos ElevenLabs: {e}")
 
     respuesta = input("¿Continuar? (s/n): ")
     if respuesta.lower() != 's':

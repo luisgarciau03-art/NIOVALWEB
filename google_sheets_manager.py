@@ -154,8 +154,8 @@ class GoogleSheetsManager:
             if cell:
                 print(f"⚠️ El teléfono {telefono} ya existe en fila {cell.row}")
                 return cell.row
-        except:
-            pass
+        except Exception:
+            pass  # Teléfono no encontrado, continuar para agregar
 
         # Preparar datos
         fecha_actual = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

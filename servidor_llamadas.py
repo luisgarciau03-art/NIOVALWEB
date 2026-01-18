@@ -248,15 +248,27 @@ respuestas_cache = {
 
     # FIX 209: Respuestas adicionales para reducir latencia
     "encargado_si": {
-        "patrones": ["sí soy", "si soy", "con él", "con el", "el mismo", "soy yo", "a sus órdenes", "a sus ordenes", "dígame", "digame"],
+        "patrones": ["sí soy", "si soy", "con él", "con el", "el mismo", "soy yo", "a sus órdenes", "a sus ordenes"],
         "respuesta": "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+    },
+    # FIX 283: Cuando cliente confirma enviar a este número (WhatsApp)
+    "confirma_este_numero": {
+        "patrones": ["a este número", "a este numero", "es a este número", "es a este numero",
+                     "a este mismo", "este mismo número", "este mismo numero", "al mismo número", "al mismo numero",
+                     "a este lo pueden enviar", "a este lo puedo enviar", "a este número lo pueden", "a este numero lo pueden"],
+        "respuesta": "Perfecto, lo enviaré a este número. Le mandaré el catálogo en breve."
     },
     # FIX 277: Cuando están pasando la llamada al encargado (modo espera)
     "pasando_llamada": {
         "patrones": ["te lo comunico", "se lo comunico", "te lo paso", "se lo paso", "ahorita te lo paso",
                      "ahorita se lo paso", "espéreme", "espereme", "un momento", "un momentito",
-                     "déjame ver", "dejame ver", "voy a ver", "le paso", "te paso", "espere"],
-        "respuesta": "Claro, aquí espero, gracias.",
+                     "déjame ver", "dejame ver", "voy a ver", "le paso", "te paso", "espere",
+                     "deme un segundo", "dame un segundo", "un segundo", "un segundito",
+                     "permítame", "permíteme", "permitame", "permiteme", "tantito",
+                     # FIX 290: Agregar variantes de "deme un minuto"
+                     "deme un minuto", "dame un minuto", "un minuto", "un minutito",
+                     "déme un minuto", "deme chance", "dame chance", "un ratito", "un rato"],
+        "respuesta": "Claro, aquí espero.",
         "categoria": "espera"
     },
     "encargado_no": {
@@ -289,8 +301,10 @@ respuestas_cache = {
         "respuesta": "Perfecto. ¿Me lo puede confirmar? Lo anoto."
     },
     "correo_si": {
-        "patrones": ["correo", "email", "mándalo", "mandalo", "envíalo", "envialo", "le paso"],
-        "respuesta": "Perfecto, ¿me lo puede deletrear por favor?"
+        "patrones": ["por correo", "el correo", "un correo", "mi correo", "email", "mándalo", "mandalo", "envíalo", "envialo", "le paso",
+                     "te doy un correo", "te voy a dar un correo", "le doy el correo", "le paso el correo",
+                     "por correo electrónico", "correo electrónico"],
+        "respuesta": "Perfecto, dígame el correo y lo anoto."
     },
     "no_interesa": {
         "patrones": ["no me interesa", "no gracias", "no necesito", "ya tenemos", "estamos bien"],
@@ -307,6 +321,14 @@ respuestas_cache = {
                      "nada de ferretería", "nada de ferreteria", "no es ferretería", "no es ferreteria",
                      "no tenemos ferretería", "no tenemos ferreteria", "no me dedico a", "no nos dedicamos"],
         "respuesta": "Entiendo perfectamente, disculpe la molestia. Que tenga un excelente día, gracias por su tiempo."
+    },
+    # FIX 288: Cuando las compras se hacen en otro lugar (sucursal vs oficinas)
+    "compras_en_oficinas": {
+        "patrones": ["sucursal no", "sucursales no", "aquí no se compra", "aqui no se compra", "no compramos aquí", "no compramos aqui",
+                     "compras en oficinas", "compras en corporativo", "compras en matriz", "área de compras",
+                     "oficinas centrales", "corporativo", "es en matriz", "es en oficinas",
+                     "no hacemos compras", "no se hacen compras", "no podemos comprar"],
+        "respuesta": "Entiendo, las compras se manejan en otro lugar. ¿Me podría proporcionar el número de las oficinas o del área de compras?"
     },
 }
 
@@ -394,7 +416,8 @@ def cargar_cache_desde_disco():
                     ):
                         debe_actualizar = False
                         print(f"✅ FIX 64: respuestas_cache.json ya está actualizado ({len(seed_content)} categorías)\n")
-            except:
+            except Exception as e:
+                print(f"⚠️ FIX 64: Error comparando cache, actualizando: {e}")
                 debe_actualizar = True
 
         if debe_actualizar:
@@ -1166,9 +1189,9 @@ def iniciar_llamada():
         )
 
         print(f"🔍 DEBUG 5: Llamada Twilio creada - SID: {call.sid}")
-        # FIX 208: Registrar inicio de llamada
+        # FIX 208/284: Registrar inicio de llamada (sin duplicar prefijo BRUCE)
         bruce_id_log = contacto_info.get("bruce_id", "N/A") if contacto_info else "N/A"
-        log_evento(f"BRUCE{bruce_id_log} - LLAMADA INICIADA a {telefono_destino} ({nombre_negocio})", "LLAMADA")
+        log_evento(f"{bruce_id_log} - LLAMADA INICIADA a {telefono_destino} ({nombre_negocio})", "LLAMADA")
 
         # Guardar info del contacto para usar en el webhook
         if contacto_info:
@@ -1945,9 +1968,9 @@ def procesar_respuesta():
 
     # LOG: Mostrar lo que dijo el cliente
     print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
-    # FIX 208: Registrar en buffer de logs
+    # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id_cliente = agente.lead_data.get("bruce_id", "N/A") if agente else "N/A"
-    log_evento(f"BRUCE{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
+    log_evento(f"{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
 
     # Registrar mensaje del cliente en LOGS
     if logs_manager and speech_result and agente.bruce_id:
@@ -2084,6 +2107,17 @@ def procesar_respuesta():
                 frase_parece_incompleta = True
                 print(f"   🚨 FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
 
+            # FIX 286: Detectar si cliente está repitiendo lo mismo (indica que espera respuesta)
+            if hasattr(agente, 'transcripcion_parcial_acumulada') and len(agente.transcripcion_parcial_acumulada) >= 2:
+                ultimas_2 = [t.lower().strip() for t in agente.transcripcion_parcial_acumulada[-2:]]
+                speech_lower_strip = speech_result.lower().strip()
+                # Si las últimas 2 transcripciones son iguales a la actual, el cliente está repitiendo
+                if ultimas_2[-1] == speech_lower_strip or (len(ultimas_2) >= 2 and ultimas_2[-1] == ultimas_2[-2] == speech_lower_strip):
+                    print(f"\n⚠️ FIX 286: CLIENTE REPITIENDO - probablemente terminó de deletrear")
+                    print(f"   Repitiendo: '{speech_result}'")
+                    print(f"   Historial: {agente.transcripcion_parcial_acumulada[-3:]}")
+                    frase_parece_incompleta = False  # Forzar respuesta
+
             if frase_parece_incompleta:
                 print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
                 print(f"   Transcripción parcial: '{speech_result}'")
@@ -2095,21 +2129,27 @@ def procesar_respuesta():
                     agente.transcripcion_parcial_acumulada = []
                 agente.transcripcion_parcial_acumulada.append(speech_result)
 
-                # Generar TwiML para seguir escuchando SIN interrumpir
-                response = VoiceResponse()
+                # FIX 286: Limitar a máximo 5 esperas para evitar loops infinitos
+                if len(agente.transcripcion_parcial_acumulada) >= 5:
+                    print(f"\n⚠️ FIX 286: LÍMITE DE ESPERA ALCANZADO ({len(agente.transcripcion_parcial_acumulada)} parciales)")
+                    print(f"   Forzando respuesta para evitar timeout infinito")
+                    # NO retornar - dejar que procese con GPT
+                else:
+                    # Generar TwiML para seguir escuchando SIN interrumpir
+                    response = VoiceResponse()
 
-                # FIX 244: Timeout más largo (4s) porque sabemos que está hablando
-                response.record(
-                    action="/procesar-respuesta",
-                    method="POST",
-                    max_length=1,
-                    timeout=4,  # 4s de silencio real = terminó de hablar
-                    play_beep=False,
-                    trim="trim-silence"
-                )
+                    # FIX 244: Timeout más largo (4s) porque sabemos que está hablando
+                    response.record(
+                        action="/procesar-respuesta",
+                        method="POST",
+                        max_length=1,
+                        timeout=4,  # 4s de silencio real = terminó de hablar
+                        play_beep=False,
+                        trim="trim-silence"
+                    )
 
-                print(f"   ✅ FIX 244: Esperando continuación con timeout de 4s...")
-                return Response(str(response), mimetype="text/xml")
+                    print(f"   ✅ FIX 244: Esperando continuación con timeout de 4s...")
+                    return Response(str(response), mimetype="text/xml")
 
         # Si llegó aquí y hay transcripciones parciales acumuladas, concatenar
         if hasattr(agente, 'transcripcion_parcial_acumulada') and agente.transcripcion_parcial_acumulada:
@@ -2190,9 +2230,9 @@ def procesar_respuesta():
                 trim="trim-silence"
             )
 
-            # Registrar en logs
+            # FIX 284: Registrar en logs (sin duplicar prefijo BRUCE)
             bruce_id = agente.lead_data.get("bruce_id", "N/A")
-            log_evento(f"BRUCE{bruce_id} DICE: \"{segunda_parte}\" (FIX 211: primer mensaje vacío)", "BRUCE")
+            log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 211: primer mensaje vacío)", "BRUCE")
 
             print(f"✅ FIX 211: Segunda parte del saludo reproducida aunque cliente no fue transcrito")
             return Response(str(response), mimetype="text/xml")
@@ -2661,9 +2701,9 @@ def procesar_respuesta():
     tiempo_gpt = time.time() - inicio
     debug_print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
-    # FIX 208: Registrar en buffer de logs
+    # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id = agente.lead_data.get("bruce_id", "N/A")
-    log_evento(f"BRUCE{bruce_id} DICE: \"{respuesta_agente}\"", "BRUCE")
+    log_evento(f"{bruce_id} DICE: \"{respuesta_agente}\"", "BRUCE")
 
     # FIX 75/76: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
     if agente.lead_data["estado_llamada"] == "Colgo":
@@ -4147,8 +4187,8 @@ def generar_cache_manual():
                 # Limpiar archivo temporal
                 try:
                     os.unlink(temp_path)
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ No se pudo eliminar temp {temp_path}: {e}")
 
                 generated_count += 1
                 print(f"✅ Audio generado y cacheado: {key}")
@@ -4653,8 +4693,8 @@ def ver_dashboard():
                     "negocio": agente.lead_data.get("nombre_negocio", "N/A") if hasattr(agente, 'lead_data') else "N/A",
                     "inicio": "En curso"
                 })
-            except:
-                pass
+            except Exception as e:
+                print(f"⚠️ Error obteniendo info de llamada activa: {e}")
 
         # Obtener historial reciente
         historial = list(historial_llamadas)[-50:]  # Últimas 50
@@ -6615,8 +6655,8 @@ if FLASK_SOCK_AVAILABLE and sock:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(transcriber.close())
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ Error cerrando transcriber: {e}")
 
                 if call_sid:
                     eliminar_transcriber(call_sid)
