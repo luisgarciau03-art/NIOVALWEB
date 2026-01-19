@@ -2246,8 +2246,18 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             return respuesta_agente
 
         except Exception as e:
-            print(f"Error al procesar con GPT-4o: {e}")
-            return "Disculpe, tuve un problema técnico. ¿Podría repetir lo que dijo?"
+            # FIX 305: Logging detallado del error para diagnóstico
+            import traceback
+            print(f"\n🚨🚨🚨 FIX 305: EXCEPCIÓN EN GPT 🚨🚨🚨")
+            print(f"   Error: {type(e).__name__}: {e}")
+            print(f"   Traceback completo:")
+            traceback.print_exc()
+            print(f"   Último mensaje del cliente: {mensaje_usuario[:100] if mensaje_usuario else 'VACÍO'}")
+            print(f"   Historial tiene {len(self.conversation_history)} mensajes")
+
+            # FIX 305: En lugar de decir "problema técnico", dar una respuesta genérica pero útil
+            # Esto evita que el cliente sienta que el sistema falló
+            return "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
     
     def texto_a_voz(self, texto: str, output_path: str = "respuesta.mp3"):
         """
