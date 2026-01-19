@@ -1305,7 +1305,8 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 15 (FIX 295): Bruce dice "ya lo tengo" pero NO ha capturado contacto
+        # FILTRO 16 (FIX 295/300): Bruce dice "ya lo tengo" pero NO ha capturado contacto
+        # FIX 300: Simplificado - si NO tiene contacto capturado, NO puede decir "ya lo tengo"
         # ============================================================
         if not filtro_aplicado:
             # Verificar si Bruce dice "ya lo tengo" o "registrado"
@@ -1319,31 +1320,20 @@ class AgenteVentas:
                 tiene_whatsapp = bool(self.whatsapp_capturado)
                 tiene_email = bool(self.email_capturado)
 
-                # Revisar historial para ver si Bruce YA pidió número/correo
-                mensajes_bruce = [
-                    msg['content'].lower() for msg in self.conversation_history
-                    if msg['role'] == 'assistant'
-                ]
-                bruce_pidio_contacto = any(
-                    kw in msg for msg in mensajes_bruce
-                    for kw in ['número de whatsapp', 'numero de whatsapp', 'cuál es su número', 'cual es su numero',
-                               'correo electrónico', 'correo electronico', 'dígame su correo', 'digame su correo',
-                               'proporcionarme su número', 'proporcionarme su numero']
-                )
-
-                if not tiene_whatsapp and not tiene_email and not bruce_pidio_contacto:
-                    print(f"\n🚫 FIX 295: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto")
+                # FIX 300: SIMPLIFICADO - Si NO tiene contacto, NO puede decir "ya lo tengo"
+                # No importa si Bruce pidió el contacto antes - si NO lo tiene, NO lo tiene
+                if not tiene_whatsapp and not tiene_email:
+                    print(f"\n🚫 FIX 295/300: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto")
                     print(f"   WhatsApp capturado: {self.whatsapp_capturado}")
                     print(f"   Email capturado: {self.email_capturado}")
-                    print(f"   Bruce pidió contacto: {bruce_pidio_contacto}")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     # Corregir: pedir el contacto en lugar de decir que ya lo tiene
-                    respuesta = "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+                    respuesta = "Disculpe, ¿me podría proporcionar su número de WhatsApp o correo electrónico para enviarle el catálogo?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226-295: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-300: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
