@@ -433,13 +433,24 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 4 (FIX 234): Cliente dice "¿Bueno?" repetidamente - no escuchó
+        # FILTRO 4 (FIX 234/297): Cliente dice "¿Bueno?" - pero NO repetir "¿me escucha?"
+        # FIX 297: Evitar bucle donde Bruce pregunta "¿me escucha?" múltiples veces
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
                 msg['content'].lower() for msg in self.conversation_history[-3:]
                 if msg['role'] == 'user'
             ]
+
+            # FIX 297: Verificar si Bruce YA preguntó "¿me escucha?" antes
+            mensajes_bruce_recientes = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_ya_pregunto_escucha = any(
+                'me escucha' in msg or 'me escuchas' in msg or 'me oye' in msg
+                for msg in mensajes_bruce_recientes
+            )
 
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
@@ -460,13 +471,23 @@ class AgenteVentas:
 
                 cliente_no_escucho = solo_dice_bueno or any(re.search(p, ultimo_cliente) for p in patrones_no_escucho)
 
-                # Si Bruce iba a repetir la presentación completa, mejor confirmar presencia
-                if cliente_no_escucho and 'nioval' in respuesta_lower:
-                    print(f"\n📞 FIX 234: FILTRO ACTIVADO - Cliente no escuchó, dice '{ultimo_cliente}'")
-                    print(f"   Bruce iba a repetir presentación")
-                    respuesta = "Sí, ¿me escucha? Le llamo de la marca NIOVAL."
-                    filtro_aplicado = True
-                    print(f"   Respuesta corregida: \"{respuesta}\"")
+                # FIX 297: Si Bruce YA preguntó "¿me escucha?", NO volver a preguntar
+                # En su lugar, continuar con la presentación
+                if cliente_no_escucho:
+                    if bruce_ya_pregunto_escucha:
+                        # Ya preguntamos si escucha, ahora continuar con presentación
+                        print(f"\n📞 FIX 297: Cliente sigue diciendo '{ultimo_cliente}' pero Bruce YA preguntó si escucha")
+                        print(f"   Continuando con presentación normal en lugar de repetir '¿me escucha?'")
+                        respuesta = "Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?"
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
+                    elif 'nioval' in respuesta_lower:
+                        # Primera vez: confirmar presencia
+                        print(f"\n📞 FIX 234: FILTRO ACTIVADO - Cliente no escuchó, dice '{ultimo_cliente}'")
+                        print(f"   Bruce iba a repetir presentación")
+                        respuesta = "Sí, ¿me escucha? Le llamo de la marca NIOVAL."
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
         # FILTRO 5 (FIX 235/237/249): Cliente dice "permítame/espere" - protocolo espera

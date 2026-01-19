@@ -246,7 +246,7 @@ respuestas_cache = {
         "categoria": "presencia"
     },
 
-    # FIX 209/294: Respuestas cuando cliente ES el encargado de compras
+    # FIX 209/294/296: Respuestas cuando cliente ES el encargado de compras
     "encargado_si": {
         "patrones": ["sí soy", "si soy", "con él", "con el", "el mismo", "soy yo", "a sus órdenes", "a sus ordenes",
                      # FIX 294: Más formas de confirmar que ES el encargado
@@ -254,7 +254,10 @@ respuestas_cache = {
                      "está hablando con él", "esta hablando con el", "hablas con él", "hablas con el",
                      "yo soy", "yo mero", "servidor", "el que busca", "el que buscas",
                      "soy el encargado", "soy la encargada", "soy el dueño", "soy la dueña",
-                     "soy el de compras", "soy la de compras", "yo me encargo", "yo hago las compras"],
+                     "soy el de compras", "soy la de compras", "yo me encargo", "yo hago las compras",
+                     # FIX 296: "él habla" = "con él habla" = ES el encargado
+                     "él habla", "el habla", "sí él habla", "si el habla", "con él habla", "con el habla",
+                     "él le atiende", "el le atiende", "aquí él", "aqui el", "él mismo", "el mismo"],
         "respuesta": "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
     },
     # FIX 283: Cuando cliente confirma enviar a este número (WhatsApp)
