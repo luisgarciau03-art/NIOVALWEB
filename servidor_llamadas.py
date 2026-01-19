@@ -295,11 +295,16 @@ respuestas_cache = {
         "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos", "dejar recado", "dejar el recado", "gusta dejar", "dejarle recado", "dejar mensaje"],
         "respuesta": "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
     },
-    # FIX 278: Cuando sugieren llamar en otro momento
+    # FIX 278/312: Cuando sugieren llamar en otro momento
     "llamar_otro_momento": {
         "patrones": ["marcarle en otro momento", "llamar en otro momento", "marque después", "marque despues",
                      "llame después", "llame despues", "otro momento", "más tarde", "mas tarde",
-                     "regrese más tarde", "regrese mas tarde", "vuelva a llamar", "llame más tarde", "llame mas tarde"],
+                     "regrese más tarde", "regrese mas tarde", "vuelva a llamar", "llame más tarde", "llame mas tarde",
+                     # FIX 312: "si gusta marcar posteriormente" y variantes
+                     "marcar posteriormente", "marque posteriormente", "llame posteriormente",
+                     "si gusta marcar", "si gusta llamar", "si gusta marcarle", "si gusta llamarle",
+                     "puede marcar", "puede llamar", "podría marcar", "podria marcar",
+                     "al rato", "ahorita no", "ahorita está ocupado", "ahorita esta ocupado"],
         "respuesta": "Claro, con gusto. ¿A qué hora me recomienda llamar para encontrarlo?"
     },
     # FIX 281: Cuando mencionan día específico (fin de semana, lunes, etc.)
