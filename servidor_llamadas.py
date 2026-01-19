@@ -2894,6 +2894,14 @@ def procesar_respuesta():
         "proporcionar.*correo", "pasar.*correo"
     ]
 
+    # FIX 292/293: Detectar si Bruce acaba de pedir número de WhatsApp/teléfono
+    keywords_pide_numero = [
+        "whatsapp", "número de whatsapp", "numero de whatsapp",
+        "cuál es su número", "cual es su numero", "me puede dar su número", "me puede dar su numero",
+        "proporcionarme su número", "proporcionarme su numero", "confirmar el número", "confirmar el numero",
+        "repetir el número", "repetir el numero", "número completo", "numero completo"
+    ]
+
     # Revisar último mensaje de Bruce
     ultimo_mensaje_bruce = None
     for msg in reversed(agente.conversation_history):
@@ -2949,6 +2957,28 @@ def procesar_respuesta():
         ]
         cliente_dictando_correo = any(ind in ultimo_mensaje_cliente.lower() for ind in indicadores_dictado_correo)
 
+    # FIX 293: Detectar si cliente está DICTANDO número de teléfono
+    cliente_dictando_numero = False
+    bruce_pidio_numero = False
+    if ultimo_mensaje_bruce:
+        bruce_pidio_numero = any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_numero)
+
+    if ultimo_mensaje_cliente:
+        # Detectar patrones de números dictados (dígitos, pares de números)
+        import re
+        texto_cliente = ultimo_mensaje_cliente.lower()
+        # Buscar si hay dígitos o palabras numéricas
+        tiene_digitos = bool(re.search(r'\d', texto_cliente))
+        tiene_numeros_palabra = any(num in texto_cliente for num in [
+            'cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez',
+            'once', 'doce', 'trece', 'catorce', 'quince', 'veinte', 'treinta', 'cuarenta', 'cincuenta',
+            'sesenta', 'setenta', 'ochenta', 'noventa'
+        ])
+        # Si Bruce pidió número Y cliente está dando números, es dictado
+        if bruce_pidio_numero and (tiene_digitos or tiene_numeros_palabra):
+            cliente_dictando_numero = True
+            debug_print(f"📞 FIX 293: Cliente dictando número de teléfono")
+
     # FIX 215: Reducir todos los timeouts para respuesta más rápida
     # Record timeout = silencio después de que cliente termina de hablar
     if cliente_pidio_momento:
@@ -2957,6 +2987,10 @@ def procesar_respuesta():
     elif cliente_dictando_correo:
         timeout_gather = 8  # FIX 215: Reducido de 15s a 8s (correo largo)
         debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente dictando correo)")
+    elif cliente_dictando_numero or bruce_pidio_numero:
+        # FIX 293: Dar más tiempo cuando cliente dicta número de teléfono (10 dígitos)
+        timeout_gather = 6  # 6 segundos para que diga los 10 dígitos sin prisa
+        debug_print(f"⏱️ FIX 293: Timeout={timeout_gather}s (cliente dictando número)")
     elif cliente_desesperado:
         timeout_gather = 2  # FIX 215: Reducido de 5s a 2s (respuesta rápida)
         debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente desesperado)")
