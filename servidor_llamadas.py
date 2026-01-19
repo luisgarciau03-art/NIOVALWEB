@@ -211,12 +211,16 @@ respuestas_cache = {
     },
 
     # Quien habla / de parte de quien
+    # FIX 308: Respuesta mejorada - NO preguntar nombre del cliente, solo presentarse
     "quien_habla": {
         "patrones": [
             "quién habla", "quien habla", "de parte de quién", "de parte de quien",
-            "quién es", "quien es", "su nombre", "cómo se llama", "como se llama"
+            "quién es", "quien es", "su nombre", "cómo se llama", "como se llama",
+            # FIX 308: Más variantes de "¿de parte de quién?"
+            "parte de quién", "parte de quien", "de qué empresa", "de que empresa",
+            "qué empresa", "que empresa", "de dónde llama", "de donde llama"
         ],
-        "respuesta": "Mi nombre es Bruce, soy asesor de ventas de NIOVAL. Quisiera brindar información al encargado de compras sobre nuestros productos ferreteros. ¿Me lo puede comunicar por favor?"
+        "respuesta": "Me comunico de parte de la marca NIOVAL, nosotros distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
     },
 
     # FIX 194/274/275: Respuestas de presencia (cliente confundido/siente abandono)

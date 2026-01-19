@@ -1166,7 +1166,8 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 11 (FIX 243): Cliente pregunta "¿Con quién hablo?"
+        # FILTRO 11 (FIX 243/308): Cliente pregunta "¿Con quién hablo?" / "¿De parte de quién?"
+        # FIX 308: NO preguntar nombre del cliente, solo presentarse
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
@@ -1177,28 +1178,39 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Patrones que indican que el cliente pregunta con quién habla
-                patrones_nombre = [
+                # Patrones que indican que el cliente pregunta quién habla / de parte de quién
+                patrones_quien_habla = [
                     r'(?:con\s+)?qui[eé]n\s+(?:tengo\s+el\s+gusto|hablo|me\s+habla|est[aá]s?)',  # "con quién hablo", "quién eres"
                     r'(?:cu[aá]l\s+es\s+)?(?:tu|su)\s+nombre',  # "cuál es tu nombre", "tu nombre"
                     r'c[oó]mo\s+(?:te\s+llamas?|se\s+llama)',  # "cómo te llamas", "cómo se llama"
                     r'(?:qui[eé]n\s+)?eres\s+(?:t[uú])?',  # "quién eres tú", "eres tú"
                     r'a\s+qui[eé]n\s+(?:hablo|tengo)',  # "a quién hablo"
+                    # FIX 308: Agregar "¿de parte de quién?"
+                    r'(?:de\s+)?parte\s+de\s+qui[eé]n',  # "de parte de quién", "parte de quién"
+                    r'de\s+qu[eé]\s+(?:empresa|marca|compa[ñn][ií]a)',  # "de qué empresa"
+                    r'qu[eé]\s+(?:empresa|marca)\s+(?:es|son)',  # "qué empresa es"
                 ]
 
-                cliente_pregunta_nombre = any(re.search(p, ultimo_cliente) for p in patrones_nombre)
+                cliente_pregunta_quien = any(re.search(p, ultimo_cliente) for p in patrones_quien_habla)
 
-                # Verificar que Bruce NO se está presentando
+                # Verificar que Bruce NO se está presentando correctamente
                 bruce_se_presenta = any(word in respuesta_lower for word in [
                     'soy bruce', 'me llamo bruce', 'mi nombre es bruce', 'habla bruce',
-                    'bruce de nioval', 'bruce, de nioval'
+                    'bruce de nioval', 'nioval', 'productos de ferretería', 'productos ferreteros'
                 ])
 
-                if cliente_pregunta_nombre and not bruce_se_presenta:
-                    print(f"\n👤 FIX 243: FILTRO ACTIVADO - Cliente pregunta quién es Bruce")
+                # FIX 308: Detectar si Bruce pregunta el nombre cuando NO debería
+                bruce_pregunta_nombre = any(frase in respuesta_lower for frase in [
+                    'con quién tengo el gusto', 'con quien tengo el gusto',
+                    'cómo se llama', 'como se llama', 'su nombre'
+                ])
+
+                if cliente_pregunta_quien and (not bruce_se_presenta or bruce_pregunta_nombre):
+                    print(f"\n👤 FIX 243/308: FILTRO ACTIVADO - Cliente pregunta quién habla")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                    respuesta = "Soy Bruce, me comunico de la empresa Nioval, especialistas en productos ferreteros. ¿Con quién tengo el gusto?"
+                    # FIX 308: Solo presentarse, NO preguntar nombre del cliente
+                    respuesta = "Me comunico de parte de la marca NIOVAL, nosotros distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
