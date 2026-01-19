@@ -88,7 +88,7 @@ class DeepgramTranscriber:
                 channels=1,
                 punctuate=True,  # Agregar puntuación
                 interim_results=True,  # Resultados parciales para baja latencia
-                endpointing=200,  # FIX 313: Reducir a 200ms para menor latencia en saludos
+                endpointing=300,  # FIX 313: Mantener 300ms para no interrumpir al cliente
                 smart_format=True,  # Formato inteligente
                 # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
                 # - utterance_end_ms (puede no estar soportado)
