@@ -317,6 +317,15 @@ respuestas_cache = {
                      "por correo electrónico", "correo electrónico"],
         "respuesta": "Perfecto, dígame el correo y lo anoto."
     },
+    # FIX 306: Cliente ofrece proporcionar su contacto (no está el encargado pero ofrece dar info)
+    "ofrece_proporcionar": {
+        "patrones": ["si gusta le proporciono", "si gusta le doy", "le proporciono", "le puedo proporcionar",
+                     "le doy el número", "le doy el numero", "le paso el número", "le paso el numero",
+                     "le doy su número", "le doy su numero", "le paso su número", "le paso su numero",
+                     "si quiere le doy", "si quiere le paso", "quiere que le dé", "quiere que le de",
+                     "le puedo dar", "puedo darle", "se lo proporciono", "se lo doy"],
+        "respuesta": "Sí, por favor, se lo agradezco mucho."
+    },
     "no_interesa": {
         "patrones": ["no me interesa", "no gracias", "no necesito", "ya tenemos", "estamos bien"],
         "respuesta": "Entiendo perfectamente. Solo quisiera enviarle nuestro catálogo sin compromiso para que lo tenga como referencia. ¿Le parece bien por WhatsApp?"

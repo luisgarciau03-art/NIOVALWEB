@@ -1366,8 +1366,49 @@ class AgenteVentas:
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 17 (FIX 306): Cliente OFRECE proporcionar contacto
+        # "No está, pero si gusta le proporciono su número/correo"
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                contexto_cliente = ' '.join(ultimos_mensajes_cliente)
+
+                # Detectar cuando cliente OFRECE dar información
+                cliente_ofrece_info = any(frase in contexto_cliente for frase in [
+                    'si gusta le proporciono', 'si gusta le doy', 'le proporciono',
+                    'le puedo proporcionar', 'le doy el número', 'le doy el numero',
+                    'le paso el número', 'le paso el numero', 'le puedo dar',
+                    'puedo darle', 'se lo proporciono', 'se lo doy',
+                    'si quiere le doy', 'si quiere le paso'
+                ])
+
+                # Verificar que Bruce NO está aceptando la oferta correctamente
+                bruce_acepta_oferta = any(frase in respuesta_lower for frase in [
+                    'sí, por favor', 'si, por favor', 'se lo agradezco',
+                    'perfecto', 'claro', 'adelante', 'dígame', 'digame'
+                ])
+
+                # Bruce dice algo incoherente como "espero" o "entiendo"
+                bruce_respuesta_incoherente = any(frase in respuesta_lower for frase in [
+                    'claro, espero', 'espero', 'entiendo que', 'comprendo'
+                ]) and not bruce_acepta_oferta
+
+                if cliente_ofrece_info and bruce_respuesta_incoherente:
+                    print(f"\n📞 FIX 306: FILTRO ACTIVADO - Cliente OFRECE proporcionar contacto")
+                    print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Sí, por favor, se lo agradezco mucho."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-300: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-306: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
