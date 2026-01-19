@@ -145,6 +145,8 @@ audio_files = {}
 contactos_llamadas = {}
 # FIX 244: Tracking de habla activa para detectar interrupciones
 cliente_hablando_activo = {}  # call_sid -> {"inicio": timestamp, "palabras_dichas": int}
+# FIX 314: Tracking de respuestas pre-cargadas por detección de saludos en interim
+respuesta_precargada = {}  # call_sid -> {"audio_listo": bool, "tipo": str}
 
 # Caché de audios pre-generados con Multilingual v2 (mejor calidad)
 audio_cache = {}
@@ -2475,9 +2477,15 @@ def procesar_respuesta():
         "dígame en qué le ayudo", "digame en que le ayudo"
     ]
 
-    # FIX 121: Si es saludo simple en primera respuesta, usar caché inmediato
+    # FIX 121/314: Si es saludo simple en primera respuesta, usar caché inmediato
     usa_segunda_parte_saludo = False
-    if es_primera_respuesta and any(saludo in speech_lower for saludo in saludos_simples):
+
+    # FIX 314: Verificar si ya detectamos saludo en interim (pre-cargado)
+    if call_sid in respuesta_precargada and respuesta_precargada[call_sid].get("tipo") == "segunda_parte_saludo":
+        usa_segunda_parte_saludo = True
+        print(f"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada")
+        print(f"   Respuesta será instantánea (0s delay)")
+    elif es_primera_respuesta and any(saludo in speech_lower for saludo in saludos_simples):
         # Verificar que la respuesta sea SOLO el saludo (no más de 5 palabras)
         palabras = speech_result.split()
         if len(palabras) <= 5:
@@ -6663,16 +6671,25 @@ def logs_api():
 # FIX 212: WEBSOCKET ENDPOINT PARA DEEPGRAM STREAMING
 # ============================================================================
 
+# FIX 314: Saludos simples para detección rápida en interim
+SALUDOS_RAPIDOS = [
+    "hola", "bueno", "buenos días", "buenos dias", "buen día", "buen dia",
+    "buenas tardes", "buenas noches", "buenas", "diga", "dígame", "digame",
+    "sí", "si", "aló", "alo", "qué tal", "que tal", "mande"
+]
+
 # Callback que se llama cuando Deepgram completa una transcripción
 def on_deepgram_transcript(call_sid, texto, is_final):
     """
-    FIX 218: Callback cuando Deepgram transcribe algo
+    FIX 218/314: Callback cuando Deepgram transcribe algo
     Ahora maneja tanto transcripciones finales como parciales
+    FIX 314: Detecta saludos en interim para pre-cargar respuesta
     """
     if not texto or not texto.strip():
         return
 
     texto = texto.strip()
+    texto_lower = texto.lower()
 
     if call_sid not in deepgram_transcripciones:
         deepgram_transcripciones[call_sid] = []
@@ -6689,6 +6706,31 @@ def on_deepgram_transcript(call_sid, texto, is_final):
     num_palabras = len(texto.split())
     if num_palabras > cliente_hablando_activo[call_sid]["palabras_dichas"]:
         cliente_hablando_activo[call_sid]["palabras_dichas"] = num_palabras
+
+    # FIX 314: Detectar saludos en interim para pre-cargar audio
+    # Solo si es primera respuesta (no hay transcripciones previas finales)
+    if not is_final and call_sid not in respuesta_precargada:
+        # Verificar si es un saludo simple
+        es_saludo = any(saludo in texto_lower for saludo in SALUDOS_RAPIDOS)
+        palabras = texto.split()
+        es_corto = len(palabras) <= 4  # Máximo 4 palabras para ser saludo
+
+        if es_saludo and es_corto:
+            print(f"🚀 FIX 314: Saludo detectado en INTERIM: '{texto}' - Pre-cargando respuesta...")
+
+            # Marcar que ya pre-cargamos para no repetir
+            respuesta_precargada[call_sid] = {
+                "audio_listo": True,
+                "tipo": "segunda_parte_saludo",
+                "timestamp": time.time()
+            }
+
+            # Verificar que el audio de segunda_parte_saludo esté en cache
+            if "segunda_parte_saludo" in audio_cache:
+                print(f"✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea")
+            else:
+                print(f"⚠️ FIX 314: Audio segunda_parte_saludo NO está en cache - generando...")
+                # El audio se generará cuando se procese la respuesta
 
     if is_final:
         # Transcripción final - agregar al array
@@ -6786,6 +6828,9 @@ if FLASK_SOCK_AVAILABLE and sock:
 
                 if call_sid:
                     eliminar_transcriber(call_sid)
+                    # FIX 314: Limpiar respuesta pre-cargada
+                    if call_sid in respuesta_precargada:
+                        del respuesta_precargada[call_sid]
 
             print(f"🔌 FIX 212: WebSocket cerrado - CallSid: {call_sid}")
 
