@@ -1553,6 +1553,45 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 19B (FIX 311b): Cliente dice "no se encuentra" y Bruce ofrece catálogo
+        # SIN haber pedido primero el número del encargado
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente indica que encargado no está
+            cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
+                'no se encuentra', 'no está', 'no esta', 'salió', 'salio',
+                'no lo tenemos', 'gusta dejar', 'dejar mensaje', 'dejar recado'
+            ])
+
+            # Bruce ofrece catálogo directamente sin pedir número del encargado
+            bruce_ofrece_catalogo = any(frase in respuesta_lower for frase in [
+                'catálogo por whatsapp', 'catalogo por whatsapp',
+                'catálogo por correo', 'catalogo por correo',
+                'le gustaría recibir', 'le gustaria recibir',
+                'envíe nuestro catálogo', 'envie nuestro catalogo',
+                'enviarle el catálogo', 'enviarle el catalogo'
+            ])
+
+            # Verificar que Bruce NO pidió número del encargado antes
+            historial_bruce = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ])
+
+            bruce_ya_pidio_numero = any(frase in historial_bruce for frase in [
+                'número directo del encargado', 'numero directo del encargado',
+                'número del encargado', 'numero del encargado'
+            ])
+
+            if cliente_dice_no_esta and bruce_ofrece_catalogo and not bruce_ya_pidio_numero:
+                print(f"\n📞 FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
+                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
             print(f"✅ FIX 226-311: Filtro post-GPT aplicado exitosamente")
 
