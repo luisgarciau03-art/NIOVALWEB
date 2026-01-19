@@ -312,9 +312,9 @@ class AgenteVentas:
         filtro_aplicado = False
 
         # ============================================================
-        # FILTRO 0 (FIX 298): CRÍTICO - Evitar despedida prematura
+        # FILTRO 0 (FIX 298/301): CRÍTICO - Evitar despedida/asunciones prematuras
         # Si estamos muy temprano en la conversación (< 4 mensajes) y Bruce
-        # intenta despedirse, BLOQUEAR y continuar conversación
+        # intenta despedirse O asume cosas que el cliente NO dijo, BLOQUEAR
         # ============================================================
         num_mensajes_total = len(self.conversation_history)
         num_mensajes_bruce = len([m for m in self.conversation_history if m['role'] == 'assistant'])
@@ -326,12 +326,22 @@ class AgenteVentas:
             'hasta luego', 'hasta pronto', 'que le vaya bien', 'buen día', 'buenas tardes',
             'me despido', 'fue un gusto'
         ]
+
+        # FIX 301: También detectar cuando Bruce ASUME que cliente está ocupado/no interesado
+        frases_asuncion_prematura = [
+            'entiendo que está ocupado', 'entiendo que esta ocupado',
+            'entiendo que no le interesa', 'entiendo que no tiene tiempo',
+            'veo que está ocupado', 'veo que esta ocupado',
+            'comprendo que está ocupado', 'comprendo que esta ocupado'
+        ]
+
         bruce_intenta_despedirse = any(frase in respuesta_lower for frase in frases_despedida)
+        bruce_asume_cosas = any(frase in respuesta_lower for frase in frases_asuncion_prematura)
 
         # Si es muy temprano (< 4 mensajes de Bruce) y NO tenemos contacto capturado
         tiene_contacto = bool(self.whatsapp_capturado) or bool(self.email_capturado)
 
-        if bruce_intenta_despedirse and num_mensajes_bruce < 4 and not tiene_contacto:
+        if (bruce_intenta_despedirse or bruce_asume_cosas) and num_mensajes_bruce < 4 and not tiene_contacto:
             # Verificar último mensaje del cliente para ver si es rechazo real
             ultimos_cliente = [m['content'].lower() for m in self.conversation_history[-2:] if m['role'] == 'user']
             ultimo_cliente = ultimos_cliente[-1] if ultimos_cliente else ""
@@ -342,11 +352,15 @@ class AgenteVentas:
                 'no moleste', 'no llame', 'quite mi número', 'no vuelva a llamar', 'cuelgo'
             ])
 
-            if not rechazo_real:
-                print(f"\n🚨 FIX 298: CRÍTICO - Bruce intenta despedirse PREMATURAMENTE")
+            # FIX 301: "Gracias" solo NO es rechazo - es cortesía
+            es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
+
+            if not rechazo_real or es_solo_gracias:
+                tipo_problema = "asume cosas" if bruce_asume_cosas else "despedida prematura"
+                print(f"\n🚨 FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
                 print(f"   Mensajes de Bruce: {num_mensajes_bruce} (< 4)")
                 print(f"   Tiene contacto: {tiene_contacto}")
-                print(f"   Último cliente: '{ultimo_cliente[:50]}...'")
+                print(f"   Último cliente: '{ultimo_cliente[:50]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                 # Continuar la conversación normalmente
                 respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
