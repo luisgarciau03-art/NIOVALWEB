@@ -1142,7 +1142,25 @@ class AgenteVentas:
                     print(f"\n📍 FIX 242: FILTRO ACTIVADO - Cliente pregunta ubicación")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                    respuesta = "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República. ¿En qué zona se encuentra usted?"
+
+                    # FIX 303: Verificar si ya se ofreció catálogo (indica que encargado ya confirmado)
+                    historial_bruce = ' '.join([
+                        msg['content'].lower() for msg in self.conversation_history
+                        if msg['role'] == 'assistant'
+                    ])
+                    ya_ofrecio_catalogo = any(frase in historial_bruce for frase in [
+                        'catálogo por whatsapp', 'catalogo por whatsapp',
+                        'cuál es su número', 'cual es su numero',
+                        'enviarle el catálogo', 'enviarle el catalogo'
+                    ])
+
+                    if ya_ofrecio_catalogo:
+                        # Ya está en proceso de captura de contacto, no preguntar por encargado
+                        respuesta = "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana."
+                        print(f"   FIX 303: Ya ofreció catálogo, respuesta sin preguntar por encargado")
+                    else:
+                        respuesta = "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República. ¿Se encuentra el encargado de compras?"
+
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
