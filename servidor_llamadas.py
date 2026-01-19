@@ -183,7 +183,9 @@ respuestas_cache = {
         "patrones": [
             "de dónde", "de donde", "dónde están", "donde están",
             "de qué ciudad", "de que ciudad", "ubicados", "ubicación",
-            "de parte de", "de qué parte", "de que parte"
+            "de parte de", "de qué parte", "de que parte",
+            # FIX 302: Agregar variantes "en qué ciudad"
+            "en qué ciudad", "en que ciudad", "qué ciudad están", "que ciudad estan"
         ],
         "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Se encuentra el encargado de compras?"
     },

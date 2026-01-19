@@ -1127,6 +1127,8 @@ class AgenteVentas:
                     r'(?:de\s+)?d[oó]nde\s+(?:me\s+)?(?:llam|habl)',  # "de dónde me llaman"
                     r'ubicaci[oó]n',  # "ubicación"
                     r'(?:de\s+)?qu[eé]\s+(?:parte|ciudad|lugar)',  # "de qué parte/ciudad"
+                    # FIX 302: Agregar "en qué ciudad están"
+                    r'(?:en\s+)?qu[eé]\s+ciudad',  # "en qué ciudad", "qué ciudad"
                 ]
 
                 cliente_pregunta_ubicacion = any(re.search(p, ultimo_cliente) for p in patrones_ubicacion)
