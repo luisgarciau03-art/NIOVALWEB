@@ -312,6 +312,48 @@ class AgenteVentas:
         filtro_aplicado = False
 
         # ============================================================
+        # FILTRO 0 (FIX 298): CRÍTICO - Evitar despedida prematura
+        # Si estamos muy temprano en la conversación (< 4 mensajes) y Bruce
+        # intenta despedirse, BLOQUEAR y continuar conversación
+        # ============================================================
+        num_mensajes_total = len(self.conversation_history)
+        num_mensajes_bruce = len([m for m in self.conversation_history if m['role'] == 'assistant'])
+
+        # Detectar si Bruce intenta despedirse
+        frases_despedida = [
+            'que tenga excelente día', 'que tenga excelente dia', 'que tenga buen día', 'que tenga buen dia',
+            'le marco entonces', 'muchas gracias por su tiempo', 'gracias por la información',
+            'hasta luego', 'hasta pronto', 'que le vaya bien', 'buen día', 'buenas tardes',
+            'me despido', 'fue un gusto'
+        ]
+        bruce_intenta_despedirse = any(frase in respuesta_lower for frase in frases_despedida)
+
+        # Si es muy temprano (< 4 mensajes de Bruce) y NO tenemos contacto capturado
+        tiene_contacto = bool(self.whatsapp_capturado) or bool(self.email_capturado)
+
+        if bruce_intenta_despedirse and num_mensajes_bruce < 4 and not tiene_contacto:
+            # Verificar último mensaje del cliente para ver si es rechazo real
+            ultimos_cliente = [m['content'].lower() for m in self.conversation_history[-2:] if m['role'] == 'user']
+            ultimo_cliente = ultimos_cliente[-1] if ultimos_cliente else ""
+
+            # Patrones de rechazo REAL (el cliente NO quiere hablar)
+            rechazo_real = any(frase in ultimo_cliente for frase in [
+                'no gracias', 'no me interesa', 'no necesito', 'estoy ocupado', 'no tengo tiempo',
+                'no moleste', 'no llame', 'quite mi número', 'no vuelva a llamar', 'cuelgo'
+            ])
+
+            if not rechazo_real:
+                print(f"\n🚨 FIX 298: CRÍTICO - Bruce intenta despedirse PREMATURAMENTE")
+                print(f"   Mensajes de Bruce: {num_mensajes_bruce} (< 4)")
+                print(f"   Tiene contacto: {tiene_contacto}")
+                print(f"   Último cliente: '{ultimo_cliente[:50]}...'")
+                print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+                # Continuar la conversación normalmente
+                respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 1 (FIX 226/251): Si ya tenemos correo, NO repetirlo ni pedir WhatsApp
         # ============================================================
         email_capturado = self.lead_data.get("email", "")
