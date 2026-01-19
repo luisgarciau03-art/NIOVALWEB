@@ -2552,6 +2552,13 @@ def procesar_respuesta():
             # 2. Apenas GPT termina, detectar si hay caché de audio disponible
             respuesta_texto = respuesta_container["respuesta"]
 
+            # FIX 304: Si respuesta es None (IVR detectado), no procesar audio
+            if respuesta_texto is None:
+                print(f"🚨 FIX 304: respuesta_texto es None (IVR detectado) - saliendo del thread")
+                audio_container["audio_id"] = None
+                audio_container["completado"] = True
+                return  # Salir del thread sin procesar audio
+
             # Detectar frases comunes para caché de audio
             usa_cache_audio = False
             cache_key_audio = None
@@ -2718,6 +2725,18 @@ def procesar_respuesta():
     tiempo_gpt = time.time() - inicio
     debug_print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
     print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
+
+    # FIX 304: Si respuesta es None (IVR detectado), colgar la llamada
+    if respuesta_agente is None:
+        print(f"🚨 FIX 304: respuesta_agente es None (IVR/contestadora detectada) - COLGANDO")
+        bruce_id = agente.lead_data.get("bruce_id", "N/A")
+        log_evento(f"{bruce_id} - IVR/CONTESTADORA DETECTADA - COLGANDO", "BRUCE")
+        agente.lead_data["estado_llamada"] = "IVR"
+        agente.lead_data["pregunta_7"] = "IVR/Contestadora automática"
+        agente.guardar_llamada_y_lead()
+        response.hangup()
+        return Response(str(response), mimetype="text/xml")
+
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id = agente.lead_data.get("bruce_id", "N/A")
     log_evento(f"{bruce_id} DICE: \"{respuesta_agente}\"", "BRUCE")
