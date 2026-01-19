@@ -1380,6 +1380,48 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 16B (FIX 310): Cliente SOLICITA envío por WhatsApp, Bruce debe pedir número
+        # "Si gusta enviarnos la información por WhatsApp"
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                contexto_cliente = ' '.join(ultimos_mensajes_cliente)
+
+                # Detectar cuando cliente SOLICITA que le envíen por WhatsApp
+                cliente_solicita_whatsapp = any(frase in contexto_cliente for frase in [
+                    'enviarnos la información por whatsapp', 'enviarme la información por whatsapp',
+                    'enviarnos la informacion por whatsapp', 'enviarme la informacion por whatsapp',
+                    'envíalo por whatsapp', 'envialo por whatsapp', 'mándalo por whatsapp', 'mandalo por whatsapp',
+                    'por whatsapp mejor', 'mejor por whatsapp', 'prefiero por whatsapp',
+                    'si gusta enviarnos', 'si gusta enviarme', 'si quiere enviarnos', 'si quiere enviarme',
+                    'puede enviarme', 'puede enviarnos', 'nos puede enviar', 'me puede enviar',
+                    'envíenos', 'envienos', 'envíeme', 'envieme', 'la información por whatsapp',
+                    'información por whatsapp', 'informacion por whatsapp'
+                ])
+
+                # Bruce NO pide número (responde otra cosa)
+                bruce_pide_numero = any(frase in respuesta_lower for frase in [
+                    'número de whatsapp', 'numero de whatsapp', 'cuál es su número', 'cual es su numero',
+                    'me puede proporcionar', 'proporcionar el número', 'proporcionar el numero',
+                    'dígame el número', 'digame el numero', 'su número', 'su numero'
+                ])
+
+                tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
+
+                if cliente_solicita_whatsapp and not bruce_pide_numero and not tiene_whatsapp:
+                    print(f"\n📱 FIX 310: FILTRO ACTIVADO - Cliente SOLICITA WhatsApp pero Bruce NO pidió número")
+                    print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Claro que sí. ¿Me puede proporcionar el número de WhatsApp para enviarle la información?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 17 (FIX 306): Cliente OFRECE proporcionar contacto
         # "No está, pero si gusta le proporciono su número/correo"
         # ============================================================
@@ -1420,8 +1462,68 @@ class AgenteVentas:
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 18 (FIX 309/309b): Cliente indica que es SUCURSAL/PUNTO DE VENTA
+        # "Es un punto de venta, aquí no hay oficinas de compras"
+        # Bruce debe pedir número de la matriz, NO despedirse NI seguir insistiendo
+        # ============================================================
+        if not filtro_aplicado:
+            import re
+            # Patrones que indican sucursal/punto de venta (no manejan compras ahí)
+            patrones_sucursal = [
+                r'punto\s+de\s+venta',
+                r'aqu[ií]\s+no\s+(?:hay|es|tenemos|se\s+encargan)',
+                r'no\s+(?:nos\s+)?encargamos?\s+de\s+compra',
+                r'no\s+es\s+(?:una?\s+)?oficina',
+                r'no\s+hay\s+oficinas?\s+de\s+compras?',
+                r'no\s+(?:se\s+)?hace[mn]?\s+compras?\s+aqu[ií]',
+                r'(?:es|somos)\s+(?:una?\s+)?sucursal',
+                r'las?\s+compras?\s+(?:son|es|están?)\s+en\s+(?:la\s+)?(?:matriz|oficinas?|corporativo)',
+                r'(?:aqu[ií]\s+)?no\s+(?:tenemos|hay)\s+quien\s+(?:compre|se\s+encargue)',
+                r'no\s+es\s+(?:el\s+)?[aá]rea\s+de\s+compras',
+                # FIX 309b: BRUCE737 - más patrones
+                r'no\s+hay\s+(?:departamento|compras)',
+                r'no\s+(?:tenemos|existe)\s+departamento',
+                r'aqu[ií]\s+no\s+hay\s+(?:departamento|compras)',
+            ]
+
+            cliente_es_sucursal = any(re.search(patron, contexto_cliente, re.IGNORECASE) for patron in patrones_sucursal)
+
+            # Bruce se despide incorrectamente cuando debería pedir número de matriz
+            bruce_se_despide = any(frase in respuesta_lower for frase in [
+                'disculpe las molestias', 'error con el número', 'que tenga buen día',
+                'que tenga excelente día', 'gracias por su tiempo', 'hasta luego',
+                'buen día', 'buena tarde', 'disculpe la molestia'
+            ])
+
+            # FIX 309b: Bruce sigue insistiendo con catálogo/whatsapp sin pedir número matriz
+            bruce_sigue_insistiendo = any(frase in respuesta_lower for frase in [
+                'catálogo digital', 'catalogo digital', 'lista de precios',
+                'enviarle nuestro catálogo', 'enviarle nuestro catalogo',
+                'compartir nuestro catálogo', 'compartir nuestro catalogo',
+                'hay alguien con quien', 'ofrecer a sus clientes',
+                'cuál es su número de whatsapp', 'cual es su numero de whatsapp',
+                'correo electrónico donde', 'correo electronico donde'
+            ])
+
+            # Verificar que Bruce NO está pidiendo número de matriz
+            bruce_pide_matriz = any(frase in respuesta_lower for frase in [
+                'número de la matriz', 'numero de la matriz', 'número de matriz', 'numero de matriz',
+                'área de compras', 'area de compras', 'número del área', 'numero del area',
+                'número de las oficinas', 'numero de las oficinas', 'oficinas centrales'
+            ])
+
+            if cliente_es_sucursal and (bruce_se_despide or bruce_sigue_insistiendo) and not bruce_pide_matriz:
+                print(f"\n🏢 FIX 309/309b: FILTRO ACTIVADO - Cliente indica que es SUCURSAL/PUNTO DE VENTA")
+                print(f"   Cliente dijo: \"{contexto_cliente[:100]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
+                print(f"   Bruce se despide: {bruce_se_despide}, Bruce sigue insistiendo: {bruce_sigue_insistiendo}")
+                respuesta = "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-306: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-309: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

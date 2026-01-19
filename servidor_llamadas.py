@@ -273,7 +273,7 @@ respuestas_cache = {
                      "a este lo pueden enviar", "a este lo puedo enviar", "a este número lo pueden", "a este numero lo pueden"],
         "respuesta": "Perfecto, lo enviaré a este número. Le mandaré el catálogo en breve."
     },
-    # FIX 277: Cuando están pasando la llamada al encargado (modo espera)
+    # FIX 277/310: Cuando están pasando la llamada al encargado (modo espera)
     "pasando_llamada": {
         "patrones": ["te lo comunico", "se lo comunico", "te lo paso", "se lo paso", "ahorita te lo paso",
                      "ahorita se lo paso", "espéreme", "espereme", "un momento", "un momentito",
@@ -282,7 +282,11 @@ respuestas_cache = {
                      "permítame", "permíteme", "permitame", "permiteme", "tantito",
                      # FIX 290: Agregar variantes de "deme un minuto"
                      "deme un minuto", "dame un minuto", "un minuto", "un minutito",
-                     "déme un minuto", "deme chance", "dame chance", "un ratito", "un rato"],
+                     "déme un minuto", "deme chance", "dame chance", "un ratito", "un rato",
+                     # FIX 310: "me da unos minutos" / "me permite"
+                     "me da unos minutos", "me permite", "me das unos minutos", "unos minutos",
+                     "si me da", "si me das", "si me permite", "si me permites",
+                     "dame unos minutos", "deme unos minutos", "unos minutitos"],
         "respuesta": "Claro, aquí espero.",
         "categoria": "espera"
     },
@@ -330,6 +334,19 @@ respuestas_cache = {
                      "le puedo dar", "puedo darle", "se lo proporciono", "se lo doy"],
         "respuesta": "Sí, por favor, se lo agradezco mucho."
     },
+    # FIX 310: Cliente SOLICITA recibir info por WhatsApp (Bruce debe pedir número)
+    "cliente_pide_whatsapp": {
+        "patrones": ["enviarnos la información por whatsapp", "enviarme la información por whatsapp",
+                     "enviarnos la informacion por whatsapp", "enviarme la informacion por whatsapp",
+                     "mándame la información por whatsapp", "mandame la informacion por whatsapp",
+                     "mándeme la información por whatsapp", "mandeme la informacion por whatsapp",
+                     "envíalo por whatsapp", "envialo por whatsapp", "mándalo por whatsapp", "mandalo por whatsapp",
+                     "por whatsapp mejor", "mejor por whatsapp", "prefiero por whatsapp",
+                     "si gusta enviarnos", "si gusta enviarme", "si quiere enviarnos", "si quiere enviarme",
+                     "puede enviarme", "puede enviarnos", "nos puede enviar", "me puede enviar",
+                     "envíenos", "envienos", "envíeme", "envieme"],
+        "respuesta": "Claro que sí. ¿Me puede proporcionar el número de WhatsApp para enviarle la información?"
+    },
     "no_interesa": {
         "patrones": ["no me interesa", "no gracias", "no necesito", "ya tenemos", "estamos bien"],
         "respuesta": "Entiendo perfectamente. Solo quisiera enviarle nuestro catálogo sin compromiso para que lo tenga como referencia. ¿Le parece bien por WhatsApp?"
@@ -346,7 +363,7 @@ respuestas_cache = {
                      "no tenemos ferretería", "no tenemos ferreteria", "no me dedico a", "no nos dedicamos"],
         "respuesta": "Entiendo perfectamente, disculpe la molestia. Que tenga un excelente día, gracias por su tiempo."
     },
-    # FIX 288/291: Cuando las compras se hacen en otro lugar (sucursal vs oficinas/matriz)
+    # FIX 288/291/309: Cuando las compras se hacen en otro lugar (sucursal vs oficinas/matriz/punto de venta)
     "compras_en_oficinas": {
         "patrones": ["sucursal no", "sucursales no", "aquí no se compra", "aqui no se compra", "no compramos aquí", "no compramos aqui",
                      "compras en oficinas", "compras en corporativo", "compras en matriz", "área de compras",
@@ -357,7 +374,18 @@ respuestas_cache = {
                      "ir a la matriz", "ir a matriz", "tendría que ir", "tendria que ir", "tendré que ir", "tendre que ir",
                      "a la matriz", "en la matriz", "llamar a matriz", "marcar a matriz",
                      "aquí no es de compras", "aqui no es de compras", "no es de compras",
-                     "no se compra aquí", "no se compra aqui", "aquí no compramos", "aqui no compramos"],
+                     "no se compra aquí", "no se compra aqui", "aquí no compramos", "aqui no compramos",
+                     # FIX 309: Punto de venta (BRUCE731)
+                     "punto de venta", "un punto de venta", "es punto de venta", "somos punto de venta",
+                     "aquí no hay oficinas", "aqui no hay oficinas", "no hay oficinas de compras",
+                     "no es una oficina", "no es oficina", "aquí no es oficina", "aqui no es oficina",
+                     "no nos encargamos de comprar", "no se encargan de comprar", "no me encargo de comprar",
+                     "aquí no tenemos quien", "aqui no tenemos quien", "no tenemos quien compre",
+                     "no es el área de compras", "no es el area de compras", "no es de compras aquí", "no es de compras aqui",
+                     # FIX 309b: BRUCE737 - más variantes de "no hay compras aquí"
+                     "aquí no hay compras", "aqui no hay compras", "no hay compras", "no hay compras aquí", "no hay compras aqui",
+                     "no hay departamento de compra", "no hay departamento de compras", "no tenemos departamento",
+                     "aquí no hay departamento", "aqui no hay departamento", "no existe departamento"],
         "respuesta": "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
     },
 }
