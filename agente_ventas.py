@@ -1522,8 +1522,39 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 19 (FIX 311): Cliente dice "no" después de pedir número encargado
+        # Flujo: encargado no está → pedir su número → cliente dice no → ofrecer catálogo
+        # ============================================================
+        if not filtro_aplicado:
+            # Verificar historial: Bruce pidió número del encargado?
+            historial_bruce = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ])
+
+            bruce_pidio_numero_encargado = any(frase in historial_bruce for frase in [
+                'número directo del encargado', 'numero directo del encargado',
+                'número del encargado', 'numero del encargado',
+                'proporcionarme el número', 'proporcionarme el numero',
+                'proporcionar el número', 'proporcionar el numero'
+            ])
+
+            # Cliente dice "no" o similar
+            cliente_niega = any(frase in contexto_cliente for frase in [
+                'no tengo', 'no lo tengo', 'no sé', 'no se', 'no puedo',
+                'no te puedo', 'no le puedo', 'no cuento con'
+            ]) or (contexto_cliente.strip() in ['no', 'no.', 'nel', 'nop', 'nope'])
+
+            if bruce_pidio_numero_encargado and cliente_niega:
+                print(f"\n📞 FIX 311: FILTRO ACTIVADO - Cliente niega número del encargado, ofrecer catálogo")
+                print(f"   Bruce pidió número del encargado y cliente dijo: \"{contexto_cliente[:50]}\"")
+                respuesta = "Entiendo, no hay problema. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo para que lo revise el encargado cuando regrese?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-309: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-311: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

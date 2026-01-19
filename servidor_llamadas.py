@@ -290,9 +290,10 @@ respuestas_cache = {
         "respuesta": "Claro, aquí espero.",
         "categoria": "espera"
     },
+    # FIX 311: Cuando encargado no está, primero pedir su número directo
     "encargado_no": {
         "patrones": ["no está", "no esta", "salió", "salio", "no se encuentra", "no lo tenemos", "dejar recado", "dejar el recado", "gusta dejar", "dejarle recado", "dejar mensaje"],
-        "respuesta": "Entiendo. ¿A qué hora puedo llamar para contactarlo? O si gusta, le puedo mandar el catálogo por WhatsApp o correo para que lo revise cuando regrese."
+        "respuesta": "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
     },
     # FIX 278: Cuando sugieren llamar en otro momento
     "llamar_otro_momento": {
@@ -362,6 +363,15 @@ respuestas_cache = {
                      "nada de ferretería", "nada de ferreteria", "no es ferretería", "no es ferreteria",
                      "no tenemos ferretería", "no tenemos ferreteria", "no me dedico a", "no nos dedicamos"],
         "respuesta": "Entiendo perfectamente, disculpe la molestia. Que tenga un excelente día, gracias por su tiempo."
+    },
+    # FIX 311: Número equivocado - despedirse inmediatamente
+    "numero_equivocado": {
+        "patrones": ["está equivocado", "esta equivocado", "equivocado de número", "equivocado de numero",
+                     "número equivocado", "numero equivocado", "se equivocó", "se equivoco",
+                     "no es aquí", "no es aqui", "aquí no es", "aqui no es",
+                     "no existe", "ya no existe", "no vive aquí", "no vive aqui",
+                     "no trabaja aquí", "no trabaja aqui", "no conozco", "no lo conozco"],
+        "respuesta": "Disculpe la molestia, que tenga buen día."
     },
     # FIX 288/291/309: Cuando las compras se hacen en otro lugar (sucursal vs oficinas/matriz/punto de venta)
     "compras_en_oficinas": {
