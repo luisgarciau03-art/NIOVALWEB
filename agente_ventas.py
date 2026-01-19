@@ -339,7 +339,8 @@ class AgenteVentas:
         bruce_asume_cosas = any(frase in respuesta_lower for frase in frases_asuncion_prematura)
 
         # Si es muy temprano (< 4 mensajes de Bruce) y NO tenemos contacto capturado
-        tiene_contacto = bool(self.whatsapp_capturado) or bool(self.email_capturado)
+        # FIX 307: Usar lead_data en lugar de atributos inexistentes
+        tiene_contacto = bool(self.lead_data.get("whatsapp")) or bool(self.lead_data.get("email"))
 
         if (bruce_intenta_despedirse or bruce_asume_cosas) and num_mensajes_bruce < 4 and not tiene_contacto:
             # Verificar último mensaje del cliente para ver si es rechazo real
@@ -1350,16 +1351,16 @@ class AgenteVentas:
             ])
 
             if bruce_dice_ya_tiene:
-                # Verificar si realmente tenemos un contacto capturado
-                tiene_whatsapp = bool(self.whatsapp_capturado)
-                tiene_email = bool(self.email_capturado)
+                # FIX 307: Verificar si realmente tenemos un contacto capturado (usar lead_data)
+                tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
+                tiene_email = bool(self.lead_data.get("email"))
 
                 # FIX 300: SIMPLIFICADO - Si NO tiene contacto, NO puede decir "ya lo tengo"
                 # No importa si Bruce pidió el contacto antes - si NO lo tiene, NO lo tiene
                 if not tiene_whatsapp and not tiene_email:
                     print(f"\n🚫 FIX 295/300: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto")
-                    print(f"   WhatsApp capturado: {self.whatsapp_capturado}")
-                    print(f"   Email capturado: {self.email_capturado}")
+                    print(f"   WhatsApp capturado: {self.lead_data.get('whatsapp')}")
+                    print(f"   Email capturado: {self.lead_data.get('email')}")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     # Corregir: pedir el contacto en lugar de decir que ya lo tiene
                     respuesta = "Disculpe, ¿me podría proporcionar su número de WhatsApp o correo electrónico para enviarle el catálogo?"
@@ -2287,13 +2288,14 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             return respuesta_agente
 
         except Exception as e:
-            # FIX 305: Logging detallado del error para diagnóstico
+            # FIX 305/307: Logging detallado del error para diagnóstico
             import traceback
             print(f"\n🚨🚨🚨 FIX 305: EXCEPCIÓN EN GPT 🚨🚨🚨")
             print(f"   Error: {type(e).__name__}: {e}")
             print(f"   Traceback completo:")
             traceback.print_exc()
-            print(f"   Último mensaje del cliente: {mensaje_usuario[:100] if mensaje_usuario else 'VACÍO'}")
+            # FIX 307: Variable correcta es respuesta_cliente
+            print(f"   Último mensaje del cliente: {respuesta_cliente[:100] if respuesta_cliente else 'VACÍO'}")
             print(f"   Historial tiene {len(self.conversation_history)} mensajes")
 
             # FIX 305: En lugar de decir "problema técnico", dar una respuesta genérica pero útil
