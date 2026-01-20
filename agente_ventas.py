@@ -1592,8 +1592,53 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 20 (FIX 315): Cliente YA indicó preferencia (correo/whatsapp)
+        # Bruce pregunta por el otro en lugar de pedir el que cliente dijo
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente ya dijo su preferencia
+            cliente_prefiere_correo = any(frase in contexto_cliente for frase in [
+                'por correo', 'correo electrónico', 'correo electronico',
+                'el correo', 'mi correo', 'email', 'mejor correo'
+            ])
+
+            cliente_prefiere_whatsapp = any(frase in contexto_cliente for frase in [
+                'por whatsapp', 'por wasa', 'whatsapp', 'wasa',
+                'mi whats', 'mejor whatsapp', 'mejor whats'
+            ])
+
+            # Bruce pregunta por el método equivocado
+            bruce_pide_whatsapp = any(frase in respuesta_lower for frase in [
+                'cuál es su whatsapp', 'cual es su whatsapp',
+                'número de whatsapp', 'numero de whatsapp',
+                'su whatsapp', 'tu whatsapp'
+            ])
+
+            bruce_pide_correo = any(frase in respuesta_lower for frase in [
+                'cuál es su correo', 'cual es su correo',
+                'su correo electrónico', 'su correo electronico',
+                'dígame el correo', 'digame el correo'
+            ])
+
+            if cliente_prefiere_correo and bruce_pide_whatsapp:
+                print(f"\n📧 FIX 315: FILTRO ACTIVADO - Cliente prefiere CORREO pero Bruce pide WhatsApp")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a pedir WhatsApp: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto, dígame el correo y lo anoto."
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+            elif cliente_prefiere_whatsapp and bruce_pide_correo:
+                print(f"\n📱 FIX 315: FILTRO ACTIVADO - Cliente prefiere WHATSAPP pero Bruce pide correo")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a pedir correo: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto. ¿Me lo puede confirmar? Lo anoto."
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-311: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-315: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
