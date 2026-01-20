@@ -402,8 +402,13 @@ respuestas_cache = {
                      # FIX 309b: BRUCE737 - más variantes de "no hay compras aquí"
                      "aquí no hay compras", "aqui no hay compras", "no hay compras", "no hay compras aquí", "no hay compras aqui",
                      "no hay departamento de compra", "no hay departamento de compras", "no tenemos departamento",
-                     "aquí no hay departamento", "aqui no hay departamento", "no existe departamento"],
-        "respuesta": "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
+                     "aquí no hay departamento", "aqui no hay departamento", "no existe departamento",
+                     # FIX 317: Compras en otra ciudad (BRUCE759)
+                     "está allá", "esta alla", "eso está allá", "eso esta alla", "es allá", "es alla",
+                     "allá en la ciudad", "alla en la ciudad", "en otra ciudad", "en la ciudad de",
+                     "en cdmx", "en méxico", "en mexico", "en guadalajara", "en monterrey",
+                     "allá con ellos", "alla con ellos", "con ellos allá", "con ellos alla"],
+        "respuesta": "Entiendo, las compras se manejan en otra ubicación. ¿Me podría proporcionar el número del área de compras?"
     },
 }
 

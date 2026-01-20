@@ -1485,6 +1485,13 @@ class AgenteVentas:
                 r'no\s+hay\s+(?:departamento|compras)',
                 r'no\s+(?:tenemos|existe)\s+departamento',
                 r'aqu[ií]\s+no\s+hay\s+(?:departamento|compras)',
+                # FIX 317: Compras en otra ciudad (BRUCE759)
+                r'(?:eso\s+)?est[aá]\s+all[aá]',
+                r'es\s+all[aá]',
+                r'all[aá]\s+(?:en\s+la\s+)?ciudad',
+                r'en\s+(?:otra\s+)?ciudad\s+de',
+                r'en\s+(?:cdmx|m[eé]xico|guadalajara|monterrey)',
+                r'all[aá]\s+con\s+ellos',
             ]
 
             cliente_es_sucursal = any(re.search(patron, contexto_cliente, re.IGNORECASE) for patron in patrones_sucursal)
@@ -1496,14 +1503,18 @@ class AgenteVentas:
                 'buen día', 'buena tarde', 'disculpe la molestia'
             ])
 
-            # FIX 309b: Bruce sigue insistiendo con catálogo/whatsapp sin pedir número matriz
+            # FIX 309b/317: Bruce sigue insistiendo con catálogo/whatsapp sin pedir número matriz
             bruce_sigue_insistiendo = any(frase in respuesta_lower for frase in [
                 'catálogo digital', 'catalogo digital', 'lista de precios',
                 'enviarle nuestro catálogo', 'enviarle nuestro catalogo',
                 'compartir nuestro catálogo', 'compartir nuestro catalogo',
                 'hay alguien con quien', 'ofrecer a sus clientes',
                 'cuál es su número de whatsapp', 'cual es su numero de whatsapp',
-                'correo electrónico donde', 'correo electronico donde'
+                'correo electrónico donde', 'correo electronico donde',
+                # FIX 317: Bruce pregunta cuándo llamar en lugar de pedir número
+                'momento más conveniente', 'momento mas conveniente',
+                'cuándo sería adecuado', 'cuando seria adecuado',
+                'llame en otro momento', 'llamar en otro momento'
             ])
 
             # Verificar que Bruce NO está pidiendo número de matriz
