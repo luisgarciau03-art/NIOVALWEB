@@ -2686,26 +2686,29 @@ def procesar_respuesta():
     # Crear respuesta TwiML inicial
     response = VoiceResponse()
 
-    # FIX 132: Detectar si cliente está desesperado (repite saludos múltiples veces)
+    # FIX 132/319: Detectar si cliente está desesperado (repite saludos múltiples veces)
+    # FIX 319: NO activar "cliente desesperado" en primera respuesta - es normal que repitan saludo
     cliente_desesperado = False
-    if len(speech_result.split()) >= 5:
-        # Cliente dijo 5+ palabras
+    if len(speech_result.split()) >= 5 and not es_primera_respuesta:
+        # Cliente dijo 5+ palabras Y NO es primera respuesta
         speech_lower = speech_result.lower()
-        # Buscar repeticiones de saludos/preguntas
+        # FIX 319: Solo patrones que indican VERDADERA desesperación (no saludos normales)
+        # Los saludos repetidos al inicio son normales, no desesperación
         patrones_desesperacion = [
-            "hola", "buenos días", "buen día", "me escuchas", "me escucha",
-            "está ahí", "estas ahi", "hay alguien", "bueno", "aló"
+            "me escuchas", "me escucha", "me oyes", "me oye",
+            "está ahí", "estas ahi", "estás ahí", "hay alguien",
+            "hola hola", "bueno bueno", "aló aló"  # Repeticiones inmediatas sí son desesperación
         ]
 
         # Contar cuántos patrones aparecen
         count_patrones = sum(1 for patron in patrones_desesperacion if patron in speech_lower)
 
-        # Si aparecen 2+ patrones diferentes, cliente está desesperado
-        if count_patrones >= 2:
+        # Si aparecen 1+ patrones de desesperación, cliente está desesperado
+        if count_patrones >= 1:
             cliente_desesperado = True
             agente.acaba_de_responder_desesperado = True  # FIX 143: Marcar para no pedir repetición después
             print(f"⚠️ FIX 132: Cliente desesperado detectado - '{speech_result}'")
-            print(f"   Reduciendo timeout de espera a 0.5s para responder INMEDIATAMENTE")
+            print(f"   Reduciendo timeout de espera a 0s para responder INMEDIATAMENTE")
 
     # FIX 58/97: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
     # El caché es instantáneo (0s), no necesita señal auditiva
@@ -2715,12 +2718,15 @@ def procesar_respuesta():
 
         # FIX 146: Reducir delay para cliente desesperado de 0.5s a 0s (meta: 3s total)
         # FIX 183: Reducir timeout de respuesta - cliente se pone agresivo con delays >3s
+        # FIX 319: Reducir aún más el timeout para saludos - clientes cuelgan con delays >4s
         if cliente_desesperado:
             timeout_espera = 0  # FIX 146: Responder INMEDIATAMENTE (0s) - meta 3s total
-        elif usa_segunda_parte_saludo or es_primera_respuesta:
-            timeout_espera = 0.8  # FIX 183: Saludo simple - responder MÁS rápido (1.0s→0.8s)
+        elif usa_segunda_parte_saludo:
+            timeout_espera = 0  # FIX 319: Saludo con cache = 0s delay (ya tenemos el audio listo)
+        elif es_primera_respuesta:
+            timeout_espera = 0.3  # FIX 319: Primera respuesta sin cache = 0.3s (antes 0.8s)
         else:
-            timeout_espera = 2.0  # FIX 183: Normal 3s→2s - delays >3s hacen al cliente agresivo
+            timeout_espera = 1.5  # FIX 319: Normal 2s→1.5s - clientes impacientes
 
         debug_print(f"⏱️ FIX 183: Esperando {timeout_espera}s antes de señal auditiva (máx 2s)")
         gpt_thread.join(timeout=timeout_espera)

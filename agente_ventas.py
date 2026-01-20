@@ -1038,7 +1038,7 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Patrones de horario/disponibilidad (FIX 230: agregados más patrones)
+                # Patrones de horario/disponibilidad (FIX 230/320: agregados más patrones)
                 patrones_horario = [
                     r'después\s+de\s+mediodía',
                     r'en\s+la\s+tarde',
@@ -1058,22 +1058,32 @@ class AgenteVentas:
                     r'no\s+se\s+encuentra.*después',  # FIX 230
                     r'llame\s+(más\s+)?tarde',  # FIX 230
                     r'marque\s+(más\s+)?tarde',  # FIX 230
+                    # FIX 320: "en una hora más", "en un rato", "como en una hora"
+                    r'en\s+una?\s+hora',  # "en una hora", "en 1 hora"
+                    r'una\s+hora\s+m[aá]s',  # "una hora más"
+                    r'como\s+en\s+una?\s+hora',  # "como en una hora"
+                    r'en\s+un\s+rato',  # "en un rato"
+                    r'en\s+unos?\s+\d+\s*(?:minutos?|mins?)',  # "en 30 minutos"
+                    r'por\s+el\s+momento\s+no',  # "por el momento no" (implica que llegará)
                 ]
 
                 cliente_dio_horario = any(re.search(p, ultimo_cliente) for p in patrones_horario)
 
                 # Si cliente dio horario pero Bruce no responde sobre eso
+                # FIX 320: Cuando cliente indica horario de llegada, pedir número directo
                 if cliente_dio_horario:
                     # Verificar si la respuesta de Bruce menciona el horario o reprogramación
                     menciona_horario = any(word in respuesta_lower for word in [
-                        'mediodía', 'tarde', 'hora', 'llamar', 'comunic', 'anotado', 'perfecto'
+                        'mediodía', 'tarde', 'hora', 'llamar', 'comunic', 'anotado', 'perfecto',
+                        'número', 'numero', 'directo'
                     ])
 
                     if not menciona_horario:
-                        print(f"\n🚨 FIX 227: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
+                        print(f"\n🚨 FIX 227/320: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                        respuesta = "Perfecto, anotado. Le llamo entonces en ese horario. Muchas gracias por la información."
+                        # FIX 320: Pedir número directo del encargado
+                        respuesta = "Perfecto. ¿Me podría proporcionar el número directo del encargado para contactarlo en ese horario?"
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -1719,8 +1729,98 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 23 (FIX 321): Bruce repite pregunta del encargado cuando
+        # cliente YA dijo que no está/salió - debe pedir número
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente indicó que encargado NO está
+            cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
+                'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
+                'no, no está', 'no, no esta', 'no lo tenemos', 'se fue', 'no hay nadie'
+            ])
+
+            # Bruce repite la pregunta del encargado (error)
+            bruce_repite_pregunta = any(frase in respuesta_lower for frase in [
+                'se encontrará el encargado', 'se encontrara el encargado',
+                'está el encargado', 'esta el encargado',
+                'se encuentra el encargado', 'encargado de compras',
+                'encargada de compras'
+            ])
+
+            if cliente_dice_no_esta and bruce_repite_pregunta:
+                print(f"\n📞 FIX 321: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce repite pregunta")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a repetir: \"{respuesta[:60]}...\"")
+                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 24 (FIX 322): Cliente pregunta "¿De dónde te comunicas?"
+        # Bruce debe responder con presentación, NO ofrecer catálogo
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente pregunta de dónde llaman
+            cliente_pregunta_origen = any(frase in contexto_cliente for frase in [
+                'de dónde', 'de donde', 'de dónde te comunicas', 'de donde te comunicas',
+                'de dónde llama', 'de donde llama', 'de dónde habla', 'de donde habla',
+                'de qué empresa', 'de que empresa', 'de parte de quién', 'de parte de quien',
+                'quién habla', 'quien habla', 'quién llama', 'quien llama'
+            ])
+
+            # Bruce NO responde la pregunta (ofrece catálogo o algo irrelevante)
+            bruce_no_responde_origen = not any(frase in respuesta_lower for frase in [
+                'nioval', 'ferretería', 'ferreteria', 'productos ferreteros',
+                'marca nioval', 'de la marca'
+            ])
+
+            if cliente_pregunta_origen and bruce_no_responde_origen:
+                print(f"\n📞 FIX 322: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
+                print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Me comunico de parte de la marca NIOVAL, nosotros distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 25 (FIX 322): Bruce dice "ya lo tengo registrado" sin
+        # haber pedido/recibido ningún dato - error grave
+        # ============================================================
+        if not filtro_aplicado:
+            # Bruce dice que ya tiene registrado algo
+            bruce_dice_registrado = any(frase in respuesta_lower for frase in [
+                'ya lo tengo registrado', 'ya lo tengo anotado',
+                'ya tengo registrado', 'ya tengo anotado',
+                'le llegará el catálogo', 'le llegara el catalogo'
+            ])
+
+            # Verificar si realmente hay un correo/whatsapp capturado
+            tiene_correo = hasattr(self, 'ultimo_correo_capturado') and self.ultimo_correo_capturado
+            tiene_whatsapp = hasattr(self, 'ultimo_whatsapp_capturado') and self.ultimo_whatsapp_capturado
+
+            # Buscar en historial si cliente dio algún dato
+            historial_cliente = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history
+                if msg['role'] == 'user'
+            ])
+            cliente_dio_correo = '@' in historial_cliente or 'arroba' in historial_cliente
+            cliente_dio_whatsapp = any(c.isdigit() for c in historial_cliente) and len([c for c in historial_cliente if c.isdigit()]) >= 10
+
+            tiene_dato_real = tiene_correo or tiene_whatsapp or cliente_dio_correo or cliente_dio_whatsapp
+
+            if bruce_dice_registrado and not tiene_dato_real:
+                print(f"\n🚨 FIX 322: FILTRO ACTIVADO - Bruce dice 'registrado' SIN tener dato")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                print(f"   tiene_correo={tiene_correo}, tiene_whatsapp={tiene_whatsapp}")
+                # Corregir a presentación
+                respuesta = "Me comunico de parte de la marca NIOVAL, distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-318: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-322: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
