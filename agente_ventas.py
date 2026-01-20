@@ -1637,8 +1637,40 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 21 (FIX 316): Bruce se despide cuando cliente solo saluda
+        # "Buen día" no es despedida, es saludo - no colgar!
+        # ============================================================
+        if not filtro_aplicado:
+            # Saludos simples que NO son despedidas
+            saludos_simples = [
+                'buen día', 'buen dia', 'buenos días', 'buenos dias',
+                'buenas tardes', 'buenas noches', 'buenas', 'hola',
+                'qué tal', 'que tal', 'diga', 'dígame', 'digame'
+            ]
+
+            # Verificar si cliente SOLO dijo un saludo (contexto corto)
+            contexto_es_saludo = any(saludo in contexto_cliente for saludo in saludos_simples)
+            contexto_es_corto = len(contexto_cliente.split()) <= 5
+
+            # Bruce se despide incorrectamente
+            bruce_se_despide = any(frase in respuesta_lower for frase in [
+                'que tenga excelente día', 'que tenga excelente dia',
+                'que tenga buen día', 'que tenga buen dia',
+                'le marco entonces', 'gracias por la información',
+                'gracias por la informacion', 'hasta luego'
+            ])
+
+            if contexto_es_saludo and contexto_es_corto and bruce_se_despide:
+                print(f"\n🚨 FIX 316: FILTRO ACTIVADO - Cliente SALUDA pero Bruce se DESPIDE")
+                print(f"   Cliente dijo: \"{contexto_cliente}\"")
+                print(f"   Bruce iba a despedirse: \"{respuesta[:60]}...\"")
+                respuesta = "Me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-315: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-316: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
