@@ -369,6 +369,14 @@ class AgenteVentas:
         respuesta_original = respuesta
         filtro_aplicado = False
 
+        # FIX 338: Definir contexto_cliente GLOBAL para todos los filtros
+        # Incluir últimos 6 mensajes del cliente para mejor detección
+        ultimos_mensajes_cliente_global = [
+            msg['content'].lower() for msg in self.conversation_history[-12:]
+            if msg['role'] == 'user'
+        ]
+        contexto_cliente = ' '.join(ultimos_mensajes_cliente_global[-6:]) if ultimos_mensajes_cliente_global else ""
+
         # ============================================================
         # FILTRO 0 (FIX 298/301): CRÍTICO - Evitar despedida/asunciones prematuras
         # Si estamos muy temprano en la conversación (< 4 mensajes) y Bruce
@@ -624,16 +632,19 @@ class AgenteVentas:
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 5 (FIX 235/237/249): Cliente dice "permítame/espere" - protocolo espera
+        # FILTRO 5 (FIX 235/237/249/337): Cliente dice "permítame/espere" - protocolo espera
+        # FIX 337: Revisar últimos 4 mensajes para mejor detección
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
-                msg['content'].lower() for msg in self.conversation_history[-2:]
+                msg['content'].lower() for msg in self.conversation_history[-4:]
                 if msg['role'] == 'user'
             ]
 
             if ultimos_mensajes_cliente:
+                # FIX 337: Revisar todos los mensajes recientes, no solo el último
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
+                contexto_espera = ' '.join(ultimos_mensajes_cliente[-2:]) if len(ultimos_mensajes_cliente) >= 2 else ultimo_cliente
 
                 # FIX 249/256/261/318: Detectar negaciones/rechazos que invalidan "ahorita"
                 # Si cliente dice "ahorita tenemos cerrado", NO es espera
@@ -677,11 +688,13 @@ class AgenteVentas:
                 if re.search(r'\bahorita\b', ultimo_cliente) and not tiene_negacion:
                     patrones_espera.append(r'\bahorita\b')
 
+                # FIX 337: Buscar en último mensaje Y en contexto reciente
                 cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
+                cliente_pide_espera_contexto = any(re.search(p, contexto_espera) for p in patrones_espera)
 
                 # FIX 249: NO activar filtro si hay negación explícita
-                if cliente_pide_espera and not tiene_negacion:
-                    print(f"\n⏳ FIX 235/237/249: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
+                if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion:
+                    print(f"\n⏳ FIX 235/237/249/337: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
                     respuesta = "Claro, espero."
                     filtro_aplicado = True
                     print(f"   Respuesta: \"{respuesta}\"")
@@ -1831,14 +1844,28 @@ class AgenteVentas:
                 'se encontrará el encargado', 'se encontrara el encargado',
                 'encargado de compras', 'encargada de compras',
                 # FIX 332: O cuando dice "ya lo tengo registrado" sin tener dato
-                'ya lo tengo registrado', 'ya tengo registrado'
+                'ya lo tengo registrado', 'ya tengo registrado',
+                # FIX 335: Bruce habla de ubicación cuando cliente ofrece número
+                'estamos ubicados', 'ubicados en', 'hacemos envíos', 'hacemos envios',
+                'toda la república', 'toda la republica'
             ])
 
             if cliente_ofrece_numero and bruce_ignora_oferta:
-                print(f"\n📞 FIX 330/332: FILTRO ACTIVADO - Cliente indica SUCURSAL/OFICINAS pero Bruce ignora")
+                print(f"\n📞 FIX 330/332/335: FILTRO ACTIVADO - Cliente ofrece número pero Bruce ignora")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                respuesta = "Entiendo, es una sucursal. ¿Me podría proporcionar el número de oficinas para comunicarme con el encargado?"
+
+                # FIX 335: Detectar si es sucursal o si simplemente ofrecen número
+                es_sucursal = any(frase in contexto_cliente for frase in [
+                    'sucursal', 'oficinas', 'oficina', 'cedis', 'corporativo'
+                ])
+
+                if es_sucursal:
+                    respuesta = "Entiendo, es una sucursal. ¿Me podría proporcionar el número de oficinas para comunicarme con el encargado?"
+                else:
+                    # Cliente simplemente ofrece dar un número
+                    respuesta = "Perfecto, estoy listo para anotarlo."
+
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -1948,12 +1975,16 @@ class AgenteVentas:
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente indicó que encargado NO está
-            # FIX 328: Agregar más variantes
+            # FIX 328/338: Agregar más variantes
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
                 'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
                 'no, no está', 'no, no esta', 'no lo tenemos', 'se fue', 'no hay nadie',
-                'ahorita no', 'ahorita no se'  # FIX 328: "ahorita no se encuentra"
+                'ahorita no', 'ahorita no se',  # FIX 328: "ahorita no se encuentra"
+                # FIX 338: Más variantes
+                'no los encuentro', 'no lo encuentro', 'no la encuentro',
+                'no se sabe', 'no sabemos', 'no tienen horario', 'no tiene horario',
+                'no sabría decirle', 'no sabria decirle'
             ])
 
             # FIX 326: Detectar si cliente sugiere llamar después
@@ -2116,6 +2147,39 @@ class AgenteVentas:
                 print(f"   Bruce iba a preguntar por encargado: \"{respuesta[:60]}...\"")
                 # Responder aceptando enviar la información
                 respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 27 (FIX 336): Cliente dice "a este número" o "sería este número"
+        # Significa que debemos enviar al mismo número que estamos marcando
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente indica usar el mismo número
+            cliente_dice_este_numero = any(frase in contexto_cliente for frase in [
+                'a este número nada más', 'a este numero nada mas',
+                'sería a este número', 'seria a este numero',
+                'sería este número', 'seria este numero',
+                'a este número', 'a este numero',
+                'por este número', 'por este numero',
+                'este mismo número', 'este mismo numero',
+                'al mismo número', 'al mismo numero',
+                'a este nada más', 'a este nada mas'
+            ])
+
+            # Bruce pide número cuando ya le dijeron que use el mismo
+            bruce_pide_numero = any(frase in respuesta_lower for frase in [
+                'cuál es su número', 'cual es su numero',
+                'me puede repetir', 'me puede proporcionar',
+                'solo escuché', 'solo escuche',
+                'dígitos', 'digitos'
+            ])
+
+            if cliente_dice_este_numero and bruce_pide_numero:
+                print(f"\n📞 FIX 336: FILTRO ACTIVADO - Cliente dice 'a este número' pero Bruce pide número")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a pedir: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto, entonces le envío el catálogo a este mismo número por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
