@@ -7,11 +7,30 @@ import os
 import json
 import time
 from datetime import datetime
+from enum import Enum
 from openai import OpenAI
 from elevenlabs import ElevenLabs, VoiceSettings
 import pandas as pd
 from dotenv import load_dotenv
 from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
+
+
+# FIX 339: Sistema de Estados de Conversación
+# Esto ayuda a Bruce a saber en qué punto de la conversación está
+# y evitar respuestas incoherentes o loops
+class EstadoConversacion(Enum):
+    INICIO = "inicio"                          # Llamada recién iniciada
+    ESPERANDO_SALUDO = "esperando_saludo"      # Bruce saludó, espera respuesta
+    PRESENTACION = "presentacion"              # Bruce se presentó
+    BUSCANDO_ENCARGADO = "buscando_encargado"  # Preguntó por encargado
+    ENCARGADO_NO_ESTA = "encargado_no_esta"    # Cliente dijo que no está - pedir contacto
+    PIDIENDO_WHATSAPP = "pidiendo_whatsapp"    # Pidió WhatsApp
+    PIDIENDO_CORREO = "pidiendo_correo"        # Pidió correo
+    DICTANDO_NUMERO = "dictando_numero"        # Cliente está dictando número - NO INTERRUMPIR
+    DICTANDO_CORREO = "dictando_correo"        # Cliente está dictando correo - NO INTERRUMPIR
+    ESPERANDO_TRANSFERENCIA = "esperando"      # Cliente dijo "espere/permítame"
+    CONTACTO_CAPTURADO = "contacto_capturado"  # Ya tenemos WhatsApp o correo
+    DESPEDIDA = "despedida"                    # Conversación terminando
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -240,6 +259,10 @@ class AgenteVentas:
         self.segunda_parte_saludo_dicha = False  # FIX 201: Flag para evitar repetir segunda parte del saludo
         self.detector_ivr = DetectorIVR()  # FIX 202: Detector de sistemas IVR/contestadoras automáticas
 
+        # FIX 339: Estado de conversación para evitar respuestas incoherentes
+        self.estado_conversacion = EstadoConversacion.INICIO
+        self.estado_anterior = None  # Para tracking de transiciones
+
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
             "contacto_id": (contacto_info.get('fila') or contacto_info.get('ID')) if contacto_info else None,
@@ -286,6 +309,80 @@ class AgenteVentas:
 
         # Contador para alternar frases de relleno (hace la conversación más natural)
         self.indice_frase_relleno = 0
+
+    def _actualizar_estado_conversacion(self, mensaje_cliente: str, respuesta_bruce: str = None):
+        """
+        FIX 339: Actualiza el estado de la conversación basándose en el mensaje del cliente
+        y opcionalmente en la respuesta de Bruce.
+
+        Esto permite que los filtros sepan en qué contexto están y eviten respuestas incoherentes.
+        """
+        import re
+
+        mensaje_lower = mensaje_cliente.lower()
+        self.estado_anterior = self.estado_conversacion
+
+        # Detectar si cliente está dictando número (contiene 3+ dígitos)
+        digitos_encontrados = re.findall(r'\d', mensaje_lower)
+        if len(digitos_encontrados) >= 3:
+            # Si estábamos pidiendo WhatsApp o hay números, está dictando
+            if self.estado_conversacion in [EstadoConversacion.PIDIENDO_WHATSAPP, EstadoConversacion.PIDIENDO_CORREO]:
+                self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                print(f"📊 FIX 339: Estado → DICTANDO_NUMERO (cliente dictando: {len(digitos_encontrados)} dígitos)")
+                return
+
+        # Detectar si cliente está dictando correo (contiene @ o "arroba")
+        if '@' in mensaje_lower or 'arroba' in mensaje_lower or 'punto com' in mensaje_lower:
+            self.estado_conversacion = EstadoConversacion.DICTANDO_CORREO
+            print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
+            return
+
+        # Detectar si cliente pide esperar
+        patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
+                          'un momento', 'un segundito', 'ahorita', 'tantito']
+        if any(p in mensaje_lower for p in patrones_espera):
+            # Verificar que NO sea negación ("no está ahorita")
+            if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']):
+                self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
+                print(f"📊 FIX 339: Estado → ESPERANDO_TRANSFERENCIA")
+                return
+
+        # Detectar si encargado no está
+        patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                           'no hay', 'no lo encuentro', 'no los encuentro', 'no tiene horario']
+        if any(p in mensaje_lower for p in patrones_no_esta):
+            self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
+            print(f"📊 FIX 339: Estado → ENCARGADO_NO_ESTA")
+            return
+
+        # Detectar si ya capturamos contacto
+        if self.lead_data.get("whatsapp") or self.lead_data.get("email"):
+            self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
+            print(f"📊 FIX 339: Estado → CONTACTO_CAPTURADO")
+            return
+
+        # Si la respuesta de Bruce pregunta por WhatsApp/correo
+        if respuesta_bruce:
+            respuesta_lower = respuesta_bruce.lower()
+            if 'whatsapp' in respuesta_lower and '?' in respuesta_lower:
+                self.estado_conversacion = EstadoConversacion.PIDIENDO_WHATSAPP
+                print(f"📊 FIX 339: Estado → PIDIENDO_WHATSAPP")
+            elif 'correo' in respuesta_lower and '?' in respuesta_lower:
+                self.estado_conversacion = EstadoConversacion.PIDIENDO_CORREO
+                print(f"📊 FIX 339: Estado → PIDIENDO_CORREO")
+            elif 'encargado' in respuesta_lower and '?' in respuesta_lower:
+                self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
+                print(f"📊 FIX 339: Estado → BUSCANDO_ENCARGADO")
+
+    def _cliente_esta_dictando(self) -> bool:
+        """
+        FIX 339: Verifica si el cliente está en proceso de dictar número o correo.
+        Útil para saber si debemos esperar más tiempo antes de responder.
+        """
+        return self.estado_conversacion in [
+            EstadoConversacion.DICTANDO_NUMERO,
+            EstadoConversacion.DICTANDO_CORREO
+        ]
 
     def _obtener_frase_relleno(self, delay_segundos: float = 3.0) -> str:
         """
@@ -1936,95 +2033,73 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 22 (FIX 318): Bruce dice "Claro, espero" pero cliente dijo
-        # que el encargado NO ESTÁ - debe pedir número del encargado
+        # FILTRO CONSOLIDADO: ENCARGADO NO ESTÁ (FIX 318/321/326/328/333/341)
+        # Combina FILTRO 22 y FILTRO 23 en uno solo más completo
+        # Maneja todas las variantes de "no está el encargado" y respuestas incorrectas
         # ============================================================
         if not filtro_aplicado:
-            # Detectar si Bruce va a decir "Claro, espero"
-            bruce_dice_espero = any(frase in respuesta_lower for frase in [
-                'claro, espero', 'claro espero', 'claro, aquí espero',
-                'perfecto, espero', 'espero', 'aquí espero'
-            ])
-
-            # Detectar si cliente indicó que encargado NO está
-            cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
-                'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
-                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
-                'no, no está', 'no, no esta', 'no lo tenemos'
-            ])
-
-            # Verificar que NO es una transferencia real (cliente pasando llamada)
-            es_transferencia = any(frase in contexto_cliente for frase in [
-                'te lo paso', 'se lo paso', 'ahorita te lo paso', 'te comunico',
-                'espérame', 'esperame', 'un momento', 'permíteme', 'permiteme'
-            ])
-
-            if bruce_dice_espero and cliente_dice_no_esta and not es_transferencia:
-                print(f"\n📞 FIX 318: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce dice 'espero'")
-                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
-                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
-                filtro_aplicado = True
-                print(f"   Respuesta corregida: \"{respuesta}\"")
-
-        # ============================================================
-        # FILTRO 23 (FIX 321/326/328): Bruce repite pregunta del encargado cuando
-        # cliente YA dijo que no está/salió - debe pedir número O aceptar horario
-        # FIX 326: Si cliente sugiere "llamar más tarde", aceptar y preguntar horario
-        # FIX 328: Mejorar detección de "no se encuentra"
-        # ============================================================
-        if not filtro_aplicado:
-            # Detectar si cliente indicó que encargado NO está
-            # FIX 328/338: Agregar más variantes
-            cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
+            # FIX 341: Lista COMPLETA de patrones que indican que el encargado NO está
+            patrones_no_esta = [
                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
                 'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
                 'no, no está', 'no, no esta', 'no lo tenemos', 'se fue', 'no hay nadie',
-                'ahorita no', 'ahorita no se',  # FIX 328: "ahorita no se encuentra"
-                # FIX 338: Más variantes
-                'no los encuentro', 'no lo encuentro', 'no la encuentro',
-                'no se sabe', 'no sabemos', 'no tienen horario', 'no tiene horario',
-                'no sabría decirle', 'no sabria decirle'
-            ])
+                'ahorita no', 'ahorita no se', 'no los encuentro', 'no lo encuentro',
+                'no la encuentro', 'no se sabe', 'no sabemos', 'no tienen horario',
+                'no tiene horario', 'no sabría decirle', 'no sabria decirle',
+                'está fuera', 'esta fuera', 'está ocupado', 'esta ocupado',
+                'no viene hoy', 'no trabaja hoy', 'ya se fue'
+            ]
+            cliente_dice_no_esta = any(frase in contexto_cliente for frase in patrones_no_esta)
+
+            # Verificar que NO es una transferencia real (cliente pasando llamada)
+            patrones_transferencia = [
+                'te lo paso', 'se lo paso', 'ahorita te lo paso', 'te comunico',
+                'espérame', 'esperame', 'un momento', 'permíteme', 'permiteme',
+                'en un momento', 'ahora lo paso', 'ahora te lo paso'
+            ]
+            es_transferencia = any(frase in contexto_cliente for frase in patrones_transferencia)
 
             # FIX 326: Detectar si cliente sugiere llamar después
-            cliente_sugiere_despues = any(frase in contexto_cliente for frase in [
+            patrones_llamar_despues = [
                 'llamar más tarde', 'llamar mas tarde', 'llame más tarde', 'llame mas tarde',
                 'guste llamar', 'quiere llamar', 'llamar después', 'llamar despues',
                 'llamar en la tarde', 'llamar mañana', 'llamar manana',
-                'marque más tarde', 'marque mas tarde', 'marque después', 'marque despues'
-            ])
+                'marque más tarde', 'marque mas tarde', 'marque después', 'marque despues',
+                'vuelva a llamar', 'intente más tarde', 'intente mas tarde'
+            ]
+            cliente_sugiere_despues = any(frase in contexto_cliente for frase in patrones_llamar_despues)
 
-            # Bruce repite la pregunta del encargado (error)
-            # FIX 328: Agregar más variantes de la pregunta
-            # FIX 333: También detectar "¿Hay algo más en que ayudar?" que es respuesta incorrecta
-            bruce_repite_pregunta = any(frase in respuesta_lower for frase in [
+            # FIX 341: TODAS las respuestas incorrectas de Bruce cuando cliente dice "no está"
+            respuestas_incorrectas_bruce = [
+                # Bruce dice "espero" cuando no hay nadie que lo transfiera
+                'claro, espero', 'claro espero', 'claro, aquí espero',
+                'perfecto, espero', 'aquí espero',
+                # Bruce repite la pregunta del encargado
                 'se encontrará el encargado', 'se encontrara el encargado',
                 'está el encargado', 'esta el encargado',
                 'se encuentra el encargado', 'encargado de compras',
-                'encargada de compras',
-                'claro. ¿se encontrará', 'claro. ¿se encontrara'  # FIX 328
-            ])
-
-            # FIX 333: Bruce dice "¿Hay algo más?" cuando debería pedir número
-            bruce_dice_hay_algo_mas = any(frase in respuesta_lower for frase in [
+                'encargada de compras', 'claro. ¿se encontrará', 'claro. ¿se encontrara',
+                # Bruce dice "hay algo más" en lugar de pedir contacto
                 'hay algo más', 'hay algo mas', 'algo más en lo que',
                 'algo mas en lo que', 'en qué puedo ayudar', 'en que puedo ayudar',
                 'puedo ayudarle', 'le puedo ayudar'
-            ])
+            ]
+            bruce_responde_mal = any(frase in respuesta_lower for frase in respuestas_incorrectas_bruce)
 
-            if cliente_dice_no_esta and (bruce_repite_pregunta or bruce_dice_hay_algo_mas):
-                print(f"\n📞 FIX 321/328/333: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce responde mal")
+            # Solo activar si cliente dice "no está" Y Bruce responde mal Y NO es transferencia
+            if cliente_dice_no_esta and bruce_responde_mal and not es_transferencia:
+                print(f"\n📞 FIX 341 CONSOLIDADO: Cliente dice NO ESTÁ pero Bruce responde mal")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                print(f"   Repite pregunta: {bruce_repite_pregunta}, Dice 'hay algo más': {bruce_dice_hay_algo_mas}")
 
-                # FIX 326: Si cliente sugiere llamar después, aceptar
+                # Determinar respuesta apropiada según contexto
                 if cliente_sugiere_despues:
                     respuesta = "Perfecto, le llamo más tarde entonces. ¿A qué hora sería mejor para encontrar al encargado?"
-                    print(f"   FIX 326: Cliente sugiere llamar después - preguntando horario")
+                    print(f"   → Cliente sugiere llamar después - preguntando horario")
                 else:
                     respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                    print(f"   → Pidiendo número directo del encargado")
+
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -2184,7 +2259,7 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         if filtro_aplicado:
-            print(f"✅ FIX 226-333: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-341: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 

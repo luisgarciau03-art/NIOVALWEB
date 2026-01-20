@@ -3074,15 +3074,30 @@ def procesar_respuesta():
         texto_cliente = ultimo_mensaje_cliente.lower()
         # Buscar si hay dígitos o palabras numéricas
         tiene_digitos = bool(re.search(r'\d', texto_cliente))
+        # FIX 340: Contar cuántos dígitos hay para saber si está dictando
+        num_digitos = len(re.findall(r'\d', texto_cliente))
         tiene_numeros_palabra = any(num in texto_cliente for num in [
             'cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez',
             'once', 'doce', 'trece', 'catorce', 'quince', 'veinte', 'treinta', 'cuarenta', 'cincuenta',
             'sesenta', 'setenta', 'ochenta', 'noventa'
         ])
-        # Si Bruce pidió número Y cliente está dando números, es dictado
-        if bruce_pidio_numero and (tiene_digitos or tiene_numeros_palabra):
+
+        # FIX 340: Detectar si cliente OFRECE dar número (aunque Bruce no haya pedido explícitamente)
+        cliente_ofrece_numero = any(frase in texto_cliente for frase in [
+            'le doy el número', 'le doy el numero', 'te doy el número', 'te doy el numero',
+            'es el', 'sería', 'seria', 'anota', 'apunta', 'el número es', 'el numero es'
+        ])
+
+        # Si Bruce pidió número O cliente ofrece número Y hay dígitos/números, es dictado
+        if (bruce_pidio_numero or cliente_ofrece_numero) and (tiene_digitos or tiene_numeros_palabra):
             cliente_dictando_numero = True
-            debug_print(f"📞 FIX 293: Cliente dictando número de teléfono")
+            debug_print(f"📞 FIX 293/340: Cliente dictando número de teléfono ({num_digitos} dígitos detectados)")
+
+        # FIX 340: Si hay 3+ dígitos en el mensaje, SIEMPRE considerar como dictado
+        # Esto evita interrumpir cuando cliente está a mitad de dictar
+        if num_digitos >= 3:
+            cliente_dictando_numero = True
+            debug_print(f"📞 FIX 340: Forzando modo dictado - {num_digitos} dígitos detectados - NO INTERRUMPIR")
 
     # FIX 215: Reducir todos los timeouts para respuesta más rápida
     # Record timeout = silencio después de que cliente termina de hablar
@@ -3093,9 +3108,10 @@ def procesar_respuesta():
         timeout_gather = 8  # FIX 215: Reducido de 15s a 8s (correo largo)
         debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente dictando correo)")
     elif cliente_dictando_numero or bruce_pidio_numero:
-        # FIX 293: Dar más tiempo cuando cliente dicta número de teléfono (10 dígitos)
-        timeout_gather = 6  # 6 segundos para que diga los 10 dígitos sin prisa
-        debug_print(f"⏱️ FIX 293: Timeout={timeout_gather}s (cliente dictando número)")
+        # FIX 293/340: Dar MÁS tiempo cuando cliente dicta número de teléfono (10 dígitos)
+        # FIX 340: Aumentado de 6s a 8s para evitar interrupciones mientras dictan
+        timeout_gather = 8  # 8 segundos para que diga los 10 dígitos sin prisa
+        debug_print(f"⏱️ FIX 293/340: Timeout={timeout_gather}s (cliente dictando número - NO INTERRUMPIR)")
     elif cliente_desesperado:
         timeout_gather = 2  # FIX 215: Reducido de 5s a 2s (respuesta rápida)
         debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente desesperado)")
