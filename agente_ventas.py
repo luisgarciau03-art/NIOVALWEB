@@ -2104,16 +2104,21 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 24 (FIX 322/327): Cliente pregunta "¿De dónde te comunicas?" o "¿Quién habla?"
+        # FILTRO 24 (FIX 322/327/342): Cliente pregunta "¿De dónde te comunicas?" o "¿Quién habla?"
         # Bruce debe responder con presentación INCLUYENDO SU NOMBRE
         # FIX 327: Agregar nombre "Bruce" cuando preguntan "quién habla"
+        # FIX 342: Agregar más variantes de "de dónde" y detectar respuestas incoherentes
         # ============================================================
         if not filtro_aplicado:
-            # Detectar si cliente pregunta de dónde llaman o quién habla
+            # FIX 342: Lista completa de preguntas sobre origen/identidad
             cliente_pregunta_origen = any(frase in contexto_cliente for frase in [
                 'de dónde', 'de donde', 'de dónde te comunicas', 'de donde te comunicas',
                 'de dónde llama', 'de donde llama', 'de dónde habla', 'de donde habla',
-                'de qué empresa', 'de que empresa', 'de parte de quién', 'de parte de quien'
+                'de dónde nos marca', 'de donde nos marca', 'de dónde me marca', 'de donde me marca',
+                'de dónde nos llama', 'de donde nos llama', 'de dónde me llama', 'de donde me llama',
+                'de qué empresa', 'de que empresa', 'de parte de quién', 'de parte de quien',
+                'qué empresa', 'que empresa', 'cuál empresa', 'cual empresa',
+                'qué marca', 'que marca', 'cuál marca', 'cual marca'
             ])
 
             # FIX 327: Detectar específicamente "¿Quién habla?"
@@ -2122,26 +2127,34 @@ class AgenteVentas:
                 'quién es', 'quien es', 'con quién hablo', 'con quien hablo'
             ])
 
+            # FIX 342: Bruce responde algo INCOHERENTE (no relacionado con la pregunta)
+            bruce_responde_incoherente = any(frase in respuesta_lower for frase in [
+                'hay algo más', 'hay algo mas', 'perfecto.', 'gracias por',
+                'que tenga buen', 'que tenga excelente', 'hasta luego',
+                'me escucha', '¿me escucha'
+            ])
+
             # Bruce NO responde la pregunta (ofrece catálogo o algo irrelevante)
-            # FIX 327: También verificar si Bruce NO dice su nombre cuando preguntan "quién habla"
             bruce_no_responde_origen = not any(frase in respuesta_lower for frase in [
                 'nioval', 'ferretería', 'ferreteria', 'productos ferreteros',
-                'marca nioval', 'de la marca'
+                'marca nioval', 'de la marca', 'guadalajara', 'jalisco'
             ])
 
             bruce_no_dice_nombre = 'bruce' not in respuesta_lower
 
-            if cliente_pregunta_origen and bruce_no_responde_origen:
-                print(f"\n📞 FIX 322: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
+            # FIX 342: Si cliente pregunta origen Y Bruce responde incoherente O no responde origen
+            if cliente_pregunta_origen and (bruce_no_responde_origen or bruce_responde_incoherente):
+                print(f"\n📞 FIX 322/342: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
                 print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                print(f"   No responde origen: {bruce_no_responde_origen}, Responde incoherente: {bruce_responde_incoherente}")
                 respuesta = "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL. Distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
             # FIX 327: Si preguntan específicamente "quién habla" y Bruce no dice su nombre
-            elif cliente_pregunta_quien and bruce_no_dice_nombre:
-                print(f"\n📞 FIX 327: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre")
+            elif cliente_pregunta_quien and (bruce_no_dice_nombre or bruce_responde_incoherente):
+                print(f"\n📞 FIX 327/342: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre")
                 print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
