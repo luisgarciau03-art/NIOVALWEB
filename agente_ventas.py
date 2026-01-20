@@ -52,10 +52,68 @@ def convertir_numeros_escritos_a_digitos(texto: str) -> str:
         "tres tres uno dos" → "33 12"
         "sesenta y seis" → "66"
         "treinta y uno" → "31"
+        "100 veintiuno" → "121" (FIX 331)
+        "cien veintiuno" → "121" (FIX 331)
     """
     import re
 
     texto_convertido = texto.lower()
+
+    # FIX 331: Convertir "100 veintiuno" → "121", "100 veintidos" → "122", etc.
+    # Esto es común en México cuando dicen números de 3 dígitos como "cien veintiuno"
+    # El patrón es: 100/cien/ciento + número del 1-99
+    patrones_cien = {
+        # 100 + veintiX = 12X
+        '100 veintiuno': '121', '100 veintidos': '122', '100 veintidós': '122',
+        '100 veintitrés': '123', '100 veintitres': '123', '100 veinticuatro': '124',
+        '100 veinticinco': '125', '100 veintiséis': '126', '100 veintiseis': '126',
+        '100 veintisiete': '127', '100 veintiocho': '128', '100 veintinueve': '129',
+        # cien + veintiX = 12X
+        'cien veintiuno': '121', 'cien veintidos': '122', 'cien veintidós': '122',
+        'cien veintitrés': '123', 'cien veintitres': '123', 'cien veinticuatro': '124',
+        'cien veinticinco': '125', 'cien veintiséis': '126', 'cien veintiseis': '126',
+        'cien veintisiete': '127', 'cien veintiocho': '128', 'cien veintinueve': '129',
+        # ciento + veintiX = 12X
+        'ciento veintiuno': '121', 'ciento veintidos': '122', 'ciento veintidós': '122',
+        'ciento veintitrés': '123', 'ciento veintitres': '123', 'ciento veinticuatro': '124',
+        'ciento veinticinco': '125', 'ciento veintiséis': '126', 'ciento veintiseis': '126',
+        'ciento veintisiete': '127', 'ciento veintiocho': '128', 'ciento veintinueve': '129',
+        # 100/cien + diez a diecinueve = 11X
+        '100 diez': '110', '100 once': '111', '100 doce': '112', '100 trece': '113',
+        '100 catorce': '114', '100 quince': '115', '100 dieciséis': '116', '100 dieciseis': '116',
+        '100 diecisiete': '117', '100 dieciocho': '118', '100 diecinueve': '119',
+        'cien diez': '110', 'cien once': '111', 'cien doce': '112', 'cien trece': '113',
+        'cien catorce': '114', 'cien quince': '115', 'cien dieciséis': '116', 'cien dieciseis': '116',
+        'cien diecisiete': '117', 'cien dieciocho': '118', 'cien diecinueve': '119',
+        # 100/cien + treinta a noventa = 13X-19X
+        '100 treinta': '130', '100 cuarenta': '140', '100 cincuenta': '150',
+        '100 sesenta': '160', '100 setenta': '170', '100 ochenta': '180', '100 noventa': '190',
+        'cien treinta': '130', 'cien cuarenta': '140', 'cien cincuenta': '150',
+        'cien sesenta': '160', 'cien setenta': '170', 'cien ochenta': '180', 'cien noventa': '190',
+        # 100/cien + unidades simples = 10X
+        '100 uno': '101', '100 dos': '102', '100 tres': '103', '100 cuatro': '104',
+        '100 cinco': '105', '100 seis': '106', '100 siete': '107', '100 ocho': '108', '100 nueve': '109',
+        'cien uno': '101', 'cien dos': '102', 'cien tres': '103', 'cien cuatro': '104',
+        'cien cinco': '105', 'cien seis': '106', 'cien siete': '107', 'cien ocho': '108', 'cien nueve': '109',
+        # Variantes sin espacio (a veces Deepgram las transcribe así)
+        '100veintiuno': '121', '100veintidos': '122', '100veintitres': '123',
+        '100veinticuatro': '124', '100veinticinco': '125', '100veintiseis': '126',
+        '100veintisiete': '127', '100veintiocho': '128', '100veintinueve': '129',
+        # ciento + treinta y uno, etc. = 13X
+        'ciento treinta y uno': '131', 'ciento treinta y dos': '132', 'ciento treinta y tres': '133',
+        'ciento treinta y cuatro': '134', 'ciento treinta y cinco': '135', 'ciento treinta y seis': '136',
+        'ciento treinta y siete': '137', 'ciento treinta y ocho': '138', 'ciento treinta y nueve': '139',
+        'ciento cuarenta y uno': '141', 'ciento cuarenta y dos': '142', 'ciento cuarenta y tres': '143',
+        'ciento cincuenta y uno': '151', 'ciento cincuenta y dos': '152', 'ciento cincuenta y tres': '153',
+    }
+
+    for patron, digitos in patrones_cien.items():
+        texto_convertido = texto_convertido.replace(patron, digitos)
+
+    # FIX 331: También convertir "cien" suelto a "100" si no se convirtió antes
+    # Esto es para casos como "9 6 1 cien 21" donde "cien" queda suelto
+    texto_convertido = texto_convertido.replace(' cien ', ' 100 ')
+    texto_convertido = texto_convertido.replace(' ciento ', ' 100 ')
 
     # FIX 276: Primero convertir números compuestos "treinta y uno" → "31"
     # Patrón: decena + "y" + unidad
@@ -356,6 +414,15 @@ class AgenteVentas:
             # FIX 301: "Gracias" solo NO es rechazo - es cortesía
             es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
 
+            # FIX 325: Detectar si cliente PIDE información por correo/WhatsApp
+            # En ese caso, NO preguntar por encargado - pedir el dato de contacto
+            cliente_pide_info_contacto = any(frase in ultimo_cliente for frase in [
+                'por correo', 'por whatsapp', 'por wasa', 'enviar la información',
+                'enviar la informacion', 'mandar la información', 'mandar la informacion',
+                'me puedes enviar', 'me puede enviar', 'envíame', 'enviame',
+                'mándame', 'mandame', 'enviarme', 'mandarme'
+            ])
+
             if not rechazo_real or es_solo_gracias:
                 tipo_problema = "asume cosas" if bruce_asume_cosas else "despedida prematura"
                 print(f"\n🚨 FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
@@ -363,8 +430,18 @@ class AgenteVentas:
                 print(f"   Tiene contacto: {tiene_contacto}")
                 print(f"   Último cliente: '{ultimo_cliente[:50]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
-                # Continuar la conversación normalmente
-                respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
+
+                # FIX 325: Si cliente pidió info por correo/WhatsApp, pedir el dato
+                if cliente_pide_info_contacto:
+                    if 'por correo' in ultimo_cliente:
+                        respuesta = "Claro, con gusto. ¿Me puede proporcionar su correo electrónico para enviarle el catálogo?"
+                        print(f"   FIX 325: Cliente pidió por CORREO - pidiendo email")
+                    else:
+                        respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                        print(f"   FIX 325: Cliente pidió por WHATSAPP - pidiendo número")
+                else:
+                    # Continuar la conversación normalmente
+                    respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -946,12 +1023,30 @@ class AgenteVentas:
                                 ultimo_cliente_msg = msg['content'].lower()
                                 break
 
-                        # Detectar si cliente dio información de tiempo/día
-                        menciona_tiempo = any(palabra in ultimo_cliente_msg for palabra in [
-                            "lunes", "martes", "miércoles", "miercoles", "jueves", "viernes",
-                            "sábado", "sabado", "domingo", "mañana", "tarde", "noche",
-                            "semana", "hora", "día", "dia", "hoy", "ayer"
+                        # FIX 334: Detectar si cliente SOLO está saludando u ofreciendo ayuda
+                        # Estos NO deben activar despedida
+                        es_solo_saludo = any(frase in ultimo_cliente_msg for frase in [
+                            "buen día", "buen dia", "buenos días", "buenos dias",
+                            "buenas tardes", "buenas noches", "dígame", "digame",
+                            "mande", "sí dígame", "si digame", "qué se le ofrece",
+                            "que se le ofrece", "en qué le puedo", "en que le puedo",
+                            "cómo le ayudo", "como le ayudo", "le puedo ayudar"
                         ])
+
+                        # Detectar si cliente dio información de tiempo/día (pero NO saludos)
+                        menciona_tiempo = False
+                        if not es_solo_saludo:
+                            menciona_tiempo = any(palabra in ultimo_cliente_msg for palabra in [
+                                "lunes", "martes", "miércoles", "miercoles", "jueves", "viernes",
+                                "sábado", "sabado", "domingo", "mañana", "tarde", "noche",
+                                "semana", "hora", "hoy", "ayer"
+                            ])
+                            # FIX 334: Excluir "día/dia" si es parte de un saludo
+                            if not menciona_tiempo:
+                                if ("día" in ultimo_cliente_msg or "dia" in ultimo_cliente_msg):
+                                    # Solo contar como tiempo si NO es parte de "buen día" o similar
+                                    if not any(saludo in ultimo_cliente_msg for saludo in ["buen día", "buen dia", "buenos día", "buenos dia"]):
+                                        menciona_tiempo = True
 
                         # Detectar si cliente dio respuesta negativa (no está, salió, etc.)
                         respuesta_negativa = any(palabra in ultimo_cliente_msg for palabra in [
@@ -959,7 +1054,11 @@ class AgenteVentas:
                             "no hay", "no viene", "estaba", "cerrado"
                         ])
 
-                        if menciona_tiempo:
+                        if es_solo_saludo:
+                            # FIX 334: Cliente solo saluda u ofrece ayuda - continuar con presentación
+                            respuesta = "Qué tal, le llamo de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+                            print(f"   FIX 334: Cliente solo saludó/ofreció ayuda - continuando presentación")
+                        elif menciona_tiempo:
                             respuesta = "Perfecto, muchas gracias por la información. Le marco entonces. Que tenga excelente día."
                             print(f"   FIX 281: Cliente mencionó tiempo/día - usando despedida apropiada")
                         elif respuesta_negativa:
@@ -1621,8 +1720,10 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 20 (FIX 315): Cliente YA indicó preferencia (correo/whatsapp)
+        # FILTRO 20 (FIX 315/329): Cliente YA indicó preferencia (correo/whatsapp)
         # Bruce pregunta por el otro en lugar de pedir el que cliente dijo
+        # FIX 329: También detectar cuando Bruce pregunta "WhatsApp o correo" cuando
+        # cliente YA especificó su preferencia
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente ya dijo su preferencia
@@ -1633,7 +1734,9 @@ class AgenteVentas:
 
             cliente_prefiere_whatsapp = any(frase in contexto_cliente for frase in [
                 'por whatsapp', 'por wasa', 'whatsapp', 'wasa',
-                'mi whats', 'mejor whatsapp', 'mejor whats'
+                'mi whats', 'mejor whatsapp', 'mejor whats',
+                'mandar por whatsapp', 'enviar por whatsapp',  # FIX 329
+                'me podrás mandar', 'me podras mandar'  # FIX 329: "¿No me podrás mandar por WhatsApp?"
             ])
 
             # Bruce pregunta por el método equivocado
@@ -1649,6 +1752,14 @@ class AgenteVentas:
                 'dígame el correo', 'digame el correo'
             ])
 
+            # FIX 329: Bruce pregunta por AMBAS opciones cuando cliente ya eligió una
+            bruce_pregunta_ambas = any(frase in respuesta_lower for frase in [
+                'whatsapp o correo', 'correo o whatsapp',
+                'whatsapp o por correo', 'correo o por whatsapp',
+                'le gustaría recibir', 'le gustaria recibir',
+                'prefiere whatsapp', 'prefiere correo'
+            ])
+
             if cliente_prefiere_correo and bruce_pide_whatsapp:
                 print(f"\n📧 FIX 315: FILTRO ACTIVADO - Cliente prefiere CORREO pero Bruce pide WhatsApp")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
@@ -1661,13 +1772,82 @@ class AgenteVentas:
                 print(f"\n📱 FIX 315: FILTRO ACTIVADO - Cliente prefiere WHATSAPP pero Bruce pide correo")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a pedir correo: \"{respuesta[:60]}...\"")
-                respuesta = "Perfecto. ¿Me lo puede confirmar? Lo anoto."
+                respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+            # FIX 329: Cliente ya dijo WhatsApp pero Bruce pregunta "WhatsApp o correo"
+            elif cliente_prefiere_whatsapp and bruce_pregunta_ambas:
+                print(f"\n📱 FIX 329: FILTRO ACTIVADO - Cliente YA dijo WhatsApp pero Bruce pregunta ambas opciones")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a preguntar: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+            # FIX 329: Cliente ya dijo correo pero Bruce pregunta "WhatsApp o correo"
+            elif cliente_prefiere_correo and bruce_pregunta_ambas:
+                print(f"\n📧 FIX 329: FILTRO ACTIVADO - Cliente YA dijo correo pero Bruce pregunta ambas opciones")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a preguntar: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto, dígame el correo y lo anoto."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 21 (FIX 316): Bruce se despide cuando cliente solo saluda
+        # FILTRO 20b (FIX 330/332): Cliente OFRECE número de oficinas/encargado
+        # O indica que es SUCURSAL y debe llamar a oficinas
+        # Bruce NO debe ignorar esto - debe pedir el número
+        # FIX 332: Expandir detección para "sería número de oficina", "sería con oficina"
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente ofrece dar un número o indica que es sucursal
+            cliente_ofrece_numero = any(frase in contexto_cliente for frase in [
+                'le doy el número', 'le doy el numero', 'te doy el número', 'te doy el numero',
+                'le paso el número', 'le paso el numero', 'te paso el número', 'te paso el numero',
+                'le doy el teléfono', 'le doy el telefono', 'anota el número', 'anota el numero',
+                'apunta el número', 'apunta el numero', 'es el número', 'es el numero',
+                'número de oficinas', 'numero de oficinas', 'número de la oficina', 'numero de la oficina',
+                'número del encargado', 'numero del encargado', 'número directo', 'numero directo',
+                'hablando a una sucursal', 'esto es sucursal', 'esta es sucursal',
+                # FIX 332: Más variantes
+                'sería número', 'seria numero', 'sería el número', 'seria el numero',
+                'sería lo que es oficina', 'seria lo que es oficina',
+                'sería con oficina', 'seria con oficina', 'sería con lo que es oficina',
+                'no sería este número', 'no seria este numero', 'no sería con nosotros',
+                'aquí en una sucursal', 'aqui en una sucursal', 'somos sucursal',
+                'esto es una sucursal', 'estamos en sucursal', 'ahí lo comunican',
+                'ahi lo comunican', 'lo comunican', 'lo transfieren'
+            ])
+
+            # Bruce ignora y dice algo irrelevante
+            bruce_ignora_oferta = any(frase in respuesta_lower for frase in [
+                'hay algo más', 'hay algo mas', 'algo más en lo que',
+                'le gustaría recibir', 'le gustaria recibir',
+                'whatsapp o correo', 'correo o whatsapp',
+                'que tenga buen día', 'que tenga excelente día',
+                'gracias por su tiempo', 'hasta luego',
+                # FIX 332: También cuando Bruce pregunta por encargado ignorando que es sucursal
+                'se encontrará el encargado', 'se encontrara el encargado',
+                'encargado de compras', 'encargada de compras',
+                # FIX 332: O cuando dice "ya lo tengo registrado" sin tener dato
+                'ya lo tengo registrado', 'ya tengo registrado'
+            ])
+
+            if cliente_ofrece_numero and bruce_ignora_oferta:
+                print(f"\n📞 FIX 330/332: FILTRO ACTIVADO - Cliente indica SUCURSAL/OFICINAS pero Bruce ignora")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Entiendo, es una sucursal. ¿Me podría proporcionar el número de oficinas para comunicarme con el encargado?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 21 (FIX 316/323): Bruce se despide cuando cliente solo saluda
         # "Buen día" no es despedida, es saludo - no colgar!
+        # FIX 323: Ser más agresivo - también cuando dice "gracias por la información"
+        # pero el cliente NO dio ninguna información (solo saludos)
+        # FIX 323b: También detectar "¿En qué le puedo ayudar?" - cliente OFRECE ayuda
         # ============================================================
         if not filtro_aplicado:
             # Saludos simples que NO son despedidas
@@ -1677,21 +1857,52 @@ class AgenteVentas:
                 'qué tal', 'que tal', 'diga', 'dígame', 'digame'
             ]
 
+            # FIX 323b: Frases donde cliente OFRECE ayuda (definitivamente NO es despedida)
+            cliente_ofrece_ayuda = any(frase in contexto_cliente for frase in [
+                'en qué le puedo', 'en que le puedo', 'en qué puedo', 'en que puedo',
+                'le puedo ayudar', 'puedo ayudar', 'cómo le ayudo', 'como le ayudo',
+                'qué se le ofrece', 'que se le ofrece', 'mande', 'dígame'
+            ])
+
             # Verificar si cliente SOLO dijo un saludo (contexto corto)
             contexto_es_saludo = any(saludo in contexto_cliente for saludo in saludos_simples)
-            contexto_es_corto = len(contexto_cliente.split()) <= 5
+            contexto_es_corto = len(contexto_cliente.split()) <= 8  # FIX 323b: aumentar a 8 palabras
 
             # Bruce se despide incorrectamente
             bruce_se_despide = any(frase in respuesta_lower for frase in [
                 'que tenga excelente día', 'que tenga excelente dia',
                 'que tenga buen día', 'que tenga buen dia',
                 'le marco entonces', 'gracias por la información',
-                'gracias por la informacion', 'hasta luego'
+                'gracias por la informacion', 'hasta luego',
+                # FIX 323: Agregar más frases de despedida prematura
+                'muchas gracias por la información', 'muchas gracias por la informacion',
+                'perfecto, muchas gracias', 'gracias por su tiempo'
             ])
 
-            if contexto_es_saludo and contexto_es_corto and bruce_se_despide:
-                print(f"\n🚨 FIX 316: FILTRO ACTIVADO - Cliente SALUDA pero Bruce se DESPIDE")
+            # FIX 323: También verificar si en TODO el historial el cliente NO dio información real
+            # Solo hay saludos repetidos
+            historial_cliente = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history
+                if msg['role'] == 'user'
+            ])
+
+            # FIX 323b: Palabras neutrales que NO cuentan como "información"
+            palabras_neutrales = saludos_simples + [
+                'sí', 'si', 'alo', 'aló', 'bueno', 'en', 'qué', 'que', 'le', 'puedo',
+                'ayudar', 'cómo', 'como', 'mande', 'diga', 'se', 'ofrece', 'a'
+            ]
+            cliente_solo_saluda = all(
+                any(saludo in palabra for saludo in palabras_neutrales)
+                for palabra in historial_cliente.split()
+            ) if historial_cliente else True
+
+            # FIX 323/323b: Si cliente saluda/ofrece ayuda Y Bruce intenta despedirse = ERROR
+            if ((contexto_es_saludo or cliente_ofrece_ayuda) and contexto_es_corto and bruce_se_despide) or \
+               (cliente_solo_saluda and bruce_se_despide and not tiene_contacto):
+                print(f"\n🚨 FIX 316/323: FILTRO ACTIVADO - Cliente SALUDA/OFRECE AYUDA pero Bruce se DESPIDE")
                 print(f"   Cliente dijo: \"{contexto_cliente}\"")
+                print(f"   Cliente ofrece ayuda: {cliente_ofrece_ayuda}")
+                print(f"   Historial cliente (solo saludos): {cliente_solo_saluda}")
                 print(f"   Bruce iba a despedirse: \"{respuesta[:60]}...\"")
                 respuesta = "Me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
                 filtro_aplicado = True
@@ -1730,57 +1941,104 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 23 (FIX 321): Bruce repite pregunta del encargado cuando
-        # cliente YA dijo que no está/salió - debe pedir número
+        # FILTRO 23 (FIX 321/326/328): Bruce repite pregunta del encargado cuando
+        # cliente YA dijo que no está/salió - debe pedir número O aceptar horario
+        # FIX 326: Si cliente sugiere "llamar más tarde", aceptar y preguntar horario
+        # FIX 328: Mejorar detección de "no se encuentra"
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente indicó que encargado NO está
+            # FIX 328: Agregar más variantes
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
                 'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
-                'no, no está', 'no, no esta', 'no lo tenemos', 'se fue', 'no hay nadie'
+                'no, no está', 'no, no esta', 'no lo tenemos', 'se fue', 'no hay nadie',
+                'ahorita no', 'ahorita no se'  # FIX 328: "ahorita no se encuentra"
+            ])
+
+            # FIX 326: Detectar si cliente sugiere llamar después
+            cliente_sugiere_despues = any(frase in contexto_cliente for frase in [
+                'llamar más tarde', 'llamar mas tarde', 'llame más tarde', 'llame mas tarde',
+                'guste llamar', 'quiere llamar', 'llamar después', 'llamar despues',
+                'llamar en la tarde', 'llamar mañana', 'llamar manana',
+                'marque más tarde', 'marque mas tarde', 'marque después', 'marque despues'
             ])
 
             # Bruce repite la pregunta del encargado (error)
+            # FIX 328: Agregar más variantes de la pregunta
+            # FIX 333: También detectar "¿Hay algo más en que ayudar?" que es respuesta incorrecta
             bruce_repite_pregunta = any(frase in respuesta_lower for frase in [
                 'se encontrará el encargado', 'se encontrara el encargado',
                 'está el encargado', 'esta el encargado',
                 'se encuentra el encargado', 'encargado de compras',
-                'encargada de compras'
+                'encargada de compras',
+                'claro. ¿se encontrará', 'claro. ¿se encontrara'  # FIX 328
             ])
 
-            if cliente_dice_no_esta and bruce_repite_pregunta:
-                print(f"\n📞 FIX 321: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce repite pregunta")
+            # FIX 333: Bruce dice "¿Hay algo más?" cuando debería pedir número
+            bruce_dice_hay_algo_mas = any(frase in respuesta_lower for frase in [
+                'hay algo más', 'hay algo mas', 'algo más en lo que',
+                'algo mas en lo que', 'en qué puedo ayudar', 'en que puedo ayudar',
+                'puedo ayudarle', 'le puedo ayudar'
+            ])
+
+            if cliente_dice_no_esta and (bruce_repite_pregunta or bruce_dice_hay_algo_mas):
+                print(f"\n📞 FIX 321/328/333: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce responde mal")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
-                print(f"   Bruce iba a repetir: \"{respuesta[:60]}...\"")
-                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                print(f"   Repite pregunta: {bruce_repite_pregunta}, Dice 'hay algo más': {bruce_dice_hay_algo_mas}")
+
+                # FIX 326: Si cliente sugiere llamar después, aceptar
+                if cliente_sugiere_despues:
+                    respuesta = "Perfecto, le llamo más tarde entonces. ¿A qué hora sería mejor para encontrar al encargado?"
+                    print(f"   FIX 326: Cliente sugiere llamar después - preguntando horario")
+                else:
+                    respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 24 (FIX 322): Cliente pregunta "¿De dónde te comunicas?"
-        # Bruce debe responder con presentación, NO ofrecer catálogo
+        # FILTRO 24 (FIX 322/327): Cliente pregunta "¿De dónde te comunicas?" o "¿Quién habla?"
+        # Bruce debe responder con presentación INCLUYENDO SU NOMBRE
+        # FIX 327: Agregar nombre "Bruce" cuando preguntan "quién habla"
         # ============================================================
         if not filtro_aplicado:
-            # Detectar si cliente pregunta de dónde llaman
+            # Detectar si cliente pregunta de dónde llaman o quién habla
             cliente_pregunta_origen = any(frase in contexto_cliente for frase in [
                 'de dónde', 'de donde', 'de dónde te comunicas', 'de donde te comunicas',
                 'de dónde llama', 'de donde llama', 'de dónde habla', 'de donde habla',
-                'de qué empresa', 'de que empresa', 'de parte de quién', 'de parte de quien',
-                'quién habla', 'quien habla', 'quién llama', 'quien llama'
+                'de qué empresa', 'de que empresa', 'de parte de quién', 'de parte de quien'
+            ])
+
+            # FIX 327: Detectar específicamente "¿Quién habla?"
+            cliente_pregunta_quien = any(frase in contexto_cliente for frase in [
+                'quién habla', 'quien habla', 'quién llama', 'quien llama',
+                'quién es', 'quien es', 'con quién hablo', 'con quien hablo'
             ])
 
             # Bruce NO responde la pregunta (ofrece catálogo o algo irrelevante)
+            # FIX 327: También verificar si Bruce NO dice su nombre cuando preguntan "quién habla"
             bruce_no_responde_origen = not any(frase in respuesta_lower for frase in [
                 'nioval', 'ferretería', 'ferreteria', 'productos ferreteros',
                 'marca nioval', 'de la marca'
             ])
 
+            bruce_no_dice_nombre = 'bruce' not in respuesta_lower
+
             if cliente_pregunta_origen and bruce_no_responde_origen:
                 print(f"\n📞 FIX 322: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
                 print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                respuesta = "Me comunico de parte de la marca NIOVAL, nosotros distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
+                respuesta = "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL. Distribuimos productos de ferretería. ¿Se encontrará el encargado de compras?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+            # FIX 327: Si preguntan específicamente "quién habla" y Bruce no dice su nombre
+            elif cliente_pregunta_quien and bruce_no_dice_nombre:
+                print(f"\n📞 FIX 327: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre")
+                print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -1819,8 +2077,50 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 26 (FIX 324): Cliente pide información por WhatsApp/correo
+        # pero Bruce pregunta de nuevo por el encargado en lugar de pedir el dato
+        # Ejemplo: "No está, pero podría mandarme la información por este [WhatsApp]"
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente pide información
+            cliente_pide_info = any(frase in contexto_cliente for frase in [
+                'mandarme la información', 'mandarme la informacion',
+                'enviarme la información', 'enviarme la informacion',
+                'mándame la información', 'mandame la informacion',
+                'me puede mandar', 'me puedes mandar',
+                'envíame', 'enviame', 'mandarme la', 'enviarme el',
+                'podría mandarme', 'podria mandarme',
+                'me manda la información', 'me manda la informacion',
+                'mándeme la', 'mandeme la', 'envíeme la', 'envieme la'
+            ])
+
+            # Detectar si cliente menciona WhatsApp o "por este número"
+            cliente_menciona_medio = any(frase in contexto_cliente for frase in [
+                'por whatsapp', 'por wasa', 'por este', 'por este número',
+                'por este numero', 'a este número', 'a este numero',
+                'este mismo', 'aquí mismo', 'aqui mismo', 'por correo'
+            ])
+
+            # Bruce pregunta por encargado en lugar de pedir el contacto
+            bruce_pregunta_encargado = any(frase in respuesta_lower for frase in [
+                'se encontrará el encargado', 'se encontrara el encargado',
+                'está el encargado', 'esta el encargado',
+                'se encuentra el encargado', 'encargado de compras',
+                'encargada de compras'
+            ])
+
+            if (cliente_pide_info or cliente_menciona_medio) and bruce_pregunta_encargado:
+                print(f"\n📱 FIX 324: FILTRO ACTIVADO - Cliente PIDE INFO pero Bruce pregunta por encargado")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a preguntar por encargado: \"{respuesta[:60]}...\"")
+                # Responder aceptando enviar la información
+                respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-322: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-333: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
