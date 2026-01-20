@@ -558,12 +558,17 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # FIX 249/256/261: Detectar negaciones/rechazos que invalidan "ahorita"
+                # FIX 249/256/261/318: Detectar negaciones/rechazos que invalidan "ahorita"
                 # Si cliente dice "ahorita tenemos cerrado", NO es espera
+                # FIX 318: "No, no está ahorita" - el encargado NO está
                 patrones_negacion = [
                     r'cerrado', r'no\s+est[aá]', r'no\s+se\s+encuentra',
                     r'no\s+hay', r'no\s+tenemos', r'no\s+puede',
                     r'ocupado', r'no\s+disponible',
+                    # FIX 318: Patrones más específicos para "no está ahorita"
+                    r'no,?\s*no\s+est[aá]',  # "No, no está ahorita"
+                    r'no\s+est[aá]\s+ahorita',  # "no está ahorita"
+                    r'ahorita\s+no\s+est[aá]',  # "ahorita no está"
                     # FIX 256: Patrones específicos para encargado
                     r'(?:encargado|jefe|gerente).*(?:no\s+est[aá]|sali[oó]|se\s+fue)',
                     r'(?:no\s+est[aá]|sali[oó]|se\s+fue).*(?:encargado|jefe|gerente)',
@@ -1570,9 +1575,11 @@ class AgenteVentas:
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente indica que encargado no está
+            # FIX 318: Agregar variantes con "ahorita"
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
                 'no se encuentra', 'no está', 'no esta', 'salió', 'salio',
-                'no lo tenemos', 'gusta dejar', 'dejar mensaje', 'dejar recado'
+                'no lo tenemos', 'gusta dejar', 'dejar mensaje', 'dejar recado',
+                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta'
             ])
 
             # Bruce ofrece catálogo directamente sin pedir número del encargado
@@ -1680,8 +1687,40 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 22 (FIX 318): Bruce dice "Claro, espero" pero cliente dijo
+        # que el encargado NO ESTÁ - debe pedir número del encargado
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si Bruce va a decir "Claro, espero"
+            bruce_dice_espero = any(frase in respuesta_lower for frase in [
+                'claro, espero', 'claro espero', 'claro, aquí espero',
+                'perfecto, espero', 'espero', 'aquí espero'
+            ])
+
+            # Detectar si cliente indicó que encargado NO está
+            cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
+                'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
+                'no, no está', 'no, no esta', 'no lo tenemos'
+            ])
+
+            # Verificar que NO es una transferencia real (cliente pasando llamada)
+            es_transferencia = any(frase in contexto_cliente for frase in [
+                'te lo paso', 'se lo paso', 'ahorita te lo paso', 'te comunico',
+                'espérame', 'esperame', 'un momento', 'permíteme', 'permiteme'
+            ])
+
+            if bruce_dice_espero and cliente_dice_no_esta and not es_transferencia:
+                print(f"\n📞 FIX 318: FILTRO ACTIVADO - Cliente dice NO ESTÁ pero Bruce dice 'espero'")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-316: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-318: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
@@ -2293,13 +2332,17 @@ Ejemplo correcto:
             "ya viene", "ahorita viene", "está por aquí"
         ]
 
-        # FIX 216: Patrones que INVALIDAN la transferencia (negaciones)
+        # FIX 216/318: Patrones que INVALIDAN la transferencia (negaciones)
         # Si el cliente dice "NO está disponible", NO es transferencia
         patrones_negacion = [
             "no está disponible", "no esta disponible",
             "no está aquí", "no esta aquí", "no esta aqui",
             "no se encuentra", "no lo encuentro", "no la encuentro",
-            "no viene", "no va a venir", "no puede", "no hay nadie"
+            "no viene", "no va a venir", "no puede", "no hay nadie",
+            # FIX 318: "no está ahorita" - el encargado NO está
+            "no está ahorita", "no esta ahorita",
+            "ahorita no está", "ahorita no esta",
+            "no, no está", "no, no esta"
         ]
 
         # FIX 229: Patrones que indican que el cliente va a DAR INFORMACIÓN (NO transferencia)
