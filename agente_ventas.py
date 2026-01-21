@@ -2707,6 +2707,46 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 32B (FIX 375): Cliente dice "mándenme la información a este número"
+        # "Este número" = el número que Bruce marcó (está en self.lead_data["telefono"])
+        # Bruce debe reconocer que YA TIENE el número
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar "este número" como referencia al número actual
+            patrones_este_numero = [
+                r'este\s+n[uú]mero', r'ese\s+n[uú]mero',
+                r'a\s+este\s+(?:n[uú]mero|whatsapp|tel[eé]fono)',
+                r'este\s+(?:tel[eé]fono|whatsapp)',
+                r'mand(?:ar|e|arlo).*este\s+n[uú]mero',
+                r'env(?:iar|íe|iarlo).*este\s+n[uú]mero',
+                r'(?:a|al)\s+este\s+(?:n[uú]mero|whatsapp)',
+                r'aqu[ií]\s+(?:mismo|al\s+n[uú]mero)',
+                r'mismo\s+n[uú]mero'
+            ]
+
+            cliente_dice_este_numero = any(re.search(p, contexto_cliente) for p in patrones_este_numero)
+
+            # Detectar si Bruce está preguntando por WhatsApp/correo después de que cliente pidió info a "este número"
+            bruce_pregunta_medio = any(frase in respuesta_lower for frase in [
+                'whatsapp o correo', 'correo electrónico', 'correo o whatsapp',
+                '¿le gustaría recibir', 'le gustaría recibir'
+            ])
+
+            if cliente_dice_este_numero and bruce_pregunta_medio:
+                # Verificar si tenemos el número del cliente
+                telefono_cliente = self.lead_data.get("telefono", "")
+                if telefono_cliente:
+                    print(f"\n📱 FIX 375: FILTRO ACTIVADO - Cliente pide info a 'este número'")
+                    print(f"   Cliente dijo: '{contexto_cliente[:80]}'")
+                    print(f"   Número que Bruce marcó: {telefono_cliente}")
+                    print(f"   Bruce iba a preguntar: '{respuesta[:60]}...'")
+
+                    # Confirmar que vamos a usar ese número como WhatsApp
+                    respuesta = f"Perfecto, le envío el catálogo a este WhatsApp. ¿Me confirma que el {telefono_cliente[-10:]} es su número de WhatsApp?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: '{respuesta}'")
+
+        # ============================================================
         # FILTRO 33 (FIX 364/367): Cliente dice "Ella habla" / "Él habla" / "Soy yo"
         # Esto indica que ESA persona ES la encargada/el encargado de compras
         # Bruce preguntó "¿Se encontrará el encargado?" y cliente dice "Ella habla"
