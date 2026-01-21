@@ -337,6 +337,22 @@ class AgenteVentas:
             print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
             return
 
+        # FIX 389: Detectar persona nueva después de transferencia
+        # Si estábamos esperando transferencia Y cliente dice "bueno"/"dígame"/etc. → Persona nueva
+        if self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+            saludos_persona_nueva = ['bueno', 'hola', 'sí', 'si', 'dígame', 'digame',
+                                     'mande', 'a ver', 'qué pasó', 'que paso', 'alo', 'aló']
+
+            # Verificar si es un saludo simple (persona nueva contestando)
+            mensaje_stripped = mensaje_lower.strip().strip('?').strip('¿')
+            es_saludo_nuevo = any(mensaje_stripped == s or mensaje_stripped.startswith(s + ' ') for s in saludos_persona_nueva)
+
+            if es_saludo_nuevo:
+                # Persona nueva detectada - cambiar a BUSCANDO_ENCARGADO para re-presentarse
+                self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
+                print(f"📊 FIX 389: Persona nueva después de transferencia - Estado → BUSCANDO_ENCARGADO")
+                return
+
         # Detectar si cliente pide esperar
         patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
                           'un momento', 'un segundito', 'ahorita', 'tantito']
@@ -748,40 +764,54 @@ class AgenteVentas:
         # Se ejecuta PRIMERO para validar lógica básica antes de filtros específicos
         # ============================================================
         if not filtro_aplicado:
-            es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
+            # FIX 389: NO activar FIX 384 si es persona nueva después de transferencia
+            # Dejar que FILTRO 5B (FIX 289) maneje la re-presentación
+            ultimos_mensajes_bruce_temp = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_dijo_espero_temp = any('claro, espero' in msg or 'espero' in msg for msg in ultimos_mensajes_bruce_temp)
 
-            if not es_valida:
-                print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
-                print(f"   Razón: {razon}")
-                print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
-                print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
+            if bruce_dijo_espero_temp and self.estado_conversacion == EstadoConversacion.BUSCANDO_ENCARGADO:
+                # Persona nueva después de espera - SKIP FIX 384, dejar que FILTRO 5B maneje
+                print(f"\n⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
+                print(f"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación")
+            else:
+                # FIX 384 normal
+                es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
 
-                # Generar respuesta con sentido común basada en la razón
-                if "Cliente acaba de dar número" in razon:
-                    respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
-                elif "Cliente acaba de dar correo" in razon:
-                    respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
-                elif "Cliente dijo que encargado NO está" in razon:
-                    respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
-                elif "Dice 'ya lo tengo' sin datos capturados" in razon:
-                    respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
-                elif "Cliente preguntó algo y Bruce no respondió" in razon:
-                    # Intentar responder la pregunta del cliente
-                    if 'qué productos' in contexto_cliente or 'que productos' in contexto_cliente:
-                        respuesta = "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo por WhatsApp?"
+                if not es_valida:
+                    print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
+                    print(f"   Razón: {razon}")
+                    print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
+                    print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
+
+                    # Generar respuesta con sentido común basada en la razón
+                    if "Cliente acaba de dar número" in razon:
+                        respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
+                    elif "Cliente acaba de dar correo" in razon:
+                        respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
+                    elif "Cliente dijo que encargado NO está" in razon:
+                        respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
+                    elif "Dice 'ya lo tengo' sin datos capturados" in razon:
+                        respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                    elif "Cliente preguntó algo y Bruce no respondió" in razon:
+                        # Intentar responder la pregunta del cliente
+                        if 'qué productos' in contexto_cliente or 'que productos' in contexto_cliente:
+                            respuesta = "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo por WhatsApp?"
+                        else:
+                            respuesta = "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
+                    elif "Cliente pidió reprogramar" in razon:
+                        respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
+                    elif "Cliente está buscando encargado" in razon:
+                        # NO decir nada - esperar
+                        respuesta = ""  # Silencio
                     else:
-                        respuesta = "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
-                elif "Cliente pidió reprogramar" in razon:
-                    respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
-                elif "Cliente está buscando encargado" in razon:
-                    # NO decir nada - esperar
-                    respuesta = ""  # Silencio
-                else:
-                    # Error genérico - solicitar dato faltante
-                    respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                        # Error genérico - solicitar dato faltante
+                        respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
 
-                filtro_aplicado = True
-                print(f"   Respuesta corregida: '{respuesta}'")
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: '{respuesta}'")
 
         # ============================================================
         # FILTRO 0 (FIX 298/301): CRÍTICO - Evitar despedida/asunciones prematuras
@@ -1118,8 +1148,11 @@ class AgenteVentas:
                 cliente_pide_espera = any(re.search(p, ultimo_cliente) for p in patrones_espera)
                 cliente_pide_espera_contexto = any(re.search(p, contexto_espera) for p in patrones_espera)
 
-                # FIX 249: NO activar filtro si hay negación explícita
-                if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion:
+                # FIX 249/389: NO activar filtro si hay negación O si es persona nueva
+                # FIX 389: Si estado es BUSCANDO_ENCARGADO (persona nueva), NO activar espera
+                es_persona_nueva_estado = (self.estado_conversacion == EstadoConversacion.BUSCANDO_ENCARGADO)
+
+                if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion and not es_persona_nueva_estado:
                     print(f"\n⏳ FIX 235/237/249/337: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
                     respuesta = "Claro, espero."
                     filtro_aplicado = True
@@ -3367,6 +3400,28 @@ class AgenteVentas:
         })
 
         # ============================================================
+        # FIX 389: INTEGRAR SISTEMA DE ESTADOS (FIX 339)
+        # Actualizar estado de conversación ANTES de cualquier análisis
+        # ============================================================
+        self._actualizar_estado_conversacion(respuesta_cliente)
+
+        # FIX 389: Si cliente pidió esperar (transferencia) → Responder inmediatamente SIN llamar GPT
+        # PERO: Si cambió a BUSCANDO_ENCARGADO (persona nueva), SÍ llamar GPT para re-presentarse
+        if self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+            print(f"\n⏳ FIX 389: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
+            print(f"   Cliente dijo: \"{respuesta_cliente}\"")
+            print(f"   → Respondiendo 'Claro, espero.' SIN llamar GPT")
+
+            respuesta_espera = "Claro, espero."
+
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": respuesta_espera
+            })
+
+            return respuesta_espera
+
+        # ============================================================
         # FIX 386: ANÁLISIS DE SENTIMIENTO EN TIEMPO REAL
         # ============================================================
         sentimiento_data = self._analizar_sentimiento(respuesta_cliente)
@@ -4231,41 +4286,6 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
 
             # FIX 305: Fallback genérico
             return "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
-    
-    def texto_a_voz(self, texto: str, output_path: str = "respuesta.mp3"):
-        """
-        Convierte texto a voz usando ElevenLabs
-        
-        Args:
-            texto: Texto a convertir
-            output_path: Ruta donde guardar el audio
-            
-        Returns:
-            Ruta del archivo de audio generado
-        """
-        try:
-            # Genera el audio con ElevenLabs
-            audio = elevenlabs_client.text_to_speech.convert(
-                text=texto,
-                voice_id=ELEVENLABS_VOICE_ID,
-                model_id="eleven_multilingual_v2",
-                voice_settings=VoiceSettings(
-                    stability=0.50,
-                    similarity_boost=0.80,
-                    style=0.35
-                )
-            )
-            
-            # Guardar audio
-            with open(output_path, "wb") as f:
-                for chunk in audio:
-                    f.write(chunk)
-            
-            return output_path
-            
-        except Exception as e:
-            print(f"Error al generar voz: {e}")
-            return None
     
     def _extraer_datos(self, texto: str):
         """Extrae información clave del texto del cliente"""
@@ -5898,46 +5918,6 @@ Responde SOLO en este formato JSON:
             self.lead_data["pregunta_7"] = "Nulo"
             self.lead_data["resultado"] = "NEGADO"
             print(f"📝 Conclusión determinada: Nulo (NEGADO)")
-
-    def guardar_llamada_y_lead(self):
-        """
-        Guarda la llamada y el lead en Google Sheets (si está configurado)
-        También guarda en Excel como respaldo
-        """
-        try:
-            print(f"📊 INICIANDO GUARDADO DE LLAMADA...")
-            print(f"📊 - Call SID: {self.call_sid}")
-            print(f"📊 - Sheets Manager: {'✅ Disponible' if self.sheets_manager else '❌ No disponible'}")
-            print(f"📊 - Contacto Info: {'✅ Disponible' if self.contacto_info else '❌ No disponible'}")
-
-            # Calcular duración de la llamada
-            if self.lead_data["fecha_inicio"]:
-                inicio = datetime.strptime(self.lead_data["fecha_inicio"], "%Y-%m-%d %H:%M:%S")
-                duracion = (datetime.now() - inicio).total_seconds()
-                self.lead_data["duracion_segundos"] = int(duracion)
-                print(f"📊 - Duración: {self.lead_data['duracion_segundos']} segundos")
-
-            # Determinar estado de la llamada
-            estado_llamada = self._determinar_estado_llamada()
-            print(f"📊 - Estado: {estado_llamada}")
-
-            # NOTA: Google Sheets se guarda en el modo automático usando ResultadosSheetsAdapter
-            # Ver líneas 2230+ para la lógica correcta de guardado
-
-            # Guardar también en Excel como respaldo
-            print(f"📊 Guardando backup en Excel...")
-            self._guardar_backup_excel()
-
-        except Exception as e:
-            import traceback
-            print(f"❌ Error al guardar llamada/lead: {e}")
-            print(f"❌ Traceback completo:")
-            print(traceback.format_exc())
-            # Intentar guardar al menos en Excel
-            try:
-                self._guardar_backup_excel()
-            except Exception as e2:
-                print(f"❌ Error también en backup Excel: {e2}")
 
     def _determinar_estado_llamada(self) -> str:
         """Determina el estado final de la llamada"""
