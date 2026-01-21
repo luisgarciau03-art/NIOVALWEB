@@ -871,9 +871,10 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 5C (FIX 291): Cliente menciona sucursal/matriz
-        # Si GPT quiere despedirse pero cliente mencionó sucursal/matriz,
-        # Bruce debe pedir el número de la matriz en lugar de colgar
+        # FILTRO 5C (FIX 291/369): Cliente menciona sucursal/matriz/mostrador
+        # Si GPT quiere despedirse O ofrecer catálogo pero cliente mencionó
+        # sucursal/matriz/mostrador, Bruce debe pedir número de matriz/oficinas
+        # FIX 369: Agregar "puro mostrador" como indicador de no hay encargado
         # ============================================================
         if not filtro_aplicado:
             ultimos_mensajes_cliente = [
@@ -886,14 +887,22 @@ class AgenteVentas:
                 contexto_cliente = ' '.join(ultimos_mensajes_cliente)
 
                 # Detectar si cliente menciona sucursal/matriz/oficinas
+                # FIX 369: Agregar patrones de "solo mostrador" / "puro mostrador"
                 menciona_redireccion = any(
                     frase in contexto_cliente
                     for frase in ['sucursal', 'matriz', 'oficinas', 'corporativo', 'área de compras',
                                   'no es de compras', 'no compramos aquí', 'no compramos aqui',
-                                  'ir a la', 'tendré que', 'tendre que', 'tendría que', 'tendria que']
+                                  'ir a la', 'tendré que', 'tendre que', 'tendría que', 'tendria que',
+                                  # FIX 369: Patrones de "solo mostrador"
+                                  'puro mostrador', 'solo mostrador', 'somos mostrador',
+                                  'empleado de mostrador', 'empleados de mostrador',
+                                  'puro empleo de mostrador', 'somos puro empleo',
+                                  'no tenemos encargado', 'no hay encargado',
+                                  'aquí no hay', 'aqui no hay', 'no manejamos compras',
+                                  'no hacemos compras', 'no compramos nosotros']
                 )
 
-                # Detectar si GPT quiere despedirse/colgar por "número equivocado"
+                # Detectar si GPT quiere despedirse/colgar O ignorar y ofrecer catálogo
                 bruce_quiere_despedirse = any(
                     frase in respuesta_lower
                     for frase in ['error con el número', 'error con el numero', 'número equivocado', 'numero equivocado',
@@ -901,11 +910,19 @@ class AgenteVentas:
                                   'gracias por su tiempo', 'que tenga']
                 )
 
-                if menciona_redireccion and bruce_quiere_despedirse:
-                    print(f"\n🏢 FIX 291: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz")
+                # FIX 369: También activar si Bruce ofrece catálogo ignorando que no hay encargado
+                bruce_ofrece_catalogo_ignorando = any(
+                    frase in respuesta_lower
+                    for frase in ['le gustaría recibir', 'le gustaria recibir',
+                                  'catálogo por whatsapp', 'catalogo por whatsapp',
+                                  'whatsapp o correo']
+                )
+
+                if menciona_redireccion and (bruce_quiere_despedirse or bruce_ofrece_catalogo_ignorando):
+                    print(f"\n🏢 FIX 291/369: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz/mostrador")
                     print(f"   Contexto: '{contexto_cliente[:80]}...'")
-                    print(f"   Bruce iba a despedirse: '{respuesta[:60]}...'")
-                    respuesta = "Entiendo, las compras se manejan en la matriz. ¿Me podría proporcionar el número de la matriz o del área de compras?"
+                    print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+                    respuesta = "Entiendo. ¿Me podría proporcionar el número de las oficinas o del área de compras para contactarlos?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -2611,12 +2628,24 @@ class AgenteVentas:
                 # FIX 368: Patrones de aceptación - buscar DENTRO del mensaje, no solo al inicio
                 patrones_acepta = [
                     'sí', 'si', 'claro', 'ok', 'órale', 'orale', 'ajá', 'aja',
-                    'dígame', 'digame', 'adelante', 'mande', 'bueno'
+                    'dígame', 'digame', 'adelante', 'mande'
                 ]
+                # FIX 370: Excluir "bueno" como patrón de aceptación si es solo "¿Bueno?" repetido
+                # "¿Bueno? ¿Bueno?" indica que cliente NO escucha, NO es aceptación
+                es_solo_bueno_repetido = bool(re.match(r'^[\s\?\¿bueno,\s]+$', ultimo_cliente.replace('?', '').replace('¿', '')))
+                if not es_solo_bueno_repetido and 'bueno' in ultimo_cliente:
+                    # Solo contar "bueno" si viene con algo más (ej: "sí bueno", "bueno, adelante")
+                    if any(p in ultimo_cliente for p in ['sí bueno', 'si bueno', 'bueno adelante', 'bueno, sí']):
+                        patrones_acepta.append('bueno')
+
                 # Cliente acepta si contiene palabras de aceptación Y NO contiene email/número
                 tiene_patron_acepta = any(p in ultimo_cliente for p in patrones_acepta)
                 no_tiene_dato = '@' not in ultimo_cliente and 'arroba' not in ultimo_cliente
                 pocos_digitos = len(re.findall(r'\d', ultimo_cliente)) < 7
+
+                # FIX 370: Si cliente solo dice "¿Bueno?" NO es aceptación
+                if es_solo_bueno_repetido:
+                    tiene_patron_acepta = False
 
                 # FIX 367: Detectar "soy yo" como indicador de que ES el encargado
                 # pero aún así NO tiene dato de contacto
