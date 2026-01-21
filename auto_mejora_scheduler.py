@@ -1,7 +1,15 @@
 """
+FIX 387: Meta-Aprendizaje Automático - Scheduler Semanal
 Sistema de Auto-Mejora Programado para Bruce W
 Se ejecuta automáticamente cada viernes a las 9:00 AM
-Requiere autorización manual del usuario antes de aplicar cambios
+
+Características FIX 387:
+- Analiza objeciones frecuentes en llamadas fallidas
+- Identifica frases más efectivas en llamadas exitosas
+- Detecta problemas recurrentes automáticamente
+- Genera reporte Excel completo con recomendaciones
+- Requiere autorización manual antes de aplicar cambios
+- Auto-update si tasa de éxito >= 80%
 """
 
 import os

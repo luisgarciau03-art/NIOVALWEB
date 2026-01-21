@@ -1,11 +1,22 @@
 """
-Sistema de Auto-Mejora Continua para Bruce W
-Analiza el desempeño semanal y optimiza el SYSTEM_PROMPT automáticamente
+FIX 387: Meta-Aprendizaje Automático para Bruce W
+Sistema de Auto-Mejora Continua que analiza el desempeño semanal,
+identifica patrones de éxito/fracaso, y optimiza el SYSTEM_PROMPT automáticamente
+
+Características FIX 387:
+- Análisis de objeciones frecuentes no manejadas
+- Detección de frases más efectivas en llamadas exitosas
+- Identificación de problemas recurrentes
+- Recomendaciones basadas en tasa de éxito (>80% = óptimo)
+- Auto-actualización de prompt si efectividad > 80%
 """
 
 import os
 import json
+import re
 from datetime import datetime, timedelta
+from collections import Counter, defaultdict
+from typing import Dict, List, Tuple
 from openai import OpenAI
 from dotenv import load_dotenv
 from resultados_sheets_adapter import ResultadosSheetsAdapter
@@ -20,8 +31,9 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 class AutoMejoraBruce:
     """
-    Sistema de auto-mejora que analiza las llamadas de la última semana
-    y genera recomendaciones para optimizar el SYSTEM_PROMPT
+    FIX 387: Sistema de meta-aprendizaje automático
+    Analiza las llamadas de la última semana y genera recomendaciones
+    basadas en patrones de éxito/fracaso para optimizar el SYSTEM_PROMPT
     """
 
     def __init__(self):
@@ -29,12 +41,22 @@ class AutoMejoraBruce:
         self.archivo_prompt = "agente_ventas.py"
         self.archivo_historial = "historial_mejoras_bruce.json"
 
+        # FIX 387: Umbrales de meta-aprendizaje
+        self.umbral_auto_update = 0.80  # 80% tasa de éxito para auto-update
+        self.min_llamadas_confiable = 20  # Mínimo de llamadas para análisis confiable
+
+        # FIX 387: Contadores de patrones
+        self.objeciones_frecuentes = Counter()
+        self.frases_efectivas = Counter()
+        self.problemas_detectados = []
+
     def analizar_semana(self):
         """
-        Analiza todas las llamadas de la última semana y genera insights
+        FIX 387: Analiza todas las llamadas de la última semana con meta-aprendizaje
+        Incluye análisis de objeciones, frases efectivas y problemas recurrentes
         """
         print("\n" + "=" * 60)
-        print("🔍 ANÁLISIS SEMANAL DE DESEMPEÑO - BRUCE W")
+        print("🧠 FIX 387: META-APRENDIZAJE AUTOMÁTICO - BRUCE W")
         print("=" * 60)
 
         try:
@@ -45,12 +67,35 @@ class AutoMejoraBruce:
                 print("❌ No hay datos suficientes para analizar")
                 return None
 
+            # FIX 387: Verificar mínimo de llamadas para análisis confiable
+            if stats['total_llamadas'] < self.min_llamadas_confiable:
+                print(f"\n⚠️  Solo {stats['total_llamadas']} llamadas analizadas.")
+                print(f"   Mínimo recomendado: {self.min_llamadas_confiable} para análisis confiable")
+                print("   Continuando con análisis limitado...\n")
+
             print(f"\n📊 Datos de la última semana:")
             print(f"   Total de llamadas: {stats['total_llamadas']}")
             print(f"   Tasa de conversión: {stats['tasa_conversion']:.1f}%")
             print(f"   WhatsApps capturados: {stats['whatsapps_capturados']}")
             print(f"   Nivel de interés promedio: {stats['interes_promedio']}")
             print(f"   Estado de ánimo predominante: {stats['animo_predominante']}")
+
+            # FIX 387: Obtener todas las filas para análisis avanzado
+            todas_filas = self.resultados_adapter.hoja_resultados.get_all_values()
+
+            # FIX 387: Analizar objeciones frecuentes
+            self._analizar_objeciones_frecuentes(todas_filas)
+
+            # FIX 387: Analizar frases efectivas
+            self._analizar_frases_efectivas(todas_filas)
+
+            # FIX 387: Detectar problemas recurrentes
+            self._detectar_problemas_recurrentes(stats)
+
+            # FIX 387: Agregar datos de meta-aprendizaje a stats
+            stats['objeciones_top'] = self.objeciones_frecuentes.most_common(5)
+            stats['frases_efectivas_top'] = self.frases_efectivas.most_common(5)
+            stats['problemas_detectados'] = self.problemas_detectados
 
             # Analizar patrones con GPT
             print("\n🤖 Analizando patrones con GPT-4o-mini...")
@@ -70,10 +115,21 @@ class AutoMejoraBruce:
                     for mejora in analisis_gpt['mejoras_sugeridas']:
                         print(f"   • {mejora}")
 
+                # FIX 387: Verificar si se requiere auto-actualización
+                print("\n" + "=" * 60)
+                if stats['tasa_conversion'] >= self.umbral_auto_update * 100:
+                    print(f"✅ FIX 387: TASA DE ÉXITO ≥ {self.umbral_auto_update*100:.0f}%")
+                    print("   Sistema funcionando ÓPTIMAMENTE - No se requieren cambios automáticos")
+                else:
+                    print(f"⚠️  FIX 387: TASA DE ÉXITO < {self.umbral_auto_update*100:.0f}%")
+                    print("   Revisar recomendaciones manualmente y actualizar prompt")
+                print("=" * 60)
+
                 return {
                     'stats': stats,
                     'analisis': analisis_gpt,
-                    'fecha': datetime.now().strftime("%Y-%m-%d")
+                    'fecha': datetime.now().strftime("%Y-%m-%d"),
+                    'auto_update': stats['tasa_conversion'] >= self.umbral_auto_update * 100
                 }
 
         except Exception as e:
@@ -176,12 +232,165 @@ class AutoMejoraBruce:
             print(f"❌ Error al obtener estadísticas: {e}")
             return None
 
+    def _analizar_objeciones_frecuentes(self, todas_filas):
+        """
+        FIX 387: Analiza objeciones frecuentes en llamadas fallidas
+        Busca patrones comunes en la columna de notas/transcripción
+        """
+        print("\n🔍 FIX 387: Analizando objeciones frecuentes...")
+
+        patrones_objecion = {
+            'ya_tengo_proveedor': r'ya\s+tengo\s+proveedor|tengo\s+proveedor\s+fijo',
+            'es_muy_caro': r'es\s+muy\s+caro|está\s+caro|sus\s+precios\s+son\s+altos',
+            'no_tengo_presupuesto': r'no\s+tengo\s+presupuesto|ahorita\s+no\s+tengo\s+dinero',
+            'no_me_interesa': r'no\s+me\s+interesa|no\s+necesito\s+nada',
+            'estoy_ocupado': r'estoy\s+ocupado|no\s+tengo\s+tiempo',
+            'mi_jefe_decide': r'mi\s+jefe\s+decide|tengo\s+que\s+consultar',
+            'solo_efectivo': r'solo\s+(?:compro|pago)\s+en\s+efectivo'
+        }
+
+        # Iterar filas para encontrar objeciones
+        for fila in todas_filas[1:]:  # Saltar header
+            if len(fila) < 19:
+                continue
+
+            # Columna S: Resultado
+            resultado = fila[18] if len(fila) > 18 else ""
+
+            # Solo analizar llamadas NO aprobadas
+            if resultado == "APROBADO":
+                continue
+
+            # Columna T: Notas/Observaciones (si existe)
+            notas = fila[19] if len(fila) > 19 else ""
+
+            # Buscar objeciones
+            for tipo_objecion, patron in patrones_objecion.items():
+                if re.search(patron, notas, re.IGNORECASE):
+                    self.objeciones_frecuentes[tipo_objecion] += 1
+
+        if self.objeciones_frecuentes:
+            print("   Top 5 objeciones:")
+            for objecion, count in self.objeciones_frecuentes.most_common(5):
+                print(f"   • {objecion.replace('_', ' ').title()}: {count}x")
+
+    def _analizar_frases_efectivas(self, todas_filas):
+        """
+        FIX 387: Identifica frases/patrones en llamadas exitosas
+        """
+        print("\n💡 FIX 387: Identificando frases efectivas...")
+
+        # Patrones de frases que Bruce usa frecuentemente
+        patrones_frases = {
+            'oferta_catalogo': r'le\s+envío\s+el\s+catálogo',
+            'pregunta_whatsapp': r'cuál\s+es\s+su\s+whatsapp',
+            'mencion_promocion': r'primer\s+pedido.*envío\s+gratis|envío\s+gratis',
+            'pregunta_encargado': r'(?:puedo|me\s+comunica).*encargado\s+de\s+compras',
+            'mencion_griferia': r'grifería|griferías|llaves',
+            'mencion_cintas': r'cinta\s+para\s+goteras|cintas'
+        }
+
+        # Analizar solo llamadas APROBADAS
+        for fila in todas_filas[1:]:
+            if len(fila) < 19:
+                continue
+
+            resultado = fila[18] if len(fila) > 18 else ""
+
+            # Solo llamadas exitosas
+            if resultado != "APROBADO":
+                continue
+
+            notas = fila[19] if len(fila) > 19 else ""
+
+            # Buscar frases efectivas
+            for tipo_frase, patron in patrones_frases.items():
+                if re.search(patron, notas, re.IGNORECASE):
+                    self.frases_efectivas[tipo_frase] += 1
+
+        if self.frases_efectivas:
+            print("   Top 5 frases efectivas:")
+            for frase, count in self.frases_efectivas.most_common(5):
+                print(f"   • {frase.replace('_', ' ').title()}: {count}x")
+
+    def _detectar_problemas_recurrentes(self, stats):
+        """
+        FIX 387: Detecta problemas recurrentes basados en métricas
+        """
+        print("\n⚠️  FIX 387: Detectando problemas recurrentes...")
+
+        # Problema 1: Tasa de conversión muy baja
+        if stats['tasa_conversion'] < 20:
+            self.problemas_detectados.append(
+                f"Tasa de conversión muy baja ({stats['tasa_conversion']:.1f}%). "
+                "Revisar script de apertura y manejo de objeciones."
+            )
+
+        # Problema 2: Objeción "ya tengo proveedor" muy frecuente
+        if self.objeciones_frecuentes.get('ya_tengo_proveedor', 0) > stats['total_llamadas'] * 0.3:
+            self.problemas_detectados.append(
+                "Objeción 'ya tengo proveedor' muy frecuente (30%+). "
+                "Mejorar diferenciación de valor en FIX 388 (Negociación)."
+            )
+
+        # Problema 3: Estado de ánimo predominantemente negativo
+        if stats['animo_predominante'] in ['Molesto', 'Enojado', 'Muy Negativo']:
+            self.problemas_detectados.append(
+                f"Estado de ánimo predominante: {stats['animo_predominante']}. "
+                "Revisar tono y empatía en respuestas. Considerar FIX 386 (Sentimiento)."
+            )
+
+        # Problema 4: Nivel de interés bajo
+        if stats['interes_promedio'] == 'Bajo':
+            self.problemas_detectados.append(
+                "Nivel de interés promedio bajo. "
+                "Enfatizar beneficios concretos (envío gratis, promoción) más temprano."
+            )
+
+        # Problema 5: Muchas llamadas pero pocas conversiones (ratio 10:1 o peor)
+        if stats['total_llamadas'] >= 100 and stats['tasa_conversion'] < 10:
+            self.problemas_detectados.append(
+                f"{stats['total_llamadas']} llamadas con solo {stats['tasa_conversion']:.1f}% conversión. "
+                "Problema de calidad de leads o script inefectivo. Revisar targeting."
+            )
+
+        if self.problemas_detectados:
+            for i, problema in enumerate(self.problemas_detectados, 1):
+                print(f"   {i}. {problema}")
+        else:
+            print("   ✅ No se detectaron problemas críticos")
+
     def _analizar_con_gpt(self, stats):
         """
-        Usa GPT-4o-mini para analizar las estadísticas y generar recomendaciones
+        FIX 387: Usa GPT-4o-mini para analizar estadísticas con meta-aprendizaje
+        Incluye objeciones frecuentes, frases efectivas y problemas detectados
         """
         try:
-            prompt = f"""Eres un experto en optimización de scripts de ventas telefónicas. Analiza estas métricas de Bruce W (agente de ventas de NIOVAL) y genera cambios ESPECÍFICOS Y TEXTUALES para el SYSTEM_PROMPT.
+            # FIX 387: Construir sección de objeciones
+            objeciones_texto = "Sin datos suficientes"
+            if stats.get('objeciones_top'):
+                objeciones_texto = "\n".join([
+                    f"  • {obj.replace('_', ' ').title()}: {count}x"
+                    for obj, count in stats['objeciones_top']
+                ])
+
+            # FIX 387: Construir sección de frases efectivas
+            frases_texto = "Sin datos suficientes"
+            if stats.get('frases_efectivas_top'):
+                frases_texto = "\n".join([
+                    f"  • {frase.replace('_', ' ').title()}: {count}x"
+                    for frase, count in stats['frases_efectivas_top']
+                ])
+
+            # FIX 387: Construir sección de problemas
+            problemas_texto = "✅ No se detectaron problemas críticos"
+            if stats.get('problemas_detectados'):
+                problemas_texto = "\n".join([
+                    f"  {i}. {problema}"
+                    for i, problema in enumerate(stats['problemas_detectados'], 1)
+                ])
+
+            prompt = f"""Eres un experto en optimización de scripts de ventas telefónicas. Analiza estas métricas de Bruce W (agente de ventas de NIOVAL) con FIX 387: META-APRENDIZAJE AUTOMÁTICO y genera cambios ESPECÍFICOS Y TEXTUALES para el SYSTEM_PROMPT.
 
 📊 MÉTRICAS DE LA SEMANA:
 - Total de llamadas: {stats['total_llamadas']}
@@ -195,6 +404,15 @@ Distribución de interés:
 
 Distribución de ánimo:
 {self._generar_distribucion(stats['estados_animo'])}
+
+🔍 FIX 387: OBJECIONES MÁS FRECUENTES (en llamadas fallidas):
+{objeciones_texto}
+
+💡 FIX 387: FRASES MÁS EFECTIVAS (en llamadas exitosas):
+{frases_texto}
+
+⚠️ FIX 387: PROBLEMAS RECURRENTES DETECTADOS:
+{problemas_texto}
 
 INSTRUCCIONES CRÍTICAS:
 1. En "modificaciones_prompt", propón cambios TEXTUALES específicos que se puedan copiar/pegar directamente

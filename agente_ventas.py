@@ -445,6 +445,137 @@ class AgenteVentas:
 
         return frase
 
+    def _analizar_sentimiento(self, mensaje_cliente: str) -> dict:
+        """
+        FIX 386: Analiza el sentimiento/emoción del mensaje del cliente en tiempo real.
+
+        Args:
+            mensaje_cliente: Último mensaje del cliente
+
+        Returns:
+            dict con: {
+                'sentimiento': 'muy_positivo'|'positivo'|'neutral'|'negativo'|'muy_negativo',
+                'score': float (-1.0 a 1.0),
+                'emocion_detectada': 'entusiasmo'|'interes'|'neutral'|'molestia'|'enojo',
+                'debe_colgar': bool
+            }
+        """
+        import re
+
+        mensaje_lower = mensaje_cliente.lower()
+        score = 0.0
+        emocion = 'neutral'
+
+        # ============================================================
+        # PATRONES MUY NEGATIVOS (score: -0.8 a -1.0) → COLGAR
+        # ============================================================
+        patrones_muy_negativos = [
+            # Enojo explícito
+            r'ya\s+te\s+dije\s+que\s+no', r'¡no!', r'no\s+me\s+interesa',
+            r'déjame\s+en\s+paz', r'dejame\s+en\s+paz', r'no\s+molestes',
+            r'quita', r'lárgate', r'largate', r'cuelga',
+            # Insultos
+            r'idiota', r'estúpido', r'estupido', r'pendejo',
+            # Frustración extrema
+            r'¿qué\s+no\s+entiendes\?', r'¿que\s+no\s+entiendes\?',
+            r'ya\s+basta', r'no\s+insistas',
+        ]
+
+        for patron in patrones_muy_negativos:
+            if re.search(patron, mensaje_lower):
+                score = -1.0
+                emocion = 'enojo'
+                break
+
+        # ============================================================
+        # PATRONES NEGATIVOS (score: -0.4 a -0.7)
+        # ============================================================
+        if score == 0.0:
+            patrones_negativos = [
+                # Rechazo educado
+                r'no\s+gracias', r'no\s+me\s+interesa', r'no\s+necesito',
+                r'no\s+estoy\s+interesado', r'no\s+nos\s+interesa',
+                # Prisa/ocupado
+                r'estoy\s+ocupado', r'no\s+tengo\s+tiempo', r'tengo\s+prisa',
+                r'rápido', r'rapido', r'luego\s+te\s+llamo',
+                # Ya tienen proveedor
+                r'ya\s+tenemos', r'ya\s+trabajamos\s+con',
+                r'solo\s+trabajamos\s+con', r'proveedor\s+fijo',
+            ]
+
+            for patron in patrones_negativos:
+                if re.search(patron, mensaje_lower):
+                    score = -0.6
+                    emocion = 'molestia'
+                    break
+
+        # ============================================================
+        # PATRONES POSITIVOS (score: 0.4 a 0.7)
+        # ============================================================
+        if score == 0.0:
+            patrones_positivos = [
+                # Interés activo
+                r'me\s+interesa', r'suena\s+bien', r'perfecto',
+                r'claro', r'sí', r'si\s+por\s+favor',
+                # Pide información
+                r'¿qué\s+productos', r'¿que\s+productos',
+                r'mándame', r'mandame', r'envíame', r'enviame',
+                r'pásame', r'pasame',
+                # Acepta catálogo
+                r'adelante', r'sí\s+mándalo', r'si\s+mandalo',
+            ]
+
+            for patron in patrones_positivos:
+                if re.search(patron, mensaje_lower):
+                    score = 0.6
+                    emocion = 'interes'
+                    break
+
+        # ============================================================
+        # PATRONES MUY POSITIVOS (score: 0.8 a 1.0)
+        # ============================================================
+        if score == 0.0:
+            patrones_muy_positivos = [
+                # Entusiasmo
+                r'¡perfecto!', r'excelente', r'¡sí!',
+                r'me\s+urge', r'necesito', r'cuando\s+antes',
+                # Múltiples confirmaciones
+                r'sí,?\s+sí', r'si,?\s+si', r'claro,?\s+claro',
+                # Pide acción inmediata
+                r'mándamelo\s+ya', r'mandamelo\s+ya',
+                r'ahora\s+mismo', r'lo\s+antes\s+posible',
+            ]
+
+            for patron in patrones_muy_positivos:
+                if re.search(patron, mensaje_lower):
+                    score = 0.9
+                    emocion = 'entusiasmo'
+                    break
+
+        # ============================================================
+        # CLASIFICACIÓN FINAL
+        # ============================================================
+        if score >= 0.8:
+            sentimiento = 'muy_positivo'
+        elif score >= 0.4:
+            sentimiento = 'positivo'
+        elif score >= -0.3:
+            sentimiento = 'neutral'
+        elif score >= -0.7:
+            sentimiento = 'negativo'
+        else:
+            sentimiento = 'muy_negativo'
+
+        # Debe colgar si sentimiento muy negativo
+        debe_colgar = score <= -0.8
+
+        return {
+            'sentimiento': sentimiento,
+            'score': score,
+            'emocion_detectada': emocion,
+            'debe_colgar': debe_colgar
+        }
+
     def _validar_sentido_comun(self, respuesta: str, contexto_cliente: str) -> tuple:
         """
         FIX 384: Validador de sentido común que verifica la lógica de la respuesta.
@@ -3234,6 +3365,47 @@ class AgenteVentas:
             "role": "user",
             "content": respuesta_cliente
         })
+
+        # ============================================================
+        # FIX 386: ANÁLISIS DE SENTIMIENTO EN TIEMPO REAL
+        # ============================================================
+        sentimiento_data = self._analizar_sentimiento(respuesta_cliente)
+
+        # Logging del sentimiento detectado
+        if sentimiento_data['sentimiento'] != 'neutral':
+            emoji_sentimiento = {
+                'muy_positivo': '😃',
+                'positivo': '🙂',
+                'neutral': '😐',
+                'negativo': '😕',
+                'muy_negativo': '😠'
+            }
+
+            print(f"\n{emoji_sentimiento[sentimiento_data['sentimiento']]} FIX 386: Sentimiento detectado")
+            print(f"   Emoción: {sentimiento_data['emocion_detectada'].upper()}")
+            print(f"   Score: {sentimiento_data['score']:.2f}")
+            print(f"   Clasificación: {sentimiento_data['sentimiento']}")
+
+            if sentimiento_data['debe_colgar']:
+                print(f"   🚨 ACCIÓN: Cliente muy molesto/enojado → COLGAR INMEDIATAMENTE")
+
+        # Si cliente está MUY molesto → Colgar con despedida educada
+        if sentimiento_data['debe_colgar']:
+            despedida_disculpa = "Disculpe las molestias. Le agradezco su tiempo. Que tenga excelente día."
+
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": despedida_disculpa
+            })
+
+            # Marcar como no interesado
+            self.lead_data["interesado"] = False
+            self.lead_data["resultado"] = "CLIENTE MOLESTO - Colgó"
+            self.lead_data["estado_llamada"] = "Colgo"
+            self.lead_data["estado_animo_cliente"] = "Muy Negativo - Enojado"
+
+            print(f"\n🚨 FIX 386: Terminando llamada por sentimiento muy negativo")
+            return despedida_disculpa
 
         # ============================================================
         # FIX 202: DETECTAR IVR/CONTESTADORAS AUTOMÁTICAS
@@ -6138,6 +6310,50 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 - PROMOCIÓN: Primer pedido de mil quinientos pesos con envío GRATIS
 - Envío gratis desde cinco mil pesos
 - Crédito disponible, pago con tarjeta sin comisión
+
+# 🎯 FIX 388: MANEJO DE OBJECIONES (Negociación Básica)
+
+⚠️ OBJECIONES COMUNES Y RESPUESTAS PROFESIONALES:
+
+1. OBJECIÓN: "Es muy caro" / "Sus precios son altos" / "Está caro"
+   RESPUESTA: "Entiendo. ¿Qué precio maneja actualmente con su proveedor? Le puedo enviar nuestra lista de precios para que compare."
+   ACCIÓN: Recopilar información de competencia, enviar catálogo con precios
+
+2. OBJECIÓN: "No tengo presupuesto" / "Ahorita no tengo dinero" / "No hay presupuesto"
+   RESPUESTA: "Sin problema. ¿Para cuándo tendría presupuesto disponible? Le puedo llamar en ese momento."
+   ACCIÓN: Agendar seguimiento, guardar como lead tibio
+
+3. OBJECIÓN: "Ya tengo proveedor" / "Ya compro con otro" / "Tengo proveedor fijo"
+   RESPUESTA: "Perfecto. Aún así le envío el catálogo por si en algún momento necesita un respaldo o comparar precios. ¿Cuál es su WhatsApp?"
+   ACCIÓN: Insistir en enviar catálogo, posicionarse como opción alternativa
+
+4. OBJECIÓN: "Solo compro en efectivo" / "No acepto crédito" / "Solo pago cash"
+   RESPUESTA: "No hay problema. Aceptamos efectivo, transferencia bancaria y tarjeta sin comisión. ¿Le envío el catálogo?"
+   ACCIÓN: Confirmar métodos de pago flexibles
+
+5. OBJECIÓN: "Mi jefe decide" / "Tengo que consultar" / "No soy el que compra"
+   RESPUESTA: "Claro. ¿Me puede comunicar con la persona que autoriza las compras o me da su contacto?"
+   ACCIÓN: Solicitar transferencia o datos del decision maker
+
+6. OBJECIÓN: "Estoy ocupado" / "No tengo tiempo" / "Llame después"
+   RESPUESTA: "Entiendo. ¿A qué hora le vendría mejor que llame? ¿Mañana en la mañana o en la tarde?"
+   ACCIÓN: Agendar seguimiento específico con horario
+
+7. OBJECIÓN: "Envíame información por correo" / "Mándame info"
+   RESPUESTA: "Perfecto. Le envío el catálogo por WhatsApp que es más rápido. ¿Cuál es su número?"
+   ACCIÓN: Redirigir a WhatsApp (más efectivo que email)
+
+8. OBJECIÓN: "No me interesa" / "No necesito nada" / "Ahorita no"
+   RESPUESTA: "Sin problema. De todos modos le dejo el catálogo por WhatsApp por si en el futuro necesita algo de ferretería. ¿Cuál es su número?"
+   ACCIÓN: Intentar dejar catálogo como opción futura
+
+⚠️ PRINCIPIOS DE NEGOCIACIÓN:
+- NUNCA discutas con el cliente
+- Usa "Entiendo" o "Sin problema" para validar su objeción
+- Haz preguntas para entender su situación real
+- Siempre ofrece una solución o alternativa
+- Mantén la conversación abierta hacia el catálogo
+- Si rechaza 2+ veces, despídete profesionalmente
 
 # REGLAS ABSOLUTAS
 ✓ ESPAÑOL MEXICANO SIEMPRE - pronunciación nativa clara
