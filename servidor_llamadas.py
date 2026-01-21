@@ -2218,17 +2218,18 @@ def procesar_respuesta():
                     # Generar TwiML para seguir escuchando SIN interrumpir
                     response = VoiceResponse()
 
-                    # FIX 244: Timeout más largo (4s) porque sabemos que está hablando
+                    # FIX 244/395: Timeout reducido (2.5s) para evitar interrupciones largas
+                    # BRUCE1122 mostró que 4s es muy largo - cliente termina de hablar antes
                     response.record(
                         action="/procesar-respuesta",
                         method="POST",
                         max_length=1,
-                        timeout=4,  # 4s de silencio real = terminó de hablar
+                        timeout=2.5,  # 2.5s de silencio real = terminó de hablar
                         play_beep=False,
                         trim="trim-silence"
                     )
 
-                    print(f"   ✅ FIX 244: Esperando continuación con timeout de 4s...")
+                    print(f"   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...")
                     return Response(str(response), mimetype="text/xml")
 
         # Si llegó aquí y hay transcripciones parciales acumuladas, concatenar
@@ -6579,12 +6580,17 @@ def ver_logs_texto():
 @app.route("/logs/api", methods=["GET"])
 def logs_api():
     """
-    FIX 208/272.8: API para obtener logs - ahora soporta HTML y JSON
+    FIX 208/272.8/395: API para obtener logs - ahora soporta HTML y JSON
     """
     try:
-        lineas = min(int(request.args.get('lineas', 500)), 5000)
-        filtro = request.args.get('filtro', '').lower()
+        # FIX 395: Si se filtra por bruce_id, buscar en TODO el buffer (5000 logs)
         bruce_id = request.args.get('bruce_id', '')
+        if bruce_id:
+            lineas = 5000  # Buscar en todo el buffer para obtener logs completos
+        else:
+            lineas = min(int(request.args.get('lineas', 500)), 5000)
+
+        filtro = request.args.get('filtro', '').lower()
         formato = request.args.get('formato', 'html')  # FIX 272.8: Por defecto HTML
 
         with log_lock:

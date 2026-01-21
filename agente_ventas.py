@@ -353,7 +353,7 @@ class AgenteVentas:
                 print(f"📊 FIX 389: Persona nueva después de transferencia - Estado → BUSCANDO_ENCARGADO")
                 return
 
-        # FIX 394: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
+        # FIX 394/395: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
         # Cliente pregunta "¿En qué le apoyo?" = ES EL ENCARGADO y está disponible
         # NO debe preguntar por el encargado, debe ofrecer catálogo DIRECTAMENTE
         patrones_encargado_disponible = [
@@ -365,11 +365,17 @@ class AgenteVentas:
             'en qué le apoyo', 'en que le apoyo',
             '¿qué necesita', '¿que necesita',
             '¿para qué llama', '¿para que llama',
-            '¿qué ocupa', '¿que ocupa'
+            '¿qué ocupa', '¿que ocupa',
+            # FIX 395: Agregar "con él/ella habla" (caso BRUCE1122)
+            'con ella habla', 'con él habla', 'con el habla',
+            'sí, con ella', 'si, con ella', 'sí, con él', 'si, con él',
+            'sí con ella', 'si con ella', 'sí con él', 'si con él',
+            'ella habla', 'él habla', 'el habla',
+            'yo soy', 'soy yo', 'soy la encargada', 'soy el encargado'
         ]
         if any(p in mensaje_lower for p in patrones_encargado_disponible):
-            print(f"📊 FIX 394: Cliente pregunta '¿En qué le puedo apoyar?' - ENCARGADO DISPONIBLE")
-            print(f"   Cliente ES el encargado - Ofreciendo catálogo DIRECTAMENTE")
+            print(f"📊 FIX 394/395: Cliente ES el encargado - ENCARGADO DISPONIBLE")
+            print(f"   Detectado: '{mensaje_cliente}' - Ofreciendo catálogo DIRECTAMENTE")
             # Responder directamente sin preguntar por encargado
             return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
 
