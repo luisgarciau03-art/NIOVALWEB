@@ -934,10 +934,16 @@ class AgenteVentas:
                 filtro_aplicado = True
 
         # REGLA CRÍTICA 1: NUNCA decir "ya lo tengo" sin datos reales
+        # FIX 402: Expandir patrones para capturar TODAS las variantes
         if not filtro_aplicado:
             bruce_dice_ya_tengo = any(frase in respuesta_lower for frase in [
                 'ya lo tengo', 'ya lo tengo registrado', 'ya lo tengo anotado',
-                'le llegará', 'le llegara', 'le envío el catálogo en las próximas horas'
+                'ya tengo registrado', 'ya tengo anotado',
+                'le llegará', 'le llegara',
+                'le envío el catálogo en las próximas horas',
+                'le enviará el catálogo', 'le enviara el catalogo',
+                'en las próximas horas', 'en las proximas horas',
+                'perfecto, ya lo', 'perfecto ya lo'  # FIX 402: Detectar inicio de frase
             ])
 
             if bruce_dice_ya_tengo:

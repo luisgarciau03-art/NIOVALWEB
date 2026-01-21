@@ -78,7 +78,7 @@ class DeepgramTranscriber:
         try:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
 
-            # FIX 222: Configuración SIMPLIFICADA para evitar HTTP 400
+            # FIX 222/401: Configuración OPTIMIZADA para baja latencia
             # Algunos parámetros pueden no estar disponibles para es-419
             options = LiveOptions(
                 model="nova-2",  # Modelo más preciso para español
@@ -88,7 +88,7 @@ class DeepgramTranscriber:
                 channels=1,
                 punctuate=True,  # Agregar puntuación
                 interim_results=True,  # Resultados parciales para baja latencia
-                endpointing=300,  # FIX 313: Mantener 300ms para no interrumpir al cliente
+                endpointing=200,  # FIX 401: Reducido de 300ms a 200ms para menor latencia
                 smart_format=True,  # Formato inteligente
                 # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
                 # - utterance_end_ms (puede no estar soportado)
