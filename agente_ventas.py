@@ -858,13 +858,18 @@ class AgenteVentas:
             # FIX 301: "Gracias" solo NO es rechazo - es cortesía
             es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
 
-            # FIX 325: Detectar si cliente PIDE información por correo/WhatsApp
+            # FIX 325/390: Detectar si cliente PIDE información por correo/WhatsApp
             # En ese caso, NO preguntar por encargado - pedir el dato de contacto
             cliente_pide_info_contacto = any(frase in ultimo_cliente for frase in [
                 'por correo', 'por whatsapp', 'por wasa', 'enviar la información',
                 'enviar la informacion', 'mandar la información', 'mandar la informacion',
                 'me puedes enviar', 'me puede enviar', 'envíame', 'enviame',
-                'mándame', 'mandame', 'enviarme', 'mandarme'
+                'mándame', 'mandame', 'enviarme', 'mandarme',
+                # FIX 390: Agregar patrones faltantes (caso BRUCE1083)
+                'al correo', 'mándanos al correo', 'mandanos al correo',
+                'envíalo al correo', 'envialo al correo', 'mándalo al correo', 'mandalo al correo',
+                'mándanos la', 'mandanos la', 'nos puede mandar', 'nos puede enviar',
+                'envíanos', 'envianos', 'mándanos', 'mandanos'
             ])
 
             if not rechazo_real or es_solo_gracias:
@@ -875,14 +880,15 @@ class AgenteVentas:
                 print(f"   Último cliente: '{ultimo_cliente[:50]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
 
-                # FIX 325: Si cliente pidió info por correo/WhatsApp, pedir el dato
+                # FIX 325/390: Si cliente pidió info por correo/WhatsApp, pedir el dato
                 if cliente_pide_info_contacto:
-                    if 'por correo' in ultimo_cliente:
+                    # FIX 390: Detectar CORREO con patrones expandidos
+                    if any(p in ultimo_cliente for p in ['por correo', 'al correo', 'correo electrónico', 'correo electronico']):
                         respuesta = "Claro, con gusto. ¿Me puede proporcionar su correo electrónico para enviarle el catálogo?"
-                        print(f"   FIX 325: Cliente pidió por CORREO - pidiendo email")
+                        print(f"   FIX 325/390: Cliente pidió por CORREO - pidiendo email")
                     else:
                         respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
-                        print(f"   FIX 325: Cliente pidió por WHATSAPP - pidiendo número")
+                        print(f"   FIX 325/390: Cliente pidió por WHATSAPP - pidiendo número")
                 else:
                     # Continuar la conversación normalmente
                     respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
@@ -2635,10 +2641,13 @@ class AgenteVentas:
                 'qué marca', 'que marca', 'cuál marca', 'cual marca'
             ])
 
-            # FIX 327: Detectar específicamente "¿Quién habla?"
+            # FIX 327/390: Detectar específicamente "¿Quién habla?" y variantes
             cliente_pregunta_quien = any(frase in contexto_cliente for frase in [
                 'quién habla', 'quien habla', 'quién llama', 'quien llama',
-                'quién es', 'quien es', 'con quién hablo', 'con quien hablo'
+                'quién es', 'quien es', 'con quién hablo', 'con quien hablo',
+                # FIX 390: Agregar "con quién tengo el gusto" (caso BRUCE1083)
+                'con quién tengo el gusto', 'con quien tengo el gusto',
+                'quién tengo el gusto', 'quien tengo el gusto'
             ])
 
             # FIX 342: Bruce responde algo INCOHERENTE (no relacionado con la pregunta)
