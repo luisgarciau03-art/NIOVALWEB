@@ -659,6 +659,7 @@ class AgenteVentas:
         # REGLA 2: No insistir con encargado si cliente dijo que no está
         # FIX 392: Mejorar detección de "salieron a comer / regresan en X tiempo"
         # FIX 393: Mejorar detección de "No, no se encuentra" y variantes
+        # FIX 397: Detectar "No." simple como respuesta negativa (caso BRUCE1125)
         # ============================================================
         cliente_dice_no_esta = any(frase in contexto_lower for frase in [
             'no está', 'no esta', 'no se encuentra', 'no lo encuentro',
@@ -684,6 +685,33 @@ class AgenteVentas:
             'se encontrará el encargado', 'se encontrara el encargado'
         ])
 
+        # FIX 397: Detectar "No." simple cuando Bruce preguntó por encargado
+        # Verificar últimos 2 mensajes de Bruce para ver si preguntó por encargado
+        ultimos_bruce = [
+            msg['content'].lower() for msg in self.conversation_history[-4:]
+            if msg['role'] == 'assistant'
+        ]
+        bruce_pregunto_encargado_reciente = any(
+            '¿se encontrará el encargado' in msg or '¿se encontrara el encargado' in msg or
+            '¿usted es el encargado' in msg
+            for msg in ultimos_bruce[-2:]  # Últimos 2 mensajes de Bruce
+        )
+
+        # FIX 397: Si cliente dice solo "No" o "No." y Bruce preguntó por encargado → Negación
+        ultimos_cliente = [
+            msg['content'].lower().strip() for msg in self.conversation_history[-3:]
+            if msg['role'] == 'user'
+        ]
+        cliente_dice_no_simple = False
+        if ultimos_cliente and bruce_pregunto_encargado_reciente:
+            ultimo_msg = ultimos_cliente[-1].strip('.').strip()
+            # Detectar "No" solo, sin otras palabras (excepto puntuación)
+            if ultimo_msg in ['no', 'nope', 'nel', 'no.', 'no,']:
+                cliente_dice_no_simple = True
+                print(f"\n🔍 FIX 397: Cliente dijo 'No' simple después de pregunta por encargado")
+                print(f"   Último mensaje cliente: '{ultimos_cliente[-1]}'")
+                print(f"   Bruce preguntó por encargado: {bruce_pregunto_encargado_reciente}")
+
         # FIX 392: También detectar si Bruce hace pregunta genérica sin ofrecer alternativa
         bruce_pregunta_generica = any(frase in respuesta_lower for frase in [
             '¿le envío el catálogo completo?', '¿le envio el catalogo completo?'
@@ -691,11 +719,16 @@ class AgenteVentas:
             'mientras tanto', 'cuando regrese', 'vuelva a llamar'
         ])
 
-        if cliente_dice_no_esta and (bruce_insiste_encargado or bruce_pregunta_generica):
-            return False, "Cliente dijo que encargado NO está / salió a comer"
+        # FIX 397: Activar REGLA 2 si cliente dijo "No está" O "No" simple
+        if (cliente_dice_no_esta or cliente_dice_no_simple) and (bruce_insiste_encargado or bruce_pregunta_generica):
+            if cliente_dice_no_simple:
+                return False, "Cliente dijo 'No' - encargado NO disponible"
+            else:
+                return False, "Cliente dijo que encargado NO está / salió a comer"
 
         # ============================================================
         # REGLA 3: No decir "ya lo tengo" sin tener datos reales
+        # FIX 397: Mejorar detección de datos reales vs frases ambiguas
         # ============================================================
         bruce_dice_ya_tengo = any(frase in respuesta_lower for frase in [
             'ya lo tengo', 'ya lo tengo registrado', 'ya lo tengo anotado',
@@ -706,14 +739,32 @@ class AgenteVentas:
             tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
             tiene_email = bool(self.lead_data.get("email"))
 
+            # FIX 397: Verificar más estrictamente si cliente dio dato
+            # Frases ambiguas que NO son datos: "pásele este", "un segundo", etc.
+            frases_ambiguas = [
+                'pásele', 'pasele', 'un segundo', 'un momento', 'espere',
+                'bueno', 'así es', 'ok', 'claro', 'sí', 'si'
+            ]
+            ultimos_msg_cliente = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ])
+            es_frase_ambigua = any(f in ultimos_msg_cliente for f in frases_ambiguas)
+
             # Verificar si cliente realmente dio dato en contexto reciente
             tiene_dato_en_contexto = (
-                (tiene_digitos and len(re.findall(r'\d', contexto_lower)) >= 10) or
+                (tiene_digitos and len(re.findall(r'\d', contexto_lower)) >= 10 and not es_frase_ambigua) or
                 tiene_arroba or
                 dice_este_numero
             )
 
             if not tiene_whatsapp and not tiene_email and not tiene_dato_en_contexto:
+                print(f"\n🚫 FIX 397: REGLA 3 ACTIVADA - Bruce dice 'ya lo tengo' sin datos")
+                print(f"   Últimos mensajes cliente: '{ultimos_msg_cliente[:100]}...'")
+                print(f"   Tiene WhatsApp guardado: {tiene_whatsapp}")
+                print(f"   Tiene Email guardado: {tiene_email}")
+                print(f"   Dígitos detectados: {tiene_digitos}")
+                print(f"   Es frase ambigua: {es_frase_ambigua}")
                 return False, "Dice 'ya lo tengo' sin datos capturados"
 
         # ============================================================
@@ -816,8 +867,65 @@ class AgenteVentas:
         contexto_cliente = ' '.join(ultimos_mensajes_cliente_global[-6:]) if ultimos_mensajes_cliente_global else ""
 
         # ============================================================
+        # FIX 398: REGLAS CRÍTICAS - SIEMPRE ACTIVAS (NO SKIPPEABLE)
+        # Estas reglas se ejecutan ANTES de cualquier skip
+        # ============================================================
+
+        # REGLA CRÍTICA 1: NUNCA decir "ya lo tengo" sin datos reales
+        if not filtro_aplicado:
+            bruce_dice_ya_tengo = any(frase in respuesta_lower for frase in [
+                'ya lo tengo', 'ya lo tengo registrado', 'ya lo tengo anotado',
+                'le llegará', 'le llegara', 'le envío el catálogo en las próximas horas'
+            ])
+
+            if bruce_dice_ya_tengo:
+                tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
+                tiene_email = bool(self.lead_data.get("email"))
+
+                # FIX 398: Verificar MUY estrictamente si cliente dio dato
+                frases_ambiguas = [
+                    'pásele', 'pasele', 'un segundo', 'un momento', 'espere',
+                    'bueno', 'así es', 'ok', 'claro', 'sí', 'si', 'eso es'
+                ]
+                ultimos_msg_cliente = ' '.join([
+                    msg['content'].lower() for msg in self.conversation_history[-3:]
+                    if msg['role'] == 'user'
+                ])
+
+                # Verificar si hay arroba o dígitos suficientes
+                tiene_arroba = '@' in ultimos_msg_cliente
+                digitos = re.findall(r'\d', ultimos_msg_cliente)
+                tiene_digitos_suficientes = len(digitos) >= 10
+
+                # Verificar que NO sea frase ambigua
+                es_frase_ambigua = any(f in ultimos_msg_cliente for f in frases_ambiguas)
+
+                # FIX 398: Solo considerar dato válido si:
+                # 1. Tiene datos guardados O
+                # 2. Tiene arroba O
+                # 3. Tiene 10+ dígitos Y NO es frase ambigua
+                tiene_dato_real = (
+                    tiene_whatsapp or
+                    tiene_email or
+                    tiene_arroba or
+                    (tiene_digitos_suficientes and not es_frase_ambigua)
+                )
+
+                if not tiene_dato_real:
+                    print(f"\n🚫 FIX 398: REGLA CRÍTICA 1 - Bloqueó 'ya lo tengo' sin datos")
+                    print(f"   WhatsApp guardado: {tiene_whatsapp}")
+                    print(f"   Email guardado: {tiene_email}")
+                    print(f"   Últimos mensajes: '{ultimos_msg_cliente[:100]}'")
+                    print(f"   Tiene arroba: {tiene_arroba}")
+                    print(f"   Dígitos: {len(digitos)}")
+                    print(f"   Es frase ambigua: {es_frase_ambigua}")
+
+                    respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp o correo electrónico para enviarle el catálogo?"
+                    filtro_aplicado = True
+
+        # ============================================================
         # FILTRO -1 (FIX 384): VALIDADOR DE SENTIDO COMÚN
-        # Se ejecuta PRIMERO para validar lógica básica antes de filtros específicos
+        # Se ejecuta DESPUÉS de REGLAS CRÍTICAS
         # ============================================================
         if not filtro_aplicado:
             # FIX 389: NO activar FIX 384 si es persona nueva después de transferencia
@@ -833,8 +941,10 @@ class AgenteVentas:
                 print(f"\n⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
                 print(f"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación")
             elif skip_fix_384:
-                # FIX 392: Cliente confirmó - NO ejecutar FIX 384
-                print(f"\n⏭️  FIX 392: Saltando FIX 384 - Cliente confirmó recientemente")
+                # FIX 392/398: Cliente confirmó - NO ejecutar FIX 384 OPCIONAL
+                # PERO: REGLAS CRÍTICAS ya se ejecutaron arriba
+                print(f"\n⏭️  FIX 392/398: Saltando FIX 384 OPCIONAL - Cliente confirmó")
+                print(f"   (REGLAS CRÍTICAS ya verificadas)")
                 print(f"   Cliente dijo: '{contexto_cliente[-60:] if len(contexto_cliente) > 60 else contexto_cliente}'")
                 print(f"   GPT generó: '{respuesta[:80]}...'")
             else:
@@ -4307,9 +4417,9 @@ Ejemplo correcto:
                 respuesta_agente = f"{frase_relleno} {respuesta_agente}"
 
             # ============================================================
-            # FIX 391/392: DETECTAR CONFIRMACIÓN DEL CLIENTE PRIMERO
+            # FIX 391/392/398: DETECTAR CONFIRMACIÓN DEL CLIENTE PRIMERO
             # ============================================================
-            # FIX 392: Variable de control para desactivar FIX 384 desde FIX 391
+            # FIX 398: Detección de confirmación MÁS ESTRICTA
             skip_fix_384 = False
 
             ultimos_mensajes_cliente_pre = [
@@ -4319,15 +4429,49 @@ Ejemplo correcto:
 
             if ultimos_mensajes_cliente_pre:
                 ultimo_cliente_pre = ultimos_mensajes_cliente_pre[-1]
-                # Cliente confirmó con "sí", "claro", "adelante", etc.
-                confirmaciones = ['sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
-                                 'bueno', 'perfecto', 'sale', 'está bien', 'esta bien']
-                cliente_confirmo_recientemente = any(c in ultimo_cliente_pre for c in confirmaciones)
 
-                # FIX 392: Si cliente confirmó, NO ejecutar FIX 384
-                if cliente_confirmo_recientemente:
+                # FIX 398: SOLO confirmaciones CLARAS (con contexto adicional)
+                confirmaciones_claras = [
+                    'sí, adelante', 'si, adelante', 'claro, adelante',
+                    'sí adelante', 'si adelante', 'claro adelante',
+                    'ok, adelante', 'okay, adelante',
+                    'sí, por favor', 'si, por favor', 'sí por favor', 'si por favor',
+                    'claro, por favor', 'claro por favor',
+                    'sí, mande', 'si, mande', 'sí mande', 'si mande',
+                    'dale, sí', 'dale, si', 'dale si', 'dale sí',
+                    'sí, sí', 'si, si', 'sí sí', 'si si',
+                    'claro, claro', 'claro claro',
+                    'está bien, adelante', 'esta bien, adelante',
+                    'perfecto, adelante', 'sale, adelante'
+                ]
+
+                # FIX 398: Frases ambiguas que NO son confirmaciones
+                frases_ambiguas_no_confirmacion = [
+                    'bueno, pásele', 'bueno, pasele', 'bueno pasele',
+                    'un segundo', 'un momento', 'espere', 'permítame', 'permitame',
+                    'así es', 'asi es', 'eso es',
+                    'ok.', 'bueno.', 'claro.', 'sí.', 'si.',  # Solo palabras (sin contexto)
+                    'a ver', 'diga', 'dígame', 'digame'
+                ]
+
+                # Verificar si es confirmación CLARA
+                cliente_confirmo_recientemente = any(
+                    conf in ultimo_cliente_pre for conf in confirmaciones_claras
+                )
+
+                # Verificar si es frase ambigua (NO confirmar en estos casos)
+                es_frase_ambigua = any(
+                    amb in ultimo_cliente_pre for amb in frases_ambiguas_no_confirmacion
+                )
+
+                # FIX 398: Solo activar skip si confirmó Y NO es frase ambigua
+                if cliente_confirmo_recientemente and not es_frase_ambigua:
                     skip_fix_384 = True
-                    print(f"\n⏭️  FIX 392: Cliente confirmó - skip_fix_384 = True")
+                    print(f"\n⏭️  FIX 398: Cliente confirmó CLARAMENTE - skip_fix_384 = True")
+                    print(f"   Confirmación detectada: '{ultimo_cliente_pre}'")
+                elif es_frase_ambigua:
+                    print(f"\n✋ FIX 398: Frase ambigua detectada - NO es confirmación")
+                    print(f"   Frase: '{ultimo_cliente_pre}'")
 
             # ============================================================
             # FIX 226: FILTRO POST-GPT - Forzar reglas que GPT no sigue
