@@ -777,41 +777,57 @@ class AgenteVentas:
                 print(f"\n⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
                 print(f"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación")
             else:
-                # FIX 384 normal
-                es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
+                # FIX 391: NO activar FIX 384 si GPT está pidiendo WhatsApp/correo correctamente
+                # Detectar si GPT está pidiendo dato de contacto
+                gpt_pide_contacto = any(frase in respuesta.lower() for frase in [
+                    'cuál es su whatsapp', 'cual es su whatsapp',
+                    'cuál es su número', 'cual es su numero',
+                    'me confirma su whatsapp', 'me confirma su número',
+                    'me puede proporcionar su correo', 'me proporciona su correo',
+                    'me confirma su correo', 'cuál es su correo', 'cual es su correo',
+                    'me podría proporcionar', 'dígame su correo', 'digame su correo'
+                ])
 
-                if not es_valida:
-                    print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
-                    print(f"   Razón: {razon}")
-                    print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
-                    print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
+                # Si GPT está pidiendo contacto, NO aplicar FIX 384
+                if gpt_pide_contacto:
+                    print(f"\n⏭️  FIX 391: Saltando FIX 384 - GPT está pidiendo WhatsApp/correo correctamente")
+                    print(f"   GPT generó: '{respuesta[:80]}...'")
+                else:
+                    # FIX 384 normal
+                    es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
 
-                    # Generar respuesta con sentido común basada en la razón
-                    if "Cliente acaba de dar número" in razon:
-                        respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
-                    elif "Cliente acaba de dar correo" in razon:
-                        respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
-                    elif "Cliente dijo que encargado NO está" in razon:
-                        respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
-                    elif "Dice 'ya lo tengo' sin datos capturados" in razon:
-                        respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
-                    elif "Cliente preguntó algo y Bruce no respondió" in razon:
-                        # Intentar responder la pregunta del cliente
-                        if 'qué productos' in contexto_cliente or 'que productos' in contexto_cliente:
-                            respuesta = "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo por WhatsApp?"
+                    if not es_valida:
+                        print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
+                        print(f"   Razón: {razon}")
+                        print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
+                        print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
+
+                        # Generar respuesta con sentido común basada en la razón
+                        if "Cliente acaba de dar número" in razon:
+                            respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
+                        elif "Cliente acaba de dar correo" in razon:
+                            respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
+                        elif "Cliente dijo que encargado NO está" in razon:
+                            respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
+                        elif "Dice 'ya lo tengo' sin datos capturados" in razon:
+                            respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                        elif "Cliente preguntó algo y Bruce no respondió" in razon:
+                            # Intentar responder la pregunta del cliente
+                            if 'qué productos' in contexto_cliente or 'que productos' in contexto_cliente:
+                                respuesta = "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo por WhatsApp?"
+                            else:
+                                respuesta = "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
+                        elif "Cliente pidió reprogramar" in razon:
+                            respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
+                        elif "Cliente está buscando encargado" in razon:
+                            # NO decir nada - esperar
+                            respuesta = ""  # Silencio
                         else:
-                            respuesta = "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
-                    elif "Cliente pidió reprogramar" in razon:
-                        respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
-                    elif "Cliente está buscando encargado" in razon:
-                        # NO decir nada - esperar
-                        respuesta = ""  # Silencio
-                    else:
-                        # Error genérico - solicitar dato faltante
-                        respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                            # Error genérico - solicitar dato faltante
+                            respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
 
-                    filtro_aplicado = True
-                    print(f"   Respuesta corregida: '{respuesta}'")
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: '{respuesta}'")
 
         # ============================================================
         # FILTRO 0 (FIX 298/301): CRÍTICO - Evitar despedida/asunciones prematuras
@@ -4196,6 +4212,21 @@ Ejemplo correcto:
             import re
             respuesta_normalizada = re.sub(r'[^\w\s]', '', respuesta_agente.lower()).strip()
 
+            # FIX 391: Detectar si contexto cambió (cliente confirmó/respondió)
+            # NO bloquear repetición si cliente dio respuesta nueva que requiere la misma acción
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'user'
+            ]
+
+            cliente_confirmo_recientemente = False
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+                # Cliente confirmó con "sí", "claro", "adelante", etc.
+                confirmaciones = ['sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
+                                 'bueno', 'perfecto', 'sale', 'está bien', 'esta bien']
+                cliente_confirmo_recientemente = any(c in ultimo_cliente for c in confirmaciones)
+
             # Verificar si esta respuesta ya se dijo en las últimas 3 respuestas
             repeticion_detectada = False
             for i, resp_previa in enumerate(ultimas_respuestas_bruce[-3:], 1):
@@ -4203,6 +4234,14 @@ Ejemplo correcto:
 
                 # Si la respuesta es >80% similar (o idéntica)
                 if respuesta_normalizada == resp_previa_normalizada:
+                    # FIX 391: Si cliente confirmó recientemente, NO bloquear
+                    # (puede ser respuesta útil en nuevo contexto)
+                    if cliente_confirmo_recientemente:
+                        print(f"\n⏭️  FIX 391: Repetición detectada pero cliente confirmó - permitiendo respuesta")
+                        print(f"   Cliente dijo: '{ultimo_cliente[:60]}...'")
+                        print(f"   Respuesta: '{respuesta_agente[:60]}...'")
+                        break
+
                     repeticion_detectada = True
                     print(f"\n🚨🚨🚨 FIX 204: REPETICIÓN IDÉNTICA DETECTADA 🚨🚨🚨")
                     print(f"   Bruce intentó repetir: \"{respuesta_agente[:60]}...\"")
