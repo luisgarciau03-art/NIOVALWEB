@@ -710,14 +710,23 @@ class AgenteVentas:
 
                 cliente_no_escucho = solo_dice_bueno or any(re.search(p, ultimo_cliente) for p in patrones_no_escucho)
 
-                # FIX 297: Si Bruce YA preguntó "¿me escucha?", NO volver a preguntar
-                # En su lugar, continuar con la presentación
+                # FIX 297/351: Si Bruce YA preguntó "¿me escucha?" o ya se presentó, NO repetir
+                # En su lugar, continuar con la presentación diferente
+                bruce_ya_se_presento = any(
+                    'soy bruce de la marca' in msg or 'usted es el encargado' in msg
+                    for msg in mensajes_bruce_recientes
+                )
+
                 if cliente_no_escucho:
-                    if bruce_ya_pregunto_escucha:
-                        # Ya preguntamos si escucha, ahora continuar con presentación
-                        print(f"\n📞 FIX 297: Cliente sigue diciendo '{ultimo_cliente}' pero Bruce YA preguntó si escucha")
-                        print(f"   Continuando con presentación normal en lugar de repetir '¿me escucha?'")
-                        respuesta = "Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?"
+                    if bruce_ya_pregunto_escucha or bruce_ya_se_presento:
+                        # Ya preguntamos o ya nos presentamos, usar frase DIFERENTE
+                        print(f"\n📞 FIX 297/351: Cliente sigue diciendo '{ultimo_cliente}' pero Bruce YA se presentó")
+                        print(f"   Usando frase diferente para evitar repetición")
+                        # FIX 351: Alternar entre diferentes frases
+                        if 'se encontrará el encargado' in ' '.join(mensajes_bruce_recientes):
+                            respuesta = "Sí, aquí sigo. ¿Me puede escuchar bien?"
+                        else:
+                            respuesta = "Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?"
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                     elif 'nioval' in respuesta_lower:
@@ -743,13 +752,24 @@ class AgenteVentas:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
                 contexto_espera = ' '.join(ultimos_mensajes_cliente[-2:]) if len(ultimos_mensajes_cliente) >= 2 else ultimo_cliente
 
-                # FIX 249/256/261/318: Detectar negaciones/rechazos que invalidan "ahorita"
+                # FIX 249/256/261/318/357: Detectar negaciones/rechazos que invalidan "ahorita"
                 # Si cliente dice "ahorita tenemos cerrado", NO es espera
                 # FIX 318: "No, no está ahorita" - el encargado NO está
+                # FIX 357: "ahorita no nos interesa" - es rechazo, NO espera
                 patrones_negacion = [
                     r'cerrado', r'no\s+est[aá]', r'no\s+se\s+encuentra',
                     r'no\s+hay', r'no\s+tenemos', r'no\s+puede',
                     r'ocupado', r'no\s+disponible',
+                    # FIX 357: "ahorita no nos interesa", "no me interesa"
+                    r'no\s+(?:me|nos|le)?\s*interesa',  # "no nos interesa"
+                    r'ahorita\s+no\s+(?:me|nos|le)?\s*interesa',  # "ahorita no nos interesa"
+                    r'no\s+(?:estoy|estamos)\s+interesad[oa]',  # "no estamos interesados"
+                    r'no\s+(?:necesito|necesitamos)',  # "no necesitamos"
+                    r'no\s+(?:gracias|thank)',  # "no gracias"
+                    # FIX 358: "no te encuentro ahorita" = encargado NO está
+                    r'no\s+(?:te|lo|la|le)\s+encuentr[oa]',  # "no te encuentro"
+                    r'no\s+(?:te|lo|la|le)\s+encuentr[oa]\s+ahorita',  # "no te encuentro ahorita"
+                    r'no,?\s*no,?\s*ahorita\s+no',  # "No, no, ahorita no"
                     # FIX 318: Patrones más específicos para "no está ahorita"
                     r'no,?\s*no\s+est[aá]',  # "No, no está ahorita"
                     r'no\s+est[aá]\s+ahorita',  # "no está ahorita"
@@ -1737,6 +1757,16 @@ class AgenteVentas:
                 r'en\s+(?:otra\s+)?ciudad\s+de',
                 r'en\s+(?:cdmx|m[eé]xico|guadalajara|monterrey)',
                 r'all[aá]\s+con\s+ellos',
+                # FIX 354: BRUCE965 - "no vemos aquí nada", "es directo a la casa"
+                r'no\s+vemos?\s+(?:aqu[ií]\s+)?(?:nada|eso)',
+                r'(?:es|va)\s+directo\s+(?:a|hacia)\s+(?:la\s+)?casa',
+                r'directamente\s+(?:a|hacia)\s+(?:la\s+)?casa',
+                r'no\s+(?:lo\s+)?recibimos',
+                r'(?:nosotros\s+)?no\s+(?:lo\s+)?vemos',
+                r'no\s+(?:nos\s+)?(?:corresponde|toca)',
+                r'eso\s+(?:es|va)\s+(?:con|para)\s+(?:la\s+)?(?:oficina|casa|matriz)',
+                r'no\s+(?:nos\s+)?encargamos\s+de\s+eso',
+                r'(?:aqu[ií]\s+)?no\s+(?:manejamos|vemos)\s+(?:nada\s+de\s+)?(?:eso|compras?|costos?)',
             ]
 
             cliente_es_sucursal = any(re.search(patron, contexto_cliente, re.IGNORECASE) for patron in patrones_sucursal)
@@ -1748,7 +1778,7 @@ class AgenteVentas:
                 'buen día', 'buena tarde', 'disculpe la molestia'
             ])
 
-            # FIX 309b/317: Bruce sigue insistiendo con catálogo/whatsapp sin pedir número matriz
+            # FIX 309b/317/354: Bruce sigue insistiendo con catálogo/whatsapp sin pedir número matriz
             bruce_sigue_insistiendo = any(frase in respuesta_lower for frase in [
                 'catálogo digital', 'catalogo digital', 'lista de precios',
                 'enviarle nuestro catálogo', 'enviarle nuestro catalogo',
@@ -1759,7 +1789,14 @@ class AgenteVentas:
                 # FIX 317: Bruce pregunta cuándo llamar en lugar de pedir número
                 'momento más conveniente', 'momento mas conveniente',
                 'cuándo sería adecuado', 'cuando seria adecuado',
-                'llame en otro momento', 'llamar en otro momento'
+                'llame en otro momento', 'llamar en otro momento',
+                # FIX 354: Bruce sigue ofreciendo catálogo cuando cliente dice que no manejan compras
+                'le gustaría recibir', 'le gustaria recibir',
+                'le gustaría que le envíe', 'le gustaria que le envie',
+                'catálogo completo', 'catalogo completo',
+                'por whatsapp o correo', 'por correo o whatsapp',
+                'hay algo de interés', 'hay algo de interes',
+                'hablar con alguien más', 'hablar con alguien mas'
             ])
 
             # Verificar que Bruce NO está pidiendo número de matriz
@@ -2059,7 +2096,7 @@ class AgenteVentas:
         # Maneja todas las variantes de "no está el encargado" y respuestas incorrectas
         # ============================================================
         if not filtro_aplicado:
-            # FIX 341: Lista COMPLETA de patrones que indican que el encargado NO está
+            # FIX 341/348/349: Lista COMPLETA de patrones que indican que el encargado NO está
             patrones_no_esta = [
                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
                 'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
@@ -2068,7 +2105,18 @@ class AgenteVentas:
                 'no la encuentro', 'no se sabe', 'no sabemos', 'no tienen horario',
                 'no tiene horario', 'no sabría decirle', 'no sabria decirle',
                 'está fuera', 'esta fuera', 'está ocupado', 'esta ocupado',
-                'no viene hoy', 'no trabaja hoy', 'ya se fue'
+                'no viene hoy', 'no trabaja hoy', 'ya se fue',
+                # FIX 348/349/360: "No" simple o "por el momento no" después de preguntar por encargado
+                'por el momento no', 'por el momento no,', 'por el momento, no',
+                'no, por el momento', 'no por el momento',
+                'en este momento no', 'en este momento, no',
+                'no, disculpe', 'no disculpe', 'no, lo siento',
+                'no, ahorita no', 'ahorita no está disponible', 'ahorita no esta disponible',
+                # FIX 360: Variantes con múltiples "no"
+                'no, no, ahorita no', 'no no ahorita no', 'no, no ahorita',
+                'no, no, no', 'no no no', 'no, no se encuentra', 'no no se encuentra',
+                'no, no sé', 'no no se', 'no, no lo encuentro', 'no no lo encuentro',
+                'no te encuentro', 'no lo encuentro ahorita', 'no te encuentro ahorita'
             ]
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in patrones_no_esta)
 
@@ -2198,13 +2246,31 @@ class AgenteVentas:
             tiene_correo = hasattr(self, 'ultimo_correo_capturado') and self.ultimo_correo_capturado
             tiene_whatsapp = hasattr(self, 'ultimo_whatsapp_capturado') and self.ultimo_whatsapp_capturado
 
-            # Buscar en historial si cliente dio algún dato
+            # FIX 356: Buscar en historial si cliente REALMENTE dio algún dato de contacto
+            # No basta con que haya dígitos - debe ser en contexto de dar número
             historial_cliente = ' '.join([
                 msg['content'].lower() for msg in self.conversation_history
                 if msg['role'] == 'user'
             ])
             cliente_dio_correo = '@' in historial_cliente or 'arroba' in historial_cliente
-            cliente_dio_whatsapp = any(c.isdigit() for c in historial_cliente) and len([c for c in historial_cliente if c.isdigit()]) >= 10
+
+            # FIX 356: Verificar que cliente DIO número en contexto de WhatsApp/contacto
+            # No solo contar dígitos - verificar que hubo intercambio de número
+            ultimos_mensajes = [msg['content'].lower() for msg in self.conversation_history[-8:] if msg['role'] == 'user']
+            contexto_numero = ' '.join(ultimos_mensajes)
+
+            # Verificar si Bruce PIDIÓ número y cliente lo DIO
+            mensajes_bruce = [msg['content'].lower() for msg in self.conversation_history[-8:] if msg['role'] == 'assistant']
+            bruce_pidio_numero = any(frase in ' '.join(mensajes_bruce) for frase in [
+                'número de whatsapp', 'numero de whatsapp', 'su whatsapp',
+                'su número', 'su numero', 'cuál es el número', 'cual es el numero',
+                'me proporciona', 'me puede dar'
+            ])
+
+            # Cliente dio número solo si: Bruce pidió Y cliente respondió con dígitos
+            import re
+            digitos_en_contexto = len(re.findall(r'\d', contexto_numero))
+            cliente_dio_whatsapp = bruce_pidio_numero and digitos_en_contexto >= 8
 
             tiene_dato_real = tiene_correo or tiene_whatsapp or cliente_dio_correo or cliente_dio_whatsapp
 
@@ -2310,7 +2376,7 @@ class AgenteVentas:
         # Esto es INCORRECTO - Bruce debe pedir el correo
         # ============================================================
         if not filtro_aplicado:
-            # Detectar si cliente ofrece dar correo
+            # FIX 359: Detectar si cliente ofrece dar correo (incluyendo preguntas)
             cliente_ofrece_correo = any(frase in contexto_cliente for frase in [
                 'te comparto un correo', 'le comparto un correo',
                 'te comparto el correo', 'le comparto el correo',
@@ -2324,7 +2390,13 @@ class AgenteVentas:
                 'para que envíe tu información', 'para que envíes tu información',
                 'para que envie tu informacion', 'para que envies tu informacion',
                 'para que nos envíe', 'para que nos envíes',
-                'para que mande', 'para que mandes'
+                'para que mande', 'para que mandes',
+                # FIX 359: Cliente PREGUNTA si dar correo
+                'doy un correo', 'doy el correo', 'doy correo',  # "¿te doy un correo?"
+                'te digo a dónde', 'te digo a donde', 'le digo a dónde', 'le digo a donde',
+                'whatsapp o correo', 'correo electrónico', 'correo electronico',
+                'mandármela', 'mandarmela', 'mándamela', 'mandamela',
+                'mándamelo', 'mandamelo', 'envíamelo', 'enviamelo'
             ])
 
             # Bruce responde algo incoherente en lugar de pedir el correo
@@ -2343,6 +2415,85 @@ class AgenteVentas:
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Claro, dígame su correo electrónico por favor."
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 29 (FIX 353): Cliente pregunta sobre productos
+        # Ejemplo: "¿De qué producto son?" → Bruce debe explicar qué vende
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente pregunta sobre productos
+            cliente_pregunta_productos = any(frase in contexto_cliente for frase in [
+                'de qué producto', 'de que producto', 'qué producto', 'que producto',
+                'de qué son', 'de que son', 'qué son', 'que son',
+                'qué venden', 'que venden', 'qué manejan', 'que manejan',
+                'qué productos', 'que productos', 'qué ofrecen', 'que ofrecen',
+                'a qué se dedican', 'a que se dedican', 'de qué es', 'de que es',
+                'qué es nioval', 'que es nioval', 'qué es eso', 'que es eso',
+                'de qué marca', 'de que marca', 'qué marca', 'que marca',
+                # FIX 361: "¿De qué marca está hablando?"
+                'qué marca está hablando', 'que marca esta hablando',
+                'de qué marca está', 'de que marca esta',
+                'de qué marca me', 'de que marca me',
+                'qué marca es', 'que marca es',
+                'me dijiste', 'dijiste que', 'no escuché', 'no escuche',
+                'repíteme', 'repiteme', 'qué era', 'que era'
+            ])
+
+            # FIX 361: Bruce no responde sobre productos (responde algo irrelevante)
+            # O responde algo completamente incoherente como "¿me escucha?" o "¿hay algo más?"
+            bruce_responde_incoherente = any(frase in respuesta_lower for frase in [
+                'me escucha', 'me escuchas', 'hay algo más', 'hay algo mas',
+                'algo más en lo que', 'algo mas en lo que', 'puedo ayudar',
+                'ya lo tengo registrado', 'perfecto.', 'excelente.'
+            ])
+            bruce_no_responde_productos = bruce_responde_incoherente or not any(frase in respuesta_lower for frase in [
+                'ferretería', 'ferreteria', 'herramienta', 'grifería', 'griferia',
+                'candado', 'nioval', 'producto', 'catálogo', 'catalogo',
+                'cinta', 'tapagoteras', 'distribuimos', 'manejamos'
+            ])
+
+            if cliente_pregunta_productos and bruce_no_responde_productos:
+                print(f"\n🔧 FIX 353: FILTRO ACTIVADO - Cliente pregunta productos pero Bruce no responde")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Claro, somos de la marca NIOVAL. Manejamos productos de ferretería como herramientas, grifería, candados, cinta tapagoteras y más. ¿Le gustaría recibir el catálogo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 30 (FIX 355): Cliente pide nombre y/o número de Bruce
+        # Ejemplo: "¿Me puede dar su número telefónico para yo pasarle a Ricardo?"
+        # Bruce debe dar su nombre y el teléfono de NIOVAL
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente pide datos de contacto de Bruce
+            cliente_pide_datos_bruce = any(frase in contexto_cliente for frase in [
+                'deme su número', 'deme su numero', 'me da su número', 'me da su numero',
+                'su número telefónico', 'su numero telefonico', 'su teléfono', 'su telefono',
+                'número de usted', 'numero de usted', 'teléfono de usted', 'telefono de usted',
+                'su nombre y su número', 'su nombre y su numero',
+                'se identifique', 'identifíquese', 'identifiquese',
+                'cómo se llama', 'como se llama', 'quién me habla', 'quien me habla',
+                'para pasarle', 'para que se comunique', 'para comunicarle',
+                'le paso su información', 'le paso su informacion',
+                'nombre de usted', 'cuál es su nombre', 'cual es su nombre'
+            ])
+
+            # Bruce responde mal (placeholders, respuesta genérica, o no da el número)
+            bruce_responde_mal_datos = any(frase in respuesta_lower for frase in [
+                '[tu nombre]', '[tu número]', 'tu nombre', 'tu número',
+                'le gustaría recibir', 'le gustaria recibir',
+                'ya lo tengo registrado', 'catálogo', 'catalogo',
+                'whatsapp o correo', 'correo electrónico'
+            ]) or '662 415' not in respuesta
+
+            if cliente_pide_datos_bruce and bruce_responde_mal_datos:
+                print(f"\n📞 FIX 355: FILTRO ACTIVADO - Cliente pide datos de Bruce")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Claro, mi nombre es Bruce de la marca NIOVAL. Nuestro teléfono es 662 415 1997, eso es: seis seis dos, cuatro uno cinco, uno nueve nueve siete. Con gusto puede pasarle mis datos al encargado."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -2945,6 +3096,11 @@ Ejemplo correcto:
             "te puedo pasar", "te paso", "le paso", "se lo paso",
             "te lo paso", "ahorita te lo paso", "te comunico",
             "me lo comunica", "me lo pasa", "pásamelo",
+            # FIX 350: "déjeme lo transfiero" y variantes
+            "déjeme lo transfiero", "dejeme lo transfiero",
+            "déjeme la transfiero", "dejeme la transfiero",
+            "lo transfiero", "la transfiero", "le transfiero",
+            "te transfiero", "déjeme transferirlo", "dejeme transferirlo",
             # FIX 237: Solicitud de espera - agregados más patrones
             "dame un momento", "espera un momento", "espérame", "un segundito",
             "permíteme", "permiteme", "déjame ver", "dejame ver",
@@ -3230,18 +3386,35 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             return respuesta_agente
 
         except Exception as e:
-            # FIX 305/307: Logging detallado del error para diagnóstico
+            # FIX 305/307/352: Logging detallado del error para diagnóstico
             import traceback
+            error_tipo = type(e).__name__
             print(f"\n🚨🚨🚨 FIX 305: EXCEPCIÓN EN GPT 🚨🚨🚨")
-            print(f"   Error: {type(e).__name__}: {e}")
+            print(f"   Error: {error_tipo}: {e}")
             print(f"   Traceback completo:")
             traceback.print_exc()
             # FIX 307: Variable correcta es respuesta_cliente
             print(f"   Último mensaje del cliente: {respuesta_cliente[:100] if respuesta_cliente else 'VACÍO'}")
             print(f"   Historial tiene {len(self.conversation_history)} mensajes")
 
-            # FIX 305: En lugar de decir "problema técnico", dar una respuesta genérica pero útil
-            # Esto evita que el cliente sienta que el sistema falló
+            # FIX 352: Respuestas de fallback según contexto del cliente
+            respuesta_lower = respuesta_cliente.lower() if respuesta_cliente else ""
+
+            # Si cliente preguntó sobre productos
+            if any(p in respuesta_lower for p in ['qué producto', 'que producto', 'de qué son', 'de que son',
+                                                    'qué venden', 'que venden', 'qué manejan', 'que manejan']):
+                return "Manejamos productos de ferretería de la marca NIOVAL. Tenemos herramientas, grifería, candados, y más. ¿Le gustaría recibir el catálogo?"
+
+            # Si cliente dijo que sí o mostró interés
+            if any(p in respuesta_lower for p in ['sí', 'si', 'claro', 'adelante', 'dígame', 'digame']):
+                return "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+
+            # Si cliente preguntó quién habla o de dónde llaman
+            if any(p in respuesta_lower for p in ['quién habla', 'quien habla', 'de dónde', 'de donde',
+                                                   'quién es', 'quien es', 'de parte']):
+                return "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL, productos de ferretería."
+
+            # FIX 305: Fallback genérico
             return "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
     
     def texto_a_voz(self, texto: str, output_path: str = "respuesta.mp3"):
