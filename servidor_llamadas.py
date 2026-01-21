@@ -5683,8 +5683,9 @@ def cache_manager():
 
 import threading
 
-# Buffer circular para logs (últimas 5000 líneas)
-log_buffer = deque(maxlen=5000)
+# Buffer circular para logs (últimas 50000 líneas)
+# FIX 403: Aumentado de 5000 a 50000 para tener logs completos como Railway
+log_buffer = deque(maxlen=50000)
 log_lock = threading.Lock()
 
 # FIX 272.9: Archivo para persistir logs entre deploys
@@ -5743,6 +5744,40 @@ def log_evento(mensaje, tipo="INFO"):
 
     # También imprimir para logs de Railway
     print(log_entry)
+
+
+# FIX 403: Interceptar TODOS los prints para capturarlos en log_buffer
+class LogCapture:
+    """Captura TODOS los outputs de print() y los agrega al buffer de logs"""
+    def __init__(self, original_stdout):
+        self.original_stdout = original_stdout
+        self.buffer = ""
+
+    def write(self, text):
+        # Escribir a stdout original (Railway)
+        self.original_stdout.write(text)
+        self.original_stdout.flush()
+
+        # Capturar en buffer
+        if text and text.strip():  # Solo capturar si no es vacío
+            with log_lock:
+                # Agregar timestamp si no lo tiene
+                if not text.startswith('['):
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    text = f"[{timestamp}] {text.strip()}"
+                else:
+                    text = text.strip()
+
+                log_buffer.append(text)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+# FIX 403: Activar captura de logs
+import sys
+original_stdout = sys.stdout
+sys.stdout = LogCapture(original_stdout)
+print("✅ FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer")
 
 
 # ============================================================================
@@ -6585,12 +6620,12 @@ def logs_api():
     FIX 208/272.8/395: API para obtener logs - ahora soporta HTML y JSON
     """
     try:
-        # FIX 395: Si se filtra por bruce_id, buscar en TODO el buffer (5000 logs)
+        # FIX 395/403: Si se filtra por bruce_id, buscar en TODO el buffer (50000 logs)
         bruce_id = request.args.get('bruce_id', '')
         if bruce_id:
-            lineas = 5000  # Buscar en todo el buffer para obtener logs completos
+            lineas = 50000  # FIX 403: Buscar en todo el buffer para logs completos
         else:
-            lineas = min(int(request.args.get('lineas', 500)), 5000)
+            lineas = min(int(request.args.get('lineas', 500)), 50000)
 
         filtro = request.args.get('filtro', '').lower()
         formato = request.args.get('formato', 'html')  # FIX 272.8: Por defecto HTML
