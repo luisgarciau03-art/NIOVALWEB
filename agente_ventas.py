@@ -337,24 +337,45 @@ class AgenteVentas:
             print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
             return
 
-        # FIX 389/396: Detectar persona nueva después de transferencia
+        # FIX 389/396/399: Detectar persona nueva después de transferencia
         # Si estábamos esperando transferencia Y cliente dice "bueno"/"dígame"/etc. → Persona nueva
         if self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-            saludos_persona_nueva = ['bueno', 'hola', 'sí', 'si', 'dígame', 'digame',
-                                     'mande', 'a ver', 'qué pasó', 'que paso', 'alo', 'aló']
+            # FIX 399: Si cliente hace PREGUNTA DIRECTA, salir de ESPERANDO_TRANSFERENCIA
+            # Caso BRUCE1131: "¿De dónde dice que habla?" = Cliente preguntando, NO transferencia
+            preguntas_directas_salir = [
+                '¿de dónde', '¿de donde', 'de dónde', 'de donde',
+                '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                '¿quién es', '¿quien es', 'quién es', 'quien es',
+                '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
+                '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
+                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
+                '¿qué dice', '¿que dice', 'qué dice', 'que dice'
+            ]
 
-            # Verificar si es un saludo simple (persona nueva contestando)
-            mensaje_stripped = mensaje_lower.strip().strip('?').strip('¿')
-            es_saludo_nuevo = any(mensaje_stripped == s or mensaje_stripped.startswith(s + ' ') for s in saludos_persona_nueva)
+            es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas_salir)
 
-            if es_saludo_nuevo:
-                # FIX 396: Persona nueva detectada - RE-PRESENTARSE INMEDIATAMENTE
-                # NO dejar que GPT maneje, porque malinterpreta "¿Bueno?" como confirmación
+            if es_pregunta_directa:
+                # Salir de ESPERANDO_TRANSFERENCIA - cliente pregunta directamente a Bruce
+                print(f"📊 FIX 399: Cliente hace PREGUNTA DIRECTA - Saliendo de ESPERANDO_TRANSFERENCIA")
+                print(f"   Mensaje: '{mensaje_cliente}' - GPT responderá")
                 self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
-                print(f"📊 FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO")
-                print(f"   Cliente dijo: '{mensaje_cliente}' - Bruce se presenta nuevamente")
-                # Retornar presentación inmediata
-                return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+                # NO retornar aquí - dejar que GPT responda la pregunta
+            else:
+                saludos_persona_nueva = ['bueno', 'hola', 'sí', 'si', 'dígame', 'digame',
+                                         'mande', 'a ver', 'qué pasó', 'que paso', 'alo', 'aló']
+
+                # Verificar si es un saludo simple (persona nueva contestando)
+                mensaje_stripped = mensaje_lower.strip().strip('?').strip('¿')
+                es_saludo_nuevo = any(mensaje_stripped == s or mensaje_stripped.startswith(s + ' ') for s in saludos_persona_nueva)
+
+                if es_saludo_nuevo:
+                    # FIX 396: Persona nueva detectada - RE-PRESENTARSE INMEDIATAMENTE
+                    # NO dejar que GPT maneje, porque malinterpreta "¿Bueno?" como confirmación
+                    self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
+                    print(f"📊 FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO")
+                    print(f"   Cliente dijo: '{mensaje_cliente}' - Bruce se presenta nuevamente")
+                    # Retornar presentación inmediata
+                    return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
 
         # FIX 394/395: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
         # Cliente pregunta "¿En qué le apoyo?" = ES EL ENCARGADO y está disponible
@@ -386,11 +407,28 @@ class AgenteVentas:
         patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
                           'un momento', 'un segundito', 'ahorita', 'tantito']
         if any(p in mensaje_lower for p in patrones_espera):
-            # Verificar que NO sea negación ("no está ahorita")
-            if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']):
+            # FIX 399: Verificar que NO sea pregunta directa a Bruce
+            # "¿De dónde dice que habla, permítame?" = PREGUNTA, no transferencia
+            preguntas_directas = [
+                '¿de dónde', '¿de donde', 'de dónde', 'de donde',
+                '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                '¿quién es', '¿quien es', 'quién es', 'quien es',
+                '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
+                '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
+                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
+                '¿qué dice', '¿que dice', 'qué dice', 'que dice'
+            ]
+
+            es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
+
+            # Verificar que NO sea negación ("no está ahorita") Y NO sea pregunta directa
+            if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']) and not es_pregunta_directa:
                 self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
-                print(f"📊 FIX 339: Estado → ESPERANDO_TRANSFERENCIA")
+                print(f"📊 FIX 339/399: Estado → ESPERANDO_TRANSFERENCIA")
                 return
+            elif es_pregunta_directa:
+                print(f"📊 FIX 399: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
+                print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder")
 
         # Detectar si encargado no está
         patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
