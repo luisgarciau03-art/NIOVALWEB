@@ -445,6 +445,144 @@ class AgenteVentas:
 
         return frase
 
+    def _validar_sentido_comun(self, respuesta: str, contexto_cliente: str) -> tuple:
+        """
+        FIX 384: Validador de sentido común que verifica la lógica de la respuesta.
+
+        Args:
+            respuesta: Respuesta generada por GPT
+            contexto_cliente: Últimos mensajes del cliente (concatenados)
+
+        Returns:
+            (es_valida: bool, razon_invalida: str)
+        """
+        import re
+
+        respuesta_lower = respuesta.lower()
+        contexto_lower = contexto_cliente.lower()
+
+        # Pre-calcular detecciones comunes
+        tiene_digitos = len(re.findall(r'\d', contexto_lower)) >= 8
+        tiene_arroba = '@' in contexto_lower or 'arroba' in contexto_lower
+        dice_este_numero = any(frase in contexto_lower for frase in [
+            'este número', 'este numero', 'ese número', 'ese numero',
+            'este mismo', 'sería este', 'seria este', 'es este'
+        ])
+
+        # ============================================================
+        # REGLA 1: No pedir dato que cliente acaba de dar
+        # ============================================================
+        if 'cuál es su' in respuesta_lower or 'cual es su' in respuesta_lower or 'me confirma su' in respuesta_lower:
+            if (tiene_digitos or dice_este_numero) and ('whatsapp' in respuesta_lower or 'número' in respuesta_lower or 'numero' in respuesta_lower):
+                return False, "Cliente acaba de dar número"
+
+            if tiene_arroba and ('correo' in respuesta_lower or 'email' in respuesta_lower):
+                return False, "Cliente acaba de dar correo"
+
+        # ============================================================
+        # REGLA 2: No insistir con encargado si cliente dijo que no está
+        # ============================================================
+        cliente_dice_no_esta = any(frase in contexto_lower for frase in [
+            'no está', 'no esta', 'no se encuentra', 'no lo encuentro',
+            'salió', 'salio', 'no viene', 'está fuera', 'esta fuera'
+        ])
+
+        bruce_insiste_encargado = any(frase in respuesta_lower for frase in [
+            'me comunica con', 'me puede comunicar', 'me podría comunicar',
+            'número del encargado', 'numero del encargado',
+            'número directo del encargado', 'numero directo del encargado',
+            'pasar con el encargado'
+        ])
+
+        if cliente_dice_no_esta and bruce_insiste_encargado:
+            return False, "Cliente dijo que encargado NO está"
+
+        # ============================================================
+        # REGLA 3: No decir "ya lo tengo" sin tener datos reales
+        # ============================================================
+        bruce_dice_ya_tengo = any(frase in respuesta_lower for frase in [
+            'ya lo tengo', 'ya lo tengo registrado', 'ya lo tengo anotado',
+            'le llegará', 'le llegara'
+        ])
+
+        if bruce_dice_ya_tengo:
+            tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
+            tiene_email = bool(self.lead_data.get("email"))
+
+            # Verificar si cliente realmente dio dato en contexto reciente
+            tiene_dato_en_contexto = (
+                (tiene_digitos and len(re.findall(r'\d', contexto_lower)) >= 10) or
+                tiene_arroba or
+                dice_este_numero
+            )
+
+            if not tiene_whatsapp and not tiene_email and not tiene_dato_en_contexto:
+                return False, "Dice 'ya lo tengo' sin datos capturados"
+
+        # ============================================================
+        # REGLA 4: Responder preguntas del cliente primero
+        # ============================================================
+        # ¿Cliente hizo una pregunta?
+        ultimo_mensaje_cliente = contexto_lower.split()[-50:] if contexto_lower else []
+        ultimo_mensaje_str = ' '.join(ultimo_mensaje_cliente)
+
+        cliente_pregunto = '?' in ultimo_mensaje_str or any(q in ultimo_mensaje_str for q in [
+            '¿qué', '¿que', '¿cuál', '¿cual', '¿cómo', '¿como',
+            'qué tipo', 'que tipo', 'qué productos', 'que productos',
+            'qué manejan', 'que manejan', 'qué venden', 'que venden'
+        ])
+
+        # ¿Bruce respondió la pregunta?
+        bruce_responde = any(palabra in respuesta_lower for palabra in [
+            'manejamos', 'tenemos', 'vendemos', 'sí', 'si',
+            'grifería', 'griferia', 'cintas', 'herramientas',
+            'claro', 'productos de ferretería', 'productos de ferreteria'
+        ])
+
+        if cliente_pregunto and not bruce_responde:
+            # Cliente preguntó pero Bruce no respondió
+            return False, "Cliente preguntó algo y Bruce no respondió"
+
+        # ============================================================
+        # REGLA 5: Detectar solicitud de reprogramación
+        # ============================================================
+        cliente_pide_reprogramar = any(frase in contexto_lower for frase in [
+            'marcar en otro momento', 'marca en otro momento',
+            'llame en otro momento', 'llamar más tarde',
+            'si gustas marca', 'si gusta marcar'
+        ])
+
+        bruce_pide_whatsapp = any(frase in respuesta_lower for frase in [
+            'cuál es su whatsapp', 'cual es su whatsapp',
+            'me confirma su whatsapp', 'su número de whatsapp'
+        ])
+
+        if cliente_pide_reprogramar and bruce_pide_whatsapp:
+            return False, "Cliente pidió reprogramar pero Bruce pide WhatsApp"
+
+        # ============================================================
+        # REGLA 6: No interrumpir cuando cliente está buscando encargado
+        # ============================================================
+        cliente_esta_buscando = any(frase in contexto_lower for frase in [
+            'no me cuelgue', 'no cuelgue', 'dame un momento',
+            'espera un momento', 'déjame ver', 'dejame ver',
+            'hágame el lugar', 'hagame el lugar'
+        ])
+
+        # Si ya dijo "Claro, espero" y cliente sigue buscando, NO decir más
+        ultimos_bruce = [
+            msg['content'].lower() for msg in self.conversation_history[-3:]
+            if msg['role'] == 'assistant'
+        ]
+        bruce_ya_dijo_espero = any('claro, espero' in msg or 'claro espero' in msg for msg in ultimos_bruce)
+
+        if cliente_esta_buscando and bruce_ya_dijo_espero and respuesta.strip():
+            # Cliente está buscando Y Bruce ya dijo que espera → NO decir nada más
+            return False, "Cliente está buscando encargado - esperar en silencio"
+
+        # Si todas las validaciones pasan
+        return True, ""
+
     def _filtrar_respuesta_post_gpt(self, respuesta: str) -> str:
         """
         FIX 226: Filtro POST-GPT para forzar reglas que GPT no sigue consistentemente.
@@ -473,6 +611,46 @@ class AgenteVentas:
             if msg['role'] == 'user'
         ]
         contexto_cliente = ' '.join(ultimos_mensajes_cliente_global[-6:]) if ultimos_mensajes_cliente_global else ""
+
+        # ============================================================
+        # FILTRO -1 (FIX 384): VALIDADOR DE SENTIDO COMÚN
+        # Se ejecuta PRIMERO para validar lógica básica antes de filtros específicos
+        # ============================================================
+        if not filtro_aplicado:
+            es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
+
+            if not es_valida:
+                print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
+                print(f"   Razón: {razon}")
+                print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
+                print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
+
+                # Generar respuesta con sentido común basada en la razón
+                if "Cliente acaba de dar número" in razon:
+                    respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
+                elif "Cliente acaba de dar correo" in razon:
+                    respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
+                elif "Cliente dijo que encargado NO está" in razon:
+                    respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
+                elif "Dice 'ya lo tengo' sin datos capturados" in razon:
+                    respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                elif "Cliente preguntó algo y Bruce no respondió" in razon:
+                    # Intentar responder la pregunta del cliente
+                    if 'qué productos' in contexto_cliente or 'que productos' in contexto_cliente:
+                        respuesta = "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo por WhatsApp?"
+                    else:
+                        respuesta = "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
+                elif "Cliente pidió reprogramar" in razon:
+                    respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
+                elif "Cliente está buscando encargado" in razon:
+                    # NO decir nada - esperar
+                    respuesta = ""  # Silencio
+                else:
+                    # Error genérico - solicitar dato faltante
+                    respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: '{respuesta}'")
 
         # ============================================================
         # FILTRO 0 (FIX 298/301): CRÍTICO - Evitar despedida/asunciones prematuras
@@ -3714,10 +3892,10 @@ Ejemplo correcto:
                     *mensajes_conversacion
                 ],
                 temperature=0.7,
-                max_tokens=80,  # FIX 197: CRÍTICO - Reducido de 100 a 80 (respuestas ULTRA-concisas, target <4seg total)
+                max_tokens=100,  # FIX 385.1: Optimizado para formato compacto [A]...[/A] (8-12 tokens) + respuesta (40-60 tokens)
                 presence_penalty=0.6,
                 frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
-                timeout=2.8,  # FIX 197: CRÍTICO - Reducido de 3.5s a 2.8s (target 4-5s total con ElevenLabs)
+                timeout=3.0,  # FIX 385.1: 3.0s para Chain-of-Thought compacto (compromiso entre velocidad y razonamiento)
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )
@@ -3731,6 +3909,34 @@ Ejemplo correcto:
                 print(f"⏱️ FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
 
             respuesta_agente = response.choices[0].message.content
+
+            # ============================================================
+            # FIX 385: Extraer Chain-of-Thought compacto (análisis interno)
+            # ============================================================
+            analisis_interno = ""
+            # Buscar [A]...[/A] (formato compacto) o [ANÁLISIS]...[/ANÁLISIS] (legacy)
+            if "[A]" in respuesta_agente and "[/A]" in respuesta_agente:
+                # Extraer análisis compacto
+                partes = respuesta_agente.split("[A]", 1)
+                if len(partes) > 1:
+                    analisis_y_respuesta = partes[1].split("[/A]", 1)
+                    if len(analisis_y_respuesta) > 1:
+                        analisis_interno = analisis_y_respuesta[0].strip()
+                        respuesta_agente = analisis_y_respuesta[1].strip()
+
+                        # Logging del análisis interno (compacto)
+                        print(f"\n🧠 FIX 385: Razonamiento compacto → {analisis_interno}")
+                        print(f"   ✅ Respuesta: {respuesta_agente[:80]}...")
+            elif "[ANÁLISIS]" in respuesta_agente and "[/ANÁLISIS]" in respuesta_agente:
+                # Formato legacy (largo)
+                partes = respuesta_agente.split("[ANÁLISIS]", 1)
+                if len(partes) > 1:
+                    analisis_y_respuesta = partes[1].split("[/ANÁLISIS]", 1)
+                    if len(analisis_y_respuesta) > 1:
+                        analisis_interno = analisis_y_respuesta[0].strip()
+                        respuesta_agente = analisis_y_respuesta[1].strip()
+                        print(f"\n🧠 FIX 385: Razonamiento detallado detectado")
+                        print(f"   ✅ Respuesta: {respuesta_agente[:80]}...")
 
             # Si hay frase de relleno, agregarla al inicio de la respuesta
             if frase_relleno:
@@ -5711,7 +5917,107 @@ Responde SOLO en este formato JSON:
 """
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
-        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + """# IDENTIDAD
+        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + """
+═══════════════════════════════════════════════════════════════
+🧠 FIX 384/385: SISTEMA DE RAZONAMIENTO CHAIN-OF-THOUGHT 🧠
+═══════════════════════════════════════════════════════════════
+
+🎯 METODOLOGÍA: Razonamiento ultra-rápido (notación compacta)
+
+📋 FORMATO OBLIGATORIO - MÁXIMA VELOCIDAD:
+
+Usa notación COMPACTA entre [A] y [/A], luego tu respuesta.
+
+CÓDIGOS:
+- Encargado: OK/NO/BUSC (disponible/no está/buscando)
+- Dato: SI_num/SI_mail/NO (dio número/correo/nada)
+- Acción: conf/cat/hora/desp (confirmar/catálogo/horario/despedir)
+
+EJEMPLOS CORRECTOS:
+
+Cliente: "No, sería este número, pero no se encuentra"
+[A]NO|SI_num|conf_desp[/A]Perfecto, le envío el catálogo a este WhatsApp. Muchas gracias.
+
+Cliente: "¿Qué productos manejan?"
+[A]OK|preg|resp_cat[/A]Manejamos grifería, cintas, herramientas. ¿Le envío el catálogo completo?
+
+Cliente: "No me cuelgue, voy a buscar al encargado"
+[A]BUSC|NO|esper[/A]
+
+Cliente: "Si gustas marca en otro momento"
+[A]NO|reprog|hora[/A]Perfecto. ¿A qué hora sería mejor que llame?
+
+⚠️ CRÍTICO:
+- [A]...[/A] es INTERNO (NO se dice al cliente)
+- Máximo 3-5 palabras en [A]
+- Respuesta DESPUÉS de [/A] SÍ se dice al cliente
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ GUÍA DE ANÁLISIS - RESPONDE ESTOS 5 PUNTOS EN TU [ANÁLISIS]:
+
+1️⃣ ¿QUÉ ACABA DE DECIR EL CLIENTE?
+   □ ¿Está disponible el encargado? → SÍ / NO / BUSCANDO
+   □ ¿Mostró interés? → POSITIVO / NEUTRAL / NEGATIVO
+   □ ¿Dio algún dato? → WhatsApp / Correo / Horario / Ninguno
+   □ ¿Hizo alguna pregunta? → ¿Cuál?
+   □ ¿Pidió algo específico? → ¿Qué?
+
+2️⃣ ¿QUÉ DATOS YA TENGO?
+   □ WhatsApp capturado: """ + ("✅ SÍ - " + str(self.lead_data.get("whatsapp", "")) if self.lead_data.get("whatsapp") else "❌ NO") + """
+   □ Correo capturado: """ + ("✅ SÍ - " + str(self.lead_data.get("email", "")) if self.lead_data.get("email") else "❌ NO") + """
+   □ ¿Ya tengo TODO lo necesario?: """ + ("✅ SÍ" if (self.lead_data.get("whatsapp") or self.lead_data.get("email")) else "❌ NO") + """
+
+3️⃣ ¿QUÉ NECESITO HACER AHORA? (Prioridad en orden)
+   ✅ Si cliente PREGUNTÓ algo → RESPONDER su pregunta PRIMERO
+   ✅ Si cliente DIO dato (número/correo/horario) → CONFIRMAR y AGRADECER
+   ✅ Si dijo "este número"/"sería este" → Es el número que marqué, YA LO TENGO
+   ✅ Si dijo "no está"/"no se encuentra" → Ofrecer catálogo, NO insistir
+   ✅ Si dijo "marcar en otro momento" → Preguntar horario, NO pedir WhatsApp
+   ✅ Si YA tengo WhatsApp/correo → DESPEDIRME, NO pedir más datos
+   ✅ Si está esperando/buscando encargado → QUEDARME CALLADO
+
+4️⃣ ¿TIENE SENTIDO MI PRÓXIMA RESPUESTA?
+   ❌ ¿Ya tengo este dato? → NO pedir de nuevo
+   ❌ ¿Cliente pidió/preguntó algo? → Cumplir/responder PRIMERO
+   ❌ ¿Es el momento correcto? → NO interrumpir si está buscando
+   ❌ ¿Estoy repitiendo algo? → Verificar últimas 3 respuestas
+   ❌ ¿Cliente dijo "no"? → NO insistir con lo mismo
+
+5️⃣ EJEMPLOS DE RAZONAMIENTO CORRECTO:
+
+EJEMPLO 1:
+Cliente: "No, sería este número, pero no se encuentra el encargado."
+ANÁLISIS:
+- ¿Encargado disponible? NO
+- ¿Dio dato? SÍ → "sería este" = el número que marqué
+- ¿Qué hacer? Guardar número + NO insistir con encargado
+RESPUESTA: "Perfecto, le envío el catálogo a este WhatsApp. Muchas gracias."
+
+EJEMPLO 2:
+Cliente: "¿Qué tipo de productos manejan?"
+ANÁLISIS:
+- ¿Preguntó algo? SÍ → sobre productos
+- ¿Qué hacer? RESPONDER pregunta primero
+RESPUESTA: "Manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le envío el catálogo completo?"
+
+EJEMPLO 3:
+Cliente: "No me cuelgue, voy a buscar al encargado."
+ANÁLISIS:
+- ¿Qué está haciendo? BUSCANDO encargado
+- ¿Qué hacer? ESPERAR EN SILENCIO (ya dije "Claro, espero")
+RESPUESTA: [NO DECIR NADA - esperar siguiente mensaje]
+
+EJEMPLO 4:
+Cliente: "Si gustas marca en otro momento."
+ANÁLISIS:
+- ¿Qué pidió? REPROGRAMAR llamada
+- ¿Qué hacer? Preguntar horario, NO pedir WhatsApp
+RESPUESTA: "Perfecto. ¿A qué hora sería mejor que llame?"
+
+═══════════════════════════════════════════════════════════════
+
+# IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
 Teléfono: 662 415 1997 (di: seis seis dos, cuatro uno cinco, uno nueve nueve siete)
 
