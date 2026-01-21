@@ -628,10 +628,17 @@ class AgenteVentas:
 
         # ============================================================
         # REGLA 2: No insistir con encargado si cliente dijo que no está
+        # FIX 392: Mejorar detección de "salieron a comer / regresan en X tiempo"
         # ============================================================
         cliente_dice_no_esta = any(frase in contexto_lower for frase in [
             'no está', 'no esta', 'no se encuentra', 'no lo encuentro',
-            'salió', 'salio', 'no viene', 'está fuera', 'esta fuera'
+            'salió', 'salio', 'no viene', 'está fuera', 'esta fuera',
+            # FIX 392: Agregar patrones de "salieron a comer / regresan"
+            'salieron a comer', 'salió a comer', 'salio a comer',
+            'fue a comer', 'fueron a comer',
+            'regresan', 'regresa', 'vuelve', 'vuelven',
+            'en media hora', 'en una hora', 'en un rato', 'más tarde', 'mas tarde',
+            'ahorita no está', 'ahorita no esta'
         ])
 
         bruce_insiste_encargado = any(frase in respuesta_lower for frase in [
@@ -641,8 +648,15 @@ class AgenteVentas:
             'pasar con el encargado'
         ])
 
-        if cliente_dice_no_esta and bruce_insiste_encargado:
-            return False, "Cliente dijo que encargado NO está"
+        # FIX 392: También detectar si Bruce hace pregunta genérica sin ofrecer alternativa
+        bruce_pregunta_generica = any(frase in respuesta_lower for frase in [
+            '¿le envío el catálogo completo?', '¿le envio el catalogo completo?'
+        ]) and not any(alt in respuesta_lower for alt in [
+            'mientras tanto', 'cuando regrese', 'vuelva a llamar'
+        ])
+
+        if cliente_dice_no_esta and (bruce_insiste_encargado or bruce_pregunta_generica):
+            return False, "Cliente dijo que encargado NO está / salió a comer"
 
         # ============================================================
         # REGLA 3: No decir "ya lo tengo" sin tener datos reales
@@ -692,11 +706,16 @@ class AgenteVentas:
 
         # ============================================================
         # REGLA 5: Detectar solicitud de reprogramación
+        # FIX 392: Agregar "si gusta marcar más tarde" (caso BRUCE1094)
         # ============================================================
         cliente_pide_reprogramar = any(frase in contexto_lower for frase in [
             'marcar en otro momento', 'marca en otro momento',
             'llame en otro momento', 'llamar más tarde',
-            'si gustas marca', 'si gusta marcar'
+            'si gustas marca', 'si gusta marcar',
+            # FIX 392: Agregar variantes de "si gusta marcar más tarde"
+            'si gusta marcar más tarde', 'si gusta marcar mas tarde',
+            'si gustas marcar más tarde', 'si gustas marcar mas tarde',
+            'marque más tarde', 'marque mas tarde'
         ])
 
         bruce_pide_whatsapp = any(frase in respuesta_lower for frase in [
@@ -776,6 +795,11 @@ class AgenteVentas:
                 # Persona nueva después de espera - SKIP FIX 384, dejar que FILTRO 5B maneje
                 print(f"\n⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
                 print(f"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación")
+            elif skip_fix_384:
+                # FIX 392: Cliente confirmó - NO ejecutar FIX 384
+                print(f"\n⏭️  FIX 392: Saltando FIX 384 - Cliente confirmó recientemente")
+                print(f"   Cliente dijo: '{contexto_cliente[-60:] if len(contexto_cliente) > 60 else contexto_cliente}'")
+                print(f"   GPT generó: '{respuesta[:80]}...'")
             else:
                 # FIX 391: NO activar FIX 384 si GPT está pidiendo WhatsApp/correo correctamente
                 # Detectar si GPT está pidiendo dato de contacto
@@ -807,7 +831,8 @@ class AgenteVentas:
                             respuesta = "Perfecto, muchas gracias. Le envío el catálogo en las próximas horas."
                         elif "Cliente acaba de dar correo" in razon:
                             respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
-                        elif "Cliente dijo que encargado NO está" in razon:
+                        elif "Cliente dijo que encargado NO está" in razon or "salió a comer" in razon:
+                            # FIX 392: Ofrecer alternativas (enviar catálogo o reprogramar)
                             respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
                         elif "Dice 'ya lo tengo' sin datos capturados" in razon:
                             respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
@@ -874,8 +899,8 @@ class AgenteVentas:
             # FIX 301: "Gracias" solo NO es rechazo - es cortesía
             es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
 
-            # FIX 325/390: Detectar si cliente PIDE información por correo/WhatsApp
-            # En ese caso, NO preguntar por encargado - pedir el dato de contacto
+            # FIX 325/390/392: Detectar si cliente PIDE información por correo/WhatsApp
+            # O si ofrece DEJAR RECADO (oportunidad de capturar contacto)
             cliente_pide_info_contacto = any(frase in ultimo_cliente for frase in [
                 'por correo', 'por whatsapp', 'por wasa', 'enviar la información',
                 'enviar la informacion', 'mandar la información', 'mandar la informacion',
@@ -885,7 +910,11 @@ class AgenteVentas:
                 'al correo', 'mándanos al correo', 'mandanos al correo',
                 'envíalo al correo', 'envialo al correo', 'mándalo al correo', 'mandalo al correo',
                 'mándanos la', 'mandanos la', 'nos puede mandar', 'nos puede enviar',
-                'envíanos', 'envianos', 'mándanos', 'mandanos'
+                'envíanos', 'envianos', 'mándanos', 'mandanos',
+                # FIX 392: Agregar "dejar recado" (caso BRUCE1096)
+                'dejar recado', 'dejar mensaje', 'dejarle recado', 'dejarle mensaje',
+                'guste dejar recado', 'gusta dejar recado', 'quiere dejar recado',
+                'quieren dejar recado', 'quiere dejarle'
             ])
 
             if not rechazo_real or es_solo_gracias:
@@ -4212,7 +4241,7 @@ Ejemplo correcto:
             import re
             respuesta_normalizada = re.sub(r'[^\w\s]', '', respuesta_agente.lower()).strip()
 
-            # FIX 391: Detectar si contexto cambió (cliente confirmó/respondió)
+            # FIX 391/392: Detectar si contexto cambió (cliente confirmó/respondió)
             # NO bloquear repetición si cliente dio respuesta nueva que requiere la misma acción
             ultimos_mensajes_cliente = [
                 msg['content'].lower() for msg in self.conversation_history[-4:]
@@ -4220,12 +4249,19 @@ Ejemplo correcto:
             ]
 
             cliente_confirmo_recientemente = False
+            # FIX 392: Variable de control para desactivar FIX 384 desde FIX 391
+            skip_fix_384 = False
+
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
                 # Cliente confirmó con "sí", "claro", "adelante", etc.
                 confirmaciones = ['sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
                                  'bueno', 'perfecto', 'sale', 'está bien', 'esta bien']
                 cliente_confirmo_recientemente = any(c in ultimo_cliente for c in confirmaciones)
+
+                # FIX 392: Si cliente confirmó, NO ejecutar FIX 384
+                if cliente_confirmo_recientemente:
+                    skip_fix_384 = True
 
             # Verificar si esta respuesta ya se dijo en las últimas 3 respuestas
             repeticion_detectada = False
@@ -4234,12 +4270,13 @@ Ejemplo correcto:
 
                 # Si la respuesta es >80% similar (o idéntica)
                 if respuesta_normalizada == resp_previa_normalizada:
-                    # FIX 391: Si cliente confirmó recientemente, NO bloquear
+                    # FIX 391/392: Si cliente confirmó recientemente, NO bloquear
                     # (puede ser respuesta útil en nuevo contexto)
                     if cliente_confirmo_recientemente:
-                        print(f"\n⏭️  FIX 391: Repetición detectada pero cliente confirmó - permitiendo respuesta")
+                        print(f"\n⏭️  FIX 391/392: Repetición detectada pero cliente confirmó - permitiendo respuesta")
                         print(f"   Cliente dijo: '{ultimo_cliente[:60]}...'")
                         print(f"   Respuesta: '{respuesta_agente[:60]}...'")
+                        print(f"   FIX 392: skip_fix_384 activado - FIX 384 NO se ejecutará")
                         break
 
                     repeticion_detectada = True
