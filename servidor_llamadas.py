@@ -1608,10 +1608,10 @@ def procesar_respuesta():
     transcripcion_deepgram = None
     transcripcion_whisper = None
 
-    # FIX 212/217/218/219: Verificar si hay transcripción de Deepgram disponible
-    # FIX 219: Reducir wait a 300ms - si Deepgram no responde rápido, usar Whisper
+    # FIX 212/217/218/219/401: Verificar si hay transcripción de Deepgram disponible
+    # FIX 401: Deepgram es el sistema PRINCIPAL - esperar suficiente tiempo
     import time
-    max_wait_deepgram = 2.0  # FIX 232: Aumentado de 0.3s a 2s - Deepgram tarda ~4s, mejor esperar que usar Whisper con basura
+    max_wait_deepgram = 5.0  # FIX 401: Aumentado a 5s - Deepgram tarda ~4s, NO usar Whisper
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
 
@@ -1683,10 +1683,12 @@ def procesar_respuesta():
             tiempo_esperado += wait_interval
 
         if not usar_deepgram:
-            print(f"⚠️ FIX 217: Deepgram no respondió en {max_wait_deepgram}s - usando Whisper")
+            print(f"⚠️ FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
+            print(f"   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
 
-    # FIX 60: Fallback a WHISPER API si Deepgram no está disponible
-    if not usar_deepgram and recording_url and OPENAI_API_KEY:
+    # FIX 401: WHISPER DESHABILITADO - Deepgram es el único sistema de transcripción
+    # Whisper genera demasiadas transcripciones basura ("subtítulos de amara.org")
+    if False and not usar_deepgram and recording_url and OPENAI_API_KEY:
         print(f"\n🎯 FIX 60: RecordingUrl disponible - usando WHISPER API")
 
         # FIX 198: Detectar contexto para mejorar transcripción de Whisper
