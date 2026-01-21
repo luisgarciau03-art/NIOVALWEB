@@ -905,9 +905,33 @@ class AgenteVentas:
         contexto_cliente = ' '.join(ultimos_mensajes_cliente_global[-6:]) if ultimos_mensajes_cliente_global else ""
 
         # ============================================================
-        # FIX 398: REGLAS CRÍTICAS - SIEMPRE ACTIVAS (NO SKIPPEABLE)
+        # FIX 398/400: REGLAS CRÍTICAS - SIEMPRE ACTIVAS (NO SKIPPEABLE)
         # Estas reglas se ejecutan ANTES de cualquier skip
         # ============================================================
+
+        # REGLA CRÍTICA 2: Si cliente pregunta "¿De dónde habla?", responder ANTES de ofrecer catálogo
+        # FIX 400: Caso BRUCE1136 - Cliente preguntó "¿De dónde me habla?" y Bruce no respondió
+        if not filtro_aplicado:
+            cliente_pregunta_de_donde = any(patron in contexto_cliente.lower() for patron in [
+                '¿de dónde', '¿de donde', 'de dónde', 'de donde',
+                '¿de qué empresa', '¿de que empresa', 'de qué empresa', 'de que empresa',
+                '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
+                '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
+                '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir'
+            ])
+
+            # Verificar si Bruce NO mencionó la empresa en su respuesta
+            bruce_menciona_nioval = any(palabra in respuesta.lower() for palabra in [
+                'nioval', 'marca nioval', 'la marca', 'me comunico de'
+            ])
+
+            if cliente_pregunta_de_donde and not bruce_menciona_nioval:
+                print(f"\n🚫 FIX 400: REGLA CRÍTICA 2 - Cliente preguntó de dónde habla, Bruce NO respondió")
+                print(f"   Cliente dijo: '{contexto_cliente[:100]}'")
+                print(f"   Bruce iba a decir: '{respuesta[:80]}'")
+                respuesta = "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+                filtro_aplicado = True
 
         # REGLA CRÍTICA 1: NUNCA decir "ya lo tengo" sin datos reales
         if not filtro_aplicado:
@@ -1017,9 +1041,13 @@ class AgenteVentas:
                         elif "Cliente acaba de dar correo" in razon:
                             respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
                         elif "Cliente dijo que encargado NO está" in razon or "salió a comer" in razon:
-                            # FIX 392/393: Ofrecer alternativas (enviar catálogo o reprogramar)
+                            # FIX 392/393/400: Ofrecer alternativas (enviar catálogo o reprogramar)
                             # FIX 393: NO usar "Perfecto" cuando cliente rechaza
-                            respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
+                            # FIX 400: Si cliente preguntó "¿De dónde habla?" + "no se encuentra", responder ambas
+                            if any(patron in contexto_cliente.lower() for patron in ['¿de dónde', 'de dónde', '¿de donde', 'de donde']):
+                                respuesta = "Me comunico de la marca NIOVAL para ofrecer información de productos de ferretería. Entiendo que el encargado no se encuentra. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise cuando regrese?"
+                            else:
+                                respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
                         elif "Dice 'ya lo tengo' sin datos capturados" in razon:
                             respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
                         elif "Cliente preguntó algo y Bruce no respondió" in razon:
