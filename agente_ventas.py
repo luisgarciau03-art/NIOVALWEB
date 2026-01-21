@@ -337,7 +337,7 @@ class AgenteVentas:
             print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
             return
 
-        # FIX 389: Detectar persona nueva después de transferencia
+        # FIX 389/396: Detectar persona nueva después de transferencia
         # Si estábamos esperando transferencia Y cliente dice "bueno"/"dígame"/etc. → Persona nueva
         if self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
             saludos_persona_nueva = ['bueno', 'hola', 'sí', 'si', 'dígame', 'digame',
@@ -348,10 +348,13 @@ class AgenteVentas:
             es_saludo_nuevo = any(mensaje_stripped == s or mensaje_stripped.startswith(s + ' ') for s in saludos_persona_nueva)
 
             if es_saludo_nuevo:
-                # Persona nueva detectada - cambiar a BUSCANDO_ENCARGADO para re-presentarse
+                # FIX 396: Persona nueva detectada - RE-PRESENTARSE INMEDIATAMENTE
+                # NO dejar que GPT maneje, porque malinterpreta "¿Bueno?" como confirmación
                 self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
-                print(f"📊 FIX 389: Persona nueva después de transferencia - Estado → BUSCANDO_ENCARGADO")
-                return
+                print(f"📊 FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO")
+                print(f"   Cliente dijo: '{mensaje_cliente}' - Bruce se presenta nuevamente")
+                # Retornar presentación inmediata
+                return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
 
         # FIX 394/395: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
         # Cliente pregunta "¿En qué le apoyo?" = ES EL ENCARGADO y está disponible
