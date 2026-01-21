@@ -629,6 +629,7 @@ class AgenteVentas:
         # ============================================================
         # REGLA 2: No insistir con encargado si cliente dijo que no está
         # FIX 392: Mejorar detección de "salieron a comer / regresan en X tiempo"
+        # FIX 393: Mejorar detección de "No, no se encuentra" y variantes
         # ============================================================
         cliente_dice_no_esta = any(frase in contexto_lower for frase in [
             'no está', 'no esta', 'no se encuentra', 'no lo encuentro',
@@ -638,14 +639,20 @@ class AgenteVentas:
             'fue a comer', 'fueron a comer',
             'regresan', 'regresa', 'vuelve', 'vuelven',
             'en media hora', 'en una hora', 'en un rato', 'más tarde', 'mas tarde',
-            'ahorita no está', 'ahorita no esta'
+            'ahorita no está', 'ahorita no esta',
+            # FIX 393: Agregar variantes de rechazo directo (caso BRUCE1099)
+            'no, no se encuentra', 'no, no está', 'no, no esta',
+            'no se encuentra, no', 'no, gracias', 'no gracias'
         ])
 
         bruce_insiste_encargado = any(frase in respuesta_lower for frase in [
             'me comunica con', 'me puede comunicar', 'me podría comunicar',
             'número del encargado', 'numero del encargado',
             'número directo del encargado', 'numero directo del encargado',
-            'pasar con el encargado'
+            'pasar con el encargado',
+            # FIX 393: Detectar si Bruce PREGUNTA por el encargado (caso BRUCE1099)
+            '¿se encontrará el encargado', '¿se encontrara el encargado',
+            'se encontrará el encargado', 'se encontrara el encargado'
         ])
 
         # FIX 392: También detectar si Bruce hace pregunta genérica sin ofrecer alternativa
@@ -749,7 +756,7 @@ class AgenteVentas:
         # Si todas las validaciones pasan
         return True, ""
 
-    def _filtrar_respuesta_post_gpt(self, respuesta: str) -> str:
+    def _filtrar_respuesta_post_gpt(self, respuesta: str, skip_fix_384: bool = False) -> str:
         """
         FIX 226: Filtro POST-GPT para forzar reglas que GPT no sigue consistentemente.
 
@@ -760,6 +767,7 @@ class AgenteVentas:
 
         Args:
             respuesta: Respuesta generada por GPT
+            skip_fix_384: Si True, NO ejecutar FIX 384 (usado por FIX 391/392)
 
         Returns:
             Respuesta filtrada/corregida
@@ -832,7 +840,8 @@ class AgenteVentas:
                         elif "Cliente acaba de dar correo" in razon:
                             respuesta = "Perfecto, muchas gracias. Le envío el catálogo por correo."
                         elif "Cliente dijo que encargado NO está" in razon or "salió a comer" in razon:
-                            # FIX 392: Ofrecer alternativas (enviar catálogo o reprogramar)
+                            # FIX 392/393: Ofrecer alternativas (enviar catálogo o reprogramar)
+                            # FIX 393: NO usar "Perfecto" cuando cliente rechaza
                             respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
                         elif "Dice 'ya lo tengo' sin datos capturados" in razon:
                             respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
@@ -4224,9 +4233,32 @@ Ejemplo correcto:
                 respuesta_agente = f"{frase_relleno} {respuesta_agente}"
 
             # ============================================================
+            # FIX 391/392: DETECTAR CONFIRMACIÓN DEL CLIENTE PRIMERO
+            # ============================================================
+            # FIX 392: Variable de control para desactivar FIX 384 desde FIX 391
+            skip_fix_384 = False
+
+            ultimos_mensajes_cliente_pre = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente_pre:
+                ultimo_cliente_pre = ultimos_mensajes_cliente_pre[-1]
+                # Cliente confirmó con "sí", "claro", "adelante", etc.
+                confirmaciones = ['sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
+                                 'bueno', 'perfecto', 'sale', 'está bien', 'esta bien']
+                cliente_confirmo_recientemente = any(c in ultimo_cliente_pre for c in confirmaciones)
+
+                # FIX 392: Si cliente confirmó, NO ejecutar FIX 384
+                if cliente_confirmo_recientemente:
+                    skip_fix_384 = True
+                    print(f"\n⏭️  FIX 392: Cliente confirmó - skip_fix_384 = True")
+
+            # ============================================================
             # FIX 226: FILTRO POST-GPT - Forzar reglas que GPT no sigue
             # ============================================================
-            respuesta_agente = self._filtrar_respuesta_post_gpt(respuesta_agente)
+            respuesta_agente = self._filtrar_respuesta_post_gpt(respuesta_agente, skip_fix_384)
 
             # ============================================================
             # FIX 204: DETECTAR Y PREVENIR REPETICIONES IDÉNTICAS
@@ -4249,8 +4281,6 @@ Ejemplo correcto:
             ]
 
             cliente_confirmo_recientemente = False
-            # FIX 392: Variable de control para desactivar FIX 384 desde FIX 391
-            skip_fix_384 = False
 
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
@@ -4258,10 +4288,6 @@ Ejemplo correcto:
                 confirmaciones = ['sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
                                  'bueno', 'perfecto', 'sale', 'está bien', 'esta bien']
                 cliente_confirmo_recientemente = any(c in ultimo_cliente for c in confirmaciones)
-
-                # FIX 392: Si cliente confirmó, NO ejecutar FIX 384
-                if cliente_confirmo_recientemente:
-                    skip_fix_384 = True
 
             # Verificar si esta respuesta ya se dijo en las últimas 3 respuestas
             repeticion_detectada = False
@@ -4280,17 +4306,38 @@ Ejemplo correcto:
                         break
 
                     repeticion_detectada = True
-                    print(f"\n🚨🚨🚨 FIX 204: REPETICIÓN IDÉNTICA DETECTADA 🚨🚨🚨")
+                    print(f"\n🚨🚨🚨 FIX 204/393: REPETICIÓN IDÉNTICA DETECTADA 🚨🚨🚨")
                     print(f"   Bruce intentó repetir: \"{respuesta_agente[:60]}...\"")
                     print(f"   Ya se dijo hace {i} respuesta(s)")
                     print(f"   → Modificando respuesta para evitar repetición")
                     break
 
+            # FIX 393: Detectar repetición de PREGUNTAS (caso BRUCE1099)
+            # Bruce preguntó "¿Se encontrará el encargado?" 2 veces seguidas
+            if not repeticion_detectada and '?' in respuesta_agente:
+                # Extraer la pregunta principal
+                pregunta_actual = respuesta_agente.split('?')[0].lower().strip()
+                pregunta_normalizada = re.sub(r'[^\w\s]', '', pregunta_actual).strip()
+
+                for i, resp_previa in enumerate(ultimas_respuestas_bruce[-2:], 1):
+                    if '?' in resp_previa:
+                        pregunta_previa = resp_previa.split('?')[0].lower().strip()
+                        pregunta_previa_norm = re.sub(r'[^\w\s]', '', pregunta_previa).strip()
+
+                        # Si la pregunta es idéntica
+                        if pregunta_normalizada == pregunta_previa_norm:
+                            repeticion_detectada = True
+                            print(f"\n🚨🚨🚨 FIX 393: REPETICIÓN DE PREGUNTA DETECTADA 🚨🚨🚨")
+                            print(f"   Bruce intentó repetir PREGUNTA: \"{pregunta_actual[:60]}...?\"")
+                            print(f"   Ya se preguntó hace {i} respuesta(s)")
+                            print(f"   → Modificando respuesta para evitar repetición")
+                            break
+
             if repeticion_detectada:
                 # Modificar la respuesta para que GPT genere algo diferente
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""🚨 [SISTEMA - FIX 204] REPETICIÓN DETECTADA
+                    "content": f"""🚨 [SISTEMA - FIX 204/393] REPETICIÓN DETECTADA
 
 Estabas a punto de decir EXACTAMENTE lo mismo que ya dijiste antes:
 "{respuesta_agente[:100]}..."
@@ -4299,13 +4346,18 @@ Estabas a punto de decir EXACTAMENTE lo mismo que ya dijiste antes:
 
 ✅ OPCIONES VÁLIDAS:
 1. Si el cliente no respondió tu pregunta: Reformula de manera DIFERENTE
-2. Si el cliente está ocupado: Ofrece despedirte o llamar después
+2. Si el cliente está ocupado/no interesado: Ofrece despedirte o llamar después
 3. Si no te entiende: Usa palabras más simples
+4. Si el cliente rechazó 2 veces: DESPÍDETE profesionalmente y cuelga
 
 💡 EJEMPLO DE REFORMULACIÓN:
 ORIGINAL: "¿Le gustaría que le envíe el catálogo por WhatsApp?"
 REFORMULADO: "¿Tiene WhatsApp donde le pueda enviar información?"
 REFORMULADO 2: "¿Prefiere que le llame en otro momento?"
+
+🚨 FIX 393: Si el cliente ya rechazó 2 veces, NO insistas:
+CLIENTE: "No, gracias" (1ra vez) → "No" (2da vez)
+BRUCE: "Entiendo. Le agradezco su tiempo. Buen día." [COLGAR]
 
 Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                 })
