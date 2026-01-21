@@ -2264,7 +2264,7 @@ class AgenteVentas:
         # Significa que debemos enviar al mismo número que estamos marcando
         # ============================================================
         if not filtro_aplicado:
-            # Detectar si cliente indica usar el mismo número
+            # FIX 347: Detectar si cliente indica usar el mismo número
             cliente_dice_este_numero = any(frase in contexto_cliente for frase in [
                 'a este número nada más', 'a este numero nada mas',
                 'sería a este número', 'seria a este numero',
@@ -2273,21 +2273,33 @@ class AgenteVentas:
                 'por este número', 'por este numero',
                 'este mismo número', 'este mismo numero',
                 'al mismo número', 'al mismo numero',
-                'a este nada más', 'a este nada mas'
+                'a este nada más', 'a este nada mas',
+                # FIX 347: Más variantes
+                'a este número que marca', 'a este numero que marca',
+                'al número que marca', 'al numero que marca',
+                'este que marca', 'número que marca', 'numero que marca',
+                'por este medio', 'a este medio',
+                'mándamelo por este', 'mandamelo por este',
+                'por aquí', 'por aqui', 'aquí mismo', 'aqui mismo',
+                'a este whatsapp', 'por este whatsapp'
             ])
 
-            # Bruce pide número cuando ya le dijeron que use el mismo
-            bruce_pide_numero = any(frase in respuesta_lower for frase in [
+            # Bruce pide número O responde algo incoherente cuando ya le dijeron el número
+            bruce_responde_mal = any(frase in respuesta_lower for frase in [
                 'cuál es su número', 'cual es su numero',
                 'me puede repetir', 'me puede proporcionar',
                 'solo escuché', 'solo escuche',
-                'dígitos', 'digitos'
+                'dígitos', 'digitos',
+                # FIX 347: Respuestas incoherentes (re-presentación)
+                'me comunico de parte', 'mi nombre es bruce',
+                'soy bruce de', 'le llamo de la marca',
+                'se encontrará el encargado', 'se encontrara el encargado'
             ])
 
-            if cliente_dice_este_numero and bruce_pide_numero:
-                print(f"\n📞 FIX 336: FILTRO ACTIVADO - Cliente dice 'a este número' pero Bruce pide número")
+            if cliente_dice_este_numero and bruce_responde_mal:
+                print(f"\n📞 FIX 336/347: FILTRO ACTIVADO - Cliente dice 'a este número' pero Bruce responde mal")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
-                print(f"   Bruce iba a pedir: \"{respuesta[:60]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto, entonces le envío el catálogo a este mismo número por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
