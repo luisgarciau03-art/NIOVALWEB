@@ -831,8 +831,15 @@ class AgenteVentas:
                                   'soy el encargado', 'soy la encargada', 'aquí estoy', 'aqui estoy']
                 )
 
-                # También puede ser persona nueva si dice solo "¿Bueno?" después de silencio
-                es_saludo_nuevo = ultimo_cliente.strip() in ['bueno', '¿bueno?', 'hola', '¿hola?', 'sí', 'si', 'dígame', 'digame']
+                # FIX 344: También puede ser persona nueva si dice "dígame", "sí dígame", "bueno", etc.
+                # Esto indica que el encargado ya fue transferido y espera que Bruce hable
+                saludos_persona_nueva = [
+                    'bueno', '¿bueno?', 'hola', '¿hola?', 'sí', 'si',
+                    'dígame', 'digame', 'sí dígame', 'si digame', 'sí, dígame', 'si, digame',
+                    'mande', 'a ver', 'a ver dígame', 'qué pasó', 'que paso',
+                    'sí bueno', 'si bueno', 'alo', 'aló'
+                ]
+                es_saludo_nuevo = any(ultimo_cliente.strip() == s or ultimo_cliente.strip().startswith(s + '.') for s in saludos_persona_nueva)
 
                 if es_persona_nueva or (es_saludo_nuevo and bruce_dijo_espero):
                     print(f"\n👋 FIX 289: PERSONA NUEVA detectada después de transferencia")
@@ -896,6 +903,7 @@ class AgenteVentas:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
                 # Patrones que indican que el cliente quiere dar su correo
+                # FIX 343: Agregar "te comparto un correo" y variantes
                 patrones_dar_correo = [
                     r'correo\s+electr[oó]nico',
                     r'por\s+correo',
@@ -903,6 +911,11 @@ class AgenteVentas:
                     r'el\s+correo',
                     r'te\s+(doy|paso)\s+(el\s+)?correo',
                     r'le\s+(doy|paso)\s+(el\s+)?correo',
+                    r'te\s+comparto\s+(un\s+)?correo',  # FIX 343: "te comparto un correo"
+                    r'le\s+comparto\s+(un\s+)?correo',  # FIX 343: "le comparto un correo"
+                    r'comparto\s+(un\s+)?correo',       # FIX 343: "comparto un correo"
+                    r'env[ií](a|e)\s+(tu|su)\s+informaci[oó]n',  # FIX 343: "envíe su información"
+                    r'para\s+que\s+env[ií](a|e)s?\s+(tu|su)',    # FIX 343: "para que envíes tu info"
                     r'anota\s+(el\s+)?correo',
                     r'apunta\s+(el\s+)?correo',
                     r'email',
@@ -1247,7 +1260,7 @@ class AgenteVentas:
             if ultimos_mensajes_cliente:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
-                # Patrones de horario/disponibilidad (FIX 230/320: agregados más patrones)
+                # Patrones de horario/disponibilidad (FIX 230/320/346: agregados más patrones)
                 patrones_horario = [
                     r'después\s+de\s+mediodía',
                     r'en\s+la\s+tarde',
@@ -1274,6 +1287,11 @@ class AgenteVentas:
                     r'en\s+un\s+rato',  # "en un rato"
                     r'en\s+unos?\s+\d+\s*(?:minutos?|mins?)',  # "en 30 minutos"
                     r'por\s+el\s+momento\s+no',  # "por el momento no" (implica que llegará)
+                    # FIX 346: "de 9 a 2", "de 8 a 3", "horario de X a Y"
+                    r'de\s+\d+\s+a\s+\d+',  # "de 9 a 2", "de 8 a 5"
+                    r'horario\s+de',  # "horario de..."
+                    r'en\s+el\s+horario',  # "en el horario de..."
+                    r'se\s+encuentra\s+en\s+el\s+horario',  # "se encuentra en el horario"
                 ]
 
                 cliente_dio_horario = any(re.search(p, ultimo_cliente) for p in patrones_horario)
@@ -1281,13 +1299,16 @@ class AgenteVentas:
                 # Si cliente dio horario pero Bruce no responde sobre eso
                 # FIX 320: Cuando cliente indica horario de llegada, pedir número directo
                 if cliente_dio_horario:
+                    # FIX 346: Si respuesta está vacía, también hay que corregir
+                    respuesta_vacia = len(respuesta.strip()) == 0
+
                     # Verificar si la respuesta de Bruce menciona el horario o reprogramación
                     menciona_horario = any(word in respuesta_lower for word in [
                         'mediodía', 'tarde', 'hora', 'llamar', 'comunic', 'anotado', 'perfecto',
                         'número', 'numero', 'directo'
                     ])
 
-                    if not menciona_horario:
+                    if not menciona_horario or respuesta_vacia:
                         print(f"\n🚨 FIX 227/320: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
@@ -2268,6 +2289,48 @@ class AgenteVentas:
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a pedir: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto, entonces le envío el catálogo a este mismo número por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 28 (FIX 345): Cliente ofrece correo pero Bruce responde incoherente
+        # Ejemplo: "Te comparto un correo" → "Perfecto. ¿Hay algo más?"
+        # Esto es INCORRECTO - Bruce debe pedir el correo
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente ofrece dar correo
+            cliente_ofrece_correo = any(frase in contexto_cliente for frase in [
+                'te comparto un correo', 'le comparto un correo',
+                'te comparto el correo', 'le comparto el correo',
+                'comparto un correo', 'comparto el correo',
+                'te doy un correo', 'le doy un correo',
+                'te doy el correo', 'le doy el correo',
+                'te paso un correo', 'le paso un correo',
+                'te paso el correo', 'le paso el correo',
+                'si gusta para que envíe', 'si gustas para que envíe',
+                'si gusta para que envie', 'si gustas para que envies',
+                'para que envíe tu información', 'para que envíes tu información',
+                'para que envie tu informacion', 'para que envies tu informacion',
+                'para que nos envíe', 'para que nos envíes',
+                'para que mande', 'para que mandes'
+            ])
+
+            # Bruce responde algo incoherente en lugar de pedir el correo
+            bruce_responde_incoherente = any(frase in respuesta_lower for frase in [
+                'hay algo más', 'hay algo mas',
+                'algo más en lo que', 'algo mas en lo que',
+                'perfecto.', 'excelente.',
+                'muchas gracias por su tiempo',
+                'que tenga buen día', 'que tenga excelente día',
+                'hasta luego',
+                'ya tengo registrado', 'ya lo tengo registrado'
+            ])
+
+            if cliente_ofrece_correo and bruce_responde_incoherente:
+                print(f"\n📧 FIX 345: FILTRO ACTIVADO - Cliente ofrece correo pero Bruce responde incoherente")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                respuesta = "Claro, dígame su correo electrónico por favor."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
