@@ -353,6 +353,26 @@ class AgenteVentas:
                 print(f"📊 FIX 389: Persona nueva después de transferencia - Estado → BUSCANDO_ENCARGADO")
                 return
 
+        # FIX 394: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
+        # Cliente pregunta "¿En qué le apoyo?" = ES EL ENCARGADO y está disponible
+        # NO debe preguntar por el encargado, debe ofrecer catálogo DIRECTAMENTE
+        patrones_encargado_disponible = [
+            '¿en qué le puedo apoyar', '¿en que le puedo apoyar',
+            '¿en qué le apoyo', '¿en que le apoyo',
+            '¿en qué puedo ayudar', '¿en que puedo ayudar',
+            '¿en qué puedo servirle', '¿en que puedo servirle',
+            'en qué le puedo apoyar', 'en que le puedo apoyar',
+            'en qué le apoyo', 'en que le apoyo',
+            '¿qué necesita', '¿que necesita',
+            '¿para qué llama', '¿para que llama',
+            '¿qué ocupa', '¿que ocupa'
+        ]
+        if any(p in mensaje_lower for p in patrones_encargado_disponible):
+            print(f"📊 FIX 394: Cliente pregunta '¿En qué le puedo apoyar?' - ENCARGADO DISPONIBLE")
+            print(f"   Cliente ES el encargado - Ofreciendo catálogo DIRECTAMENTE")
+            # Responder directamente sin preguntar por encargado
+            return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+
         # Detectar si cliente pide esperar
         patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
                           'un momento', 'un segundito', 'ahorita', 'tantito']
@@ -3331,8 +3351,53 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO FINAL (FIX 394): Eliminar "Perfecto" inapropiado
+        # Bruce dice "Perfecto" cuando cliente hace pregunta o NO confirmó nada
+        # ============================================================
+        if not filtro_aplicado and respuesta.lower().startswith('perfecto'):
+            # Obtener último mensaje del cliente
+            ultimos_3_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_3_cliente:
+                ultimo_msg_cliente = ultimos_3_cliente[-1]
+
+                # Cliente hizo PREGUNTA (termina en ?)
+                cliente_hizo_pregunta = '?' in ultimo_msg_cliente
+
+                # Cliente NO confirmó nada
+                cliente_no_confirmo = not any(conf in ultimo_msg_cliente for conf in [
+                    'sí', 'si', 'claro', 'adelante', 'dale', 'ok', 'okay',
+                    'bueno', 'sale', 'está bien', 'esta bien', 'por favor'
+                ])
+
+                # Cliente rechazó o dijo "No"
+                cliente_rechazo = any(neg in ultimo_msg_cliente for neg in [
+                    'no', 'no está', 'no esta', 'no se encuentra', 'no gracias'
+                ])
+
+                # Si cliente hizo pregunta O NO confirmó O rechazó → NO usar "Perfecto"
+                if cliente_hizo_pregunta or cliente_no_confirmo or cliente_rechazo:
+                    print(f"\n🚫 FIX 394: 'Perfecto' inapropiado detectado")
+                    print(f"   Cliente dijo: '{ultimo_msg_cliente[:60]}...'")
+                    print(f"   Razón: {'Pregunta' if cliente_hizo_pregunta else 'No confirmó' if cliente_no_confirmo else 'Rechazo'}")
+
+                    # Reemplazar "Perfecto" con "Claro" o eliminarlo
+                    if respuesta.lower().startswith('perfecto.'):
+                        respuesta = respuesta[9:].strip()  # Eliminar "Perfecto."
+                        respuesta = respuesta[0].upper() + respuesta[1:] if respuesta else respuesta
+                        print(f"   Respuesta corregida: '{respuesta[:60]}...'")
+                        filtro_aplicado = True
+                    elif respuesta.lower().startswith('perfecto,'):
+                        respuesta = "Claro," + respuesta[9:]
+                        print(f"   Respuesta corregida: '{respuesta[:60]}...'")
+                        filtro_aplicado = True
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-364: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-394: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
@@ -4312,14 +4377,16 @@ Ejemplo correcto:
                     print(f"   → Modificando respuesta para evitar repetición")
                     break
 
-            # FIX 393: Detectar repetición de PREGUNTAS (caso BRUCE1099)
-            # Bruce preguntó "¿Se encontrará el encargado?" 2 veces seguidas
+            # FIX 393/394: Detectar repetición de PREGUNTAS (caso BRUCE1099, BRUCE1105)
+            # Bruce preguntó "¿Se encontrará el encargado?" múltiples veces seguidas
+            # FIX 394: Ampliar a últimas 4 respuestas (BRUCE1105 repitió 4 veces)
             if not repeticion_detectada and '?' in respuesta_agente:
                 # Extraer la pregunta principal
                 pregunta_actual = respuesta_agente.split('?')[0].lower().strip()
                 pregunta_normalizada = re.sub(r'[^\w\s]', '', pregunta_actual).strip()
 
-                for i, resp_previa in enumerate(ultimas_respuestas_bruce[-2:], 1):
+                # FIX 394: Revisar últimas 4 respuestas en vez de 2
+                for i, resp_previa in enumerate(ultimas_respuestas_bruce[-4:], 1):
                     if '?' in resp_previa:
                         pregunta_previa = resp_previa.split('?')[0].lower().strip()
                         pregunta_previa_norm = re.sub(r'[^\w\s]', '', pregunta_previa).strip()
@@ -4327,7 +4394,7 @@ Ejemplo correcto:
                         # Si la pregunta es idéntica
                         if pregunta_normalizada == pregunta_previa_norm:
                             repeticion_detectada = True
-                            print(f"\n🚨🚨🚨 FIX 393: REPETICIÓN DE PREGUNTA DETECTADA 🚨🚨🚨")
+                            print(f"\n🚨🚨🚨 FIX 393/394: REPETICIÓN DE PREGUNTA DETECTADA 🚨🚨🚨")
                             print(f"   Bruce intentó repetir PREGUNTA: \"{pregunta_actual[:60]}...?\"")
                             print(f"   Ya se preguntó hace {i} respuesta(s)")
                             print(f"   → Modificando respuesta para evitar repetición")
