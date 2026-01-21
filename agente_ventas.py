@@ -936,6 +936,43 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 5D (FIX 379): Cliente dice que ELLOS no manejan productos de ferretería
+        # Bruce NO debe decir "no manejamos" (invirtiendo el sujeto)
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                contexto_cliente = ' '.join(ultimos_mensajes_cliente)
+
+                # FIX 379: Detectar cuando CLIENTE dice que ELLOS no manejan productos
+                cliente_dice_no_manejan = any(frase in contexto_cliente for frase in [
+                    'no lo manejamos', 'no los manejamos', 'no manejamos',
+                    'no la manejamos', 'no las manejamos',
+                    'no trabajamos', 'no vendemos', 'no tenemos',
+                    'tipo de producto no', 'ese producto no',
+                    'esos productos no', 'ese tipo de'
+                ])
+
+                # Detectar si Bruce invierte el sujeto diciendo "no manejamos"
+                bruce_invierte_sujeto = any(frase in respuesta_lower for frase in [
+                    'actualmente no manejamos', 'no manejamos ese',
+                    'no manejamos ese tipo', 'no manejamos tubería',
+                    'no manejamos eso'
+                ])
+
+                if cliente_dice_no_manejan and bruce_invierte_sujeto:
+                    print(f"\n🔄 FIX 379: FILTRO ACTIVADO - Bruce invierte sujeto ('no manejamos' → 'ustedes no manejan')")
+                    print(f"   Cliente dijo: '{contexto_cliente[:80]}...'")
+                    print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+                    respuesta = "Entiendo que ustedes no manejan ese tipo de producto actualmente. Aún así, le puedo enviar nuestro catálogo completo de ferretería por WhatsApp por si en el futuro les interesa. ¿Le parece?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: '{respuesta}'")
+
+        # ============================================================
         # FILTRO 6 (FIX 231): Detectar cuando cliente quiere dar correo
         # ============================================================
         if not filtro_aplicado:
@@ -1026,6 +1063,17 @@ class AgenteVentas:
 
                 cliente_dice_no_disponible = any(re.search(p, ultimo_cliente) for p in patrones_no_disponible)
 
+                # FIX 376: Detectar cuando cliente pregunta sobre productos DESPUÉS de decir "no está"
+                # Ejemplo: "No. ¿Qué cree? Que no está. Pero. ¿Qué tipo de productos son los que maneja?"
+                cliente_pregunta_productos = any(palabra in ultimo_cliente for palabra in [
+                    'qué tipo de productos', 'que tipo de productos',
+                    'qué productos', 'que productos',
+                    'qué manejan', 'que manejan',
+                    'qué venden', 'que venden',
+                    'de qué se trata', 'de que se trata',
+                    'qué es lo que', 'que es lo que'
+                ])
+
                 # FIX 255: Ampliar detección - Bruce pide transferencia O pregunta por mejor momento
                 bruce_insiste_contacto = any(kw in respuesta_lower for kw in [
                     'me lo podría comunicar',
@@ -1043,6 +1091,11 @@ class AgenteVentas:
                     'qué hora puedo',
                     'cuándo lo encuentro',
                     'cuándo está disponible',
+                    # FIX 376: Pedir número directo del encargado
+                    'número directo del encargado',
+                    'numero directo del encargado',
+                    'número del encargado',
+                    'numero del encargado'
                 ])
 
                 # FIX 372: También detectar si Bruce dice "está ocupado" cuando NO está disponible
@@ -1052,8 +1105,17 @@ class AgenteVentas:
                     'si está ocupado', 'si esta ocupado'
                 ])
 
-                if cliente_dice_no_disponible and (bruce_insiste_contacto or bruce_dice_ocupado):
-                    print(f"\n🚫 FIX 254/255/372: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
+                # FIX 376: Si cliente dice "no está" PERO pregunta sobre productos
+                # Bruce debe responder la pregunta primero
+                if cliente_dice_no_disponible and cliente_pregunta_productos:
+                    print(f"\n📦 FIX 376: FILTRO ACTIVADO - Cliente dice 'no está' pero pregunta sobre productos")
+                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    respuesta = "Claro, manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le gustaría que le envíe el catálogo por WhatsApp para que el encargado lo revise?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+                elif cliente_dice_no_disponible and (bruce_insiste_contacto or bruce_dice_ocupado):
+                    print(f"\n🚫 FIX 254/255/372/376: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
@@ -2721,28 +2783,94 @@ class AgenteVentas:
                 r'env(?:iar|íe|iarlo).*este\s+n[uú]mero',
                 r'(?:a|al)\s+este\s+(?:n[uú]mero|whatsapp)',
                 r'aqu[ií]\s+(?:mismo|al\s+n[uú]mero)',
-                r'mismo\s+n[uú]mero'
+                r'mismo\s+n[uú]mero',
+                # FIX 377: "es este mismo", "este mismo", "el mismo"
+                r'es\s+este\s+mismo', r'este\s+mismo',
+                r'el\s+mismo\s+(?:n[uú]mero)?', r'ese\s+mismo',
+                r'este\s+(?:tel[eé]fono|n[uú]mero)?\s*mismo',
+                r'es\s+el\s+mismo',
+                # FIX 382: "sería este", "seria este" (condicional)
+                r'ser[ií]a\s+este', r'ser[ií]a\s+el\s+mismo',
+                r'ser[ií]a\s+ese', r'ser[ií]a\s+(?:este|ese)\s+n[uú]mero'
             ]
 
             cliente_dice_este_numero = any(re.search(p, contexto_cliente) for p in patrones_este_numero)
 
             # Detectar si Bruce está preguntando por WhatsApp/correo después de que cliente pidió info a "este número"
+            # FIX 377: También detectar "ya lo tengo registrado" cuando NO debería
             bruce_pregunta_medio = any(frase in respuesta_lower for frase in [
                 'whatsapp o correo', 'correo electrónico', 'correo o whatsapp',
                 '¿le gustaría recibir', 'le gustaría recibir'
             ])
 
-            if cliente_dice_este_numero and bruce_pregunta_medio:
+            # FIX 378: Detectar "ya lo tengo registrado" cuando cliente dijo "este mismo"
+            bruce_dice_registrado_sin_confirmar = any(frase in respuesta_lower for frase in [
+                'ya lo tengo registrado', 'ya lo tengo anotado',
+                'le llegará el catálogo', 'le llegara el catalogo'
+            ])
+
+            if cliente_dice_este_numero and (bruce_pregunta_medio or bruce_dice_registrado_sin_confirmar):
                 # Verificar si tenemos el número del cliente
                 telefono_cliente = self.lead_data.get("telefono", "")
                 if telefono_cliente:
-                    print(f"\n📱 FIX 375: FILTRO ACTIVADO - Cliente pide info a 'este número'")
+                    print(f"\n📱 FIX 375/377/378: FILTRO ACTIVADO - Cliente pide info a 'este número'")
                     print(f"   Cliente dijo: '{contexto_cliente[:80]}'")
                     print(f"   Número que Bruce marcó: {telefono_cliente}")
-                    print(f"   Bruce iba a preguntar: '{respuesta[:60]}...'")
+                    print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+
+                    # FIX 378: GUARDAR el número como WhatsApp antes de confirmar
+                    # Limpiar el número (quitar espacios, guiones, paréntesis)
+                    telefono_limpio = re.sub(r'[^\d+]', '', telefono_cliente)
+
+                    # Solo guardar si parece un número válido (10+ dígitos)
+                    if len(re.findall(r'\d', telefono_limpio)) >= 10:
+                        self.lead_data["whatsapp"] = telefono_limpio
+                        print(f"   ✅ WhatsApp guardado: {telefono_limpio}")
 
                     # Confirmar que vamos a usar ese número como WhatsApp
-                    respuesta = f"Perfecto, le envío el catálogo a este WhatsApp. ¿Me confirma que el {telefono_cliente[-10:]} es su número de WhatsApp?"
+                    ultimos_4_digitos = telefono_cliente[-4:]
+                    respuesta = f"Perfecto, le envío el catálogo a este WhatsApp terminado en {ultimos_4_digitos}. Muchas gracias."
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: '{respuesta}'")
+
+        # ============================================================
+        # FILTRO 32C (FIX 383): Cliente pide "marcar en otro momento" (reprogramar)
+        # Bruce NO debe pedir WhatsApp, debe preguntar horario
+        # ============================================================
+        if not filtro_aplicado:
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+
+            if ultimos_mensajes_cliente:
+                contexto_cliente = ' '.join(ultimos_mensajes_cliente)
+
+                # Detectar solicitud de reprogramación
+                cliente_pide_reprogramar = any(frase in contexto_cliente for frase in [
+                    'marcar en otro momento', 'marca en otro momento',
+                    'llame en otro momento', 'llama en otro momento',
+                    'llamar en otro momento', 'llamar más tarde',
+                    'marcar más tarde', 'marca más tarde',
+                    'regrese más tarde', 'llame después',
+                    'vuelva a llamar', 'vuelve a llamar',
+                    'mejor en otro momento', 'en otro horario',
+                    'si gustas marca', 'si gusta marcar',
+                    'si gustas llama', 'si gusta llamar'
+                ])
+
+                # Detectar si Bruce pide WhatsApp en lugar de horario
+                bruce_pide_whatsapp = any(frase in respuesta_lower for frase in [
+                    'cuál es su whatsapp', 'cual es su whatsapp',
+                    'me confirma su whatsapp', 'me da su whatsapp',
+                    'su número de whatsapp', 'me proporciona su whatsapp'
+                ])
+
+                if cliente_pide_reprogramar and bruce_pide_whatsapp:
+                    print(f"\n📅 FIX 383: FILTRO ACTIVADO - Cliente pide reprogramar pero Bruce pide WhatsApp")
+                    print(f"   Cliente dijo: '{contexto_cliente[:80]}...'")
+                    print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+                    respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: '{respuesta}'")
 
@@ -3402,7 +3530,7 @@ Ejemplo correcto:
             "déjeme la transfiero", "dejeme la transfiero",
             "lo transfiero", "la transfiero", "le transfiero",
             "te transfiero", "déjeme transferirlo", "dejeme transferirlo",
-            # FIX 237: Solicitud de espera - agregados más patrones
+            # FIX 237/380: Solicitud de espera - agregados más patrones
             "dame un momento", "espera un momento", "espérame", "un segundito",
             "permíteme", "permiteme", "déjame ver", "dejame ver",
             "un momento",  # FIX 237: Solo "un momento" sin prefijo
@@ -3411,6 +3539,13 @@ Ejemplo correcto:
             "ahorita",     # FIX 237: Cuando dice solo "ahorita" (va a hacer algo)
             "me permite",  # FIX 237
             "me permites", # FIX 237
+            # FIX 380: "No me cuelgue" indica que va a buscar al encargado
+            "no me cuelgue", "no cuelgue", "no me cuelgues", "no cuelgues",
+            "espérame tantito", "esperame tantito",
+            # FIX 381: "Hágame el lugar" = modismo mexicano de "espéreme"
+            "hágame el lugar", "hagame el lugar",
+            "hágame favor", "hagame favor",
+            "hágame un favor", "hagame un favor",
             # Confirmación de disponibilidad + acción
             "sí está aquí", "está aquí", "está disponible",
             "ya viene", "ahorita viene", "está por aquí"
