@@ -2580,31 +2580,51 @@ class AgenteVentas:
 
                 tiene_dato_confirmado = tiene_email_real or tiene_whatsapp_real or cliente_dio_email_real or cliente_dio_whatsapp_real
 
-                # FIX 363: Detectar cuando cliente OFRECE dar dato pero aún no lo ha dado
+                # FIX 363/366: Detectar cuando cliente OFRECE dar dato pero aún no lo ha dado
+                # FIX 366: Agregar "no sé si te pudiera dar un correo" y variantes
                 cliente_ofrece_dar_dato = any(frase in contexto_cliente for frase in [
                     'si gusta mandárme', 'si gusta mandarme', 'si gusta mandarmelo',
                     'mándeme su', 'mandeme su', 'envíeme su', 'envieme su',
                     'yo le comparto', 'yo se lo comparto', 'yo le paso',
                     'mandármelo por correo', 'mandarmelo por correo',
-                    'si gusta enviar', 'si desea enviar'
+                    'si gusta enviar', 'si desea enviar',
+                    # FIX 366: Cliente ofrece dar correo
+                    'te pudiera dar un correo', 'le pudiera dar un correo',
+                    'te puedo dar un correo', 'le puedo dar un correo',
+                    'darle un correo', 'darte un correo',
+                    'si te doy un correo', 'si le doy un correo',
+                    'te paso un correo', 'le paso un correo',
+                    'te doy el correo', 'le doy el correo',
+                    'si quiere le doy', 'si quieres te doy',
+                    'no sé si te', 'no se si te', 'no sé si le', 'no se si le'
                 ])
 
-                # FIX 365: Detectar cuando cliente solo dice "sí" aceptando la oferta
+                # FIX 365/368: Detectar cuando cliente dice "sí" aceptando la oferta
                 # pero Bruce dice "ya lo tengo" sin haber pedido el dato
-                # Ejemplo: Bruce: "¿Por WhatsApp o correo?" Cliente: "Sí, dígame" Bruce: "Ya lo tengo" ← ERROR
+                # FIX 368: Mejorar para detectar frases más largas como "Ajá. Sí, soy yo, dígame"
                 ultimos_mensajes_cliente = [
                     msg['content'].lower().strip() for msg in self.conversation_history[-3:]
                     if msg['role'] == 'user'
                 ]
                 ultimo_cliente = ultimos_mensajes_cliente[-1] if ultimos_mensajes_cliente else ""
 
-                # Patrones de aceptación sin dar el dato
-                cliente_solo_acepta = any(
-                    ultimo_cliente.startswith(p) or ultimo_cliente == p
-                    for p in ['sí', 'si', 'sí,', 'si,', 'claro', 'ok', 'órale', 'orale',
-                              'sí dígame', 'si digame', 'dígame', 'digame', 'adelante',
-                              'sí bueno', 'si bueno', 'mande', 'ajá', 'aja']
-                )
+                # FIX 368: Patrones de aceptación - buscar DENTRO del mensaje, no solo al inicio
+                patrones_acepta = [
+                    'sí', 'si', 'claro', 'ok', 'órale', 'orale', 'ajá', 'aja',
+                    'dígame', 'digame', 'adelante', 'mande', 'bueno'
+                ]
+                # Cliente acepta si contiene palabras de aceptación Y NO contiene email/número
+                tiene_patron_acepta = any(p in ultimo_cliente for p in patrones_acepta)
+                no_tiene_dato = '@' not in ultimo_cliente and 'arroba' not in ultimo_cliente
+                pocos_digitos = len(re.findall(r'\d', ultimo_cliente)) < 7
+
+                # FIX 367: Detectar "soy yo" como indicador de que ES el encargado
+                # pero aún así NO tiene dato de contacto
+                cliente_dice_soy_yo = any(frase in ultimo_cliente for frase in [
+                    'soy yo', 'yo soy', 'sí soy', 'si soy', 'aquí estoy', 'aqui estoy'
+                ])
+
+                cliente_solo_acepta = tiene_patron_acepta and no_tiene_dato and pocos_digitos
 
                 # Verificar que Bruce acaba de preguntar por WhatsApp/correo
                 ultimos_bruce = [
@@ -2619,10 +2639,11 @@ class AgenteVentas:
                 cliente_acepta_sin_dato = cliente_solo_acepta and bruce_pregunto_medio
 
                 if not tiene_dato_confirmado or cliente_ofrece_dar_dato or cliente_acepta_sin_dato:
-                    print(f"\n🚨 FIX 363/365: FILTRO ACTIVADO - Bruce dice 'registrado' SIN DATO REAL")
+                    print(f"\n🚨 FIX 363/365/366/367/368: FILTRO ACTIVADO - Bruce dice 'registrado' SIN DATO REAL")
                     print(f"   tiene_email_real={tiene_email_real}, tiene_whatsapp_real={tiene_whatsapp_real}")
                     print(f"   cliente_dio_email_real={cliente_dio_email_real}, cliente_dio_whatsapp_real={cliente_dio_whatsapp_real}")
                     print(f"   cliente_ofrece_dar_dato={cliente_ofrece_dar_dato}, cliente_acepta_sin_dato={cliente_acepta_sin_dato}")
+                    print(f"   cliente_dice_soy_yo={cliente_dice_soy_yo}, ultimo_cliente='{ultimo_cliente[:50]}'")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     # Pedir el dato correctamente
                     if 'correo' in contexto_cliente or 'email' in contexto_cliente:
@@ -2633,10 +2654,11 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
-        # FILTRO 33 (FIX 364): Cliente dice "Ella habla" / "Él habla"
+        # FILTRO 33 (FIX 364/367): Cliente dice "Ella habla" / "Él habla" / "Soy yo"
         # Esto indica que ESA persona ES la encargada/el encargado de compras
         # Bruce preguntó "¿Se encontrará el encargado?" y cliente dice "Ella habla"
         # = la persona en la línea ES la encargada
+        # FIX 367: Agregar "soy yo, dígame" como indicador de encargado
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente indica que es el/la encargado/a
@@ -2649,7 +2671,10 @@ class AgenteVentas:
                 r'es\s+una\s+servidora', r'servidor', r'servidora',
                 # Patrones mexicanos comunes
                 r'aquí\s+(?:andamos|estamos)', r'aqui\s+(?:andamos|estamos)',
-                r'mero\s+(?:yo|ella|él)', r'precisamente\s+(?:yo|ella|él)'
+                r'mero\s+(?:yo|ella|él)', r'precisamente\s+(?:yo|ella|él)',
+                # FIX 367: "soy yo" con variantes
+                r's[ií],?\s*soy\s+yo', r'soy\s+yo,?\s*d[ií]game',
+                r'yo\s+soy,?\s*d[ií]game', r's[ií],?\s*adelante'
             ]
 
             cliente_indica_es_encargado = any(re.search(p, contexto_cliente) for p in patrones_ella_el_habla)
