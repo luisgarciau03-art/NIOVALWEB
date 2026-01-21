@@ -887,7 +887,7 @@ class AgenteVentas:
                 contexto_cliente = ' '.join(ultimos_mensajes_cliente)
 
                 # Detectar si cliente menciona sucursal/matriz/oficinas
-                # FIX 369: Agregar patrones de "solo mostrador" / "puro mostrador"
+                # FIX 369/373: Agregar patrones de "solo mostrador" / "puro distribución"
                 menciona_redireccion = any(
                     frase in contexto_cliente
                     for frase in ['sucursal', 'matriz', 'oficinas', 'corporativo', 'área de compras',
@@ -899,7 +899,13 @@ class AgenteVentas:
                                   'puro empleo de mostrador', 'somos puro empleo',
                                   'no tenemos encargado', 'no hay encargado',
                                   'aquí no hay', 'aqui no hay', 'no manejamos compras',
-                                  'no hacemos compras', 'no compramos nosotros']
+                                  'no hacemos compras', 'no compramos nosotros',
+                                  # FIX 373: Patrones de "solo distribución"
+                                  'no nos dedicamos a las compras', 'no nos dedicamos a compras',
+                                  'somos distribución', 'somos distribucion', 'solo distribución',
+                                  'solo distribucion', 'nada más distribución', 'nada mas distribucion',
+                                  'únicamente distribución', 'unicamente distribucion',
+                                  'pura distribución', 'pura distribucion']
                 )
 
                 # Detectar si GPT quiere despedirse/colgar O ignorar y ofrecer catálogo
@@ -918,8 +924,11 @@ class AgenteVentas:
                                   'whatsapp o correo']
                 )
 
-                if menciona_redireccion and (bruce_quiere_despedirse or bruce_ofrece_catalogo_ignorando):
-                    print(f"\n🏢 FIX 291/369: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz/mostrador")
+                # FIX 373: También activar si Bruce dice "Claro, espero" ignorando que no manejan compras
+                bruce_dice_espero_ignorando = 'claro, espero' in respuesta_lower or 'claro espero' in respuesta_lower
+
+                if menciona_redireccion and (bruce_quiere_despedirse or bruce_ofrece_catalogo_ignorando or bruce_dice_espero_ignorando):
+                    print(f"\n🏢 FIX 291/369/373: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz/mostrador/distribución")
                     print(f"   Contexto: '{contexto_cliente[:80]}...'")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                     respuesta = "Entiendo. ¿Me podría proporcionar el número de las oficinas o del área de compras para contactarlos?"
@@ -995,6 +1004,7 @@ class AgenteVentas:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
                 # Detectar si cliente dice que encargado NO está disponible
+                # FIX 372: Agregar "viene hasta el [día]" como NO disponible
                 patrones_no_disponible = [
                     r'no\s+se\s+encuentra',
                     r'no\s+est[aá]',
@@ -1005,6 +1015,13 @@ class AgenteVentas:
                     r'(?:sali[oó]|se\s+fue)',
                     r'llamar\s+(?:m[aá]s\s+)?tarde',  # FIX 255: "llamar más tarde"
                     r'llame\s+(?:m[aá]s\s+)?tarde',   # FIX 255: "llame más tarde"
+                    # FIX 372: "viene hasta el viernes/lunes/martes/etc"
+                    r'viene\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
+                    r'llega\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
+                    r'regresa\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
+                    r'entra\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
+                    r'viene\s+el\s+(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
+                    r'llega\s+el\s+(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
                 ]
 
                 cliente_dice_no_disponible = any(re.search(p, ultimo_cliente) for p in patrones_no_disponible)
@@ -1028,8 +1045,15 @@ class AgenteVentas:
                     'cuándo está disponible',
                 ])
 
-                if cliente_dice_no_disponible and bruce_insiste_contacto:
-                    print(f"\n🚫 FIX 254/255: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste")
+                # FIX 372: También detectar si Bruce dice "está ocupado" cuando NO está disponible
+                bruce_dice_ocupado = any(frase in respuesta_lower for frase in [
+                    'entiendo que está ocupado', 'entiendo que esta ocupado',
+                    'veo que está ocupado', 'veo que esta ocupado',
+                    'si está ocupado', 'si esta ocupado'
+                ])
+
+                if cliente_dice_no_disponible and (bruce_insiste_contacto or bruce_dice_ocupado):
+                    print(f"\n🚫 FIX 254/255/372: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
@@ -3352,16 +3376,17 @@ Ejemplo correcto:
             "ya viene", "ahorita viene", "está por aquí"
         ]
 
-        # FIX 216/318: Patrones que INVALIDAN la transferencia (negaciones)
+        # FIX 216/318/374: Patrones que INVALIDAN la transferencia (negaciones)
         # Si el cliente dice "NO está disponible", NO es transferencia
         patrones_negacion = [
             "no está disponible", "no esta disponible",
             "no está aquí", "no esta aquí", "no esta aqui",
             "no se encuentra", "no lo encuentro", "no la encuentro",
             "no viene", "no va a venir", "no puede", "no hay nadie",
-            # FIX 318: "no está ahorita" - el encargado NO está
+            # FIX 318/374: "no está ahorita" / "ahorita no" - el encargado NO está
             "no está ahorita", "no esta ahorita",
             "ahorita no está", "ahorita no esta",
+            "ahorita no", "no ahorita",  # FIX 374: Cubrir "ahorita no no está"
             "no, no está", "no, no esta"
         ]
 
@@ -4611,6 +4636,8 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             palabras_ayuda = [
                 # Preposiciones/conectores
                 'de', 'del', 'con', 'como', 'para', 'por', 'sin', 'bajo', 'el', 'la', 'los', 'las', 'es', 'son',
+                # FIX 371: Agregar "y" que aparece entre palabras del email
+                'y', 'e', 'o', 'u', 'a',
                 # FIX 160: Contextuales de correo
                 'correo', 'email', 'mail', 'electrónico', 'electronico',
                 # Nombres comunes en alfabeto radiofónico informal
@@ -4650,9 +4677,14 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             print(f"   Paso 1 (X de Palabra): '{texto_original_debug[:100]}...'")
             print(f"   Paso 2 (sin ayudas): '{texto_email_procesado[:100]}...'")
 
-        # Paso 1: Reemplazar palabras clave por símbolos
-        # "arroba" → "@"
+        # FIX 371: PRIMERO convertir "arroba" a "@" para detectar el límite del email
         texto_email_procesado = re.sub(r'\b(arroba|aroba|a roba)\b', '@', texto_email_procesado)
+
+        # FIX 371: Eliminar puntos/comas que están ANTES del @ (errores de transcripción)
+        # Ejemplo: "Tesoro. Arroba" → "Tesoro Arroba" → "Tesoro @"
+        # Buscar: [palabra].  @ (punto antes del @) y eliminarlo
+        texto_email_procesado = re.sub(r'\.\s*@', ' @', texto_email_procesado)
+        texto_email_procesado = re.sub(r',\s*@', ' @', texto_email_procesado)
 
         # "punto" → "."
         # IMPORTANTE: Solo reemplazar "punto" cuando está en contexto de email (cerca de @, gmail, com, etc.)
