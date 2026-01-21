@@ -2497,8 +2497,191 @@ class AgenteVentas:
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
+        # ============================================================
+        # FILTRO 31 (FIX 362): Cliente dicta número de teléfono después de que
+        # Bruce pidió el número del encargado - NO decir "Claro, espero"
+        # Ejemplo: Bruce: "¿Me podría proporcionar el número del encargado?"
+        #          Cliente: "4 4 2 2 15 23 0 1"
+        #          Bruce: "Claro, espero" ← ERROR! Debe capturar el número
+        # ============================================================
+        if not filtro_aplicado:
+            import re
+
+            # Verificar si cliente está dando números (dígitos en el mensaje)
+            digitos_en_cliente = len(re.findall(r'\d', contexto_cliente))
+
+            # Patrones que indican que cliente está dictando un número de teléfono
+            patron_dictando_numero = bool(re.search(r'\d\s*\d\s*\d', contexto_cliente))  # Al menos 3 dígitos
+
+            # Bruce preguntó por número del encargado recientemente
+            mensajes_bruce_recientes = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_pidio_numero_encargado = any(
+                frase in ' '.join(mensajes_bruce_recientes)
+                for frase in [
+                    'número del encargado', 'numero del encargado',
+                    'número directo', 'numero directo',
+                    'contactarlo en ese horario', 'contactarla en ese horario',
+                    'para llamarle', 'para contactarlo', 'para contactarla',
+                    'me podría proporcionar el número', 'me podria proporcionar el numero'
+                ]
+            )
+
+            # Bruce responde con "Claro, espero" u otra respuesta de espera
+            bruce_dice_espero = any(frase in respuesta_lower for frase in [
+                'claro, espero', 'claro espero', 'aquí espero', 'aqui espero',
+                'perfecto, espero', 'perfecto espero'
+            ])
+
+            if digitos_en_cliente >= 6 and patron_dictando_numero and bruce_dice_espero:
+                print(f"\n📞 FIX 362: FILTRO ACTIVADO - Cliente DICTA NÚMERO pero Bruce dice 'espero'")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Dígitos detectados: {digitos_en_cliente}")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                # Agradecer y confirmar el número
+                respuesta = "Perfecto, muchas gracias por el número. Le marco entonces en ese horario. Que tenga excelente día."
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 32 (FIX 363): Reforzar detección de "ya lo tengo registrado"
+        # Cuando Bruce NO tiene ningún dato pero dice que sí tiene
+        # También detectar cuando cliente OFRECE dar correo/número
+        # pero Bruce dice "ya lo tengo registrado" sin haberlo recibido
+        # ============================================================
+        if not filtro_aplicado:
+            # Bruce dice que ya tiene registrado
+            bruce_dice_registrado = any(frase in respuesta_lower for frase in [
+                'ya lo tengo registrado', 'ya lo tengo anotado',
+                'ya tengo registrado', 'ya tengo anotado',
+                'le llegará el catálogo', 'le llegara el catalogo',
+                'en las próximas horas', 'en las proximas horas'
+            ])
+
+            if bruce_dice_registrado:
+                # Verificar si REALMENTE tenemos datos
+                tiene_email_real = bool(self.lead_data.get("email"))
+                tiene_whatsapp_real = bool(self.lead_data.get("whatsapp"))
+
+                # Buscar en historial si cliente dio email con @
+                historial_cliente = ' '.join([
+                    msg['content'].lower() for msg in self.conversation_history
+                    if msg['role'] == 'user'
+                ])
+                cliente_dio_email_real = '@' in historial_cliente or ('arroba' in historial_cliente and 'punto' in historial_cliente)
+
+                # Buscar si cliente dio número de WhatsApp (10+ dígitos Y Bruce lo pidió)
+                digitos_total = len(re.findall(r'\d', historial_cliente))
+                mensajes_bruce_todos = [msg['content'].lower() for msg in self.conversation_history if msg['role'] == 'assistant']
+                bruce_pidio_whatsapp = any('whatsapp' in msg or 'su número' in msg for msg in mensajes_bruce_todos)
+                cliente_dio_whatsapp_real = bruce_pidio_whatsapp and digitos_total >= 10
+
+                tiene_dato_confirmado = tiene_email_real or tiene_whatsapp_real or cliente_dio_email_real or cliente_dio_whatsapp_real
+
+                # FIX 363: Detectar cuando cliente OFRECE dar dato pero aún no lo ha dado
+                cliente_ofrece_dar_dato = any(frase in contexto_cliente for frase in [
+                    'si gusta mandárme', 'si gusta mandarme', 'si gusta mandarmelo',
+                    'mándeme su', 'mandeme su', 'envíeme su', 'envieme su',
+                    'yo le comparto', 'yo se lo comparto', 'yo le paso',
+                    'mandármelo por correo', 'mandarmelo por correo',
+                    'si gusta enviar', 'si desea enviar'
+                ])
+
+                # FIX 365: Detectar cuando cliente solo dice "sí" aceptando la oferta
+                # pero Bruce dice "ya lo tengo" sin haber pedido el dato
+                # Ejemplo: Bruce: "¿Por WhatsApp o correo?" Cliente: "Sí, dígame" Bruce: "Ya lo tengo" ← ERROR
+                ultimos_mensajes_cliente = [
+                    msg['content'].lower().strip() for msg in self.conversation_history[-3:]
+                    if msg['role'] == 'user'
+                ]
+                ultimo_cliente = ultimos_mensajes_cliente[-1] if ultimos_mensajes_cliente else ""
+
+                # Patrones de aceptación sin dar el dato
+                cliente_solo_acepta = any(
+                    ultimo_cliente.startswith(p) or ultimo_cliente == p
+                    for p in ['sí', 'si', 'sí,', 'si,', 'claro', 'ok', 'órale', 'orale',
+                              'sí dígame', 'si digame', 'dígame', 'digame', 'adelante',
+                              'sí bueno', 'si bueno', 'mande', 'ajá', 'aja']
+                )
+
+                # Verificar que Bruce acaba de preguntar por WhatsApp/correo
+                ultimos_bruce = [
+                    msg['content'].lower() for msg in self.conversation_history[-4:]
+                    if msg['role'] == 'assistant'
+                ]
+                bruce_pregunto_medio = any(
+                    'whatsapp o correo' in msg or 'correo electrónico' in msg or 'correo o whatsapp' in msg
+                    for msg in ultimos_bruce
+                )
+
+                cliente_acepta_sin_dato = cliente_solo_acepta and bruce_pregunto_medio
+
+                if not tiene_dato_confirmado or cliente_ofrece_dar_dato or cliente_acepta_sin_dato:
+                    print(f"\n🚨 FIX 363/365: FILTRO ACTIVADO - Bruce dice 'registrado' SIN DATO REAL")
+                    print(f"   tiene_email_real={tiene_email_real}, tiene_whatsapp_real={tiene_whatsapp_real}")
+                    print(f"   cliente_dio_email_real={cliente_dio_email_real}, cliente_dio_whatsapp_real={cliente_dio_whatsapp_real}")
+                    print(f"   cliente_ofrece_dar_dato={cliente_ofrece_dar_dato}, cliente_acepta_sin_dato={cliente_acepta_sin_dato}")
+                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                    # Pedir el dato correctamente
+                    if 'correo' in contexto_cliente or 'email' in contexto_cliente:
+                        respuesta = "Claro, con gusto. ¿Me puede proporcionar su correo electrónico?"
+                    else:
+                        respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 33 (FIX 364): Cliente dice "Ella habla" / "Él habla"
+        # Esto indica que ESA persona ES la encargada/el encargado de compras
+        # Bruce preguntó "¿Se encontrará el encargado?" y cliente dice "Ella habla"
+        # = la persona en la línea ES la encargada
+        # ============================================================
+        if not filtro_aplicado:
+            # Detectar si cliente indica que es el/la encargado/a
+            patrones_ella_el_habla = [
+                r'ella\s+habla', r'él\s+habla', r'el\s+habla',
+                r'yo\s+hablo', r'aquí\s+habla', r'aqui\s+habla',
+                r'con\s+ella\s+(?:habla|está)', r'con\s+él\s+(?:habla|está)',
+                r'soy\s+(?:yo|ella|él)', r'le\s+habla',
+                r'hablas?\s+con\s+(?:ella|él|el)',
+                r'es\s+una\s+servidora', r'servidor', r'servidora',
+                # Patrones mexicanos comunes
+                r'aquí\s+(?:andamos|estamos)', r'aqui\s+(?:andamos|estamos)',
+                r'mero\s+(?:yo|ella|él)', r'precisamente\s+(?:yo|ella|él)'
+            ]
+
+            cliente_indica_es_encargado = any(re.search(p, contexto_cliente) for p in patrones_ella_el_habla)
+
+            # Bruce preguntó por encargado recientemente
+            mensajes_bruce_recientes = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_pregunto_encargado = any(
+                'encargado' in msg or 'encargada' in msg
+                for msg in mensajes_bruce_recientes
+            )
+
+            # Bruce responde algo que ignora que el cliente dijo que ES el encargado
+            bruce_ignora = any(frase in respuesta_lower for frase in [
+                '¿se encontrará el encargado', 'se encontrara el encargado',
+                'se encuentra el encargado', 'encargado de compras',
+                'me escucha', 'me escuchas', 'estamos ubicados'
+            ])
+
+            if cliente_indica_es_encargado and (bruce_pregunto_encargado or bruce_ignora):
+                print(f"\n👩‍💼 FIX 364: FILTRO ACTIVADO - Cliente dice que ES el/la encargado/a")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                # Continuar con la oferta del catálogo
+                respuesta = "Perfecto, mucho gusto. ¿Le gustaría recibir nuestro catálogo de productos por WhatsApp o correo electrónico?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
         if filtro_aplicado:
-            print(f"✅ FIX 226-341: Filtro post-GPT aplicado exitosamente")
+            print(f"✅ FIX 226-364: Filtro post-GPT aplicado exitosamente")
 
         return respuesta
 
