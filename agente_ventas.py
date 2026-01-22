@@ -311,10 +311,13 @@ class AgenteVentas:
         # Contador para alternar frases de relleno (hace la conversación más natural)
         self.indice_frase_relleno = 0
 
-    def _actualizar_estado_conversacion(self, mensaje_cliente: str, respuesta_bruce: str = None):
+    def _actualizar_estado_conversacion(self, mensaje_cliente: str, respuesta_bruce: str = None) -> bool:
         """
         FIX 339: Actualiza el estado de la conversación basándose en el mensaje del cliente
         y opcionalmente en la respuesta de Bruce.
+
+        Returns:
+            bool: True si debe continuar procesando, False si debe detener (ej: problema de audio)
 
         Esto permite que los filtros sepan en qué contexto están y eviten respuestas incoherentes.
         """
@@ -530,13 +533,47 @@ class AgenteVentas:
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
             print(f"📊 FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
-            return
+            return True
+
+        # FIX 427: Detectar cuando cliente dice "soy yo" (él ES el encargado)
+        # Casos: BRUCE1290, BRUCE1293
+        # Cliente dice "Soy yo" o "Yo soy el encargado" indicando que él es quien toma decisiones
+        patrones_soy_yo = ['soy yo', 'yo soy', 'sí soy yo', 'si soy yo',
+                          'yo soy el encargado', 'soy el encargado',
+                          'yo mero', 'aquí mero']
+        if any(p in mensaje_lower for p in patrones_soy_yo):
+            self.estado_conversacion = EstadoConversacion.ENCARGADO_PRESENTE
+            print(f"📊 FIX 427: Cliente ES el encargado → Estado = ENCARGADO_PRESENTE")
+            return True
+
+        # FIX 428: Detectar problemas de comunicación (cliente no puede escuchar bien)
+        # Caso: BRUCE1289, BRUCE1297 - Cliente dijo "¿bueno? ¿bueno?" repetidamente
+        # Cliente repite frases indicando que no puede escuchar a Bruce
+        # Patrones: "¿bueno?" múltiple, saludos repetidos, etc.
+        palabras_problema_audio = mensaje_lower.split()
+
+        # Contar repeticiones de "bueno"
+        contador_bueno = mensaje_lower.count('¿bueno?') + mensaje_lower.count('bueno?') + mensaje_lower.count('¿bueno')
+        if contador_bueno >= 2:
+            print(f"📊 FIX 428: Cliente dice '¿bueno?' {contador_bueno} veces → Problema de audio detectado")
+            print(f"   → NO procesar con GPT - retornar False para que sistema de respuestas vacías maneje")
+            # Retornar False para que generar_respuesta() retorne None
+            # El sistema de respuestas vacías se encargará de colgar si continúa
+            return False
+
+        # Detectar saludos repetidos ("buen día. buen día.")
+        saludos_simples = ['buen día', 'buen dia', 'buenas', 'buenos días', 'buenos dias']
+        frases_encontradas = [s for s in saludos_simples if mensaje_lower.count(s) >= 2]
+        if frases_encontradas:
+            print(f"📊 FIX 428: Cliente repite saludo '{frases_encontradas[0]}' → Posible problema de audio")
+            print(f"   → NO procesar con GPT - retornar False")
+            return False
 
         # Detectar si ya capturamos contacto
         if self.lead_data.get("whatsapp") or self.lead_data.get("email"):
             self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
             print(f"📊 FIX 339: Estado → CONTACTO_CAPTURADO")
-            return
+            return True
 
         # Si la respuesta de Bruce pregunta por WhatsApp/correo
         if respuesta_bruce:
@@ -550,6 +587,9 @@ class AgenteVentas:
             elif 'encargado' in respuesta_lower and '?' in respuesta_lower:
                 self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
                 print(f"📊 FIX 339: Estado → BUSCANDO_ENCARGADO")
+
+        # Continuar procesando normalmente
+        return True
 
     def _cliente_esta_dictando(self) -> bool:
         """
@@ -3884,8 +3924,14 @@ class AgenteVentas:
         # ============================================================
         # FIX 389: INTEGRAR SISTEMA DE ESTADOS (FIX 339)
         # Actualizar estado de conversación ANTES de cualquier análisis
+        # FIX 428: Retorna False si detecta problema de audio (no procesar)
         # ============================================================
-        self._actualizar_estado_conversacion(respuesta_cliente)
+        debe_continuar = self._actualizar_estado_conversacion(respuesta_cliente)
+        if not debe_continuar:
+            # FIX 428 detectó problema de audio (¿bueno? repetido, etc.)
+            # No generar respuesta - sistema de respuestas vacías manejará
+            print(f"   ⏭️  FIX 428: Problema de audio detectado → NO generar respuesta (retornando None)")
+            return None
 
         # ============================================================
         # FIX 424: NO INTERRUMPIR cuando cliente está dictando correo/número
