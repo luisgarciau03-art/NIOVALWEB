@@ -515,14 +515,21 @@ class AgenteVentas:
 
         # Detectar si encargado no está
         # FIX 417: Agregar "ocupado" y "busy" (casos BRUCE1216, BRUCE1219)
-        patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+        # FIX 425: Agregar variantes de errores de transcripción (caso BRUCE1251)
+        patrones_no_esta = ['no está', 'no esta', 'no se encuentra',
+                           # FIX 425: Error de transcripción común: "encuentre" en vez de "encuentra"
+                           'no se encuentre',
+                           'salió', 'salio',
                            'no hay', 'no lo encuentro', 'no los encuentro', 'no tiene horario',
                            # FIX 417: "Ocupado" = No disponible = Equivalente a "no está"
                            'está ocupado', 'esta ocupado', 'ocupado',
-                           'está busy', 'esta busy', 'busy']
+                           'está busy', 'esta busy', 'busy',
+                           # FIX 425: Frases que indican "no está" (caso BRUCE1251: "anda en la comida")
+                           'anda en la comida', 'anda comiendo', 'salió a comer', 'salio a comer',
+                           'fue a comer', 'están comiendo', 'estan comiendo']
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
-            print(f"📊 FIX 339/417: Estado → ENCARGADO_NO_ESTA")
+            print(f"📊 FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
             return
 
         # Detectar si ya capturamos contacto
@@ -3879,6 +3886,90 @@ class AgenteVentas:
         # Actualizar estado de conversación ANTES de cualquier análisis
         # ============================================================
         self._actualizar_estado_conversacion(respuesta_cliente)
+
+        # ============================================================
+        # FIX 424: NO INTERRUMPIR cuando cliente está dictando correo/número
+        # Caso BRUCE1250: Cliente dijo "compras arroba Gmail." (estaba dictando)
+        # Bruce interrumpió antes de que dijera el dominio completo (.com, .mx, etc.)
+        # ============================================================
+        if self._cliente_esta_dictando():
+            import re
+            respuesta_lower = respuesta_cliente.lower()
+
+            # Verificar si el dictado está COMPLETO
+            dictado_completo = False
+
+            if self.estado_conversacion == EstadoConversacion.DICTANDO_CORREO:
+                # Correo completo si tiene dominio: ".com", ".mx", "punto com", etc.
+                dominios_completos = [
+                    '.com', '.mx', '.net', '.org', '.edu',
+                    'punto com', 'punto mx', 'punto net', 'punto org',
+                    'com.mx', 'punto com punto mx'
+                ]
+                dictado_completo = any(dominio in respuesta_lower for dominio in dominios_completos)
+
+                print(f"\n⏸️  FIX 424: Cliente dictando CORREO - Verificando si está completo")
+                print(f"   Cliente dijo: \"{respuesta_cliente}\"")
+                print(f"   Correo completo: {dictado_completo}")
+
+            elif self.estado_conversacion == EstadoConversacion.DICTANDO_NUMERO:
+                # Número completo si tiene 10+ dígitos
+                digitos = re.findall(r'\d', respuesta_lower)
+                dictado_completo = len(digitos) >= 10
+
+                print(f"\n⏸️  FIX 424: Cliente dictando NÚMERO - Verificando si está completo")
+                print(f"   Cliente dijo: \"{respuesta_cliente}\"")
+                print(f"   Dígitos detectados: {len(digitos)} - Completo: {dictado_completo}")
+
+            if not dictado_completo:
+                # Dictado INCOMPLETO - NO responder, esperar a que cliente termine
+                print(f"   → Dictado INCOMPLETO - Esperando más información (retornando None)")
+                return None
+
+        # ============================================================
+        # FIX 426: NO PROCESAR transcripciones PARCIALES incompletas
+        # Caso BRUCE1194: Cliente dijo "En este momento" (transcripción parcial de Deepgram)
+        # Bruce procesó antes de recibir transcripción final: "En este momento no se encuentra"
+        # ============================================================
+        respuesta_lower = respuesta_cliente.lower().strip()
+
+        # Frases de INICIO que típicamente CONTINÚAN
+        # Caso BRUCE1194/1257/1262/1264/1267: "en este momento" → continúa con "no se encuentra"
+        frases_inicio_incompletas = [
+            'en este momento',
+            'ahorita',
+            'ahora',
+            'ahora mismo',
+            'por el momento',
+            'por ahora',
+            'en este rato'
+        ]
+
+        # Palabras de CONTINUACIÓN que indican que la frase está COMPLETA
+        palabras_continuacion = [
+            'no',      # "en este momento no se encuentra"
+            'está',    # "ahorita está ocupado"
+            'esta',    # "ahorita esta ocupado"
+            'se',      # "en este momento se encuentra"
+            'salió',   # "ahorita salió"
+            'salio',   # "ahorita salio"
+            'hay',     # "ahora no hay nadie"
+            'puede',   # "ahorita no puede"
+            'anda'     # "ahorita anda en la comida"
+        ]
+
+        # Verificar si cliente dijo SOLO una frase de inicio SIN continuación
+        tiene_frase_inicio = any(frase in respuesta_lower for frase in frases_inicio_incompletas)
+        tiene_continuacion = any(palabra in respuesta_lower.split() for palabra in palabras_continuacion)
+
+        # Si tiene frase de inicio pero NO tiene continuación → transcripción PARCIAL
+        if tiene_frase_inicio and not tiene_continuacion:
+            print(f"\n⏸️  FIX 426: Transcripción PARCIAL detectada (frase de inicio sin continuación)")
+            print(f"   Cliente dijo: \"{respuesta_cliente}\"")
+            print(f"   Tiene frase de inicio: {tiene_frase_inicio}")
+            print(f"   Tiene continuación: {tiene_continuacion}")
+            print(f"   → Esperando transcripción COMPLETA (retornando None)")
+            return None
 
         # FIX 389/415: Si cliente pidió esperar (transferencia) → Responder inmediatamente SIN llamar GPT
         # PERO: Si cambió a BUSCANDO_ENCARGADO (persona nueva), SÍ llamar GPT para re-presentarse
