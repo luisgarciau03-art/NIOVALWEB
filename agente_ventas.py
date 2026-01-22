@@ -4467,10 +4467,10 @@ Ejemplo correcto:
                     *mensajes_conversacion
                 ],
                 temperature=0.7,
-                max_tokens=100,  # FIX 385.1: Optimizado para formato compacto [A]...[/A] (8-12 tokens) + respuesta (40-60 tokens)
+                max_tokens=150,  # FIX 406: Aumentado de 100 a 150 para mejor razonamiento Chain-of-Thought (+0.5s latencia aceptable)
                 presence_penalty=0.6,
                 frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
-                timeout=3.0,  # FIX 385.1: 3.0s para Chain-of-Thought compacto (compromiso entre velocidad y razonamiento)
+                timeout=4.0,  # FIX 406: Aumentado de 3.0s a 4.0s para acomodar 150 tokens
                 stream=False,
                 top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
             )
