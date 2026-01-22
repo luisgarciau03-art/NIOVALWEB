@@ -5773,6 +5773,14 @@ class LogCapture:
     def flush(self):
         self.original_stdout.flush()
 
+    def isatty(self):
+        """Necesario para compatibilidad con Click/Flask"""
+        return self.original_stdout.isatty()
+
+    def __getattr__(self, name):
+        """Delegar cualquier otro método/atributo al stdout original"""
+        return getattr(self.original_stdout, name)
+
 # FIX 403: Activar captura de logs
 import sys
 original_stdout = sys.stdout
