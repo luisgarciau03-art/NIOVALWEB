@@ -903,11 +903,23 @@ class AgenteVentas:
         ultimo_mensaje_cliente = contexto_lower.split()[-50:] if contexto_lower else []
         ultimo_mensaje_str = ' '.join(ultimo_mensaje_cliente)
 
-        cliente_pregunto = '?' in ultimo_mensaje_str or any(q in ultimo_mensaje_str for q in [
+        # FIX 423: Excluir saludos comunes que usan '?' pero NO son preguntas reales
+        # Caso BRUCE1244: Cliente dijo "¿Bueno?" (saludo), Bruce ofreció productos (incorrecto)
+        saludos_con_interrogacion = [
+            '¿bueno?', '¿bueno', 'bueno?',
+            '¿dígame?', '¿digame?', 'dígame?', 'digame?',
+            '¿mande?', 'mande?',
+            '¿sí?', '¿si?', 'sí?', 'si?',
+            '¿aló?', '¿alo?', 'aló?', 'alo?'
+        ]
+
+        es_solo_saludo = any(saludo == ultimo_mensaje_str.strip() for saludo in saludos_con_interrogacion)
+
+        cliente_pregunto = not es_solo_saludo and ('?' in ultimo_mensaje_str or any(q in ultimo_mensaje_str for q in [
             '¿qué', '¿que', '¿cuál', '¿cual', '¿cómo', '¿como',
             'qué tipo', 'que tipo', 'qué productos', 'que productos',
             'qué manejan', 'que manejan', 'qué venden', 'que venden'
-        ])
+        ]))
 
         # ¿Bruce respondió la pregunta?
         bruce_responde = any(palabra in respuesta_lower for palabra in [
@@ -1234,59 +1246,74 @@ class AgenteVentas:
         tiene_contacto = bool(self.lead_data.get("whatsapp")) or bool(self.lead_data.get("email"))
 
         if (bruce_intenta_despedirse or bruce_asume_cosas) and num_mensajes_bruce < 4 and not tiene_contacto:
-            # Verificar último mensaje del cliente para ver si es rechazo real
-            ultimos_cliente = [m['content'].lower() for m in self.conversation_history[-2:] if m['role'] == 'user']
-            ultimo_cliente = ultimos_cliente[-1] if ultimos_cliente else ""
+            # FIX 419: NO aplicar FIX 298/301 si estamos en estado crítico (ENCARGADO_NO_ESTA)
+            # Caso BRUCE1235: Cliente dijo "ahorita no se encuentra" → Estado = ENCARGADO_NO_ESTA
+            # GPT generó: "Entiendo que está ocupado. ¿Le gustaría que le envíe el catá..."
+            # FIX 298/301 sobrescribió con pregunta del encargado (INCORRECTO)
+            # GPT debe manejar con contexto de estado, FIX 298/301 NO debe sobrescribir
+            estado_critico_298 = self.estado_conversacion in [
+                EstadoConversacion.ENCARGADO_NO_ESTA,
+            ]
 
-            # Patrones de rechazo REAL (el cliente NO quiere hablar)
-            rechazo_real = any(frase in ultimo_cliente for frase in [
-                'no gracias', 'no me interesa', 'no necesito', 'estoy ocupado', 'no tengo tiempo',
-                'no moleste', 'no llame', 'quite mi número', 'no vuelva a llamar', 'cuelgo'
-            ])
-
-            # FIX 301: "Gracias" solo NO es rechazo - es cortesía
-            es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
-
-            # FIX 325/390/392: Detectar si cliente PIDE información por correo/WhatsApp
-            # O si ofrece DEJAR RECADO (oportunidad de capturar contacto)
-            cliente_pide_info_contacto = any(frase in ultimo_cliente for frase in [
-                'por correo', 'por whatsapp', 'por wasa', 'enviar la información',
-                'enviar la informacion', 'mandar la información', 'mandar la informacion',
-                'me puedes enviar', 'me puede enviar', 'envíame', 'enviame',
-                'mándame', 'mandame', 'enviarme', 'mandarme',
-                # FIX 390: Agregar patrones faltantes (caso BRUCE1083)
-                'al correo', 'mándanos al correo', 'mandanos al correo',
-                'envíalo al correo', 'envialo al correo', 'mándalo al correo', 'mandalo al correo',
-                'mándanos la', 'mandanos la', 'nos puede mandar', 'nos puede enviar',
-                'envíanos', 'envianos', 'mándanos', 'mandanos',
-                # FIX 392: Agregar "dejar recado" (caso BRUCE1096)
-                'dejar recado', 'dejar mensaje', 'dejarle recado', 'dejarle mensaje',
-                'guste dejar recado', 'gusta dejar recado', 'quiere dejar recado',
-                'quieren dejar recado', 'quiere dejarle'
-            ])
-
-            if not rechazo_real or es_solo_gracias:
-                tipo_problema = "asume cosas" if bruce_asume_cosas else "despedida prematura"
-                print(f"\n🚨 FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
-                print(f"   Mensajes de Bruce: {num_mensajes_bruce} (< 4)")
-                print(f"   Tiene contacto: {tiene_contacto}")
-                print(f"   Último cliente: '{ultimo_cliente[:50]}'")
+            if estado_critico_298:
+                print(f"\n⏭️  FIX 419: Saltando FIX 298/301 - Estado crítico: {self.estado_conversacion.value}")
+                print(f"   GPT debe manejar con contexto de estado")
                 print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+                # NO sobrescribir - dejar respuesta de GPT
+            else:
+                # Verificar último mensaje del cliente para ver si es rechazo real
+                ultimos_cliente = [m['content'].lower() for m in self.conversation_history[-2:] if m['role'] == 'user']
+                ultimo_cliente = ultimos_cliente[-1] if ultimos_cliente else ""
 
-                # FIX 325/390: Si cliente pidió info por correo/WhatsApp, pedir el dato
-                if cliente_pide_info_contacto:
-                    # FIX 390: Detectar CORREO con patrones expandidos
-                    if any(p in ultimo_cliente for p in ['por correo', 'al correo', 'correo electrónico', 'correo electronico']):
-                        respuesta = "Claro, con gusto. ¿Me puede proporcionar su correo electrónico para enviarle el catálogo?"
-                        print(f"   FIX 325/390: Cliente pidió por CORREO - pidiendo email")
+                # Patrones de rechazo REAL (el cliente NO quiere hablar)
+                rechazo_real = any(frase in ultimo_cliente for frase in [
+                    'no gracias', 'no me interesa', 'no necesito', 'estoy ocupado', 'no tengo tiempo',
+                    'no moleste', 'no llame', 'quite mi número', 'no vuelva a llamar', 'cuelgo'
+                ])
+
+                # FIX 301: "Gracias" solo NO es rechazo - es cortesía
+                es_solo_gracias = ultimo_cliente.strip() in ['gracias', 'gracias.', 'muchas gracias', 'ok gracias']
+
+                # FIX 325/390/392: Detectar si cliente PIDE información por correo/WhatsApp
+                # O si ofrece DEJAR RECADO (oportunidad de capturar contacto)
+                cliente_pide_info_contacto = any(frase in ultimo_cliente for frase in [
+                    'por correo', 'por whatsapp', 'por wasa', 'enviar la información',
+                    'enviar la informacion', 'mandar la información', 'mandar la informacion',
+                    'me puedes enviar', 'me puede enviar', 'envíame', 'enviame',
+                    'mándame', 'mandame', 'enviarme', 'mandarme',
+                    # FIX 390: Agregar patrones faltantes (caso BRUCE1083)
+                    'al correo', 'mándanos al correo', 'mandanos al correo',
+                    'envíalo al correo', 'envialo al correo', 'mándalo al correo', 'mandalo al correo',
+                    'mándanos la', 'mandanos la', 'nos puede mandar', 'nos puede enviar',
+                    'envíanos', 'envianos', 'mándanos', 'mandanos',
+                    # FIX 392: Agregar "dejar recado" (caso BRUCE1096)
+                    'dejar recado', 'dejar mensaje', 'dejarle recado', 'dejarle mensaje',
+                    'guste dejar recado', 'gusta dejar recado', 'quiere dejar recado',
+                    'quieren dejar recado', 'quiere dejarle'
+                ])
+
+                if not rechazo_real or es_solo_gracias:
+                    tipo_problema = "asume cosas" if bruce_asume_cosas else "despedida prematura"
+                    print(f"\n🚨 FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
+                    print(f"   Mensajes de Bruce: {num_mensajes_bruce} (< 4)")
+                    print(f"   Tiene contacto: {tiene_contacto}")
+                    print(f"   Último cliente: '{ultimo_cliente[:50]}'")
+                    print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
+
+                    # FIX 325/390: Si cliente pidió info por correo/WhatsApp, pedir el dato
+                    if cliente_pide_info_contacto:
+                        # FIX 390: Detectar CORREO con patrones expandidos
+                        if any(p in ultimo_cliente for p in ['por correo', 'al correo', 'correo electrónico', 'correo electronico']):
+                            respuesta = "Claro, con gusto. ¿Me puede proporcionar su correo electrónico para enviarle el catálogo?"
+                            print(f"   FIX 325/390: Cliente pidió por CORREO - pidiendo email")
+                        else:
+                            respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
+                            print(f"   FIX 325/390: Cliente pidió por WHATSAPP - pidiendo número")
                     else:
-                        respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
-                        print(f"   FIX 325/390: Cliente pidió por WHATSAPP - pidiendo número")
-                else:
-                    # Continuar la conversación normalmente
-                    respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
-                filtro_aplicado = True
-                print(f"   Respuesta corregida: \"{respuesta}\"")
+                        # Continuar la conversación normalmente
+                        respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
         # FILTRO 1 (FIX 226/251): Si ya tenemos correo, NO repetirlo ni pedir WhatsApp
@@ -4539,6 +4566,35 @@ Ejemplo correcto:
 
             respuesta_agente = respuestas_despedida.get(self.lead_data["estado_llamada"], "Que tenga buen día.")
 
+            # FIX 421: NO repetir despedida automática si ya se dijo (caso BRUCE1227)
+            # Similar a FIX 415 para "Claro, espero."
+            # Verificar últimos 3 mensajes de Bruce
+            if respuesta_agente:
+                ultimos_bruce_temp_fix421 = [
+                    msg['content'].lower() for msg in self.conversation_history[-6:]
+                    if msg['role'] == 'assistant'
+                ]
+
+                # Buscar frases clave de la despedida en historial
+                frases_despedida_ya_dicha = [
+                    'disculpe las molestias',
+                    'error con el número',
+                    'entró el buzón',
+                    'le llamaré en otro momento'
+                ]
+
+                bruce_ya_se_despidio = any(
+                    frase in msg for frase in frases_despedida_ya_dicha
+                    for msg in ultimos_bruce_temp_fix421
+                )
+
+                if bruce_ya_se_despidio:
+                    # FIX 421: Ya dijo despedida → NO repetir (silencio)
+                    print(f"\n⏭️  FIX 421: Bruce YA se despidió - NO repetir despedida")
+                    print(f"   Cliente dijo: \"{respuesta_cliente[:50]}\" - NO responder")
+                    # Retornar cadena vacía para terminar llamada sin repetir
+                    return ""
+
             # Solo agregar al historial si hay respuesta (no vacía)
             if respuesta_agente:
                 self.conversation_history.append({
@@ -4845,13 +4901,36 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             # FIX 352: Respuestas de fallback según contexto del cliente
             respuesta_lower = respuesta_cliente.lower() if respuesta_cliente else ""
 
+            # FIX 422: Si Bruce pidió número del encargado y cliente aceptó, preguntar directamente
+            # Caso BRUCE1244: Bruce pidió número, cliente dijo "Si gusta,", Bruce debió preguntar por número
+            ultimos_bruce_422 = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_pidio_numero_encargado = any(
+                frase in msg for frase in [
+                    'número directo del encargado',
+                    'numero directo del encargado',
+                    'número del encargado',
+                    'numero del encargado'
+                ]
+                for msg in ultimos_bruce_422
+            )
+
+            cliente_acepta = any(p in respuesta_lower for p in ['sí', 'si', 'claro', 'adelante', 'dígame', 'digame', 'gusta'])
+
+            if bruce_pidio_numero_encargado and cliente_acepta:
+                print(f"✅ FIX 422: Bruce pidió número del encargado y cliente aceptó")
+                print(f"   Cliente dijo: '{respuesta_cliente}' - Preguntando directamente por número")
+                return "Perfecto. ¿Cuál es el número?"
+
             # Si cliente preguntó sobre productos
             if any(p in respuesta_lower for p in ['qué producto', 'que producto', 'de qué son', 'de que son',
                                                     'qué venden', 'que venden', 'qué manejan', 'que manejan']):
                 return "Manejamos productos de ferretería de la marca NIOVAL. Tenemos herramientas, grifería, candados, y más. ¿Le gustaría recibir el catálogo?"
 
-            # Si cliente dijo que sí o mostró interés
-            if any(p in respuesta_lower for p in ['sí', 'si', 'claro', 'adelante', 'dígame', 'digame']):
+            # Si cliente dijo que sí o mostró interés (pero NO si Bruce pidió número)
+            if cliente_acepta and not bruce_pidio_numero_encargado:
                 return "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
 
             # Si cliente preguntó quién habla o de dónde llaman
@@ -4887,18 +4966,24 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             print(f"📝 FIX 72: Estado detectado: Buzón de voz - Frase: '{texto[:50]}'")
             return
 
-        # FIX 24: Detección MÁS ESTRICTA de teléfono incorrecto
+        # FIX 24/420: Detección MÁS ESTRICTA de teléfono incorrecto
         # Frases completas que indican número equivocado
+        # FIX 420: Removida "fuera de servicio" - es ambigua (caso BRUCE1227)
+        # "fuera de servicio" puede referirse a: teléfono, negocio cerrado, o encargado no disponible
         frases_numero_incorrecto = [
             "numero incorrecto", "número incorrecto", "numero equivocado", "número equivocado",
-            "no existe", "fuera de servicio", "no es aqui", "no es aquí",
+            "no existe", "no es aqui", "no es aquí",
             "se equivocó de número", "se equivoco de numero", "marcó mal", "marco mal",
             "no trabajo aqui", "no trabajo aquí", "no es el negocio", "no es mi negocio",
             "equivocado de numero", "equivocado de número", "llamó mal", "llamo mal",
             "no hay negocio", "aqui no es", "aquí no es", "no es aca", "no es acá",
             "esto no es una ferretería", "esto no es ferretería", "no vendemos",
             "no es este el número", "no es este número", "llamó al número equivocado",
-            "se equivocó de teléfono", "marcó equivocado"
+            "se equivocó de teléfono", "marcó equivocado",
+            # FIX 420: Agregar patrones más específicos para teléfono fuera de servicio
+            "el número está fuera de servicio", "el numero esta fuera de servicio",
+            "teléfono fuera de servicio", "telefono fuera de servicio",
+            "este número no existe", "este numero no existe"
         ]
 
         # NOTA: Eliminadas frases genéricas que causan falsos positivos:
