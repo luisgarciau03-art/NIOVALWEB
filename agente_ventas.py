@@ -403,32 +403,55 @@ class AgenteVentas:
             # Responder directamente sin preguntar por encargado
             return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
 
-        # Detectar si cliente pide esperar
-        patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
-                          'un momento', 'un segundito', 'ahorita', 'tantito']
-        if any(p in mensaje_lower for p in patrones_espera):
-            # FIX 399: Verificar que NO sea pregunta directa a Bruce
-            # "¿De dónde dice que habla, permítame?" = PREGUNTA, no transferencia
-            preguntas_directas = [
-                '¿de dónde', '¿de donde', 'de dónde', 'de donde',
-                '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
-                '¿quién es', '¿quien es', 'quién es', 'quien es',
-                '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
-                '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
-                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
-                '¿qué dice', '¿que dice', 'qué dice', 'que dice'
-            ]
+        # FIX 405: PRIMERO detectar si es RECHAZO antes de detectar transferencia
+        # Caso BRUCE1146: "No, ahorita no, muchas gracias" = RECHAZO, NO transferencia
+        patrones_rechazo = [
+            'no, ahorita no', 'no ahorita no',
+            'no, gracias', 'no gracias',
+            'no me interesa', 'no necesito',
+            'no, no necesito', 'no no necesito',
+            'estoy ocupado', 'estamos ocupados',
+            'no tengo tiempo', 'no tiene tiempo',
+            'no moleste', 'no llame más', 'no llame mas',
+            'quite mi número', 'quite mi numero',
+            'no vuelva a llamar', 'no vuelvan a llamar'
+        ]
 
-            es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
+        es_rechazo = any(rechazo in mensaje_lower for rechazo in patrones_rechazo)
 
-            # Verificar que NO sea negación ("no está ahorita") Y NO sea pregunta directa
-            if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']) and not es_pregunta_directa:
-                self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
-                print(f"📊 FIX 339/399: Estado → ESPERANDO_TRANSFERENCIA")
-                return
-            elif es_pregunta_directa:
-                print(f"📊 FIX 399: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
-                print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder")
+        if es_rechazo:
+            print(f"📊 FIX 405: Cliente RECHAZÓ (no es transferencia)")
+            print(f"   Mensaje: '{mensaje_cliente}'")
+            print(f"   Detectado patrón de rechazo - GPT manejará despedida")
+            # NO activar ESPERANDO_TRANSFERENCIA - dejar que GPT maneje el rechazo
+            # GPT debería despedirse cortésmente
+        else:
+            # Detectar si cliente pide esperar (SOLO si NO es rechazo)
+            patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
+                              'un momento', 'un segundito', 'ahorita', 'tantito']
+            if any(p in mensaje_lower for p in patrones_espera):
+                # FIX 399: Verificar que NO sea pregunta directa a Bruce
+                # "¿De dónde dice que habla, permítame?" = PREGUNTA, no transferencia
+                preguntas_directas = [
+                    '¿de dónde', '¿de donde', 'de dónde', 'de donde',
+                    '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                    '¿quién es', '¿quien es', 'quién es', 'quien es',
+                    '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
+                    '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
+                    '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
+                    '¿qué dice', '¿que dice', 'qué dice', 'que dice'
+                ]
+
+                es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
+
+                # Verificar que NO sea negación ("no está ahorita") Y NO sea pregunta directa
+                if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']) and not es_pregunta_directa:
+                    self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
+                    print(f"📊 FIX 339/399/405: Estado → ESPERANDO_TRANSFERENCIA")
+                    return
+                elif es_pregunta_directa:
+                    print(f"📊 FIX 399: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
+                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder")
 
         # Detectar si encargado no está
         patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
@@ -909,8 +932,9 @@ class AgenteVentas:
         # Estas reglas se ejecutan ANTES de cualquier skip
         # ============================================================
 
-        # REGLA CRÍTICA 2: Si cliente pregunta "¿De dónde habla?", responder ANTES de ofrecer catálogo
+        # REGLA CRÍTICA 2: Si cliente pregunta "¿De dónde habla?" o "¿Qué necesita?", responder ANTES de ofrecer catálogo
         # FIX 400: Caso BRUCE1136 - Cliente preguntó "¿De dónde me habla?" y Bruce no respondió
+        # FIX 405: Caso BRUCE1146 - Cliente preguntó "¿Qué necesita?" y Bruce dijo "¿Me escucha?"
         if not filtro_aplicado:
             cliente_pregunta_de_donde = any(patron in contexto_cliente.lower() for patron in [
                 '¿de dónde', '¿de donde', 'de dónde', 'de donde',
@@ -918,7 +942,12 @@ class AgenteVentas:
                 '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
                 '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
                 '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
-                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir'
+                '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
+                # FIX 405: Agregar "¿Qué necesita?" (caso BRUCE1146)
+                '¿qué necesita', '¿que necesita', 'qué necesita', 'que necesita',
+                '¿en qué le puedo ayudar', '¿en que le puedo ayudar',
+                '¿qué se le ofrece', '¿que se le ofrece',
+                '¿para qué llama', '¿para que llama'
             ])
 
             # Verificar si Bruce NO mencionó la empresa en su respuesta
@@ -927,7 +956,7 @@ class AgenteVentas:
             ])
 
             if cliente_pregunta_de_donde and not bruce_menciona_nioval:
-                print(f"\n🚫 FIX 400: REGLA CRÍTICA 2 - Cliente preguntó de dónde habla, Bruce NO respondió")
+                print(f"\n🚫 FIX 400/405: REGLA CRÍTICA 2 - Cliente preguntó sobre empresa/propósito, Bruce NO respondió")
                 print(f"   Cliente dijo: '{contexto_cliente[:100]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:80]}'")
                 respuesta = "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
