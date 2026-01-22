@@ -448,72 +448,81 @@ class AgenteVentas:
                 es_solicitud_llamar_despues = any(patron in mensaje_lower for patron in solicita_llamar_despues)
 
                 if es_solicitud_llamar_despues:
-                    print(f"📊 FIX 411: Cliente pide LLAMAR DESPUÉS (no transferencia)")
-                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe agendar o despedirse")
-                    # NO activar ESPERANDO_TRANSFERENCIA
-                    return  # Dejar que GPT maneje
+                    # FIX 416: NO hacer return - permitir que se detecte ENCARGADO_NO_ESTA
+                    # Caso BRUCE1215: "No, no está ahorita. Si quiere más tarde"
+                    # Debe detectar AMBOS: 1) Llamar después 2) Encargado no está
+                    print(f"📊 FIX 411/416: Cliente pide LLAMAR DESPUÉS (no transferencia)")
+                    print(f"   Mensaje: '{mensaje_cliente}' - Continuando para detectar otros estados")
+                    # NO activar ESPERANDO_TRANSFERENCIA - pero NO hacer return aún
+                    # Continuar para detectar ENCARGADO_NO_ESTA u otros estados
 
-                # FIX 411: Verificar que NO sea solicitud de número de Bruce
-                # Caso BRUCE1198: "O si gusta dejarme algún número" = PIDE NÚMERO, no transferencia
-                pide_numero_bruce = [
-                    'déjame un número', 'dejame un numero',
-                    'déjame algún número', 'dejame algun numero',
-                    'dame un número', 'dame un numero',
-                    'tu número', 'su número', 'tu numero', 'su numero',
-                    'tu teléfono', 'su teléfono', 'tu telefono', 'su telefono',
-                    'tu whatsapp', 'su whatsapp',
-                    'dejarme número', 'dejarme numero',
-                    'dejarme algún', 'dejarme algun',
-                ]
+                else:
+                    # FIX 411: Verificar que NO sea solicitud de número de Bruce
+                    # Caso BRUCE1198: "O si gusta dejarme algún número" = PIDE NÚMERO, no transferencia
+                    pide_numero_bruce = [
+                        'déjame un número', 'dejame un numero',
+                        'déjame algún número', 'dejame algun numero',
+                        'dame un número', 'dame un numero',
+                        'tu número', 'su número', 'tu numero', 'su numero',
+                        'tu teléfono', 'su teléfono', 'tu telefono', 'su telefono',
+                        'tu whatsapp', 'su whatsapp',
+                        'dejarme número', 'dejarme numero',
+                        'dejarme algún', 'dejarme algun',
+                    ]
 
-                cliente_pide_numero = any(patron in mensaje_lower for patron in pide_numero_bruce)
+                    cliente_pide_numero = any(patron in mensaje_lower for patron in pide_numero_bruce)
 
-                if cliente_pide_numero:
-                    print(f"📊 FIX 411: Cliente PIDE NÚMERO de Bruce")
-                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe dar WhatsApp")
-                    # NO activar ESPERANDO_TRANSFERENCIA
-                    return  # Dejar que GPT maneje
+                    if cliente_pide_numero:
+                        print(f"📊 FIX 411: Cliente PIDE NÚMERO de Bruce")
+                        print(f"   Mensaje: '{mensaje_cliente}' - GPT debe dar WhatsApp")
+                        # NO activar ESPERANDO_TRANSFERENCIA
+                        return  # Dejar que GPT maneje
 
-                # FIX 411: Expandir preguntas directas (incluir NOMBRE)
-                # Caso BRUCE1199: "Permítame. ¿Cuál es tu nombre?" = PREGUNTA POR NOMBRE, no transferencia
-                preguntas_directas = [
-                    '¿de dónde', '¿de donde', 'de dónde', 'de donde',
-                    '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
-                    '¿quién es', '¿quien es', 'quién es', 'quien es',
-                    '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
-                    '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
-                    '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
-                    '¿qué dice', '¿que dice', 'qué dice', 'que dice',
-                    # FIX 411: Preguntas por NOMBRE (caso BRUCE1199)
-                    '¿cuál es tu nombre', '¿cual es tu nombre', 'cuál es tu nombre', 'cual es tu nombre',
-                    '¿cómo te llamas', '¿como te llamas', 'cómo te llamas', 'como te llamas',
-                    '¿cuánto es tu nombre', '¿cuanto es tu nombre',  # Deepgram transcribe "cuál" como "cuánto"
-                    '¿tu nombre', 'tu nombre',
-                    '¿su nombre', 'su nombre',
-                    '¿cómo se llama', '¿como se llama', 'cómo se llama', 'como se llama',
-                    '¿cuál es su nombre', '¿cual es su nombre', 'cuál es su nombre', 'cual es su nombre',
-                ]
+                    # FIX 411: Expandir preguntas directas (incluir NOMBRE)
+                    # Caso BRUCE1199: "Permítame. ¿Cuál es tu nombre?" = PREGUNTA POR NOMBRE, no transferencia
+                    preguntas_directas = [
+                        '¿de dónde', '¿de donde', 'de dónde', 'de donde',
+                        '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                        '¿quién es', '¿quien es', 'quién es', 'quien es',
+                        '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
+                        '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
+                        '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
+                        '¿qué dice', '¿que dice', 'qué dice', 'que dice',
+                        # FIX 411: Preguntas por NOMBRE (caso BRUCE1199)
+                        '¿cuál es tu nombre', '¿cual es tu nombre', 'cuál es tu nombre', 'cual es tu nombre',
+                        '¿cómo te llamas', '¿como te llamas', 'cómo te llamas', 'como te llamas',
+                        '¿cuánto es tu nombre', '¿cuanto es tu nombre',  # Deepgram transcribe "cuál" como "cuánto"
+                        '¿tu nombre', 'tu nombre',
+                        '¿su nombre', 'su nombre',
+                        '¿cómo se llama', '¿como se llama', 'cómo se llama', 'como se llama',
+                        '¿cuál es su nombre', '¿cual es su nombre', 'cuál es su nombre', 'cual es su nombre',
+                    ]
 
-                es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
+                    es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
 
-                if es_pregunta_directa:
-                    print(f"📊 FIX 411: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
-                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder la pregunta")
-                    # NO activar ESPERANDO_TRANSFERENCIA
-                    return  # Dejar que GPT maneje
+                    if es_pregunta_directa:
+                        print(f"📊 FIX 411: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
+                        print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder la pregunta")
+                        # NO activar ESPERANDO_TRANSFERENCIA
+                        return  # Dejar que GPT maneje
 
-                # Verificar que NO sea negación ("no está ahorita")
-                if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']):
-                    self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
-                    print(f"📊 FIX 339/399/405/411: Estado → ESPERANDO_TRANSFERENCIA")
-                    return
+                    # Verificar que NO sea negación ("no está ahorita") ni ocupado ("ahorita está ocupado")
+                    # FIX 417: Agregar "ocupado" a las exclusiones (casos BRUCE1216, BRUCE1219)
+                    if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra', 'ocupado', 'busy']):
+                        self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
+                        print(f"📊 FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA")
+                        return
 
         # Detectar si encargado no está
+        # FIX 417: Agregar "ocupado" y "busy" (casos BRUCE1216, BRUCE1219)
         patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
-                           'no hay', 'no lo encuentro', 'no los encuentro', 'no tiene horario']
+                           'no hay', 'no lo encuentro', 'no los encuentro', 'no tiene horario',
+                           # FIX 417: "Ocupado" = No disponible = Equivalente a "no está"
+                           'está ocupado', 'esta ocupado', 'ocupado',
+                           'está busy', 'esta busy', 'busy']
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
-            print(f"📊 FIX 339: Estado → ENCARGADO_NO_ESTA")
+            print(f"📊 FIX 339/417: Estado → ENCARGADO_NO_ESTA")
             return
 
         # Detectar si ya capturamos contacto
@@ -1134,8 +1143,20 @@ class AgenteVentas:
                     'me podría proporcionar', 'dígame su correo', 'digame su correo'
                 ])
 
+                # FIX 418: NO aplicar FIX 384 si estamos en estado crítico (ENCARGADO_NO_ESTA)
+                # Caso BRUCE1220: Cliente dijo "no hay", estado = ENCARGADO_NO_ESTA
+                # FIX 384 sobrescribió con "Claro. Manejamos productos..." (incorrecto)
+                estado_critico = self.estado_conversacion in [
+                    EstadoConversacion.ENCARGADO_NO_ESTA,
+                    EstadoConversacion.ENCARGADO_NO_ESTA
+                ]
+
+                if estado_critico:
+                    print(f"\n⏭️  FIX 418: Saltando FIX 384 - Estado crítico: {self.estado_conversacion.value}")
+                    print(f"   GPT debe manejar con contexto de estado")
+                    print(f"   Cliente dijo: '{contexto_cliente[-80:] if len(contexto_cliente) > 80 else contexto_cliente}'")
                 # Si GPT está pidiendo contacto, NO aplicar FIX 384
-                if gpt_pide_contacto:
+                elif gpt_pide_contacto:
                     print(f"\n⏭️  FIX 391: Saltando FIX 384 - GPT está pidiendo WhatsApp/correo correctamente")
                     print(f"   GPT generó: '{respuesta[:80]}...'")
                 else:
@@ -3832,10 +3853,27 @@ class AgenteVentas:
         # ============================================================
         self._actualizar_estado_conversacion(respuesta_cliente)
 
-        # FIX 389: Si cliente pidió esperar (transferencia) → Responder inmediatamente SIN llamar GPT
+        # FIX 389/415: Si cliente pidió esperar (transferencia) → Responder inmediatamente SIN llamar GPT
         # PERO: Si cambió a BUSCANDO_ENCARGADO (persona nueva), SÍ llamar GPT para re-presentarse
+        # FIX 415: Prevenir loop "Claro, espero." - Solo decirlo UNA VEZ
         if self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-            print(f"\n⏳ FIX 389: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
+            # FIX 415: Verificar si Bruce YA dijo "Claro, espero." recientemente
+            ultimos_bruce_temp_fix415 = [
+                msg['content'].lower() for msg in self.conversation_history[-5:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_ya_dijo_espero = any('claro, espero' in msg or 'claro espero' in msg
+                                       for msg in ultimos_bruce_temp_fix415)
+
+            if bruce_ya_dijo_espero:
+                # FIX 415: Ya dijo "Claro, espero." → SILENCIARSE (esperar en silencio sin responder)
+                print(f"\n⏭️  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
+                print(f"   Cliente dijo: \"{respuesta_cliente}\" - NO responder (esperar transferencia)")
+                # Retornar None para indicar que NO debe generar audio
+                return None
+
+            # Primera vez diciendo "Claro, espero." en esta transferencia
+            print(f"\n⏳ FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
             print(f"   Cliente dijo: \"{respuesta_cliente}\"")
             print(f"   → Respondiendo 'Claro, espero.' SIN llamar GPT")
 
