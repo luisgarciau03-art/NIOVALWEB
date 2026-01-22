@@ -258,6 +258,7 @@ class AgenteVentas:
         self.esperando_transferencia = False  # FIX 170: Flag cuando cliente va a pasar al encargado
         self.segunda_parte_saludo_dicha = False  # FIX 201: Flag para evitar repetir segunda parte del saludo
         self.detector_ivr = DetectorIVR()  # FIX 202: Detector de sistemas IVR/contestadoras automáticas
+        self.timeouts_deepgram = 0  # FIX 408: Contador de timeouts de Deepgram (máximo 2 pedidos de repetición)
 
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
@@ -721,6 +722,7 @@ class AgenteVentas:
         # FIX 392: Mejorar detección de "salieron a comer / regresan en X tiempo"
         # FIX 393: Mejorar detección de "No, no se encuentra" y variantes
         # FIX 397: Detectar "No." simple como respuesta negativa (caso BRUCE1125)
+        # FIX 409: Detectar "ahorita no" (caso timeout Deepgram + "no está")
         # ============================================================
         cliente_dice_no_esta = any(frase in contexto_lower for frase in [
             'no está', 'no esta', 'no se encuentra', 'no lo encuentro',
@@ -731,6 +733,9 @@ class AgenteVentas:
             'regresan', 'regresa', 'vuelve', 'vuelven',
             'en media hora', 'en una hora', 'en un rato', 'más tarde', 'mas tarde',
             'ahorita no está', 'ahorita no esta',
+            # FIX 409: Agregar "ahorita no" + variantes más flexibles
+            'ahorita no', 'no está ahorita', 'no esta ahorita',
+            'no ahorita', 'ahorita ya no',
             # FIX 393: Agregar variantes de rechazo directo (caso BRUCE1099)
             'no, no se encuentra', 'no, no está', 'no, no esta',
             'no se encuentra, no', 'no, gracias', 'no gracias'
@@ -2189,12 +2194,13 @@ class AgenteVentas:
                 ultimo_cliente = ultimos_mensajes_cliente[-1]
 
                 # Patrones que indican que el cliente pregunta quién habla / de parte de quién
+                # FIX 410: Arreglar patrón que detecta "quiere" como "quién"
                 patrones_quien_habla = [
-                    r'(?:con\s+)?qui[eé]n\s+(?:tengo\s+el\s+gusto|hablo|me\s+habla|est[aá]s?)',  # "con quién hablo", "quién eres"
+                    r'\bqui[eé]n\s+(?:tengo\s+el\s+gusto|hablo|me\s+habla|est[aá]s?|eres)',  # "quién hablo", "quién eres" (word boundary)
+                    r'\bcon\s+qui[eé]n\s+(?:hablo|tengo)',  # "con quién hablo"
                     r'(?:cu[aá]l\s+es\s+)?(?:tu|su)\s+nombre',  # "cuál es tu nombre", "tu nombre"
                     r'c[oó]mo\s+(?:te\s+llamas?|se\s+llama)',  # "cómo te llamas", "cómo se llama"
-                    r'(?:qui[eé]n\s+)?eres\s+(?:t[uú])?',  # "quién eres tú", "eres tú"
-                    r'a\s+qui[eé]n\s+(?:hablo|tengo)',  # "a quién hablo"
+                    r'\ba\s+qui[eé]n\s+(?:hablo|tengo)',  # "a quién hablo"
                     # FIX 308: Agregar "¿de parte de quién?"
                     r'(?:de\s+)?parte\s+de\s+qui[eé]n',  # "de parte de quién", "parte de quién"
                     r'de\s+qu[eé]\s+(?:empresa|marca|compa[ñn][ií]a)',  # "de qué empresa"

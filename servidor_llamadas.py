@@ -1677,6 +1677,13 @@ def procesar_respuesta():
                     if speech_original_twilio:
                         print(f"   🔵 Twilio: '{speech_original_twilio}'")
 
+                    # FIX 408: Resetear contador de timeouts cuando Deepgram responde exitosamente
+                    if call_sid in conversaciones_activas:
+                        agente_temp = conversaciones_activas[call_sid]
+                        if hasattr(agente_temp, 'timeouts_deepgram') and agente_temp.timeouts_deepgram > 0:
+                            print(f"   ✅ FIX 408: Reseteando contador de timeouts (era {agente_temp.timeouts_deepgram})")
+                            agente_temp.timeouts_deepgram = 0
+
                     deepgram_transcripciones[call_sid] = []
                     break
             time.sleep(wait_interval)
@@ -2266,42 +2273,103 @@ def procesar_respuesta():
         es_primer_mensaje = len(mensajes_usuario) == 0
 
         if es_primer_mensaje:
-            print(f"🚨 FIX 211: Primer mensaje vacío - Asumiendo que cliente respondió pero no se transcribió")
-            print(f"   Reproduciendo segunda parte del saludo directamente...")
+            # FIX 408: Lógica progresiva de timeouts - NO asumir "bueno" inmediatamente
+            # Cliente podría haber dicho "no está" y perdemos la conversación
+
+            # Incrementar contador de timeouts
+            agente.timeouts_deepgram += 1
+            print(f"🚨 FIX 408: Primer mensaje vacío (timeout #{agente.timeouts_deepgram})")
+
             agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
-
-            # FIX 211: En lugar de esperar, reproducir la segunda parte del saludo
-            # El cliente probablemente ya dijo "bueno" o "sí" pero Whisper no lo captó
-            segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
-
-            # Agregar al historial como si hubiera respondido
-            agente.conversation_history.append({
-                "role": "user",
-                "content": "[Cliente respondió - no transcrito]"
-            })
-            agente.conversation_history.append({
-                "role": "assistant",
-                "content": segunda_parte
-            })
-
             response = VoiceResponse()
+            bruce_id = agente.lead_data.get("bruce_id", "N/A")
 
-            # Usar audio pre-generado si existe
-            if "segunda_parte_saludo" in audio_cache:
-                audio_id = f"segunda_parte_vacio_{call_sid}"
-                audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
-                audio_url = request.url_root + f"audio/{audio_id}"
-                print(f"📦 FIX 211: Usando audio pre-generado de segunda_parte_saludo")
-                response.play(audio_url)
-            else:
-                # Generar audio si no está en caché
-                audio_id = f"segunda_parte_vacio_{call_sid}"
-                result = generar_audio_elevenlabs(segunda_parte, audio_id)
+            # LÓGICA PROGRESIVA: Máximo 2 pedidos de repetición
+            if agente.timeouts_deepgram == 1:
+                # PRIMER TIMEOUT: Pedir repetición natural
+                respuesta_timeout = "Disculpe, no alcancé a escucharle bien, ¿me podría repetir?"
+                print(f"   📞 FIX 408: Primer timeout - pidiendo repetición natural")
+
+                # Agregar al historial
+                agente.conversation_history.append({
+                    "role": "user",
+                    "content": "[Timeout Deepgram - no se transcribió]"
+                })
+                agente.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_timeout
+                })
+
+                # Generar audio
+                audio_id = f"timeout1_{call_sid}"
+                result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
                 if result:
                     audio_url = request.url_root + f"audio/{audio_id}"
                     response.play(audio_url)
                 else:
-                    response.say(segunda_parte, voice="alice", language="es-MX")
+                    response.say(respuesta_timeout, voice="alice", language="es-MX")
+
+                log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #1)", "BRUCE")
+
+            elif agente.timeouts_deepgram == 2:
+                # SEGUNDO TIMEOUT: Pedir repetición más directa
+                respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
+                print(f"   📞 FIX 408: Segundo timeout - pidiendo repetición directa")
+
+                # Agregar al historial
+                agente.conversation_history.append({
+                    "role": "user",
+                    "content": "[Timeout Deepgram #2 - no se transcribió]"
+                })
+                agente.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_timeout
+                })
+
+                # Generar audio
+                audio_id = f"timeout2_{call_sid}"
+                result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
+                if result:
+                    audio_url = request.url_root + f"audio/{audio_id}"
+                    response.play(audio_url)
+                else:
+                    response.say(respuesta_timeout, voice="alice", language="es-MX")
+
+                log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #2)", "BRUCE")
+
+            else:
+                # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
+                print(f"   ⚠️ FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
+                segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+                # Agregar al historial como si hubiera respondido
+                agente.conversation_history.append({
+                    "role": "user",
+                    "content": "[Cliente respondió - problema de audio]"
+                })
+                agente.conversation_history.append({
+                    "role": "assistant",
+                    "content": segunda_parte
+                })
+
+                # Usar audio pre-generado si existe
+                if "segunda_parte_saludo" in audio_cache:
+                    audio_id = f"segunda_parte_vacio_{call_sid}"
+                    audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
+                    audio_url = request.url_root + f"audio/{audio_id}"
+                    print(f"📦 FIX 408: Usando audio pre-generado de segunda_parte_saludo")
+                    response.play(audio_url)
+                else:
+                    # Generar audio si no está en caché
+                    audio_id = f"segunda_parte_vacio_{call_sid}"
+                    result = generar_audio_elevenlabs(segunda_parte, audio_id)
+                    if result:
+                        audio_url = request.url_root + f"audio/{audio_id}"
+                        response.play(audio_url)
+                    else:
+                        response.say(segunda_parte, voice="alice", language="es-MX")
+
+                log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 408: timeout #3+, continuando)", "BRUCE")
 
             # FIX 214/215: Record en lugar de Gather (elimina costos de Speech Recognition)
             response.record(
@@ -2313,11 +2381,7 @@ def procesar_respuesta():
                 trim="trim-silence"
             )
 
-            # FIX 284: Registrar en logs (sin duplicar prefijo BRUCE)
-            bruce_id = agente.lead_data.get("bruce_id", "N/A")
-            log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 211: primer mensaje vacío)", "BRUCE")
-
-            print(f"✅ FIX 211: Segunda parte del saludo reproducida aunque cliente no fue transcrito")
+            print(f"✅ FIX 408: Respuesta enviada según nivel de timeout")
             return Response(str(response), mimetype="text/xml")
 
         # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
