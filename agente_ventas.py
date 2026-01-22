@@ -404,12 +404,15 @@ class AgenteVentas:
             # Responder directamente sin preguntar por encargado
             return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
 
-        # FIX 405: PRIMERO detectar si es RECHAZO antes de detectar transferencia
+        # FIX 405/413: PRIMERO detectar si es RECHAZO antes de detectar transferencia
         # Caso BRUCE1146: "No, ahorita no, muchas gracias" = RECHAZO, NO transferencia
+        # FIX 413: Caso BRUCE1206: "No, no nos interesa ahorita, gracias" = RECHAZO, NO transferencia
         patrones_rechazo = [
             'no, ahorita no', 'no ahorita no',
             'no, gracias', 'no gracias',
             'no me interesa', 'no necesito',
+            # FIX 413: Agregar variantes "nos/les/le interesa" (caso BRUCE1206)
+            'no nos interesa', 'no les interesa', 'no le interesa',
             'no, no necesito', 'no no necesito',
             'estoy ocupado', 'estamos ocupados',
             'no tengo tiempo', 'no tiene tiempo',
@@ -431,8 +434,48 @@ class AgenteVentas:
             patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
                               'un momento', 'un segundito', 'ahorita', 'tantito']
             if any(p in mensaje_lower for p in patrones_espera):
-                # FIX 399: Verificar que NO sea pregunta directa a Bruce
-                # "¿De dónde dice que habla, permítame?" = PREGUNTA, no transferencia
+                # FIX 411: Verificar que NO sea solicitud de llamar después
+                # Caso BRUCE1198: "Si gusta marcar en 5 minutos" = LLAMAR DESPUÉS, no transferencia
+                solicita_llamar_despues = [
+                    'marcar en', 'llamar en',  # "Si gusta marcar en 5 minutos"
+                    'marcar más tarde', 'llamar más tarde', 'marcar mas tarde', 'llamar mas tarde',
+                    'marcar después', 'llamar después', 'marcar despues', 'llamar despues',
+                    'marcar luego', 'llamar luego',
+                    'en 5 minutos', 'en un rato', 'en unos minutos',
+                    'más tarde', 'más tardecito', 'al rato', 'mas tarde', 'mas tardecito',
+                ]
+
+                es_solicitud_llamar_despues = any(patron in mensaje_lower for patron in solicita_llamar_despues)
+
+                if es_solicitud_llamar_despues:
+                    print(f"📊 FIX 411: Cliente pide LLAMAR DESPUÉS (no transferencia)")
+                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe agendar o despedirse")
+                    # NO activar ESPERANDO_TRANSFERENCIA
+                    return  # Dejar que GPT maneje
+
+                # FIX 411: Verificar que NO sea solicitud de número de Bruce
+                # Caso BRUCE1198: "O si gusta dejarme algún número" = PIDE NÚMERO, no transferencia
+                pide_numero_bruce = [
+                    'déjame un número', 'dejame un numero',
+                    'déjame algún número', 'dejame algun numero',
+                    'dame un número', 'dame un numero',
+                    'tu número', 'su número', 'tu numero', 'su numero',
+                    'tu teléfono', 'su teléfono', 'tu telefono', 'su telefono',
+                    'tu whatsapp', 'su whatsapp',
+                    'dejarme número', 'dejarme numero',
+                    'dejarme algún', 'dejarme algun',
+                ]
+
+                cliente_pide_numero = any(patron in mensaje_lower for patron in pide_numero_bruce)
+
+                if cliente_pide_numero:
+                    print(f"📊 FIX 411: Cliente PIDE NÚMERO de Bruce")
+                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe dar WhatsApp")
+                    # NO activar ESPERANDO_TRANSFERENCIA
+                    return  # Dejar que GPT maneje
+
+                # FIX 411: Expandir preguntas directas (incluir NOMBRE)
+                # Caso BRUCE1199: "Permítame. ¿Cuál es tu nombre?" = PREGUNTA POR NOMBRE, no transferencia
                 preguntas_directas = [
                     '¿de dónde', '¿de donde', 'de dónde', 'de donde',
                     '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
@@ -440,19 +483,30 @@ class AgenteVentas:
                     '¿qué empresa', '¿que empresa', 'qué empresa', 'que empresa',
                     '¿cómo dijo', '¿como dijo', 'cómo dijo', 'como dijo',
                     '¿me repite', 'me repite', '¿puede repetir', 'puede repetir',
-                    '¿qué dice', '¿que dice', 'qué dice', 'que dice'
+                    '¿qué dice', '¿que dice', 'qué dice', 'que dice',
+                    # FIX 411: Preguntas por NOMBRE (caso BRUCE1199)
+                    '¿cuál es tu nombre', '¿cual es tu nombre', 'cuál es tu nombre', 'cual es tu nombre',
+                    '¿cómo te llamas', '¿como te llamas', 'cómo te llamas', 'como te llamas',
+                    '¿cuánto es tu nombre', '¿cuanto es tu nombre',  # Deepgram transcribe "cuál" como "cuánto"
+                    '¿tu nombre', 'tu nombre',
+                    '¿su nombre', 'su nombre',
+                    '¿cómo se llama', '¿como se llama', 'cómo se llama', 'como se llama',
+                    '¿cuál es su nombre', '¿cual es su nombre', 'cuál es su nombre', 'cual es su nombre',
                 ]
 
                 es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
 
-                # Verificar que NO sea negación ("no está ahorita") Y NO sea pregunta directa
-                if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']) and not es_pregunta_directa:
+                if es_pregunta_directa:
+                    print(f"📊 FIX 411: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
+                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder la pregunta")
+                    # NO activar ESPERANDO_TRANSFERENCIA
+                    return  # Dejar que GPT maneje
+
+                # Verificar que NO sea negación ("no está ahorita")
+                if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra']):
                     self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
-                    print(f"📊 FIX 339/399/405: Estado → ESPERANDO_TRANSFERENCIA")
+                    print(f"📊 FIX 339/399/405/411: Estado → ESPERANDO_TRANSFERENCIA")
                     return
-                elif es_pregunta_directa:
-                    print(f"📊 FIX 399: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
-                    print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder")
 
         # Detectar si encargado no está
         patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
@@ -940,6 +994,7 @@ class AgenteVentas:
         # REGLA CRÍTICA 2: Si cliente pregunta "¿De dónde habla?" o "¿Qué necesita?", responder ANTES de ofrecer catálogo
         # FIX 400: Caso BRUCE1136 - Cliente preguntó "¿De dónde me habla?" y Bruce no respondió
         # FIX 405: Caso BRUCE1146 - Cliente preguntó "¿Qué necesita?" y Bruce dijo "¿Me escucha?"
+        # FIX 412: Caso BRUCE1203 - Cliente preguntó "¿En qué le puedo ayudar?" al inicio, Bruce se presentó, luego cliente dijo "No, no se encuentra" y Bruce volvió a presentarse innecesariamente
         if not filtro_aplicado:
             cliente_pregunta_de_donde = any(patron in contexto_cliente.lower() for patron in [
                 '¿de dónde', '¿de donde', 'de dónde', 'de donde',
@@ -955,17 +1010,35 @@ class AgenteVentas:
                 '¿para qué llama', '¿para que llama'
             ])
 
-            # Verificar si Bruce NO mencionó la empresa en su respuesta
-            bruce_menciona_nioval = any(palabra in respuesta.lower() for palabra in [
+            # Verificar si Bruce NO mencionó la empresa en su respuesta ACTUAL
+            bruce_menciona_nioval_en_respuesta_actual = any(palabra in respuesta.lower() for palabra in [
                 'nioval', 'marca nioval', 'la marca', 'me comunico de'
             ])
 
-            if cliente_pregunta_de_donde and not bruce_menciona_nioval:
-                print(f"\n🚫 FIX 400/405: REGLA CRÍTICA 2 - Cliente preguntó sobre empresa/propósito, Bruce NO respondió")
+            # FIX 412: Verificar si Bruce YA se presentó en mensajes ANTERIORES
+            # Caso BRUCE1203: Cliente preguntó "¿En qué le puedo ayudar?" al inicio, Bruce se presentó,
+            # luego cliente dijo "No, no se encuentra" y Bruce NO debe volver a presentarse
+            ultimos_mensajes_bruce_temp_fix412 = [
+                msg['content'].lower() for msg in self.conversation_history[-10:]
+                if msg['role'] == 'assistant'
+            ]
+            bruce_ya_se_presento = any(
+                any(palabra in msg for palabra in ['nioval', 'marca nioval', 'me comunico de'])
+                for msg in ultimos_mensajes_bruce_temp_fix412
+            )
+
+            # FIX 412: SOLO activar si cliente preguntó Y Bruce NO mencionó NIOVAL (ni ahora NI antes)
+            if cliente_pregunta_de_donde and not bruce_menciona_nioval_en_respuesta_actual and not bruce_ya_se_presento:
+                print(f"\n🚫 FIX 400/405/412: REGLA CRÍTICA 2 - Cliente preguntó sobre empresa, Bruce NO se ha presentado")
                 print(f"   Cliente dijo: '{contexto_cliente[:100]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:80]}'")
                 respuesta = "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
                 filtro_aplicado = True
+            elif cliente_pregunta_de_donde and bruce_ya_se_presento:
+                # FIX 412: Bruce YA se presentó antes - NO sobrescribir
+                print(f"\n⏭️  FIX 412: Cliente preguntó pero Bruce YA se presentó antes - NO sobrescribiendo")
+                print(f"   Respuesta actual: '{respuesta[:80]}'")
+                # NO activar filtro - dejar que la respuesta actual fluya
 
         # REGLA CRÍTICA 1: NUNCA decir "ya lo tengo" sin datos reales
         # FIX 402: Expandir patrones para capturar TODAS las variantes
