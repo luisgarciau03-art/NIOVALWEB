@@ -2207,6 +2207,22 @@ def procesar_respuesta():
                     print(f"   Historial: {agente.transcripcion_parcial_acumulada[-3:]}")
                     frase_parece_incompleta = False  # Forzar respuesta
 
+            # FIX 441: Casos BRUCE1329-1332 - NO esperar para saludos simples
+            # Los saludos son frases completas por sí mismas, no necesitan continuación
+            saludos_simples = [
+                'hola', 'buenas', 'buenos días', 'buenos dias', 'buen día', 'buen dia',
+                'buenas tardes', 'buenas noches', 'qué tal', 'que tal',
+                'bueno', 'aló', 'alo', 'diga', 'dígame', 'digame',
+                'mande', 'sí', 'si', 'sí dígame', 'si digame'
+            ]
+            # Limpiar signos de interrogación/exclamación de ambos lados
+            frase_para_comparar = frase_limpia.strip('.,;:!?¿¡')
+            frase_es_saludo_simple = frase_para_comparar in saludos_simples
+
+            if frase_parece_incompleta and frase_es_saludo_simple:
+                print(f"   ✅ FIX 441: '{speech_result}' es saludo simple - NO esperar continuación")
+                frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             if frase_parece_incompleta:
                 print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
                 print(f"   Transcripción parcial: '{speech_result}'")
@@ -2227,18 +2243,21 @@ def procesar_respuesta():
                     # Generar TwiML para seguir escuchando SIN interrumpir
                     response = VoiceResponse()
 
-                    # FIX 244/395: Timeout reducido (2.5s) para evitar interrupciones largas
-                    # BRUCE1122 mostró que 4s es muy largo - cliente termina de hablar antes
+                    # FIX 244/395/442: Timeout dinámico basado en contenido
+                    # - 2.5s para deletreo de email (necesita más tiempo)
+                    # - 1.5s para otras frases (reducir delay percibido - casos BRUCE1329-1332)
+                    timeout_espera = 2.5 if esta_deletreando_email else 1.5
+
                     response.record(
                         action="/procesar-respuesta",
                         method="POST",
                         max_length=1,
-                        timeout=2.5,  # 2.5s de silencio real = terminó de hablar
+                        timeout=timeout_espera,
                         play_beep=False,
                         trim="trim-silence"
                     )
 
-                    print(f"   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...")
+                    print(f"   ✅ FIX 244/395/442: Esperando continuación con timeout de {timeout_espera}s...")
                     return Response(str(response), mimetype="text/xml")
 
         # Si llegó aquí y hay transcripciones parciales acumuladas, concatenar
