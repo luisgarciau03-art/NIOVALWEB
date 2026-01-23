@@ -20,6 +20,7 @@ from agente_ventas import AgenteVentas
 from elevenlabs import ElevenLabs
 from openai import OpenAI  # FIX 60: Para Whisper API
 import requests  # FIX 60: Para descargar grabaciones de Twilio
+import re  # FIX 458: Para limpiar puntuación en detección de saludos
 
 # FIX 212: Flask-Sock para WebSocket (Deepgram streaming)
 try:
@@ -2291,11 +2292,16 @@ def procesar_respuesta():
                 'hola', 'buenas', 'buenos días', 'buenos dias', 'buen día', 'buen dia',
                 'buenas tardes', 'buenas noches', 'qué tal', 'que tal',
                 'bueno', 'aló', 'alo', 'diga', 'dígame', 'digame',
-                'mande', 'sí', 'si', 'sí dígame', 'si digame'
+                'mande', 'sí', 'si', 'sí dígame', 'si digame',
+                # FIX 458: BRUCE1377 - Agregar variantes con coma/puntuación
+                'sí, dígame', 'si, digame', 'sí, diga', 'si, diga',
+                'buen día, dígame', 'buen dia, digame'
             ]
-            # Limpiar signos de interrogación/exclamación de ambos lados
-            frase_para_comparar = frase_limpia.strip('.,;:!?¿¡')
-            frase_es_saludo_simple = frase_para_comparar in saludos_simples
+            # FIX 458: Limpiar TODA la puntuación (incluyendo comas internas) para comparar
+            frase_para_comparar = re.sub(r'[.,;:!?¿¡]', '', frase_limpia).strip()
+            # También crear lista de saludos sin puntuación para comparar
+            saludos_sin_puntuacion = [re.sub(r'[.,;:!?¿¡]', '', s).strip() for s in saludos_simples]
+            frase_es_saludo_simple = frase_para_comparar in saludos_sin_puntuacion or frase_limpia.strip('.,;:!?¿¡') in saludos_simples
 
             # FIX 453: Caso BRUCE1347 - NO tratar "Sí" como saludo si cliente estaba dando dato
             # Si hay transcripciones parciales previas que terminan en "es", "teléfono", etc.
