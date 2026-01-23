@@ -333,13 +333,15 @@ class AgenteVentas:
             if self.estado_conversacion in [EstadoConversacion.PIDIENDO_WHATSAPP, EstadoConversacion.PIDIENDO_CORREO]:
                 self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
                 print(f"📊 FIX 339: Estado → DICTANDO_NUMERO (cliente dictando: {len(digitos_encontrados)} dígitos)")
-                return
+                # FIX 435: Retornar True (no None) - estado válido donde Bruce espera dictado completo
+                return True
 
         # Detectar si cliente está dictando correo (contiene @ o "arroba")
         if '@' in mensaje_lower or 'arroba' in mensaje_lower or 'punto com' in mensaje_lower:
             self.estado_conversacion = EstadoConversacion.DICTANDO_CORREO
             print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
-            return
+            # FIX 435: Retornar True (no None) - estado válido donde Bruce espera dictado completo
+            return True
 
         # FIX 389/396/399: Detectar persona nueva después de transferencia
         # Si estábamos esperando transferencia Y cliente dice "bueno"/"dígame"/etc. → Persona nueva
@@ -514,7 +516,10 @@ class AgenteVentas:
                     if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra', 'ocupado', 'busy']):
                         self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
                         print(f"📊 FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA")
-                        return
+                        # FIX 435: Retornar True (no None) para que generar_respuesta() NO malinterprete como FIX 428
+                        # Caso BRUCE1304: "ahorita le paso" → establecía ESPERANDO_TRANSFERENCIA
+                        # pero return sin valor retornaba None → generar_respuesta() lo interpretaba como FIX 428 y colgaba
+                        return True
 
         # Detectar si encargado no está
         # FIX 417: Agregar "ocupado" y "busy" (casos BRUCE1216, BRUCE1219)
