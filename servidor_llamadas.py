@@ -1979,6 +1979,19 @@ def procesar_respuesta():
     speech_lower = speech_result.lower() if speech_result else ""
     es_buzon_por_contenido = any(keyword in speech_lower for keyword in keywords_buzon)
 
+    # FIX 463: BRUCE1388 - NO detectar buzón si cliente OFRECE WhatsApp/contacto
+    # Caso: "si gusta dejar un mensaje a WhatsApp y le compartimos los números"
+    # Esto NO es buzón - es una persona ofreciendo medio de contacto
+    if es_buzon_por_contenido:
+        cliente_ofrece_contacto = any(palabra in speech_lower for palabra in [
+            'whatsapp', 'le compartimos', 'le comparto', 'le paso',
+            'este número', 'este numero', 'a este mismo', 'mi número', 'mi numero'
+        ])
+        if cliente_ofrece_contacto:
+            print(f"✅ FIX 463: NO es buzón - cliente OFRECE contacto (WhatsApp/número)")
+            print(f"   Mensaje: '{speech_result[:80]}...'")
+            es_buzon_por_contenido = False
+
     if es_buzon_por_contenido:
         print(f"📞 FIX 105: Buzón detectado por contenido del SpeechResult")
         print(f"   Mensaje: '{speech_result[:100]}...'")
