@@ -2788,11 +2788,23 @@ class AgenteVentas:
                     tiene_palabra_inicio = any(palabra in ultimo_cliente for palabra in palabras_inicio_dictado)
 
                     # Si tiene pocos dígitos (3-8) Y (tiene patrón de dictado O palabra de inicio) = está dictando
-                    if 3 <= num_digitos <= 8 and (tiene_patron_dictado or tiene_palabra_inicio):
+                    # FIX 468: BRUCE1406 - También detectar si termina en coma (cliente sigue dictando)
+                    termina_en_coma = ultimo_cliente.strip().endswith(',')
+
+                    if 3 <= num_digitos <= 8 and (tiene_patron_dictado or tiene_palabra_inicio or termina_en_coma):
                         cliente_esta_dictando = True
-                        print(f"\n⏸️  FIX 434: Cliente está DICTANDO número ({num_digitos} dígitos)")
+                        print(f"\n⏸️  FIX 434/468: Cliente está DICTANDO número ({num_digitos} dígitos)")
                         print(f"   Patrón detectado: {ultimo_cliente[:80]}")
+                        print(f"   Termina en coma: {termina_en_coma}")
                         print(f"   → NO interrumpir - esperar a que termine de dictar")
+
+                        # FIX 468: BRUCE1406 - Establecer estado y NO generar respuesta
+                        # Esto evita que otros filtros sobrescriban con preguntas
+                        self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                        # Respuesta corta de confirmación para que cliente sepa que escuchamos
+                        respuesta = "Ajá..."
+                        filtro_aplicado = True
+                        print(f"   ✅ FIX 468: Estado → DICTANDO_NUMERO, respuesta mínima para no interrumpir")
 
                     # FIX 245: Validar número incompleto (SOLO si NO está dictando)
                     if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion and not cliente_esta_dictando:
