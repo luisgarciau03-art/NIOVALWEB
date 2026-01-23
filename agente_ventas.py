@@ -2831,6 +2831,52 @@ class AgenteVentas:
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FIX 462: BRUCE1396 - Capturar número cuando cliente CONFIRMA
+        # Escenario: Bruce dijo "lo tengo anotado como 221-442-61-55, ¿es correcto?"
+        #            Cliente dijo "Es correcto"
+        #            Pero el número NO se guardó → FIX 295/300 pidió el número de nuevo
+        # Solución: Detectar confirmación y extraer número del historial de Bruce
+        # ============================================================
+        if not filtro_aplicado and not self.lead_data.get("whatsapp"):
+            # Detectar si cliente está CONFIRMANDO un número
+            cliente_confirma_numero = any(frase in ultimo_cliente for frase in [
+                'es correcto', 'correcto', 'sí es', 'si es', 'así es', 'eso es',
+                'exacto', 'ese es', 'ese mero', 'ándale', 'andale', 'ajá', 'aja',
+                'afirmativo', 'está bien', 'esta bien', 'ok', 'okey'
+            ])
+
+            if cliente_confirma_numero:
+                # Buscar en el historial el último mensaje de Bruce con un número
+                for msg in reversed(self.conversation_history[-6:]):
+                    if msg['role'] == 'assistant':
+                        # Buscar patrones de confirmación de número
+                        # "lo tengo anotado como 221-442-61-55" o "221 442 61 55"
+                        patron_numero_en_mensaje = re.search(
+                            r'(?:anotado como|tengo como|registrado como|es el|número es)?\s*(\d[\d\s\-\.]+\d)',
+                            msg['content'], re.IGNORECASE
+                        )
+                        if patron_numero_en_mensaje:
+                            numero_en_historial = patron_numero_en_mensaje.group(1)
+                            # Limpiar: solo dígitos
+                            digitos = re.sub(r'[^\d]', '', numero_en_historial)
+
+                            if len(digitos) >= 9 and len(digitos) <= 12:
+                                # Normalizar a 10 dígitos (quitar 52 si lo tiene)
+                                if len(digitos) == 12 and digitos.startswith('52'):
+                                    digitos = digitos[2:]
+
+                                numero_whatsapp = f"+52{digitos}" if len(digitos) == 10 else f"+52{digitos}"
+                                self.lead_data["whatsapp"] = numero_whatsapp
+                                self.lead_data["whatsapp_valido"] = True
+
+                                print(f"\n✅ FIX 462: Cliente CONFIRMÓ número del historial")
+                                print(f"   Bruce dijo: '{msg['content'][:60]}...'")
+                                print(f"   Cliente confirmó: '{ultimo_cliente[:40]}'")
+                                print(f"   Número extraído: {numero_en_historial} → {numero_whatsapp}")
+                                print(f"   💾 WhatsApp guardado: {numero_whatsapp}")
+                                break
+
+        # ============================================================
         # FILTRO 16 (FIX 295/300): Bruce dice "ya lo tengo" pero NO ha capturado contacto
         # FIX 300: Simplificado - si NO tiene contacto capturado, NO puede decir "ya lo tengo"
         # ============================================================
