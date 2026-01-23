@@ -4274,6 +4274,28 @@ class AgenteVentas:
         if filtro_aplicado:
             print(f"✅ FIX 226-394: Filtro post-GPT aplicado exitosamente")
 
+        # FIX 467: BRUCE1404 - Fallback cuando GPT devuelve respuesta vacía
+        # Esto ocurre a veces con transcripciones duplicadas/erróneas que confunden a GPT
+        if not respuesta or len(respuesta.strip()) == 0:
+            print(f"\n⚠️ FIX 467: GPT devolvió respuesta VACÍA - generando fallback")
+            print(f"   Estado actual: {self.estado_conversacion}")
+
+            # Generar respuesta según el estado de la conversación
+            if self.estado_conversacion == EstadoConversacion.ENCARGADO_NO_ESTA:
+                respuesta = "Entiendo. ¿Me podría proporcionar un número de WhatsApp o correo para enviarle información?"
+                print(f"   FIX 467: Estado ENCARGADO_NO_ESTA - pidiendo contacto")
+            elif self.estado_conversacion == EstadoConversacion.PIDIENDO_WHATSAPP:
+                respuesta = "¿Me puede repetir el número, por favor?"
+                print(f"   FIX 467: Estado PIDIENDO_WHATSAPP - solicitando repetición")
+            elif self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+                respuesta = "Claro, espero."
+                print(f"   FIX 467: Estado ESPERANDO_TRANSFERENCIA - esperando")
+            else:
+                respuesta = "Sí, dígame."
+                print(f"   FIX 467: Estado genérico - respuesta neutral")
+
+            print(f"   Respuesta fallback: \"{respuesta}\"")
+
         return respuesta
 
     def iniciar_conversacion(self):
