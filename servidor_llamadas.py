@@ -63,6 +63,8 @@ except ImportError as e:
 
 # Almacenamiento de transcripciones pendientes de Deepgram
 deepgram_transcripciones = {}  # call_sid -> transcripción
+# FIX 451: Tracking de transcripciones FINAL vs PARCIAL
+deepgram_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es_final": bool}
 
 # FIX 164: Sistema de logging condicional para reducir rate limit
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
@@ -1616,10 +1618,34 @@ def procesar_respuesta():
     tiempo_esperado = 0
 
     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+        # FIX 451: Variable para rastrear si esperamos FINAL
+        esperando_final = True
+        tiempo_espera_final_extra = 0.0
+        max_espera_final_extra = 1.0  # Máximo 1s adicional esperando FINAL después de PARCIAL
+
         while tiempo_esperado < max_wait_deepgram:
             if call_sid in deepgram_transcripciones:
                 transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
                 if transcripciones_dg:
+                    # FIX 451: Verificar si la transcripción es FINAL
+                    info_ultima = deepgram_ultima_final.get(call_sid, {})
+                    es_final = info_ultima.get("es_final", False)
+
+                    if not es_final and esperando_final:
+                        # Solo tenemos PARCIAL - esperar un poco más por FINAL
+                        if tiempo_espera_final_extra < max_espera_final_extra:
+                            tiempo_espera_final_extra += wait_interval
+                            time.sleep(wait_interval)
+                            tiempo_esperado += wait_interval
+                            print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_final_extra}s)")
+                            continue
+                        else:
+                            # Ya esperamos suficiente, usar PARCIAL con advertencia
+                            print(f"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
+                            esperando_final = False
+                    elif es_final:
+                        print(f"✅ FIX 451: Transcripción FINAL recibida")
+
                     # FIX 239/242/248: Manejo inteligente de múltiples transcripciones
                     if len(transcripciones_dg) > 1:
                         print(f"⚠️ FIX 239/242/248: {len(transcripciones_dg)} transcripciones acumuladas")
@@ -1685,6 +1711,9 @@ def procesar_respuesta():
                             agente_temp.timeouts_deepgram = 0
 
                     deepgram_transcripciones[call_sid] = []
+                    # FIX 451: Limpiar también el tracking de FINAL/PARCIAL
+                    if call_sid in deepgram_ultima_final:
+                        deepgram_ultima_final[call_sid] = {}
                     break
             time.sleep(wait_interval)
             tiempo_esperado += wait_interval
@@ -6925,9 +6954,18 @@ def on_deepgram_transcript(call_sid, texto, is_final):
         # Transcripción final - agregar al array
         print(f"📝 FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
         deepgram_transcripciones[call_sid].append(texto)
+        # FIX 451: Marcar que recibimos transcripción FINAL
+        if call_sid not in deepgram_ultima_final:
+            deepgram_ultima_final[call_sid] = {}
+        deepgram_ultima_final[call_sid] = {
+            "timestamp": time.time(),
+            "texto": texto,
+            "es_final": True
+        }
     else:
         # FIX 218: Transcripción parcial - reemplazar última entrada parcial
         # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
+        print(f"📝 FIX 212: [PARCIAL] '{texto}'")
         if deepgram_transcripciones[call_sid]:
             # Si la última entrada es más corta que la nueva, reemplazarla
             ultima = deepgram_transcripciones[call_sid][-1]
@@ -6935,6 +6973,17 @@ def on_deepgram_transcript(call_sid, texto, is_final):
                 deepgram_transcripciones[call_sid][-1] = texto
         else:
             deepgram_transcripciones[call_sid].append(texto)
+        # FIX 451: Marcar que solo tenemos PARCIAL (aún no llegó FINAL)
+        if call_sid not in deepgram_ultima_final:
+            deepgram_ultima_final[call_sid] = {}
+        # Solo actualizar si no hay FINAL reciente (menos de 0.5s)
+        ultima_info = deepgram_ultima_final.get(call_sid, {})
+        if not ultima_info.get("es_final") or (time.time() - ultima_info.get("timestamp", 0)) > 0.5:
+            deepgram_ultima_final[call_sid] = {
+                "timestamp": time.time(),
+                "texto": texto,
+                "es_final": False
+            }
 
 
 # WebSocket handler para recibir audio de Twilio
