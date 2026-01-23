@@ -2794,11 +2794,14 @@ def procesar_respuesta():
             # Deshabilitar caché para que use GPT normal con detección de interrupción
             usa_segunda_parte_saludo = False
 
-            # Agregar mensaje del cliente al historial ANTES de GPT
-            agente.conversation_history.append({
-                "role": "user",
-                "content": speech_result
-            })
+            # FIX 461: BRUCE1381 - NO agregar mensaje aquí
+            # procesar_respuesta() ya lo agrega en agente_ventas.py línea 4314
+            # Agregar aquí causaba DUPLICACIÓN del mensaje del usuario
+            # REMOVIDO:
+            # agente.conversation_history.append({
+            #     "role": "user",
+            #     "content": speech_result
+            # })
 
             # No continuar con caché - dejar que GPT procese con detección de interrupción
         else:
