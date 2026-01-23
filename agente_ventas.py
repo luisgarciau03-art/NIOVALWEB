@@ -4347,12 +4347,25 @@ class AgenteVentas:
             'salio',   # "ahorita salio"
             'hay',     # "ahora no hay nadie"
             'puede',   # "ahorita no puede"
-            'anda'     # "ahorita anda en la comida"
+            'anda',    # "ahorita anda en la comida"
+            # FIX 452: Caso BRUCE1349 - Agregar más palabras de continuación
+            'estamos', # "ahorita estamos trabajando con un proveedor"
+            'estoy',   # "por el momento estoy ocupado"
+            'tenemos', # "ahorita tenemos otro proveedor"
+            'tengo',   # "ahorita tengo ocupado"
+            'trabajamos',  # "ahorita trabajamos con otro"
+            'trabajando',  # "estamos trabajando"
+            'proveedor',   # "ya tenemos proveedor"
+            'gracias',     # "te agradezco" - frase completa de despedida
+            'agradezco',   # "te agradezco mucho"
         ]
 
         # Verificar si cliente dijo SOLO una frase de inicio SIN continuación
         tiene_frase_inicio = any(frase in respuesta_lower for frase in frases_inicio_incompletas)
-        tiene_continuacion = any(palabra in respuesta_lower.split() for palabra in palabras_continuacion)
+        # FIX 454: Caso BRUCE1353 - Limpiar puntuación de cada palabra antes de comparar
+        # "No, no, en este momento" → ['no', 'no', 'en', 'este', 'momento'] (sin comas)
+        palabras_limpias = [palabra.strip('.,;:!?¿¡') for palabra in respuesta_lower.split()]
+        tiene_continuacion = any(palabra in palabras_limpias for palabra in palabras_continuacion)
 
         # Si tiene frase de inicio pero NO tiene continuación → transcripción PARCIAL
         if tiene_frase_inicio and not tiene_continuacion:

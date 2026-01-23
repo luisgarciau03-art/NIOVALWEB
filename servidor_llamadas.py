@@ -2248,9 +2248,25 @@ def procesar_respuesta():
             frase_para_comparar = frase_limpia.strip('.,;:!?¿¡')
             frase_es_saludo_simple = frase_para_comparar in saludos_simples
 
-            if frase_parece_incompleta and frase_es_saludo_simple:
+            # FIX 453: Caso BRUCE1347 - NO tratar "Sí" como saludo si cliente estaba dando dato
+            # Si hay transcripciones parciales previas que terminan en "es", "teléfono", etc.
+            # el cliente probablemente está confirmando que va a dar el dato, NO saludando
+            cliente_dando_dato_previo = False
+            if hasattr(agente, 'transcripcion_parcial_acumulada') and agente.transcripcion_parcial_acumulada:
+                ultima_parcial = agente.transcripcion_parcial_acumulada[-1].lower().strip()
+                palabras_esperando_dato = ['es', 'teléfono', 'telefono', 'correo', 'email', 'número', 'numero', 'whatsapp']
+                # Verificar si la última transcripción termina en palabra que espera dato
+                for palabra in palabras_esperando_dato:
+                    if ultima_parcial.endswith(palabra) or f'{palabra} es' in ultima_parcial or f'el {palabra}' in ultima_parcial:
+                        cliente_dando_dato_previo = True
+                        print(f"   ⚠️ FIX 453: Contexto previo indica dato pendiente ('{ultima_parcial}')")
+                        break
+
+            if frase_parece_incompleta and frase_es_saludo_simple and not cliente_dando_dato_previo:
                 print(f"   ✅ FIX 441: '{speech_result}' es saludo simple - NO esperar continuación")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
+            elif frase_es_saludo_simple and cliente_dando_dato_previo:
+                print(f"   ⏳ FIX 453: '{speech_result}' parece saludo PERO cliente daba dato - ESPERAR")
 
             # FIX 443: Caso BRUCE1334 - Detectar cuando cliente OFRECE dar datos
             # Si el cliente dice "le puedo dar un correo/whatsapp/número", ESPERAR a que termine
