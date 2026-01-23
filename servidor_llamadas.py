@@ -1661,6 +1661,50 @@ def procesar_respuesta():
                         else:
                             # Ya esperamos suficiente, usar PARCIAL con advertencia
                             print(f"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
+
+                            # FIX 465: BRUCE1398 - Detectar si la frase está INCOMPLETA
+                            # Si termina con coma o palabras conectoras, el cliente sigue hablando
+                            ultima_parcial_texto = ""
+                            if transcripciones_dg:
+                                ultima_parcial_texto = transcripciones_dg[-1].strip().lower()
+
+                            # Patrones que indican frase incompleta
+                            frase_incompleta = False
+                            if ultima_parcial_texto:
+                                # Termina con coma = definitivamente incompleta
+                                if ultima_parcial_texto.endswith(','):
+                                    frase_incompleta = True
+                                    print(f"   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando")
+                                # Termina con palabra conectora
+                                elif any(ultima_parcial_texto.endswith(f' {palabra}') for palabra in [
+                                    'y', 'pero', 'o', 'que', 'porque', 'este', 'bueno', 'pues', 'entonces', 'como'
+                                ]):
+                                    frase_incompleta = True
+                                    print(f"   ⚠️ FIX 465: Frase termina en CONECTOR - cliente sigue hablando")
+
+                            # FIX 465: Si frase incompleta, esperar 0.5s más antes de continuar
+                            if frase_incompleta:
+                                max_espera_frase_incompleta = 0.5
+                                tiempo_espera_incompleta = 0.0
+                                while tiempo_espera_incompleta < max_espera_frase_incompleta:
+                                    time.sleep(0.05)
+                                    tiempo_espera_incompleta += 0.05
+                                    tiempo_esperado += 0.05
+
+                                    # Verificar si llegó transcripción más larga
+                                    trans_actuales = deepgram_transcripciones.get(call_sid, [])
+                                    if trans_actuales and len(trans_actuales[-1]) > len(ultima_parcial_texto):
+                                        print(f"   ✅ FIX 465: Nueva transcripción más larga recibida")
+                                        # Volver a esperar por FINAL
+                                        esperando_final = True
+                                        tiempo_espera_final_extra = 0.5  # Ya esperamos algo
+                                        break
+
+                                if esperando_final:
+                                    continue  # Volver al loop principal
+                                else:
+                                    print(f"   ⚠️ FIX 465: Sin nueva transcripción después de {max_espera_frase_incompleta}s - usando parcial")
+
                             esperando_final = False
                     elif es_final:
                         print(f"✅ FIX 451: Transcripción FINAL recibida")
