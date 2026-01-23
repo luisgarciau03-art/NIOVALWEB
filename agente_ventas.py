@@ -2422,9 +2422,28 @@ class AgenteVentas:
                             respuesta = "Claro, puede enviar la información al WhatsApp 3 3 2 1 0 1 4 4 8 6 o al correo ventas arroba nioval punto com."
                             print(f"   🎯 FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
                         elif cliente_hace_pregunta and not cliente_dando_info:
-                            # FIX 444: Cliente está preguntando algo, no dando datos
-                            respuesta = "Sí, dígame."
-                            print(f"   🎯 FIX 444: Cliente hace PREGUNTA - no decir 'adelante con el dato'")
+                            # FIX 464: BRUCE1390 - Detectar si cliente pregunta QUÉ VENDE
+                            # Caso: "¿Qué mercancía vende?" → Bruce respondió "Sí, dígame" (INCORRECTO)
+                            # GPT había generado: "Manejamos productos de ferretería..." (CORRECTO)
+                            cliente_pregunta_que_vende = any(frase in ultimo_cliente_lower for frase in [
+                                'qué vende', 'que vende', 'qué mercancía', 'que mercancia',
+                                'qué productos', 'que productos', 'qué manejan', 'que manejan',
+                                'qué es lo que vende', 'que es lo que vende',
+                                'a qué se dedica', 'a que se dedica',
+                                'de qué se trata', 'de que se trata',
+                                'qué ofrece', 'que ofrece'
+                            ])
+
+                            if cliente_pregunta_que_vende:
+                                # FIX 464: NO cambiar la respuesta de GPT - dejar que explique los productos
+                                print(f"   ✅ FIX 464: Cliente pregunta QUÉ VENDE - dejando respuesta de GPT")
+                                # No cambiar respuesta, dejar que GPT explique los productos
+                                filtro_aplicado = False  # Cancelar el filtro
+                                break  # Salir del loop de patrones
+                            else:
+                                # FIX 444 original: Cliente está preguntando algo genérico
+                                respuesta = "Sí, dígame."
+                                print(f"   🎯 FIX 444: Cliente hace PREGUNTA - no decir 'adelante con el dato'")
                         elif bruce_pidio_correo or cliente_dando_info:
                             # FIX 430: Verificar si REALMENTE tenemos contacto capturado
                             # Caso BRUCE1313: Bruce dijo "ya lo tengo registrado" pero cliente solo dijo nombre
