@@ -2108,17 +2108,29 @@ class AgenteVentas:
 
         # ============================================================
         # FILTRO 15 (FIX 263): Evitar volver a preguntar por encargado cuando ya avanzamos
+        # FIX 447: Caso BRUCE1340 - NO activar si cliente solo ha dicho saludos
         # ============================================================
         if not filtro_aplicado:
-            # Verificar si ya hablamos del catálogo/WhatsApp/correo (significa que ya pasamos esa etapa)
-            ultimos_mensajes = [
+            # FIX 447: Solo contar como "avanzada" si el CLIENTE mencionó WhatsApp/correo/catálogo
+            # No contar menciones de Bruce (él siempre los ofrece en su presentación)
+            ultimos_mensajes_cliente_completos = [
                 msg['content'].lower() for msg in self.conversation_history[-8:]
+                if msg['role'] == 'user'
             ]
 
-            # Detectar si ya se habló del catálogo/WhatsApp/correo
+            # FIX 447: Detectar si cliente SOLO ha dicho saludos (no ha dado información real)
+            saludos_comunes = ['buen día', 'buen dia', 'buenos días', 'buenos dias',
+                              'buenas tardes', 'buenas noches', 'buenas', 'hola',
+                              'dígame', 'digame', 'mande', 'sí', 'si', 'bueno', 'aló', 'alo']
+            cliente_solo_saludo = all(
+                any(saludo in msg for saludo in saludos_comunes) and len(msg) < 30
+                for msg in ultimos_mensajes_cliente_completos
+            ) if ultimos_mensajes_cliente_completos else True
+
+            # Detectar si ya se habló del catálogo/WhatsApp/correo POR EL CLIENTE (no Bruce)
             conversacion_avanzada = any(
                 any(kw in msg for kw in ['whatsapp', 'catálogo', 'catalogo', 'correo', 'email'])
-                for msg in ultimos_mensajes
+                for msg in ultimos_mensajes_cliente_completos
             )
 
             # Detectar si Bruce está volviendo a preguntar por el encargado
@@ -2146,7 +2158,11 @@ class AgenteVentas:
                                    'dónde', 'donde', 'cuándo', 'cuando', 'por qué', 'porque']
                 cliente_hizo_pregunta = any(p in ultimo_cliente for p in patrones_pregunta)
 
-            if conversacion_avanzada and bruce_pregunta_encargado and not cliente_hizo_pregunta:
+            # FIX 447: NO activar si cliente solo ha dicho saludos
+            if cliente_solo_saludo:
+                print(f"\n⏭️  FIX 447: Cliente solo ha dicho saludos - NO aplicar FIX 263")
+
+            if conversacion_avanzada and bruce_pregunta_encargado and not cliente_hizo_pregunta and not cliente_solo_saludo:
                 print(f"\n🚫 FIX 263: FILTRO ACTIVADO - Bruce pregunta por encargado cuando ya avanzamos")
                 print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                 # Ofrecer continuar o despedirse
@@ -2196,12 +2212,15 @@ class AgenteVentas:
 
                         # FIX 334: Detectar si cliente SOLO está saludando u ofreciendo ayuda
                         # Estos NO deben activar despedida
+                        # FIX 450: Caso BRUCE1343 - Agregar "bueno", "sí", "aló" como saludos
                         es_solo_saludo = any(frase in ultimo_cliente_msg for frase in [
                             "buen día", "buen dia", "buenos días", "buenos dias",
                             "buenas tardes", "buenas noches", "dígame", "digame",
                             "mande", "sí dígame", "si digame", "qué se le ofrece",
                             "que se le ofrece", "en qué le puedo", "en que le puedo",
-                            "cómo le ayudo", "como le ayudo", "le puedo ayudar"
+                            "cómo le ayudo", "como le ayudo", "le puedo ayudar",
+                            # FIX 450: Variantes de contestar teléfono
+                            "bueno", "sí", "si", "aló", "alo", "hola"
                         ])
 
                         # Detectar si cliente dio información de tiempo/día (pero NO saludos)
@@ -2244,6 +2263,7 @@ class AgenteVentas:
 
                         # FIX 443: Caso BRUCE1334 - Detectar si cliente OFRECE dar datos
                         # Esto tiene prioridad sobre respuesta_negativa porque el cliente quiere colaborar
+                        # FIX 448: Caso BRUCE1342 - Agregar más variantes de ofrecimiento
                         frases_ofrecimiento_datos = [
                             'le puedo dar', 'te puedo dar', 'le doy', 'te doy',
                             'anota', 'apunta', 'mi correo', 'el correo', 'mi email',
@@ -2259,7 +2279,14 @@ class AgenteVentas:
                             'manda por correo', 'mandar por correo', 'enviar por correo',
                             'por correo', 'a su correo', 'a tu correo', 'al mail',
                             'manda al mail', 'enviar al mail', 'por mail', 'mi mail',
-                            'el mail es', 'el correo es', 'su correo es'
+                            'el mail es', 'el correo es', 'su correo es',
+                            # FIX 448: Caso BRUCE1342 - Variantes adicionales
+                            'le doy mi correo', 'le doy el correo', 'le doy un correo',
+                            'le envío su correo', 'le envio su correo', 'le envío el correo',
+                            'ahí le puedo enviar', 'ahi le puedo enviar',
+                            'le puedo enviar', 'puedo enviar información', 'puedo enviar informacion',
+                            'doy mi número', 'doy mi numero', 'doy el número', 'doy el numero',
+                            'tome nota', 'toma nota', 'le doy el dato', 'le doy los datos'
                         ]
                         cliente_ofreciendo_datos = any(frase in ultimo_cliente_msg for frase in frases_ofrecimiento_datos)
 
