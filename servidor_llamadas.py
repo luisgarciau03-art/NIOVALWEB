@@ -1469,12 +1469,13 @@ def webhook_voz():
     # 4. Record termina por silencio, callback a /procesar-respuesta
 
     # FIX 455: Limpiar transcripciones acumuladas antes de reproducir audio inicial
+    import time as time_module  # FIX 455: Import local para evitar conflictos
     if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
         print(f"🧹 FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones previas (audio inicial)")
         deepgram_transcripciones[call_sid] = []
         if call_sid in deepgram_ultima_final:
             deepgram_ultima_final[call_sid] = {}
-    bruce_audio_enviado_timestamp[call_sid] = time.time()
+    bruce_audio_enviado_timestamp[call_sid] = time_module.time()
 
     # Reproducir el audio primero
     audio_url = request.url_root + f"audio/{audio_id}"
@@ -2457,12 +2458,13 @@ def procesar_respuesta():
                 })
 
                 # FIX 455: Limpiar transcripciones antes de enviar segunda parte
+                import time as time_mod  # FIX 455: Import local
                 if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
                     print(f"🧹 FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones (segunda parte)")
                     deepgram_transcripciones[call_sid] = []
                     if call_sid in deepgram_ultima_final:
                         deepgram_ultima_final[call_sid] = {}
-                bruce_audio_enviado_timestamp[call_sid] = time.time()
+                bruce_audio_enviado_timestamp[call_sid] = time_mod.time()
 
                 # Usar audio pre-generado si existe
                 if "segunda_parte_saludo" in audio_cache:
@@ -3356,6 +3358,7 @@ def procesar_respuesta():
     # Esa transcripción se acumula y cuando llega /procesar-respuesta después del audio,
     # el sistema procesa un "¿Bueno?" viejo en lugar del mensaje actual
     # Solución: Limpiar buffer ANTES de enviar audio para que solo capture la RESPUESTA al audio
+    import time as time_455  # FIX 455: Import local seguro
     transcripciones_previas = len(deepgram_transcripciones.get(call_sid, []))
     if transcripciones_previas > 0:
         print(f"🧹 FIX 455: Limpiando {transcripciones_previas} transcripciones acumuladas ANTES de enviar audio")
@@ -3365,7 +3368,7 @@ def procesar_respuesta():
         if call_sid in deepgram_ultima_final:
             deepgram_ultima_final[call_sid] = {}
     # Guardar timestamp de cuando Bruce envía audio (para referencia en logs)
-    bruce_audio_enviado_timestamp[call_sid] = time.time()
+    bruce_audio_enviado_timestamp[call_sid] = time_455.time()
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs)
     if audio_id is None:
