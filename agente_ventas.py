@@ -383,10 +383,12 @@ class AgenteVentas:
                     # Retornar presentación inmediata
                     return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
 
-        # FIX 394/395: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
+        # FIX 394/395/446: Detectar "¿En qué le puedo apoyar?" como ENCARGADO DISPONIBLE
         # Cliente pregunta "¿En qué le apoyo?" = ES EL ENCARGADO y está disponible
         # NO debe preguntar por el encargado, debe ofrecer catálogo DIRECTAMENTE
+        # FIX 446: Lista ampliada con más variantes
         patrones_encargado_disponible = [
+            # Ofreciendo ayuda
             '¿en qué le puedo apoyar', '¿en que le puedo apoyar',
             '¿en qué le apoyo', '¿en que le apoyo',
             '¿en qué puedo ayudar', '¿en que puedo ayudar',
@@ -396,12 +398,30 @@ class AgenteVentas:
             '¿qué necesita', '¿que necesita',
             '¿para qué llama', '¿para que llama',
             '¿qué ocupa', '¿que ocupa',
+            # FIX 446: Más variantes de ofrecimiento
+            '¿qué se le ofrece', '¿que se le ofrece',
+            '¿qué desea', '¿que desea', '¿qué busca', '¿que busca',
+            'para servirle', 'a sus órdenes', 'a sus ordenes',
+            'a la orden', 'dígame', 'digame', 'mande usted',
+            'servidor', 'servidora', 'presente',
             # FIX 395: Agregar "con él/ella habla" (caso BRUCE1122)
             'con ella habla', 'con él habla', 'con el habla',
             'sí, con ella', 'si, con ella', 'sí, con él', 'si, con él',
             'sí con ella', 'si con ella', 'sí con él', 'si con él',
             'ella habla', 'él habla', 'el habla',
-            'yo soy', 'soy yo', 'soy la encargada', 'soy el encargado'
+            # Confirmando que es el encargado
+            'yo soy', 'soy yo', 'soy la encargada', 'soy el encargado',
+            # FIX 446: Más variantes de "soy yo"
+            'yo mero', 'aquí mero', 'aqí mero', 'acá mero',
+            'sí soy', 'si soy', 'sí soy yo', 'si soy yo',
+            'yo soy la dueña', 'yo soy el dueño', 'soy el dueño', 'soy la dueña',
+            'yo soy quien', 'yo me encargo', 'yo hago las compras',
+            'conmigo', 'con un servidor', 'con una servidora',
+            # FIX 446: Confirmando que SÍ está el encargado
+            'sí está', 'si esta', 'sí se encuentra', 'si se encuentra',
+            'aquí está', 'aqui esta', 'aquí se encuentra', 'aqui se encuentra',
+            'sí lo tenemos', 'si lo tenemos', 'sí la tenemos', 'si la tenemos',
+            'ya llegó', 'ya llego', 'acaba de llegar', 'ya está aquí', 'ya esta aqui'
         ]
         if any(p in mensaje_lower for p in patrones_encargado_disponible):
             print(f"📊 FIX 394/395: Cliente ES el encargado - ENCARGADO DISPONIBLE")
@@ -540,12 +560,32 @@ class AgenteVentas:
             print(f"📊 FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
             return True
 
-        # FIX 427: Detectar cuando cliente dice "soy yo" (él ES el encargado)
+        # FIX 427/446: Detectar cuando cliente dice "soy yo" (él ES el encargado)
         # Casos: BRUCE1290, BRUCE1293
         # Cliente dice "Soy yo" o "Yo soy el encargado" indicando que él es quien toma decisiones
-        patrones_soy_yo = ['soy yo', 'yo soy', 'sí soy yo', 'si soy yo',
-                          'yo soy el encargado', 'soy el encargado',
-                          'yo mero', 'aquí mero']
+        # FIX 446: Lista ampliada con más variantes
+        patrones_soy_yo = [
+            # Básicos
+            'soy yo', 'yo soy', 'sí soy yo', 'si soy yo', 'sí soy', 'si soy',
+            # Encargado/encargada
+            'yo soy el encargado', 'soy el encargado', 'yo soy la encargada', 'soy la encargada',
+            # Dueño/dueña
+            'yo soy el dueño', 'soy el dueño', 'yo soy la dueña', 'soy la dueña',
+            # Mexicanismos
+            'yo mero', 'aquí mero', 'acá mero', 'mero mero',
+            # Variantes de "conmigo"
+            'conmigo', 'con un servidor', 'con una servidora',
+            'a sus órdenes', 'a sus ordenes', 'para servirle',
+            # Variantes de rol
+            'yo me encargo', 'yo hago las compras', 'yo veo eso',
+            'yo manejo', 'yo decido', 'yo atiendo', 'yo recibo',
+            # Variantes "con él/ella habla"
+            'con ella habla', 'con él habla', 'con el habla',
+            'ella habla', 'él habla', 'el habla',
+            # Respuestas afirmativas a "¿usted es el encargado?"
+            'sí, yo soy', 'si, yo soy', 'sí yo soy', 'si yo soy',
+            'sí, con él', 'si, con él', 'sí, con ella', 'si, con ella'
+        ]
         if any(p in mensaje_lower for p in patrones_soy_yo):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_PRESENTE
             print(f"📊 FIX 427: Cliente ES el encargado → Estado = ENCARGADO_PRESENTE")
@@ -2180,12 +2220,64 @@ class AgenteVentas:
                                         menciona_tiempo = True
 
                         # Detectar si cliente dio respuesta negativa (no está, salió, etc.)
+                        # FIX 446: Ampliada lista de detección de "encargado no está"
                         respuesta_negativa = any(palabra in ultimo_cliente_msg for palabra in [
+                            # Básicas
                             "no está", "no esta", "salió", "salio", "no se encuentra",
-                            "no hay", "no viene", "estaba", "cerrado"
+                            "no hay", "no viene", "estaba", "cerrado",
+                            # Variantes de ausencia
+                            "no lo tenemos", "no la tenemos", "se fue", "ya se fue",
+                            "está fuera", "esta fuera", "está ocupado", "esta ocupado",
+                            "no lo encuentro", "no la encuentro", "no lo veo", "no la veo",
+                            # Variantes temporales
+                            "no está ahorita", "no esta ahorita", "ahorita no está", "ahorita no esta",
+                            "por el momento no", "en este momento no", "ahora no",
+                            "todavía no llega", "todavia no llega", "aún no llega", "aun no llega",
+                            "no ha llegado", "todavía no viene", "todavia no viene",
+                            # Variantes de horario/día
+                            "no viene hoy", "no trabaja hoy", "hoy no viene", "hoy no está",
+                            "viene hasta", "llega hasta", "regresa hasta",
+                            # Ofreciendo alternativas
+                            "gusta dejar", "dejar mensaje", "dejar recado", "dejar un recado",
+                            "quiere dejar", "le dejo el mensaje", "yo le paso el recado"
                         ])
 
-                        if es_solo_saludo:
+                        # FIX 443: Caso BRUCE1334 - Detectar si cliente OFRECE dar datos
+                        # Esto tiene prioridad sobre respuesta_negativa porque el cliente quiere colaborar
+                        frases_ofrecimiento_datos = [
+                            'le puedo dar', 'te puedo dar', 'le doy', 'te doy',
+                            'anota', 'apunta', 'mi correo', 'el correo', 'mi email',
+                            'le paso', 'te paso', 'mi whatsapp', 'mi número', 'mi numero',
+                            'manda al correo', 'mandar al correo', 'enviar al correo',
+                            'ahí me manda', 'ahí le mando', 'le envío', 'me envía',
+                            'para que me mande', 'para que le mande',
+                            # FIX 443b: Agregar más frases para WhatsApp (BRUCE1337)
+                            'manda por whatsapp', 'mandar por whatsapp', 'enviar por whatsapp',
+                            'por whatsapp', 'al whatsapp', 'a su whatsapp', 'a tu whatsapp',
+                            'le mando por', 'te mando por', 'se lo mando',
+                            # FIX 443c: Agregar más frases para correo
+                            'manda por correo', 'mandar por correo', 'enviar por correo',
+                            'por correo', 'a su correo', 'a tu correo', 'al mail',
+                            'manda al mail', 'enviar al mail', 'por mail', 'mi mail',
+                            'el mail es', 'el correo es', 'su correo es'
+                        ]
+                        cliente_ofreciendo_datos = any(frase in ultimo_cliente_msg for frase in frases_ofrecimiento_datos)
+
+                        if cliente_ofreciendo_datos:
+                            # FIX 443: Cliente ofrece dar correo/whatsapp/teléfono - aceptar y pedir el dato
+                            if 'correo' in ultimo_cliente_msg or 'email' in ultimo_cliente_msg:
+                                respuesta = "Claro, con gusto le envío la información. ¿Cuál es su correo electrónico?"
+                                print(f"   🎯 FIX 443: Cliente OFRECE CORREO - aceptando oferta")
+                            elif 'whatsapp' in ultimo_cliente_msg:
+                                respuesta = "Perfecto, ¿me puede confirmar su número de WhatsApp?"
+                                print(f"   🎯 FIX 443: Cliente OFRECE WHATSAPP - aceptando oferta")
+                            else:
+                                respuesta = "Claro, con gusto. ¿Me puede proporcionar el dato?"
+                                print(f"   🎯 FIX 443: Cliente OFRECE DATO - aceptando oferta")
+                            filtro_aplicado = True
+                            print(f"   Respuesta corregida: \"{respuesta}\"")
+                            break
+                        elif es_solo_saludo:
                             # FIX 334: Cliente solo saluda u ofrece ayuda - continuar con presentación
                             # FIX 440: Caso BRUCE1326 - Verificar si Bruce YA preguntó por encargado
                             # Si ya preguntó, NO volver a preguntar (evitar repetición)
@@ -2195,9 +2287,10 @@ class AgenteVentas:
                             )
 
                             if bruce_ya_pregunto_encargado:
-                                # FIX 440: Bruce ya preguntó - solo confirmar que escucha
-                                respuesta = "¿Me escucha? Le preguntaba si se encuentra el encargado de compras."
-                                print(f"   FIX 440: Bruce ya preguntó por encargado - NO repetir pregunta completa")
+                                # FIX 440/445: Caso BRUCE1326/1338 - Bruce ya preguntó
+                                # FIX 445: NO usar "¿Me escucha?" - el cliente SÍ escucha, solo hay latencia de Deepgram
+                                respuesta = "Sí, le llamo de la marca NIOVAL. ¿Se encuentra el encargado de compras?"
+                                print(f"   FIX 440/445: Bruce ya preguntó por encargado - reformulando sin '¿Me escucha?'")
                             else:
                                 respuesta = "Qué tal, le llamo de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
                                 print(f"   FIX 334: Cliente solo saludó/ofreció ayuda - continuando presentación")
@@ -2208,7 +2301,8 @@ class AgenteVentas:
                             respuesta = "Entiendo. ¿A qué hora puedo llamar para contactarlo?"
                             print(f"   FIX 281: Cliente indicó ausencia - preguntando horario")
                         else:
-                            respuesta = "¿Me escucha?"
+                            # FIX 445: NO usar "¿Me escucha?" genérico - el cliente SÍ escucha
+                            respuesta = "Sí, dígame."
 
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
@@ -2256,7 +2350,26 @@ class AgenteVentas:
                         print(f"   Patrón repetido: '{patron}'")
                         print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                         # FIX 280/285: Reformular mejor según contexto
-                        if bruce_pidio_correo or cliente_dando_info:
+                        # FIX 444: Caso BRUCE1337 - NO usar "Adelante con el dato" si cliente pregunta o quiere dejar mensaje
+                        ultimo_cliente_lower = ultimos_mensajes_cliente[-1] if ultimos_mensajes_cliente else ""
+                        cliente_hace_pregunta = '?' in ultimo_cliente_lower or '¿' in ultimo_cliente_lower
+                        cliente_quiere_dejar_mensaje = any(frase in ultimo_cliente_lower for frase in [
+                            'deje un mensaje', 'dejar mensaje', 'dejo un mensaje', 'dejo mensaje',
+                            'deme el mensaje', 'dame el mensaje', 'le dejo el mensaje',
+                            'quiere dejar', 'quieres dejar', 'le puede dejar',
+                            'mande un mensaje', 'mandar mensaje', 'enviar mensaje',
+                            'qué le digo', 'que le digo'
+                        ])
+
+                        if cliente_quiere_dejar_mensaje:
+                            # FIX 444: Cliente quiere dejar mensaje - dar contacto
+                            respuesta = "Claro, puede enviar la información al WhatsApp 3 3 2 1 0 1 4 4 8 6 o al correo ventas arroba nioval punto com."
+                            print(f"   🎯 FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
+                        elif cliente_hace_pregunta and not cliente_dando_info:
+                            # FIX 444: Cliente está preguntando algo, no dando datos
+                            respuesta = "Sí, dígame."
+                            print(f"   🎯 FIX 444: Cliente hace PREGUNTA - no decir 'adelante con el dato'")
+                        elif bruce_pidio_correo or cliente_dando_info:
                             # FIX 430: Verificar si REALMENTE tenemos contacto capturado
                             # Caso BRUCE1313: Bruce dijo "ya lo tengo registrado" pero cliente solo dijo nombre
                             tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
@@ -2992,16 +3105,41 @@ class AgenteVentas:
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente ya dijo su preferencia
+            # FIX 446: Listas ampliadas para detección de preferencia de contacto
             cliente_prefiere_correo = any(frase in contexto_cliente for frase in [
+                # Básicos
                 'por correo', 'correo electrónico', 'correo electronico',
-                'el correo', 'mi correo', 'email', 'mejor correo'
+                'el correo', 'mi correo', 'email', 'mejor correo',
+                # FIX 446: Variantes adicionales
+                'al correo', 'a mi correo', 'a su correo',
+                'mándalo al correo', 'mandalo al correo', 'envíalo al correo', 'envialo al correo',
+                'mándamelo al correo', 'mandamelo al correo',
+                'mande al correo', 'envíe al correo', 'envie al correo',
+                'por mail', 'al mail', 'mi mail', 'el mail',
+                'prefiero correo', 'mejor por correo', 'por correo mejor',
+                'mándelo por correo', 'mandelo por correo', 'envíelo por correo', 'envielo por correo',
+                'le doy el correo', 'le paso el correo', 'te doy el correo',
+                'anota el correo', 'apunta el correo'
             ])
 
             cliente_prefiere_whatsapp = any(frase in contexto_cliente for frase in [
+                # Básicos
                 'por whatsapp', 'por wasa', 'whatsapp', 'wasa',
                 'mi whats', 'mejor whatsapp', 'mejor whats',
                 'mandar por whatsapp', 'enviar por whatsapp',  # FIX 329
-                'me podrás mandar', 'me podras mandar'  # FIX 329: "¿No me podrás mandar por WhatsApp?"
+                'me podrás mandar', 'me podras mandar',  # FIX 329: "¿No me podrás mandar por WhatsApp?"
+                # FIX 446: Variantes adicionales
+                'al whatsapp', 'a mi whatsapp', 'a su whatsapp',
+                'mándalo al whatsapp', 'mandalo al whatsapp', 'envíalo al whatsapp', 'envialo al whatsapp',
+                'mándamelo al whatsapp', 'mandamelo al whatsapp',
+                'mande al whatsapp', 'envíe al whatsapp', 'envie al whatsapp',
+                'por whats', 'al whats', 'mi whats', 'el whats',
+                'prefiero whatsapp', 'mejor por whatsapp', 'por whatsapp mejor',
+                'mándelo por whatsapp', 'mandelo por whatsapp', 'envíelo por whatsapp', 'envielo por whatsapp',
+                'le doy el whatsapp', 'le paso el whatsapp', 'te doy el whatsapp',
+                'anota el whatsapp', 'apunta el whatsapp',
+                'manda al wasa', 'envía al wasa', 'envia al wasa',
+                'por wasap', 'al wasap', 'por guasa', 'al guasa'
             ])
 
             # Bruce pregunta por el método equivocado

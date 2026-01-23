@@ -2223,6 +2223,34 @@ def procesar_respuesta():
                 print(f"   ✅ FIX 441: '{speech_result}' es saludo simple - NO esperar continuación")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
 
+            # FIX 443: Caso BRUCE1334 - Detectar cuando cliente OFRECE dar datos
+            # Si el cliente dice "le puedo dar un correo/whatsapp/número", ESPERAR a que termine
+            # Frases que indican ofrecimiento de datos importantes
+            frases_ofrecimiento_datos = [
+                'le puedo dar', 'te puedo dar', 'le doy', 'te doy',
+                'anota', 'apunta', 'mi correo', 'el correo', 'mi email',
+                'le paso', 'te paso', 'mi whatsapp', 'mi número', 'mi numero',
+                'manda al correo', 'mandar al correo', 'enviar al correo',
+                'ahí me manda', 'ahí le mando', 'le envío', 'me envía',
+                'para que me mande', 'para que le mande',
+                # FIX 443b: Agregar más frases para WhatsApp (BRUCE1337)
+                'manda por whatsapp', 'mandar por whatsapp', 'enviar por whatsapp',
+                'por whatsapp', 'al whatsapp', 'a su whatsapp', 'a tu whatsapp',
+                'le mando por', 'te mando por', 'se lo mando',
+                # FIX 443c: Agregar más frases para correo
+                'manda por correo', 'mandar por correo', 'enviar por correo',
+                'por correo', 'a su correo', 'a tu correo', 'al mail',
+                'manda al mail', 'enviar al mail', 'por mail', 'mi mail',
+                'el mail es', 'el correo es', 'su correo es'
+            ]
+            cliente_ofreciendo_datos = any(frase in frase_limpia for frase in frases_ofrecimiento_datos)
+
+            if cliente_ofreciendo_datos:
+                print(f"   🎯 FIX 443: CLIENTE OFRECIENDO DATOS - esperar a que termine")
+                print(f"   Detectado: '{speech_result}'")
+                frase_parece_incompleta = True  # Forzar espera para captar el dato completo
+                esta_deletreando_email = True  # Usar timeout largo (2.5s) igual que con emails
+
             if frase_parece_incompleta:
                 print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
                 print(f"   Transcripción parcial: '{speech_result}'")
