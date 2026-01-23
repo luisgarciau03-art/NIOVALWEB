@@ -2227,6 +2227,27 @@ class AgenteVentas:
                     # FIX 236: Buscar en TODOS los mensajes anteriores, no solo los últimos
                     ya_dicho = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
                     if ya_dicho:
+                        # FIX 466: BRUCE1405 - NO filtrar si cliente pregunta DE DÓNDE LLAMAN
+                        # Cuando cliente pregunta "¿de dónde me habla?", la presentación ES la respuesta correcta
+                        ultimo_cliente_para_466 = ""
+                        for msg in reversed(self.conversation_history):
+                            if msg['role'] == 'user':
+                                ultimo_cliente_para_466 = msg['content'].lower()
+                                break
+
+                        cliente_pregunta_origen = any(frase in ultimo_cliente_para_466 for frase in [
+                            'de dónde', 'de donde', 'quién habla', 'quien habla',
+                            'quién llama', 'quien llama', 'quién es', 'quien es',
+                            'de qué empresa', 'de que empresa', 'de qué compañía', 'de que compania',
+                            'de parte de quién', 'de parte de quien', 'con quién hablo', 'con quien hablo'
+                        ])
+
+                        if cliente_pregunta_origen:
+                            print(f"\n✅ FIX 466: Cliente pregunta DE DÓNDE LLAMAN - presentación ES la respuesta correcta")
+                            print(f"   Cliente dijo: '{ultimo_cliente_para_466[:60]}...'")
+                            print(f"   NO se cambiará la respuesta de GPT")
+                            break  # Salir del for sin aplicar filtro
+
                         print(f"\n🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
