@@ -553,21 +553,25 @@ class AgenteVentas:
         palabras_problema_audio = mensaje_lower.split()
 
         # Contar repeticiones de "bueno"
+        # FIX 433: CRÍTICO - Umbral aumentado de 2 a 5+ para evitar falsos positivos
+        # Casos BRUCE1311, 1306, 1301: Bruce colgaba cuando cliente decía "¿bueno?" 2-3 veces
+        # Mayoría de clientes SÍ estaban escuchando - solo es forma de contestar/hablar
         contador_bueno = mensaje_lower.count('¿bueno?') + mensaje_lower.count('bueno?') + mensaje_lower.count('¿bueno')
-        if contador_bueno >= 2:
-            print(f"📊 FIX 428: Cliente dice '¿bueno?' {contador_bueno} veces → Problema de audio detectado")
+        if contador_bueno >= 5:
+            print(f"📊 FIX 428/433: Cliente dice '¿bueno?' {contador_bueno} veces → Problema de audio REAL detectado")
             print(f"   → NO procesar con GPT - retornar False para que sistema de respuestas vacías maneje")
             # Retornar False para que generar_respuesta() retorne None
             # El sistema de respuestas vacías se encargará de colgar si continúa
             return False
 
-        # Detectar saludos repetidos ("buen día. buen día.")
-        saludos_simples = ['buen día', 'buen dia', 'buenas', 'buenos días', 'buenos dias']
-        frases_encontradas = [s for s in saludos_simples if mensaje_lower.count(s) >= 2]
-        if frases_encontradas:
-            print(f"📊 FIX 428: Cliente repite saludo '{frases_encontradas[0]}' → Posible problema de audio")
-            print(f"   → NO procesar con GPT - retornar False")
-            return False
+        # FIX 433: DESHABILITADO - Detectar saludos repetidos causaba falsos positivos
+        # Saludar 2 veces es normal, no indica problema de audio
+        # saludos_simples = ['buen día', 'buen dia', 'buenas', 'buenos días', 'buenos dias']
+        # frases_encontradas = [s for s in saludos_simples if mensaje_lower.count(s) >= 2]
+        # if frases_encontradas:
+        #     print(f"📊 FIX 428: Cliente repite saludo '{frases_encontradas[0]}' → Posible problema de audio")
+        #     print(f"   → NO procesar con GPT - retornar False")
+        #     return False
 
         # Detectar si ya capturamos contacto
         if self.lead_data.get("whatsapp") or self.lead_data.get("email"):
@@ -1591,8 +1595,9 @@ class AgenteVentas:
                     r'(?:no\s+est[aá]|sali[oó]|se\s+fue).*(?:encargado|jefe|gerente)',
                     r'ya\s+sali[oó]', r'se\s+fue', r'est[aá]\s+fuera',
                     # FIX 261: Patrones de horario de llegada (implica que ahora NO está)
-                    r'(?:entra|llega|viene)\s+(?:a\s+las?|hasta\s+las?)\s*\d',
-                    r'(?:entra|llega|viene)\s+(?:en\s+la\s+)?(?:tarde|mañana|noche)',
+                    # FIX 429: Agregar "encuentra" y "está" para casos como "se encuentra hasta las 5"
+                    r'(?:entra|llega|viene|encuentra|est[aá])\s+(?:a\s+las?|hasta\s+las?)\s*\d',
+                    r'(?:entra|llega|viene|encuentra|est[aá])\s+(?:en\s+la\s+)?(?:tarde|mañana|noche)',
                     r'hasta\s+las?\s*\d',  # "hasta las 9"
                     r'(?:después|despues)\s+de\s+las?\s*\d',  # "después de las 9"
                     r'(?:m[aá]s\s+)?tarde',  # "más tarde"
@@ -2040,13 +2045,32 @@ class AgenteVentas:
                 'me puede comunicar con el encargado',
             ])
 
-            if conversacion_avanzada and bruce_pregunta_encargado:
+            # FIX 431: NO activar este filtro si el cliente hizo una pregunta directa
+            # Caso BRUCE1311: Cliente preguntó "¿De qué marca?" y Bruce iba a responder
+            # pero FIX 263 cambió la respuesta a "Perfecto. ¿Hay algo más...?" (incorrecto)
+            ultimos_mensajes_cliente = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+            cliente_hizo_pregunta = False
+            if ultimos_mensajes_cliente:
+                ultimo_cliente = ultimos_mensajes_cliente[-1]
+                # Detectar preguntas directas del cliente
+                patrones_pregunta = ['¿', '?', 'qué', 'que', 'cuál', 'cual', 'cómo', 'como',
+                                   'dónde', 'donde', 'cuándo', 'cuando', 'por qué', 'porque']
+                cliente_hizo_pregunta = any(p in ultimo_cliente for p in patrones_pregunta)
+
+            if conversacion_avanzada and bruce_pregunta_encargado and not cliente_hizo_pregunta:
                 print(f"\n🚫 FIX 263: FILTRO ACTIVADO - Bruce pregunta por encargado cuando ya avanzamos")
                 print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                 # Ofrecer continuar o despedirse
                 respuesta = "Perfecto. ¿Hay algo más en lo que le pueda ayudar?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
+            elif conversacion_avanzada and bruce_pregunta_encargado and cliente_hizo_pregunta:
+                print(f"\n⏭️  FIX 431: Cliente hizo pregunta directa → NO aplicar FIX 263")
+                print(f"   Cliente preguntó: '{ultimos_mensajes_cliente[-1][:50]}...'")
+                print(f"   Bruce debe responder la pregunta, no cambiar tema")
 
         # ============================================================
         # FILTRO 7 (FIX 228/236/240): Evitar repetir el saludo/presentación
@@ -2175,8 +2199,18 @@ class AgenteVentas:
                         print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                         # FIX 280/285: Reformular mejor según contexto
                         if bruce_pidio_correo or cliente_dando_info:
-                            # Cliente está en medio de dar el correo
-                            respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas."
+                            # FIX 430: Verificar si REALMENTE tenemos contacto capturado
+                            # Caso BRUCE1313: Bruce dijo "ya lo tengo registrado" pero cliente solo dijo nombre
+                            tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
+                            tiene_email = bool(self.lead_data.get("email"))
+
+                            if tiene_whatsapp or tiene_email:
+                                # Cliente está en medio de dar el correo y SÍ lo capturamos
+                                respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas."
+                            else:
+                                # Cliente NO dio contacto completo, NO decir "ya lo tengo registrado"
+                                print(f"   ⚠️ FIX 430: NO tengo contacto capturado - NO decir 'ya lo tengo'")
+                                respuesta = "Sí, lo escucho. Adelante con el dato."
                         elif 'whatsapp' in patron or 'catálogo' in patron or 'correo' in patron:
                             respuesta = "Sí, lo escucho. Adelante con el dato."
                         else:
@@ -2459,8 +2493,42 @@ class AgenteVentas:
                         'anotado como', 'entendido', 'anoto como'
                     ])
 
-                    # FIX 245: Validar número incompleto
-                    if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion:
+                    # FIX 434: NO interrumpir si cliente está DICTANDO el número
+                    # Caso BRUCE1308: Cliente dice "Es el 3 40." → Bruce interrumpe "solo escuché 3 dígitos"
+                    # Cliente continúa "342, 109, 76," → Bruce interrumpe OTRA VEZ "solo escuché 8 dígitos"
+                    # Resultado: Cliente confundido, 27 dígitos acumulados
+                    cliente_esta_dictando = False
+
+                    # Detectar patrones de dictado:
+                    # 1. Números en grupos pequeños separados por espacios/pausas: "3 40", "342 109 76"
+                    # 2. Números separados por comas: "3, 4, 2", "342, 109"
+                    # 3. Mensaje corto con pocos dígitos (indica que viene más)
+                    # 4. Palabras como "es el", "son", "empieza" (inicio de dictado)
+
+                    patrones_dictado = [
+                        r'\d+\s+\d+',  # Números separados por espacios: "3 40", "342 109"
+                        r'\d+,\s*\d+',  # Números separados por comas: "3, 4, 2"
+                        r'\d+\.\s*\d+',  # Números separados por puntos: "3. 40"
+                    ]
+
+                    palabras_inicio_dictado = [
+                        'es el', 'son el', 'empieza', 'inicia', 'comienza',
+                        'son los', 'es los', 'primero'
+                    ]
+
+                    # Verificar patrones de dictado en el mensaje
+                    tiene_patron_dictado = any(re.search(patron, ultimo_cliente) for patron in patrones_dictado)
+                    tiene_palabra_inicio = any(palabra in ultimo_cliente for palabra in palabras_inicio_dictado)
+
+                    # Si tiene pocos dígitos (3-8) Y (tiene patrón de dictado O palabra de inicio) = está dictando
+                    if 3 <= num_digitos <= 8 and (tiene_patron_dictado or tiene_palabra_inicio):
+                        cliente_esta_dictando = True
+                        print(f"\n⏸️  FIX 434: Cliente está DICTANDO número ({num_digitos} dígitos)")
+                        print(f"   Patrón detectado: {ultimo_cliente[:80]}")
+                        print(f"   → NO interrumpir - esperar a que termine de dictar")
+
+                    # FIX 245: Validar número incompleto (SOLO si NO está dictando)
+                    if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion and not cliente_esta_dictando:
                         print(f"\n📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
@@ -2619,12 +2687,16 @@ class AgenteVentas:
                 contexto_cliente = ' '.join(ultimos_mensajes_cliente)
 
                 # Detectar cuando cliente OFRECE dar información
+                # FIX 432: Agregar patrones para detectar "¿no le han pasado?", "te lo paso", etc.
                 cliente_ofrece_info = any(frase in contexto_cliente for frase in [
                     'si gusta le proporciono', 'si gusta le doy', 'le proporciono',
                     'le puedo proporcionar', 'le doy el número', 'le doy el numero',
                     'le paso el número', 'le paso el numero', 'le puedo dar',
                     'puedo darle', 'se lo proporciono', 'se lo doy',
-                    'si quiere le doy', 'si quiere le paso'
+                    'si quiere le doy', 'si quiere le paso',
+                    # FIX 432: Caso BRUCE1313 - "¿No le han pasado algún"
+                    'le han pasado', 'le pasaron', 'te lo paso', 'se lo paso',
+                    'no le han pasado', '¿no le han pasado', 'le puedo pasar'
                 ])
 
                 # Verificar que Bruce NO está aceptando la oferta correctamente
