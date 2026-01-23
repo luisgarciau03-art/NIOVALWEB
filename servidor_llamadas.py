@@ -70,6 +70,11 @@ deepgram_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es
 # Solución: Limpiar transcripciones que llegaron ANTES de que Bruce terminara de hablar
 bruce_audio_enviado_timestamp = {}  # call_sid -> timestamp cuando se envió el audio
 
+# FIX 456: Tracking de transcripciones PARCIALES para detectar si cliente sigue hablando
+# Caso BRUCE1375: Bruce interrumpió porque recibió FINAL pero cliente seguía hablando (PARCIAL nueva)
+# Solución: Después de FINAL, esperar y verificar si llegan PARCIALES nuevas
+deepgram_ultima_parcial = {}  # call_sid -> {"timestamp": float, "texto": str}
+
 # FIX 164: Sistema de logging condicional para reducir rate limit
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
@@ -1658,6 +1663,37 @@ def procesar_respuesta():
                             esperando_final = False
                     elif es_final:
                         print(f"✅ FIX 451: Transcripción FINAL recibida")
+
+                        # FIX 456: BRUCE1375 - Esperar para ver si cliente sigue hablando
+                        # El cliente puede pausar brevemente pero continuar hablando
+                        tiempo_espera_post_final = 0.0
+                        max_espera_post_final = 0.35  # 350ms para detectar si sigue hablando
+                        timestamp_final = info_ultima.get("timestamp", time.time())
+
+                        while tiempo_espera_post_final < max_espera_post_final:
+                            time.sleep(0.05)  # Esperar 50ms
+                            tiempo_espera_post_final += 0.05
+                            tiempo_esperado += 0.05
+
+                            # Verificar si llegó una PARCIAL nueva después del FINAL
+                            info_parcial = deepgram_ultima_parcial.get(call_sid, {})
+                            timestamp_parcial = info_parcial.get("timestamp", 0)
+
+                            # Si hay PARCIAL más reciente que el FINAL, cliente sigue hablando
+                            if timestamp_parcial > timestamp_final:
+                                print(f"⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '{info_parcial.get('texto', '')}'")
+                                print(f"   Esperando más transcripciones...")
+                                # Reset espera - esperar por nueva FINAL
+                                esperando_final = True
+                                tiempo_espera_final_extra = 0.0
+                                break
+
+                        # FIX 456: Si detectamos que sigue hablando, volver al while principal
+                        if esperando_final and tiempo_espera_final_extra == 0.0:
+                            continue  # Volver a esperar por nueva FINAL
+
+                        if tiempo_espera_post_final >= max_espera_post_final:
+                            print(f"✅ FIX 456: No hay PARCIALES nuevas después de {max_espera_post_final}s - cliente terminó de hablar")
 
                     # FIX 239/242/248: Manejo inteligente de múltiples transcripciones
                     if len(transcripciones_dg) > 1:
@@ -7028,6 +7064,13 @@ def on_deepgram_transcript(call_sid, texto, is_final):
                 deepgram_transcripciones[call_sid][-1] = texto
         else:
             deepgram_transcripciones[call_sid].append(texto)
+
+        # FIX 456: Siempre registrar la última PARCIAL para detectar si cliente sigue hablando
+        deepgram_ultima_parcial[call_sid] = {
+            "timestamp": time.time(),
+            "texto": texto
+        }
+
         # FIX 451: Marcar que solo tenemos PARCIAL (aún no llegó FINAL)
         if call_sid not in deepgram_ultima_final:
             deepgram_ultima_final[call_sid] = {}
