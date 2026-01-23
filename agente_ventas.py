@@ -857,7 +857,10 @@ class AgenteVentas:
             'no ahorita', 'ahorita ya no',
             # FIX 393: Agregar variantes de rechazo directo (caso BRUCE1099)
             'no, no se encuentra', 'no, no está', 'no, no esta',
-            'no se encuentra, no', 'no, gracias', 'no gracias'
+            'no se encuentra, no', 'no, gracias', 'no gracias',
+            # FIX 438: Caso BRUCE1321 - "todavía no llega" indica que encargado regresará
+            'todavía no llega', 'todavia no llega', 'aún no llega', 'aun no llega',
+            'no ha llegado', 'todavía no viene', 'todavia no viene'
         ])
 
         bruce_insiste_encargado = any(frase in respuesta_lower for frase in [
@@ -961,6 +964,9 @@ class AgenteVentas:
 
         # FIX 423: Excluir saludos comunes que usan '?' pero NO son preguntas reales
         # Caso BRUCE1244: Cliente dijo "¿Bueno?" (saludo), Bruce ofreció productos (incorrecto)
+        # FIX 436: Caso BRUCE1322 - Cliente dijo "Hola, buenos días. ¿Bueno?"
+        #          FIX 423 fallaba porque solo detectaba si mensaje era EXACTAMENTE "¿bueno?"
+        #          Ahora detectamos si el mensaje CONTIENE saludos típicos con interrogación
         saludos_con_interrogacion = [
             '¿bueno?', '¿bueno', 'bueno?',
             '¿dígame?', '¿digame?', 'dígame?', 'digame?',
@@ -969,7 +975,36 @@ class AgenteVentas:
             '¿aló?', '¿alo?', 'aló?', 'alo?'
         ]
 
-        es_solo_saludo = any(saludo == ultimo_mensaje_str.strip() for saludo in saludos_con_interrogacion)
+        # FIX 436: Detectar si el mensaje es un patrón de saludo (con o sin pregunta)
+        # Patrones de saludo que NO son preguntas reales:
+        # - "Hola, buenos días. ¿Bueno?"
+        # - "¿Bueno? ¿Bueno?"
+        # - "Hola. ¿Bueno?"
+        patrones_saludo = [
+            'hola', 'buenos días', 'buenos dias', 'buenas tardes', 'buenas noches',
+            'buen día', 'buen dia', 'qué tal', 'que tal'
+        ]
+
+        # FIX 436: Múltiples condiciones para detectar saludo (no pregunta real)
+        # 1. El mensaje es SOLO un saludo con interrogación
+        es_solo_saludo_exacto = any(saludo == ultimo_mensaje_str.strip() for saludo in saludos_con_interrogacion)
+
+        # 2. El mensaje CONTIENE un saludo con interrogación (como "Hola. ¿Bueno?")
+        contiene_saludo_interrogacion = any(saludo in ultimo_mensaje_str for saludo in saludos_con_interrogacion)
+
+        # 3. El mensaje es solo saludos típicos (hola, buenos días, etc.)
+        es_saludo_tipico = any(patron in ultimo_mensaje_str for patron in patrones_saludo)
+
+        # FIX 436: Si el mensaje contiene saludos Y tiene "?" del tipo saludo → NO es pregunta real
+        # Caso BRUCE1322: "hola, buenos días. ¿bueno?" → es_saludo = True
+        es_solo_saludo = (
+            es_solo_saludo_exacto or
+            (contiene_saludo_interrogacion and es_saludo_tipico) or
+            (contiene_saludo_interrogacion and not any(q in ultimo_mensaje_str for q in [
+                '¿qué', '¿que', '¿cuál', '¿cual', '¿cómo', '¿como',
+                '¿cuánto', '¿cuanto', '¿dónde', '¿donde', '¿quién', '¿quien'
+            ]))
+        )
 
         cliente_pregunto = not es_solo_saludo and ('?' in ultimo_mensaje_str or any(q in ultimo_mensaje_str for q in [
             '¿qué', '¿que', '¿cuál', '¿cual', '¿cómo', '¿como',
@@ -978,10 +1013,16 @@ class AgenteVentas:
         ]))
 
         # ¿Bruce respondió la pregunta?
+        # FIX 439: Caso BRUCE1317 - Agregar palabras de identificación de empresa
+        # Cliente preguntó "¿De dónde habla?" y Bruce dijo "Me comunico de la marca NIOVAL..."
+        # FIX 384 NO reconocía esto como respuesta válida → cambiaba a info de productos
         bruce_responde = any(palabra in respuesta_lower for palabra in [
             'manejamos', 'tenemos', 'vendemos', 'sí', 'si',
             'grifería', 'griferia', 'cintas', 'herramientas',
-            'claro', 'productos de ferretería', 'productos de ferreteria'
+            'claro', 'productos de ferretería', 'productos de ferreteria',
+            # FIX 439: Agregar palabras de identificación/introducción
+            'nioval', 'marca nioval', 'me comunico de', 'la marca',
+            'soy de', 'hablo de', 'llamamos de', 'llamo de'
         ])
 
         if cliente_pregunto and not bruce_responde:
@@ -2146,8 +2187,20 @@ class AgenteVentas:
 
                         if es_solo_saludo:
                             # FIX 334: Cliente solo saluda u ofrece ayuda - continuar con presentación
-                            respuesta = "Qué tal, le llamo de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
-                            print(f"   FIX 334: Cliente solo saludó/ofreció ayuda - continuando presentación")
+                            # FIX 440: Caso BRUCE1326 - Verificar si Bruce YA preguntó por encargado
+                            # Si ya preguntó, NO volver a preguntar (evitar repetición)
+                            bruce_ya_pregunto_encargado = any(
+                                'encontrar' in msg and 'encargado' in msg
+                                for msg in ultimos_mensajes_bruce
+                            )
+
+                            if bruce_ya_pregunto_encargado:
+                                # FIX 440: Bruce ya preguntó - solo confirmar que escucha
+                                respuesta = "¿Me escucha? Le preguntaba si se encuentra el encargado de compras."
+                                print(f"   FIX 440: Bruce ya preguntó por encargado - NO repetir pregunta completa")
+                            else:
+                                respuesta = "Qué tal, le llamo de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+                                print(f"   FIX 334: Cliente solo saludó/ofreció ayuda - continuando presentación")
                         elif menciona_tiempo:
                             respuesta = "Perfecto, muchas gracias por la información. Le marco entonces. Que tenga excelente día."
                             print(f"   FIX 281: Cliente mencionó tiempo/día - usando despedida apropiada")
@@ -2849,10 +2902,14 @@ class AgenteVentas:
         if not filtro_aplicado:
             # Detectar si cliente indica que encargado no está
             # FIX 318: Agregar variantes con "ahorita"
+            # FIX 438: Caso BRUCE1321 - Agregar "todavía no llega" y variantes
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in [
                 'no se encuentra', 'no está', 'no esta', 'salió', 'salio',
                 'no lo tenemos', 'gusta dejar', 'dejar mensaje', 'dejar recado',
-                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta'
+                'no está ahorita', 'no esta ahorita', 'ahorita no está', 'ahorita no esta',
+                # FIX 438: "todavía no llega" indica encargado regresará
+                'todavía no llega', 'todavia no llega', 'aún no llega', 'aun no llega',
+                'no ha llegado', 'todavía no viene', 'todavia no viene'
             ])
 
             # Bruce ofrece catálogo directamente sin pedir número del encargado
@@ -2880,6 +2937,50 @@ class AgenteVentas:
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
                 respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 19C (FIX 437): Bruce YA pidió número de encargado, cliente confirma
+        # pero Bruce ofrece catálogo en lugar de esperar el número
+        # Caso BRUCE1322: Bruce preguntó número, cliente dijo "Por favor,", Bruce ofreció catálogo
+        # ============================================================
+        if not filtro_aplicado:
+            historial_bruce = ' '.join([
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ])
+
+            bruce_ya_pidio_numero = any(frase in historial_bruce for frase in [
+                'número directo del encargado', 'numero directo del encargado',
+                'número del encargado', 'numero del encargado',
+                '¿me podría proporcionar el número', '¿me podria proporcionar el numero'
+            ])
+
+            # Cliente dice frases de confirmación/espera que indican que va a dar el número
+            cliente_confirma_o_espera = any(frase in contexto_cliente for frase in [
+                'por favor', 'porfavor', 'sí', 'si', 'claro', 'adelante', 'dale',
+                'un momento', 'un segundo', 'espere', 'espéreme', 'espereme',
+                'ahí le paso', 'ahi le paso', 'déjeme', 'dejeme',
+                'ok', 'va', 'sale', 'perfecto', 'listo'
+            ])
+
+            # Bruce ofrece catálogo cuando debería estar esperando el número
+            bruce_ofrece_catalogo = any(frase in respuesta_lower for frase in [
+                'catálogo por whatsapp', 'catalogo por whatsapp',
+                'catálogo por correo', 'catalogo por correo',
+                'le gustaría recibir', 'le gustaria recibir',
+                'envíe nuestro catálogo', 'envie nuestro catalogo',
+                'whatsapp o correo', 'correo o whatsapp'
+            ])
+
+            if bruce_ya_pidio_numero and cliente_confirma_o_espera and bruce_ofrece_catalogo:
+                print(f"\n📞 FIX 437: FILTRO ACTIVADO - Bruce YA pidió número, cliente confirmó, NO ofrecer catálogo")
+                print(f"   Caso: BRUCE1322 - Cliente dijo 'Por favor,' y Bruce ofreció catálogo")
+                print(f"   Historial Bruce: pidió número del encargado")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce iba a ofrecer: \"{respuesta[:60]}...\"")
+                respuesta = "Perfecto. Adelante, lo escucho."
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -3112,7 +3213,10 @@ class AgenteVentas:
                 'no, no, ahorita no', 'no no ahorita no', 'no, no ahorita',
                 'no, no, no', 'no no no', 'no, no se encuentra', 'no no se encuentra',
                 'no, no sé', 'no no se', 'no, no lo encuentro', 'no no lo encuentro',
-                'no te encuentro', 'no lo encuentro ahorita', 'no te encuentro ahorita'
+                'no te encuentro', 'no lo encuentro ahorita', 'no te encuentro ahorita',
+                # FIX 438: Caso BRUCE1321 - "todavía no llega" indica encargado regresará
+                'todavía no llega', 'todavia no llega', 'aún no llega', 'aun no llega',
+                'no ha llegado', 'todavía no viene', 'todavia no viene'
             ]
             cliente_dice_no_esta = any(frase in contexto_cliente for frase in patrones_no_esta)
 
