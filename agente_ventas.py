@@ -1447,9 +1447,38 @@ class AgenteVentas:
                             respuesta = "Claro, con gusto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
                             print(f"   FIX 325/390: Cliente pidió por WHATSAPP - pidiendo número")
                     else:
-                        # Continuar la conversación normalmente
-                        respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
-                    filtro_aplicado = True
+                        # FIX 459: BRUCE1381 - Verificar si Bruce YA preguntó por el encargado
+                        # Si ya preguntó, NO volver a preguntar (evita doble pregunta)
+                        historial_bruce_459 = ' '.join([
+                            msg['content'].lower() for msg in self.conversation_history[-4:]
+                            if msg['role'] == 'assistant'
+                        ])
+                        bruce_ya_pregunto_encargado = any(frase in historial_bruce_459 for frase in [
+                            'encargado de compras', 'encargada de compras',
+                            '¿se encontrará el encargado', '¿se encuentra el encargado',
+                            'se encontrara el encargado', 'se encuentra el encargado'
+                        ])
+
+                        if bruce_ya_pregunto_encargado:
+                            # FIX 459: Ya preguntó por encargado - usar respuesta contextual
+                            print(f"   ✅ FIX 459: Bruce YA preguntó por encargado - NO volver a preguntar")
+                            # Verificar si cliente indicó que no está el encargado
+                            encargado_no_esta = any(frase in ultimo_cliente for frase in [
+                                'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                                'por el momento no', 'ahorita no', 'no hay'
+                            ])
+                            if encargado_no_esta:
+                                respuesta = "Entiendo. ¿A qué hora puedo llamar para contactarlo?"
+                                print(f"   FIX 459: Encargado no está - preguntando horario")
+                            else:
+                                # Cliente dio respuesta parcial/confusa - usar respuesta de GPT
+                                print(f"   FIX 459: Usando respuesta original de GPT")
+                                filtro_aplicado = False  # Dejar respuesta de GPT
+                        else:
+                            # Continuar la conversación normalmente
+                            respuesta = "Claro. ¿Se encontrará el encargado o encargada de compras para brindarle información de nuestros productos?"
+                    if filtro_aplicado != False:  # FIX 459: Solo marcar si no se desactivó
+                        filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
@@ -5005,25 +5034,43 @@ Ejemplo correcto:
             print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
             # NO retornar "Claro, espero" - dejar que GPT pida el correo/dato
         else:
-            for patron in patrones_transferencia_inmediata:
-                if patron in respuesta_lower:
-                    print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
-                    print(f"   Patrón detectado: '{patron}'")
-                    print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+            # FIX 460: BRUCE1381 - Detectar si cliente dice LLAMAR DESPUÉS vs TRANSFERIR AHORA
+            # Si cliente dice "puede marcar en otro momento", "llame después", etc.
+            # NO es transferencia - es sugerencia de llamar en otro momento
+            cliente_dice_llamar_despues = any(frase in respuesta_lower for frase in [
+                'puede marcar', 'marque después', 'marque despues', 'llame después', 'llame despues',
+                'llámenos después', 'llamenos despues', 'marcar en otro', 'llamar en otro',
+                'vuelva a llamar', 'intente más tarde', 'intente mas tarde',
+                'regrese la llamada', 'mejor llame', 'otro momento', 'otro dia', 'otro día',
+                'más tarde', 'mas tarde', 'en la tarde', 'en la mañana', 'mañana',
+                'el mostrador', 'nada más atendemos', 'nada mas atendemos', 'solo atendemos',
+                'no se la maneja', 'no le puedo', 'no tengo esa información', 'no tengo esa informacion'
+            ])
 
-                    # Marcar flag de transferencia
-                    self.esperando_transferencia = True
+            if cliente_dice_llamar_despues:
+                print(f"📅 FIX 460: Cliente sugiere LLAMAR DESPUÉS - NO es transferencia")
+                print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+                # NO activar transferencia - dejar que GPT maneje con despedida apropiada
+            else:
+                for patron in patrones_transferencia_inmediata:
+                    if patron in respuesta_lower:
+                        print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
+                        print(f"   Patrón detectado: '{patron}'")
+                        print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
-                    # Respuesta simple de espera
-                    respuesta_espera = "Claro, espero."
+                        # Marcar flag de transferencia
+                        self.esperando_transferencia = True
 
-                    self.conversation_history.append({
-                        "role": "assistant",
-                        "content": respuesta_espera
-                    })
+                        # Respuesta simple de espera
+                        respuesta_espera = "Claro, espero."
 
-                    print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
-                    return respuesta_espera
+                        self.conversation_history.append({
+                            "role": "assistant",
+                            "content": respuesta_espera
+                        })
+
+                        print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
+                        return respuesta_espera
 
         # FIX 238/262: Detectar cuando encargado LLEGA después de esperar
         # Si estábamos esperando transferencia y cliente dice "¿Bueno?" = encargado llegó
