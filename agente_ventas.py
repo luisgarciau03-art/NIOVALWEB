@@ -3072,7 +3072,27 @@ class AgenteVentas:
                 'número del encargado', 'numero del encargado'
             ])
 
-            if cliente_dice_no_esta and bruce_ofrece_catalogo and not bruce_ya_pidio_numero:
+            # FIX 457: BRUCE1370 - NO pedir número si cliente OFRECE dar un correo/número/whatsapp
+            # Cliente dijo: "No se encuentra. Si quiere le doy un correo electrónico."
+            # Bruce NO debe pedir número, debe ACEPTAR el correo que el cliente ofrece
+            cliente_ofrece_dato = any(frase in contexto_cliente for frase in [
+                'le doy un correo', 'le doy el correo', 'le paso el correo',
+                'le doy un numero', 'le doy el numero', 'le paso el numero',
+                'le doy un número', 'le doy el número', 'le paso el número',
+                'le doy mi correo', 'le doy mi numero', 'le doy mi número',
+                'le paso un correo', 'le paso un numero', 'le paso un número',
+                'si quiere le doy', 'si gusta le doy', 'si desea le doy',
+                'le puedo dar un correo', 'le puedo dar el correo',
+                'le puedo dar un numero', 'le puedo dar el numero',
+                'anote el correo', 'anote mi correo', 'apunte el correo',
+                'tome nota', 'le comparto'
+            ])
+
+            if cliente_ofrece_dato:
+                print(f"\n✅ FIX 457: Cliente OFRECE dato - NO aplicar FIX 311b")
+                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                print(f"   Bruce usará respuesta de GPT que acepta el dato")
+            elif cliente_dice_no_esta and bruce_ofrece_catalogo and not bruce_ya_pidio_numero:
                 print(f"\n📞 FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
