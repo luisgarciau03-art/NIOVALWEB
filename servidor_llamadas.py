@@ -2490,6 +2490,21 @@ def procesar_respuesta():
             elif frase_es_saludo_simple and cliente_dando_dato_previo:
                 print(f"   ⏳ FIX 453: '{speech_result}' parece saludo PERO cliente daba dato - ESPERAR")
 
+            # FIX 473: BRUCE1425 - Detectar frases de CORTESIA como respuestas completas
+            # En Mexico es comun responder "Buen dia, a sus ordenes" o "Para servirle"
+            frases_cortesia = [
+                'a sus órdenes', 'a sus ordenes', 'a tus órdenes', 'a tus ordenes',
+                'para servirle', 'para servirte', 'en qué le puedo ayudar', 'en que le puedo ayudar',
+                'en qué puedo servirle', 'en que puedo servirle', 'cómo le puedo ayudar',
+                'como le puedo ayudar', 'a la orden', 'a sus órdenes señor', 'a sus ordenes señor',
+                'con mucho gusto', 'a la brevedad'
+            ]
+            frase_es_cortesia = any(cortesia in frase_limpia for cortesia in frases_cortesia)
+
+            if frase_parece_incompleta and frase_es_cortesia:
+                print(f"   ✅ FIX 473: BRUCE1425 - '{speech_result}' es frase de CORTESIA - NO esperar")
+                frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             # FIX 471: BRUCE1415 - "No tengo" es respuesta completa, NO esperar continuación
             # El cliente está diciendo que no hay encargado de compras
             respuestas_no_hay_encargado = [
