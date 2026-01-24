@@ -1644,6 +1644,14 @@ def procesar_respuesta():
         tiempo_espera_final_extra = 0.0
         max_espera_final_extra = 1.0  # Máximo 1s adicional esperando FINAL después de PARCIAL
 
+        # FIX 477: BRUCE1443 - Reducir espera para saludos cortos (reduce delay en 2do mensaje)
+        # Si la PARCIAL es un saludo corto, no esperar 1s completo por FINAL
+        saludos_cortos = [
+            'bueno', 'sí', 'si', 'alo', 'aló', 'diga', 'digame', 'dígame',
+            'buenos días', 'buenos dias', 'buenas tardes', 'buenas noches',
+            'hola', 'mande', 'a sus órdenes', 'a sus ordenes', 'para servirle'
+        ]
+
         while tiempo_esperado < max_wait_deepgram:
             if call_sid in deepgram_transcripciones:
                 transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
@@ -1653,12 +1661,22 @@ def procesar_respuesta():
                     es_final = info_ultima.get("es_final", False)
 
                     if not es_final and esperando_final:
+                        # FIX 477: Si la PARCIAL es saludo corto, reducir tiempo de espera
+                        parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
+                        es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
+
+                        # Reducir espera para saludos cortos (0.3s en lugar de 1s)
+                        max_espera_ajustada = 0.3 if es_saludo_corto else max_espera_final_extra
+
+                        if es_saludo_corto and tiempo_espera_final_extra == 0:
+                            print(f"🚀 FIX 477: Saludo corto detectado '{parcial_actual}' - reduciendo espera a 0.3s")
+
                         # Solo tenemos PARCIAL - esperar un poco más por FINAL
-                        if tiempo_espera_final_extra < max_espera_final_extra:
+                        if tiempo_espera_final_extra < max_espera_ajustada:
                             tiempo_espera_final_extra += wait_interval
                             time.sleep(wait_interval)
                             tiempo_esperado += wait_interval
-                            print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_final_extra}s)")
+                            print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_ajustada}s)")
                             continue
                         else:
                             # Ya esperamos suficiente, usar PARCIAL con advertencia

@@ -1167,7 +1167,13 @@ class AgenteVentas:
                 '¿qué necesita', '¿que necesita', 'qué necesita', 'que necesita',
                 '¿en qué le puedo ayudar', '¿en que le puedo ayudar',
                 '¿qué se le ofrece', '¿que se le ofrece',
-                '¿para qué llama', '¿para que llama'
+                '¿para qué llama', '¿para que llama',
+                # FIX 479: BRUCE1445 - "de donde llamas dices" (sin signos de interrogación)
+                'de donde llamas', 'de dónde llamas', 'de donde habla', 'de dónde habla',
+                'de donde me llama', 'de dónde me llama', 'de donde dices', 'de dónde dices',
+                'de que marca', 'de qué marca', 'que marca es', 'qué marca es',
+                'como se llama la marca', 'cómo se llama la marca',
+                'como dijo que se llama', 'cómo dijo que se llama'
             ])
 
             # Verificar si Bruce NO mencionó la empresa en su respuesta ACTUAL
@@ -2724,15 +2730,49 @@ class AgenteVentas:
                         break
 
                 # Detectar si Bruce pidió número EN CUALQUIERA de sus últimos mensajes
-                bruce_pidio_numero = any(
+                # FIX 476: BRUCE1438 - Ser más estricto: solo si Bruce pidió EXPLÍCITAMENTE WhatsApp/teléfono
+                # Problema: Bruce decía "solo escuché 4 dígitos" cuando cliente no estaba dando contacto
+                bruce_pidio_numero_contacto = any(
                     any(kw in msg_bruce for kw in [
-                        'número', 'numero', 'teléfono', 'telefono', 'whatsapp',
-                        'celular', 'dígame el número', 'digame el numero',
-                        'cuál es el número', 'cual es el numero',
-                        'me puede dar', 'me da el', 'cuál es su'
+                        'whatsapp', 'celular', 'teléfono para contactar', 'telefono para contactar',
+                        'número de whatsapp', 'numero de whatsapp', 'número de celular', 'numero de celular',
+                        'su whatsapp', 'tu whatsapp', 'me da su whatsapp', 'me da tu whatsapp',
+                        'proporcionar el número', 'proporcionar su número', 'proporcionar tu número',
+                        'dar el número', 'dar su número', 'dar tu número',
+                        'enviarle el catálogo', 'enviarle nuestro', 'enviar el catálogo'
                     ])
                     for msg_bruce in mensajes_bruce
                 )
+
+                # FIX 476: También verificar que cliente está DANDO número (no solo mencionando dígitos)
+                cliente_dando_numero = any(patron in ultimo_cliente for patron in [
+                    'es el', 'es mi', 'mi número', 'mi numero', 'mi cel', 'mi whatsapp',
+                    'el número es', 'el numero es', 'anota', 'anote', 'apunte', 'apunta',
+                    'te paso', 'le paso', 'te doy', 'le doy', 'ahí va', 'ahi va',
+                    'mira es', 'tome nota', 'seria el'
+                ])
+
+                # FIX 476B: BRUCE1438 - Excluir cuando cliente menciona HORAS o DÍAS (no es teléfono)
+                # Cliente dijo "Hasta el lunes a las 10 y media, 11" = callback, NO número de teléfono
+                cliente_menciona_hora_o_dia = any(patron in ultimo_cliente for patron in [
+                    # Horas
+                    'a las', 'las diez', 'las once', 'las doce', 'las nueve', 'las ocho',
+                    'y media', 'y cuarto', 'en punto', 'de la mañana', 'de la tarde',
+                    # Días
+                    'el lunes', 'el martes', 'el miércoles', 'el miercoles', 'el jueves', 'el viernes',
+                    'hasta el', 'hasta mañana', 'hasta manana', 'la próxima', 'la proxima',
+                    # Otros indicadores de tiempo
+                    'más tarde', 'mas tarde', 'al rato', 'en un rato', 'después de', 'despues de'
+                ])
+
+                # Si menciona hora o día, NO tratar como número de teléfono
+                if cliente_menciona_hora_o_dia:
+                    cliente_dando_numero = False
+                    print(f"\n⏰ FIX 476B: Cliente menciona HORA/DÍA, NO número de teléfono")
+                    print(f"   Mensaje: '{ultimo_cliente[:80]}'")
+
+                # Condición más estricta: Bruce pidió contacto Y cliente está dando número Y NO menciona hora/día
+                bruce_pidio_numero = bruce_pidio_numero_contacto and cliente_dando_numero and not cliente_menciona_hora_o_dia
 
                 if bruce_pidio_numero and ultimo_cliente:
                     # FIX 276: Primero convertir números escritos a dígitos
@@ -3266,6 +3306,65 @@ class AgenteVentas:
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
                 respuesta = "Claro, con gusto. ¿A qué hora me recomienda llamar para encontrarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
+        # FILTRO 19B3 (FIX 478): BRUCE1444 - Cliente pide que Bruce marque en un día específico
+        # Problema: Cliente dijo "marque el lunes" pero Bruce no entendió
+        # ============================================================
+        if not filtro_aplicado:
+            # Patrones de días de la semana y momentos
+            dias_semana = ['lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado', 'domingo']
+            momentos = ['mañana', 'manana', 'pasado mañana', 'pasado manana', 'la próxima semana', 'la proxima semana', 'otro día', 'otro dia']
+
+            # Detectar si cliente pide callback en día específico
+            cliente_pide_dia = any(frase in contexto_cliente for frase in [
+                # Marque/llame + día
+                'marque el', 'márqueme el', 'marqueme el', 'llámeme el', 'llameme el',
+                'llame el', 'hable el', 'hábleme el', 'hableme el',
+                # Mejor + día
+                'mejor el', 'mejor hasta el', 'hasta el',
+                # Mañana/después
+                'mañana', 'manana', 'pasado mañana', 'pasado manana',
+                'la próxima semana', 'la proxima semana', 'el próximo', 'el proximo',
+                # Indirectas
+                'regrese', 'regresa', 'vuelva', 'vuelve'
+            ])
+
+            # Verificar que menciona un día de la semana o momento
+            menciona_dia = any(dia in contexto_cliente for dia in dias_semana + momentos)
+
+            # Bruce no entendió y ofrece catálogo o sigue la conversación normal
+            bruce_no_entendio = not any(frase in respuesta_lower for frase in [
+                'el lunes', 'el martes', 'el miércoles', 'el miercoles', 'el jueves', 'el viernes',
+                'mañana', 'manana', 'próxima semana', 'proxima semana',
+                'ese día', 'ese dia', 'a esa hora', 'en ese momento',
+                'le marco', 'le llamo', 'le hablo', 'me comunico'
+            ])
+
+            if cliente_pide_dia and menciona_dia and bruce_no_entendio:
+                # Extraer el día mencionado
+                dia_mencionado = None
+                for dia in dias_semana:
+                    if dia in contexto_cliente:
+                        dia_mencionado = dia.capitalize()
+                        break
+                for momento in momentos:
+                    if momento in contexto_cliente:
+                        dia_mencionado = momento
+                        break
+
+                print(f"\n📅 FIX 478: FILTRO ACTIVADO - Cliente pide callback en día específico")
+                print(f"   Caso BRUCE1444: Cliente dijo 'marque el lunes'")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Día detectado: {dia_mencionado}")
+                print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+
+                if dia_mencionado:
+                    respuesta = f"Perfecto, le marco el {dia_mencionado}. ¿A qué hora le queda mejor?"
+                else:
+                    respuesta = "Claro, ¿qué día y a qué hora le queda mejor para llamarle?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
