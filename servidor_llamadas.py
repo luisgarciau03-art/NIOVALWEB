@@ -3667,14 +3667,51 @@ def procesar_respuesta():
     # el sistema procesa un "¿Bueno?" viejo en lugar del mensaje actual
     # Solución: Limpiar buffer ANTES de enviar audio para que solo capture la RESPUESTA al audio
     import time as time_455  # FIX 455: Import local seguro
-    transcripciones_previas = len(deepgram_transcripciones.get(call_sid, []))
-    if transcripciones_previas > 0:
-        print(f"🧹 FIX 455: Limpiando {transcripciones_previas} transcripciones acumuladas ANTES de enviar audio")
-        print(f"   Contenido descartado: {deepgram_transcripciones.get(call_sid, [])}")
-        deepgram_transcripciones[call_sid] = []
-        # También limpiar el tracking de FINAL/PARCIAL
-        if call_sid in deepgram_ultima_final:
-            deepgram_ultima_final[call_sid] = {}
+    import re as re_481  # FIX 481: Para detectar dígitos
+    transcripciones_previas = deepgram_transcripciones.get(call_sid, [])
+
+    # FIX 481: BRUCE1446/BRUCE1458 - NO descartar transcripciones importantes
+    # Verificar si alguna transcripción contiene información importante que NO debe descartarse
+    transcripciones_importantes = []
+    transcripciones_descartar = []
+
+    dias_semana_481 = ['lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado', 'domingo']
+    patrones_dia_481 = ['marcar el', 'marque el', 'llame el', 'si gusta marcar', 'hasta el', 'se presenta']
+
+    for trans in transcripciones_previas:
+        trans_lower = trans.lower() if isinstance(trans, str) else str(trans).lower()
+
+        # FIX 481: Preservar si menciona día de la semana con contexto de callback
+        contiene_dia_callback = any(
+            patron in trans_lower and any(dia in trans_lower for dia in dias_semana_481)
+            for patron in patrones_dia_481
+        )
+
+        # FIX 481: Preservar si contiene dígitos que parecen número telefónico (3+ dígitos)
+        # Excluir horas como "a las 2", "las 10"
+        digitos = re_481.findall(r'\d', trans_lower)
+        contiene_telefono = len(digitos) >= 3 and not any(h in trans_lower for h in ['a las', 'las dos', 'las tres', 'las diez', 'las once', 'las doce'])
+
+        if contiene_dia_callback or contiene_telefono:
+            transcripciones_importantes.append(trans)
+            print(f"⚠️ FIX 481: Preservando transcripción importante: '{trans}'")
+        else:
+            transcripciones_descartar.append(trans)
+
+    if transcripciones_descartar:
+        print(f"🧹 FIX 455: Limpiando {len(transcripciones_descartar)} transcripciones acumuladas ANTES de enviar audio")
+        print(f"   Contenido descartado: {transcripciones_descartar}")
+
+    # Solo conservar las transcripciones importantes
+    deepgram_transcripciones[call_sid] = transcripciones_importantes
+
+    if transcripciones_importantes:
+        print(f"✅ FIX 481: Conservando {len(transcripciones_importantes)} transcripciones importantes")
+
+    # Limpiar el tracking de FINAL/PARCIAL si no hay transcripciones importantes
+    if not transcripciones_importantes and call_sid in deepgram_ultima_final:
+        deepgram_ultima_final[call_sid] = {}
+
     # Guardar timestamp de cuando Bruce envía audio (para referencia en logs)
     bruce_audio_enviado_timestamp[call_sid] = time_455.time()
 

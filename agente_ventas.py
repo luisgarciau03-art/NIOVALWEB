@@ -2745,12 +2745,31 @@ class AgenteVentas:
                 )
 
                 # FIX 476: También verificar que cliente está DANDO número (no solo mencionando dígitos)
+                # FIX 483: BRUCE1458 - Agregar patrones para "Es 6 6 9 2" (es + dígitos)
                 cliente_dando_numero = any(patron in ultimo_cliente for patron in [
                     'es el', 'es mi', 'mi número', 'mi numero', 'mi cel', 'mi whatsapp',
                     'el número es', 'el numero es', 'anota', 'anote', 'apunte', 'apunta',
                     'te paso', 'le paso', 'te doy', 'le doy', 'ahí va', 'ahi va',
                     'mira es', 'tome nota', 'seria el'
                 ])
+
+                # FIX 483: BRUCE1458 - Detectar cuando cliente dice "es" seguido de dígitos
+                # Ejemplo: "Es 6 6 9 2" → cliente dictando número
+                if not cliente_dando_numero and ultimo_cliente.strip().startswith('es '):
+                    # Verificar que después de "es " hay dígitos
+                    resto = ultimo_cliente.strip()[3:]  # Después de "es "
+                    if re.search(r'\d', resto):
+                        cliente_dando_numero = True
+                        print(f"📞 FIX 483: Detectado 'es' + dígitos: '{ultimo_cliente[:40]}'")
+
+                # FIX 483: También detectar si el mensaje es PRINCIPALMENTE dígitos y Bruce pidió número
+                if not cliente_dando_numero and bruce_pidio_numero_contacto:
+                    digitos_en_mensaje = len(re.findall(r'\d', ultimo_cliente))
+                    palabras_en_mensaje = len(ultimo_cliente.split())
+                    # Si más del 50% del mensaje son dígitos (o grupos de dígitos)
+                    if digitos_en_mensaje >= 3 and palabras_en_mensaje <= 5:
+                        cliente_dando_numero = True
+                        print(f"📞 FIX 483: Mensaje con dígitos después de pedir número: '{ultimo_cliente[:40]}'")
 
                 # FIX 476B: BRUCE1438 - Excluir cuando cliente menciona HORAS o DÍAS (no es teléfono)
                 # Cliente dijo "Hasta el lunes a las 10 y media, 11" = callback, NO número de teléfono
@@ -3323,6 +3342,12 @@ class AgenteVentas:
                 # Marque/llame + día
                 'marque el', 'márqueme el', 'marqueme el', 'llámeme el', 'llameme el',
                 'llame el', 'hable el', 'hábleme el', 'hableme el',
+                # FIX 480: BRUCE1446 - "Si gusta marcar el día lunes"
+                'si gusta marcar', 'si gustas marcar', 'marcar el día', 'marcar el dia',
+                'si gusta marcar el', 'si gustas marcar el', 'si gusta llamar', 'si gustas llamar',
+                # FIX 480: "Se presenta hasta el lunes" = encargado estará el lunes
+                'se presenta hasta', 'se presenta el', 'estará hasta el', 'estara hasta el',
+                'está hasta el', 'esta hasta el', 'viene hasta el', 'llega hasta el',
                 # Mejor + día
                 'mejor el', 'mejor hasta el', 'hasta el',
                 # Mañana/después
@@ -4699,11 +4724,27 @@ class AgenteVentas:
                                        for msg in ultimos_bruce_temp_fix415)
 
             if bruce_ya_dijo_espero:
-                # FIX 415: Ya dijo "Claro, espero." → SILENCIARSE (esperar en silencio sin responder)
-                print(f"\n⏭️  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
-                print(f"   Cliente dijo: \"{respuesta_cliente}\" - NO responder (esperar transferencia)")
-                # Retornar None para indicar que NO debe generar audio
-                return None
+                # FIX 482: BRUCE1457 - Detectar si cliente VOLVIÓ de la espera
+                # Si dice "¿Bueno?", "Sí", "Ya", "Aquí estoy", etc. = VOLVIÓ y debemos continuar
+                cliente_lower_482 = respuesta_cliente.strip().lower()
+                cliente_volvio = any(frase in cliente_lower_482 for frase in [
+                    '¿bueno?', 'bueno?', 'bueno', 'sí', 'si', 'ya', 'ya estoy',
+                    'aquí estoy', 'aqui estoy', 'listo', 'diga', 'dígame', 'digame',
+                    'mande', 'sí diga', 'si diga', 'ya regresé', 'ya regrese',
+                    'continúe', 'continue', 'siga', 'ahí está', 'ahi esta'
+                ])
+
+                if cliente_volvio:
+                    print(f"\n✅ FIX 482: Cliente VOLVIÓ de la espera - '{respuesta_cliente}'")
+                    print(f"   Cambiando estado a CONVERSACION_NORMAL para continuar")
+                    self.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                    # NO retornar None, continuar con procesamiento normal (GPT)
+                else:
+                    # FIX 415: Ya dijo "Claro, espero." → SILENCIARSE (esperar en silencio sin responder)
+                    print(f"\n⏭️  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
+                    print(f"   Cliente dijo: \"{respuesta_cliente}\" - NO responder (esperar transferencia)")
+                    # Retornar None para indicar que NO debe generar audio
+                    return None
 
             # Primera vez diciendo "Claro, espero." en esta transferencia
             print(f"\n⏳ FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
