@@ -31,6 +31,7 @@ class EstadoConversacion(Enum):
     ESPERANDO_TRANSFERENCIA = "esperando"      # Cliente dijo "espere/permítame"
     CONTACTO_CAPTURADO = "contacto_capturado"  # Ya tenemos WhatsApp o correo
     DESPEDIDA = "despedida"                    # Conversación terminando
+    CONVERSACION_NORMAL = "conversacion_normal"  # FIX 488: Estado normal de conversación
 
 # Cargar variables de entorno desde .env
 load_dotenv()

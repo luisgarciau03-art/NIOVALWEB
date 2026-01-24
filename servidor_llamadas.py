@@ -76,6 +76,12 @@ bruce_audio_enviado_timestamp = {}  # call_sid -> timestamp cuando se envió el 
 # Solución: Después de FINAL, esperar y verificar si llegan PARCIALES nuevas
 deepgram_ultima_parcial = {}  # call_sid -> {"timestamp": float, "texto": str}
 
+# FIX 490: Locks para prevenir race conditions en acceso concurrente a diccionarios compartidos
+# Los threads de Deepgram, GPT, y cleanup acceden a estos diccionarios simultáneamente
+deepgram_transcripciones_lock = threading.Lock()
+deepgram_ultima_final_lock = threading.Lock()
+conversaciones_activas_lock = threading.Lock()
+
 # FIX 164: Sistema de logging condicional para reducir rate limit
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
@@ -437,6 +443,39 @@ cache_respuestas_stats = {
 preguntas_frecuentes = {}
 UMBRAL_AUTO_CACHE = 2  # Después de 2 veces, sugerir para caché (más agresivo)
 candidatos_auto_cache = []  # Lista de preguntas que califican para caché automático
+
+
+# FIX 489: Función para limpiar TODOS los recursos de una llamada terminada (prevenir memory leak)
+def limpiar_recursos_llamada(call_sid):
+    """
+    Limpia todos los recursos asociados a una llamada terminada.
+
+    FIX 489: Previene memory leak limpiando TODOS los diccionarios que usan call_sid como key.
+    Antes solo se limpiaban 2 de 9 diccionarios, causando acumulación de memoria.
+
+    Args:
+        call_sid: ID de la llamada de Twilio
+    """
+    diccionarios_call_specific = [
+        conversaciones_activas,      # Instancia del agente
+        contactos_llamadas,          # Info del contacto
+        deepgram_transcripciones,    # Transcripciones acumuladas
+        deepgram_ultima_final,       # Última transcripción FINAL
+        deepgram_ultima_parcial,     # Última transcripción PARCIAL
+        cliente_hablando_activo,     # Tracking de interrupciones
+        bruce_audio_enviado_timestamp,  # Timestamp del último audio
+        respuesta_precargada,        # Respuestas pre-generadas
+        callsid_to_bruceid          # Mapeo call_sid -> bruce_id
+    ]
+
+    # Limpiar cada diccionario
+    recursos_limpiados = 0
+    for diccionario in diccionarios_call_specific:
+        if call_sid in diccionario:
+            del diccionario[call_sid]
+            recursos_limpiados += 1
+
+    print(f"🧹 FIX 489: Limpiados {recursos_limpiados} recursos de llamada {call_sid}")
 
 
 def cargar_cache_desde_disco():
@@ -1653,72 +1692,80 @@ def procesar_respuesta():
         ]
 
         while tiempo_esperado < max_wait_deepgram:
-            if call_sid in deepgram_transcripciones:
-                transcripciones_dg = deepgram_transcripciones.get(call_sid, [])
-                if transcripciones_dg:
-                    # FIX 451: Verificar si la transcripción es FINAL
-                    info_ultima = deepgram_ultima_final.get(call_sid, {})
-                    es_final = info_ultima.get("es_final", False)
+            # FIX 490: Proteger lectura concurrente de transcripciones con lock
+            with deepgram_transcripciones_lock:
+                if call_sid in deepgram_transcripciones:
+                    transcripciones_dg = deepgram_transcripciones.get(call_sid, []).copy()  # Copiar para evitar modificación externa
+                else:
+                    transcripciones_dg = []
 
-                    if not es_final and esperando_final:
-                        # FIX 477: Si la PARCIAL es saludo corto, reducir tiempo de espera
-                        parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
-                        es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
+            # Obtener info de última FINAL (también protegida)
+            with deepgram_ultima_final_lock:
+                info_ultima = deepgram_ultima_final.get(call_sid, {})
+                es_final = info_ultima.get("es_final", False)
 
-                        # Reducir espera para saludos cortos (0.3s en lugar de 1s)
-                        max_espera_ajustada = 0.3 if es_saludo_corto else max_espera_final_extra
+            if transcripciones_dg:
+                # FIX 451: Verificar si la transcripción es FINAL
+                if not es_final and esperando_final:
+                    # FIX 477: Si la PARCIAL es saludo corto, reducir tiempo de espera
+                    parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
+                    es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
 
-                        if es_saludo_corto and tiempo_espera_final_extra == 0:
-                            print(f"🚀 FIX 477: Saludo corto detectado '{parcial_actual}' - reduciendo espera a 0.3s")
+                    # Reducir espera para saludos cortos (0.3s en lugar de 1s)
+                    max_espera_ajustada = 0.3 if es_saludo_corto else max_espera_final_extra
 
-                        # Solo tenemos PARCIAL - esperar un poco más por FINAL
-                        if tiempo_espera_final_extra < max_espera_ajustada:
-                            tiempo_espera_final_extra += wait_interval
-                            time.sleep(wait_interval)
-                            tiempo_esperado += wait_interval
-                            print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_ajustada}s)")
-                            continue
-                        else:
-                            # Ya esperamos suficiente, usar PARCIAL con advertencia
-                            print(f"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
+                    if es_saludo_corto and tiempo_espera_final_extra == 0:
+                        print(f"🚀 FIX 477: Saludo corto detectado '{parcial_actual}' - reduciendo espera a 0.3s")
 
-                            # FIX 465: BRUCE1398 - Detectar si la frase está INCOMPLETA
-                            # Si termina con coma o palabras conectoras, el cliente sigue hablando
-                            ultima_parcial_texto = ""
-                            if transcripciones_dg:
-                                ultima_parcial_texto = transcripciones_dg[-1].strip().lower()
+                    # Solo tenemos PARCIAL - esperar un poco más por FINAL
+                    if tiempo_espera_final_extra < max_espera_ajustada:
+                        tiempo_espera_final_extra += wait_interval
+                        time.sleep(wait_interval)
+                        tiempo_esperado += wait_interval
+                        print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_ajustada}s)")
+                        continue
+                    else:
+                        # Ya esperamos suficiente, usar PARCIAL con advertencia
+                        print(f"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
 
-                            # Patrones que indican frase incompleta
-                            frase_incompleta = False
-                            if ultima_parcial_texto:
-                                # Termina con coma = definitivamente incompleta
-                                if ultima_parcial_texto.endswith(','):
-                                    frase_incompleta = True
-                                    print(f"   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando")
-                                # Termina con palabra conectora
-                                elif any(ultima_parcial_texto.endswith(f' {palabra}') for palabra in [
-                                    'y', 'pero', 'o', 'que', 'porque', 'este', 'bueno', 'pues', 'entonces', 'como'
-                                ]):
-                                    frase_incompleta = True
-                                    print(f"   ⚠️ FIX 465: Frase termina en CONECTOR - cliente sigue hablando")
+                        # FIX 465: BRUCE1398 - Detectar si la frase está INCOMPLETA
+                        # Si termina con coma o palabras conectoras, el cliente sigue hablando
+                        ultima_parcial_texto = ""
+                        if transcripciones_dg:
+                            ultima_parcial_texto = transcripciones_dg[-1].strip().lower()
 
-                            # FIX 465: Si frase incompleta, esperar 0.5s más antes de continuar
-                            if frase_incompleta:
-                                max_espera_frase_incompleta = 0.5
-                                tiempo_espera_incompleta = 0.0
-                                while tiempo_espera_incompleta < max_espera_frase_incompleta:
-                                    time.sleep(0.05)
-                                    tiempo_espera_incompleta += 0.05
-                                    tiempo_esperado += 0.05
+                        # Patrones que indican frase incompleta
+                        frase_incompleta = False
+                        if ultima_parcial_texto:
+                            # Termina con coma = definitivamente incompleta
+                            if ultima_parcial_texto.endswith(','):
+                                frase_incompleta = True
+                                print(f"   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando")
+                            # Termina con palabra conectora
+                            elif any(ultima_parcial_texto.endswith(f' {palabra}') for palabra in [
+                                'y', 'pero', 'o', 'que', 'porque', 'este', 'bueno', 'pues', 'entonces', 'como'
+                            ]):
+                                frase_incompleta = True
+                                print(f"   ⚠️ FIX 465: Frase termina en CONECTOR - cliente sigue hablando")
 
-                                    # Verificar si llegó transcripción más larga
+                        # FIX 465: Si frase incompleta, esperar 0.5s más antes de continuar
+                        if frase_incompleta:
+                            max_espera_frase_incompleta = 0.5
+                            tiempo_espera_incompleta = 0.0
+                            while tiempo_espera_incompleta < max_espera_frase_incompleta:
+                                time.sleep(0.05)
+                                tiempo_espera_incompleta += 0.05
+                                tiempo_esperado += 0.05
+
+                                # FIX 490: Proteger acceso concurrente con lock
+                                with deepgram_transcripciones_lock:
                                     trans_actuales = deepgram_transcripciones.get(call_sid, [])
-                                    if trans_actuales and len(trans_actuales[-1]) > len(ultima_parcial_texto):
-                                        print(f"   ✅ FIX 465: Nueva transcripción más larga recibida")
-                                        # Volver a esperar por FINAL
-                                        esperando_final = True
-                                        tiempo_espera_final_extra = 0.5  # Ya esperamos algo
-                                        break
+                                if trans_actuales and len(trans_actuales[-1]) > len(ultima_parcial_texto):
+                                    print(f"   ✅ FIX 465: Nueva transcripción más larga recibida")
+                                    # Volver a esperar por FINAL
+                                    esperando_final = True
+                                    tiempo_espera_final_extra = 0.5  # Ya esperamos algo
+                                    break
 
                                 if esperando_final:
                                     continue  # Volver al loop principal
@@ -3956,10 +4003,8 @@ def despedida_final():
             import traceback
             traceback.print_exc()
 
-        # Limpiar memoria
-        del conversaciones_activas[call_sid]
-        if call_sid in contactos_llamadas:
-            del contactos_llamadas[call_sid]
+        # FIX 489: Limpiar TODOS los recursos (prevenir memory leak)
+        limpiar_recursos_llamada(call_sid)
 
     # Crear respuesta TwiML para colgar
     response = VoiceResponse()
@@ -7369,32 +7414,35 @@ def on_deepgram_transcript(call_sid, texto, is_final):
                 print(f"⚠️ FIX 314: Audio segunda_parte_saludo NO está en cache - generando...")
                 # El audio se generará cuando se procese la respuesta
 
-    if is_final:
-        # Transcripción final - agregar al array
-        print(f"📝 FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
-        deepgram_transcripciones[call_sid].append(texto)
-        # FIX 451: Marcar que recibimos transcripción FINAL
-        if call_sid not in deepgram_ultima_final:
-            deepgram_ultima_final[call_sid] = {}
-        deepgram_ultima_final[call_sid] = {
-            "timestamp": time.time(),
-            "texto": texto,
-            "es_final": True
-        }
-    else:
-        # FIX 218: Transcripción parcial - reemplazar última entrada parcial
-        # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
-        print(f"📝 FIX 212: [PARCIAL] '{texto}'")
-        if deepgram_transcripciones[call_sid]:
-            # Si la última entrada es más corta que la nueva, reemplazarla
-            ultima = deepgram_transcripciones[call_sid][-1]
-            if len(texto) > len(ultima):
-                deepgram_transcripciones[call_sid][-1] = texto
-        else:
+    # FIX 490: Proteger acceso concurrente a transcripciones con lock
+    with deepgram_transcripciones_lock:
+        if is_final:
+            # Transcripción final - agregar al array
+            print(f"📝 FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
             deepgram_transcripciones[call_sid].append(texto)
+            # FIX 451: Marcar que recibimos transcripción FINAL
+            with deepgram_ultima_final_lock:
+                if call_sid not in deepgram_ultima_final:
+                    deepgram_ultima_final[call_sid] = {}
+                deepgram_ultima_final[call_sid] = {
+                    "timestamp": time.time(),
+                    "texto": texto,
+                    "es_final": True
+                }
+        else:
+            # FIX 218: Transcripción parcial - reemplazar última entrada parcial
+            # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
+            print(f"📝 FIX 212: [PARCIAL] '{texto}'")
+            if deepgram_transcripciones[call_sid]:
+                # Si la última entrada es más corta que la nueva, reemplazarla
+                ultima = deepgram_transcripciones[call_sid][-1]
+                if len(texto) > len(ultima):
+                    deepgram_transcripciones[call_sid][-1] = texto
+            else:
+                deepgram_transcripciones[call_sid].append(texto)
 
-        # FIX 456: Siempre registrar la última PARCIAL para detectar si cliente sigue hablando
-        deepgram_ultima_parcial[call_sid] = {
+            # FIX 456: Siempre registrar la última PARCIAL para detectar si cliente sigue hablando
+            deepgram_ultima_parcial[call_sid] = {
             "timestamp": time.time(),
             "texto": texto
         }
