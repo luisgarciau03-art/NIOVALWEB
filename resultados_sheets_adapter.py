@@ -1,6 +1,6 @@
 """
 Adaptador para el Spreadsheet de RESULTADOS
-Guarda las respuestas del formulario de 7 preguntas en "Respuestas de formulario 1"
+Guarda las respuestas del formulario de 7 preguntas en "Bruce FORMS"
 
 MIGRADO: Ahora hereda de BaseGoogleSheetsAdapter para eliminar código duplicado
 """
@@ -17,7 +17,7 @@ class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
 
     # Configuración del spreadsheet
     SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg/edit"
-    HOJA_NOMBRE = "Respuestas de formulario 1"
+    HOJA_NOMBRE = "Bruce FORMS"
 
     def __init__(self):
         """Inicializa la conexión con el spreadsheet de resultados"""

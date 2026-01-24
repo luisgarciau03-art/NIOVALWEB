@@ -4128,9 +4128,9 @@ def status_callback():
                 # FIX 179: Reintentos deshabilitados (llamadas masivas)
                 print(f"   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)", flush=True)
 
-            # FIX 89: GUARDAR en "Respuestas de formulario 1" cuando es buzón después del segundo intento
+            # FIX 89: GUARDAR en "Bruce FORMS" cuando es buzón después del segundo intento
             elif intentos >= 2:
-                print(f"   💾 Segundo intento de buzón - guardando en Respuestas de formulario 1...")
+                print(f"   💾 Segundo intento de buzón - guardando en Bruce FORMS...")
 
                 # Obtener o crear agente para guardar el buzón
                 agente = None
@@ -4159,7 +4159,7 @@ def status_callback():
 
                     try:
                         agente.guardar_llamada_y_lead()
-                        print(f"   ✅ Buzón guardado en Respuestas de formulario 1")
+                        print(f"   ✅ Buzón guardado en Bruce FORMS")
                     except Exception as e:
                         print(f"   ⚠️ Error guardando buzón: {e}")
                 else:
@@ -4215,7 +4215,7 @@ def status_callback():
                 agente.lead_data["pregunta_7"] = estado.upper()
                 agente.lead_data["resultado"] = "NEGADO"
 
-                # Guardar en "Respuestas de formulario 1"
+                # Guardar en "Bruce FORMS"
                 agente.guardar_llamada_y_lead()
                 print(f"   ✅ Llamada fallida guardada: {estado}")
 

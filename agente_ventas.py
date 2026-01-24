@@ -8423,7 +8423,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             return
 
         try:
-            print("📊 Guardando resultados en 'Respuestas de formulario 1'...")
+            print("📊 Guardando resultados en 'Bruce FORMS'...")
 
             # Calcular duración de la llamada ANTES de guardar
             if self.lead_data.get("fecha_inicio"):
@@ -8446,7 +8446,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             calificacion_bruce = self.autoevaluar_llamada()
             print(f"⭐ Bruce se autoevaluó: {calificacion_bruce}/10")
 
-            # Guardar en "Respuestas de formulario 1"
+            # Guardar en "Bruce FORMS"
             resultado_guardado = self.resultados_manager.guardar_resultado_llamada({
                 'nombre_negocio': self.lead_data["nombre_negocio"],
                 'telefono': self.lead_data["telefono"],
@@ -8469,7 +8469,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             })
 
             if resultado_guardado:
-                print(f"✅ Resultados guardados en 'Respuestas de formulario 1'")
+                print(f"✅ Resultados guardados en 'Bruce FORMS'")
             else:
                 print(f"❌ Error al guardar resultados")
 
@@ -8864,7 +8864,7 @@ def procesar_contactos_automaticamente():
             print("\n📝 Guardando resultados en Google Sheets...")
 
             try:
-                # 1. Guardar en "Respuestas de formulario 1" (7 preguntas + análisis)
+                # 1. Guardar en "Bruce FORMS" (7 preguntas + análisis)
                 resultado_guardado = resultados_adapter.guardar_resultado_llamada({
                     'nombre_negocio': agente.lead_data["nombre_negocio"],
                     'telefono': agente.lead_data["telefono"],
