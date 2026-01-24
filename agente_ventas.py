@@ -2534,6 +2534,15 @@ class AgenteVentas:
                     r'en\s+un\s+rato',  # "en un rato"
                     r'en\s+unos?\s+\d+\s*(?:minutos?|mins?)',  # "en 30 minutos"
                     r'por\s+el\s+momento\s+no',  # "por el momento no" (implica que llegará)
+                    # FIX 487: BRUCE1468 - "dentro de una hora", "regresa en una hora"
+                    r'dentro\s+de.*hora',  # "dentro de una hora", "dentro de 1 hora"
+                    r'regresa.*hora',  # "regresa en una hora", "regresa como en una hora"
+                    r'vuelve.*hora',  # "vuelve en una hora"
+                    r'llega.*hora',  # "llega en una hora"
+                    r'viene.*hora',  # "viene en una hora"
+                    r'se\s+vend[ií]a.*hora',  # "se vendría en una hora" (caso BRUCE1468)
+                    r'estar[aá].*hora',  # "estará en una hora"
+                    r'regresa.*\d+\s*hora',  # "regresa en 1 hora", "regresa 1 hora"
                     # FIX 346: "de 9 a 2", "de 8 a 3", "horario de X a Y"
                     r'de\s+\d+\s+a\s+\d+',  # "de 9 a 2", "de 8 a 5"
                     r'horario\s+de',  # "horario de..."
@@ -3459,7 +3468,13 @@ class AgenteVentas:
                 'prefiero correo', 'mejor por correo', 'por correo mejor',
                 'mándelo por correo', 'mandelo por correo', 'envíelo por correo', 'envielo por correo',
                 'le doy el correo', 'le paso el correo', 'te doy el correo',
-                'anota el correo', 'apunta el correo'
+                'anota el correo', 'apunta el correo',
+                # FIX 485: BRUCE1464 - Detectar preguntas confirmando correo: "¿Es por correo?"
+                '¿es por correo?', 'es por correo?', '¿por correo?', 'por correo?',
+                '¿correo?', 'correo?', '¿es correo?', 'es correo?',
+                '¿está bien por correo?', 'esta bien por correo?',
+                '¿puede ser por correo?', 'puede ser por correo?',
+                'correo está bien', 'correo esta bien', 'por correo está bien', 'por correo esta bien'
             ])
 
             cliente_prefiere_whatsapp = any(frase in contexto_cliente for frase in [
@@ -3479,7 +3494,14 @@ class AgenteVentas:
                 'le doy el whatsapp', 'le paso el whatsapp', 'te doy el whatsapp',
                 'anota el whatsapp', 'apunta el whatsapp',
                 'manda al wasa', 'envía al wasa', 'envia al wasa',
-                'por wasap', 'al wasap', 'por guasa', 'al guasa'
+                'por wasap', 'al wasap', 'por guasa', 'al guasa',
+                # FIX 485: BRUCE1464 - Detectar preguntas confirmando WhatsApp: "¿Es por WhatsApp?"
+                '¿es por whatsapp?', 'es por whatsapp?', '¿por whatsapp?', 'por whatsapp?',
+                '¿whatsapp?', 'whatsapp?', '¿es whatsapp?', 'es whatsapp?',
+                '¿está bien por whatsapp?', 'esta bien por whatsapp?',
+                '¿puede ser por whatsapp?', 'puede ser por whatsapp?',
+                'whatsapp está bien', 'whatsapp esta bien', 'por whatsapp está bien', 'por whatsapp esta bien',
+                '¿por wasa?', 'por wasa?', '¿wasa?', 'wasa?'
             ])
 
             # Bruce pregunta por el método equivocado

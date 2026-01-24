@@ -2545,8 +2545,9 @@ def procesar_respuesta():
             if frase_parece_incompleta and frase_sin_puntuacion in ['no', 'no gracias', 'no no']:
                 # Verificar si Bruce acaba de preguntar por el encargado
                 ultimo_mensaje_bruce = ""
-                if agente.historial:
-                    for msg in reversed(agente.historial):
+                # FIX 484: BRUCE1459 - Corregir atributo (historial → conversation_history)
+                if agente.conversation_history:
+                    for msg in reversed(agente.conversation_history):
                         if msg.get('role') == 'assistant':
                             ultimo_mensaje_bruce = msg.get('content', '').lower()
                             break
