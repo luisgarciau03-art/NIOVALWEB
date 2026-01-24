@@ -2490,6 +2490,19 @@ def procesar_respuesta():
             elif frase_es_saludo_simple and cliente_dando_dato_previo:
                 print(f"   ⏳ FIX 453: '{speech_result}' parece saludo PERO cliente daba dato - ESPERAR")
 
+            # FIX 471: BRUCE1415 - "No tengo" es respuesta completa, NO esperar continuación
+            # El cliente está diciendo que no hay encargado de compras
+            respuestas_no_hay_encargado = [
+                'no tengo', 'no tenemos', 'no hay', 'aquí no hay', 'aqui no hay',
+                'no contamos', 'no está', 'no esta', 'no se encuentra',
+                'no lo tengo', 'no la tengo', 'no, no hay'
+            ]
+            frase_es_no_hay_encargado = any(resp in frase_limpia for resp in respuestas_no_hay_encargado)
+
+            if frase_parece_incompleta and frase_es_no_hay_encargado:
+                print(f"   ✅ FIX 471: '{speech_result}' indica NO HAY ENCARGADO - NO esperar continuación")
+                frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             # FIX 443: Caso BRUCE1334 - Detectar cuando cliente OFRECE dar datos
             # Si el cliente dice "le puedo dar un correo/whatsapp/número", ESPERAR a que termine
             # Frases que indican ofrecimiento de datos importantes

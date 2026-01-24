@@ -554,7 +554,9 @@ class AgenteVentas:
                            'está busy', 'esta busy', 'busy',
                            # FIX 425: Frases que indican "no está" (caso BRUCE1251: "anda en la comida")
                            'anda en la comida', 'anda comiendo', 'salió a comer', 'salio a comer',
-                           'fue a comer', 'están comiendo', 'estan comiendo']
+                           'fue a comer', 'están comiendo', 'estan comiendo',
+                           # FIX 471: BRUCE1415 - "No tengo" = No hay encargado
+                           'no tengo', 'no tenemos', 'no contamos con', 'aquí no hay']
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
             print(f"📊 FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
