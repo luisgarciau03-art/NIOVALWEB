@@ -2503,6 +2503,31 @@ def procesar_respuesta():
                 print(f"   ✅ FIX 471: '{speech_result}' indica NO HAY ENCARGADO - NO esperar continuación")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
 
+            # FIX 472: BRUCE1419 - Si cliente responde solo "No" a pregunta sobre encargado
+            # "No" solo ES respuesta completa cuando Bruce acaba de preguntar por el encargado
+            import re
+            frase_sin_puntuacion = re.sub(r'[.,;:!?¿¡]', '', frase_limpia).strip()
+            if frase_parece_incompleta and frase_sin_puntuacion in ['no', 'no gracias', 'no no']:
+                # Verificar si Bruce acaba de preguntar por el encargado
+                ultimo_mensaje_bruce = ""
+                if agente.historial:
+                    for msg in reversed(agente.historial):
+                        if msg.get('role') == 'assistant':
+                            ultimo_mensaje_bruce = msg.get('content', '').lower()
+                            break
+
+                # Buscar si pregunto por encargado
+                bruce_pregunto_encargado = any(p in ultimo_mensaje_bruce for p in [
+                    'encargado', 'encargada', 'quien ve las compras', 'quien maneja las compras',
+                    'responsable de compras', 'se encontrara', 'se encuentra'
+                ])
+
+                if bruce_pregunto_encargado:
+                    print(f"   ✅ FIX 472: BRUCE1419 - Cliente dijo '{speech_result}' a pregunta de encargado")
+                    print(f"   Ultimo de Bruce: '{ultimo_mensaje_bruce[:60]}...'")
+                    print(f"   'No' es respuesta COMPLETA - NO esperar continuacion")
+                    frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             # FIX 443: Caso BRUCE1334 - Detectar cuando cliente OFRECE dar datos
             # Si el cliente dice "le puedo dar un correo/whatsapp/número", ESPERAR a que termine
             # Frases que indican ofrecimiento de datos importantes
