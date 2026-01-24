@@ -3230,6 +3230,46 @@ class AgenteVentas:
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
+        # FILTRO 19B2 (FIX 474): BRUCE1433 - Cliente quiere que Bruce vuelva cuando llegue el dueño
+        # Problema: Cliente dijo "mejor cuando venga el dueño, al rato llega"
+        # Bruce ofreció catálogo en lugar de preguntar a qué hora volver a llamar
+        # ============================================================
+        if not filtro_aplicado:
+            # Patrones que indican "vuelva a llamar cuando llegue el dueño/encargado"
+            cliente_quiere_volver_llamar = any(frase in contexto_cliente for frase in [
+                # Variantes de "cuando venga/llegue el dueño/encargado"
+                'cuando venga el dueño', 'cuando venga el dueno', 'cuando venga el encargado',
+                'cuando llegue el dueño', 'cuando llegue el dueno', 'cuando llegue el encargado',
+                'mejor cuando venga', 'mejor cuando llegue', 'mejor cuando esté', 'mejor cuando este',
+                # "Al rato llega" = el dueño/encargado llegará pronto
+                'al rato llega', 'ahorita llega', 'ahorita viene', 'al rato viene',
+                'más tarde llega', 'mas tarde llega', 'más tarde viene', 'mas tarde viene',
+                'en un rato llega', 'en un rato viene', 'ya mero llega', 'ya mero viene',
+                'ahorita no está pero', 'ahorita no esta pero', 'no está pero al rato', 'no esta pero al rato',
+                # Variantes directas de "vuelva a llamar"
+                'vuelva cuando', 'vuelva a llamar cuando', 'llame cuando', 'marque cuando'
+            ])
+
+            # Bruce ofrece catálogo cuando debería preguntar hora para volver a llamar
+            bruce_ofrece_catalogo = any(frase in respuesta_lower for frase in [
+                'catálogo por whatsapp', 'catalogo por whatsapp',
+                'catálogo por correo', 'catalogo por correo',
+                'le gustaría que le envíe', 'le gustaria que le envie',
+                'envíe nuestro catálogo', 'envie nuestro catalogo',
+                'envíe el catálogo', 'envie el catalogo',
+                'whatsapp o correo', 'correo o whatsapp'
+            ])
+
+            if cliente_quiere_volver_llamar and bruce_ofrece_catalogo:
+                print(f"\n📞 FIX 474: FILTRO ACTIVADO - Cliente quiere que Bruce vuelva cuando llegue el dueño")
+                print(f"   Caso BRUCE1433: Cliente dijo 'mejor cuando venga el dueño, al rato llega'")
+                print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
+                print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
+                respuesta = "Claro, con gusto. ¿A qué hora me recomienda llamar para encontrarlo?"
+                filtro_aplicado = True
+                print(f"   Respuesta corregida: \"{respuesta}\"")
+
+        # ============================================================
         # FILTRO 19C (FIX 437): Bruce YA pidió número de encargado, cliente confirma
         # pero Bruce ofrece catálogo en lugar de esperar el número
         # Caso BRUCE1322: Bruce preguntó número, cliente dijo "Por favor,", Bruce ofreció catálogo
