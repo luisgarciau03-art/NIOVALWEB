@@ -3693,9 +3693,27 @@ def procesar_respuesta():
         digitos = re_481.findall(r'\d', trans_lower)
         contiene_telefono = len(digitos) >= 3 and not any(h in trans_lower for h in ['a las', 'las dos', 'las tres', 'las diez', 'las once', 'las doce'])
 
-        if contiene_dia_callback or contiene_telefono:
+        # FIX 486: BRUCE1466 - Preservar frases de "interrupción válida"
+        # Cliente dice "déjeme validar", "un momento", "espere" mientras Bruce procesa
+        frases_interrupcion_valida = [
+            'déjeme', 'dejeme', 'déjame', 'dejame',
+            'validar', 'valido', 'checo', 'verifico',
+            'un momento', 'espera', 'espere', 'espérame', 'esperame',
+            'permíteme', 'permiteme', 'permítame', 'permitame',
+            'voy a', 'deja ver', 'déjame ver', 'dejame ver',
+            'voy a preguntar', 'lo checo', 'lo verifico',
+            'deja consulto', 'deja pregunto', 'consulto',
+            'lo consulto', 'pregunto', 'lo pregunto',
+            'a ver', 'mmmm', 'mmm', 'ehh', 'ehhh'
+        ]
+        contiene_interrupcion_valida = any(frase in trans_lower for frase in frases_interrupcion_valida)
+
+        if contiene_dia_callback or contiene_telefono or contiene_interrupcion_valida:
             transcripciones_importantes.append(trans)
-            print(f"⚠️ FIX 481: Preservando transcripción importante: '{trans}'")
+            if contiene_interrupcion_valida:
+                print(f"⚠️ FIX 486: Preservando INTERRUPCIÓN VÁLIDA: '{trans}'")
+            else:
+                print(f"⚠️ FIX 481: Preservando transcripción importante: '{trans}'")
         else:
             transcripciones_descartar.append(trans)
 
