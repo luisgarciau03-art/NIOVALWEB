@@ -1812,9 +1812,54 @@ def procesar_respuesta():
             time.sleep(wait_interval)
             tiempo_esperado += wait_interval
 
+        # FIX 469: BRUCE1416 - Si el timeout se agotó pero HAY transcripciones, usarlas
+        # El loop puede terminar por timeout mientras espera más transcripciones,
+        # pero ya acumuló transcripciones FINAL válidas que no debemos perder
         if not usar_deepgram:
-            print(f"⚠️ FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
-            print(f"   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
+            transcripciones_acumuladas = deepgram_transcripciones.get(call_sid, [])
+            if transcripciones_acumuladas:
+                print(f"\n⚠️ FIX 469: Timeout pero hay {len(transcripciones_acumuladas)} transcripciones acumuladas")
+                for i, t in enumerate(transcripciones_acumuladas):
+                    print(f"   [{i}] '{t}'")
+
+                # Usar las transcripciones acumuladas
+                if len(transcripciones_acumuladas) > 1:
+                    # Eliminar duplicados y concatenar
+                    transcripciones_unicas = []
+                    for t in transcripciones_acumuladas:
+                        t_normalizada = t.lower().strip().rstrip('.,;:!?')
+                        es_duplicado = False
+                        for existente in transcripciones_unicas:
+                            existente_norm = existente.lower().strip().rstrip('.,;:!?')
+                            if t_normalizada == existente_norm:
+                                es_duplicado = True
+                                break
+                            if t_normalizada in existente_norm or existente_norm in t_normalizada:
+                                if len(t) > len(existente):
+                                    transcripciones_unicas.remove(existente)
+                                    transcripciones_unicas.append(t)
+                                es_duplicado = True
+                                break
+                        if not es_duplicado:
+                            transcripciones_unicas.append(t)
+
+                    transcripcion_deepgram = " ".join(transcripciones_unicas)
+                    print(f"   ✅ FIX 469: Concatenando {len(transcripciones_unicas)} partes: '{transcripcion_deepgram}'")
+                else:
+                    transcripcion_deepgram = transcripciones_acumuladas[0]
+                    print(f"   ✅ FIX 469: Usando transcripción única: '{transcripcion_deepgram}'")
+
+                usar_deepgram = True
+                speech_original_twilio = speech_result
+                speech_result = transcripcion_deepgram
+
+                # Limpiar para próximo ciclo
+                deepgram_transcripciones[call_sid] = []
+                if call_sid in deepgram_ultima_final:
+                    deepgram_ultima_final[call_sid] = {}
+            else:
+                print(f"⚠️ FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
+                print(f"   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
 
     # FIX 401: WHISPER DESHABILITADO - Deepgram es el único sistema de transcripción
     # Whisper genera demasiadas transcripciones basura ("subtítulos de amara.org")
