@@ -1494,11 +1494,13 @@ def webhook_voz():
 
     # FIX 223: Reducir max_length para evitar delays de 20-40s
     # Problema: Cliente repite varias veces sin pausar → Record no termina
+    # FIX 475: BRUCE1432 - Reducir timeout de 2s a 1s para el primer mensaje (saludo)
+    # Saludos como "Buenos días" o "Bueno" son cortos, no necesitan 2s de silencio
     response.record(
         action="/procesar-respuesta",
         method="POST",
         max_length=1,  # FIX 223: Reducido de 30s a 10s máximo
-        timeout=2,  # FIX 223: 2s de silencio = fin
+        timeout=1,  # FIX 475: Reducido de 2s a 1s (saludos son cortos)
         play_beep=False,
         trim="trim-silence",
         recording_status_callback="/grabacion-status",
