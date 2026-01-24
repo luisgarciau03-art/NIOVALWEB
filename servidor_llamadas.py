@@ -2310,6 +2310,71 @@ def procesar_respuesta():
 
             # FIX 260: Pre-detectar si es una pregunta para evitar falsos positivos
             frase_limpia = speech_result.strip().lower()
+
+            # FIX 470: BRUCE1412 - Detectar frases de ESPERA ANTES de cualquier otra lógica
+            # Si el cliente dice "Permítame un segundo", "Un momento", etc., debemos
+            # establecer estado ESPERANDO_TRANSFERENCIA y NO tratarlo como frase incompleta
+            frases_espera_cliente = [
+                'permítame', 'permitame', 'permíteme', 'permiteme',
+                'un momento', 'un momentito', 'un segundo', 'un segundito',
+                'dame un momento', 'deme un momento', 'dame un segundo', 'deme un segundo',
+                'espere', 'espéreme', 'espereme', 'espera', 'espérame', 'esperame',
+                'déjeme', 'dejeme', 'déjame', 'dejame',
+                'aguarde', 'aguárdeme', 'aguardeme', 'aguarda', 'aguárdame',
+                'tantito', 'un tantito', 'ahí le', 'ahorita le', 'ahorita te',
+                'voy a ver', 'déjeme ver', 'dejeme ver', 'déjame ver', 'dejame ver',
+                'ahorita se lo paso', 'se lo paso', 'le paso', 'te paso', 'ahorita lo paso',
+                'en un momento', 'un minuto', 'un minutito'
+            ]
+            cliente_pidio_espera = any(frase in frase_limpia for frase in frases_espera_cliente)
+
+            if cliente_pidio_espera:
+                print(f"\n⏸️ FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
+                print(f"   Estableciendo estado ESPERANDO_TRANSFERENCIA")
+
+                # Establecer estado de espera en el agente
+                from agente_ventas import EstadoConversacion
+                agente.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
+                agente.respuestas_vacias_consecutivas = 0  # Resetear contador
+
+                # Registrar en historial
+                agente.conversation_history.append({
+                    "role": "user",
+                    "content": speech_result
+                })
+                agente.conversation_history.append({
+                    "role": "assistant",
+                    "content": "Claro, espero."
+                })
+
+                bruce_id = agente.lead_data.get("bruce_id", "N/A")
+                log_evento(f"{bruce_id} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
+                log_evento(f"{bruce_id} DICE: \"Claro, espero.\" (FIX 470: modo espera)", "BRUCE")
+
+                # Generar audio de respuesta corta
+                audio_id = f"espera_{call_sid}"
+                result = generar_audio_elevenlabs("Claro, espero.", audio_id)
+
+                response = VoiceResponse()
+                if result:
+                    audio_url = request.url_root + f"audio/{audio_id}"
+                    response.play(audio_url)
+                else:
+                    response.say("Claro, espero.", voice="alice", language="es-MX")
+
+                # FIX 470: Usar timeout LARGO para esperar transferencia (30 segundos)
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=30,  # 30 segundos de espera
+                    play_beep=False,
+                    trim="trim-silence"
+                )
+
+                print(f"   ✅ FIX 470: Esperando transferencia con timeout de 30s...")
+                return Response(str(response), mimetype="text/xml")
+
             es_pregunta_rapida = (
                 frase_limpia.startswith('¿') or
                 frase_limpia.startswith('qué ') or frase_limpia.startswith('que ') or
@@ -2512,6 +2577,29 @@ def procesar_respuesta():
 
     # FIX 92: Detectar respuestas vacías y pedir repetición antes de colgar
     if not speech_result or speech_result.strip() == "":
+        # FIX 470: BRUCE1412 - Si estamos en modo ESPERANDO_TRANSFERENCIA, NO contar como vacía
+        # El cliente pidió "Permítame un segundo" y está transfiriendo la llamada
+        from agente_ventas import EstadoConversacion
+        if agente.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+            print(f"⏸️ FIX 470: Respuesta vacía pero estamos en ESPERANDO_TRANSFERENCIA - seguir esperando")
+            print(f"   Silencios ignorados, esperando que cliente vuelva...")
+
+            # NO incrementar respuestas_vacias_consecutivas
+            response = VoiceResponse()
+
+            # Seguir esperando con timeout largo
+            response.record(
+                action="/procesar-respuesta",
+                method="POST",
+                max_length=1,
+                timeout=30,  # 30 segundos más de espera
+                play_beep=False,
+                trim="trim-silence"
+            )
+
+            print(f"   ✅ FIX 470: Continuando espera con timeout de 30s...")
+            return Response(str(response), mimetype="text/xml")
+
         agente.respuestas_vacias_consecutivas += 1
         print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
