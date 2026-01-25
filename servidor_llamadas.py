@@ -2620,30 +2620,78 @@ def procesar_respuesta():
                     print(f"   'No' es respuesta COMPLETA - NO esperar continuacion")
                     frase_parece_incompleta = False  # Forzar respuesta inmediata
 
-            # FIX 443: Caso BRUCE1334 - Detectar cuando cliente OFRECE dar datos
-            # Si el cliente dice "le puedo dar un correo/whatsapp/número", ESPERAR a que termine
-            # Frases que indican ofrecimiento de datos importantes
-            frases_ofrecimiento_datos = [
-                'le puedo dar', 'te puedo dar', 'le doy', 'te doy',
-                'anota', 'apunta', 'mi correo', 'el correo', 'mi email',
-                'le paso', 'te paso', 'mi whatsapp', 'mi número', 'mi numero',
-                'manda al correo', 'mandar al correo', 'enviar al correo',
-                'ahí me manda', 'ahí le mando', 'le envío', 'me envía',
-                'para que me mande', 'para que le mande',
-                # FIX 443b: Agregar más frases para WhatsApp (BRUCE1337)
-                'manda por whatsapp', 'mandar por whatsapp', 'enviar por whatsapp',
-                'por whatsapp', 'al whatsapp', 'a su whatsapp', 'a tu whatsapp',
-                'le mando por', 'te mando por', 'se lo mando',
-                # FIX 443c: Agregar más frases para correo
-                'manda por correo', 'mandar por correo', 'enviar por correo',
-                'por correo', 'a su correo', 'a tu correo', 'al mail',
-                'manda al mail', 'enviar al mail', 'por mail', 'mi mail',
-                'el mail es', 'el correo es', 'su correo es'
-            ]
-            cliente_ofreciendo_datos = any(frase in frase_limpia for frase in frases_ofrecimiento_datos)
+            # FIX 500: BRUCE1476 - Separar OFERTAS de DICTADO
+            # OFERTAS: Cliente PREGUNTA si quieres el correo → Responder inmediatamente
+            # DICTADO: Cliente YA ESTÁ dando el correo → Esperar a que termine
 
-            if cliente_ofreciendo_datos:
-                print(f"    FIX 443: CLIENTE OFRECIENDO DATOS - esperar a que termine")
+            # Frases de OFERTA (pregunta si quieres el correo/whatsapp)
+            frases_oferta_correo = [
+                'te puedo pasar el correo', 'le puedo pasar el correo',
+                'te paso el correo', 'le paso el correo', 'te paso correo', 'le paso correo',
+                'quieres el correo', 'quiere el correo', 'quieres que te pase correo',
+                'quiere que le pase correo', 'quieres que te pase el correo',
+                'te puedo dar el correo', 'le puedo dar el correo', 'te puedo dar correo',
+                'por correo', 'mejor por correo', 'mándamelo por correo', 'mandamelo por correo'
+            ]
+            frases_oferta_whatsapp = [
+                'te puedo pasar el whatsapp', 'le puedo pasar el whatsapp',
+                'te paso el whatsapp', 'le paso el whatsapp', 'te paso el número',
+                'le paso el número', 'te paso numero', 'le paso numero',
+                'quieres el whatsapp', 'quiere el whatsapp', 'quieres el número',
+                'quiere el número', 'te puedo dar el número', 'le puedo dar el número',
+                'por whatsapp', 'mejor por whatsapp', 'al whatsapp', 'a tu whatsapp',
+                'te lo mando por whatsapp', 'se lo mando por whatsapp'
+            ]
+
+            cliente_ofrece_correo = any(frase in frase_limpia for frase in frases_oferta_correo)
+            cliente_ofrece_whatsapp = any(frase in frase_limpia for frase in frases_oferta_whatsapp)
+
+            # FIX 500: Si cliente OFRECE correo/WhatsApp → Responder inmediatamente
+            if cliente_ofrece_correo or cliente_ofrece_whatsapp:
+                tipo_oferta = "correo" if cliente_ofrece_correo else "WhatsApp"
+                print(f"\n FIX 500: BRUCE1476 - Cliente OFRECE {tipo_oferta}")
+                print(f"   Detectado: '{speech_result}'")
+                print(f"   Respuesta INMEDIATA - NO esperar")
+
+                # Generar respuesta directa
+                if cliente_ofrece_correo:
+                    respuesta_oferta = "Sí, por favor, dígame el correo."
+                else:
+                    respuesta_oferta = "Sí, por favor, dígame el número."
+
+                # Log el evento
+                bruce_id = agente.lead_data.get("bruce_id", "N/A")
+                log_evento(f"{bruce_id} DICE: \"{respuesta_oferta}\" (FIX 500: respuesta a oferta)", "BRUCE")
+
+                # Generar audio y responder
+                audio_url = agente.text_to_speech_enhanced(respuesta_oferta)
+                if audio_url:
+                    response = VoiceResponse()
+                    response.play(audio_url)
+                    response.gather(
+                        input="speech",
+                        action=request.url_root + "llamada/continuar",
+                        language="es-MX",
+                        speechTimeout="3",
+                        timeout="8",
+                        speechModel="phone_call"
+                    )
+                    return Response(str(response), mimetype="text/xml")
+
+            # FIX 443: Caso BRUCE1334 - Detectar cuando cliente ESTÁ DICTANDO datos
+            # Si el cliente YA ESTÁ dando el correo/email/número, ESPERAR a que termine
+            # Frases que indican que YA está dando el dato (no solo ofreciendo)
+            frases_dictando_datos = [
+                'anota', 'apunta', 'ahí le va', 'ahí te va', 'toma nota', 'tome nota',
+                'el correo es', 'mi correo es', 'el email es', 'mi email es',
+                'el mail es', 'mi mail es', 'su correo es',
+                'el número es', 'mi número es', 'el whatsapp es', 'mi whatsapp es',
+                'arroba', 'punto com', 'punto mx', '@', 'gmail', 'hotmail', 'yahoo', 'outlook'
+            ]
+            cliente_dictando_datos = any(frase in frase_limpia for frase in frases_dictando_datos)
+
+            if cliente_dictando_datos:
+                print(f"    FIX 443: CLIENTE DICTANDO DATOS - esperar a que termine")
                 print(f"   Detectado: '{speech_result}'")
                 frase_parece_incompleta = True  # Forzar espera para captar el dato completo
                 esta_deletreando_email = True  # Usar timeout largo (2.5s) igual que con emails
