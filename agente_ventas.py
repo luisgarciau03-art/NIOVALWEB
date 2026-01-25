@@ -5581,6 +5581,43 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "accion": "PEDIR_WHATSAPP_ENCARGADO"
                     }
 
+        # ================================================================
+        # FIX 495: BRUCE1463 - Cliente dice "POR CORREO" en respuesta a oferta
+        # PROBLEMA: Bruce preguntó "¿WhatsApp o correo?" y cliente dijo "Por correo, está bien"
+        #           Bruce se quedó en SILENCIO y no pidió el correo
+        # SOLUCIÓN: Detectar "por correo" y pedir el correo electrónico inmediatamente
+        # ================================================================
+        patrones_acepta_correo = [
+            'por correo', 'el correo', 'correo está bien', 'correo esta bien',
+            'prefiero correo', 'mejor correo', 'sí correo', 'si correo',
+            'al correo', 'mándame al correo', 'mandame al correo',
+            'envíame al correo', 'enviame al correo'
+        ]
+        # Evitar falso positivo si cliente pregunta "¿Es por correo?"
+        es_pregunta = '?' in texto_cliente or texto_lower.startswith('es ')
+        if any(p in texto_lower for p in patrones_acepta_correo) and not es_pregunta:
+            print(f"[OK] FIX 495: Cliente ACEPTA recibir por CORREO: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_ACEPTA_CORREO",
+                "respuesta": "Perfecto. ¿Cuál es su correo electrónico?",
+                "accion": "PEDIR_CORREO"
+            }
+
+        # FIX 495: Cliente dice "POR WHATSAPP" en respuesta a oferta
+        patrones_acepta_whatsapp = [
+            'por whatsapp', 'el whatsapp', 'whatsapp está bien', 'whatsapp esta bien',
+            'prefiero whatsapp', 'mejor whatsapp', 'sí whatsapp', 'si whatsapp',
+            'al whatsapp', 'mándame al whatsapp', 'mandame al whatsapp',
+            'por wasa', 'por wats', 'por whats'
+        ]
+        if any(p in texto_lower for p in patrones_acepta_whatsapp) and not es_pregunta:
+            print(f"[OK] FIX 495: Cliente ACEPTA recibir por WHATSAPP: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_ACEPTA_WHATSAPP",
+                "respuesta": "Perfecto. ¿Me confirma su número de WhatsApp?",
+                "accion": "PEDIR_WHATSAPP"
+            }
+
         # FIX 476 (AUDITORIA W04): PREGUNTAS DIRECTAS - PRIORIDAD MÁXIMA
         # Problema: Bruce responde "Sí, dígame" en lugar de responder pregunta directa
         # Ejemplo: Cliente: "¿De dónde habla?" → Bruce: "Sí, dígame" [ERROR]
