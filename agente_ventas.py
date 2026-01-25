@@ -5539,14 +5539,79 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         import re
         texto_lower = texto_cliente.lower().strip()
 
-        # FIX 493: BRUCE1471 - PRIORIDAD MÁXIMA: Detectar "encargado no está" + horario
-        # PROBLEMA: Bruce entraba en loop preguntando por encargado 5+ veces
-        # Cliente dijo "No, no está, llega a las 3" y Bruce seguía preguntando
-        # SOLUCIÓN: Detectar este patrón ANTES de cualquier otra lógica
-        patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
-                           'llega a las', 'llega más tarde', 'llega mas tarde',
-                           'viene a las', 'regresa a las', 'no hay nadie']
-        if any(p in texto_lower for p in patrones_no_esta):
+        # ================================================================
+        # FIX 497: SISTEMA DE DETECCIÓN SEMÁNTICA ROBUSTO
+        # PROBLEMA: Variaciones regionales de México no se detectaban
+        # - Querétaro: "No está"
+        # - CDMX: "Jefe, disculpe aún no llega"
+        # - Norte: "El patrón no se encuentra"
+        # - Bajío: "El mero mero salió"
+        # SOLUCIÓN: Patrones expandidos + detección por palabras clave
+        # ================================================================
+
+        # --- SINÓNIMOS DE "ENCARGADO" POR REGIÓN ---
+        sinonimos_encargado = [
+            # Formales
+            'encargado', 'encargada', 'responsable', 'gerente', 'gerenta',
+            'administrador', 'administradora', 'director', 'directora',
+            # Informales/Regionales
+            'jefe', 'jefa', 'patrón', 'patrona', 'dueño', 'dueña',
+            'el mero mero', 'la mera mera', 'el que manda', 'la que manda',
+            'el de compras', 'la de compras', 'quien compra', 'el que compra',
+            'quien decide', 'el que decide', 'la que decide',
+            # Títulos
+            'licenciado', 'licenciada', 'ingeniero', 'ingeniera', 'contador', 'contadora'
+        ]
+
+        # --- PATRONES DE "NO ESTÁ" EXPANDIDOS ---
+        # Incluye variaciones regionales de todo México
+        patrones_no_esta = [
+            # Básicos (Querétaro, Bajío)
+            'no está', 'no esta', 'no se encuentra', 'no anda',
+            # Salió/Fue (General)
+            'salió', 'salio', 'se fue', 'se salió', 'anda fuera',
+            'fue a', 'anda en', 'está afuera', 'esta afuera',
+            # Llegará después (CDMX, formal)
+            'aún no llega', 'aun no llega', 'todavía no llega', 'todavia no llega',
+            'no ha llegado', 'viene más tarde', 'viene mas tarde',
+            'llega a las', 'llega más tarde', 'llega mas tarde', 'llega hasta',
+            'viene a las', 'regresa a las', 'vuelve a las',
+            'llega como a las', 'viene como a las', 'regresa como a las',
+            # No disponible (General)
+            'no hay nadie', 'no lo encuentro', 'no la encuentro',
+            'está ocupado', 'esta ocupado', 'está ocupada', 'esta ocupada',
+            'está en junta', 'esta en junta', 'anda en una junta',
+            'no puede atender', 'no lo puedo comunicar', 'no la puedo comunicar',
+            # Horario/Día (General)
+            'hoy no viene', 'hoy no vino', 'viene mañana', 'viene el lunes',
+            'no trabaja hoy', 'es su día de descanso', 'es su dia de descanso',
+            'ya se fue', 'ya salió', 'ya salio',
+            # Regional Norte (Monterrey, Chihuahua)
+            'no anda aquí', 'no anda aqui', 'anda pa fuera',
+            # Regional CDMX
+            'disculpe', 'ahorita no', 'ahorita no está', 'ahorita no esta',
+            'en este momento no', 'por el momento no',
+            # Comida/Descanso
+            'salió a comer', 'salio a comer', 'está comiendo', 'esta comiendo',
+            'fue a comer', 'anda comiendo', 'salió a desayunar', 'salio a desayunar'
+        ]
+
+        # Detectar si cliente menciona que el encargado NO ESTÁ
+        encargado_no_esta = any(p in texto_lower for p in patrones_no_esta)
+
+        # También detectar si mencionan sinónimo + negación
+        # Ej: "el jefe no está", "el patrón salió", "el dueño viene más tarde"
+        if not encargado_no_esta:
+            for sinonimo in sinonimos_encargado:
+                if sinonimo in texto_lower:
+                    # Verificar si hay negación o ausencia cerca
+                    negaciones = ['no', 'salió', 'salio', 'fue', 'viene', 'llega', 'anda', 'todavía', 'aún']
+                    if any(neg in texto_lower for neg in negaciones):
+                        encargado_no_esta = True
+                        print(f"[OK] FIX 497: Detectado sinónimo '{sinonimo}' + ausencia")
+                        break
+
+        if encargado_no_esta:
             # Verificar si Bruce ya preguntó por encargado (evitar loop)
             ultimas_bruce = [
                 msg['content'].lower() for msg in self.conversation_history[-6:]
@@ -5582,20 +5647,31 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     }
 
         # ================================================================
-        # FIX 495: BRUCE1463 - Cliente dice "POR CORREO" en respuesta a oferta
-        # PROBLEMA: Bruce preguntó "¿WhatsApp o correo?" y cliente dijo "Por correo, está bien"
-        #           Bruce se quedó en SILENCIO y no pidió el correo
-        # SOLUCIÓN: Detectar "por correo" y pedir el correo electrónico inmediatamente
+        # FIX 495/497: DETECCIÓN ROBUSTA - Cliente ACEPTA correo
+        # AMPLIADO: Variaciones regionales + contextuales
         # ================================================================
         patrones_acepta_correo = [
-            'por correo', 'el correo', 'correo está bien', 'correo esta bien',
-            'prefiero correo', 'mejor correo', 'sí correo', 'si correo',
-            'al correo', 'mándame al correo', 'mandame al correo',
-            'envíame al correo', 'enviame al correo'
+            # Elección directa
+            'por correo', 'al correo', 'el correo', 'a mi correo',
+            'correo está bien', 'correo esta bien', 'correo por favor',
+            'prefiero correo', 'mejor correo', 'mejor por correo',
+            'sí correo', 'si correo', 'sí, correo', 'si, correo',
+            # Acciones
+            'mándame al correo', 'mandame al correo', 'mándalo al correo', 'mandalo al correo',
+            'envíame al correo', 'enviame al correo', 'envíalo al correo', 'envialo al correo',
+            'pásalo al correo', 'pasalo al correo', 'mándamelo al correo', 'mandamelo al correo',
+            # Confirmaciones
+            'el correo sí', 'el correo si', 'correo sí', 'correo si',
+            'a correo', 'que sea correo', 'que sea por correo',
+            # Regional
+            'échalo al correo', 'echalo al correo', 'aviéntalo al correo',
+            # Variaciones
+            'mail', 'email', 'e-mail', 'al mail', 'por mail', 'al email'
         ]
-        # Evitar falso positivo si cliente pregunta "¿Es por correo?"
-        es_pregunta = '?' in texto_cliente or texto_lower.startswith('es ')
-        if any(p in texto_lower for p in patrones_acepta_correo) and not es_pregunta:
+        # Evitar falso positivo si cliente pregunta "¿Es por correo?" o menciona que ya tiene
+        es_pregunta = '?' in texto_cliente or texto_lower.startswith('es ') or texto_lower.startswith('¿')
+        tiene_correo = 'ya tiene' in texto_lower or 'ya tienen' in texto_lower
+        if any(p in texto_lower for p in patrones_acepta_correo) and not es_pregunta and not tiene_correo:
             print(f"[OK] FIX 495: Cliente ACEPTA recibir por CORREO: '{texto_cliente[:50]}'")
             return {
                 "tipo": "CLIENTE_ACEPTA_CORREO",
@@ -5603,12 +5679,27 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "PEDIR_CORREO"
             }
 
-        # FIX 495: Cliente dice "POR WHATSAPP" en respuesta a oferta
+        # FIX 495/497: DETECCIÓN ROBUSTA - Cliente ACEPTA WhatsApp
         patrones_acepta_whatsapp = [
-            'por whatsapp', 'el whatsapp', 'whatsapp está bien', 'whatsapp esta bien',
-            'prefiero whatsapp', 'mejor whatsapp', 'sí whatsapp', 'si whatsapp',
-            'al whatsapp', 'mándame al whatsapp', 'mandame al whatsapp',
-            'por wasa', 'por wats', 'por whats'
+            # Elección directa
+            'por whatsapp', 'al whatsapp', 'el whatsapp', 'a mi whatsapp',
+            'whatsapp está bien', 'whatsapp esta bien', 'whatsapp por favor',
+            'prefiero whatsapp', 'mejor whatsapp', 'mejor por whatsapp',
+            'sí whatsapp', 'si whatsapp', 'sí, whatsapp', 'si, whatsapp',
+            # Acciones
+            'mándame al whatsapp', 'mandame al whatsapp', 'mándalo al whatsapp', 'mandalo al whatsapp',
+            'envíame al whatsapp', 'enviame al whatsapp', 'envíalo al whatsapp', 'envialo al whatsapp',
+            'pásalo al whatsapp', 'pasalo al whatsapp',
+            # Confirmaciones
+            'el whatsapp sí', 'el whatsapp si', 'whatsapp sí', 'whatsapp si',
+            'a whatsapp', 'que sea whatsapp', 'que sea por whatsapp',
+            # Regional/Coloquial
+            'por wasa', 'por wats', 'por whats', 'al wasa', 'al wats',
+            'por guasap', 'por wasap', 'al guasap', 'al wasap',
+            'por wa', 'al wa', 'por el wa',
+            # Este número
+            'a este número', 'a este numero', 'este mismo número', 'este mismo numero',
+            'sí, este', 'si, este', 'a éste', 'a este', 'aquí mismo', 'aqui mismo'
         ]
         if any(p in texto_lower for p in patrones_acepta_whatsapp) and not es_pregunta:
             print(f"[OK] FIX 495: Cliente ACEPTA recibir por WHATSAPP: '{texto_cliente[:50]}'")
@@ -5619,21 +5710,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # ================================================================
-        # FIX 496: BRUCE1472 - Cliente OFRECE dar correo/WhatsApp
-        # PROBLEMA: Cliente dijo "¿Te puedo pasar el correo?" y Bruce respondió "Claro, espero."
-        #           Bruce NO entendió que el cliente estaba OFRECIENDO el correo
-        # SOLUCIÓN: Detectar frases de ofrecimiento y ACEPTAR inmediatamente
+        # FIX 496/497: DETECCIÓN ROBUSTA - Cliente OFRECE dar contacto
+        # PROBLEMA: Cliente dijo "¿Te puedo pasar el correo?" y Bruce no entendió
+        # AMPLIADO: Todas las formas de ofrecer información de contacto
         # ================================================================
         patrones_ofrece_correo = [
+            # Preguntas de ofrecimiento
             'te puedo pasar el correo', 'le puedo pasar el correo',
-            'te paso el correo', 'le paso el correo',
-            'te doy el correo', 'le doy el correo',
-            'quiere el correo', 'quieres el correo',
+            'te puedo dar el correo', 'le puedo dar el correo',
+            'quiere el correo', 'quieres el correo', 'quiere que le dé el correo',
+            'quiere que le pase el correo', 'gusta el correo',
+            # Acciones directas
+            'te paso el correo', 'le paso el correo', 'le doy el correo', 'te doy el correo',
             'te mando el correo', 'le mando el correo',
-            'anota el correo', 'anote el correo',
-            'apunta el correo', 'apunte el correo',
-            'tengo el correo', 'aquí tengo el correo',
-            'puedo darle el correo', 'puedo darte el correo'
+            'aquí está el correo', 'aqui esta el correo', 'este es el correo',
+            # Instrucciones
+            'anota el correo', 'anote el correo', 'apunta el correo', 'apunte el correo',
+            'tome nota del correo', 'toma nota del correo', 'ahí le va el correo',
+            # Disponibilidad
+            'tengo el correo', 'aquí tengo el correo', 'aqui tengo el correo',
+            'sí tengo correo', 'si tengo correo', 'el correo es',
+            'puedo darle el correo', 'puedo darte el correo',
+            # Regional
+            'le aviento el correo', 'te aviento el correo',
+            'ahí te va el correo', 'ahi te va el correo',
+            # Dictando
+            'es arroba', 'arroba gmail', 'arroba hotmail', 'arroba outlook', 'arroba yahoo'
         ]
         if any(p in texto_lower for p in patrones_ofrece_correo):
             print(f"[OK] FIX 496: Cliente OFRECE dar CORREO: '{texto_cliente[:50]}'")
@@ -5643,19 +5745,48 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "ACEPTAR_CORREO"
             }
 
-        # FIX 496: Cliente OFRECE dar WhatsApp
+        # FIX 496/497: DETECCIÓN ROBUSTA - Cliente OFRECE dar WhatsApp/Número
         patrones_ofrece_whatsapp = [
+            # Preguntas de ofrecimiento - WhatsApp
             'te puedo pasar el whatsapp', 'le puedo pasar el whatsapp',
-            'te paso el whatsapp', 'le paso el whatsapp',
-            'te doy el whatsapp', 'le doy el whatsapp',
-            'quiere el whatsapp', 'quieres el whatsapp',
+            'te puedo dar el whatsapp', 'le puedo dar el whatsapp',
+            'quiere el whatsapp', 'quieres el whatsapp', 'quiere que le dé el whatsapp',
+            'quiere que le pase el whatsapp', 'gusta el whatsapp',
+            # Acciones directas - WhatsApp
+            'te paso el whatsapp', 'le paso el whatsapp', 'le doy el whatsapp', 'te doy el whatsapp',
             'te mando el whatsapp', 'le mando el whatsapp',
-            'anota el whatsapp', 'anote el whatsapp',
-            'apunta el whatsapp', 'apunte el whatsapp',
-            'tengo el whatsapp', 'aquí tengo el whatsapp',
+            'aquí está el whatsapp', 'aqui esta el whatsapp', 'este es el whatsapp',
+            # Instrucciones - WhatsApp
+            'anota el whatsapp', 'anote el whatsapp', 'apunta el whatsapp', 'apunte el whatsapp',
+            'tome nota del whatsapp', 'toma nota del whatsapp',
+            # Disponibilidad - WhatsApp
+            'tengo el whatsapp', 'aquí tengo el whatsapp', 'aqui tengo el whatsapp',
+            'sí tengo whatsapp', 'si tengo whatsapp', 'el whatsapp es',
             'puedo darle el whatsapp', 'puedo darte el whatsapp',
-            'te paso el número', 'le paso el número',
-            'te doy el número', 'le doy el número'
+            # Preguntas de ofrecimiento - NÚMERO (genérico)
+            'te puedo pasar el número', 'le puedo pasar el número',
+            'te puedo pasar el numero', 'le puedo pasar el numero',
+            'te puedo dar el número', 'le puedo dar el número',
+            'te puedo dar el numero', 'le puedo dar el numero',
+            'quiere el número', 'quieres el número', 'quiere el numero', 'quieres el numero',
+            # Acciones directas - NÚMERO
+            'te paso el número', 'le paso el número', 'te paso el numero', 'le paso el numero',
+            'te doy el número', 'le doy el número', 'te doy el numero', 'le doy el numero',
+            'aquí está el número', 'aqui esta el numero', 'este es el número', 'este es el numero',
+            # Instrucciones - NÚMERO
+            'anota el número', 'anote el número', 'anota el numero', 'anote el numero',
+            'apunta el número', 'apunte el número', 'apunta el numero', 'apunte el numero',
+            'tome nota', 'toma nota', 'ahí le va', 'ahi le va', 'ahí te va', 'ahi te va',
+            # Disponibilidad - NÚMERO
+            'tengo el número', 'aquí tengo el número', 'tengo el numero', 'aqui tengo el numero',
+            'el número es', 'el numero es', 'mi número es', 'mi numero es',
+            'puedo darle el número', 'puedo darte el número',
+            # Regional - NÚMERO
+            'le aviento el número', 'te aviento el número', 'le aviento el numero', 'te aviento el numero',
+            # Dictando número
+            'es el', 'el cel es', 'el celular es', 'el teléfono es', 'el telefono es',
+            # Confirmación de que tienen
+            'sí tengo', 'si tengo', 'claro que sí', 'claro que si', 'cómo no', 'como no'
         ]
         if any(p in texto_lower for p in patrones_ofrece_whatsapp):
             print(f"[OK] FIX 496: Cliente OFRECE dar WHATSAPP: '{texto_cliente[:50]}'")
@@ -5663,6 +5794,49 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "tipo": "CLIENTE_OFRECE_WHATSAPP",
                 "respuesta": "Sí, por favor, dígame el número.",
                 "accion": "ACEPTAR_WHATSAPP"
+            }
+
+        # ================================================================
+        # FIX 497: DETECCIÓN ROBUSTA - Cliente ES el encargado
+        # PROBLEMA: Bruce sigue preguntando por encargado cuando YA está hablando con él
+        # AMPLIADO: Variaciones regionales de confirmación
+        # ================================================================
+        patrones_soy_encargado = [
+            # Confirmaciones directas
+            'yo soy', 'soy yo', 'yo mero', 'yo mera', 'el mero', 'la mera',
+            'con él habla', 'con el habla', 'con ella habla',
+            'a sus órdenes', 'a sus ordenes', 'para servirle',
+            'aquí estoy', 'aqui estoy', 'presente', 'servidor', 'servidora',
+            # Títulos + confirmación
+            'soy el encargado', 'soy la encargada', 'soy el gerente', 'soy la gerente',
+            'soy el dueño', 'soy la dueña', 'soy el jefe', 'soy la jefa',
+            'soy el responsable', 'soy la responsable', 'soy quien compra',
+            'soy el que compra', 'soy la que compra', 'soy quien decide',
+            # Regional - confirmación informal
+            'sí, yo', 'si, yo', 'yo, dígame', 'yo, digame', 'yo, ¿qué pasó', 'yo, que paso',
+            'yo, ¿qué necesita', 'yo, que necesita', 'yo, ¿en qué le ayudo', 'yo, en que le ayudo',
+            'mande', 'mande usted', 'dígame', 'digame', 'usted dirá', 'usted dira',
+            # Confirmación de que es él/ella
+            'el mismo', 'la misma', 'yo mismo', 'yo misma',
+            'conmigo', 'con un servidor', 'con una servidora',
+            # Respuesta a "¿Es el encargado?"
+            'sí lo soy', 'si lo soy', 'así es', 'asi es', 'efectivamente',
+            'correcto', 'afirmativo', 'eso es', 'exacto', 'exactamente',
+            # Regional CDMX
+            'órale', 'orale', 'órale pues', 'orale pues', 'ándale', 'andale',
+            # Regional Norte
+            'simón', 'simon', 'nel que sí', 'nel que si'
+        ]
+
+        # Verificar si cliente dice que ES el encargado
+        if any(p in texto_lower for p in patrones_soy_encargado):
+            # Marcar que el encargado está confirmado
+            self.encargado_confirmado = True
+            print(f"[OK] FIX 497: Cliente ES el encargado: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_ES_ENCARGADO",
+                "respuesta": "Perfecto. Le llamo para ofrecerle nuestro catálogo de productos ferreteros NIOVAL. ¿Le gustaría recibirlo por WhatsApp o correo?",
+                "accion": "OFRECER_CATALOGO"
             }
 
         # FIX 476 (AUDITORIA W04): PREGUNTAS DIRECTAS - PRIORIDAD MÁXIMA
