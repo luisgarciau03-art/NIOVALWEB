@@ -1120,6 +1120,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         pregunta_lower = pregunta_repetida.lower()
 
+        # ================================================================
+        # FIX 493: PROTECCIÓN ANTI-LOOP GLOBAL
+        # Si Bruce ya preguntó por encargado 2+ veces en toda la conversación,
+        # NO volver a preguntar aunque sea primera repetición de esta pregunta
+        # ================================================================
+        ultimas_bruce_rep = [
+            msg['content'].lower() for msg in self.conversation_history[-6:]
+            if msg['role'] == 'assistant'
+        ]
+        patrones_encargado_rep = [
+            'se encontrará el encargado', 'se encontrara el encargado',
+            'está el encargado', 'esta el encargado',
+            'se encuentra el encargado', 'encargado de compras',
+            'me comunica con el encargado'
+        ]
+        veces_pregunto_global = sum(
+            1 for msg in ultimas_bruce_rep
+            if any(p in msg for p in patrones_encargado_rep)
+        )
+        # Si ya preguntamos 2+ veces globalmente, tratar como 3+ repeticiones
+        if veces_pregunto_global >= 2:
+            veces = 3  # Forzar respuesta alternativa (sin preguntar por encargado)
+
         # Identificar tipo de pregunta
         if any(p in pregunta_lower for p in ["de dónde", "de donde", "ubicación", "dónde están"]):
             if veces == 2:
@@ -1131,7 +1154,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if veces == 2:
                 return "Bruce de NIOVAL, productos ferreteros. ¿Está el encargado de compras?"
             else:
-                return "Me llamo Bruce, de NIOVAL. ¿Le puedo dejar un mensaje al encargado?"
+                return "Me llamo Bruce, de NIOVAL. ¿Le envío el catálogo por WhatsApp?"
 
         elif any(p in pregunta_lower for p in ["qué vende", "que vende", "qué productos"]):
             if veces == 2:
@@ -1260,15 +1283,35 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 if msg['role'] == 'assistant'
             ]
 
+            # ================================================================
+            # FIX 493: PROTECCIÓN ANTI-LOOP EN RECUPERACIÓN
+            # Si ya preguntamos por encargado 2+ veces, NO volver a preguntar
+            # ================================================================
+            patrones_encargado_rec = [
+                'se encontrará el encargado', 'se encontrara el encargado',
+                'está el encargado', 'esta el encargado',
+                'se encuentra el encargado', 'encargado de compras',
+                'me comunica con el encargado'
+            ]
+            veces_pregunto_encargado_rec = sum(
+                1 for msg in ultimos_bruce
+                if any(p in msg for p in patrones_encargado_rec)
+            )
+            ya_pregunto_suficiente_rec = veces_pregunto_encargado_rec >= 2
+
             if ultimos_bruce:
                 ultimo_bruce = ultimos_bruce[-1]
 
                 # Si Bruce habló de NIOVAL → Clarificar empresa
                 if 'nioval' in ultimo_bruce or 'marca' in ultimo_bruce:
+                    if ya_pregunto_suficiente_rec:
+                        return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos de ferretería. ¿Le envío el catálogo por WhatsApp?"
                     return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos de ferretería. ¿Está el encargado de compras?"
 
                 # Si Bruce habló de productos → Clarificar productos
                 if 'producto' in ultimo_bruce or 'ferretería' in ultimo_bruce or 'grifería' in ultimo_bruce:
+                    if ya_pregunto_suficiente_rec:
+                        return "Perdón, me explico mejor: vendemos productos para ferreterías como cintas, grifería, herramientas. ¿Le envío el catálogo?"
                     return "Perdón, me explico mejor: vendemos productos para ferreterías como cintas, grifería, herramientas. ¿Me comunica con el encargado?"
 
                 # Si Bruce pidió contacto → Clarificar por qué
@@ -1276,6 +1319,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     return "Disculpe. Le pido el WhatsApp para enviarle nuestro catálogo de productos. Es sin compromiso."
 
             # Recuperación genérica
+            if ya_pregunto_suficiente_rec:
+                return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos para ferreterías. ¿Le envío el catálogo por WhatsApp?"
             return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos para ferreterías. ¿Se encontrará el encargado de compras?"
 
         elif tipo_error == "FRUSTRACION":
@@ -5628,18 +5673,43 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         texto_lower = texto_cliente.lower().strip()
 
+        # ================================================================
+        # FIX 493: PROTECCIÓN ANTI-LOOP EN CACHE
+        # Si Bruce ya preguntó por encargado 2+ veces, NO volver a preguntar
+        # ================================================================
+        ultimas_bruce_cache = [
+            msg['content'].lower() for msg in self.conversation_history[-6:]
+            if msg['role'] == 'assistant'
+        ]
+        patrones_encargado_cache = [
+            'se encontrará el encargado', 'se encontrara el encargado',
+            'está el encargado', 'esta el encargado',
+            'se encuentra el encargado', 'encargado de compras'
+        ]
+        veces_pregunto_encargado_cache = sum(
+            1 for msg in ultimas_bruce_cache
+            if any(p in msg for p in patrones_encargado_cache)
+        )
+        ya_pregunto_suficiente = veces_pregunto_encargado_cache >= 2
+
         # CACHE DE RESPUESTAS MÁS FRECUENTES (basado en análisis de logs)
 
         # Pregunta: ¿De dónde?
         if any(p in texto_lower for p in ["de dónde", "de donde", "dónde están", "donde estan", "ubicación", "de qué ciudad", "de que ciudad"]):
+            if ya_pregunto_suficiente:
+                return "Estamos en Guadalajara, pero hacemos envíos a toda la República. ¿Le envío el catálogo por WhatsApp?"
             return "Estamos en Guadalajara, pero hacemos envíos a toda la República. ¿Se encuentra el encargado?"
 
         # Pregunta: ¿Qué venden?
         if any(p in texto_lower for p in ["qué vende", "que vende", "qué productos", "que productos", "qué maneja", "que maneja"]):
+            if ya_pregunto_suficiente:
+                return "Productos ferreteros: cintas, grifería, herramientas. ¿Le envío el catálogo por WhatsApp?"
             return "Productos ferreteros: cintas, grifería, herramientas. ¿Está el encargado?"
 
         # Pregunta: ¿Qué marcas?
         if any(p in texto_lower for p in ["qué marcas", "que marcas", "de qué marca", "de que marca", "cuál marca", "cual marca"]):
+            if ya_pregunto_suficiente:
+                return "Manejamos NIOVAL, nuestra marca propia. Mejores precios al ser marca propia. ¿Le envío el catálogo?"
             return "Manejamos NIOVAL, nuestra marca propia. Mejores precios al ser marca propia. ¿Está el encargado?"
 
         # Objeción: No me interesa
@@ -6988,13 +7058,24 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                     return "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
 
             # FIX 493: Verificar si ya preguntamos por encargado antes
+            # ACTUALIZADO: Usar MISMOS patrones que el parche global anti-loop
             ultimas_bruce_493 = [
                 msg['content'].lower() for msg in self.conversation_history[-6:]
                 if msg['role'] == 'assistant'
             ]
+            # Lista COMPLETA de patrones de encargado (sincronizada con parche global)
+            patrones_encargado_493 = [
+                'se encontrará el encargado', 'se encontrara el encargado',
+                'está el encargado', 'esta el encargado',
+                'se encuentra el encargado', 'encargado de compras',
+                'me comunica con el encargado', 'comunica con el encargado',
+                'mensaje al encargado', 'dejar un mensaje al encargado',
+                'hablar con el encargado', 'contactar al encargado',
+                'encargado o encargada', 'encontrará el encargado'
+            ]
             veces_pregunto_encargado = sum(
                 1 for msg in ultimas_bruce_493
-                if 'se encontrará el encargado' in msg or 'se encontrara el encargado' in msg
+                if any(p in msg for p in patrones_encargado_493)
             )
             if veces_pregunto_encargado >= 2:
                 print(f"[WARN] FIX 493: Ya preguntamos por encargado {veces_pregunto_encargado} veces - EVITANDO LOOP")
