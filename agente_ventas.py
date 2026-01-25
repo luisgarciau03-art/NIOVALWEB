@@ -1878,8 +1878,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if any(p in msg for p in preguntas_encargado)
         )
 
-        # Si la respuesta actual pregunta por encargado Y ya preguntamos 2+ veces
+        # FIX 494: INCOHERENCIA - Si cliente YA CONFIRMÓ que él es el encargado
+        # Bruce NO debe preguntar por encargado NUNCA MÁS (ni siquiera 1 vez)
+        encargado_ya_confirmado = getattr(self, 'encargado_confirmado', False)
+
+        # Si la respuesta actual pregunta por encargado
         pregunta_por_encargado = any(p in respuesta_lower for p in preguntas_encargado)
+
+        # FIX 494: INCOHERENCIA CRÍTICA - Cliente YA ES el encargado
+        # Si encargado_ya_confirmado = True, BLOQUEAR INMEDIATAMENTE cualquier pregunta por encargado
+        if pregunta_por_encargado and encargado_ya_confirmado:
+            print(f"\n[WARN] FIX 494 INCOHERENCIA: Bruce iba a preguntar por encargado pero CLIENTE YA ES EL ENCARGADO")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            # Ofrecer catálogo directamente ya que estamos hablando con el encargado
+            respuesta = "¿Le gustaría recibir nuestro catálogo de productos por WhatsApp?"
+            print(f"   Respuesta corregida: '{respuesta}'")
+            return respuesta
+
+        # FIX 493: Si ya preguntamos 2+ veces, también bloquear
         if pregunta_por_encargado and veces_pregunto_encargado >= 2:
             print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a preguntar por encargado ({veces_pregunto_encargado+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
@@ -1908,24 +1924,55 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return respuesta
 
+        # FIX 494: INCOHERENCIA - Si ya tenemos WhatsApp capturado, NO pedir de nuevo
+        whatsapp_ya_capturado = bool(self.lead_data.get("whatsapp"))
+
         # Contar veces que preguntó por WhatsApp
         preguntas_whatsapp = [
             'cuál es su whatsapp', 'cual es su whatsapp',
             'me proporciona su whatsapp', 'me da su whatsapp',
-            'le gustaría recibir.*whatsapp', 'envío.*whatsapp'
+            'me confirma su whatsapp', 'confirma su whatsapp',
+            'su número de whatsapp', 'su numero de whatsapp'
         ]
         veces_pregunto_whatsapp = sum(
             1 for msg in ultimas_bruce_antiloop
-            if any(p in msg for p in preguntas_whatsapp[:4])  # Solo patrones exactos
+            if any(p in msg for p in preguntas_whatsapp)
         )
 
+        # Detectar si Bruce va a pedir WhatsApp
+        pregunta_whatsapp = any(p in respuesta_lower for p in preguntas_whatsapp)
+
+        # FIX 494: Si YA tenemos WhatsApp, no pedir de nuevo (INCOHERENCIA CRÍTICA)
+        if pregunta_whatsapp and whatsapp_ya_capturado:
+            print(f"\n[WARN] FIX 494 INCOHERENCIA: Bruce iba a pedir WhatsApp pero YA LO TIENE: {self.lead_data.get('whatsapp')}")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            respuesta = "Perfecto, le envío el catálogo en un momento. ¿Hay algo más en lo que le pueda ayudar?"
+            print(f"   Respuesta corregida: '{respuesta}'")
+            return respuesta
+
         # Si preguntó WhatsApp 3+ veces, ofrecer alternativa
-        pregunta_whatsapp = any(p in respuesta_lower for p in preguntas_whatsapp[:4])
         if pregunta_whatsapp and veces_pregunto_whatsapp >= 3:
             print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir WhatsApp ({veces_pregunto_whatsapp+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             respuesta = "Entiendo. ¿Prefiere que le envíe la información por correo electrónico?"
             print(f"   Respuesta anti-loop: '{respuesta}'")
+            return respuesta
+
+        # FIX 494: INCOHERENCIA - Si ya tenemos CORREO capturado, NO pedir de nuevo
+        email_ya_capturado = bool(self.lead_data.get("email"))
+
+        preguntas_correo = [
+            'cuál es su correo', 'cual es su correo',
+            'me proporciona su correo', 'me da su correo',
+            'su correo electrónico', 'correo electrónico'
+        ]
+        pregunta_correo = any(p in respuesta_lower for p in preguntas_correo)
+
+        if pregunta_correo and email_ya_capturado:
+            print(f"\n[WARN] FIX 494 INCOHERENCIA: Bruce iba a pedir correo pero YA LO TIENE: {self.lead_data.get('email')}")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            respuesta = "Perfecto, le envío el catálogo en un momento. ¿Hay algo más en lo que le pueda ayudar?"
+            print(f"   Respuesta corregida: '{respuesta}'")
             return respuesta
 
         # FIX 493: Detectar loop de preguntas de CATÁLOGO
