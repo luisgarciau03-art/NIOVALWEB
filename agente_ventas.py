@@ -5328,6 +5328,48 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         import re
         texto_lower = texto_cliente.lower().strip()
 
+        # FIX 493: BRUCE1471 - PRIORIDAD MÁXIMA: Detectar "encargado no está" + horario
+        # PROBLEMA: Bruce entraba en loop preguntando por encargado 5+ veces
+        # Cliente dijo "No, no está, llega a las 3" y Bruce seguía preguntando
+        # SOLUCIÓN: Detectar este patrón ANTES de cualquier otra lógica
+        patrones_no_esta = ['no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                           'llega a las', 'llega más tarde', 'llega mas tarde',
+                           'viene a las', 'regresa a las', 'no hay nadie']
+        if any(p in texto_lower for p in patrones_no_esta):
+            # Verificar si Bruce ya preguntó por encargado (evitar loop)
+            ultimas_bruce = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+            veces_pregunto = sum(
+                1 for msg in ultimas_bruce
+                if 'se encontrará el encargado' in msg or 'se encontrara el encargado' in msg
+                   or 'encargado de compras' in msg
+            )
+
+            if veces_pregunto >= 1:  # Si ya preguntó al menos 1 vez
+                print(f"[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó {veces_pregunto} vez(ces)")
+
+                # Detectar si cliente dio horario
+                patron_horario = r'(?:llega|viene|regresa|está|esta).*?(?:a las|las|a la|la)\s*(\d{1,2})'
+                match_horario = re.search(patron_horario, texto_lower)
+
+                if match_horario:
+                    hora = match_horario.group(1)
+                    print(f"   FIX 493: Cliente dio horario ({hora} hrs) - Confirmar callback")
+                    return {
+                        "tipo": "ENCARGADO_NO_ESTA_CON_HORARIO",
+                        "respuesta": f"Perfecto, le llamo a las {hora} entonces. Muchas gracias por su tiempo.",
+                        "accion": "AGENDAR_CALLBACK"
+                    }
+                else:
+                    print(f"   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp")
+                    return {
+                        "tipo": "ENCARGADO_NO_ESTA_SIN_HORARIO",
+                        "respuesta": "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?",
+                        "accion": "PEDIR_WHATSAPP_ENCARGADO"
+                    }
+
         # FIX 476 (AUDITORIA W04): PREGUNTAS DIRECTAS - PRIORIDAD MÁXIMA
         # Problema: Bruce responde "Sí, dígame" en lugar de responder pregunta directa
         # Ejemplo: Cliente: "¿De dónde habla?" → Bruce: "Sí, dígame" [ERROR]
@@ -6803,7 +6845,43 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                                                    'quién es', 'quien es', 'de parte']):
                 return "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL, productos de ferretería."
 
-            # FIX 305: Fallback genérico
+            # FIX 493: BRUCE1471 - Detectar si cliente dijo que encargado NO ESTÁ
+            # PROBLEMA: Fallback genérico preguntaba por encargado cuando cliente ya dijo "no está"
+            # RESULTADO: Loop infinito de 5+ repeticiones
+            patrones_no_esta_fallback = [
+                'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                'llega a las', 'llega más tarde', 'llega mas tarde',
+                'no hay nadie', 'no hay encargado', 'no tenemos encargado',
+                'ocupado', 'en una junta', 'no puede atender'
+            ]
+            if any(p in respuesta_lower for p in patrones_no_esta_fallback):
+                print(f"[OK] FIX 493: Fallback detecta ENCARGADO_NO_ESTA - NO preguntar de nuevo")
+                # Detectar si cliente dio horario
+                import re
+                patron_horario = r'(?:llega|viene|regresa|está|esta).*?(?:a las|las|a la|la)\s*(\d{1,2})'
+                match_horario = re.search(patron_horario, respuesta_lower)
+                if match_horario:
+                    hora = match_horario.group(1)
+                    print(f"   FIX 493: Cliente dio horario ({hora} hrs) - Agendar callback")
+                    return f"Perfecto, le llamo a las {hora} entonces. Muchas gracias."
+                else:
+                    # Sin horario - pedir WhatsApp del encargado
+                    return "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+
+            # FIX 493: Verificar si ya preguntamos por encargado antes
+            ultimas_bruce_493 = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+            veces_pregunto_encargado = sum(
+                1 for msg in ultimas_bruce_493
+                if 'se encontrará el encargado' in msg or 'se encontrara el encargado' in msg
+            )
+            if veces_pregunto_encargado >= 2:
+                print(f"[WARN] FIX 493: Ya preguntamos por encargado {veces_pregunto_encargado} veces - EVITANDO LOOP")
+                return "Entiendo. ¿Me puede proporcionar un WhatsApp para enviarle información?"
+
+            # FIX 305: Fallback genérico (solo si no hay indicios de loop)
             return "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
     
     def _extraer_datos(self, texto: str):
