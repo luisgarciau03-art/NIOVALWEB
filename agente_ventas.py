@@ -1816,11 +1816,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         ]
 
         # Contar veces que preguntó por encargado
+        # FIX 493: Lista COMPLETA de todas las variantes encontradas en el código
         preguntas_encargado = [
+            # Variantes principales
             'se encontrará el encargado', 'se encontrara el encargado',
             'está el encargado', 'esta el encargado',
             'se encuentra el encargado', 'encargado de compras',
-            'me comunica con el encargado', 'comunica con el encargado'
+            'me comunica con el encargado', 'comunica con el encargado',
+            # Variantes adicionales encontradas en auditoría
+            'mensaje al encargado', 'dejar un mensaje al encargado',
+            'hablar con el encargado', 'contactar al encargado',
+            'encargado o encargada', 'encontrará el encargado'
         ]
         veces_pregunto_encargado = sum(
             1 for msg in ultimas_bruce_antiloop
@@ -1875,6 +1881,47 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             respuesta = "Entiendo. ¿Prefiere que le envíe la información por correo electrónico?"
             print(f"   Respuesta anti-loop: '{respuesta}'")
+            return respuesta
+
+        # FIX 493: Detectar loop de preguntas de CATÁLOGO
+        preguntas_catalogo = [
+            'le envío el catálogo', 'le envio el catalogo',
+            'enviarle el catálogo', 'enviarle el catalogo',
+            'recibir el catálogo', 'recibir el catalogo',
+            'recibir nuestro catálogo', 'recibir nuestro catalogo',
+            'le gustaría recibir', 'le gustaria recibir'
+        ]
+        veces_pregunto_catalogo = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in preguntas_catalogo)
+        )
+
+        pregunta_catalogo = any(p in respuesta_lower for p in preguntas_catalogo)
+        if pregunta_catalogo and veces_pregunto_catalogo >= 3:
+            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_pregunto_catalogo+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            # Cliente ya rechazó 3 veces - despedirse profesionalmente
+            respuesta = "Entiendo perfectamente. Le agradezco su tiempo. Que tenga excelente día."
+            print(f"   Respuesta anti-loop: '{respuesta}' (despedida después de 3 rechazos)")
+            return respuesta
+
+        # FIX 493: Detectar loop de "¿Me puede repetir?"
+        preguntas_repetir = [
+            'me puede repetir', 'me podría repetir', 'me podria repetir',
+            'no escuché bien', 'no escuche bien', 'disculpe no escuché'
+        ]
+        veces_pidio_repetir = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in preguntas_repetir)
+        )
+
+        pregunta_repetir = any(p in respuesta_lower for p in preguntas_repetir)
+        if pregunta_repetir and veces_pidio_repetir >= 2:
+            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir repetición ({veces_pidio_repetir+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            # Problema de audio - ofrecer llamar después
+            respuesta = "Parece que tenemos problemas de conexión. ¿Le puedo llamar en otro momento?"
+            print(f"   Respuesta anti-loop: '{respuesta}' (problemas de conexión)")
             return respuesta
 
         # FIX 338: Definir contexto_cliente GLOBAL para todos los filtros
