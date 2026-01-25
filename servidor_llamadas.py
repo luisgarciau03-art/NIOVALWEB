@@ -2331,6 +2331,7 @@ def procesar_respuesta():
         frase_lower = speech_result.lower()
         palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo", "outlook", ".com", ".mx", ".net"]
         esta_deletreando_email = any(palabra in frase_lower for palabra in palabras_deletreo_email)
+        email_detectado_completo = False  # FIX 499: Bandera para email completo
 
         # FIX 265: Si está deletreando email, verificar si parece completo o incompleto
         if esta_deletreando_email:
@@ -2367,6 +2368,8 @@ def procesar_respuesta():
                 return Response(str(response), mimetype="text/xml")
             else:
                 print(f"    FIX 265: Email parece completo - procesar normalmente")
+                # FIX 499: Marcar que el email está completo para NO esperar más
+                email_detectado_completo = True
 
         # Verificar si el cliente tiene historial de habla activa
         if call_sid in cliente_hablando_activo:
@@ -2505,12 +2508,15 @@ def procesar_respuesta():
                 print(f"    FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente")
 
             # FIX 253: Detectar si cliente está deletreando email (arroba, punto, @)
+            # FIX 499: PERO si FIX 265 ya determinó que el email está completo, NO marcar como incompleto
             palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo"]
             esta_deletreando_email = any(palabra in speech_result.lower() for palabra in palabras_deletreo_email)
 
-            if esta_deletreando_email:
+            if esta_deletreando_email and not email_detectado_completo:
                 frase_parece_incompleta = True
                 print(f"    FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
+            elif esta_deletreando_email and email_detectado_completo:
+                print(f"    FIX 499: Email COMPLETO detectado - NO esperar más, procesar ahora")
 
             # FIX 286: Detectar si cliente está repitiendo lo mismo (indica que espera respuesta)
             if hasattr(agente, 'transcripcion_parcial_acumulada') and len(agente.transcripcion_parcial_acumulada) >= 2:
