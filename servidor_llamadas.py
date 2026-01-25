@@ -2663,9 +2663,12 @@ def procesar_respuesta():
                 bruce_id = agente.lead_data.get("bruce_id", "N/A")
                 log_evento(f"{bruce_id} DICE: \"{respuesta_oferta}\" (FIX 500: respuesta a oferta)", "BRUCE")
 
-                # Generar audio y responder
-                audio_url = agente.text_to_speech_enhanced(respuesta_oferta)
-                if audio_url:
+                # FIX 500b: Generar audio con función global (corrige AttributeError)
+                audio_id = f"oferta_{call_sid}_{int(time.time())}"
+                result = generar_audio_elevenlabs(respuesta_oferta, audio_id)
+
+                if result:
+                    audio_url = request.url_root + f"audio/{audio_id}"
                     response = VoiceResponse()
                     response.play(audio_url)
                     response.gather(
