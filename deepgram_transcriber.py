@@ -64,6 +64,8 @@ class DeepgramTranscriber:
         self.audio_chunks_received = 0
         self.transcripts_received = 0
         self.total_latency_ms = 0
+        # FIX 501: Timestamp del último chunk de audio para medir latencia real
+        self.last_audio_chunk_time = None
 
     async def connect(self):
         """Establece conexión con Deepgram"""
@@ -78,8 +80,8 @@ class DeepgramTranscriber:
         try:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
 
-            # FIX 222/401: Configuración OPTIMIZADA para baja latencia
-            # Algunos parámetros pueden no estar disponibles para es-419
+            # FIX 222/401/501: Configuración OPTIMIZADA para baja latencia
+            # FIX 501: BRUCE1476 - Optimizaciones adicionales para reducir delay
             options = LiveOptions(
                 model="nova-2",  # Modelo más preciso para español
                 language="es-419",  # Español Latinoamérica
@@ -88,8 +90,11 @@ class DeepgramTranscriber:
                 channels=1,
                 punctuate=True,  # Agregar puntuación
                 interim_results=True,  # Resultados parciales para baja latencia
-                endpointing=200,  # FIX 401: Reducido de 300ms a 200ms para menor latencia
+                # FIX 501: Ajustes para menor latencia en llamadas telefónicas
+                endpointing=150,  # Reducido de 200ms a 150ms (más agresivo)
                 smart_format=True,  # Formato inteligente
+                # FIX 501: Nuevos parámetros para optimizar latencia
+                no_delay=True,  # Procesar audio inmediatamente sin buffering
                 # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
                 # - utterance_end_ms (puede no estar soportado)
                 # - vad_events (puede no estar soportado)
@@ -154,8 +159,13 @@ class DeepgramTranscriber:
 
             self.transcripts_received += 1
 
-            # Calcular latencia
-            latency_ms = (datetime.now() - self.start_time).total_seconds() * 1000
+            # FIX 501: Calcular latencia REAL desde el último chunk de audio
+            # Antes: medía desde start_time (engañoso, podía mostrar 44s)
+            # Ahora: mide desde el último audio enviado (latencia real de Deepgram)
+            if self.last_audio_chunk_time:
+                latency_ms = (datetime.now() - self.last_audio_chunk_time).total_seconds() * 1000
+            else:
+                latency_ms = (datetime.now() - self.start_time).total_seconds() * 1000
 
             if is_final:
                 self.final_transcripts.append(transcript)
@@ -201,6 +211,8 @@ class DeepgramTranscriber:
         try:
             self.dg_connection.send(audio_data)
             self.audio_chunks_received += 1
+            # FIX 501: Registrar timestamp para medir latencia real
+            self.last_audio_chunk_time = datetime.now()
             return True
         except Exception as e:
             print(f" FIX 212: Error enviando audio: {e}")
