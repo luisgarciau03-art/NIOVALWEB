@@ -3352,6 +3352,23 @@ def procesar_respuesta():
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
+    # FIX 498: BRUCE1473 - Si respuesta es cadena vacía = modo espera silencioso
+    # NO colgar, solo esperar sin generar audio y seguir escuchando
+    if respuesta_agente == "":
+        print(f" FIX 498: Respuesta vacía (modo espera silencioso) - Continuando sin audio")
+        bruce_id = agente.lead_data.get("bruce_id", "N/A")
+        log_evento(f"{bruce_id} - ESPERANDO EN SILENCIO (FIX 498)", "BRUCE")
+        # NO colgar, seguir escuchando al cliente
+        response.gather(
+            input="speech",
+            action=request.url_root + "llamada/continuar",
+            language="es-MX",
+            speechTimeout="3",
+            timeout="8",
+            speechModel="phone_call"
+        )
+        return Response(str(response), mimetype="text/xml")
+
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id = agente.lead_data.get("bruce_id", "N/A")
     log_evento(f"{bruce_id} DICE: \"{respuesta_agente}\"", "BRUCE")

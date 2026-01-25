@@ -6266,17 +6266,69 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'continúe', 'continue', 'siga', 'ahí está', 'ahi esta'
                 ])
 
+                # FIX 498: BRUCE1473 - Detectar si cliente OFRECE correo/WhatsApp durante espera
+                # Si dice "te paso el correo", "quieres el correo", etc. → ACEPTAR la oferta
+                patrones_ofrece_correo_espera = [
+                    'te puedo pasar el correo', 'le puedo pasar el correo',
+                    'te paso el correo', 'le paso el correo', 'te paso correo', 'le paso correo',
+                    'te doy el correo', 'le doy el correo', 'te doy correo', 'le doy correo',
+                    'quiere el correo', 'quieres el correo', 'quieres que te pase correo',
+                    'quiere que le pase correo', 'por correo', 'al correo', 'el correo',
+                    'te mando el correo', 'le mando el correo', 'mándalo al correo',
+                    'anota el correo', 'anote el correo', 'apunta el correo'
+                ]
+
+                patrones_ofrece_whatsapp_espera = [
+                    'te puedo pasar el whatsapp', 'le puedo pasar el whatsapp',
+                    'te paso el whatsapp', 'le paso el whatsapp', 'te paso el número',
+                    'le paso el número', 'te paso numero', 'le paso numero',
+                    'te doy el whatsapp', 'le doy el whatsapp', 'te doy el número',
+                    'le doy el número', 'quiere el whatsapp', 'quieres el whatsapp',
+                    'quiere el número', 'quieres el número', 'anota el número',
+                    'anote el número', 'toma nota', 'tome nota', 'ahí le va', 'ahí te va'
+                ]
+
+                # FIX 498: Detectar si cliente está verificando que Bruce sigue ahí
+                patrones_verificando_presencia = [
+                    'hola', '¿hola?', 'bueno', '¿bueno?', '¿sigues ahí?', 'sigues ahi',
+                    '¿me escucha?', 'me escucha', '¿está ahí?', 'esta ahi', '¿oye?', 'oye'
+                ]
+
+                cliente_ofrece_correo = any(p in cliente_lower_482 for p in patrones_ofrece_correo_espera)
+                cliente_ofrece_whatsapp = any(p in cliente_lower_482 for p in patrones_ofrece_whatsapp_espera)
+                cliente_verificando = any(p in cliente_lower_482 for p in patrones_verificando_presencia)
+
+                if cliente_ofrece_correo:
+                    print(f"\n[OK] FIX 498: Cliente OFRECE CORREO durante espera - '{respuesta_cliente}'")
+                    print(f"   Cambiando estado a CONVERSACION_NORMAL para aceptar oferta")
+                    self.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                    # Responder aceptando la oferta
+                    return "Sí, por favor, dígame el correo."
+
+                if cliente_ofrece_whatsapp:
+                    print(f"\n[OK] FIX 498: Cliente OFRECE WHATSAPP/NÚMERO durante espera - '{respuesta_cliente}'")
+                    print(f"   Cambiando estado a CONVERSACION_NORMAL para aceptar oferta")
+                    self.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                    # Responder aceptando la oferta
+                    return "Sí, por favor, dígame el número."
+
+                if cliente_verificando:
+                    print(f"\n[OK] FIX 498: Cliente VERIFICANDO PRESENCIA durante espera - '{respuesta_cliente}'")
+                    print(f"   Respondiendo para confirmar que seguimos en línea")
+                    # Responder para confirmar presencia pero seguir esperando
+                    return "Sí, aquí estoy. Le espero."
+
                 if cliente_volvio:
                     print(f"\n[OK] FIX 482: Cliente VOLVIÓ de la espera - '{respuesta_cliente}'")
                     print(f"   Cambiando estado a CONVERSACION_NORMAL para continuar")
                     self.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
                     # NO retornar None, continuar con procesamiento normal (GPT)
                 else:
-                    # FIX 415: Ya dijo "Claro, espero." → SILENCIARSE (esperar en silencio sin responder)
-                    print(f"\n[EMOJI]  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
+                    # FIX 415/498: Ya dijo "Claro, espero." → SILENCIARSE pero NO colgar
+                    print(f"\n[WARN] FIX 415/498: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
                     print(f"   Cliente dijo: \"{respuesta_cliente}\" - NO responder (esperar transferencia)")
-                    # Retornar None para indicar que NO debe generar audio
-                    return None
+                    # FIX 498: Retornar cadena vacía para silenciarse SIN colgar (None = IVR = colgar)
+                    return ""
 
             # Primera vez diciendo "Claro, espero." en esta transferencia
             print(f"\n[EMOJI] FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
