@@ -1805,6 +1805,78 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         respuesta_original = respuesta
         filtro_aplicado = False
 
+        # ============================================================
+        # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
+        # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
+        # Solución: Contar preguntas y BLOQUEAR repeticiones
+        # ============================================================
+        ultimas_bruce_antiloop = [
+            msg['content'].lower() for msg in self.conversation_history[-10:]
+            if msg['role'] == 'assistant'
+        ]
+
+        # Contar veces que preguntó por encargado
+        preguntas_encargado = [
+            'se encontrará el encargado', 'se encontrara el encargado',
+            'está el encargado', 'esta el encargado',
+            'se encuentra el encargado', 'encargado de compras',
+            'me comunica con el encargado', 'comunica con el encargado'
+        ]
+        veces_pregunto_encargado = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in preguntas_encargado)
+        )
+
+        # Si la respuesta actual pregunta por encargado Y ya preguntamos 2+ veces
+        pregunta_por_encargado = any(p in respuesta_lower for p in preguntas_encargado)
+        if pregunta_por_encargado and veces_pregunto_encargado >= 2:
+            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a preguntar por encargado ({veces_pregunto_encargado+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+
+            # Verificar si cliente dio horario en el contexto
+            ultimo_cliente = ""
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    ultimo_cliente = msg['content'].lower()
+                    break
+
+            import re
+            patron_horario = r'(?:llega|viene|regresa).*?(?:a las|las)\s*(\d{1,2})'
+            match_horario = re.search(patron_horario, ultimo_cliente)
+
+            if match_horario:
+                hora = match_horario.group(1)
+                respuesta = f"Perfecto, le llamo a las {hora} entonces. Muchas gracias por su tiempo."
+                print(f"   Respuesta anti-loop: '{respuesta}' (con horario)")
+            elif 'no está' in ultimo_cliente or 'no esta' in ultimo_cliente:
+                respuesta = "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+                print(f"   Respuesta anti-loop: '{respuesta}' (pedir WhatsApp)")
+            else:
+                respuesta = "¿Me puede proporcionar un WhatsApp donde le envíe información?"
+                print(f"   Respuesta anti-loop: '{respuesta}' (genérico)")
+
+            return respuesta
+
+        # Contar veces que preguntó por WhatsApp
+        preguntas_whatsapp = [
+            'cuál es su whatsapp', 'cual es su whatsapp',
+            'me proporciona su whatsapp', 'me da su whatsapp',
+            'le gustaría recibir.*whatsapp', 'envío.*whatsapp'
+        ]
+        veces_pregunto_whatsapp = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in preguntas_whatsapp[:4])  # Solo patrones exactos
+        )
+
+        # Si preguntó WhatsApp 3+ veces, ofrecer alternativa
+        pregunta_whatsapp = any(p in respuesta_lower for p in preguntas_whatsapp[:4])
+        if pregunta_whatsapp and veces_pregunto_whatsapp >= 3:
+            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir WhatsApp ({veces_pregunto_whatsapp+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            respuesta = "Entiendo. ¿Prefiere que le envíe la información por correo electrónico?"
+            print(f"   Respuesta anti-loop: '{respuesta}'")
+            return respuesta
+
         # FIX 338: Definir contexto_cliente GLOBAL para todos los filtros
         # Incluir últimos 6 mensajes del cliente para mejor detección
         ultimos_mensajes_cliente_global = [
