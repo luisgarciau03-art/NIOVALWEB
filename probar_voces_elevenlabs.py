@@ -89,10 +89,10 @@ for voz in voces_probar:
                 for chunk in audio_generator:
                     f.write(chunk)
 
-            print(f"  ✅ Guardado: {filename}")
+            print(f"   Guardado: {filename}")
 
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            print(f"   Error: {e}")
 
         print()
 

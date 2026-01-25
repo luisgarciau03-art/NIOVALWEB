@@ -14,25 +14,25 @@ headers = {
     "Authorization": f"Basic {auth}"
 }
 
-print("🔍 Verificando credenciales de Twilio...")
+print(" Verificando credenciales de Twilio...")
 print(f"   Account SID: {account_sid}")
 print(f"   Auth Token: {auth_token[:8]}...{auth_token[-8:]}")
 print()
 
 try:
     response = requests.get(url, headers=headers, timeout=10)
-    print(f"📡 Respuesta HTTP: {response.status_code}")
+    print(f" Respuesta HTTP: {response.status_code}")
     print()
     
     if response.status_code == 200:
         data = response.json()
-        print("✅ CREDENCIALES VÁLIDAS")
+        print(" CREDENCIALES VÁLIDAS")
         print(f"   Account SID: {data.get('sid')}")
         print(f"   Friendly Name: {data.get('friendly_name')}")
         print(f"   Status: {data.get('status')}")
         print(f"   Type: {data.get('type')}")
     elif response.status_code == 401:
-        print("❌ ERROR 401: CREDENCIALES INVÁLIDAS")
+        print(" ERROR 401: CREDENCIALES INVÁLIDAS")
         print()
         print("Posibles causas:")
         print("1. El Account SID es incorrecto")
@@ -45,9 +45,9 @@ try:
         print("3. Copia el Auth Token exacto (o genera uno nuevo)")
         print("4. Actualiza las variables en Railway")
     else:
-        print(f"❌ ERROR INESPERADO: {response.status_code}")
+        print(f" ERROR INESPERADO: {response.status_code}")
         print(f"   Respuesta: {response.text[:500]}")
         
 except Exception as e:
-    print(f"❌ ERROR DE CONEXIÓN: {type(e).__name__}")
+    print(f" ERROR DE CONEXIÓN: {type(e).__name__}")
     print(f"   Mensaje: {str(e)}")

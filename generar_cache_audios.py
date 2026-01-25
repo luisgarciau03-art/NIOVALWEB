@@ -36,7 +36,7 @@ frases_a_generar = [
     }
 ]
 
-print(f"\n📋 Frases a generar: {len(frases_a_generar)}")
+print(f"\n Frases a generar: {len(frases_a_generar)}")
 for i, frase in enumerate(frases_a_generar, 1):
     print(f"   {i}. {frase['key']}: {frase['texto'][:60]}...")
 

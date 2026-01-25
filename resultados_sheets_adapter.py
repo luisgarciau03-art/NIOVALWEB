@@ -28,7 +28,7 @@ class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
         )
         # Alias para compatibilidad con código existente
         self.hoja_resultados = self.hoja
-        print(f"✅ Conectado a spreadsheet de resultados: {self.hoja_nombre}")
+        print(f" Conectado a spreadsheet de resultados: {self.hoja_nombre}")
 
     def guardar_resultado_llamada(self, datos: Dict) -> bool:
         """
@@ -68,7 +68,7 @@ class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
 
             ultima_fila = filas_con_datos + 1
 
-            print(f"\n📝 Guardando resultado en fila {ultima_fila}...")
+            print(f"\n Guardando resultado en fila {ultima_fila}...")
 
             # Preparar datos
             fecha_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -187,11 +187,11 @@ class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
             # Ejecutar todas las actualizaciones en batch
             self.hoja_resultados.batch_update(actualizaciones)
 
-            print(f"✅ Resultado guardado exitosamente en fila {ultima_fila}")
+            print(f" Resultado guardado exitosamente en fila {ultima_fila}")
             return True
 
         except Exception as e:
-            print(f"❌ Error al guardar resultado: {e}")
+            print(f" Error al guardar resultado: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -222,14 +222,14 @@ class ResultadosSheetsAdapter(BaseGoogleSheetsAdapter):
             }
 
         except Exception as e:
-            print(f"❌ Error al obtener estadísticas: {e}")
+            print(f" Error al obtener estadísticas: {e}")
             return {}
 
 
 # Testing
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("📊 RESULTADOS SHEETS ADAPTER - TESTING")
+    print(" RESULTADOS SHEETS ADAPTER - TESTING")
     print("=" * 60 + "\n")
 
     try:
@@ -263,11 +263,11 @@ if __name__ == "__main__":
 
         # Guardar
         exito = adapter.guardar_resultado_llamada(datos_prueba)
-        print(f"\\nResultado del guardado: {'✅ Éxito' if exito else '❌ Error'}")
+        print(f"\\nResultado del guardado: {' Éxito' if exito else ' Error'}")
         """)
 
     except Exception as e:
-        print(f"\n❌ Error en testing: {e}")
+        print(f"\n Error en testing: {e}")
         import traceback
         traceback.print_exc()
 

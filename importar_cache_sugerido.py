@@ -18,17 +18,17 @@ with open('cache_sugerido_del_log.json', 'r', encoding='utf-8') as f:
 # Crear directorio si no existe
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
-    print(f"📁 Directorio creado: {CACHE_DIR}")
+    print(f" Directorio creado: {CACHE_DIR}")
 
 # Cargar caché existente (si existe)
 cache_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
 if os.path.exists(cache_file):
     with open(cache_file, 'r', encoding='utf-8') as f:
         cache_existente = json.load(f)
-    print(f"📦 Caché existente cargado: {len(cache_existente)} categorías")
+    print(f" Caché existente cargado: {len(cache_existente)} categorías")
 else:
     cache_existente = {}
-    print("📦 No hay caché existente, creando nuevo")
+    print(" No hay caché existente, creando nuevo")
 
 # Merge: agregar solo las categorías nuevas
 categorias_agregadas = 0
@@ -43,12 +43,12 @@ for categoria, datos in cache_sugerido.items():
 
         cache_existente[categoria]["patrones"] = patrones_merged
         categorias_actualizadas += 1
-        print(f"🔄 Actualizada: {categoria} ({len(patrones_merged)} patrones)")
+        print(f" Actualizada: {categoria} ({len(patrones_merged)} patrones)")
     else:
         # Agregar nueva categoría
         cache_existente[categoria] = datos
         categorias_agregadas += 1
-        print(f"✅ Agregada: {categoria} ({len(datos['patrones'])} patrones)")
+        print(f" Agregada: {categoria} ({len(datos['patrones'])} patrones)")
 
 # Guardar caché actualizado
 with open(cache_file, 'w', encoding='utf-8') as f:
@@ -57,9 +57,9 @@ with open(cache_file, 'w', encoding='utf-8') as f:
 print("\n" + "="*80)
 print("IMPORTACIÓN COMPLETADA")
 print("="*80)
-print(f"✅ Categorías agregadas: {categorias_agregadas}")
-print(f"🔄 Categorías actualizadas: {categorias_actualizadas}")
-print(f"📊 Total de categorías: {len(cache_existente)}")
-print(f"📁 Archivo guardado: {cache_file}")
-print("\n💡 El caché estará disponible en Railway después del próximo deploy")
+print(f" Categorías agregadas: {categorias_agregadas}")
+print(f" Categorías actualizadas: {categorias_actualizadas}")
+print(f" Total de categorías: {len(cache_existente)}")
+print(f" Archivo guardado: {cache_file}")
+print("\n El caché estará disponible en Railway después del próximo deploy")
 print("   Accede al panel en: /cache-manager")

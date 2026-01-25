@@ -34,7 +34,7 @@ def hacer_llamada(telefono_destino: str, nombre_prospecto: str = ""):
         "phone_number": telefono_destino
     }
     
-    print(f"\n📞 Iniciando llamada a {telefono_destino}...")
+    print(f"\n Iniciando llamada a {telefono_destino}...")
     if nombre_prospecto:
         print(f"   Prospecto: {nombre_prospecto}")
     
@@ -43,17 +43,17 @@ def hacer_llamada(telefono_destino: str, nombre_prospecto: str = ""):
         
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ Llamada iniciada exitosamente!")
+            print(f" Llamada iniciada exitosamente!")
             print(f"   Call ID: {data.get('call_id', 'N/A')}")
             return data
         else:
-            print(f"❌ Error al iniciar llamada:")
+            print(f" Error al iniciar llamada:")
             print(f"   Status: {response.status_code}")
             print(f"   Respuesta: {response.text}")
             return None
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         return None
 
 
@@ -68,7 +68,7 @@ def llamar_lista(lista_telefonos: list):
             {"telefono": "+52YYYYYYYYYY", "nombre": "Ferretería El Martillo"}
         ]
     """
-    print(f"\n🚀 Iniciando {len(lista_telefonos)} llamadas...\n")
+    print(f"\n Iniciando {len(lista_telefonos)} llamadas...\n")
     
     resultados = []
     
@@ -88,12 +88,12 @@ def llamar_lista(lista_telefonos: list):
         # Pausa entre llamadas (opcional)
         if i < len(lista_telefonos):
             import time
-            print("\n⏳ Esperando 30 segundos antes de la siguiente llamada...")
+            print("\n Esperando 30 segundos antes de la siguiente llamada...")
             time.sleep(30)
     
     # Resumen
     print("\n" + "=" * 60)
-    print("📊 RESUMEN DE LLAMADAS")
+    print(" RESUMEN DE LLAMADAS")
     print("=" * 60)
     exitosas = sum(1 for r in resultados if r["exitosa"])
     print(f"Total: {len(resultados)}")
@@ -107,7 +107,7 @@ def llamar_lista(lista_telefonos: list):
 def menu_interactivo():
     """Menú interactivo para hacer llamadas"""
     print("\n" + "=" * 60)
-    print("📞 SISTEMA DE LLAMADAS SALIENTES - NIOVAL")
+    print(" SISTEMA DE LLAMADAS SALIENTES - NIOVAL")
     print("=" * 60)
     print("\nOpciones:")
     print("1. Llamar a un solo número")
@@ -126,7 +126,7 @@ def menu_interactivo():
             if telefono:
                 hacer_llamada(telefono, nombre if nombre else "Cliente")
             else:
-                print("❌ Debes ingresar un número de teléfono")
+                print(" Debes ingresar un número de teléfono")
             
             continuar = input("\n¿Hacer otra llamada? (s/n): ").strip().lower()
             if continuar != 's':
@@ -157,20 +157,20 @@ def menu_interactivo():
                     if confirmar == 's':
                         llamar_lista(lista)
                     else:
-                        print("❌ Llamadas canceladas")
+                        print(" Llamadas canceladas")
                 else:
-                    print("❌ No se agregaron números")
+                    print(" No se agregaron números")
                     
             except ValueError:
-                print("❌ Cantidad inválida")
+                print(" Cantidad inválida")
             
             break
             
         elif opcion == "3":
-            print("\n👋 ¡Hasta luego!")
+            print("\n ¡Hasta luego!")
             break
         else:
-            print("❌ Opción inválida, intenta de nuevo")
+            print(" Opción inválida, intenta de nuevo")
 
 
 if __name__ == "__main__":

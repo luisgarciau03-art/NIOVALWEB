@@ -25,7 +25,7 @@ def descargar_logs(lineas=1000, filtro=None, bruce_id=None):
         str: Ruta del archivo guardado o None si falla
     """
     print("\n" + "="*70)
-    print("📥 DESCARGA AUTOMÁTICA DE LOGS - BRUCE W")
+    print(" DESCARGA AUTOMÁTICA DE LOGS - BRUCE W")
     print("="*70 + "\n")
 
     # Crear carpeta si no existe
@@ -41,36 +41,36 @@ def descargar_logs(lineas=1000, filtro=None, bruce_id=None):
     # Intentar API JSON (más info)
     url_api = f"{URL_SERVIDOR}/logs/api"
 
-    print(f"   🌐 Conectando a: {url_api}")
-    print(f"   📊 Solicitando: {lineas} líneas")
+    print(f"    Conectando a: {url_api}")
+    print(f"    Solicitando: {lineas} líneas")
     if filtro:
-        print(f"   🔍 Filtro: {filtro}")
+        print(f"    Filtro: {filtro}")
     if bruce_id:
-        print(f"   🆔 Bruce ID: {bruce_id}")
+        print(f"    Bruce ID: {bruce_id}")
 
     try:
         response = requests.get(url_api, params=params, timeout=30)
 
         if response.status_code != 200:
-            print(f"\n   ❌ Error del servidor: {response.status_code}")
+            print(f"\n    Error del servidor: {response.status_code}")
             print(f"   {response.text[:200]}")
             return None
 
         data = response.json()
 
         if "error" in data:
-            print(f"\n   ❌ Error: {data['error']}")
+            print(f"\n    Error: {data['error']}")
             return None
 
         logs = data.get("logs", [])
         total_en_buffer = data.get("total_en_buffer", 0)
 
-        print(f"\n   ✅ Logs recibidos: {len(logs)}")
-        print(f"   📊 Total en servidor: {total_en_buffer}")
+        print(f"\n    Logs recibidos: {len(logs)}")
+        print(f"    Total en servidor: {total_en_buffer}")
 
         if not logs:
-            print("\n   ⚠️ No hay logs disponibles")
-            print("   💡 Esto puede significar que el servidor se reinició recientemente")
+            print("\n    No hay logs disponibles")
+            print("    Esto puede significar que el servidor se reinició recientemente")
             print("      Los logs se acumulan mientras el servidor está activo")
             return None
 
@@ -99,21 +99,21 @@ def descargar_logs(lineas=1000, filtro=None, bruce_id=None):
             for log in logs:
                 f.write(log + "\n")
 
-        print(f"\n   💾 Guardado en: {filepath}")
-        print(f"   📏 Tamaño: {os.path.getsize(filepath):,} bytes")
+        print(f"\n    Guardado en: {filepath}")
+        print(f"    Tamaño: {os.path.getsize(filepath):,} bytes")
 
         return filepath
 
     except requests.exceptions.ConnectionError:
-        print(f"\n   ❌ No se pudo conectar al servidor")
-        print(f"   🔗 Verifica que el servidor esté activo en:")
+        print(f"\n    No se pudo conectar al servidor")
+        print(f"    Verifica que el servidor esté activo en:")
         print(f"      {URL_SERVIDOR}")
         return None
     except requests.exceptions.Timeout:
-        print(f"\n   ❌ Timeout - El servidor tardó demasiado")
+        print(f"\n    Timeout - El servidor tardó demasiado")
         return None
     except Exception as e:
-        print(f"\n   ❌ Error: {e}")
+        print(f"\n    Error: {e}")
         return None
 
 
@@ -121,7 +121,7 @@ def analizar_logs(filepath):
     """Ejecuta el analizador de logs si existe"""
     if filepath and os.path.exists(filepath):
         print("\n" + "="*70)
-        print("🔍 EJECUTANDO ANÁLISIS...")
+        print(" EJECUTANDO ANÁLISIS...")
         print("="*70)
         os.system(f'py analizar_logs_railway.py "{filepath}"')
 
@@ -154,7 +154,7 @@ def main():
             i += 1
         elif arg in ['-h', '--help']:
             print("""
-📥 DESCARGA AUTOMÁTICA DE LOGS - BRUCE W
+ DESCARGA AUTOMÁTICA DE LOGS - BRUCE W
 
 Uso:
     py descargar_logs_auto.py [opciones]
@@ -192,7 +192,7 @@ URLs del servidor:
             analizar_logs(filepath)
 
     print("\n" + "="*70)
-    print("✅ Proceso completado")
+    print(" Proceso completado")
     print("="*70 + "\n")
 
 

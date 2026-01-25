@@ -17,7 +17,7 @@ try:
         # Encabezados (primera fila)
         encabezados = datos[0]
 
-        print(f"\n📋 COLUMNAS ENCONTRADAS ({len(encabezados)} columnas):")
+        print(f"\n COLUMNAS ENCONTRADAS ({len(encabezados)} columnas):")
         print("-" * 80)
 
         letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -25,7 +25,7 @@ try:
             letra = letras[i] if i < len(letras) else f"[{i+1}]"
             print(f"{letra:3} | {encabezado}")
 
-        print(f"\n📊 EJEMPLO DE DATOS (Fila 2):")
+        print(f"\n EJEMPLO DE DATOS (Fila 2):")
         print("-" * 80)
         if len(datos) > 1:
             fila_ejemplo = datos[1]
@@ -38,6 +38,6 @@ try:
         print("\n" + "=" * 80)
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f" Error: {e}")
     import traceback
     traceback.print_exc()

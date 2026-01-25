@@ -58,21 +58,21 @@ def main():
     print()
 
     if not ELEVENLABS_API_KEY:
-        print("❌ ERROR: Variable ELEVENLABS_API_KEY no configurada")
+        print(" ERROR: Variable ELEVENLABS_API_KEY no configurada")
         return
 
     # Frase a regenerar
     texto_original = "Manejamos una variedad de productos de ferretería, como griferías, cintas y herramientas."
 
-    print(f"📝 Texto original: {texto_original}")
+    print(f" Texto original: {texto_original}")
 
     # Aplicar corrección de pronunciación
     texto_corregido = corregir_pronunciacion(texto_original)
-    print(f"✅ Texto corregido: {texto_corregido}")
+    print(f" Texto corregido: {texto_corregido}")
 
     try:
         # Generar nuevo audio con ElevenLabs
-        print(f"\n🎙️ Generando nuevo audio con ElevenLabs...")
+        print(f"\n Generando nuevo audio con ElevenLabs...")
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto_corregido,
@@ -92,16 +92,16 @@ def main():
                 if chunk:
                     f.write(chunk)
 
-        print(f"\n✅ Audio regenerado exitosamente!")
-        print(f"📂 Archivo: {nombre_archivo}")
-        print(f"📂 Ruta: {ruta}")
+        print(f"\n Audio regenerado exitosamente!")
+        print(f" Archivo: {nombre_archivo}")
+        print(f" Ruta: {ruta}")
 
         # Verificar tamaño
         tamano = os.path.getsize(ruta)
-        print(f"📊 Tamaño: {tamano / 1024:.1f} KB")
+        print(f" Tamaño: {tamano / 1024:.1f} KB")
 
     except Exception as e:
-        print(f"❌ ERROR al regenerar audio: {str(e)}")
+        print(f" ERROR al regenerar audio: {str(e)}")
         import traceback
         traceback.print_exc()
 

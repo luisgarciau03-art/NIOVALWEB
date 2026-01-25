@@ -24,19 +24,19 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 def obtener_stats():
     """Obtiene estadísticas del servidor Railway"""
     try:
-        print("🔍 Consultando estadísticas de Railway...")
+        print(" Consultando estadísticas de Railway...")
         response = requests.get(f"{RAILWAY_URL}/stats", timeout=10)
 
         if response.status_code == 200:
             # El HTML contiene las estadísticas, parsear manualmente
             html = response.text
-            print("✅ Estadísticas obtenidas")
+            print(" Estadísticas obtenidas")
             return html
         else:
-            print(f"❌ Error: {response.status_code}")
+            print(f" Error: {response.status_code}")
             return None
     except Exception as e:
-        print(f"❌ Error consultando stats: {e}")
+        print(f" Error consultando stats: {e}")
         return None
 
 def parsear_frases_sin_cache(html):
@@ -46,7 +46,7 @@ def parsear_frases_sin_cache(html):
     frases_sin_cache = []
 
     # Buscar tabla de frases más usadas
-    # Patrón: frase con X usos que NO tiene ✅ (significa no tiene caché)
+    # Patrón: frase con X usos que NO tiene  (significa no tiene caché)
 
     # Por ahora, vamos a usar las que sabemos del análisis manual
     # TODO: Mejorar parsing del HTML
@@ -73,7 +73,7 @@ def generar_audio(texto, cache_key):
     try:
         client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
-        print(f"\n📝 Generando: {cache_key}")
+        print(f"\n Generando: {cache_key}")
         print(f"   Texto ({len(texto.split())} palabras): {texto[:80]}...")
 
         # Generar audio
@@ -92,11 +92,11 @@ def generar_audio(texto, cache_key):
             for chunk in audio_generator:
                 f.write(chunk)
 
-        print(f"   ✅ Guardado: {filename}")
+        print(f"    Guardado: {filename}")
         return True
 
     except Exception as e:
-        print(f"   ❌ Error: {e}")
+        print(f"    Error: {e}")
         return False
 
 def main():
@@ -107,17 +107,17 @@ def main():
     # Obtener estadísticas
     stats_html = obtener_stats()
     if not stats_html:
-        print("\n❌ No se pudieron obtener estadísticas")
+        print("\n No se pudieron obtener estadísticas")
         return
 
     # Parsear frases sin caché
     frases = parsear_frases_sin_cache(stats_html)
 
     if not frases:
-        print("\n✅ Todas las frases frecuentes ya tienen caché")
+        print("\n Todas las frases frecuentes ya tienen caché")
         return
 
-    print(f"\n📋 Frases sin caché a generar: {len(frases)}")
+    print(f"\n Frases sin caché a generar: {len(frases)}")
     print()
 
     for i, (texto, usos) in enumerate(frases, 1):
@@ -134,23 +134,23 @@ def main():
         if hasattr(subscription, 'character_count'):
             caracteres_restantes = subscription.character_limit - subscription.character_count
 
-            print(f"💰 Créditos disponibles: {caracteres_restantes:,} caracteres")
+            print(f" Créditos disponibles: {caracteres_restantes:,} caracteres")
 
             # Calcular necesarios
             total_caracteres = sum(len(texto) for texto, _ in frases)
             creditos_necesarios = total_caracteres * 7  # ~7 créditos por carácter
 
-            print(f"📝 Créditos necesarios: ~{creditos_necesarios:,} caracteres")
+            print(f" Créditos necesarios: ~{creditos_necesarios:,} caracteres")
             print()
 
             if caracteres_restantes < creditos_necesarios:
-                print("⚠️  ADVERTENCIA: Créditos insuficientes")
+                print("  ADVERTENCIA: Créditos insuficientes")
                 print(f"   Necesitas: {creditos_necesarios:,}")
                 print(f"   Tienes: {caracteres_restantes:,}")
                 print(f"   Faltante: {creditos_necesarios - caracteres_restantes:,}")
                 print()
     except Exception as e:
-        print(f"⚠️  No se pudo verificar créditos: {e}")
+        print(f"  No se pudo verificar créditos: {e}")
         print()
 
     respuesta = input("¿Continuar? (s/n): ")
@@ -171,7 +171,7 @@ def main():
         # Verificar si ya existe
         filepath = os.path.join(CACHE_DIR, f"{cache_key}.mp3")
         if os.path.exists(filepath):
-            print(f"\n⏭️  Saltando: {texto[:50]}... (ya existe)")
+            print(f"\n  Saltando: {texto[:50]}... (ya existe)")
             exitosos += 1
             continue
 
@@ -187,14 +187,14 @@ def main():
     print("\n" + "="*70)
     print("RESUMEN")
     print("="*70)
-    print(f"\n✅ Exitosos: {exitosos}/{len(frases)}")
-    print(f"❌ Fallidos: {fallidos}/{len(frases)}")
+    print(f"\n Exitosos: {exitosos}/{len(frases)}")
+    print(f" Fallidos: {fallidos}/{len(frases)}")
     print()
 
     if exitosos > 0:
-        print("🎉 Cachés generados exitosamente")
+        print(" Cachés generados exitosamente")
         print()
-        print("📌 Próximo paso: Subir a Railway")
+        print(" Próximo paso: Subir a Railway")
         print("   Opción 1: Desplegar completo (automático con git push)")
         print("   Opción 2: Subir solo audio_cache/ al volumen persistente")
         print()

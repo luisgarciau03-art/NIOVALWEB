@@ -90,5 +90,5 @@ if not ELEVENLABS_VOICE_ID:
     print("2. Configura ELEVENLABS_VOICE_ID en el archivo .env")
 
 print("\nPara verificar tu cuota de ElevenLabs:")
-print("👉 https://elevenlabs.io/app/subscription")
+print(" https://elevenlabs.io/app/subscription")
 print("\n" + "=" * 60)

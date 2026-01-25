@@ -206,8 +206,8 @@ print(json.dumps(cache_sugerido, ensure_ascii=False, indent=2))
 with open('cache_sugerido.json', 'w', encoding='utf-8') as f:
     json.dump(cache_sugerido, f, ensure_ascii=False, indent=2)
 
-print("\n✅ Archivo generado: cache_sugerido.json")
-print("\n📊 RESUMEN:")
+print("\n Archivo generado: cache_sugerido.json")
+print("\n RESUMEN:")
 print(f"  - {len(cache_sugerido)} categorías nuevas detectadas")
 print(f"  - Total de {sum(len(v['patrones']) for v in cache_sugerido.values())} patrones únicos")
 print(f"  - Cobertura estimada: ~{len(preguntas_normalizadas)} preguntas del LOG")

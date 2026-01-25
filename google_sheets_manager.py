@@ -48,10 +48,10 @@ class GoogleSheetsManager:
                 scopes=self.scopes
             )
             client = gspread.authorize(creds)
-            print("✅ Autenticado correctamente con Google Sheets")
+            print(" Autenticado correctamente con Google Sheets")
             return client
         except Exception as e:
-            print(f"❌ Error al autenticar: {e}")
+            print(f" Error al autenticar: {e}")
             raise
 
     def _obtener_o_crear_spreadsheet(self):
@@ -59,12 +59,12 @@ class GoogleSheetsManager:
         try:
             # Intentar abrir spreadsheet existente
             spreadsheet = self.client.open(self.spreadsheet_name)
-            print(f"✅ Spreadsheet encontrado: {self.spreadsheet_name}")
+            print(f" Spreadsheet encontrado: {self.spreadsheet_name}")
             return spreadsheet
         except gspread.SpreadsheetNotFound:
             # Crear nuevo spreadsheet
             spreadsheet = self.client.create(self.spreadsheet_name)
-            print(f"✅ Spreadsheet creado: {self.spreadsheet_name}")
+            print(f" Spreadsheet creado: {self.spreadsheet_name}")
             return spreadsheet
 
     def inicializar_hojas(self):
@@ -115,7 +115,7 @@ class GoogleSheetsManager:
             try:
                 # Intentar obtener la hoja
                 hoja = self.spreadsheet.worksheet(nombre_hoja)
-                print(f"✅ Hoja '{nombre_hoja}' ya existe")
+                print(f" Hoja '{nombre_hoja}' ya existe")
             except gspread.WorksheetNotFound:
                 # Crear la hoja
                 hoja = self.spreadsheet.add_worksheet(
@@ -130,7 +130,7 @@ class GoogleSheetsManager:
                     'textFormat': {'bold': True},
                     'backgroundColor': {'red': 0.2, 'green': 0.6, 'blue': 0.9}
                 })
-                print(f"✅ Hoja '{nombre_hoja}' creada con {len(encabezados)} columnas")
+                print(f" Hoja '{nombre_hoja}' creada con {len(encabezados)} columnas")
 
     # ==================== GESTIÓN DE CONTACTOS ====================
 
@@ -152,7 +152,7 @@ class GoogleSheetsManager:
         try:
             cell = hoja.find(telefono, in_column=3)  # Columna de teléfono
             if cell:
-                print(f"⚠️ El teléfono {telefono} ya existe en fila {cell.row}")
+                print(f" El teléfono {telefono} ya existe en fila {cell.row}")
                 return cell.row
         except Exception:
             pass  # Teléfono no encontrado, continuar para agregar
@@ -182,7 +182,7 @@ class GoogleSheetsManager:
         hoja.append_row(nueva_fila)
         fila_id = len(hoja.get_all_values())
 
-        print(f"✅ Contacto agregado: {nombre_negocio} - Fila {fila_id}")
+        print(f" Contacto agregado: {nombre_negocio} - Fila {fila_id}")
         return fila_id
 
     def agregar_contactos_masivo(self, contactos: List[Dict]) -> Dict:
@@ -218,7 +218,7 @@ class GoogleSheetsManager:
                     resultados['filas'].append(fila)
 
             except Exception as e:
-                print(f"❌ Error al agregar contacto: {e}")
+                print(f" Error al agregar contacto: {e}")
                 resultados['errores'] += 1
 
         return resultados
@@ -304,9 +304,9 @@ class GoogleSheetsManager:
             hoja.update_cell(fila, 4, numero_formateado)
             # Actualizar fecha de actualización
             hoja.update_cell(fila, 14, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            print(f"✅ WhatsApp actualizado en fila {fila}: {numero_formateado}")
+            print(f" WhatsApp actualizado en fila {fila}: {numero_formateado}")
         except Exception as e:
-            print(f"❌ Error al actualizar WhatsApp: {e}")
+            print(f" Error al actualizar WhatsApp: {e}")
 
     def registrar_email_capturado(self, fila: int, email: str):
         """
@@ -322,9 +322,9 @@ class GoogleSheetsManager:
             hoja.update_cell(fila, 6, email)
             # Actualizar fecha de actualización
             hoja.update_cell(fila, 14, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            print(f"✅ Email actualizado en fila {fila}: {email}")
+            print(f" Email actualizado en fila {fila}: {email}")
         except Exception as e:
-            print(f"❌ Error al actualizar email: {e}")
+            print(f" Error al actualizar email: {e}")
 
     # ==================== GESTIÓN DE LLAMADAS ====================
 
@@ -391,7 +391,7 @@ class GoogleSheetsManager:
         # Actualizar KPIs
         self.actualizar_kpis_diarios()
 
-        print(f"✅ Llamada registrada: {contacto_nombre} - Estado: {estado}")
+        print(f" Llamada registrada: {contacto_nombre} - Estado: {estado}")
         return llamada_fila
 
     def _agregar_reprogramada(self, llamada_id: int, nombre: str, telefono: str,
@@ -475,7 +475,7 @@ class GoogleSheetsManager:
         # Actualizar KPIs
         self.actualizar_kpis_diarios()
 
-        print(f"✅ Lead creado: {kwargs.get('nombre_negocio', 'N/A')} - Fila {lead_fila}")
+        print(f" Lead creado: {kwargs.get('nombre_negocio', 'N/A')} - Fila {lead_fila}")
         return lead_fila
 
     def obtener_leads_pendientes(self) -> List[Dict]:
@@ -572,7 +572,7 @@ class GoogleSheetsManager:
         # Actualizar dashboard
         self._actualizar_dashboard()
 
-        print(f"✅ KPIs actualizados para {fecha_hoy}")
+        print(f" KPIs actualizados para {fecha_hoy}")
 
     def _actualizar_dashboard(self):
         """Actualiza el dashboard con métricas generales"""
@@ -642,7 +642,7 @@ class GoogleSheetsManager:
 # Ejemplo de uso
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("📊 GOOGLE SHEETS MANAGER - NIOVAL")
+    print(" GOOGLE SHEETS MANAGER - NIOVAL")
     print("=" * 60 + "\n")
 
     # Inicializar manager
@@ -652,8 +652,8 @@ if __name__ == "__main__":
             spreadsheet_name="NIOVAL - Sistema Llamadas Test"
         )
 
-        print("\n✅ Sistema inicializado correctamente")
-        print(f"📋 Spreadsheet: {manager.spreadsheet.url}")
+        print("\n Sistema inicializado correctamente")
+        print(f" Spreadsheet: {manager.spreadsheet.url}")
 
         # Agregar contacto de prueba
         print("\n--- Agregando contacto de prueba ---")
@@ -672,5 +672,5 @@ if __name__ == "__main__":
             print(f"{metrica}: {valor}")
 
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         print("\nAsegúrate de tener el archivo credentials.json configurado")

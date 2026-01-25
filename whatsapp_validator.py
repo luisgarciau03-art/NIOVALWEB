@@ -266,7 +266,7 @@ class WhatsAppValidatorCache:
         if numero in self.cache:
             resultado = self.cache[numero].copy()
             resultado['desde_cache'] = True
-            print(f"✓ Número {numero} encontrado en cache")
+            print(f" Número {numero} encontrado en cache")
             return resultado
 
         # Validar y guardar en cache
@@ -278,7 +278,7 @@ class WhatsAppValidatorCache:
     def limpiar_cache(self):
         """Limpia el cache de validaciones"""
         self.cache.clear()
-        print("✓ Cache limpiado")
+        print(" Cache limpiado")
 
     def obtener_estadisticas(self) -> Dict:
         """Obtiene estadísticas del cache"""
@@ -296,7 +296,7 @@ class WhatsAppValidatorCache:
 # Ejemplo de uso
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("📱 VALIDADOR DE WHATSAPP - NIOVAL")
+    print(" VALIDADOR DE WHATSAPP - NIOVAL")
     print("=" * 60 + "\n")
 
     # Validador básico (por formato)
@@ -338,7 +338,7 @@ if __name__ == "__main__":
         print(f"{key}: {value}")
 
     print("\n" + "=" * 60)
-    print("💡 CONFIGURACIÓN PARA VALIDACIÓN REAL:")
+    print(" CONFIGURACIÓN PARA VALIDACIÓN REAL:")
     print("=" * 60)
     print("""
 Para validación REAL de WhatsApp (verificar si está activo):

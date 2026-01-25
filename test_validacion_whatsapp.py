@@ -13,7 +13,7 @@ if sys.platform == 'win32':
 from whatsapp_validator import WhatsAppValidator
 
 print("\n" + "=" * 60)
-print("🧪 TEST - VALIDACIÓN DE WHATSAPP CON TWILIO")
+print(" TEST - VALIDACIÓN DE WHATSAPP CON TWILIO")
 print("=" * 60 + "\n")
 
 # Números de prueba
@@ -24,17 +24,17 @@ numeros_prueba = [
 
 try:
     # Inicializar validador con método Twilio
-    print("📱 Inicializando validador con Twilio Lookup API...")
+    print(" Inicializando validador con Twilio Lookup API...")
     validator = WhatsAppValidator(method="twilio")
 
     for numero in numeros_prueba:
-        print(f"\n{'─'*60}")
-        print(f"📞 Validando: {numero}")
-        print(f"{'─'*60}")
+        print(f"\n{''*60}")
+        print(f" Validando: {numero}")
+        print(f"{''*60}")
 
         resultado = validator.validar(numero)
 
-        print(f"\n✅ Resultado:")
+        print(f"\n Resultado:")
         print(f"   Número: {resultado.get('numero')}")
         print(f"   Válido: {resultado.get('valido')}")
         print(f"   🟢 Tiene WhatsApp: {resultado.get('tiene_whatsapp')}")
@@ -43,17 +43,17 @@ try:
         print(f"   Formato nacional: {resultado.get('formato_nacional')}")
 
         if 'nota' in resultado:
-            print(f"   ℹ️  {resultado.get('nota')}")
+            print(f"   ℹ  {resultado.get('nota')}")
 
         if 'error' in resultado:
-            print(f"   ❌ Error: {resultado.get('error')}")
+            print(f"    Error: {resultado.get('error')}")
 
     print("\n" + "=" * 60)
-    print("✅ TEST COMPLETADO")
+    print(" TEST COMPLETADO")
     print("=" * 60)
 
 except Exception as e:
-    print(f"\n❌ Error: {e}")
+    print(f"\n Error: {e}")
     import traceback
     traceback.print_exc()
 

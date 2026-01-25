@@ -43,14 +43,14 @@ def enviar_notificacion(mensaje: str):
             response = requests.post(url, data=data, timeout=10)
 
             if response.status_code == 200:
-                print(f"✅ {bot['nombre']}: Notificación enviada exitosamente")
+                print(f" {bot['nombre']}: Notificación enviada exitosamente")
                 resultados.append(True)
             else:
-                print(f"❌ {bot['nombre']}: Error {response.status_code} - {response.text}")
+                print(f" {bot['nombre']}: Error {response.status_code} - {response.text}")
                 resultados.append(False)
 
         except Exception as e:
-            print(f"❌ {bot['nombre']}: Excepción - {e}")
+            print(f" {bot['nombre']}: Excepción - {e}")
             resultados.append(False)
 
     return all(resultados)
@@ -61,18 +61,18 @@ def main():
     if len(sys.argv) > 1:
         mensaje = " ".join(sys.argv[1:])
     else:
-        mensaje = "🚀 <b>Deploy completado</b>\n\n✅ Bruce Agent actualizado en Railway"
+        mensaje = " <b>Deploy completado</b>\n\n Bruce Agent actualizado en Railway"
 
-    print(f"\n📱 Enviando notificación a Telegram...")
+    print(f"\n Enviando notificación a Telegram...")
     print(f"   Mensaje: {mensaje[:100]}...")
 
     exito = enviar_notificacion(mensaje)
 
     if exito:
-        print("\n✅ Todas las notificaciones enviadas correctamente")
+        print("\n Todas las notificaciones enviadas correctamente")
         return 0
     else:
-        print("\n⚠️ Algunas notificaciones fallaron")
+        print("\n Algunas notificaciones fallaron")
         return 1
 
 

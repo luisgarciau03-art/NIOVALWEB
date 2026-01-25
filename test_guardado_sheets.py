@@ -14,12 +14,12 @@ from resultados_sheets_adapter import ResultadosSheetsAdapter
 from datetime import datetime
 
 print("\n" + "=" * 60)
-print("🧪 TEST - GUARDADO EN GOOGLE SHEETS")
+print(" TEST - GUARDADO EN GOOGLE SHEETS")
 print("=" * 60 + "\n")
 
 try:
     # Inicializar adapter
-    print("📊 Conectando a Google Sheets...")
+    print(" Conectando a Google Sheets...")
     adapter = ResultadosSheetsAdapter()
 
     # Datos de prueba
@@ -40,25 +40,25 @@ try:
         'duracion': '3:45'
     }
 
-    print("\n📝 Datos de prueba preparados:")
+    print("\n Datos de prueba preparados:")
     print(f"   Negocio: {datos_prueba['nombre_negocio']}")
     print(f"   Resultado: {datos_prueba['resultado']}")
     print(f"   Interés: {datos_prueba['nivel_interes_clasificado']}")
 
-    print("\n💾 Guardando en Google Sheets...")
+    print("\n Guardando en Google Sheets...")
     exito = adapter.guardar_resultado_llamada(datos_prueba)
 
     if exito:
         print("\n" + "=" * 60)
-        print("✅ ¡GUARDADO EXITOSO!")
+        print(" ¡GUARDADO EXITOSO!")
         print("=" * 60)
-        print("\n📊 Ve a tu Google Sheets:")
+        print("\n Ve a tu Google Sheets:")
         print("   Spreadsheet: Respuestas de formulario 1")
         print("   Última fila: Debería aparecer 'TEST - Ferretería Prueba'")
-        print("\n✅ El sistema de guardado funciona correctamente")
+        print("\n El sistema de guardado funciona correctamente")
     else:
         print("\n" + "=" * 60)
-        print("❌ ERROR AL GUARDAR")
+        print(" ERROR AL GUARDAR")
         print("=" * 60)
         print("\nRevisar:")
         print("  1. Credenciales de Google Sheets")
@@ -66,7 +66,7 @@ try:
         print("  3. Conexión a internet")
 
 except Exception as e:
-    print(f"\n❌ Error: {e}")
+    print(f"\n Error: {e}")
     import traceback
     traceback.print_exc()
 

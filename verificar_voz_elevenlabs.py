@@ -22,7 +22,7 @@ print("VERIFICAR VOZ DE ELEVENLABS")
 print("=" * 70 + "\n")
 
 if not ELEVENLABS_API_KEY or not ELEVENLABS_VOICE_ID:
-    print("❌ ERROR: Faltan credenciales de ElevenLabs en .env")
+    print(" ERROR: Faltan credenciales de ElevenLabs en .env")
     sys.exit(1)
 
 print(f"Voice ID configurado: {ELEVENLABS_VOICE_ID}")
@@ -97,7 +97,7 @@ try:
 
 except Exception as e:
     import traceback
-    print(f"\n❌ ERROR: {e}")
+    print(f"\n ERROR: {e}")
     print(f"\nTraceback:")
     print(traceback.format_exc())
     print("\nPosibles causas:")

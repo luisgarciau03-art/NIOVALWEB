@@ -26,7 +26,7 @@ class SistemaAutomatizado:
     def __init__(self):
         """Inicializa el sistema completo"""
         print("\n" + "=" * 60)
-        print("🚀 INICIANDO SISTEMA AUTOMATIZADO - NIOVAL")
+        print(" INICIANDO SISTEMA AUTOMATIZADO - NIOVAL")
         print("=" * 60 + "\n")
 
         # Inicializar componentes
@@ -40,8 +40,8 @@ class SistemaAutomatizado:
         self.horario_inicio = os.getenv("HORARIO_INICIO", "09:00")
         self.horario_fin = os.getenv("HORARIO_FIN", "17:00")
 
-        print(f"✅ Sistema inicializado")
-        print(f"📊 Configuración:")
+        print(f" Sistema inicializado")
+        print(f" Configuración:")
         print(f"   - Llamadas por día: {self.llamadas_por_dia}")
         print(f"   - Delay entre llamadas: {self.delay_entre_llamadas}s")
         print(f"   - Horario: {self.horario_inicio} - {self.horario_fin}")
@@ -57,12 +57,12 @@ class SistemaAutomatizado:
                 spreadsheet_name=spreadsheet_name
             )
 
-            print(f"✅ Google Sheets conectado")
+            print(f" Google Sheets conectado")
             print(f"   URL: {manager.spreadsheet.url}")
             return manager
 
         except Exception as e:
-            print(f"⚠️ Error al inicializar Google Sheets: {e}")
+            print(f" Error al inicializar Google Sheets: {e}")
             print("   El sistema funcionará sin Google Sheets (solo respaldo Excel)")
             return None
 
@@ -73,11 +73,11 @@ class SistemaAutomatizado:
             validator = WhatsAppValidator(method=method)
             validator_cache = WhatsAppValidatorCache(validator)
 
-            print(f"✅ Validador de WhatsApp: {method}")
+            print(f" Validador de WhatsApp: {method}")
             return validator_cache
 
         except Exception as e:
-            print(f"⚠️ Error al inicializar validador: {e}")
+            print(f" Error al inicializar validador: {e}")
             return None
 
     def _inicializar_twilio(self) -> Optional[Client]:
@@ -87,15 +87,15 @@ class SistemaAutomatizado:
             auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 
             if not account_sid or not auth_token:
-                print("⚠️ Credenciales de Twilio no configuradas")
+                print(" Credenciales de Twilio no configuradas")
                 return None
 
             client = Client(account_sid, auth_token)
-            print("✅ Twilio conectado")
+            print(" Twilio conectado")
             return client
 
         except Exception as e:
-            print(f"⚠️ Error al inicializar Twilio: {e}")
+            print(f" Error al inicializar Twilio: {e}")
             return None
 
     # ==================== GESTIÓN DE LLAMADAS ====================
@@ -103,21 +103,21 @@ class SistemaAutomatizado:
     def ejecutar_llamadas_diarias(self):
         """Ejecuta el proceso de llamadas del día"""
         print("\n" + "=" * 60)
-        print(f"📞 INICIANDO LLAMADAS DEL DÍA - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        print(f" INICIANDO LLAMADAS DEL DÍA - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         print("=" * 60 + "\n")
 
         # Obtener contactos pendientes
         contactos = self._obtener_contactos_para_llamar()
 
         if not contactos:
-            print("ℹ️ No hay contactos pendientes para llamar")
+            print("ℹ No hay contactos pendientes para llamar")
             return
 
-        print(f"📋 Contactos a llamar: {len(contactos)}")
+        print(f" Contactos a llamar: {len(contactos)}")
 
         # Verificar si estamos en horario laboral
         if not self._en_horario_laboral():
-            print(f"⚠️ Fuera de horario laboral ({self.horario_inicio}-{self.horario_fin})")
+            print(f" Fuera de horario laboral ({self.horario_inicio}-{self.horario_fin})")
             return
 
         # Ejecutar llamadas con delay
@@ -142,20 +142,20 @@ class SistemaAutomatizado:
 
                 # Delay entre llamadas
                 if idx < len(contactos):
-                    print(f"⏳ Esperando {self.delay_entre_llamadas}s antes de la siguiente llamada...")
+                    print(f" Esperando {self.delay_entre_llamadas}s antes de la siguiente llamada...")
                     time.sleep(self.delay_entre_llamadas)
 
             except Exception as e:
-                print(f"❌ Error en llamada: {e}")
+                print(f" Error en llamada: {e}")
                 resultados['fallidas'] += 1
 
         # Mostrar resumen
         print("\n" + "=" * 60)
-        print("📊 RESUMEN DEL DÍA")
+        print(" RESUMEN DEL DÍA")
         print("=" * 60)
-        print(f"✅ Exitosas: {resultados['exitosas']}")
-        print(f"📅 Reprogramadas: {resultados['reprogramadas']}")
-        print(f"❌ Fallidas: {resultados['fallidas']}")
+        print(f" Exitosas: {resultados['exitosas']}")
+        print(f" Reprogramadas: {resultados['reprogramadas']}")
+        print(f" Fallidas: {resultados['fallidas']}")
         print("=" * 60 + "\n")
 
         # Actualizar KPIs
@@ -201,7 +201,7 @@ class SistemaAutomatizado:
         nombre = contacto.get('Nombre Negocio', 'Cliente')
         telefono = contacto.get('Teléfono')
 
-        print(f"📞 Llamando a {nombre} ({telefono})...")
+        print(f" Llamando a {nombre} ({telefono})...")
 
         # Crear agente para este contacto
         agente = AgenteVentas(
@@ -221,7 +221,7 @@ class SistemaAutomatizado:
             return resultado
 
         except Exception as e:
-            print(f"❌ Error al llamar: {e}")
+            print(f" Error al llamar: {e}")
             return {
                 'exito': False,
                 'error': str(e)
@@ -245,7 +245,7 @@ class SistemaAutomatizado:
 
             agente.call_sid = call.sid
 
-            print(f"✅ Llamada iniciada - SID: {call.sid}")
+            print(f" Llamada iniciada - SID: {call.sid}")
 
             # Esperar resultado (en producción esto sería asíncrono)
             time.sleep(5)  # Simular espera de conexión
@@ -273,7 +273,7 @@ class SistemaAutomatizado:
             return resultado
 
         except Exception as e:
-            print(f"❌ Error en llamada Twilio: {e}")
+            print(f" Error en llamada Twilio: {e}")
             return {
                 'exito': False,
                 'error': str(e)
@@ -281,7 +281,7 @@ class SistemaAutomatizado:
 
     def _llamada_simulada(self, agente: AgenteVentas) -> Dict:
         """Simulación de llamada para testing"""
-        print("🧪 MODO SIMULACIÓN (sin Twilio)")
+        print(" MODO SIMULACIÓN (sin Twilio)")
 
         # Simular conversación básica
         mensaje_inicial = agente.iniciar_conversacion()
@@ -341,7 +341,7 @@ class SistemaAutomatizado:
             hora: Hora preferida (HH:MM)
             motivo: Motivo de la reprogramación
         """
-        print(f"📅 Reprogramando llamada para {contacto.get('Nombre Negocio')}")
+        print(f" Reprogramando llamada para {contacto.get('Nombre Negocio')}")
         print(f"   Fecha: {fecha} {hora}")
         print(f"   Motivo: {motivo}")
 
@@ -355,7 +355,7 @@ class SistemaAutomatizado:
     def programar_llamadas_automaticas(self):
         """Programa las llamadas automáticas diarias"""
         print("\n" + "=" * 60)
-        print("⏰ CONFIGURANDO LLAMADAS AUTOMÁTICAS")
+        print(" CONFIGURANDO LLAMADAS AUTOMÁTICAS")
         print("=" * 60 + "\n")
 
         # Programar llamadas diarias a la hora configurada
@@ -367,26 +367,26 @@ class SistemaAutomatizado:
         # Programar revisión de reprogramadas cada 4 horas
         schedule.every(4).hours.do(self._revisar_reprogramadas)
 
-        print(f"✅ Llamadas programadas para las {self.horario_inicio}")
-        print(f"✅ KPIs se actualizarán cada hora")
-        print(f"✅ Revisión de reprogramadas cada 4 horas")
+        print(f" Llamadas programadas para las {self.horario_inicio}")
+        print(f" KPIs se actualizarán cada hora")
+        print(f" Revisión de reprogramadas cada 4 horas")
 
     def _actualizar_kpis(self):
         """Actualiza KPIs periódicamente"""
         if self.sheets_manager:
             self.sheets_manager.actualizar_kpis_diarios()
-            print("✅ KPIs actualizados")
+            print(" KPIs actualizados")
 
     def _revisar_reprogramadas(self):
         """Revisa y procesa llamadas reprogramadas"""
         if self.sheets_manager:
             reprogramadas = self.sheets_manager.obtener_llamadas_reprogramadas_hoy()
-            print(f"📅 Reprogramadas para hoy: {len(reprogramadas)}")
+            print(f" Reprogramadas para hoy: {len(reprogramadas)}")
 
     def iniciar_modo_continuo(self):
         """Inicia el sistema en modo continuo (24/7)"""
         print("\n" + "=" * 60)
-        print("🔄 MODO CONTINUO ACTIVADO")
+        print(" MODO CONTINUO ACTIVADO")
         print("=" * 60 + "\n")
         print("El sistema correrá indefinidamente...")
         print("Presiona Ctrl+C para detener\n")
@@ -396,34 +396,34 @@ class SistemaAutomatizado:
                 schedule.run_pending()
                 time.sleep(60)  # Revisar cada minuto
         except KeyboardInterrupt:
-            print("\n\n🛑 Sistema detenido por el usuario")
+            print("\n\n Sistema detenido por el usuario")
 
     # ==================== REPORTES ====================
 
     def generar_reporte_diario(self):
         """Genera reporte del día"""
         if not self.sheets_manager:
-            print("⚠️ No hay conexión a Google Sheets para generar reporte")
+            print(" No hay conexión a Google Sheets para generar reporte")
             return
 
         print("\n" + "=" * 60)
-        print(f"📊 REPORTE DEL DÍA - {datetime.now().strftime('%Y-%m-%d')}")
+        print(f" REPORTE DEL DÍA - {datetime.now().strftime('%Y-%m-%d')}")
         print("=" * 60 + "\n")
 
         kpis = self.sheets_manager.obtener_kpis_ultimos_dias(dias=1)
 
         if kpis:
             kpi_hoy = kpis[0]
-            print(f"📞 Llamadas realizadas: {kpi_hoy.get('Llamadas Realizadas', 0)}")
-            print(f"✅ Contestadas: {kpi_hoy.get('Llamadas Contestadas', 0)}")
-            print(f"❌ No contestadas: {kpi_hoy.get('Llamadas No Contestadas', 0)}")
-            print(f"📱 WhatsApps capturados: {kpi_hoy.get('WhatsApps Capturados', 0)}")
-            print(f"📧 Emails capturados: {kpi_hoy.get('Emails Capturados', 0)}")
-            print(f"🎯 Leads generados: {kpi_hoy.get('Leads Generados', 0)}")
-            print(f"📈 Tasa de contacto: {kpi_hoy.get('Tasa Contacto (%)', 0)}%")
-            print(f"💰 Tasa de conversión: {kpi_hoy.get('Tasa Conversión (%)', 0)}%")
+            print(f" Llamadas realizadas: {kpi_hoy.get('Llamadas Realizadas', 0)}")
+            print(f" Contestadas: {kpi_hoy.get('Llamadas Contestadas', 0)}")
+            print(f" No contestadas: {kpi_hoy.get('Llamadas No Contestadas', 0)}")
+            print(f" WhatsApps capturados: {kpi_hoy.get('WhatsApps Capturados', 0)}")
+            print(f" Emails capturados: {kpi_hoy.get('Emails Capturados', 0)}")
+            print(f" Leads generados: {kpi_hoy.get('Leads Generados', 0)}")
+            print(f" Tasa de contacto: {kpi_hoy.get('Tasa Contacto (%)', 0)}%")
+            print(f" Tasa de conversión: {kpi_hoy.get('Tasa Conversión (%)', 0)}%")
         else:
-            print("ℹ️ No hay datos para hoy aún")
+            print("ℹ No hay datos para hoy aún")
 
         print("\n" + "=" * 60)
 
@@ -432,17 +432,17 @@ class SistemaAutomatizado:
 def main():
     """Función principal del sistema"""
     print("""
-    ╔═══════════════════════════════════════════════════════╗
-    ║  SISTEMA AUTOMATIZADO DE LLAMADAS - NIOVAL           ║
-    ║  Bruce W - Agente de Ventas Inteligente              ║
-    ╚═══════════════════════════════════════════════════════╝
+    
+      SISTEMA AUTOMATIZADO DE LLAMADAS - NIOVAL           
+      Bruce W - Agente de Ventas Inteligente              
+    
     """)
 
     # Inicializar sistema
     sistema = SistemaAutomatizado()
 
     # Menú de opciones
-    print("\n📋 OPCIONES DISPONIBLES:")
+    print("\n OPCIONES DISPONIBLES:")
     print("1. Ejecutar llamadas ahora (manual)")
     print("2. Programar llamadas automáticas (modo continuo)")
     print("3. Generar reporte del día")
@@ -465,19 +465,19 @@ def main():
     elif opcion == "4":
         if sistema.sheets_manager:
             resumen = sistema.sheets_manager.obtener_resumen_general()
-            print("\n📊 RESUMEN GENERAL:")
+            print("\n RESUMEN GENERAL:")
             print(json.dumps(resumen, indent=2, ensure_ascii=False))
 
     elif opcion == "5":
-        print("\n🧪 Ejecutando llamada de prueba...")
+        print("\n Ejecutando llamada de prueba...")
         contactos = sistema._obtener_contactos_para_llamar()
         if contactos:
             sistema.realizar_llamada(contactos[0])
         else:
-            print("⚠️ No hay contactos disponibles")
+            print(" No hay contactos disponibles")
 
     else:
-        print("👋 Hasta pronto!")
+        print(" Hasta pronto!")
 
 
 if __name__ == "__main__":

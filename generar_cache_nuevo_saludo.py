@@ -32,7 +32,7 @@ frases_a_generar = [
     }
 ]
 
-print(f"📋 Frases a generar: {len(frases_a_generar)}\n")
+print(f" Frases a generar: {len(frases_a_generar)}\n")
 for i, frase in enumerate(frases_a_generar, 1):
     print(f"   {i}. {frase['key']}")
     print(f"      → {frase['texto'][:70]}...")
@@ -47,27 +47,27 @@ try:
 
     if response.status_code == 200:
         result = response.json()
-        print("✅ Cache generado exitosamente\n")
-        print(f"📊 Resultados:")
+        print(" Cache generado exitosamente\n")
+        print(f" Resultados:")
         print(f"   • Audios generados: {result.get('generated', 0)}")
         print(f"   • Total solicitados: {result.get('total_requested', 0)}")
         print(f"   • Errores: {len(result.get('errors', []) or [])}")
 
         if result.get('errors'):
-            print(f"\n❌ Errores:")
+            print(f"\n Errores:")
             for error in result['errors']:
                 print(f"   • {error}")
     else:
-        print(f"❌ Error: {response.status_code}")
+        print(f" Error: {response.status_code}")
         print(f"   Respuesta: {response.text}")
 
 except requests.exceptions.Timeout:
-    print("⏱️ Timeout - el servidor está procesando la solicitud")
+    print(" Timeout - el servidor está procesando la solicitud")
     print("   Los audios se están generando en segundo plano")
     print("   Espera 1-2 minutos y verifica en Railway")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f" Error: {e}")
     import traceback
     traceback.print_exc()
 

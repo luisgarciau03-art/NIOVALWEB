@@ -49,9 +49,9 @@ class MonitorCreditosElevenLabs:
         if self.api_key:
             try:
                 self.client = ElevenLabs(api_key=self.api_key)
-                print("✅ Monitor de créditos ElevenLabs inicializado")
+                print(" Monitor de créditos ElevenLabs inicializado")
             except Exception as e:
-                print(f"⚠️ Error inicializando monitor de créditos: {e}")
+                print(f" Error inicializando monitor de créditos: {e}")
 
     def verificar_creditos_ahora(self):
         """
@@ -75,28 +75,28 @@ class MonitorCreditosElevenLabs:
                 if self.caracteres_restantes < self.CRITICO:
                     if not self.alertas_enviadas["critico"]:
                         print("\n" + "="*60)
-                        print("🚨🚨🚨 ALERTA CRÍTICA - CRÉDITOS ELEVENLABS 🚨🚨🚨")
+                        print(" ALERTA CRÍTICA - CRÉDITOS ELEVENLABS ")
                         print("="*60)
-                        print(f"⚠️  Caracteres restantes: {self.caracteres_restantes:,}")
-                        print(f"⚠️  Llamadas restantes: ~{llamadas_restantes}")
-                        print(f"⚠️  ACCIÓN REQUERIDA: RECARGAR INMEDIATAMENTE")
+                        print(f"  Caracteres restantes: {self.caracteres_restantes:,}")
+                        print(f"  Llamadas restantes: ~{llamadas_restantes}")
+                        print(f"  ACCIÓN REQUERIDA: RECARGAR INMEDIATAMENTE")
                         print("="*60 + "\n")
                         self.alertas_enviadas["critico"] = True
 
                 elif self.caracteres_restantes < self.BAJO:
                     if not self.alertas_enviadas["bajo"]:
                         print("\n" + "="*60)
-                        print("⚠️  ALERTA - CRÉDITOS BAJOS ELEVENLABS")
+                        print("  ALERTA - CRÉDITOS BAJOS ELEVENLABS")
                         print("="*60)
-                        print(f"📊 Caracteres restantes: {self.caracteres_restantes:,}")
-                        print(f"📞 Llamadas restantes: ~{llamadas_restantes}")
-                        print(f"📢 ACCIÓN SUGERIDA: Considerar recarga pronto")
+                        print(f" Caracteres restantes: {self.caracteres_restantes:,}")
+                        print(f" Llamadas restantes: ~{llamadas_restantes}")
+                        print(f" ACCIÓN SUGERIDA: Considerar recarga pronto")
                         print("="*60 + "\n")
                         self.alertas_enviadas["bajo"] = True
 
                 elif self.caracteres_restantes < self.MEDIO:
                     if not self.alertas_enviadas["medio"]:
-                        print(f"📊 Créditos ElevenLabs: {self.caracteres_restantes:,} caracteres (~{llamadas_restantes} llamadas)")
+                        print(f" Créditos ElevenLabs: {self.caracteres_restantes:,} caracteres (~{llamadas_restantes} llamadas)")
                         self.alertas_enviadas["medio"] = True
 
                 # Reset alertas si los créditos suben (recarga)
@@ -116,7 +116,7 @@ class MonitorCreditosElevenLabs:
                 }
 
         except Exception as e:
-            print(f"⚠️ Error verificando créditos: {e}")
+            print(f" Error verificando créditos: {e}")
             return None
 
     def _calcular_estado(self):
@@ -160,14 +160,14 @@ class MonitorCreditosElevenLabs:
         Inicia un thread que verifica créditos periódicamente
         """
         def monitor_loop():
-            print(f"🔄 Monitor de créditos iniciado (cada {self.INTERVALO_CHECK}s)")
+            print(f" Monitor de créditos iniciado (cada {self.INTERVALO_CHECK}s)")
 
             while True:
                 try:
                     self.verificar_creditos_ahora()
                     time.sleep(self.INTERVALO_CHECK)
                 except Exception as e:
-                    print(f"⚠️ Error en monitor loop: {e}")
+                    print(f" Error en monitor loop: {e}")
                     time.sleep(60)  # Reintentar en 1 minuto si hay error
 
         # Verificar créditos inmediatamente al iniciar
@@ -182,25 +182,25 @@ class MonitorCreditosElevenLabs:
         Genera un reporte del estado actual
         """
         if not self.caracteres_restantes:
-            return "⚠️ No hay datos de créditos disponibles"
+            return " No hay datos de créditos disponibles"
 
         llamadas_restantes = self.caracteres_restantes // 300
         estado = self._calcular_estado()
 
         emoji_estado = {
-            "OPTIMO": "✅",
-            "MEDIO": "📊",
-            "BAJO": "⚠️",
-            "CRITICO": "🚨"
-        }.get(estado, "❓")
+            "OPTIMO": "",
+            "MEDIO": "",
+            "BAJO": "",
+            "CRITICO": ""
+        }.get(estado, "")
 
         reporte = f"""
 {emoji_estado} ESTADO ELEVENLABS: {estado}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 Caracteres restantes: {self.caracteres_restantes:,} / {self.caracteres_limite:,}
-📞 Llamadas restantes: ~{llamadas_restantes}
-🕐 Último check: {self.ultimo_check.strftime('%Y-%m-%d %H:%M:%S') if self.ultimo_check else 'N/A'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ Caracteres restantes: {self.caracteres_restantes:,} / {self.caracteres_limite:,}
+ Llamadas restantes: ~{llamadas_restantes}
+ Último check: {self.ultimo_check.strftime('%Y-%m-%d %H:%M:%S') if self.ultimo_check else 'N/A'}
+
 """
         return reporte.strip()
 
@@ -231,7 +231,7 @@ def iniciar_monitoreo():
 # Script standalone para testing
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("🚀 FIX 200: MONITOR DE CRÉDITOS ELEVENLABS")
+    print(" FIX 200: MONITOR DE CRÉDITOS ELEVENLABS")
     print("="*60 + "\n")
 
     monitor = MonitorCreditosElevenLabs()
@@ -243,13 +243,13 @@ if __name__ == "__main__":
         print("\n" + monitor.obtener_reporte())
 
         # Test de verificación
-        print("\n🧪 TESTS DE VERIFICACIÓN:")
-        print(f"  ✓ ¿Créditos suficientes para llamada de 50 palabras? {monitor.tiene_creditos_suficientes(50)}")
-        print(f"  ✓ ¿Créditos suficientes para llamada de 200 palabras? {monitor.tiene_creditos_suficientes(200)}")
+        print("\n TESTS DE VERIFICACIÓN:")
+        print(f"   ¿Créditos suficientes para llamada de 50 palabras? {monitor.tiene_creditos_suficientes(50)}")
+        print(f"   ¿Créditos suficientes para llamada de 200 palabras? {monitor.tiene_creditos_suficientes(200)}")
 
-        print("\n✅ Monitor funcionando correctamente")
+        print("\n Monitor funcionando correctamente")
         print("   Para integrar con el servidor, importar: from monitor_creditos_elevenlabs import iniciar_monitoreo")
 
     else:
-        print("\n❌ No se pudo verificar créditos")
+        print("\n No se pudo verificar créditos")
         print("   Verificar API key y conexión")

@@ -268,7 +268,7 @@ class DetectorIVR:
 # === PRUEBAS Y EJEMPLOS ===
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("🧪 FIX 202: PRUEBAS DE DETECCIÓN DE IVR")
+    print(" FIX 202: PRUEBAS DE DETECCIÓN DE IVR")
     print("="*70 + "\n")
 
     detector = DetectorIVR()
@@ -327,9 +327,9 @@ if __name__ == "__main__":
 
     # Ejecutar tests
     for i, test in enumerate(test_cases, 1):
-        print(f"\n{'─'*70}")
-        print(f"📋 {test['nombre']}")
-        print(f"{'─'*70}")
+        print(f"\n{''*70}")
+        print(f" {test['nombre']}")
+        print(f"{''*70}")
         print(f"Texto: \"{test['texto']}\"")
         print(f"Primera respuesta: {test['es_primera']}")
         print(f"Acción esperada: {test['esperado']}")
@@ -340,11 +340,11 @@ if __name__ == "__main__":
 
         # Mostrar resultado
         if resultado["es_ivr"]:
-            emoji = "🚨"
+            emoji = ""
         elif resultado["confianza"] >= 0.3:
-            emoji = "⚠️"
+            emoji = ""
         else:
-            emoji = "✅"
+            emoji = ""
 
         print(f"{emoji} RESULTADO:")
         print(f"   IVR detectado: {resultado['es_ivr']}")
@@ -362,14 +362,14 @@ if __name__ == "__main__":
 
         # Verificar si cumple expectativa
         if resultado["accion"] == test["esperado"] or test["esperado"] in resultado["accion"]:
-            print(f"\n   ✅ CORRECTO: Acción coincide con esperado")
+            print(f"\n    CORRECTO: Acción coincide con esperado")
         else:
-            print(f"\n   ⚠️  REVISAR: Se esperaba '{test['esperado']}', se obtuvo '{resultado['accion']}'")
+            print(f"\n     REVISAR: Se esperaba '{test['esperado']}', se obtuvo '{resultado['accion']}'")
 
         # Reset detector para siguiente test
         detector.reset()
 
     # Estadísticas finales
     print("\n" + "="*70)
-    print("✅ PRUEBAS COMPLETADAS")
+    print(" PRUEBAS COMPLETADAS")
     print("="*70 + "\n")

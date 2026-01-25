@@ -25,16 +25,16 @@ def descargar_audios():
     """Descarga todos los audios del cache de Railway"""
 
     print("\n" + "=" * 60)
-    print("📥 DESCARGANDO AUDIOS DE RAILWAY")
+    print(" DESCARGANDO AUDIOS DE RAILWAY")
     print("=" * 60 + "\n")
 
     # Crear directorio si no existe
     if not os.path.exists(LOCAL_CACHE_DIR):
         os.makedirs(LOCAL_CACHE_DIR)
-        print(f"📁 Directorio creado: {os.path.abspath(LOCAL_CACHE_DIR)}\n")
+        print(f" Directorio creado: {os.path.abspath(LOCAL_CACHE_DIR)}\n")
 
     # 1. Listar audios disponibles
-    print(f"🔍 Consultando audios disponibles en Railway...")
+    print(f" Consultando audios disponibles en Railway...")
     try:
         response = requests.get(f"{WEBHOOK_URL}/listar-audios", timeout=10)
         response.raise_for_status()
@@ -43,14 +43,14 @@ def descargar_audios():
         total = data.get('total', 0)
         archivos = data.get('archivos', [])
 
-        print(f"✅ Encontrados {total} audios en Railway\n")
+        print(f" Encontrados {total} audios en Railway\n")
 
         if total == 0:
-            print("⚠️  No hay audios para descargar")
+            print("  No hay audios para descargar")
             return
 
     except Exception as e:
-        print(f"❌ Error al listar audios: {e}")
+        print(f" Error al listar audios: {e}")
         return
 
     # 2. Descargar cada audio
@@ -61,7 +61,7 @@ def descargar_audios():
         nombre = archivo['nombre']
         tamano_kb = archivo['tamaño_kb']
 
-        print(f"📥 [{i}/{total}] Descargando: {nombre} ({tamano_kb} KB)")
+        print(f" [{i}/{total}] Descargando: {nombre} ({tamano_kb} KB)")
 
         try:
             # Descargar archivo
@@ -74,27 +74,27 @@ def descargar_audios():
             with open(filepath, 'wb') as f:
                 f.write(response.content)
 
-            print(f"   ✅ Guardado en: {filepath}")
+            print(f"    Guardado en: {filepath}")
             descargados += 1
 
         except Exception as e:
-            print(f"   ❌ Error: {e}")
+            print(f"    Error: {e}")
             errores += 1
 
         print()
 
     # 3. Resumen
     print("=" * 60)
-    print("📊 RESUMEN DE DESCARGA")
+    print(" RESUMEN DE DESCARGA")
     print("=" * 60)
     print(f"Total disponibles: {total}")
-    print(f"✅ Descargados: {descargados}")
-    print(f"❌ Errores: {errores}")
-    print(f"📁 Ubicación: {os.path.abspath(LOCAL_CACHE_DIR)}")
+    print(f" Descargados: {descargados}")
+    print(f" Errores: {errores}")
+    print(f" Ubicación: {os.path.abspath(LOCAL_CACHE_DIR)}")
     print("=" * 60 + "\n")
 
     if descargados > 0:
-        print("✅ Descarga completada. Puedes escuchar los audios en:")
+        print(" Descarga completada. Puedes escuchar los audios en:")
         print(f"   {os.path.abspath(LOCAL_CACHE_DIR)}\n")
 
 
@@ -102,8 +102,8 @@ if __name__ == "__main__":
     try:
         descargar_audios()
     except KeyboardInterrupt:
-        print("\n\n⚠️  Descarga cancelada por el usuario")
+        print("\n\n  Descarga cancelada por el usuario")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
         traceback.print_exc()

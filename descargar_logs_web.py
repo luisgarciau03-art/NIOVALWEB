@@ -12,12 +12,12 @@ def descargar_logs_manual():
     Guía para descargar logs manualmente desde Railway web
     """
     print("\n" + "="*70)
-    print("📥 DESCARGA MANUAL DE LOGS - RAILWAY WEB")
+    print(" DESCARGA MANUAL DE LOGS - RAILWAY WEB")
     print("="*70 + "\n")
 
     print("Como no tienes Railway CLI instalado, sigue estos pasos:\n")
 
-    print("📋 PASOS PARA DESCARGAR LOGS:\n")
+    print(" PASOS PARA DESCARGAR LOGS:\n")
 
     print("1. Abre tu navegador y ve a:")
     print("   https://railway.app/dashboard\n")
@@ -47,7 +47,7 @@ def descargar_logs_manual():
     print(f"   python analizar_logs_railway.py \"{archivo_sugerido}\"\n")
 
     print("="*70)
-    print("💡 ALTERNATIVA: Instalar Railway CLI (Recomendado)")
+    print(" ALTERNATIVA: Instalar Railway CLI (Recomendado)")
     print("="*70 + "\n")
 
     print("Si quieres automatizar esto en el futuro:\n")
@@ -75,16 +75,16 @@ def descargar_logs_manual():
     respuesta = input("Ingresa la ruta del archivo (o presiona Enter para salir): ").strip()
 
     if respuesta and os.path.exists(respuesta):
-        print(f"\n✅ Archivo encontrado: {respuesta}")
+        print(f"\n Archivo encontrado: {respuesta}")
         print(f"Analizando...\n")
 
         # Ejecutar análisis
         os.system(f'python analizar_logs_railway.py "{respuesta}"')
     elif respuesta:
-        print(f"\n❌ Archivo no encontrado: {respuesta}")
+        print(f"\n Archivo no encontrado: {respuesta}")
         print("Verifica la ruta y vuelve a intentar\n")
     else:
-        print("\n👋 Saliendo...\n")
+        print("\n Saliendo...\n")
 
 def crear_script_descarga_rapida():
     """
@@ -147,12 +147,12 @@ pause
     with open(bat_file, 'w', encoding='utf-8') as f:
         f.write(bat_content)
 
-    print(f"✅ Creado script de ayuda: {bat_file}")
+    print(f" Creado script de ayuda: {bat_file}")
     print(f"   Doble clic en ese archivo para guía paso a paso\n")
 
 def main():
     print("\n" + "="*70)
-    print("🌐 DESCARGADOR DE LOGS - RAILWAY WEB")
+    print(" DESCARGADOR DE LOGS - RAILWAY WEB")
     print("   (Sin necesidad de Railway CLI)")
     print("="*70)
 

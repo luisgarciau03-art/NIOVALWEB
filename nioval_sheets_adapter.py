@@ -31,7 +31,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
         )
         # Alias para compatibilidad con código existente
         self.hoja_contactos = self.hoja
-        print(f"✅ Conectado a: {self.hoja_nombre}")
+        print(f" Conectado a: {self.hoja_nombre}")
 
     def normalizar_numero(self, numero: str) -> Optional[str]:
         """
@@ -68,7 +68,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             return f"+52{numero_limpio[1:]}"
 
         else:
-            print(f"⚠️ Número inválido (no tiene 10 dígitos): {numero} → {numero_limpio}")
+            print(f" Número inválido (no tiene 10 dígitos): {numero} → {numero_limpio}")
             return None
 
     def verificar_contacto_ya_llamado(self, fila: int) -> bool:
@@ -104,14 +104,14 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             numero_cambio = self.verificar_cambio_numero(fila)
 
             if numero_cambio:
-                print(f"🔄 Fila {fila}: Número cambió desde última llamada - permitir re-contacto")
+                print(f" Fila {fila}: Número cambió desde última llamada - permitir re-contacto")
                 return False  # Permitir llamar aunque tenga historial
 
             # 3. Tiene historial y número NO cambió = ya fue llamado
             return True
 
         except Exception as e:
-            print(f"⚠️ Error verificando si contacto fue llamado: {e}")
+            print(f" Error verificando si contacto fue llamado: {e}")
             return False  # En caso de error, asumir que no fue llamado
 
     def verificar_cambio_numero(self, fila: int) -> bool:
@@ -147,14 +147,14 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
                 numero_previo = registro_u.split("|")[0].replace("NUM:", "").strip()
 
                 if numero_previo != numero_actual_normalizado:
-                    print(f"   📞 Número anterior: {numero_previo}")
-                    print(f"   📞 Número actual: {numero_actual_normalizado}")
+                    print(f"    Número anterior: {numero_previo}")
+                    print(f"    Número actual: {numero_actual_normalizado}")
                     return True
 
             return False
 
         except Exception as e:
-            print(f"⚠️ Error verificando cambio de número: {e}")
+            print(f" Error verificando cambio de número: {e}")
             return False
 
     def marcar_primera_llamada(self, fila: int, numero_llamado: str = None):
@@ -181,10 +181,10 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
 
             # Guardar en columna U (índice 21)
             self.hoja_contactos.update_cell(fila, 21, marca)
-            print(f"✅ Primera llamada marcada en fila {fila} (columna U) - Número: {numero_llamado}")
+            print(f" Primera llamada marcada en fila {fila} (columna U) - Número: {numero_llamado}")
 
         except Exception as e:
-            print(f"❌ Error al marcar primera llamada: {e}")
+            print(f" Error al marcar primera llamada: {e}")
 
     def obtener_contactos_pendientes(self, limite: int = 100) -> List[Dict]:
         """
@@ -200,14 +200,14 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
         Returns:
             Lista de diccionarios con datos de contactos
         """
-        print(f"\n📋 Obteniendo contactos pendientes...")
+        print(f"\n Obteniendo contactos pendientes...")
 
         try:
             # Obtener todos los valores de la hoja
             datos = self.hoja_contactos.get_all_values()
 
             if not datos:
-                print("⚠️ La hoja está vacía")
+                print(" La hoja está vacía")
                 return []
 
             # La primera fila son encabezados (asumiendo)
@@ -278,18 +278,18 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
                         if len(contactos_pendientes) >= limite:
                             break
 
-            print(f"✅ Encontrados {len(contactos_pendientes)} contactos pendientes")
+            print(f" Encontrados {len(contactos_pendientes)} contactos pendientes")
 
             # Mostrar primeros 3 como muestra
             if contactos_pendientes:
-                print("\n📝 Primeros 3 contactos:")
+                print("\n Primeros 3 contactos:")
                 for c in contactos_pendientes[:3]:
                     print(f"   Fila {c['fila']}: {c['nombre_negocio']} - {c['telefono']}")
 
             return contactos_pendientes
 
         except Exception as e:
-            print(f"❌ Error al obtener contactos: {e}")
+            print(f" Error al obtener contactos: {e}")
             return []
 
     # NOTA: La columna F NO se debe llenar desde este sistema
@@ -323,9 +323,9 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
 
             # Reemplazar en columna E (índice 5)
             self.hoja_contactos.update_cell(fila, 5, numero_formateado)
-            print(f"✅ Número actualizado en fila {fila} (columna E): {numero_formateado}")
+            print(f" Número actualizado en fila {fila} (columna E): {numero_formateado}")
         except Exception as e:
-            print(f"❌ Error al actualizar número: {e}")
+            print(f" Error al actualizar número: {e}")
 
     def registrar_email_capturado(self, fila: int, email: str):
         """
@@ -339,9 +339,9 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
         try:
             # Columna T (índice 20) - email principal
             self.hoja_contactos.update_cell(fila, 20, email)
-            print(f"✅ Email registrado en fila {fila} (columna T): {email}")
+            print(f" Email registrado en fila {fila} (columna T): {email}")
         except Exception as e:
-            print(f"❌ Error al registrar email: {e}")
+            print(f" Error al registrar email: {e}")
 
     def guardar_referencia(self, fila_destino: int, nombre_referidor: str, telefono_referidor: str = "", contexto: str = "", numero_llamado: str = None):
         """
@@ -374,10 +374,10 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
 
             # Columna U (índice 21)
             self.hoja_contactos.update_cell(fila_destino, 21, referencia)
-            print(f"✅ Referencia guardada en fila {fila_destino} (columna U): {referencia}")
+            print(f" Referencia guardada en fila {fila_destino} (columna U): {referencia}")
 
         except Exception as e:
-            print(f"❌ Error al guardar referencia: {e}")
+            print(f" Error al guardar referencia: {e}")
 
     def obtener_referencia(self, fila: int) -> Optional[str]:
         """
@@ -402,7 +402,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             return None
 
         except Exception as e:
-            print(f"⚠️ Error al obtener referencia: {e}")
+            print(f" Error al obtener referencia: {e}")
             return None
 
     def obtener_historial_completo(self, fila: int) -> Dict[str, str]:
@@ -437,7 +437,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             }
 
         except Exception as e:
-            print(f"⚠️ Error al obtener historial completo: {e}")
+            print(f" Error al obtener historial completo: {e}")
             return {
                 'referencia': None,
                 'intentos_buzon': None,
@@ -462,7 +462,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
                 return int(valor)
             return 0
         except Exception as e:
-            print(f"⚠️ Error al obtener contador de intentos: {e}")
+            print(f" Error al obtener contador de intentos: {e}")
             return 0
 
     def marcar_intento_buzon(self, fila: int) -> int:
@@ -483,11 +483,11 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             # Actualizar contador en columna V (índice 22)
             self.hoja_contactos.update_cell(fila, 22, str(nuevos_intentos))
 
-            print(f"📞 Intento de buzón #{nuevos_intentos} registrado para fila {fila}")
+            print(f" Intento de buzón #{nuevos_intentos} registrado para fila {fila}")
             return nuevos_intentos
 
         except Exception as e:
-            print(f"❌ Error al marcar intento de buzón: {e}")
+            print(f" Error al marcar intento de buzón: {e}")
             return 0
 
     def mover_fila_al_final(self, fila: int):
@@ -498,13 +498,13 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             fila: Número de fila a mover
         """
         try:
-            print(f"📋 Moviendo fila {fila} al final de la lista...")
+            print(f" Moviendo fila {fila} al final de la lista...")
 
             # Obtener los datos de la fila
             datos_fila = self.hoja_contactos.row_values(fila)
 
             if not datos_fila:
-                print(f"⚠️ La fila {fila} está vacía, no se puede mover")
+                print(f" La fila {fila} está vacía, no se puede mover")
                 return
 
             # Limpiar columna F (estado) para que vuelva a aparecer como pendiente
@@ -521,10 +521,10 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             # Eliminar la fila original
             self.hoja_contactos.delete_rows(fila)
 
-            print(f"✅ Fila movida de {fila} → {nueva_fila} (al final)")
+            print(f" Fila movida de {fila} → {nueva_fila} (al final)")
 
         except Exception as e:
-            print(f"❌ Error al mover fila: {e}")
+            print(f" Error al mover fila: {e}")
             import traceback
             traceback.print_exc()
 
@@ -549,10 +549,10 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
 
             # Columna W (índice 23)
             self.hoja_contactos.update_cell(fila, 23, contexto)
-            print(f"✅ Contexto de reprogramación guardado en fila {fila} (columna W): {contexto[:50]}...")
+            print(f" Contexto de reprogramación guardado en fila {fila} (columna W): {contexto[:50]}...")
 
         except Exception as e:
-            print(f"❌ Error al guardar contexto de reprogramación: {e}")
+            print(f" Error al guardar contexto de reprogramación: {e}")
 
     def obtener_contexto_reprogramacion(self, fila: int) -> Optional[str]:
         """
@@ -573,7 +573,7 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             return None
 
         except Exception as e:
-            print(f"⚠️ Error al obtener contexto de reprogramación: {e}")
+            print(f" Error al obtener contexto de reprogramación: {e}")
             return None
 
     def marcar_estado_final(self, fila: int, estado: str):
@@ -587,9 +587,9 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
         try:
             # Columna F (índice 6)
             self.hoja_contactos.update_cell(fila, 6, estado)
-            print(f"✅ Estado marcado en fila {fila} (columna F): {estado}")
+            print(f" Estado marcado en fila {fila} (columna F): {estado}")
         except Exception as e:
-            print(f"❌ Error al marcar estado: {e}")
+            print(f" Error al marcar estado: {e}")
 
     def obtener_estadisticas(self) -> Dict:
         """Obtiene estadísticas generales de la hoja"""
@@ -619,14 +619,14 @@ class NiovalSheetsAdapter(BaseGoogleSheetsAdapter):
             }
 
         except Exception as e:
-            print(f"❌ Error al obtener estadísticas: {e}")
+            print(f" Error al obtener estadísticas: {e}")
             return {}
 
 
 # Testing y ejemplos de uso
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("📊 NIOVAL SHEETS ADAPTER - TESTING")
+    print(" NIOVAL SHEETS ADAPTER - TESTING")
     print("=" * 60 + "\n")
 
     try:
@@ -645,7 +645,7 @@ if __name__ == "__main__":
         contactos = adapter.obtener_contactos_pendientes(limite=5)
 
         if contactos:
-            print(f"\n✅ {len(contactos)} contactos pendientes obtenidos")
+            print(f"\n {len(contactos)} contactos pendientes obtenidos")
 
             # Mostrar detalles
             for c in contactos:
@@ -656,7 +656,7 @@ if __name__ == "__main__":
                 print(f"  Ciudad: {c['ciudad']}")
 
         else:
-            print("ℹ️ No hay contactos pendientes")
+            print("ℹ No hay contactos pendientes")
 
         # Test de normalización
         print("\n--- TEST DE NORMALIZACIÓN DE NÚMEROS ---")
@@ -675,8 +675,8 @@ if __name__ == "__main__":
             print(f"{num:20} → {normalizado}")
 
     except Exception as e:
-        print(f"\n❌ Error en testing: {e}")
-        print("\n💡 Verifica:")
+        print(f"\n Error en testing: {e}")
+        print("\n Verifica:")
         print("   1. Que el archivo bubbly-subject-412101-c969f4a975c5.json existe")
         print("   2. Que el Service Account tiene acceso al spreadsheet")
         print("   3. Que la hoja 'Bruce' existe")

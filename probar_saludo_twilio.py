@@ -36,12 +36,12 @@ try:
         tts_language='es-MX'
     )
 
-    print(f"✅ Audio generado!")
+    print(f" Audio generado!")
     print(f"URL del audio: {recording.url}")
     print(f"\nPuedes escucharlo en tu navegador copiando la URL de arriba")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f" Error: {e}")
     print("\nAlternativa: Usa el script de llamada de prueba")
     print("python llamar_produccion.py +52[TU_NUMERO] \"Prueba\"")
 

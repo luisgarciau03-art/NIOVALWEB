@@ -30,7 +30,7 @@ print(f"Negocio: {NOMBRE_NEGOCIO}")
 print()
 
 if MI_NUMERO == "+52XXXXXXXXXX":
-    print("⚠️  ERROR: Debes cambiar MI_NUMERO en el archivo test_mi_numero.py")
+    print("  ERROR: Debes cambiar MI_NUMERO en el archivo test_mi_numero.py")
     print("   Edita la línea 10 con tu número real")
     print()
     exit(1)

@@ -11,7 +11,7 @@ from datetime import datetime
 def analizar_llamada(logs, bruce_id):
     """Analiza una llamada específica por ID"""
     print("\n" + "="*70)
-    print(f"🔍 ANÁLISIS DETALLADO: BRUCE{bruce_id}")
+    print(f" ANÁLISIS DETALLADO: BRUCE{bruce_id}")
     print("="*70 + "\n")
 
     lineas = logs.split('\n')
@@ -26,14 +26,14 @@ def analizar_llamada(logs, bruce_id):
             })
 
     if not lineas_bruce:
-        print(f"❌ No se encontró información de BRUCE{bruce_id}")
+        print(f" No se encontró información de BRUCE{bruce_id}")
         return
 
-    print(f"📊 Total de líneas encontradas: {len(lineas_bruce)}\n")
+    print(f" Total de líneas encontradas: {len(lineas_bruce)}\n")
 
     # Extraer información clave
     print("="*70)
-    print("📋 INFORMACIÓN DE LA LLAMADA")
+    print(" INFORMACIÓN DE LA LLAMADA")
     print("="*70 + "\n")
 
     # Buscar datos clave
@@ -70,19 +70,19 @@ def analizar_llamada(logs, bruce_id):
                 duracion = match.group(1)
 
     if numero_telefono:
-        print(f"📞 Teléfono: {numero_telefono}")
+        print(f" Teléfono: {numero_telefono}")
     if nombre_negocio:
-        print(f"🏪 Negocio: {nombre_negocio}")
+        print(f" Negocio: {nombre_negocio}")
     if resultado:
-        print(f"📊 Resultado: {resultado}")
+        print(f" Resultado: {resultado}")
     if duracion:
-        print(f"⏱️  Duración: {duracion} segundos")
+        print(f"  Duración: {duracion} segundos")
 
     print("\n")
 
     # Extraer conversación
     print("="*70)
-    print("💬 CONVERSACIÓN COMPLETA")
+    print(" CONVERSACIÓN COMPLETA")
     print("="*70 + "\n")
 
     conversacion = []
@@ -91,43 +91,43 @@ def analizar_llamada(logs, bruce_id):
         linea = item['texto']
 
         # Bruce dice
-        if 'BRUCE DICE:' in linea or '🤖 BRUCE DICE:' in linea:
+        if 'BRUCE DICE:' in linea or ' BRUCE DICE:' in linea:
             match = re.search(r'BRUCE DICE:\s*"([^"]+)"', linea)
             if match:
                 texto = match.group(1)
-                conversacion.append(f"🤖 BRUCE: {texto}")
+                conversacion.append(f" BRUCE: {texto}")
 
         # Cliente dice
-        if 'CLIENTE DICE:' in linea or '👤 CLIENTE DICE:' in linea:
+        if 'CLIENTE DICE:' in linea or ' CLIENTE DICE:' in linea:
             match = re.search(r'CLIENTE DICE:\s*"([^"]+)"', linea)
             if match:
                 texto = match.group(1)
-                conversacion.append(f"👤 CLIENTE: {texto}")
+                conversacion.append(f" CLIENTE: {texto}")
 
     if conversacion:
         for i, mensaje in enumerate(conversacion, 1):
             print(f"{i}. {mensaje}")
     else:
-        print("ℹ️  No se encontraron mensajes de conversación en el log")
+        print("ℹ  No se encontraron mensajes de conversación en el log")
 
     print("\n")
 
     # Detectar errores
     print("="*70)
-    print("🚨 ERRORES Y WARNINGS")
+    print(" ERRORES Y WARNINGS")
     print("="*70 + "\n")
 
     errores_detectados = []
 
     patrones_problema = {
-        '❌ Error General': r'❌.*',
-        '⚠️ Warning': r'⚠️.*',
-        '🔄 Reintento': r'Reintentando|intento \d+/\d+',
-        '💰 Créditos': r'credits? (remaining|required)',
-        '🤖 Error GPT': r'Error en GPT|OpenAI.*error',
-        '🎤 Error ElevenLabs': r'Error.*ElevenLabs|ApiError',
-        '📞 Error Twilio': r'TwilioException|status_callback_error',
-        '⏱️ Timeout': r'timeout|Timeout waiting',
+        ' Error General': r'.*',
+        ' Warning': r'.*',
+        ' Reintento': r'Reintentando|intento \d+/\d+',
+        ' Créditos': r'credits? (remaining|required)',
+        ' Error GPT': r'Error en GPT|OpenAI.*error',
+        ' Error ElevenLabs': r'Error.*ElevenLabs|ApiError',
+        ' Error Twilio': r'TwilioException|status_callback_error',
+        ' Timeout': r'timeout|Timeout waiting',
     }
 
     for nombre, patron in patrones_problema.items():
@@ -152,13 +152,13 @@ def analizar_llamada(logs, bruce_id):
             if len(error['items']) > 2:
                 print(f"   ... y {len(error['items']) - 2} más")
     else:
-        print("✅ No se detectaron errores en esta llamada")
+        print(" No se detectaron errores en esta llamada")
 
     print("\n")
 
     # Detectar fixes activos
     print("="*70)
-    print("🔧 FIXES ACTIVOS DETECTADOS")
+    print(" FIXES ACTIVOS DETECTADOS")
     print("="*70 + "\n")
 
     fixes_detectados = set()
@@ -173,23 +173,23 @@ def analizar_llamada(logs, bruce_id):
         for fix_id in sorted(fixes_detectados):
             # Contar ocurrencias
             count = sum(1 for item in lineas_bruce if f'FIX {fix_id}' in item['texto'])
-            print(f"   ✅ FIX {fix_id}: {count} menciones")
+            print(f"    FIX {fix_id}: {count} menciones")
     else:
-        print("ℹ️  No se detectaron fixes específicos en esta llamada")
+        print("ℹ  No se detectaron fixes específicos en esta llamada")
 
     print("\n")
 
     # Métricas de rendimiento
     print("="*70)
-    print("📊 MÉTRICAS DE RENDIMIENTO")
+    print(" MÉTRICAS DE RENDIMIENTO")
     print("="*70 + "\n")
 
     # Contar mensajes
-    mensajes_bruce = len([c for c in conversacion if c.startswith('🤖')])
-    mensajes_cliente = len([c for c in conversacion if c.startswith('👤')])
+    mensajes_bruce = len([c for c in conversacion if c.startswith('')])
+    mensajes_cliente = len([c for c in conversacion if c.startswith('')])
 
-    print(f"💬 Mensajes de Bruce: {mensajes_bruce}")
-    print(f"👤 Mensajes del Cliente: {mensajes_cliente}")
+    print(f" Mensajes de Bruce: {mensajes_bruce}")
+    print(f" Mensajes del Cliente: {mensajes_cliente}")
 
     # Contar palabras de Bruce
     palabras_totales = 0
@@ -200,42 +200,42 @@ def analizar_llamada(logs, bruce_id):
 
     if mensajes_bruce > 0:
         promedio_palabras = palabras_totales / mensajes_bruce
-        print(f"📝 Promedio de palabras por mensaje: {promedio_palabras:.1f}")
+        print(f" Promedio de palabras por mensaje: {promedio_palabras:.1f}")
 
         if promedio_palabras > 30:
-            print(f"   ⚠️  Mensajes muy largos (objetivo: 15-25 palabras)")
+            print(f"     Mensajes muy largos (objetivo: 15-25 palabras)")
         elif promedio_palabras < 15:
-            print(f"   ⚠️  Mensajes muy cortos")
+            print(f"     Mensajes muy cortos")
         else:
-            print(f"   ✅ Longitud adecuada")
+            print(f"    Longitud adecuada")
 
     print("\n")
 
     # Análisis de resultado
     print("="*70)
-    print("🎯 ANÁLISIS DEL RESULTADO")
+    print(" ANÁLISIS DEL RESULTADO")
     print("="*70 + "\n")
 
     if resultado:
         if "IVR" in resultado or "Buzón" in resultado:
-            print("🤖 Resultado: IVR/Contestadora detectada")
-            print("   ✅ FIX 202 funcionó correctamente (detectó sistema automatizado)")
+            print(" Resultado: IVR/Contestadora detectada")
+            print("    FIX 202 funcionó correctamente (detectó sistema automatizado)")
         elif "catálogo enviado" in resultado.lower():
-            print("✅ Resultado: ÉXITO - Catálogo enviado")
+            print(" Resultado: ÉXITO - Catálogo enviado")
             print("   Cliente aceptó recibir información")
         elif "No contestó" in resultado:
-            print("📞 Resultado: No contestó")
+            print(" Resultado: No contestó")
             print("   Cliente no respondió a la llamada")
         elif "Ocupado" in resultado or "ocupado" in resultado.lower():
-            print("⏳ Resultado: Cliente ocupado")
+            print(" Resultado: Cliente ocupado")
             print("   Cliente no pudo atender en ese momento")
         elif "Rechazado" in resultado:
-            print("❌ Resultado: Rechazado")
+            print(" Resultado: Rechazado")
             print("   Cliente rechazó la oferta")
         else:
-            print(f"ℹ️  Resultado: {resultado}")
+            print(f"ℹ  Resultado: {resultado}")
     else:
-        print("ℹ️  No se encontró resultado registrado")
+        print("ℹ  No se encontró resultado registrado")
 
     print("\n")
 
@@ -283,18 +283,18 @@ def analizar_llamada(logs, bruce_id):
         for item in lineas_bruce:
             f.write(f"Línea {item['numero']}: {item['texto']}\n")
 
-    print(f"💾 Análisis guardado en: {archivo_analisis}")
+    print(f" Análisis guardado en: {archivo_analisis}")
     print("\n")
 
 def main():
     print("\n" + "="*70)
-    print("🔍 ANALIZADOR DE LLAMADA ESPECÍFICA")
+    print(" ANALIZADOR DE LLAMADA ESPECÍFICA")
     print("   Sistema BruceW")
     print("="*70)
 
     # Verificar argumentos
     if len(sys.argv) < 2:
-        print("\n❌ Falta el ID de Bruce o archivo de logs")
+        print("\n Falta el ID de Bruce o archivo de logs")
         print("\nUso:")
         print("   python analizar_llamada_especifica.py <BRUCE_ID>")
         print("   python analizar_llamada_especifica.py <BRUCE_ID> <archivo_logs.txt>")
@@ -311,7 +311,7 @@ def main():
         # Usar archivo especificado
         archivo = sys.argv[2]
         if not os.path.exists(archivo):
-            print(f"❌ Archivo no encontrado: {archivo}")
+            print(f" Archivo no encontrado: {archivo}")
             return
 
         with open(archivo, 'r', encoding='utf-8', errors='ignore') as f:
@@ -321,22 +321,22 @@ def main():
         carpeta_logs = "C:\\Users\\PC 1\\AgenteVentas\\LOGS"
 
         if not os.path.exists(carpeta_logs):
-            print(f"❌ Carpeta de logs no existe: {carpeta_logs}")
-            print("\n💡 Ejecuta primero: python analizar_logs_railway.py")
+            print(f" Carpeta de logs no existe: {carpeta_logs}")
+            print("\n Ejecuta primero: python analizar_logs_railway.py")
             return
 
         archivos = [f for f in os.listdir(carpeta_logs) if f.startswith('logs_railway_')]
 
         if not archivos:
-            print(f"❌ No hay archivos de logs en: {carpeta_logs}")
-            print("\n💡 Ejecuta primero: python analizar_logs_railway.py")
+            print(f" No hay archivos de logs en: {carpeta_logs}")
+            print("\n Ejecuta primero: python analizar_logs_railway.py")
             return
 
         # Usar el más reciente
         archivo_mas_reciente = max(archivos, key=lambda f: os.path.getctime(os.path.join(carpeta_logs, f)))
         archivo = os.path.join(carpeta_logs, archivo_mas_reciente)
 
-        print(f"\n📂 Usando archivo: {archivo}")
+        print(f"\n Usando archivo: {archivo}")
 
         with open(archivo, 'r', encoding='utf-8', errors='ignore') as f:
             logs = f.read()
@@ -345,7 +345,7 @@ def main():
     analizar_llamada(logs, bruce_id)
 
     print("="*70)
-    print("✅ Análisis completado")
+    print(" Análisis completado")
     print("="*70 + "\n")
 
 if __name__ == "__main__":

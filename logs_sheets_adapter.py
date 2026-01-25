@@ -33,8 +33,8 @@ class LogsSheetsAdapter(BaseGoogleSheetsAdapter):
         # Contador de IDs BRUCE (se incrementa por cada nueva conversación)
         self.contador_bruce = self._obtener_ultimo_id_bruce()
 
-        print(f"✅ Conectado a hoja LOGS para registro de conversaciones")
-        print(f"📊 Último ID BRUCE: BRUCE{self.contador_bruce:02d}")
+        print(f" Conectado a hoja LOGS para registro de conversaciones")
+        print(f" Último ID BRUCE: BRUCE{self.contador_bruce:02d}")
 
     def _obtener_ultimo_id_bruce(self):
         """Obtiene el último ID BRUCE usado en la hoja"""
@@ -55,7 +55,7 @@ class LogsSheetsAdapter(BaseGoogleSheetsAdapter):
 
             return max_id
         except Exception as e:
-            print(f"⚠️ Error obteniendo último ID BRUCE: {e}")
+            print(f" Error obteniendo último ID BRUCE: {e}")
             return 0
 
     def generar_nuevo_id_bruce(self):
@@ -112,14 +112,14 @@ class LogsSheetsAdapter(BaseGoogleSheetsAdapter):
                 self.hoja_logs.insert_row(fila, index=2, value_input_option='USER_ENTERED')
             except Exception as e:
                 # Si falla insert_row (hoja vacía), usar append_row
-                print(f"   ⚠️ insert_row falló, usando append_row: {e}")
+                print(f"    insert_row falló, usando append_row: {e}")
                 self.hoja_logs.append_row(fila, value_input_option='USER_ENTERED')
 
-            print(f"📝 LOG registrado: {quien[:6]}... | {mensaje[:50]}...")
+            print(f" LOG registrado: {quien[:6]}... | {mensaje[:50]}...")
 
         except Exception as e:
             # No fallar la llamada si falla el log
-            print(f"⚠️ Error registrando en LOGS (no crítico): {e}")
+            print(f" Error registrando en LOGS (no crítico): {e}")
 
     def registrar_mensaje_bruce(
         self,

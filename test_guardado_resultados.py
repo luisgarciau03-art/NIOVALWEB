@@ -22,7 +22,7 @@ def test_guardado():
     # Inicializar adaptador
     print("1. Inicializando ResultadosSheetsAdapter...")
     resultados_manager = ResultadosSheetsAdapter()
-    print("✅ Adaptador inicializado\n")
+    print(" Adaptador inicializado\n")
 
     # Datos de prueba
     datos_prueba = {
@@ -62,14 +62,14 @@ def test_guardado():
         exito = resultados_manager.guardar_resultado_llamada(datos_prueba)
 
         if exito:
-            print("\n✅ ¡GUARDADO EXITOSO!")
+            print("\n ¡GUARDADO EXITOSO!")
             print("   Verifica en: https://docs.google.com/spreadsheets/d/1U_z1KNqCxSRZVi7wvO2FQH4zIdS_wxuafxj6YHdHEqg/edit")
             print("   Hoja: Respuestas de formulario 1")
         else:
-            print("\n❌ Guardado falló (retornó False)")
+            print("\n Guardado falló (retornó False)")
 
     except Exception as e:
-        print(f"\n❌ ERROR al guardar: {e}")
+        print(f"\n ERROR al guardar: {e}")
         import traceback
         print("\nTraceback completo:")
         print(traceback.format_exc())

@@ -12,18 +12,18 @@ try:
     print("ANÁLISIS DEL TABLERO DE NIOVAL")
     print("=" * 80)
 
-    print("\n📋 COLUMNAS DISPONIBLES:")
+    print("\n COLUMNAS DISPONIBLES:")
     print("-" * 80)
     for i, col in enumerate(df.columns, 1):
         print(f"{i:2}. {col}")
 
-    print(f"\n📊 ESTADÍSTICAS:")
+    print(f"\n ESTADÍSTICAS:")
     print("-" * 80)
     print(f"Total de registros: {len(df)}")
     print(f"Total de columnas: {len(df.columns)}")
 
     # Analizar columnas con datos
-    print("\n📝 CONTENIDO DE COLUMNAS (primeras 3 filas):")
+    print("\n CONTENIDO DE COLUMNAS (primeras 3 filas):")
     print("-" * 80)
 
     # Mostrar primeras 3 filas de cada columna importante
@@ -32,7 +32,7 @@ try:
 
     for col in columnas_importantes:
         if col in df.columns:
-            print(f"\n🔹 {col}:")
+            print(f"\n {col}:")
             valores = df[col].head(3).tolist()
             for i, val in enumerate(valores, 1):
                 val_str = str(val)[:100] if pd.notna(val) else "[VACÍO]"
@@ -47,7 +47,7 @@ try:
     print("=" * 80)
 
     # Mostrar 2 registros completos
-    print("\n📌 REGISTRO 1:")
+    print("\n REGISTRO 1:")
     print("-" * 80)
     if len(df) > 0:
         registro = df.iloc[0]
@@ -57,7 +57,7 @@ try:
             print(f"{col:20}: {valor_str}")
 
     if len(df) > 1:
-        print("\n📌 REGISTRO 2:")
+        print("\n REGISTRO 2:")
         print("-" * 80)
         registro = df.iloc[1]
         for col in df.columns:
@@ -68,7 +68,7 @@ try:
     print("\n" + "=" * 80)
 
 except Exception as e:
-    print(f"❌ Error al leer el archivo: {e}")
+    print(f" Error al leer el archivo: {e}")
     import traceback
     traceback.print_exc()
     sys.exit(1)

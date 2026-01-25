@@ -13,17 +13,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 print("\n" + "=" * 80)
-print("🧪 TEST DE INTEGRACIÓN COMPLETA - SISTEMA NIOVAL")
+print(" TEST DE INTEGRACIÓN COMPLETA - SISTEMA NIOVAL")
 print("=" * 80)
 
 try:
     # 1. Conectar a Google Sheets
-    print("\n📊 Paso 1: Conectando a Google Spreadsheet...")
+    print("\n Paso 1: Conectando a Google Spreadsheet...")
     print("-" * 80)
     adapter = NiovalSheetsAdapter()
 
     # 2. Obtener estadísticas
-    print("\n📈 Paso 2: Estadísticas generales...")
+    print("\n Paso 2: Estadísticas generales...")
     print("-" * 80)
     stats = adapter.obtener_estadisticas()
     print(f"Total de contactos: {stats.get('total_contactos', 0)}")
@@ -33,18 +33,18 @@ try:
     print(f"Progreso: {stats.get('porcentaje_completado', 0)}%")
 
     # 3. Obtener contactos pendientes
-    print("\n📋 Paso 3: Obteniendo contactos pendientes (primeros 2)...")
+    print("\n Paso 3: Obteniendo contactos pendientes (primeros 2)...")
     print("-" * 80)
     contactos = adapter.obtener_contactos_pendientes(limite=2)
 
     if not contactos:
-        print("⚠️ No hay contactos pendientes")
+        print(" No hay contactos pendientes")
         print("\nPosibles razones:")
         print("  - Todos los contactos ya tienen valor en columna F")
         print("  - No hay números en columna E")
         print("  - La hoja está vacía")
     else:
-        print(f"✅ {len(contactos)} contactos pendientes encontrados\n")
+        print(f" {len(contactos)} contactos pendientes encontrados\n")
 
         # 4. Mostrar información completa de cada contacto
         for idx, contacto in enumerate(contactos, 1):
@@ -52,24 +52,24 @@ try:
             print(f"CONTACTO #{idx} - FILA {contacto['fila']}")
             print("=" * 80)
 
-            print("\n📌 INFORMACIÓN BÁSICA:")
+            print("\n INFORMACIÓN BÁSICA:")
             print(f"  Teléfono original: {contacto.get('numero_raw', 'N/A')}")
             print(f"  Teléfono normalizado: {contacto.get('telefono', 'N/A')}")
 
-            print("\n🏪 DATOS DEL NEGOCIO (Spreadsheet):")
+            print("\n DATOS DEL NEGOCIO (Spreadsheet):")
             print(f"  Nombre (col B): {contacto.get('nombre_negocio', 'N/A')}")
             print(f"  Ciudad (col C): {contacto.get('ciudad', 'N/A')}")
             print(f"  Categoría (col D): {contacto.get('categoria', 'N/A')}")
             print(f"  Domicilio (col H): {contacto.get('domicilio', 'N/A')}")
             print(f"  Horario (col M): {contacto.get('horario', 'N/A')}")
 
-            print("\n⭐ DATOS DE GOOGLE MAPS:")
+            print("\n DATOS DE GOOGLE MAPS:")
             print(f"  Puntuación (col I): {contacto.get('puntuacion', 'N/A')}")
             print(f"  Reseñas (col J): {contacto.get('resenas', 'N/A')}")
             print(f"  Nombre Maps (col K): {contacto.get('maps', 'N/A')}")
             print(f"  Link Maps (col L): {contacto.get('link', 'N/A')[:50]}..." if contacto.get('link') else "  Link Maps (col L): N/A")
 
-            print("\n📊 OTROS DATOS:")
+            print("\n OTROS DATOS:")
             print(f"  Estatus (col N): {contacto.get('estatus', 'N/A')}")
             print(f"  Porcentajes (col G): {contacto.get('porcentajes', 'N/A')}")
             print(f"  Latitud (col O): {contacto.get('latitud', 'N/A')}")
@@ -78,7 +78,7 @@ try:
 
             # 5. Simular cómo Bruce verá este contacto
             print("\n" + "=" * 80)
-            print("🤖 CONTEXTO QUE BRUCE W RECIBIRÁ AL LLAMAR:")
+            print(" CONTEXTO QUE BRUCE W RECIBIRÁ AL LLAMAR:")
             print("=" * 80)
 
             # Crear agente temporal para generar contexto
@@ -114,67 +114,67 @@ try:
                 print(contexto)
 
                 print("\n" + "=" * 80)
-                print("📝 LO QUE ESTO SIGNIFICA:")
+                print(" LO QUE ESTO SIGNIFICA:")
                 print("=" * 80)
 
                 datos_conocidos = []
                 datos_que_preguntar = []
 
                 if contacto.get('nombre_negocio'):
-                    datos_conocidos.append("✅ Nombre del negocio")
+                    datos_conocidos.append(" Nombre del negocio")
                 else:
-                    datos_que_preguntar.append("❓ Nombre del negocio")
+                    datos_que_preguntar.append(" Nombre del negocio")
 
                 if contacto.get('ciudad'):
-                    datos_conocidos.append("✅ Ciudad")
+                    datos_conocidos.append(" Ciudad")
                 else:
-                    datos_que_preguntar.append("❓ Ciudad")
+                    datos_que_preguntar.append(" Ciudad")
 
                 if contacto.get('domicilio'):
-                    datos_conocidos.append("✅ Dirección completa")
+                    datos_conocidos.append(" Dirección completa")
                 else:
-                    datos_que_preguntar.append("❓ Dirección")
+                    datos_que_preguntar.append(" Dirección")
 
                 if contacto.get('horario'):
-                    datos_conocidos.append("✅ Horario de atención")
+                    datos_conocidos.append(" Horario de atención")
                 else:
-                    datos_que_preguntar.append("❓ Horario")
+                    datos_que_preguntar.append(" Horario")
 
                 # Lo que SIEMPRE pregunta
-                datos_que_preguntar.append("❓ WhatsApp (PRIORIDAD #1)")
-                datos_que_preguntar.append("❓ Email (si no tiene WhatsApp)")
-                datos_que_preguntar.append("❓ Nombre del contacto (opcional)")
+                datos_que_preguntar.append(" WhatsApp (PRIORIDAD #1)")
+                datos_que_preguntar.append(" Email (si no tiene WhatsApp)")
+                datos_que_preguntar.append(" Nombre del contacto (opcional)")
 
                 print("\n🟢 BRUCE YA CONOCE:")
                 for dato in datos_conocidos:
                     print(f"  {dato}")
 
-                print("\n🔵 BRUCE VA A PREGUNTAR:")
+                print("\n BRUCE VA A PREGUNTAR:")
                 for dato in datos_que_preguntar:
                     print(f"  {dato}")
 
             else:
-                print("⚠️ No hay información previa disponible")
+                print(" No hay información previa disponible")
                 print("Bruce preguntará toda la información necesaria")
 
             print("\n")
 
     print("=" * 80)
-    print("✅ TEST DE INTEGRACIÓN COMPLETADO")
+    print(" TEST DE INTEGRACIÓN COMPLETADO")
     print("=" * 80)
 
-    print("\n📌 PRÓXIMOS PASOS:")
+    print("\n PRÓXIMOS PASOS:")
     print("  1. Verificar que la información mostrada es correcta")
     print("  2. Confirmar que Bruce NO preguntará lo que ya sabe")
     print("  3. Ejecutar sistema_llamadas_nioval.py para probar llamadas")
     print("\n")
 
 except Exception as e:
-    print(f"\n❌ Error durante el test: {e}")
+    print(f"\n Error durante el test: {e}")
     import traceback
     traceback.print_exc()
 
-    print("\n💡 POSIBLES SOLUCIONES:")
+    print("\n POSIBLES SOLUCIONES:")
     print("  1. Verificar que existe: C:\\Users\\PC 1\\bubbly-subject-412101-c969f4a975c5.json")
     print("  2. Verificar que el Service Account tiene acceso al Spreadsheet")
     print("  3. Verificar que la hoja se llama 'LISTA DE CONTACTOS'")

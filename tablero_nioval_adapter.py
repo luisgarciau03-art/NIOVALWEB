@@ -26,10 +26,10 @@ class TaberoNiovalAdapter:
         """Carga el archivo Excel del tablero"""
         try:
             self.df = pd.read_excel(self.archivo_excel)
-            print(f"✅ Tablero NIOVAL cargado: {len(self.df)} registros")
+            print(f" Tablero NIOVAL cargado: {len(self.df)} registros")
             print(f"   Columnas: {', '.join(self.df.columns.tolist())}")
         except Exception as e:
-            print(f"❌ Error al cargar tablero: {e}")
+            print(f" Error al cargar tablero: {e}")
             self.df = None
 
     def buscar_contacto_por_telefono(self, telefono: str) -> Optional[Dict]:
@@ -204,13 +204,13 @@ if __name__ == "__main__":
         adapter = TaberoNiovalAdapter()
 
         if adapter.df is not None:
-            print("\n📊 ESTADÍSTICAS:")
+            print("\n ESTADÍSTICAS:")
             print("-" * 80)
             stats = adapter.obtener_estadisticas()
             for key, value in stats.items():
                 print(f"{key:30}: {value}")
 
-            print("\n🔍 EJEMPLO DE BÚSQUEDA:")
+            print("\n EJEMPLO DE BÚSQUEDA:")
             print("-" * 80)
 
             # Buscar primer contacto como ejemplo
@@ -221,12 +221,12 @@ if __name__ == "__main__":
 
                 resultado = adapter.buscar_contacto_por_nombre(str(nombre))
                 if resultado:
-                    print("\n✅ Contacto encontrado:")
+                    print("\n Contacto encontrado:")
                     for key, value in resultado.items():
                         if value:
                             print(f"  {key:25}: {value}")
 
-            print("\n🔄 EJEMPLO DE ENRIQUECIMIENTO:")
+            print("\n EJEMPLO DE ENRIQUECIMIENTO:")
             print("-" * 80)
 
             contacto_prueba = {
@@ -244,6 +244,6 @@ if __name__ == "__main__":
         print("\n" + "=" * 80)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         import traceback
         traceback.print_exc()

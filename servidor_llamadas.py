@@ -28,7 +28,7 @@ try:
     FLASK_SOCK_AVAILABLE = True
 except ImportError:
     FLASK_SOCK_AVAILABLE = False
-    print("⚠️ FIX 212: flask-sock no instalado. WebSocket no disponible.")
+    print(" FIX 212: flask-sock no instalado. WebSocket no disponible.")
 
 load_dotenv()
 
@@ -38,7 +38,7 @@ app = Flask(__name__)
 sock = None
 if FLASK_SOCK_AVAILABLE:
     sock = Sock(app)
-    print("✅ FIX 212: Flask-Sock inicializado para WebSocket")
+    print(" FIX 212: Flask-Sock inicializado para WebSocket")
 
 # FIX 212: Importar módulo de Deepgram
 deepgram_transcriber = None
@@ -55,12 +55,12 @@ try:
     )
     DEEPGRAM_AVAILABLE = verificar_deepgram() if DEEPGRAM_API_KEY else False
     if DEEPGRAM_AVAILABLE:
-        print("✅ FIX 212: Deepgram configurado y listo")
+        print(" FIX 212: Deepgram configurado y listo")
     else:
-        print("⚠️ FIX 212: Deepgram no configurado - usando Whisper como fallback")
+        print(" FIX 212: Deepgram no configurado - usando Whisper como fallback")
 except ImportError as e:
     DEEPGRAM_AVAILABLE = False
-    print(f"⚠️ FIX 212: Módulo deepgram_transcriber no disponible: {e}")
+    print(f" FIX 212: Módulo deepgram_transcriber no disponible: {e}")
 
 # Almacenamiento de transcripciones pendientes de Deepgram
 deepgram_transcripciones = {}  # call_sid -> transcripción
@@ -108,19 +108,19 @@ try:
     sheets_manager = NiovalSheetsAdapter()  # Para leer contactos
     resultados_manager = ResultadosSheetsAdapter()  # Para guardar resultados
     logs_manager = LogsSheetsAdapter()  # Para registrar logs de conversación
-    print("✅ Google Sheets Managers inicializados")
+    print(" Google Sheets Managers inicializados")
 except Exception as e:
-    print(f"⚠️  Google Sheets no disponible: {e}")
-    print("⚠️  Las llamadas se guardarán solo en backup local")
+    print(f"  Google Sheets no disponible: {e}")
+    print("  Las llamadas se guardarán solo en backup local")
 
 # Inicializar WhatsApp Validator
 try:
     from whatsapp_validator import WhatsAppValidator
     whatsapp_validator = WhatsAppValidator()
-    print("✅ WhatsApp Validator inicializado")
+    print(" WhatsApp Validator inicializado")
 except Exception as e:
-    print(f"⚠️  WhatsApp Validator no disponible: {e}")
-    print("⚠️  No se validarán números de WhatsApp")
+    print(f"  WhatsApp Validator no disponible: {e}")
+    print("  No se validarán números de WhatsApp")
 
 # Configuración Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -128,21 +128,21 @@ TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
 # FIX 173: Logging de diagnóstico de credenciales (sin exponer token completo)
-print("🔍 FIX 173: Verificando credenciales de Twilio...")
+print(" FIX 173: Verificando credenciales de Twilio...")
 if TWILIO_ACCOUNT_SID:
-    print(f"   ✅ TWILIO_ACCOUNT_SID encontrado: {TWILIO_ACCOUNT_SID[:10]}...{TWILIO_ACCOUNT_SID[-4:]}")
+    print(f"    TWILIO_ACCOUNT_SID encontrado: {TWILIO_ACCOUNT_SID[:10]}...{TWILIO_ACCOUNT_SID[-4:]}")
 else:
-    print("   ❌ TWILIO_ACCOUNT_SID NO ENCONTRADO")
+    print("    TWILIO_ACCOUNT_SID NO ENCONTRADO")
 
 if TWILIO_AUTH_TOKEN:
-    print(f"   ✅ TWILIO_AUTH_TOKEN encontrado: {TWILIO_AUTH_TOKEN[:8]}...{TWILIO_AUTH_TOKEN[-4:]}")
+    print(f"    TWILIO_AUTH_TOKEN encontrado: {TWILIO_AUTH_TOKEN[:8]}...{TWILIO_AUTH_TOKEN[-4:]}")
 else:
-    print("   ❌ TWILIO_AUTH_TOKEN NO ENCONTRADO")
+    print("    TWILIO_AUTH_TOKEN NO ENCONTRADO")
 
 if TWILIO_PHONE_NUMBER:
-    print(f"   ✅ TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
+    print(f"    TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
 else:
-    print("   ❌ TWILIO_PHONE_NUMBER NO ENCONTRADO")
+    print("    TWILIO_PHONE_NUMBER NO ENCONTRADO")
 
 # Configuración ElevenLabs
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
@@ -475,7 +475,7 @@ def limpiar_recursos_llamada(call_sid):
             del diccionario[call_sid]
             recursos_limpiados += 1
 
-    print(f"🧹 FIX 489: Limpiados {recursos_limpiados} recursos de llamada {call_sid}")
+    print(f" FIX 489: Limpiados {recursos_limpiados} recursos de llamada {call_sid}")
 
 
 def cargar_cache_desde_disco():
@@ -485,7 +485,7 @@ def cargar_cache_desde_disco():
 
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)
-        print("📁 Directorio de caché creado")
+        print(" Directorio de caché creado")
         return
 
     # Cargar metadata
@@ -500,9 +500,9 @@ def cargar_cache_desde_disco():
             filepath = os.path.join(CACHE_DIR, filename)
             if os.path.exists(filepath):
                 audio_cache[key] = filepath
-                print(f"  📦 Cargado desde disco: {key}")
+                print(f"   Cargado desde disco: {key}")
 
-        print(f"✅ {len(audio_cache)} audios cargados desde caché persistente\n")
+        print(f" {len(audio_cache)} audios cargados desde caché persistente\n")
 
     # Cargar estadísticas de frases
     stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
@@ -510,7 +510,7 @@ def cargar_cache_desde_disco():
         with open(stats_file, 'r', encoding='utf-8') as f:
             global frase_stats
             frase_stats = json.load(f)
-        print(f"📊 {len(frase_stats)} estadísticas de frases cargadas desde disco\n")
+        print(f" {len(frase_stats)} estadísticas de frases cargadas desde disco\n")
 
     # FIX 57: Cargar preguntas frecuentes y candidatos auto-cache
     preguntas_file = os.path.join(CACHE_DIR, "preguntas_frecuentes.json")
@@ -518,7 +518,7 @@ def cargar_cache_desde_disco():
         with open(preguntas_file, 'r', encoding='utf-8') as f:
             global preguntas_frecuentes
             preguntas_frecuentes = json.load(f)
-        print(f"🔍 {len(preguntas_frecuentes)} preguntas frecuentes cargadas desde disco\n")
+        print(f" {len(preguntas_frecuentes)} preguntas frecuentes cargadas desde disco\n")
 
     # FIX 57/59/64: Cargar respuestas cacheadas personalizadas
     respuestas_file = os.path.join(CACHE_DIR, "respuestas_cache.json")
@@ -546,16 +546,16 @@ def cargar_cache_desde_disco():
                         for key in seed_content
                     ):
                         debe_actualizar = False
-                        print(f"✅ FIX 64: respuestas_cache.json ya está actualizado ({len(seed_content)} categorías)\n")
+                        print(f" FIX 64: respuestas_cache.json ya está actualizado ({len(seed_content)} categorías)\n")
             except Exception as e:
-                print(f"⚠️ FIX 64: Error comparando cache, actualizando: {e}")
+                print(f" FIX 64: Error comparando cache, actualizando: {e}")
                 debe_actualizar = True
 
         if debe_actualizar:
             shutil.copy(repo_respuestas_file, respuestas_file)
-            print(f"📋 FIX 64: Actualizado respuestas_cache.json desde seed_data/ a Volume\n")
+            print(f" FIX 64: Actualizado respuestas_cache.json desde seed_data/ a Volume\n")
     else:
-        print(f"⚠️ FIX 64: No se encontró seed_data/respuestas_cache.json\n")
+        print(f" FIX 64: No se encontró seed_data/respuestas_cache.json\n")
 
     if os.path.exists(respuestas_file):
         with open(respuestas_file, 'r', encoding='utf-8') as f:
@@ -563,8 +563,8 @@ def cargar_cache_desde_disco():
             cache_personalizado = json.load(f)
             # Merge con las respuestas por defecto (prioridad a las personalizadas)
             respuestas_cache.update(cache_personalizado)
-        print(f"💾 {len(cache_personalizado)} respuestas personalizadas cargadas desde disco")
-        print(f"📊 TOTAL de categorías en caché: {len(respuestas_cache)}\n")
+        print(f" {len(cache_personalizado)} respuestas personalizadas cargadas desde disco")
+        print(f" TOTAL de categorías en caché: {len(respuestas_cache)}\n")
 
 
 def guardar_cache_en_disco(key, texto, audio_path):
@@ -594,7 +594,7 @@ def guardar_cache_en_disco(key, texto, audio_path):
     with open(metadata_file, 'w', encoding='utf-8') as f:
         json.dump(cache_metadata, f, ensure_ascii=False, indent=2)
 
-    print(f"💾 Caché guardado en disco: {key} → {filename}")
+    print(f" Caché guardado en disco: {key} → {filename}")
 
 
 def guardar_stats_en_disco():
@@ -639,14 +639,14 @@ def registrar_pregunta_respuesta(pregunta, respuesta):
     # Verificar si alcanzó el umbral para auto-caché
     if preguntas_frecuentes[pregunta_normalizada]["count"] == UMBRAL_AUTO_CACHE:
         # Calificar para caché automático
-        print(f"\n🎯 FIX 57: Pregunta frecuente detectada ({UMBRAL_AUTO_CACHE} veces):")
+        print(f"\n FIX 57: Pregunta frecuente detectada ({UMBRAL_AUTO_CACHE} veces):")
         print(f"   Pregunta: '{pregunta[:60]}...'")
         print(f"   Respuesta más común: '{respuesta[:60]}...'")
 
         # Agregar a candidatos si no está ya
         if pregunta_normalizada not in candidatos_auto_cache:
             candidatos_auto_cache.append(pregunta_normalizada)
-            print(f"   ✅ Agregado a candidatos de auto-caché")
+            print(f"    Agregado a candidatos de auto-caché")
 
     # Guardar en disco para persistencia
     preguntas_file = os.path.join(CACHE_DIR, "preguntas_frecuentes.json")
@@ -705,7 +705,7 @@ def registrar_frase_usada(texto):
 
     # Si se detectó un nombre, usar la plantilla universal
     if nombre_detectado:
-        print(f"👤 Nombre detectado: '{nombre_detectado}' → Usando plantilla universal")
+        print(f" Nombre detectado: '{nombre_detectado}' → Usando plantilla universal")
         texto_para_cache = texto_plantilla
     else:
         texto_para_cache = texto_norm
@@ -730,7 +730,7 @@ def registrar_frase_usada(texto):
 
     # Auto-generar caché si alcanza frecuencia mínima
     if count == FRECUENCIA_MIN_CACHE and frase_key not in audio_cache:
-        print(f"\n🔥 Frase frecuente detectada ({count} usos): {texto_para_cache[:50]}...")
+        print(f"\n Frase frecuente detectada ({count} usos): {texto_para_cache[:50]}...")
         print(f"   Generando caché automático con Multilingual v2...")
 
         try:
@@ -754,12 +754,12 @@ def registrar_frase_usada(texto):
             # Guardar en disco para persistencia
             guardar_cache_en_disco(frase_key, texto_para_cache, temp_file.name)
 
-            print(f"   ✅ Caché auto-generado: {frase_key}")
+            print(f"    Caché auto-generado: {frase_key}")
             if nombre_detectado:
-                print(f"   📝 Guardado como plantilla universal con (NAME)")
+                print(f"    Guardado como plantilla universal con (NAME)")
 
         except Exception as e:
-            print(f"   ❌ Error generando caché automático: {e}")
+            print(f"    Error generando caché automático: {e}")
 
 
 def pre_generar_audios_cache():
@@ -802,8 +802,8 @@ def pre_generar_audios_cache():
 
     # FIX 59: Agregar respuestas cacheadas de respuestas_cache para pre-generación
     # Esto hace que las respuestas comunes sean INSTANTÁNEAS (0s delay)
-    print("🔧 Pre-generando caché de audios con Multilingual v2...")
-    print(f"📋 Agregando {len(respuestas_cache)} respuestas cacheadas al pre-generado...")
+    print(" Pre-generando caché de audios con Multilingual v2...")
+    print(f" Agregando {len(respuestas_cache)} respuestas cacheadas al pre-generado...")
     for categoria, datos in respuestas_cache.items():
         cache_key = f"respuesta_cache_{categoria}"
         frases_comunes[cache_key] = datos["respuesta"]
@@ -811,11 +811,11 @@ def pre_generar_audios_cache():
     for key, texto in frases_comunes.items():
         # IMPORTANTE: Solo generar si NO existe en cache (ahorra créditos)
         if key in audio_cache:
-            print(f"  ⏭️ Omitido: {key} (ya existe en cache)")
+            print(f"   Omitido: {key} (ya existe en cache)")
             continue
 
         try:
-            print(f"  🎙️ Generando: {key}...")
+            print(f"   Generando: {key}...")
             # Usar Multilingual v2 para frases comunes (mejor acento)
             audio_generator = elevenlabs_client.text_to_speech.convert(
                 voice_id=ELEVENLABS_VOICE_ID,
@@ -833,11 +833,11 @@ def pre_generar_audios_cache():
 
             # Guardar en disco para persistencia
             guardar_cache_en_disco(key, texto, temp_file.name)
-            print(f"  ✅ Cached: {key}")
+            print(f"   Cached: {key}")
         except Exception as e:
-            print(f"  ❌ Error caching {key}: {e}")
+            print(f"   Error caching {key}: {e}")
 
-    print(f"✅ Caché completo: {len(audio_cache)} audios pre-generados\n")
+    print(f" Caché completo: {len(audio_cache)} audios pre-generados\n")
 
 
 def corregir_pronunciacion(texto):
@@ -886,7 +886,7 @@ def concatenar_audios_mp3(audio_paths):
 
     except ImportError:
         # Si pydub no está disponible, usar concatenación simple de bytes
-        print("⚠️ pydub no disponible, usando concatenación simple")
+        print(" pydub no disponible, usando concatenación simple")
         temp_output = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
 
         for path in audio_paths:
@@ -912,13 +912,13 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
     import time
     inicio = time.time()
 
-    print(f"🎭 Generando audio con nombre específico: '{nombre}'")
+    print(f" Generando audio con nombre específico: '{nombre}'")
 
     # Reemplazar (NAME) con el nombre real
     texto_final = texto_plantilla.replace("(NAME)", nombre)
 
     # Generar audio completo
-    print(f"   🎤 Generando: '{texto_final[:50]}...'")
+    print(f"    Generando: '{texto_final[:50]}...'")
     audio_generator = elevenlabs_client.text_to_speech.convert(
         voice_id=ELEVENLABS_VOICE_ID,
         text=texto_final,
@@ -932,7 +932,7 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
         temp_file.write(chunk)
     temp_file.close()
 
-    print(f"   ✅ Audio generado en {(time.time() - inicio):.2f}s")
+    print(f"    Audio generado en {(time.time() - inicio):.2f}s")
     return temp_file.name
 
 
@@ -951,7 +951,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         # PASO 1: Si hay cache key manual, usar audio pre-generado
         if usar_cache_key and usar_cache_key in audio_cache:
             audio_files[audio_id] = audio_cache[usar_cache_key]
-            print(f"📦 Caché manual: {usar_cache_key} (0s delay)")
+            print(f" Caché manual: {usar_cache_key} (0s delay)")
             return audio_id
 
         # PASO 2: Detectar si tiene nombre y buscar plantilla correspondiente
@@ -963,7 +963,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
             frase_key_plantilla = "_".join(palabras_plantilla.split())
 
             if frase_key_plantilla in audio_cache:
-                print(f"🎭 Usando plantilla universal + nombre '{nombre_detectado}'")
+                print(f" Usando plantilla universal + nombre '{nombre_detectado}'")
                 audio_compuesto = generar_audio_con_nombre(
                     texto_plantilla,
                     nombre_detectado,
@@ -972,12 +972,12 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
 
                 if audio_compuesto:
                     audio_files[audio_id] = audio_compuesto
-                    print(f"✅ Audio compuesto listo (plantilla + nombre)")
+                    print(f" Audio compuesto listo (plantilla + nombre)")
                     return audio_id
                 else:
-                    print(f"⚠️ Error en audio compuesto, generando completo...")
+                    print(f" Error en audio compuesto, generando completo...")
             else:
-                print(f"ℹ️ Plantilla no en caché, generando completo...")
+                print(f"ℹ Plantilla no en caché, generando completo...")
 
         # PASO 3: Buscar en caché auto-generado (sin nombre)
         # FIX 191: NUNCA usar caché si el texto contiene despedidas de cierre
@@ -989,7 +989,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         es_despedida_cierre = any(palabra in texto_lower for palabra in palabras_cierre)
 
         if es_despedida_cierre:
-            print(f"🚫 FIX 191: Bloqueando caché de despedida - cliente aún puede estar hablando")
+            print(f" FIX 191: Bloqueando caché de despedida - cliente aún puede estar hablando")
             print(f"   Texto: '{texto[:60]}...'")
             # NO usar caché - dejar que GPT decida si es momento de despedirse
         else:
@@ -998,7 +998,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
 
             if frase_key in audio_cache:
                 audio_files[audio_id] = audio_cache[frase_key]
-                print(f"📦 Caché AUTO: {frase_key[:40]}... (0s delay)")
+                print(f" Caché AUTO: {frase_key[:40]}... (0s delay)")
                 return audio_id
 
         # PASO 4: Registrar frase para estadísticas (auto-genera caché si es frecuente)
@@ -1012,7 +1012,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         # Prioridad: CALIDAD DE ACENTO > VELOCIDAD
         palabras = len(texto_corregido.split())
         modelo = "eleven_multilingual_v2"
-        print(f"🎙️ FIX 197: Usando Multilingual v2 ({palabras} palabras, acento mexicano)")
+        print(f" FIX 197: Usando Multilingual v2 ({palabras} palabras, acento mexicano)")
 
         # FIX 162A: Generar audio con retry automático
         max_intentos = 2
@@ -1020,7 +1020,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
 
         while intento <= max_intentos:
             try:
-                print(f"🎵 FIX 162A: Generando audio (intento {intento}/{max_intentos})")
+                print(f" FIX 162A: Generando audio (intento {intento}/{max_intentos})")
 
                 audio_generator = elevenlabs_client.text_to_speech.convert(
                     voice_id=ELEVENLABS_VOICE_ID,
@@ -1036,23 +1036,23 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                     temp_file.write(chunk)
                     chunk_count += 1
                     if chunk_count == 1:
-                        print(f"🎵 Primer chunk en {(time.time() - inicio):.2f}s")
+                        print(f" Primer chunk en {(time.time() - inicio):.2f}s")
                 temp_file.close()
 
                 # Guardar ruta del archivo
                 audio_files[audio_id] = temp_file.name
-                print(f"✅ Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
+                print(f" Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
 
                 if intento > 1:
-                    print(f"✅ FIX 162A: Audio generado exitosamente en intento {intento}")
+                    print(f" FIX 162A: Audio generado exitosamente en intento {intento}")
 
                 return audio_id
 
             except Exception as e_retry:
-                print(f"⚠️ FIX 162A: Error en intento {intento}/{max_intentos}: {type(e_retry).__name__}")
+                print(f" FIX 162A: Error en intento {intento}/{max_intentos}: {type(e_retry).__name__}")
 
                 if intento < max_intentos:
-                    print(f"🔄 FIX 162A: Reintentando en 1 segundo...")
+                    print(f" FIX 162A: Reintentando en 1 segundo...")
                     time.sleep(1)
                     intento += 1
                 else:
@@ -1060,12 +1060,12 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                     raise e_retry
 
     except Exception as e:
-        print(f"❌ FIX 162A: Error generando audio ElevenLabs después de {max_intentos} intentos: {e}")
+        print(f" FIX 162A: Error generando audio ElevenLabs después de {max_intentos} intentos: {e}")
         print(f"   Tipo de error: {type(e).__name__}")
         print(f"   Texto que causó error: {texto[:100]}...")
         print(f"   Traceback completo:")
         traceback.print_exc()
-        print(f"🚨 FIX 162A: CRÍTICO - NO usar fallback Twilio (causa desconfianza)")
+        print(f" FIX 162A: CRÍTICO - NO usar fallback Twilio (causa desconfianza)")
         # FIX 208: Registrar error en buffer
         log_evento(f"ERROR ELEVENLABS: {type(e).__name__} - {str(e)[:200]}", "ERROR")
         return None
@@ -1160,7 +1160,7 @@ def post_procesar_transcripcion_email(texto_transcrito):
             nombre = match.group(1)
             email_reconstruido = f"{nombre}@{proveedor}.com"
             texto = re.sub(pattern, email_reconstruido, texto)
-            print(f"   ✅ FIX 198: Email reconstruido: {email_reconstruido}")
+            print(f"    FIX 198: Email reconstruido: {email_reconstruido}")
 
     # Reemplazar " punto " en contextos de email
     # Solo si ya detectamos @ (para no afectar conversación normal)
@@ -1187,7 +1187,7 @@ def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_em
     inicio = time.time()
 
     try:
-        print(f"🎙️ FIX 60: Descargando grabación de Twilio...")
+        print(f" FIX 60: Descargando grabación de Twilio...")
         print(f"   URL: {recording_url}")
 
         # FIX 62: Descargar audio de Twilio con autenticación (timeout agresivo)
@@ -1200,15 +1200,15 @@ def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_em
 
         tiempo_descarga = time.time() - inicio
         audio_bytes = len(response.content)
-        print(f"   ✅ Audio descargado en {tiempo_descarga:.3f}s ({audio_bytes} bytes)")
+        print(f"    Audio descargado en {tiempo_descarga:.3f}s ({audio_bytes} bytes)")
 
         # FIX 268: Validar tamaño mínimo de audio antes de enviar a Whisper
         # Whisper requiere mínimo 0.1 segundos de audio (~1600 bytes para WAV mono 8kHz)
         # Si el audio es muy pequeño, es silencio o ruido - no vale la pena transcribir
         AUDIO_MIN_BYTES = 2000  # ~0.125 segundos de audio
         if audio_bytes < AUDIO_MIN_BYTES:
-            print(f"   ⚠️ FIX 268: Audio muy corto ({audio_bytes} bytes < {AUDIO_MIN_BYTES}) - probablemente silencio")
-            print(f"   ℹ️ Saltando Whisper para evitar error 'audio_too_short'")
+            print(f"    FIX 268: Audio muy corto ({audio_bytes} bytes < {AUDIO_MIN_BYTES}) - probablemente silencio")
+            print(f"   ℹ Saltando Whisper para evitar error 'audio_too_short'")
             return None
 
         # Guardar temporalmente para Whisper
@@ -1216,9 +1216,9 @@ def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_em
         temp_audio.write(response.content)
         temp_audio.close()
 
-        print(f"🤖 FIX 60: Transcribiendo con Whisper API...")
+        print(f" FIX 60: Transcribiendo con Whisper API...")
         if whisper_prompt:
-            print(f"   🎯 FIX 198: Usando prompt contextual")
+            print(f"    FIX 198: Usando prompt contextual")
         inicio_whisper = time.time()
 
         # FIX 198: Transcribir con Whisper con prompt contextual opcional
@@ -1253,19 +1253,19 @@ def transcribir_con_whisper(recording_url, whisper_prompt=None, post_procesar_em
             texto = post_procesar_transcripcion_email(texto)
 
             if texto_original != texto:
-                print(f"   🔄 FIX 198: Transcripción mejorada")
+                print(f"    FIX 198: Transcripción mejorada")
                 print(f"      Antes: '{texto_original}'")
                 print(f"      Después: '{texto}'")
 
-        print(f"   ✅ Transcripción completada en {tiempo_whisper:.3f}s")
-        print(f"   ⏱️  Tiempo total: {tiempo_total:.3f}s (descarga: {tiempo_descarga:.3f}s + whisper: {tiempo_whisper:.3f}s)")
-        print(f"   📝 Texto: '{texto}'")
+        print(f"    Transcripción completada en {tiempo_whisper:.3f}s")
+        print(f"     Tiempo total: {tiempo_total:.3f}s (descarga: {tiempo_descarga:.3f}s + whisper: {tiempo_whisper:.3f}s)")
+        print(f"    Texto: '{texto}'")
 
         return texto
 
     except Exception as e:
         tiempo_total = time.time() - inicio
-        print(f"   ❌ Error en transcripción Whisper después de {tiempo_total:.3f}s: {e}")
+        print(f"    Error en transcripción Whisper después de {tiempo_total:.3f}s: {e}")
         return None
 
 
@@ -1282,10 +1282,10 @@ def iniciar_llamada():
     }
     """
     try:
-        debug_print(f"\n🔍 DEBUG 1: /iniciar-llamada - Request recibido")
+        debug_print(f"\n DEBUG 1: /iniciar-llamada - Request recibido")
 
         data = request.json
-        print(f"🔍 DEBUG 2: JSON parseado correctamente")
+        print(f" DEBUG 2: JSON parseado correctamente")
 
         telefono_destino = data.get("telefono")
         nombre_negocio = data.get("nombre_negocio", "cliente")
@@ -1293,15 +1293,15 @@ def iniciar_llamada():
         # FIX 179: Flag para deshabilitar reintentos automáticos (usado por llamadas masivas)
         deshabilitar_reintentos = data.get("deshabilitar_reintentos", False)
 
-        print(f"🔍 DEBUG 3: Datos extraídos - Tel: {telefono_destino}, Negocio: {nombre_negocio}")
+        print(f" DEBUG 3: Datos extraídos - Tel: {telefono_destino}, Negocio: {nombre_negocio}")
         if deshabilitar_reintentos:
-            print(f"🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada")
+            print(f" FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada")
 
         if not telefono_destino:
-            print(f"❌ ERROR: Teléfono no proporcionado")
+            print(f" ERROR: Teléfono no proporcionado")
             return {"error": "Teléfono requerido"}, 400
 
-        print(f"🔍 DEBUG 4: Iniciando llamada Twilio a {telefono_destino}")
+        print(f" DEBUG 4: Iniciando llamada Twilio a {telefono_destino}")
 
         # FIX 85: DESHABILITAR machine_detection para reducir delay de 11s a 2-3s
         # PROBLEMA: DetectMessageEnd hace que Twilio ESPERE 5-10s antes de hablar
@@ -1319,7 +1319,7 @@ def iniciar_llamada():
             status_callback_event=["completed"]  # Notificar cuando termine
         )
 
-        print(f"🔍 DEBUG 5: Llamada Twilio creada - SID: {call.sid}")
+        print(f" DEBUG 5: Llamada Twilio creada - SID: {call.sid}")
         # FIX 208/284: Registrar inicio de llamada (sin duplicar prefijo BRUCE)
         bruce_id_log = contacto_info.get("bruce_id", "N/A") if contacto_info else "N/A"
         log_evento(f"{bruce_id_log} - LLAMADA INICIADA a {telefono_destino} ({nombre_negocio})", "LLAMADA")
@@ -1330,7 +1330,7 @@ def iniciar_llamada():
             contactos_llamadas[call.sid] = contacto_info
             # FIX 179: Guardar flag de reintentos
             contactos_llamadas[call.sid]['deshabilitar_reintentos'] = deshabilitar_reintentos
-            print(f"📋 Contacto completo guardado para Call SID {call.sid[:10]}... (fila {contacto_info.get('fila', 'N/A')})")
+            print(f" Contacto completo guardado para Call SID {call.sid[:10]}... (fila {contacto_info.get('fila', 'N/A')})")
         else:
             # Si no, guardar solo lo básico (compatibilidad con llamadas antiguas)
             contactos_llamadas[call.sid] = {
@@ -1339,9 +1339,9 @@ def iniciar_llamada():
                 # FIX 179: Guardar flag de reintentos
                 "deshabilitar_reintentos": deshabilitar_reintentos
             }
-            print(f"📋 Contacto básico guardado para Call SID {call.sid[:10]}...")
+            print(f" Contacto básico guardado para Call SID {call.sid[:10]}...")
 
-        print(f"🔍 DEBUG 6: Retornando respuesta exitosa")
+        print(f" DEBUG 6: Retornando respuesta exitosa")
 
         return {
             "success": True,
@@ -1352,10 +1352,10 @@ def iniciar_llamada():
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"\n❌ ERROR EN /iniciar-llamada:")
-        print(f"❌ Tipo de error: {type(e).__name__}")
-        print(f"❌ Mensaje: {str(e)}")
-        print(f"❌ Stack trace completo:")
+        print(f"\n ERROR EN /iniciar-llamada:")
+        print(f" Tipo de error: {type(e).__name__}")
+        print(f" Mensaje: {str(e)}")
+        print(f" Stack trace completo:")
         print(error_trace)
         return {"error": str(e), "type": type(e).__name__, "traceback": error_trace}, 500
 
@@ -1381,11 +1381,11 @@ def webhook_voz():
         if fila:
             # Verificar si el número cambió
             if sheets_manager.verificar_cambio_numero(fila):
-                print(f"\n🔄 NÚMERO CAMBIÓ - Cargando historial previo para contexto...")
+                print(f"\n NÚMERO CAMBIÓ - Cargando historial previo para contexto...")
                 historial_previo = sheets_manager.obtener_historial_completo(fila)
 
                 if any(historial_previo.values()):
-                    print(f"📚 Historial cargado:")
+                    print(f" Historial cargado:")
                     if historial_previo['referencia']:
                         print(f"   - Referencia: {historial_previo['referencia'][:80]}...")
                     if historial_previo['intentos_buzon']:
@@ -1400,7 +1400,7 @@ def webhook_voz():
     bruce_id = None
     if logs_manager:
         bruce_id = logs_manager.generar_nuevo_id_bruce()
-        print(f"🆔 ID BRUCE generado: {bruce_id}")
+        print(f" ID BRUCE generado: {bruce_id}")
 
     # Crear nueva conversación con Google Sheets y WhatsApp Validator
     agente = AgenteVentas(
@@ -1455,24 +1455,24 @@ def webhook_voz():
     if usa_cache_saludo_corto and "saludo_inicial" in audio_cache:
         # FIX 114: Usar audio pre-generado del saludo corto FIX 112 (0s delay, voz Bruce)
         audio_files[audio_id] = audio_cache["saludo_inicial"]
-        print(f"📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)")
+        print(f" FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)")
     elif usa_cache_saludo_normal and "saludo_inicial" in audio_cache:
         # Usar audio pre-generado del caché - versión normal (0s delay, voz Bruce)
         audio_files[audio_id] = audio_cache["saludo_inicial"]
-        print(f"📦 Saludo inicial (normal) desde caché (0s delay, voz Bruce)")
+        print(f" Saludo inicial (normal) desde caché (0s delay, voz Bruce)")
     elif usa_cache_saludo_encargado and "saludo_inicial_encargado" in audio_cache:
         # Usar audio pre-generado del caché - versión encargado (0s delay, voz Bruce)
         audio_files[audio_id] = audio_cache["saludo_inicial_encargado"]
-        print(f"📦 Saludo inicial (encargado) desde caché (0s delay, voz Bruce)")
+        print(f" Saludo inicial (encargado) desde caché (0s delay, voz Bruce)")
     else:
         # Fallback: generar con ElevenLabs si no hay caché
-        print(f"⚠️ Generando saludo inicial con ElevenLabs (caché no disponible - tardará 2-4s)")
+        print(f" Generando saludo inicial con ElevenLabs (caché no disponible - tardará 2-4s)")
         generar_audio_elevenlabs(mensaje_inicial, audio_id)
 
     # FIX 212: DEEPGRAM STREAMING - Transcripción en tiempo real
     # Iniciar MediaStream hacia nuestro servidor WebSocket para Deepgram
     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
-        print(f"🎙️ FIX 212: Iniciando MediaStream para Deepgram")
+        print(f" FIX 212: Iniciando MediaStream para Deepgram")
 
         # Obtener URL base del servidor (para WebSocket)
         # En Railway: wss://nioval-webhook-server-production.up.railway.app/media-stream
@@ -1501,7 +1501,7 @@ def webhook_voz():
         recording_status_callback_event="completed"
     )
     response.append(start_recording)
-    print(f"   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada")
+    print(f"    FIX 271: Grabación asíncrona de llamada completa iniciada")
 
     # FIX 214: ELIMINAR COSTOS DE TWILIO SPEECH RECOGNITION
     # Twilio cobra por usar input="speech" con language (Speech Recognition)
@@ -1516,7 +1516,7 @@ def webhook_voz():
     # FIX 455: Limpiar transcripciones acumuladas antes de reproducir audio inicial
     import time as time_module  # FIX 455: Import local para evitar conflictos
     if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
-        print(f"🧹 FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones previas (audio inicial)")
+        print(f" FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones previas (audio inicial)")
         deepgram_transcripciones[call_sid] = []
         if call_sid in deepgram_ultima_final:
             deepgram_ultima_final[call_sid] = {}
@@ -1546,7 +1546,7 @@ def webhook_voz():
         recording_status_callback_method="POST"
     )
 
-    print(f"   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)")
+    print(f"    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)")
 
     return Response(str(response), mimetype="text/xml")
 
@@ -1559,7 +1559,7 @@ def grabacion_status():
     recording_url = request.form.get("RecordingUrl", "")
     call_sid = request.form.get("CallSid", "")
 
-    print(f"📼 FIX 214: Grabación fragmento {recording_status} - CallSid: {call_sid}")
+    print(f" FIX 214: Grabación fragmento {recording_status} - CallSid: {call_sid}")
     if recording_url:
         print(f"   URL: {recording_url}")
 
@@ -1587,7 +1587,7 @@ def grabacion_llamada_completa():
         recording_duration = request.form.get("RecordingDuration", "0")
         call_sid = request.form.get("CallSid", "")
 
-    print(f"\n🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA")
+    print(f"\n FIX 267: GRABACIÓN COMPLETA DE LLAMADA")
     print(f"   CallSid: {call_sid}")
     print(f"   RecordingSid: {recording_sid}")
     print(f"   Status: {recording_status}")
@@ -1599,21 +1599,21 @@ def grabacion_llamada_completa():
         if agente:
             agente.lead_data["recording_url"] = recording_url
             agente.lead_data["recording_duration"] = recording_duration
-            print(f"   ✅ URL guardada en lead_data del agente")
+            print(f"    URL guardada en lead_data del agente")
         else:
-            print(f"   ⚠️ Agente no encontrado en conversaciones_activas (llamada ya terminó)")
+            print(f"    Agente no encontrado en conversaciones_activas (llamada ya terminó)")
 
         # FIX 272: Guardar URL asociada al bruce_id para el historial
         bruce_id = callsid_to_bruceid.get(call_sid)
         if bruce_id:
             grabaciones_por_bruce[bruce_id] = recording_url
-            print(f"   ✅ FIX 272: Grabación asociada a {bruce_id}")
+            print(f"    FIX 272: Grabación asociada a {bruce_id}")
 
             # Actualizar historial existente
             for llamada in historial_llamadas:
                 if llamada.get("bruce_id") == bruce_id:
                     llamada["detalles"]["recording_url"] = recording_url
-                    print(f"   ✅ FIX 272: Historial actualizado con URL de grabación")
+                    print(f"    FIX 272: Historial actualizado con URL de grabación")
                     # FIX 272.2: Persistir cambio en disco
                     guardar_historial()
                     break
@@ -1637,7 +1637,7 @@ def procesar_respuesta():
         answered_by = request.args.get("AnsweredBy", "")
 
         # DEBUG: Log todos los parámetros de Twilio
-        print(f"\n🔍 DEBUG - Parámetros Twilio (GET):")
+        print(f"\n DEBUG - Parámetros Twilio (GET):")
         print(f"   CallSid: {call_sid}")
         print(f"   CallStatus: {call_status}")
         print(f"   AnsweredBy: {answered_by}")
@@ -1653,7 +1653,7 @@ def procesar_respuesta():
         answered_by = request.form.get("AnsweredBy", "")
 
         # DEBUG: Log todos los parámetros de Twilio
-        print(f"\n🔍 DEBUG - Parámetros Twilio (POST):")
+        print(f"\n DEBUG - Parámetros Twilio (POST):")
         print(f"   CallSid: {call_sid}")
         print(f"   CallStatus: {call_status}")
         print(f"   AnsweredBy: {answered_by}")
@@ -1681,7 +1681,10 @@ def procesar_respuesta():
         # FIX 451: Variable para rastrear si esperamos FINAL
         esperando_final = True
         tiempo_espera_final_extra = 0.0
-        max_espera_final_extra = 1.0  # Máximo 1s adicional esperando FINAL después de PARCIAL
+        # FIX 475 (AUDITORIA W04): Reducir timeout de 1.0s a 0.3s para TODAS las transcripciones
+        # Latencias de 30-115s observadas causando pérdida de leads
+        # Benchmark industria: <300ms, nuevo timeout: 300ms universal
+        max_espera_final_extra = 0.3  # Máximo 0.3s adicional esperando FINAL después de PARCIAL
 
         # FIX 477: BRUCE1443 - Reducir espera para saludos cortos (reduce delay en 2do mensaje)
         # Si la PARCIAL es un saludo corto, no esperar 1s completo por FINAL
@@ -1711,22 +1714,23 @@ def procesar_respuesta():
                     parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
                     es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
 
-                    # Reducir espera para saludos cortos (0.3s en lugar de 1s)
-                    max_espera_ajustada = 0.3 if es_saludo_corto else max_espera_final_extra
+                    # FIX 475 (AUDITORIA W04): Timeout universal de 0.3s para todas las transcripciones
+                    # No diferenciar entre saludos y otras frases - consistencia de latencia
+                    max_espera_ajustada = max_espera_final_extra  # Ya es 0.3s universal
 
                     if es_saludo_corto and tiempo_espera_final_extra == 0:
-                        print(f"🚀 FIX 477: Saludo corto detectado '{parcial_actual}' - reduciendo espera a 0.3s")
+                        print(f" FIX 477: Saludo corto detectado '{parcial_actual}' - reduciendo espera a 0.3s")
 
                     # Solo tenemos PARCIAL - esperar un poco más por FINAL
                     if tiempo_espera_final_extra < max_espera_ajustada:
                         tiempo_espera_final_extra += wait_interval
                         time.sleep(wait_interval)
                         tiempo_esperado += wait_interval
-                        print(f"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_ajustada}s)")
+                        print(f" FIX 451: Solo PARCIAL disponible, esperando FINAL... ({tiempo_espera_final_extra:.2f}s/{max_espera_ajustada}s)")
                         continue
                     else:
                         # Ya esperamos suficiente, usar PARCIAL con advertencia
-                        print(f"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
+                        print(f" FIX 451: Usando transcripción PARCIAL después de esperar {max_espera_final_extra}s por FINAL")
 
                         # FIX 465: BRUCE1398 - Detectar si la frase está INCOMPLETA
                         # Si termina con coma o palabras conectoras, el cliente sigue hablando
@@ -1740,13 +1744,13 @@ def procesar_respuesta():
                             # Termina con coma = definitivamente incompleta
                             if ultima_parcial_texto.endswith(','):
                                 frase_incompleta = True
-                                print(f"   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando")
+                                print(f"    FIX 465: Frase termina en COMA - cliente sigue hablando")
                             # Termina con palabra conectora
                             elif any(ultima_parcial_texto.endswith(f' {palabra}') for palabra in [
                                 'y', 'pero', 'o', 'que', 'porque', 'este', 'bueno', 'pues', 'entonces', 'como'
                             ]):
                                 frase_incompleta = True
-                                print(f"   ⚠️ FIX 465: Frase termina en CONECTOR - cliente sigue hablando")
+                                print(f"    FIX 465: Frase termina en CONECTOR - cliente sigue hablando")
 
                         # FIX 465: Si frase incompleta, esperar 0.5s más antes de continuar
                         if frase_incompleta:
@@ -1761,7 +1765,7 @@ def procesar_respuesta():
                                 with deepgram_transcripciones_lock:
                                     trans_actuales = deepgram_transcripciones.get(call_sid, [])
                                 if trans_actuales and len(trans_actuales[-1]) > len(ultima_parcial_texto):
-                                    print(f"   ✅ FIX 465: Nueva transcripción más larga recibida")
+                                    print(f"    FIX 465: Nueva transcripción más larga recibida")
                                     # Volver a esperar por FINAL
                                     esperando_final = True
                                     tiempo_espera_final_extra = 0.5  # Ya esperamos algo
@@ -1769,47 +1773,46 @@ def procesar_respuesta():
 
                                 if esperando_final:
                                     continue  # Volver al loop principal
-                                else:
-                                    print(f"   ⚠️ FIX 465: Sin nueva transcripción después de {max_espera_frase_incompleta}s - usando parcial")
 
+                            # Si no se activó esperando_final, continuar usando parcial
                             esperando_final = False
-                    elif es_final:
-                        print(f"✅ FIX 451: Transcripción FINAL recibida")
+                elif es_final:
+                    print(f" FIX 451: Transcripción FINAL recibida")
 
-                        # FIX 456: BRUCE1375 - Esperar para ver si cliente sigue hablando
-                        # El cliente puede pausar brevemente pero continuar hablando
-                        tiempo_espera_post_final = 0.0
-                        max_espera_post_final = 0.35  # 350ms para detectar si sigue hablando
-                        timestamp_final = info_ultima.get("timestamp", time.time())
+                    # FIX 456: BRUCE1375 - Esperar para ver si cliente sigue hablando
+                    # El cliente puede pausar brevemente pero continuar hablando
+                    tiempo_espera_post_final = 0.0
+                    max_espera_post_final = 0.35  # 350ms para detectar si sigue hablando
+                    timestamp_final = info_ultima.get("timestamp", time.time())
 
-                        while tiempo_espera_post_final < max_espera_post_final:
-                            time.sleep(0.05)  # Esperar 50ms
-                            tiempo_espera_post_final += 0.05
-                            tiempo_esperado += 0.05
+                    while tiempo_espera_post_final < max_espera_post_final:
+                        time.sleep(0.05)  # Esperar 50ms
+                        tiempo_espera_post_final += 0.05
+                        tiempo_esperado += 0.05
 
-                            # Verificar si llegó una PARCIAL nueva después del FINAL
-                            info_parcial = deepgram_ultima_parcial.get(call_sid, {})
-                            timestamp_parcial = info_parcial.get("timestamp", 0)
+                        # Verificar si llegó una PARCIAL nueva después del FINAL
+                        info_parcial = deepgram_ultima_parcial.get(call_sid, {})
+                        timestamp_parcial = info_parcial.get("timestamp", 0)
 
-                            # Si hay PARCIAL más reciente que el FINAL, cliente sigue hablando
-                            if timestamp_parcial > timestamp_final:
-                                print(f"⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '{info_parcial.get('texto', '')}'")
-                                print(f"   Esperando más transcripciones...")
-                                # Reset espera - esperar por nueva FINAL
-                                esperando_final = True
-                                tiempo_espera_final_extra = 0.0
-                                break
+                        # Si hay PARCIAL más reciente que el FINAL, cliente sigue hablando
+                        if timestamp_parcial > timestamp_final:
+                            print(f" FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '{info_parcial.get('texto', '')}'")
+                            print(f"   Esperando más transcripciones...")
+                            # Reset espera - esperar por nueva FINAL
+                            esperando_final = True
+                            tiempo_espera_final_extra = 0.0
+                            break
 
-                        # FIX 456: Si detectamos que sigue hablando, volver al while principal
-                        if esperando_final and tiempo_espera_final_extra == 0.0:
-                            continue  # Volver a esperar por nueva FINAL
+                    # FIX 456: Si detectamos que sigue hablando, volver al while principal
+                    if esperando_final and tiempo_espera_final_extra == 0.0:
+                        continue  # Volver a esperar por nueva FINAL
 
-                        if tiempo_espera_post_final >= max_espera_post_final:
-                            print(f"✅ FIX 456: No hay PARCIALES nuevas después de {max_espera_post_final}s - cliente terminó de hablar")
+                    if tiempo_espera_post_final >= max_espera_post_final:
+                        print(f" FIX 456: No hay PARCIALES nuevas después de {max_espera_post_final}s - cliente terminó de hablar")
 
                     # FIX 239/242/248: Manejo inteligente de múltiples transcripciones
                     if len(transcripciones_dg) > 1:
-                        print(f"⚠️ FIX 239/242/248: {len(transcripciones_dg)} transcripciones acumuladas")
+                        print(f" FIX 239/242/248: {len(transcripciones_dg)} transcripciones acumuladas")
                         for i, t in enumerate(transcripciones_dg):
                             print(f"   [{i}] '{t}'")
 
@@ -1842,16 +1845,16 @@ def procesar_respuesta():
                             if not es_duplicado:
                                 transcripciones_unicas.append(t)
 
-                        print(f"   🧹 FIX 248: Después de eliminar duplicados: {len(transcripciones_unicas)} transcripciones únicas")
+                        print(f"    FIX 248: Después de eliminar duplicados: {len(transcripciones_unicas)} transcripciones únicas")
 
                         # FIX 242: Buscar la transcripción más completa
                         if len(transcripciones_unicas) == 1:
                             transcripcion_deepgram = transcripciones_unicas[0]
-                            print(f"   ✅ FIX 248: Una sola transcripción única: '{transcripcion_deepgram}'")
+                            print(f"    FIX 248: Una sola transcripción única: '{transcripcion_deepgram}'")
                         else:
                             # Concatenar las partes únicas (ya sin duplicados)
                             transcripcion_deepgram = " ".join(transcripciones_unicas)
-                            print(f"   🔄 FIX 248: Concatenando {len(transcripciones_unicas)} partes únicas: '{transcripcion_deepgram}'")
+                            print(f"    FIX 248: Concatenando {len(transcripciones_unicas)} partes únicas: '{transcripcion_deepgram}'")
                     else:
                         transcripcion_deepgram = transcripciones_dg[0]
 
@@ -1859,16 +1862,16 @@ def procesar_respuesta():
                     speech_original_twilio = speech_result
                     speech_result = transcripcion_deepgram
 
-                    print(f"\n🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó {tiempo_esperado:.1f}s)")
+                    print(f"\n FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó {tiempo_esperado:.1f}s)")
                     print(f"   🟢 Deepgram: '{transcripcion_deepgram}'")
                     if speech_original_twilio:
-                        print(f"   🔵 Twilio: '{speech_original_twilio}'")
+                        print(f"    Twilio: '{speech_original_twilio}'")
 
                     # FIX 408: Resetear contador de timeouts cuando Deepgram responde exitosamente
                     if call_sid in conversaciones_activas:
                         agente_temp = conversaciones_activas[call_sid]
                         if hasattr(agente_temp, 'timeouts_deepgram') and agente_temp.timeouts_deepgram > 0:
-                            print(f"   ✅ FIX 408: Reseteando contador de timeouts (era {agente_temp.timeouts_deepgram})")
+                            print(f"    FIX 408: Reseteando contador de timeouts (era {agente_temp.timeouts_deepgram})")
                             agente_temp.timeouts_deepgram = 0
 
                     deepgram_transcripciones[call_sid] = []
@@ -1885,7 +1888,7 @@ def procesar_respuesta():
         if not usar_deepgram:
             transcripciones_acumuladas = deepgram_transcripciones.get(call_sid, [])
             if transcripciones_acumuladas:
-                print(f"\n⚠️ FIX 469: Timeout pero hay {len(transcripciones_acumuladas)} transcripciones acumuladas")
+                print(f"\n FIX 469: Timeout pero hay {len(transcripciones_acumuladas)} transcripciones acumuladas")
                 for i, t in enumerate(transcripciones_acumuladas):
                     print(f"   [{i}] '{t}'")
 
@@ -1911,10 +1914,10 @@ def procesar_respuesta():
                             transcripciones_unicas.append(t)
 
                     transcripcion_deepgram = " ".join(transcripciones_unicas)
-                    print(f"   ✅ FIX 469: Concatenando {len(transcripciones_unicas)} partes: '{transcripcion_deepgram}'")
+                    print(f"    FIX 469: Concatenando {len(transcripciones_unicas)} partes: '{transcripcion_deepgram}'")
                 else:
                     transcripcion_deepgram = transcripciones_acumuladas[0]
-                    print(f"   ✅ FIX 469: Usando transcripción única: '{transcripcion_deepgram}'")
+                    print(f"    FIX 469: Usando transcripción única: '{transcripcion_deepgram}'")
 
                 usar_deepgram = True
                 speech_original_twilio = speech_result
@@ -1925,13 +1928,13 @@ def procesar_respuesta():
                 if call_sid in deepgram_ultima_final:
                     deepgram_ultima_final[call_sid] = {}
             else:
-                print(f"⚠️ FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
-                print(f"   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
+                print(f" FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
+                print(f"    Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
 
     # FIX 401: WHISPER DESHABILITADO - Deepgram es el único sistema de transcripción
     # Whisper genera demasiadas transcripciones basura ("subtítulos de amara.org")
     if False and not usar_deepgram and recording_url and OPENAI_API_KEY:
-        print(f"\n🎯 FIX 60: RecordingUrl disponible - usando WHISPER API")
+        print(f"\n FIX 60: RecordingUrl disponible - usando WHISPER API")
 
         # FIX 198: Detectar contexto para mejorar transcripción de Whisper
         whisper_prompt = None
@@ -1957,12 +1960,12 @@ def procesar_respuesta():
                 # FIX 198: Prompt específico para emails
                 whisper_prompt = "El cliente está deletreando su correo electrónico. Palabras clave: arroba, @, punto, com, gmail, hotmail, yahoo, guión bajo, guión medio."
                 post_procesar_email = True
-                print(f"🎯 FIX 198: Contexto EMAIL detectado - mejorando transcripción")
+                print(f" FIX 198: Contexto EMAIL detectado - mejorando transcripción")
 
             elif estaba_pidiendo_whatsapp:
                 # Prompt para números telefónicos
                 whisper_prompt = "El cliente está dictando su número de WhatsApp o teléfono en español. Números del 0 al 9."
-                print(f"🎯 FIX 198: Contexto WHATSAPP detectado - mejorando transcripción")
+                print(f" FIX 198: Contexto WHATSAPP detectado - mejorando transcripción")
 
         transcripcion_whisper = transcribir_con_whisper(
             recording_url,
@@ -2000,7 +2003,7 @@ def procesar_respuesta():
                 es_basura = True
 
             if es_basura:
-                print(f"\n🚫 FIX 233: Transcripción BASURA detectada de Whisper: '{transcripcion_whisper}'")
+                print(f"\n FIX 233: Transcripción BASURA detectada de Whisper: '{transcripcion_whisper}'")
                 print(f"   Ignorando y esperando entrada válida del cliente...")
                 # NO usar esta transcripción - retornar TwiML para seguir escuchando
                 transcripcion_whisper = None
@@ -2011,17 +2014,17 @@ def procesar_respuesta():
 
                 # Log de comparación (útil para validar mejora)
                 if speech_original_twilio:
-                    print(f"\n📊 FIX 60: COMPARACIÓN DE TRANSCRIPCIONES:")
-                    print(f"   🔵 Twilio: '{speech_original_twilio}'")
+                    print(f"\n FIX 60: COMPARACIÓN DE TRANSCRIPCIONES:")
+                    print(f"    Twilio: '{speech_original_twilio}'")
                     print(f"   🟢 Whisper: '{transcripcion_whisper}'")
                     if speech_original_twilio.lower() != transcripcion_whisper.lower():
-                        print(f"   ⚠️  DIFERENCIAS DETECTADAS - Whisper será más preciso")
+                        print(f"     DIFERENCIAS DETECTADAS - Whisper será más preciso")
                 else:
-                    print(f"   ℹ️  Solo Whisper disponible (Twilio no transcribió)")
+                    print(f"   ℹ  Solo Whisper disponible (Twilio no transcribió)")
         else:
-            print(f"   ⚠️  Whisper falló - fallback a transcripción de Twilio")
+            print(f"     Whisper falló - fallback a transcripción de Twilio")
     elif not OPENAI_API_KEY:
-        print(f"   ℹ️  OPENAI_API_KEY no configurada - usando Twilio Speech Recognition")
+        print(f"   ℹ  OPENAI_API_KEY no configurada - usando Twilio Speech Recognition")
 
     # FIX 28/94: Corrección de transcripciones comunes de Whisper/Twilio
     # Whisper confunde palabras que suenan similar pero tienen significados diferentes
@@ -2090,19 +2093,19 @@ def procesar_respuesta():
                 # Reemplazar en el texto completo (eliminar " con [letra]")
                 speech_result = speech_result[:match.start()] + palabra_corregida + speech_result[match.end():]
 
-                print(f"🔧 FIX 30 - Corrección ortográfica:")
+                print(f" FIX 30 - Corrección ortográfica:")
                 print(f"   '{palabra_original} con {letra_correcta}' → '{palabra_corregida}'")
 
         # Log si hubo correcciones
         if speech_result != speech_original:
-            print(f"🔧 FIX 28/30 - Transcripción corregida:")
+            print(f" FIX 28/30 - Transcripción corregida:")
             print(f"   Original: '{speech_original}'")
             print(f"   Corregida: '{speech_result}'")
 
     # Verificar si Twilio detectó buzón de voz (AnsweredBy=machine_start)
     if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
-        print(f"📞 Buzón de voz detectado automáticamente por Twilio: {answered_by}")
-        print(f"💬 Marcando como BUZON")
+        print(f" Buzón de voz detectado automáticamente por Twilio: {answered_by}")
+        print(f" Marcando como BUZON")
 
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
@@ -2112,7 +2115,7 @@ def procesar_respuesta():
             agente.lead_data["pregunta_0"] = "Buzon"
             agente.lead_data["pregunta_7"] = "BUZON"
             agente.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado actualizado: Buzón detectado automáticamente")
+            print(f" Estado actualizado: Buzón detectado automáticamente")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -2144,14 +2147,14 @@ def procesar_respuesta():
             'este número', 'este numero', 'a este mismo', 'mi número', 'mi numero'
         ])
         if cliente_ofrece_contacto:
-            print(f"✅ FIX 463: NO es buzón - cliente OFRECE contacto (WhatsApp/número)")
+            print(f" FIX 463: NO es buzón - cliente OFRECE contacto (WhatsApp/número)")
             print(f"   Mensaje: '{speech_result[:80]}...'")
             es_buzon_por_contenido = False
 
     if es_buzon_por_contenido:
-        print(f"📞 FIX 105: Buzón detectado por contenido del SpeechResult")
+        print(f" FIX 105: Buzón detectado por contenido del SpeechResult")
         print(f"   Mensaje: '{speech_result[:100]}...'")
-        print(f"💬 Marcando como BUZON")
+        print(f" Marcando como BUZON")
 
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
@@ -2161,7 +2164,7 @@ def procesar_respuesta():
             agente.lead_data["pregunta_0"] = "Buzon"
             agente.lead_data["pregunta_7"] = "BUZON"
             agente.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado actualizado: Buzón detectado por análisis de contenido")
+            print(f" Estado actualizado: Buzón detectado por análisis de contenido")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -2207,9 +2210,9 @@ def procesar_respuesta():
     es_operadora = any(keyword in speech_lower for keyword in keywords_operadora)
 
     if es_operadora:
-        print(f"📞 FIX 109: Operadora/IVR detectada por contenido del SpeechResult")
+        print(f" FIX 109: Operadora/IVR detectada por contenido del SpeechResult")
         print(f"   Mensaje: '{speech_result[:100]}...'")
-        print(f"💬 Marcando como OPERADORA")
+        print(f" Marcando como OPERADORA")
 
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
@@ -2219,7 +2222,7 @@ def procesar_respuesta():
             agente.lead_data["pregunta_0"] = "Operadora"
             agente.lead_data["pregunta_7"] = "OPERADORA"
             agente.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado actualizado: Operadora/IVR detectada")
+            print(f" Estado actualizado: Operadora/IVR detectada")
 
             # Guardar la llamada
             agente.guardar_llamada_y_lead()
@@ -2236,15 +2239,15 @@ def procesar_respuesta():
     estados_llamada_terminada = ["completed", "busy", "no-answer", "canceled", "failed"]
 
     if call_status in estados_llamada_terminada:
-        print(f"📞 Llamada YA terminada - Estado: {call_status}")
+        print(f" Llamada YA terminada - Estado: {call_status}")
 
         # FIX 195: Verificar si hay SpeechResult para procesar
         if speech_result and speech_result.strip():
-            print(f"⚠️ FIX 195: Llamada terminada pero hay transcripción: '{speech_result}'")
+            print(f" FIX 195: Llamada terminada pero hay transcripción: '{speech_result}'")
             print(f"   Esto indica request duplicado de Twilio - transcripción ya procesada")
             # NO procesar de nuevo - ya se procesó en request "in-progress"
         else:
-            print(f"💬 Cliente colgó o llamada desconectada")
+            print(f" Cliente colgó o llamada desconectada")
 
         # Obtener agente si existe
         agente = conversaciones_activas.get(call_sid)
@@ -2263,10 +2266,10 @@ def procesar_respuesta():
                 agente.lead_data["pregunta_0"] = "Colgo"
                 agente.lead_data["pregunta_7"] = "Colgo"
                 agente.lead_data["resultado"] = "NEGADO"
-                print(f"📝 Estado actualizado: Cliente colgó (sin datos capturados)")
+                print(f" Estado actualizado: Cliente colgó (sin datos capturados)")
             elif tiene_dato_capturado:
                 # FIX 176: Si hay datos capturados, determinar conclusión correcta
-                print(f"📝 FIX 176: Cliente colgó pero SÍ capturamos datos:")
+                print(f" FIX 176: Cliente colgó pero SÍ capturamos datos:")
                 print(f"   WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
                 print(f"   Email: {bool(agente.lead_data.get('email'))}")
                 print(f"   Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
@@ -2287,12 +2290,12 @@ def procesar_respuesta():
     estados_validos = ["in-progress", "ringing", "answered", ""]  # "" = sin status (primera llamada)
 
     if call_status and call_status not in estados_validos:
-        print(f"⚠️ FIX 195: CallStatus inválido para procesar: '{call_status}' - ignorando")
+        print(f" FIX 195: CallStatus inválido para procesar: '{call_status}' - ignorando")
         response = VoiceResponse()
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
-    print(f"✅ FIX 195: CallStatus válido ('{call_status}' o vacío) - procesando transcripción")
+    print(f" FIX 195: CallStatus válido ('{call_status}' o vacío) - procesando transcripción")
 
     # Obtener agente de esta conversación
     agente = conversaciones_activas.get(call_sid)
@@ -2304,7 +2307,7 @@ def procesar_respuesta():
         return Response(str(response), mimetype="text/xml")
 
     # LOG: Mostrar lo que dijo el cliente
-    print(f"\n💬 CLIENTE DIJO: \"{speech_result}\"")
+    print(f"\n CLIENTE DIJO: \"{speech_result}\"")
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id_cliente = agente.lead_data.get("bruce_id", "N/A") if agente else "N/A"
     log_evento(f"{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
@@ -2340,7 +2343,7 @@ def procesar_respuesta():
 
             if not email_parece_completo:
                 # Email incompleto - esperar más
-                print(f"\n📧 FIX 265: CLIENTE DELETREANDO EMAIL (incompleto)")
+                print(f"\n FIX 265: CLIENTE DELETREANDO EMAIL (incompleto)")
                 print(f"   Transcripción parcial: '{speech_result}'")
                 print(f"   tiene_arroba: {tiene_arroba}, tiene_punto: {tiene_punto}, tiene_dominio: {tiene_dominio}")
 
@@ -2360,10 +2363,10 @@ def procesar_respuesta():
                     trim="trim-silence"
                 )
 
-                print(f"   ✅ FIX 265: Esperando que termine el email con timeout de 5s...")
+                print(f"    FIX 265: Esperando que termine el email con timeout de 5s...")
                 return Response(str(response), mimetype="text/xml")
             else:
-                print(f"   ✅ FIX 265: Email parece completo - procesar normalmente")
+                print(f"    FIX 265: Email parece completo - procesar normalmente")
 
         # Verificar si el cliente tiene historial de habla activa
         if call_sid in cliente_hablando_activo:
@@ -2396,7 +2399,7 @@ def procesar_respuesta():
             cliente_pidio_espera = any(frase in frase_limpia for frase in frases_espera_cliente)
 
             if cliente_pidio_espera:
-                print(f"\n⏸️ FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
+                print(f"\n FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
                 print(f"   Estableciendo estado ESPERANDO_TRANSFERENCIA")
 
                 # Establecer estado de espera en el agente
@@ -2439,7 +2442,7 @@ def procesar_respuesta():
                     trim="trim-silence"
                 )
 
-                print(f"   ✅ FIX 470: Esperando transferencia con timeout de 30s...")
+                print(f"    FIX 470: Esperando transferencia con timeout de 30s...")
                 return Response(str(response), mimetype="text/xml")
 
             es_pregunta_rapida = (
@@ -2454,7 +2457,7 @@ def procesar_respuesta():
             # FIX 260: Pero NO si es una pregunta (preguntas cortas son válidas)
             if palabras_nuevas < 3 and info_habla["palabras_dichas"] > 3 and not es_pregunta_rapida:
                 frase_parece_incompleta = True
-                print(f"   🚨 FIX 244: Frase corta ({palabras_nuevas} palabras) después de hablar")
+                print(f"    FIX 244: Frase corta ({palabras_nuevas} palabras) después de hablar")
 
             # 2. Frase termina en preposición/artículo/verbo copulativo (indica continuación)
             # FIX 250: Agregar verbos copulativos y auxiliares que requieren complemento
@@ -2487,9 +2490,9 @@ def procesar_respuesta():
             # FIX 260: Si es pregunta, NO marcar como incompleta aunque termine en "es"
             if ultima_palabra in palabras_continuacion and not es_pregunta:
                 frase_parece_incompleta = True
-                print(f"   🚨 FIX 244/250: Frase termina en '{ultima_palabra}' (continuación esperada)")
+                print(f"    FIX 244/250: Frase termina en '{ultima_palabra}' (continuación esperada)")
             elif ultima_palabra in palabras_continuacion and es_pregunta:
-                print(f"   ✅ FIX 260: Frase termina en '{ultima_palabra}' pero ES PREGUNTA - responder inmediatamente")
+                print(f"    FIX 260: Frase termina en '{ultima_palabra}' pero ES PREGUNTA - responder inmediatamente")
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
             # FIX 264: Pero NO si es una pregunta o termina en signo de interrogación
@@ -2497,9 +2500,9 @@ def procesar_respuesta():
             if tiempo_hablando < 2.0 and palabras_nuevas >= 2 and not es_pregunta and not termina_en_pregunta:
                 # Probablemente sigue hablando - el timeout de 2s lo interrumpió
                 frase_parece_incompleta = True
-                print(f"   🚨 FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
+                print(f"    FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
             elif tiempo_hablando < 2.0 and (es_pregunta or termina_en_pregunta):
-                print(f"   ✅ FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente")
+                print(f"    FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente")
 
             # FIX 253: Detectar si cliente está deletreando email (arroba, punto, @)
             palabras_deletreo_email = ["arroba", "punto", "guion", "guión", "bajo", "@", "gmail", "hotmail", "yahoo"]
@@ -2507,7 +2510,7 @@ def procesar_respuesta():
 
             if esta_deletreando_email:
                 frase_parece_incompleta = True
-                print(f"   🚨 FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
+                print(f"    FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
 
             # FIX 286: Detectar si cliente está repitiendo lo mismo (indica que espera respuesta)
             if hasattr(agente, 'transcripcion_parcial_acumulada') and len(agente.transcripcion_parcial_acumulada) >= 2:
@@ -2515,7 +2518,7 @@ def procesar_respuesta():
                 speech_lower_strip = speech_result.lower().strip()
                 # Si las últimas 2 transcripciones son iguales a la actual, el cliente está repitiendo
                 if ultimas_2[-1] == speech_lower_strip or (len(ultimas_2) >= 2 and ultimas_2[-1] == ultimas_2[-2] == speech_lower_strip):
-                    print(f"\n⚠️ FIX 286: CLIENTE REPITIENDO - probablemente terminó de deletrear")
+                    print(f"\n FIX 286: CLIENTE REPITIENDO - probablemente terminó de deletrear")
                     print(f"   Repitiendo: '{speech_result}'")
                     print(f"   Historial: {agente.transcripcion_parcial_acumulada[-3:]}")
                     frase_parece_incompleta = False  # Forzar respuesta
@@ -2548,14 +2551,14 @@ def procesar_respuesta():
                 for palabra in palabras_esperando_dato:
                     if ultima_parcial.endswith(palabra) or f'{palabra} es' in ultima_parcial or f'el {palabra}' in ultima_parcial:
                         cliente_dando_dato_previo = True
-                        print(f"   ⚠️ FIX 453: Contexto previo indica dato pendiente ('{ultima_parcial}')")
+                        print(f"    FIX 453: Contexto previo indica dato pendiente ('{ultima_parcial}')")
                         break
 
             if frase_parece_incompleta and frase_es_saludo_simple and not cliente_dando_dato_previo:
-                print(f"   ✅ FIX 441: '{speech_result}' es saludo simple - NO esperar continuación")
+                print(f"    FIX 441: '{speech_result}' es saludo simple - NO esperar continuación")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
             elif frase_es_saludo_simple and cliente_dando_dato_previo:
-                print(f"   ⏳ FIX 453: '{speech_result}' parece saludo PERO cliente daba dato - ESPERAR")
+                print(f"    FIX 453: '{speech_result}' parece saludo PERO cliente daba dato - ESPERAR")
 
             # FIX 473: BRUCE1425 - Detectar frases de CORTESIA como respuestas completas
             # En Mexico es comun responder "Buen dia, a sus ordenes" o "Para servirle"
@@ -2569,7 +2572,7 @@ def procesar_respuesta():
             frase_es_cortesia = any(cortesia in frase_limpia for cortesia in frases_cortesia)
 
             if frase_parece_incompleta and frase_es_cortesia:
-                print(f"   ✅ FIX 473: BRUCE1425 - '{speech_result}' es frase de CORTESIA - NO esperar")
+                print(f"    FIX 473: BRUCE1425 - '{speech_result}' es frase de CORTESIA - NO esperar")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
 
             # FIX 471: BRUCE1415 - "No tengo" es respuesta completa, NO esperar continuación
@@ -2582,7 +2585,7 @@ def procesar_respuesta():
             frase_es_no_hay_encargado = any(resp in frase_limpia for resp in respuestas_no_hay_encargado)
 
             if frase_parece_incompleta and frase_es_no_hay_encargado:
-                print(f"   ✅ FIX 471: '{speech_result}' indica NO HAY ENCARGADO - NO esperar continuación")
+                print(f"    FIX 471: '{speech_result}' indica NO HAY ENCARGADO - NO esperar continuación")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
 
             # FIX 472: BRUCE1419 - Si cliente responde solo "No" a pregunta sobre encargado
@@ -2606,7 +2609,7 @@ def procesar_respuesta():
                 ])
 
                 if bruce_pregunto_encargado:
-                    print(f"   ✅ FIX 472: BRUCE1419 - Cliente dijo '{speech_result}' a pregunta de encargado")
+                    print(f"    FIX 472: BRUCE1419 - Cliente dijo '{speech_result}' a pregunta de encargado")
                     print(f"   Ultimo de Bruce: '{ultimo_mensaje_bruce[:60]}...'")
                     print(f"   'No' es respuesta COMPLETA - NO esperar continuacion")
                     frase_parece_incompleta = False  # Forzar respuesta inmediata
@@ -2634,13 +2637,13 @@ def procesar_respuesta():
             cliente_ofreciendo_datos = any(frase in frase_limpia for frase in frases_ofrecimiento_datos)
 
             if cliente_ofreciendo_datos:
-                print(f"   🎯 FIX 443: CLIENTE OFRECIENDO DATOS - esperar a que termine")
+                print(f"    FIX 443: CLIENTE OFRECIENDO DATOS - esperar a que termine")
                 print(f"   Detectado: '{speech_result}'")
                 frase_parece_incompleta = True  # Forzar espera para captar el dato completo
                 esta_deletreando_email = True  # Usar timeout largo (2.5s) igual que con emails
 
             if frase_parece_incompleta:
-                print(f"\n⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
+                print(f"\n FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
                 print(f"   Transcripción parcial: '{speech_result}'")
                 print(f"   Tiempo hablando: {tiempo_hablando:.1f}s")
                 print(f"   Palabras dichas: {palabras_nuevas} (historial: {info_habla['palabras_dichas']})")
@@ -2652,7 +2655,7 @@ def procesar_respuesta():
 
                 # FIX 286: Limitar a máximo 5 esperas para evitar loops infinitos
                 if len(agente.transcripcion_parcial_acumulada) >= 5:
-                    print(f"\n⚠️ FIX 286: LÍMITE DE ESPERA ALCANZADO ({len(agente.transcripcion_parcial_acumulada)} parciales)")
+                    print(f"\n FIX 286: LÍMITE DE ESPERA ALCANZADO ({len(agente.transcripcion_parcial_acumulada)} parciales)")
                     print(f"   Forzando respuesta para evitar timeout infinito")
                     # NO retornar - dejar que procese con GPT
                 else:
@@ -2673,12 +2676,12 @@ def procesar_respuesta():
                         trim="trim-silence"
                     )
 
-                    print(f"   ✅ FIX 244/395/442: Esperando continuación con timeout de {timeout_espera}s...")
+                    print(f"    FIX 244/395/442: Esperando continuación con timeout de {timeout_espera}s...")
                     return Response(str(response), mimetype="text/xml")
 
         # Si llegó aquí y hay transcripciones parciales acumuladas, concatenar
         if hasattr(agente, 'transcripcion_parcial_acumulada') and agente.transcripcion_parcial_acumulada:
-            print(f"\n🔄 FIX 244: Concatenando transcripciones parciales")
+            print(f"\n FIX 244: Concatenando transcripciones parciales")
             for i, parcial in enumerate(agente.transcripcion_parcial_acumulada):
                 print(f"   [{i}] '{parcial}'")
 
@@ -2687,7 +2690,7 @@ def procesar_respuesta():
 
             # Concatenar todas las partes
             speech_result = " ".join(agente.transcripcion_parcial_acumulada)
-            print(f"   ✅ FIX 244: Frase completa: '{speech_result}'")
+            print(f"    FIX 244: Frase completa: '{speech_result}'")
 
             # Limpiar acumulador
             agente.transcripcion_parcial_acumulada = []
@@ -2702,7 +2705,7 @@ def procesar_respuesta():
         # El cliente pidió "Permítame un segundo" y está transfiriendo la llamada
         from agente_ventas import EstadoConversacion
         if agente.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-            print(f"⏸️ FIX 470: Respuesta vacía pero estamos en ESPERANDO_TRANSFERENCIA - seguir esperando")
+            print(f" FIX 470: Respuesta vacía pero estamos en ESPERANDO_TRANSFERENCIA - seguir esperando")
             print(f"   Silencios ignorados, esperando que cliente vuelva...")
 
             # NO incrementar respuestas_vacias_consecutivas
@@ -2718,11 +2721,11 @@ def procesar_respuesta():
                 trim="trim-silence"
             )
 
-            print(f"   ✅ FIX 470: Continuando espera con timeout de 30s...")
+            print(f"    FIX 470: Continuando espera con timeout de 30s...")
             return Response(str(response), mimetype="text/xml")
 
         agente.respuestas_vacias_consecutivas += 1
-        print(f"⚠️ Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
+        print(f" Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
         # FIX 145: Si es el PRIMER mensaje y está vacío, NO pedir repetición
         # Cliente normal necesita 2-3s para procesar "Hola, buen dia"
@@ -2736,7 +2739,7 @@ def procesar_respuesta():
 
             # Incrementar contador de timeouts
             agente.timeouts_deepgram += 1
-            print(f"🚨 FIX 408: Primer mensaje vacío (timeout #{agente.timeouts_deepgram})")
+            print(f" FIX 408: Primer mensaje vacío (timeout #{agente.timeouts_deepgram})")
 
             agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
             response = VoiceResponse()
@@ -2746,7 +2749,7 @@ def procesar_respuesta():
             if agente.timeouts_deepgram == 1:
                 # PRIMER TIMEOUT: Pedir repetición natural
                 respuesta_timeout = "Disculpe, no alcancé a escucharle bien, ¿me podría repetir?"
-                print(f"   📞 FIX 408: Primer timeout - pidiendo repetición natural")
+                print(f"    FIX 408: Primer timeout - pidiendo repetición natural")
 
                 # Agregar al historial
                 agente.conversation_history.append({
@@ -2772,7 +2775,7 @@ def procesar_respuesta():
             elif agente.timeouts_deepgram == 2:
                 # SEGUNDO TIMEOUT: Pedir repetición más directa
                 respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
-                print(f"   📞 FIX 408: Segundo timeout - pidiendo repetición directa")
+                print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
 
                 # Agregar al historial
                 agente.conversation_history.append({
@@ -2797,7 +2800,7 @@ def procesar_respuesta():
 
             else:
                 # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
-                print(f"   ⚠️ FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
+                print(f"    FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
                 segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
                 # Agregar al historial como si hubiera respondido
@@ -2813,7 +2816,7 @@ def procesar_respuesta():
                 # FIX 455: Limpiar transcripciones antes de enviar segunda parte
                 import time as time_mod  # FIX 455: Import local
                 if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
-                    print(f"🧹 FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones (segunda parte)")
+                    print(f" FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones (segunda parte)")
                     deepgram_transcripciones[call_sid] = []
                     if call_sid in deepgram_ultima_final:
                         deepgram_ultima_final[call_sid] = {}
@@ -2824,7 +2827,7 @@ def procesar_respuesta():
                     audio_id = f"segunda_parte_vacio_{call_sid}"
                     audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
                     audio_url = request.url_root + f"audio/{audio_id}"
-                    print(f"📦 FIX 408: Usando audio pre-generado de segunda_parte_saludo")
+                    print(f" FIX 408: Usando audio pre-generado de segunda_parte_saludo")
                     response.play(audio_url)
                 else:
                     # Generar audio si no está en caché
@@ -2848,13 +2851,13 @@ def procesar_respuesta():
                 trim="trim-silence"
             )
 
-            print(f"✅ FIX 408: Respuesta enviada según nivel de timeout")
+            print(f" FIX 408: Respuesta enviada según nivel de timeout")
             return Response(str(response), mimetype="text/xml")
 
         # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
         # El cliente necesita tiempo para procesar la confirmación "Sí, estoy aquí"
         if agente.acaba_de_responder_desesperado:
-            print(f"🚨 FIX 143: Cliente desesperado acaba de recibir confirmación - NO pedir repetición")
+            print(f" FIX 143: Cliente desesperado acaba de recibir confirmación - NO pedir repetición")
             print(f"   Esperando a que cliente procese y responda...")
             agente.acaba_de_responder_desesperado = False  # Resetear flag
             agente.respuestas_vacias_consecutivas = 0  # Resetear contador
@@ -2869,13 +2872,13 @@ def procesar_respuesta():
                 play_beep=False,
                 trim="trim-silence"
             )
-            print(f"✅ FIX 143: Esperando respuesta sin pedir repetición (Record)")
+            print(f" FIX 143: Esperando respuesta sin pedir repetición (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # FIX 170: Si cliente va a pasar al encargado, esperar MÁS tiempo
         # El cliente necesita 15-20s para localizar y pasar al encargado
         if agente.esperando_transferencia:
-            print(f"📞 FIX 170: Cliente va a pasar al encargado - Esperando transferencia...")
+            print(f" FIX 170: Cliente va a pasar al encargado - Esperando transferencia...")
             print(f"   Timeout extendido a 20s para dar tiempo a la transferencia")
             agente.esperando_transferencia = False  # Resetear flag después de primer timeout
             agente.respuestas_vacias_consecutivas = 0  # Resetear contador
@@ -2890,12 +2893,12 @@ def procesar_respuesta():
                 play_beep=False,
                 trim="trim-silence"
             )
-            print(f"✅ FIX 170: Esperando hasta 20s para que cliente pase al encargado (Record)")
+            print(f" FIX 170: Esperando hasta 20s para que cliente pase al encargado (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # Primera o segunda vez: Pedir amablemente que repitan
         if agente.respuestas_vacias_consecutivas <= 2:
-            print(f"🎙️ Bruce pedirá que le repitan (intento #{agente.respuestas_vacias_consecutivas})")
+            print(f" Bruce pedirá que le repitan (intento #{agente.respuestas_vacias_consecutivas})")
 
             # Frases variadas para pedir repetición
             frases_repeticion = [
@@ -2908,7 +2911,7 @@ def procesar_respuesta():
             respuesta_agente = frases_repeticion[(agente.respuestas_vacias_consecutivas - 1) % len(frases_repeticion)]
 
             # FIX 152: LOG cuando se reproduce "Disculpa no te escuché bien"
-            print(f"🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN")
+            print(f" FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN")
             print(f"   Mensaje: '{respuesta_agente}'")
             print(f"   Razón: Timeout expiró sin respuesta del cliente")
             print(f"   Intento: #{agente.respuestas_vacias_consecutivas}")
@@ -2929,7 +2932,7 @@ def procesar_respuesta():
                 response.say(respuesta_agente, voice="Polly.Mia", language="es-MX")
 
             # FIX 152: LOG adicional después de generar
-            print(f"✅ Bruce pidió que le repitan")
+            print(f" Bruce pidió que le repitan")
 
             # FIX 214/215: Esperar respuesta del cliente (Record + Deepgram)
             response.record(
@@ -2941,13 +2944,13 @@ def procesar_respuesta():
                 trim="trim-silence"
             )
 
-            print(f"✅ Bruce pidió que le repitan (Record)")
+            print(f" Bruce pidió que le repitan (Record)")
             return Response(str(response), mimetype="text/xml")
 
         # Tercera vez: Cliente probablemente colgó
         else:
-            print(f"📞 Detectadas 3 respuestas vacías consecutivas")
-            print(f"💬 Cliente probablemente colgó o no responde")
+            print(f" Detectadas 3 respuestas vacías consecutivas")
+            print(f" Cliente probablemente colgó o no responde")
 
             # FIX 176: Verificar si se capturaron datos antes de marcar como "Colgo"
             tiene_dato_capturado = (
@@ -2963,10 +2966,10 @@ def procesar_respuesta():
                 agente.lead_data["pregunta_0"] = "Colgo"
                 agente.lead_data["pregunta_7"] = "Colgo"
                 agente.lead_data["resultado"] = "NEGADO"
-                print(f"📝 Estado actualizado: Cliente colgó (3 silencios, sin datos)")
+                print(f" Estado actualizado: Cliente colgó (3 silencios, sin datos)")
             elif tiene_dato_capturado:
                 # FIX 176: Si hay datos, determinar conclusión correcta
-                print(f"📝 FIX 176: 3 silencios pero SÍ hay datos capturados")
+                print(f" FIX 176: 3 silencios pero SÍ hay datos capturados")
                 # FIX 177: Forzar recálculo para sobrescribir "Colgo" temporal
                 agente._determinar_conclusion(forzar_recalculo=True)
                 print(f"   Conclusión: {agente.lead_data.get('pregunta_7')}")
@@ -2991,7 +2994,7 @@ def procesar_respuesta():
     mensajes_usuario = [msg for msg in agente.conversation_history if msg['role'] == 'user']
     es_primera_respuesta = len(mensajes_usuario) == 0
 
-    print(f"🔍 FIX 121 DEBUG: len(conversation_history)={len(agente.conversation_history)}, mensajes_usuario={len(mensajes_usuario)}, es_primera_respuesta={es_primera_respuesta}")
+    print(f" FIX 121 DEBUG: len(conversation_history)={len(agente.conversation_history)}, mensajes_usuario={len(mensajes_usuario)}, es_primera_respuesta={es_primera_respuesta}")
 
     # FIX 210: Saludos simples del cliente - AMPLIADO
     # Cuando el cliente responde con cualquiera de estos al primer saludo,
@@ -3022,14 +3025,14 @@ def procesar_respuesta():
     # FIX 314: Verificar si ya detectamos saludo en interim (pre-cargado)
     if call_sid in respuesta_precargada and respuesta_precargada[call_sid].get("tipo") == "segunda_parte_saludo":
         usa_segunda_parte_saludo = True
-        print(f"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada")
+        print(f" FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada")
         print(f"   Respuesta será instantánea (0s delay)")
     elif es_primera_respuesta and any(saludo in speech_lower for saludo in saludos_simples):
         # Verificar que la respuesta sea SOLO el saludo (no más de 5 palabras)
         palabras = speech_result.split()
         if len(palabras) <= 5:
             usa_segunda_parte_saludo = True
-            print(f"🚀 FIX 121: Saludo simple detectado en primera respuesta: '{speech_result}'")
+            print(f" FIX 121: Saludo simple detectado en primera respuesta: '{speech_result}'")
             print(f"   Usando CACHE de segunda_parte_saludo para respuesta instantánea (0s GPT)")
 
     # FIX 56/70: VERIFICAR CACHÉ DE RESPUESTAS ANTES DE LLAMAR GPT (0s delay)
@@ -3063,7 +3066,7 @@ def procesar_respuesta():
         for frase_obj in frases_objecion:
             if frase_obj in texto:
                 tiene_objeciones_activas = True
-                print(f"🚨 FIX 70: Objeción detectada en historial - DESHABILITANDO CACHE")
+                print(f" FIX 70: Objeción detectada en historial - DESHABILITANDO CACHE")
                 print(f"   Frase: '{frase_obj}'")
                 break
         if tiene_objeciones_activas:
@@ -3071,7 +3074,7 @@ def procesar_respuesta():
 
     # FIX 71: DESHABILITAR CACHE COMPLETAMENTE hasta resolver loops
     # El cache estaba causando respuestas sin contexto que ignoraban objeciones
-    print(f"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo")
+    print(f" FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo")
     print(f"   Razón: Cache causaba loops y respuestas sin contexto")
 
     # TODO: Re-habilitar cache cuando se resuelvan los loops de repetición
@@ -3088,7 +3091,7 @@ def procesar_respuesta():
     # FIX 115/121/131: Si detectamos saludo simple, usar caché directo sin GPT
     if usa_segunda_parte_saludo:
         timestamp_inicio_cache = time.time()
-        print(f"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...")
+        print(f" FIX 121: INICIANDO respuesta desde caché de segunda parte...")
 
         # FIX 131: Verificar si Bruce YA dijo la segunda parte (cliente interrumpió)
         # Si hay 2+ mensajes de Bruce, significa que ya se dijo la segunda parte
@@ -3098,7 +3101,7 @@ def procesar_respuesta():
         if bruce_ya_dijo_segunda_parte:
             # Cliente interrumpió mientras Bruce hablaba el 2do mensaje
             # NO usar caché, usar GPT para responder con nexo
-            print(f"⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché")
+            print(f" FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché")
             print(f"   Cliente dijo: '{speech_result}' mientras Bruce hablaba segunda parte")
             print(f"   Usando GPT con instrucción de nexo en lugar de caché")
 
@@ -3140,7 +3143,7 @@ def procesar_respuesta():
 
             cache_respuestas_stats["cache_hits"] += 1
             tiempo_cache = time.time() - timestamp_inicio_cache
-            print(f"✅ FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
+            print(f" FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
 
     # FIX 97: Preparar contenedor para audio generado en paralelo
     audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
@@ -3160,7 +3163,7 @@ def procesar_respuesta():
 
             # FIX 304: Si respuesta es None (IVR detectado), no procesar audio
             if respuesta_texto is None:
-                print(f"🚨 FIX 304: respuesta_texto es None (IVR detectado) - saliendo del thread")
+                print(f" FIX 304: respuesta_texto es None (IVR detectado) - saliendo del thread")
                 audio_container["audio_id"] = None
                 audio_container["completado"] = True
                 return  # Salir del thread sin procesar audio
@@ -3189,26 +3192,26 @@ def procesar_respuesta():
             audio_id_temp = f"respuesta_{call_sid}_{len(audio_files)}"
 
             if usa_cache_audio:
-                print(f"🎯 FIX 97: Audio cacheado detectado: {cache_key_audio}")
+                print(f" FIX 97: Audio cacheado detectado: {cache_key_audio}")
                 result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp, usar_cache_key=cache_key_audio)
             else:
                 # FIX 98: SIEMPRE usar voz de Bruce (ElevenLabs), sin importar longitud
                 palabras = len(respuesta_texto.split())
-                print(f"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE ({palabras} palabras)")
+                print(f" FIX 98: Generando audio con ElevenLabs VOZ BRUCE ({palabras} palabras)")
                 result = generar_audio_elevenlabs(respuesta_texto, audio_id_temp)
 
             # FIX 102: Logging detallado del resultado
-            print(f"🔍 FIX 102 DEBUG: result = {result}, type = {type(result)}")
+            print(f" FIX 102 DEBUG: result = {result}, type = {type(result)}")
 
             # Guardar resultado en contenedor
             if result is not None:
                 audio_container["audio_id"] = audio_id_temp
                 audio_container["usa_cache"] = usa_cache_audio
                 audio_container["cache_key"] = cache_key_audio
-                debug_print(f"✅ FIX 102: Audio container guardado - audio_id={audio_id_temp}")
+                debug_print(f" FIX 102: Audio container guardado - audio_id={audio_id_temp}")
             else:
                 audio_container["audio_id"] = None  # Usar Twilio TTS
-                print(f"⚠️ FIX 102: generar_audio_elevenlabs() retornó None - usará Twilio TTS")
+                print(f" FIX 102: generar_audio_elevenlabs() retornó None - usará Twilio TTS")
 
             audio_container["completado"] = True
 
@@ -3244,7 +3247,7 @@ def procesar_respuesta():
         if count_patrones >= 1:
             cliente_desesperado = True
             agente.acaba_de_responder_desesperado = True  # FIX 143: Marcar para no pedir repetición después
-            print(f"⚠️ FIX 132: Cliente desesperado detectado - '{speech_result}'")
+            print(f" FIX 132: Cliente desesperado detectado - '{speech_result}'")
             print(f"   Reduciendo timeout de espera a 0s para responder INMEDIATAMENTE")
 
     # FIX 58/97: Si la respuesta vino del caché, NO esperar ni reproducir "pensando"
@@ -3265,7 +3268,7 @@ def procesar_respuesta():
         else:
             timeout_espera = 1.5  # FIX 319: Normal 2s→1.5s - clientes impacientes
 
-        debug_print(f"⏱️ FIX 183: Esperando {timeout_espera}s antes de señal auditiva (máx 2s)")
+        debug_print(f" FIX 183: Esperando {timeout_espera}s antes de señal auditiva (máx 2s)")
         gpt_thread.join(timeout=timeout_espera)
 
     if not respuesta_container["completado"] and not respuesta_container.get("desde_cache", False):
@@ -3273,14 +3276,14 @@ def procesar_respuesta():
 
         # FIX 133: Si cliente está desesperado, responder INMEDIATAMENTE y esperar GPT
         if cliente_desesperado:
-            print(f"🚨 FIX 133: Cliente desesperado - confirmando presencia INMEDIATAMENTE")
+            print(f" FIX 133: Cliente desesperado - confirmando presencia INMEDIATAMENTE")
 
             # Esperar a que GPT termine (máximo 5s más)
             gpt_thread.join(timeout=5.0)
 
             if not respuesta_container["completado"]:
                 # GPT aún no termina - dar confirmación y seguir esperando
-                print(f"⏳ FIX 133 + FIX 162A: GPT aún procesando - usando audio de relleno")
+                print(f" FIX 133 + FIX 162A: GPT aún procesando - usando audio de relleno")
                 # FIX 162A: Usar audio de relleno en lugar de Twilio
                 if "un_momento" in audio_cache:
                     audio_url = request.url_root + "audio_cache/un_momento"
@@ -3294,15 +3297,15 @@ def procesar_respuesta():
 
                 if not respuesta_container["completado"]:
                     # GPT tardó más de 10.5s - timeout
-                    print(f"❌ FIX 133: GPT timeout después de 10.5s")
+                    print(f" FIX 133: GPT timeout después de 10.5s")
                     response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
                     response.hangup()
                     return Response(str(response), mimetype="text/xml")
 
             # GPT terminó - continuar con respuesta normal
-            print(f"✅ FIX 133: GPT completado - continuando con respuesta")
+            print(f" FIX 133: GPT completado - continuando con respuesta")
         else:
-            print(f"⏳ GPT+Audio procesando - reproduciendo tono de pensando...")
+            print(f" GPT+Audio procesando - reproduciendo tono de pensando...")
             # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
             # Seleccionar aleatoriamente una de las 8 frases de "pensando"
             pensando_keys = [f"pensando_{i}" for i in range(1, 9)]
@@ -3312,11 +3315,11 @@ def procesar_respuesta():
             if pensando_key in audio_cache:
                 # Reproducir audio pre-generado con voz de Bruce (0s delay)
                 audio_url = request.url_root + f"audio_cache/{pensando_key}"
-                print(f"💭 Bruce dice (voz Bruce): '{pensando_key}' desde caché")
+                print(f" Bruce dice (voz Bruce): '{pensando_key}' desde caché")
                 response.play(audio_url)
             else:
                 # FIX 162A: Si no está en caché, usar cualquier audio de relleno disponible
-                print(f"⚠️ FIX 162A: '{pensando_key}' no en caché, buscando alternativa")
+                print(f" FIX 162A: '{pensando_key}' no en caché, buscando alternativa")
                 if "dejeme_ver" in audio_cache:
                     response.play(request.url_root + "audio_cache/dejeme_ver")
                 elif "un_momento" in audio_cache:
@@ -3328,19 +3331,19 @@ def procesar_respuesta():
 
         if not respuesta_container["completado"]:
             # GPT tardó más de 10 segundos total - timeout real
-            print(f"❌ GPT timeout después de 10s")
+            print(f" GPT timeout después de 10s")
             response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
             response.hangup()
             return Response(str(response), mimetype="text/xml")
 
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
-    debug_print(f"⏱️ GPT tardó: {tiempo_gpt:.2f}s")
-    print(f"🤖 BRUCE DICE: \"{respuesta_agente}\"")
+    debug_print(f" GPT tardó: {tiempo_gpt:.2f}s")
+    print(f" BRUCE DICE: \"{respuesta_agente}\"")
 
     # FIX 304: Si respuesta es None (IVR detectado), colgar la llamada
     if respuesta_agente is None:
-        print(f"🚨 FIX 304: respuesta_agente es None (IVR/contestadora detectada) - COLGANDO")
+        print(f" FIX 304: respuesta_agente es None (IVR/contestadora detectada) - COLGANDO")
         bruce_id = agente.lead_data.get("bruce_id", "N/A")
         log_evento(f"{bruce_id} - IVR/CONTESTADORA DETECTADA - COLGANDO", "BRUCE")
         agente.lead_data["estado_llamada"] = "IVR"
@@ -3355,7 +3358,7 @@ def procesar_respuesta():
 
     # FIX 75/76: VERIFICAR SI DEBE COLGAR INMEDIATAMENTE (objeción terminal detectada)
     if agente.lead_data["estado_llamada"] == "Colgo":
-        print(f"🚨🚨🚨 FIX 75: Estado 'Colgo' detectado - Terminando llamada después de despedida")
+        print(f" FIX 75: Estado 'Colgo' detectado - Terminando llamada después de despedida")
         print(f"   Razón: {agente.lead_data.get('pregunta_7', 'Objeción terminal')}")
 
         # FIX 76: Generar audio con voz de Bruce (ElevenLabs) usando caché
@@ -3368,11 +3371,11 @@ def procesar_respuesta():
         if result_despedida is not None:
             # Audio generado con ElevenLabs (voz Bruce)
             audio_url_despedida = request.url_root + f"audio/{audio_id_despedida}"
-            print(f"✅ FIX 76: Usando voz Bruce (ElevenLabs) para despedida de objeción")
+            print(f" FIX 76: Usando voz Bruce (ElevenLabs) para despedida de objeción")
             response.play(audio_url_despedida)
         else:
             # FIX 162A: ElevenLabs falló - usar despedida simple pre-cacheada
-            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida simple")
+            print(f" FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida simple")
             print(f"   Despedida que falló: {respuesta_agente[:100]}...")
             print(f"   Call SID: {call_sid}")
             # Usar despedida simple del caché
@@ -3406,7 +3409,7 @@ def procesar_respuesta():
         audio_container["usa_cache"] = True
         audio_container["cache_key"] = cache_key
         audio_container["completado"] = True
-        print(f"📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)")
+        print(f" FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)")
     else:
         # FIX 165: Timeout dinámico según longitud del mensaje
         # Mensajes largos necesitan más tiempo para generar audio
@@ -3425,16 +3428,16 @@ def procesar_respuesta():
             timeout_calculado = (palabras * 0.2) + 2.0
             max_wait = max(5.0, min(timeout_calculado, 15.0))
 
-            print(f"⏳ FIX 165 + FIX 203: Esperando audio ({palabras} palabras, timeout={max_wait:.1f}s)...")
+            print(f" FIX 165 + FIX 203: Esperando audio ({palabras} palabras, timeout={max_wait:.1f}s)...")
             waited = 0
             while not audio_container.get("completado", False) and waited < max_wait:
                 time.sleep(0.1)
                 waited += 0.1
 
             if audio_container.get("completado", False):
-                debug_print(f"✅ FIX 165: Audio completado después de {waited:.1f}s")
+                debug_print(f" FIX 165: Audio completado después de {waited:.1f}s")
             else:
-                print(f"⚠️ FIX 165: Audio NO completó después de {max_wait:.1f}s - usará audio de relleno")
+                print(f" FIX 165: Audio NO completó después de {max_wait:.1f}s - usará audio de relleno")
 
         # FIX 97: Usar audio ya generado en paralelo (o None si debe usar Twilio TTS)
         # El thread ya generó el audio mientras esperábamos, así que está listo AHORA
@@ -3443,15 +3446,15 @@ def procesar_respuesta():
         cache_key = audio_container.get("cache_key")
 
     tiempo_total = time.time() - inicio
-    debug_print(f"⏱️ TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
+    debug_print(f" TOTAL delay (GPT + Audio en paralelo): {tiempo_total:.2f}s")
 
     if audio_id:
         if usa_cache:
-            print(f"📦 FIX 97: Audio desde caché: {cache_key} (generado en paralelo)")
+            print(f" FIX 97: Audio desde caché: {cache_key} (generado en paralelo)")
         else:
-            print(f"🎵 FIX 97: Audio ElevenLabs (generado en paralelo)")
+            print(f" FIX 97: Audio ElevenLabs (generado en paralelo)")
     else:
-        print(f"⚡ FIX 97: Usar Twilio TTS (respuesta larga o error)")
+        print(f" FIX 97: Usar Twilio TTS (respuesta larga o error)")
 
     # Registrar mensaje de Bruce en LOGS (con info de cache)
     if logs_manager and agente.bruce_id:
@@ -3487,19 +3490,19 @@ def procesar_respuesta():
     debe_terminar = any(despedida in respuesta_lower for despedida in despedidas_bruce)
 
     if debe_terminar:
-        print(f"🔚 Detectada despedida en: {respuesta_agente[:50]}...")
+        print(f" Detectada despedida en: {respuesta_agente[:50]}...")
 
         # FIX 158: Marcar que Bruce se despidió primero
         agente.bruce_se_despidio = True
 
         # IMPORTANTE: Esperar respuesta del cliente por educación antes de colgar
-        print(f"⏳ Esperando despedida del cliente por cortesía...")
+        print(f" Esperando despedida del cliente por cortesía...")
 
         # FIX 214: Usar Record en lugar de Gather para despedida (ahorra costos Speech Recognition)
         # Reproducir audio primero
         if audio_id is None:
             # FIX 162A: ElevenLabs falló - usar despedida simple pre-cacheada
-            print(f"🚨 FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida")
+            print(f" FIX 162A: ElevenLabs FALLÓ en despedida - usando caché de despedida")
             print(f"   Despedida que falló: {respuesta_agente[:100]}...")
             print(f"   Call SID: {call_sid}")
             if "despedida_simple" in audio_cache:
@@ -3628,39 +3631,39 @@ def procesar_respuesta():
         # Si Bruce pidió número O cliente ofrece número Y hay dígitos/números, es dictado
         if (bruce_pidio_numero or cliente_ofrece_numero) and (tiene_digitos or tiene_numeros_palabra):
             cliente_dictando_numero = True
-            debug_print(f"📞 FIX 293/340: Cliente dictando número de teléfono ({num_digitos} dígitos detectados)")
+            debug_print(f" FIX 293/340: Cliente dictando número de teléfono ({num_digitos} dígitos detectados)")
 
         # FIX 340: Si hay 3+ dígitos en el mensaje, SIEMPRE considerar como dictado
         # Esto evita interrumpir cuando cliente está a mitad de dictar
         if num_digitos >= 3:
             cliente_dictando_numero = True
-            debug_print(f"📞 FIX 340: Forzando modo dictado - {num_digitos} dígitos detectados - NO INTERRUMPIR")
+            debug_print(f" FIX 340: Forzando modo dictado - {num_digitos} dígitos detectados - NO INTERRUMPIR")
 
     # FIX 215: Reducir todos los timeouts para respuesta más rápida
     # Record timeout = silencio después de que cliente termina de hablar
     if cliente_pidio_momento:
         timeout_gather = 5  # FIX 215: Reducido de 10s a 5s
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente pidió esperar)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (cliente pidió esperar)")
     elif cliente_dictando_correo:
         timeout_gather = 8  # FIX 215: Reducido de 15s a 8s (correo largo)
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente dictando correo)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (cliente dictando correo)")
     elif cliente_dictando_numero or bruce_pidio_numero:
         # FIX 293/340: Dar MÁS tiempo cuando cliente dicta número de teléfono (10 dígitos)
         # FIX 340: Aumentado de 6s a 8s para evitar interrupciones mientras dictan
         timeout_gather = 8  # 8 segundos para que diga los 10 dígitos sin prisa
-        debug_print(f"⏱️ FIX 293/340: Timeout={timeout_gather}s (cliente dictando número - NO INTERRUMPIR)")
+        debug_print(f" FIX 293/340: Timeout={timeout_gather}s (cliente dictando número - NO INTERRUMPIR)")
     elif cliente_desesperado:
         timeout_gather = 2  # FIX 215: Reducido de 5s a 2s (respuesta rápida)
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (cliente desesperado)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (cliente desesperado)")
     elif ultimo_mensaje_bruce and any(keyword in ultimo_mensaje_bruce for keyword in keywords_pide_correo):
         timeout_gather = 3  # FIX 215: Reducido de 4s a 3s
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (pedir correo/WhatsApp)")
     elif es_segundo_mensaje:
         timeout_gather = 2  # FIX 215: Reducido de 3s a 2s
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (segundo mensaje)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (segundo mensaje)")
     else:
         timeout_gather = 2  # FIX 215: Reducido de 4s a 2s (conversación normal)
-        debug_print(f"⏱️ FIX 215: Timeout={timeout_gather}s (conversación normal)")
+        debug_print(f" FIX 215: Timeout={timeout_gather}s (conversación normal)")
 
     # FIX 125/154/156/157/194: Manejo inteligente de interrupciones
     # FIX 157: barge_in=False para evitar ciclo de saludos
@@ -3675,23 +3678,23 @@ def procesar_respuesta():
     if num_mensajes_bruce <= 2:
         # Primeros 2 mensajes: NO permitir (evitar ciclo FIX 157)
         permitir_interrupcion = False
-        debug_print(f"🔇 FIX 194: barge_in=False (saludo inicial, evitar ciclo)")
+        debug_print(f" FIX 194: barge_in=False (saludo inicial, evitar ciclo)")
     elif num_mensajes_bruce >= 5:
         # FIX 196: Desde mensaje #5: Permitir para detectar objeciones Y confusión
         permitir_interrupcion = True
-        debug_print(f"🎙️ FIX 196: barge_in=True (mensaje #{num_mensajes_bruce}, detectar objeciones/confusión)")
+        debug_print(f" FIX 196: barge_in=True (mensaje #{num_mensajes_bruce}, detectar objeciones/confusión)")
     else:
         # Mensajes 3-4: NO permitir (conversación fluida temprana)
         permitir_interrupcion = False
-        debug_print(f"🔇 FIX 194: barge_in=False (conversación fluida)")
+        debug_print(f" FIX 194: barge_in=False (conversación fluida)")
 
     # FIX 214: Usar Record en lugar de Gather para ELIMINAR COSTOS de Twilio Speech Recognition
     # Deepgram transcribe en tiempo real vía MediaStream, Record solo captura audio
-    print(f"🎯 FIX 214: Usando Record + Deepgram (mensaje #{num_mensajes_bruce})")
+    print(f" FIX 214: Usando Record + Deepgram (mensaje #{num_mensajes_bruce})")
 
     # FIX 141: Si cliente está desesperado, reproducir confirmación ANTES de respuesta
     if cliente_desesperado:
-        print(f"🚨 FIX 141: Agregando confirmación (cliente desesperado)")
+        print(f" FIX 141: Agregando confirmación (cliente desesperado)")
 
         audio_id_confirmacion = f"confirmacion_desesperado_{call_sid}"
         result_confirmacion = generar_audio_elevenlabs(
@@ -3702,10 +3705,10 @@ def procesar_respuesta():
 
         if result_confirmacion:
             audio_url_confirmacion = request.url_root + f"audio/{audio_id_confirmacion}"
-            print(f"✅ FIX 141: Confirmación generada")
+            print(f" FIX 141: Confirmación generada")
             response.play(audio_url_confirmacion)
         else:
-            print(f"⚠️ FIX 162A: Caché falló - usando audio de relleno")
+            print(f" FIX 162A: Caché falló - usando audio de relleno")
             if "pensando_1" in audio_cache:
                 response.play(request.url_root + "audio_cache/pensando_1")
 
@@ -3758,21 +3761,21 @@ def procesar_respuesta():
         if contiene_dia_callback or contiene_telefono or contiene_interrupcion_valida:
             transcripciones_importantes.append(trans)
             if contiene_interrupcion_valida:
-                print(f"⚠️ FIX 486: Preservando INTERRUPCIÓN VÁLIDA: '{trans}'")
+                print(f" FIX 486: Preservando INTERRUPCIÓN VÁLIDA: '{trans}'")
             else:
-                print(f"⚠️ FIX 481: Preservando transcripción importante: '{trans}'")
+                print(f" FIX 481: Preservando transcripción importante: '{trans}'")
         else:
             transcripciones_descartar.append(trans)
 
     if transcripciones_descartar:
-        print(f"🧹 FIX 455: Limpiando {len(transcripciones_descartar)} transcripciones acumuladas ANTES de enviar audio")
+        print(f" FIX 455: Limpiando {len(transcripciones_descartar)} transcripciones acumuladas ANTES de enviar audio")
         print(f"   Contenido descartado: {transcripciones_descartar}")
 
     # Solo conservar las transcripciones importantes
     deepgram_transcripciones[call_sid] = transcripciones_importantes
 
     if transcripciones_importantes:
-        print(f"✅ FIX 481: Conservando {len(transcripciones_importantes)} transcripciones importantes")
+        print(f" FIX 481: Conservando {len(transcripciones_importantes)} transcripciones importantes")
 
     # Limpiar el tracking de FINAL/PARCIAL si no hay transcripciones importantes
     if not transcripciones_importantes and call_sid in deepgram_ultima_final:
@@ -3783,15 +3786,15 @@ def procesar_respuesta():
 
     # FIX 96/98: Reproducir audio SIEMPRE con voz de Bruce (ElevenLabs)
     if audio_id is None:
-        print(f"🚨 FIX 162A: ElevenLabs FALLÓ - usando audio de relleno")
+        print(f" FIX 162A: ElevenLabs FALLÓ - usando audio de relleno")
         print(f"   Respuesta que falló: {respuesta_agente[:100]}...")
         print(f"   Call SID: {call_sid}")
 
         if "dejeme_ver" in audio_cache:
-            print(f"🎵 FIX 162A: Usando audio de relleno 'dejeme_ver'")
+            print(f" FIX 162A: Usando audio de relleno 'dejeme_ver'")
             response.play(request.url_root + "audio_cache/dejeme_ver")
         elif "un_momento" in audio_cache:
-            print(f"🎵 FIX 162A: Usando audio de relleno 'un_momento'")
+            print(f" FIX 162A: Usando audio de relleno 'un_momento'")
             response.play(request.url_root + "audio_cache/un_momento")
     else:
         audio_url = request.url_root + f"audio/{audio_id}"
@@ -3825,11 +3828,11 @@ def despedida_final():
         call_sid = request.form.get("CallSid")
         cliente_respuesta = request.form.get("SpeechResult", "")
 
-    print(f"\n👋 DESPEDIDA FINAL - Call SID: {call_sid}")
+    print(f"\n DESPEDIDA FINAL - Call SID: {call_sid}")
     if cliente_respuesta:
-        print(f"💬 CLIENTE SE DESPIDE: \"{cliente_respuesta}\"")
+        print(f" CLIENTE SE DESPIDE: \"{cliente_respuesta}\"")
     else:
-        print(f"🔇 Cliente no respondió despedida (silencio)")
+        print(f" Cliente no respondió despedida (silencio)")
 
     # Obtener agente de la conversación activa
     agente = conversaciones_activas.get(call_sid)
@@ -3841,10 +3844,10 @@ def despedida_final():
 
     # Guardar lead y llamada en Google Sheets
     if agente:
-        print(f"💾 Guardando llamada {call_sid} en Google Sheets...")
+        print(f" Guardando llamada {call_sid} en Google Sheets...")
         try:
             agente.guardar_llamada_y_lead()
-            print(f"✅ Llamada {call_sid} guardada correctamente")
+            print(f" Llamada {call_sid} guardada correctamente")
 
             # Manejo post-guardado: Buzón y Reprogramación
             if sheets_manager and agente.contacto_info:
@@ -3855,7 +3858,7 @@ def despedida_final():
                 estado = agente.lead_data.get("estado_llamada")
                 if estado in ["Buzon", "Operadora"] and fila:
                     tipo_deteccion = "buzón" if estado == "Buzon" else "operadora"
-                    print(f"\n📞 Llamada cayó en {tipo_deteccion} - manejando reintento...")
+                    print(f"\n Llamada cayó en {tipo_deteccion} - manejando reintento...")
                     intentos = sheets_manager.marcar_intento_buzon(fila)
 
                     # FIX 179: Verificar si los reintentos están deshabilitados
@@ -3863,8 +3866,8 @@ def despedida_final():
 
                     if intentos == 1 and not deshabilitar_reintentos:
                         # PRIMER intento de buzón/operadora - REINTENTO INMEDIATO
-                        print(f"📞 Primer intento de {tipo_deteccion} - iniciando reintento inmediato...")
-                        print(f"⏰ Esperando 30 segundos antes de reintentar...")
+                        print(f" Primer intento de {tipo_deteccion} - iniciando reintento inmediato...")
+                        print(f" Esperando 30 segundos antes de reintentar...")
 
                         # Capturar url_root ANTES del thread (Flask context)
                         base_url = request.url_root.replace('http://', 'https://')
@@ -3877,7 +3880,7 @@ def despedida_final():
                             telefono_destino = agente.contacto_info.get('telefono')
                             nombre_negocio = agente.contacto_info.get('nombre_negocio', 'cliente')
 
-                            print(f"📞 Iniciando segundo intento a {telefono_destino}...")
+                            print(f" Iniciando segundo intento a {telefono_destino}...")
 
                             try:
                                 response_call = requests.post(
@@ -3891,12 +3894,12 @@ def despedida_final():
                                 )
 
                                 if response_call.status_code == 200:
-                                    print(f"✅ Segundo intento iniciado correctamente")
+                                    print(f" Segundo intento iniciado correctamente")
                                 else:
-                                    print(f"⚠️ Error en reintento: {response_call.status_code}")
+                                    print(f" Error en reintento: {response_call.status_code}")
 
                             except Exception as e:
-                                print(f"❌ Error iniciando reintento: {e}")
+                                print(f" Error iniciando reintento: {e}")
 
                         # Ejecutar reintento en background
                         import threading
@@ -3906,14 +3909,14 @@ def despedida_final():
 
                     elif intentos == 1 and deshabilitar_reintentos:
                         # FIX 179: Reintentos deshabilitados (llamadas masivas)
-                        print(f"🚫 FIX 179: Primer intento de {tipo_deteccion} pero reintentos DESHABILITADOS (llamadas masivas)")
+                        print(f" FIX 179: Primer intento de {tipo_deteccion} pero reintentos DESHABILITADOS (llamadas masivas)")
                     else:
-                        print(f"📞 Intento de buzón #{intentos} - no se hará reintento automático")
+                        print(f" Intento de buzón #{intentos} - no se hará reintento automático")
 
                 # 2. Manejo de REFERENCIAS - Llamar automáticamente al referido
                 telefono_referencia = agente.lead_data.get("referencia_telefono")
                 if telefono_referencia and fila:
-                    print(f"\n👥 Procesando referencia...")
+                    print(f"\n Procesando referencia...")
                     nombre_ref = agente.lead_data.get("referencia_nombre", "")
                     print(f"     Nombre del referido: {nombre_ref}")
                     print(f"     Teléfono del referido: {telefono_referencia}")
@@ -3947,18 +3950,18 @@ def despedida_final():
                         referencia_completa = f"NUM:{telefono_referencia}|Ref: {nombre_negocio_origen} ({telefono_origen}) - {fecha_hora[:10]} - {ultimo_mensaje_cliente[:50]}"
 
                         sheets_manager.guardar_referencia(fila_referido, referencia_completa)
-                        print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
+                        print(f" Referencia guardada en fila {fila_referido} (columna U)")
 
                         # Guardar contexto de reprogramación en el contacto ACTUAL (quien dio la referencia)
                         contexto_reprog = f"Reprog: Referencia dada | Pasó contacto de {nombre_ref or 'encargado'} ({telefono_referencia})"
                         sheets_manager.guardar_contexto_reprogramacion(fila, contexto_reprog)
-                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+                        print(f" Contexto de referencia guardado en fila {fila} (columna W)")
 
                         # Iniciar llamada automática al referido
-                        print(f"\n📞 Iniciando llamada automática al referido...")
-                        print(f"     🌐 Enviando solicitud a {base_url}iniciar-llamada")
-                        print(f"     📱 Teléfono: {telefono_referencia}")
-                        print(f"     📋 Fila: {fila_referido}")
+                        print(f"\n Iniciando llamada automática al referido...")
+                        print(f"      Enviando solicitud a {base_url}iniciar-llamada")
+                        print(f"      Teléfono: {telefono_referencia}")
+                        print(f"      Fila: {fila_referido}")
 
                         try:
                             import requests
@@ -3974,13 +3977,13 @@ def despedida_final():
 
                             if response_ref.status_code == 200:
                                 result = response_ref.json()
-                                print(f"     ✅ Llamada iniciada exitosamente!")
-                                print(f"     📞 Call SID: {result.get('call_sid', 'N/A')}")
+                                print(f"      Llamada iniciada exitosamente!")
+                                print(f"      Call SID: {result.get('call_sid', 'N/A')}")
                             else:
-                                print(f"     ⚠️ Error en llamada automática: {response_ref.status_code}")
+                                print(f"      Error en llamada automática: {response_ref.status_code}")
 
                         except Exception as e:
-                            print(f"     ❌ Error iniciando llamada automática: {e}")
+                            print(f"      Error iniciando llamada automática: {e}")
 
                 # 3. Marcar llamada en columna U (registro de contacto)
                 # No bloquear llamadas futuras - columnas U/V/W son solo para contexto
@@ -3994,12 +3997,12 @@ def despedida_final():
                     sheets_manager.marcar_primera_llamada(fila, numero_llamado=telefono_llamado)
 
                     if es_primera:
-                        print(f"📝 Primera llamada registrada en columna U con número: {telefono_llamado}")
+                        print(f" Primera llamada registrada en columna U con número: {telefono_llamado}")
                     else:
-                        print(f"📝 Llamada subsecuente registrada en columna U con número: {telefono_llamado}")
+                        print(f" Llamada subsecuente registrada en columna U con número: {telefono_llamado}")
 
         except Exception as e:
-            print(f"❌ Error guardando llamada {call_sid}: {e}")
+            print(f" Error guardando llamada {call_sid}: {e}")
             import traceback
             traceback.print_exc()
 
@@ -4082,7 +4085,7 @@ def status_callback():
         call_duration = request.form.get("CallDuration")
         answered_by = request.form.get("AnsweredBy", "")
 
-    print(f"\n📞 STATUS CALLBACK - Llamada {call_sid[:10]}...")
+    print(f"\n STATUS CALLBACK - Llamada {call_sid[:10]}...")
     print(f"   Estado: {call_status}")
     print(f"   Duración: {call_duration}s")
     if answered_by:
@@ -4100,9 +4103,9 @@ def status_callback():
 
     if es_buzon:
         if answered_by:
-            print(f"   📞 Buzón detectado por AnsweredBy: {answered_by}")
+            print(f"    Buzón detectado por AnsweredBy: {answered_by}")
         else:
-            print(f"   📞 Buzón detectado por CallStatus: {call_status} (no-answer)")
+            print(f"    Buzón detectado por CallStatus: {call_status} (no-answer)")
 
         # Obtener info del contacto (puede estar en conversaciones_activas o contactos_llamadas)
         contacto_info = None
@@ -4118,16 +4121,16 @@ def status_callback():
 
             # Marcar intento de buzón
             intentos = sheets_manager.marcar_intento_buzon(fila)
-            print(f"   📞 Intento de buzón #{intentos} registrado")
+            print(f"    Intento de buzón #{intentos} registrado")
 
             # FIX 179: Verificar si los reintentos están deshabilitados
             deshabilitar_reintentos = contacto_info.get('deshabilitar_reintentos', False)
 
             if intentos == 1 and not deshabilitar_reintentos:
                 # PRIMER intento - REINTENTO INMEDIATO
-                print(f"   🔄 Primer buzón - programando reintento inmediato...", flush=True)
-                print(f"   ⏰ Esperando 30 segundos...", flush=True)
-                print(f"   📋 Datos del reintento: tel={telefono}, fila={fila}, base_url={request.url_root}", flush=True)
+                print(f"    Primer buzón - programando reintento inmediato...", flush=True)
+                print(f"    Esperando 30 segundos...", flush=True)
+                print(f"    Datos del reintento: tel={telefono}, fila={fila}, base_url={request.url_root}", flush=True)
 
                 import time
                 import threading
@@ -4138,9 +4141,9 @@ def status_callback():
 
                 def hacer_reintento():
                     import sys
-                    print(f"\n🔄 Thread iniciado - esperando 30s...", flush=True)
+                    print(f"\n Thread iniciado - esperando 30s...", flush=True)
                     time.sleep(30)
-                    print(f"\n📞 Iniciando reintento inmediato a {telefono}...", flush=True)
+                    print(f"\n Iniciando reintento inmediato a {telefono}...", flush=True)
 
                     try:
                         import requests
@@ -4156,26 +4159,26 @@ def status_callback():
 
                         if response_call.status_code == 200:
                             data = response_call.json()
-                            print(f"   ✅ Reintento iniciado: {data.get('call_sid', 'Unknown')}", flush=True)
+                            print(f"    Reintento iniciado: {data.get('call_sid', 'Unknown')}", flush=True)
                         else:
-                            print(f"   ⚠️ Error en reintento: {response_call.status_code}", flush=True)
+                            print(f"    Error en reintento: {response_call.status_code}", flush=True)
                     except Exception as e:
-                        print(f"   ❌ Error iniciando reintento: {e}", flush=True)
+                        print(f"    Error iniciando reintento: {e}", flush=True)
 
                 # Ejecutar reintento en thread separado para no bloquear el callback
-                print(f"   🧵 Creando thread para reintento...", flush=True)
+                print(f"    Creando thread para reintento...", flush=True)
                 thread = threading.Thread(target=hacer_reintento)
                 thread.daemon = True
                 thread.start()
-                print(f"   ✅ Thread iniciado correctamente (daemon={thread.daemon}, alive={thread.is_alive()})", flush=True)
+                print(f"    Thread iniciado correctamente (daemon={thread.daemon}, alive={thread.is_alive()})", flush=True)
 
             elif intentos == 1 and deshabilitar_reintentos:
                 # FIX 179: Reintentos deshabilitados (llamadas masivas)
-                print(f"   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)", flush=True)
+                print(f"    FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)", flush=True)
 
             # FIX 89: GUARDAR en "Bruce FORMS" cuando es buzón después del segundo intento
             elif intentos >= 2:
-                print(f"   💾 Segundo intento de buzón - guardando en Bruce FORMS...")
+                print(f"    Segundo intento de buzón - guardando en Bruce FORMS...")
 
                 # Obtener o crear agente para guardar el buzón
                 agente = None
@@ -4193,7 +4196,7 @@ def status_callback():
                         )
                         agente.call_sid = call_sid
                     except Exception as e:
-                        print(f"   ⚠️ Error creando agente temporal: {e}")
+                        print(f"    Error creando agente temporal: {e}")
 
                 # Guardar el buzón
                 if agente:
@@ -4204,15 +4207,15 @@ def status_callback():
 
                     try:
                         agente.guardar_llamada_y_lead()
-                        print(f"   ✅ Buzón guardado en Bruce FORMS")
+                        print(f"    Buzón guardado en Bruce FORMS")
                     except Exception as e:
-                        print(f"   ⚠️ Error guardando buzón: {e}")
+                        print(f"    Error guardando buzón: {e}")
                 else:
-                    print(f"   ⚠️ No se pudo obtener agente para guardar buzón")
+                    print(f"    No se pudo obtener agente para guardar buzón")
 
     # FIX 95: Manejo de llamadas FALLIDAS (failed, busy, canceled)
     if call_status in ["failed", "busy", "canceled"]:
-        print(f"   ⚠️ Llamada fallida - Estado: {call_status}")
+        print(f"    Llamada fallida - Estado: {call_status}")
 
         # Obtener info del contacto
         contacto_info = None
@@ -4229,9 +4232,9 @@ def status_callback():
             # Obtener código de error de Twilio
             sip_code = request.args.get("SipResponseCode") if request.method == "GET" else request.form.get("SipResponseCode")
 
-            print(f"   📋 Fila {fila}: {nombre_negocio} - {telefono}")
+            print(f"    Fila {fila}: {nombre_negocio} - {telefono}")
             if sip_code:
-                print(f"   ⚠️ SIP Response Code: {sip_code}")
+                print(f"    SIP Response Code: {sip_code}")
 
             # Crear agente temporal para guardar el resultado
             try:
@@ -4262,10 +4265,10 @@ def status_callback():
 
                 # Guardar en "Bruce FORMS"
                 agente.guardar_llamada_y_lead()
-                print(f"   ✅ Llamada fallida guardada: {estado}")
+                print(f"    Llamada fallida guardada: {estado}")
 
             except Exception as e:
-                print(f"   ❌ Error guardando llamada fallida: {e}")
+                print(f"    Error guardando llamada fallida: {e}")
                 import traceback
                 traceback.print_exc()
 
@@ -4276,7 +4279,7 @@ def status_callback():
         # Verificar si fue buzón de voz
         if answered_by in ["machine_start", "machine_end_beep", "machine_end_silence", "machine_end_other"]:
             if agente.lead_data["estado_llamada"] == "Respondio":
-                print(f"   📞 Buzón de voz - detectado por status callback")
+                print(f"    Buzón de voz - detectado por status callback")
                 agente.lead_data["estado_llamada"] = "Buzon"
                 agente.lead_data["pregunta_0"] = "Buzon"
                 agente.lead_data["pregunta_7"] = "BUZON"
@@ -4285,9 +4288,9 @@ def status_callback():
                 # Guardar la llamada
                 try:
                     agente.guardar_llamada_y_lead()
-                    print(f"   ✅ Buzón guardado desde status callback")
+                    print(f"    Buzón guardado desde status callback")
                 except Exception as e:
-                    print(f"   ⚠️ Error guardando buzón desde status callback: {e}")
+                    print(f"    Error guardando buzón desde status callback: {e}")
 
         # Si no fue buzón, determinar si colgó o no respondió
         elif agente.lead_data["estado_llamada"] == "Respondio":
@@ -4296,8 +4299,8 @@ def status_callback():
             bruce_se_despidio = getattr(agente, 'bruce_se_despidio', False)
 
             if bruce_se_despidio:
-                print(f"   ✅ FIX 158: Bruce se despidió primero - NO clasificar como 'Colgó'")
-                print(f"   📞 Llamada terminó normalmente - cliente respondió y Bruce completó despedida")
+                print(f"    FIX 158: Bruce se despidió primero - NO clasificar como 'Colgó'")
+                print(f"    Llamada terminó normalmente - cliente respondió y Bruce completó despedida")
                 # NO cambiar estado - mantener "Respondio" y el resultado que Bruce determinó
             else:
                 # Verificar si hubo intercambio de conversación
@@ -4306,7 +4309,7 @@ def status_callback():
 
                 if num_mensajes <= 1:
                     # Cliente nunca respondió al saludo inicial
-                    print(f"   📞 Cliente no respondió - detectado por status callback (solo {num_mensajes} mensaje)")
+                    print(f"    Cliente no respondió - detectado por status callback (solo {num_mensajes} mensaje)")
                     agente.lead_data["estado_llamada"] = "No Respondio"
                     agente.lead_data["pregunta_0"] = "No Respondio"
                     agente.lead_data["pregunta_7"] = "No Respondio"
@@ -4320,7 +4323,7 @@ def status_callback():
                     )
 
                     # Hubo conversación, entonces sí colgó
-                    print(f"   💬 Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
+                    print(f"    Cliente colgó - detectado por status callback ({num_mensajes} mensajes)")
 
                     if not tiene_dato_capturado:
                         # Sin datos capturados → Marcar como "Colgo"
@@ -4328,10 +4331,10 @@ def status_callback():
                         agente.lead_data["pregunta_0"] = "Colgo"
                         agente.lead_data["pregunta_7"] = "Colgo"
                         agente.lead_data["resultado"] = "NEGADO"
-                        print(f"   📝 Clasificado como 'Colgó' (sin datos capturados)")
+                        print(f"    Clasificado como 'Colgó' (sin datos capturados)")
                     else:
                         # FIX 176: Con datos capturados → Determinar conclusión correcta
-                        print(f"   📝 FIX 176: Cliente colgó pero SÍ capturamos datos:")
+                        print(f"    FIX 176: Cliente colgó pero SÍ capturamos datos:")
                         print(f"      WhatsApp: {bool(agente.lead_data.get('whatsapp'))}")
                         print(f"      Email: {bool(agente.lead_data.get('email'))}")
                         print(f"      Referencia: {bool(agente.lead_data.get('referencia_telefono'))}")
@@ -4342,9 +4345,9 @@ def status_callback():
             # Guardar la llamada
             try:
                 agente.guardar_llamada_y_lead()
-                print(f"   ✅ Llamada guardada desde status callback")
+                print(f"    Llamada guardada desde status callback")
             except Exception as e:
-                print(f"   ⚠️ Error guardando desde status callback: {e}")
+                print(f"    Error guardando desde status callback: {e}")
 
         # FIX 207/272: Registrar en historial para dashboard web
         try:
@@ -4362,9 +4365,9 @@ def status_callback():
                 },
                 call_sid=call_sid  # FIX 272: Para asociar grabación después
             )
-            print(f"   📊 FIX 207: Llamada registrada en dashboard")
+            print(f"    FIX 207: Llamada registrada en dashboard")
         except Exception as e:
-            print(f"   ⚠️ Error registrando en dashboard: {e}")
+            print(f"    Error registrando en dashboard: {e}")
 
     return Response("OK", status=200)
 
@@ -4406,9 +4409,9 @@ def regenerar_cache():
                         os.remove(filepath)
                         archivos_eliminados += 1
                 except Exception as e:
-                    print(f"⚠️  No se pudo eliminar {archivo}: {e}")
+                    print(f"  No se pudo eliminar {archivo}: {e}")
 
-            print(f"🗑️  {archivos_eliminados} archivos eliminados del caché")
+            print(f"  {archivos_eliminados} archivos eliminados del caché")
 
         # Regenerar caché manual con la voz ACTUAL
         pre_generar_audios_cache()
@@ -4734,7 +4737,7 @@ def ver_estadisticas():
             </style>
         </head>
         <body>
-            <h1>🎤 Estadísticas de Caché - Bruce W</h1>
+            <h1> Estadísticas de Caché - Bruce W</h1>
 
             <div class="stats-summary">
                 <div class="stat-card">
@@ -4762,11 +4765,11 @@ def ver_estadisticas():
                     <button class="select-all-btn" onclick="deselectAll()">Deseleccionar Todo</button>
                 </div>
                 <button class="download-btn" id="generate-btn" onclick="generateSelected()" disabled>
-                    🎤 Generar Audios Seleccionados
+                     Generar Audios Seleccionados
                 </button>
             </div>
 
-            <h2>📊 Frases por Frecuencia de Uso</h2>
+            <h2> Frases por Frecuencia de Uso</h2>
             <table>
                 <thead>
                     <tr>
@@ -4789,7 +4792,7 @@ def ver_estadisticas():
             # Verificar si está en caché
             frase_normalizada = frase_key
             en_cache = frase_normalizada in audio_cache
-            estado = '<span class="cached">✅ En caché</span>' if en_cache else '<span class="not-cached">⏳ No cacheado</span>'
+            estado = '<span class="cached"> En caché</span>' if en_cache else '<span class="not-cached"> No cacheado</span>'
 
             # Mostrar frase completa (sin limitar)
             frase_display = texto
@@ -4860,7 +4863,7 @@ def ver_estadisticas():
 
                     const btn = document.getElementById('generate-btn');
                     btn.disabled = true;
-                    btn.textContent = '⏳ Generando ' + frases.length + ' audios...';
+                    btn.textContent = ' Generando ' + frases.length + ' audios...';
 
                     try {
                         const response = await fetch('/generate-cache', {
@@ -4872,17 +4875,17 @@ def ver_estadisticas():
                         const result = await response.json();
 
                         if (result.success) {
-                            alert('✅ ' + result.generated + ' audios generados correctamente!');
+                            alert(' ' + result.generated + ' audios generados correctamente!');
                             location.reload(); // Recargar para ver cambios
                         } else {
-                            alert('❌ Error: ' + result.error);
+                            alert(' Error: ' + result.error);
                         }
                     } catch (error) {
-                        alert('❌ Error al generar audios: ' + error.message);
+                        alert(' Error al generar audios: ' + error.message);
                     }
 
                     btn.disabled = false;
-                    btn.textContent = '🎤 Generar Audios Seleccionados';
+                    btn.textContent = ' Generar Audios Seleccionados';
                 }
             </script>
         </body>
@@ -4924,13 +4927,13 @@ def generar_cache_manual():
 
             # Verificar si ya existe en caché (skip si no es forzado)
             if key in audio_cache and not force:
-                print(f"⏭️ Omitido: {key} (ya está en caché)")
+                print(f" Omitido: {key} (ya está en caché)")
                 continue
             elif key in audio_cache and force:
-                print(f"🔄 Regenerando: {key} (force=True)")
+                print(f" Regenerando: {key} (force=True)")
 
             try:
-                print(f"\n🎤 Generando audio para: {texto[:50]}...")
+                print(f"\n Generando audio para: {texto[:50]}...")
 
                 # Generar audio con ElevenLabs Multilingual v2
                 audio_generator = elevenlabs_client.text_to_speech.convert(
@@ -4956,15 +4959,15 @@ def generar_cache_manual():
                 try:
                     os.unlink(temp_path)
                 except Exception as e:
-                    print(f"⚠️ No se pudo eliminar temp {temp_path}: {e}")
+                    print(f" No se pudo eliminar temp {temp_path}: {e}")
 
                 generated_count += 1
-                print(f"✅ Audio generado y cacheado: {key}")
+                print(f" Audio generado y cacheado: {key}")
 
             except Exception as e:
                 error_msg = f"Error en '{texto[:30]}...': {str(e)}"
                 errors.append(error_msg)
-                print(f"❌ {error_msg}")
+                print(f" {error_msg}")
 
         # Respuesta
         result = {
@@ -4974,11 +4977,11 @@ def generar_cache_manual():
             "errors": errors if errors else None
         }
 
-        print(f"\n✅ Generación completada: {generated_count}/{len(frases)} audios")
+        print(f"\n Generación completada: {generated_count}/{len(frases)} audios")
         return result
 
     except Exception as e:
-        print(f"❌ Error en generate-cache: {e}")
+        print(f" Error en generate-cache: {e}")
         return {
             "success": False,
             "error": str(e)
@@ -5140,9 +5143,9 @@ def diagnostico_persistencia():
             with open(test_file, 'w') as f:
                 f.write("test")
             os.remove(test_file)
-            diagnostico["test_escritura"] = "✅ OK"
+            diagnostico["test_escritura"] = " OK"
         except Exception as e:
-            diagnostico["test_escritura"] = f"❌ FALLO: {str(e)}"
+            diagnostico["test_escritura"] = f" FALLO: {str(e)}"
 
         # Variables de entorno relevantes
         diagnostico["env_vars"] = {
@@ -5223,10 +5226,10 @@ def diagnostico_persistencia():
             </style>
         </head>
         <body>
-            <h1>🔍 Diagnóstico de Persistencia - Railway</h1>
+            <h1> Diagnóstico de Persistencia - Railway</h1>
 
             <div class="section">
-                <h2>📁 Información del Directorio</h2>
+                <h2> Información del Directorio</h2>
                 <table>
                     <tr>
                         <td class="key">Directorio configurado:</td>
@@ -5239,37 +5242,37 @@ def diagnostico_persistencia():
                     <tr>
                         <td class="key">Existe:</td>
                         <td class="{'ok' if diagnostico['existe'] else 'error'}">
-                            {'✅ SÍ' if diagnostico['existe'] else '❌ NO'}
+                            {' SÍ' if diagnostico['existe'] else ' NO'}
                         </td>
                     </tr>
                     <tr>
                         <td class="key">Es directorio:</td>
                         <td class="{'ok' if diagnostico['es_directorio'] else 'error'}">
-                            {'✅ SÍ' if diagnostico['es_directorio'] else '❌ NO'}
+                            {' SÍ' if diagnostico['es_directorio'] else ' NO'}
                         </td>
                     </tr>
                 </table>
             </div>
 
             <div class="section">
-                <h2>🔐 Permisos</h2>
+                <h2> Permisos</h2>
                 <table>
                     <tr>
                         <td class="key">Lectura (R):</td>
                         <td class="{'ok' if diagnostico['readable'] else 'error'}">
-                            {'✅ OK' if diagnostico['readable'] else '❌ FALLO'}
+                            {' OK' if diagnostico['readable'] else ' FALLO'}
                         </td>
                     </tr>
                     <tr>
                         <td class="key">Escritura (W):</td>
                         <td class="{'ok' if diagnostico['writable'] else 'error'}">
-                            {'✅ OK' if diagnostico['writable'] else '❌ FALLO'}
+                            {' OK' if diagnostico['writable'] else ' FALLO'}
                         </td>
                     </tr>
                     <tr>
                         <td class="key">Ejecución (X):</td>
                         <td class="{'ok' if diagnostico['executable'] else 'error'}">
-                            {'✅ OK' if diagnostico['executable'] else '❌ FALLO'}
+                            {' OK' if diagnostico['executable'] else ' FALLO'}
                         </td>
                     </tr>
                     <tr>
@@ -5282,7 +5285,7 @@ def diagnostico_persistencia():
             </div>
 
             <div class="section">
-                <h2>📊 Archivos en Disco</h2>
+                <h2> Archivos en Disco</h2>
                 <table>
                     <tr>
                         <td class="key">Total archivos:</td>
@@ -5295,20 +5298,20 @@ def diagnostico_persistencia():
                     <tr>
                         <td class="key">metadata.json:</td>
                         <td class="{'ok' if diagnostico['metadata_existe'] else 'warning'}">
-                            {'✅ Existe (' + str(diagnostico.get('metadata_tamano_kb', 0)) + ' KB)' if diagnostico['metadata_existe'] else '⚠️ No existe'}
+                            {' Existe (' + str(diagnostico.get('metadata_tamano_kb', 0)) + ' KB)' if diagnostico['metadata_existe'] else ' No existe'}
                         </td>
                     </tr>
                     <tr>
                         <td class="key">frase_stats.json:</td>
                         <td class="{'ok' if diagnostico['stats_existe'] else 'warning'}">
-                            {'✅ Existe (' + str(diagnostico.get('stats_tamano_kb', 0)) + ' KB)' if diagnostico['stats_existe'] else '⚠️ No existe'}
+                            {' Existe (' + str(diagnostico.get('stats_tamano_kb', 0)) + ' KB)' if diagnostico['stats_existe'] else ' No existe'}
                         </td>
                     </tr>
                 </table>
             </div>
 
             <div class="section">
-                <h2>💾 Caché en Memoria</h2>
+                <h2> Caché en Memoria</h2>
                 <table>
                     <tr>
                         <td class="key">Audios cargados:</td>
@@ -5322,7 +5325,7 @@ def diagnostico_persistencia():
             </div>
 
             <div class="section">
-                <h2>🌍 Variables de Entorno</h2>
+                <h2> Variables de Entorno</h2>
                 <table>
                     <tr>
                         <td class="key">CACHE_DIR:</td>
@@ -5336,7 +5339,7 @@ def diagnostico_persistencia():
             </div>
 
             <div class="section">
-                <h2>📄 Últimos Archivos (Top 20)</h2>
+                <h2> Últimos Archivos (Top 20)</h2>
                 <table>
                     <tr>
                         <th>Archivo</th>
@@ -5357,7 +5360,7 @@ def diagnostico_persistencia():
             </div>
 
             <div class="section">
-                <h2>✅ Recomendaciones</h2>
+                <h2> Recomendaciones</h2>
                 <ul>
                     <li>Si el directorio NO existe, verifica que el volumen esté montado en Railway</li>
                     <li>Si NO hay permisos de escritura, verifica la configuración del volumen</li>
@@ -5396,7 +5399,7 @@ def cargar_historial():
                 datos = json.load(f)
                 return deque(datos, maxlen=500)  # Últimas 500 llamadas
     except Exception as e:
-        print(f"⚠️ FIX 272.2: Error cargando historial: {e}")
+        print(f" FIX 272.2: Error cargando historial: {e}")
     return deque(maxlen=500)
 
 def guardar_historial():
@@ -5407,12 +5410,12 @@ def guardar_historial():
             json.dump(list(historial_llamadas), f, ensure_ascii=False, indent=2)
         return True
     except Exception as e:
-        print(f"⚠️ FIX 272.2: Error guardando historial: {e}")
+        print(f" FIX 272.2: Error guardando historial: {e}")
         return False
 
 # Cargar historial al iniciar
 historial_llamadas = cargar_historial()
-print(f"📞 FIX 272.2: {len(historial_llamadas)} llamadas en historial cargadas")
+print(f" FIX 272.2: {len(historial_llamadas)} llamadas en historial cargadas")
 
 # FIX 272: Mapeo CallSid -> bruce_id para asociar grabaciones
 callsid_to_bruceid = {}  # call_sid -> bruce_id
@@ -5462,7 +5465,7 @@ def ver_dashboard():
                     "inicio": "En curso"
                 })
             except Exception as e:
-                print(f"⚠️ Error obteniendo info de llamada activa: {e}")
+                print(f" Error obteniendo info de llamada activa: {e}")
 
         # Obtener historial reciente
         historial = list(historial_llamadas)[-50:]  # Últimas 50
@@ -5500,7 +5503,7 @@ def ver_dashboard():
         <!DOCTYPE html>
         <html>
         <head>
-            <title>📊 Dashboard Bruce W - Monitoreo</title>
+            <title> Dashboard Bruce W - Monitoreo</title>
             <meta charset="UTF-8">
             <meta http-equiv="refresh" content="15">
             <style>
@@ -5625,13 +5628,13 @@ def ver_dashboard():
                 <span class="pulse"></span> Auto-refresh 15s
             </div>
 
-            <h1>📊 Dashboard de Monitoreo - Bruce W</h1>
+            <h1> Dashboard de Monitoreo - Bruce W</h1>
 
             <div class="nav-links">
-                📞 <a href="/historial-llamadas">Historial + Calificaciones</a>
-                📊 <a href="/stats">Estadísticas de Caché</a>
-                🔍 <a href="/diagnostico-persistencia">Diagnóstico</a>
-                🔄 <a href="/logs" onclick="location.reload(); return false;">Refrescar</a>
+                 <a href="/historial-llamadas">Historial + Calificaciones</a>
+                 <a href="/stats">Estadísticas de Caché</a>
+                 <a href="/diagnostico-persistencia">Diagnóstico</a>
+                 <a href="/logs" onclick="location.reload(); return false;">Refrescar</a>
             </div>
 
             <div class="stats">
@@ -5657,7 +5660,7 @@ def ver_dashboard():
                 </div>
             </div>
 
-            <h2>📞 Llamadas Activas ({len(llamadas_activas_lista)})</h2>
+            <h2> Llamadas Activas ({len(llamadas_activas_lista)})</h2>
         """
 
         if llamadas_activas_lista:
@@ -5688,7 +5691,7 @@ def ver_dashboard():
             """
 
         html += f"""
-            <h2>📜 Historial Reciente ({total_llamadas} total)</h2>
+            <h2> Historial Reciente ({total_llamadas} total)</h2>
         """
 
         if historial:
@@ -5718,14 +5721,14 @@ def ver_dashboard():
         else:
             html += """
             <div class="empty-state">
-                <h3>📭 No hay historial de llamadas aún</h3>
+                <h3> No hay historial de llamadas aún</h3>
                 <p>El historial aparecerá aquí cuando se realicen llamadas.</p>
                 <p>Las estadísticas se acumulan mientras el servidor esté activo.</p>
             </div>
             """
 
         html += f"""
-            <h2>💾 Estado del Sistema</h2>
+            <h2> Estado del Sistema</h2>
             <table>
                 <tr><td>Audios en Caché</td><td><strong>{info_sistema['audios_en_cache']}</strong></td></tr>
                 <tr><td>Frases Registradas</td><td><strong>{info_sistema['frases_registradas']}</strong></td></tr>
@@ -5734,7 +5737,7 @@ def ver_dashboard():
             </table>
 
             <p style="text-align: center; color: #666; margin-top: 30px;">
-                💡 El historial se guarda en memoria mientras el servidor esté activo.<br>
+                 El historial se guarda en memoria mientras el servidor esté activo.<br>
                 Para ver logs completos de Railway, copia los logs desde el Dashboard de Railway.
             </p>
         </body>
@@ -5785,12 +5788,12 @@ def cache_manager():
 
                 # FIX 65: Pre-generar audio automáticamente para la nueva respuesta
                 try:
-                    print(f"\n🎯 FIX 65: Pre-generando audio para nueva categoría '{categoria}'...")
+                    print(f"\n FIX 65: Pre-generando audio para nueva categoría '{categoria}'...")
                     audio_id = f"cache_{categoria}"
                     generar_audio_elevenlabs(respuesta, audio_id, usar_cache_key=categoria)
-                    print(f"   ✅ Audio pre-generado exitosamente")
+                    print(f"    Audio pre-generado exitosamente")
                 except Exception as e:
-                    print(f"   ⚠️ Error pre-generando audio: {e}")
+                    print(f"    Error pre-generando audio: {e}")
                     # No fallar si el audio falla, solo advertir
 
                 return {"success": True, "message": f"Categoría '{categoria}' agregada y audio pre-generado"}
@@ -6004,7 +6007,7 @@ def cache_manager():
         </head>
         <body>
             <div class="container">
-                <h1>🎯 Gestor de Caché de Respuestas</h1>
+                <h1> Gestor de Caché de Respuestas</h1>
                 <p class="subtitle">Administra respuestas pre-definidas para reducir latencia en preguntas comunes</p>
 
                 <!-- Estadísticas -->
@@ -6029,7 +6032,7 @@ def cache_manager():
 
                 <!-- Lista de categorías -->
                 <div class="category-list">
-                    <h2>📋 Respuestas Cacheadas ({len(respuestas_cache)})</h2>
+                    <h2> Respuestas Cacheadas ({len(respuestas_cache)})</h2>
         """
 
         for categoria, datos in respuestas_cache.items():
@@ -6042,7 +6045,7 @@ def cache_manager():
                             <span class="category-name">{categoria}</span>
                             <div>
                                 <span class="usage-badge">{usos} usos</span>
-                                <button class="delete-btn" onclick="eliminarCategoria('{categoria}')">🗑️ Eliminar</button>
+                                <button class="delete-btn" onclick="eliminarCategoria('{categoria}')"> Eliminar</button>
                             </div>
                         </div>
                         <div class="patterns-list">
@@ -6065,7 +6068,7 @@ def cache_manager():
             html += """
                 <!-- Candidatos de Auto-Caché -->
                 <div class="category-list" style="margin-top: 40px;">
-                    <h2>🤖 Candidatos de Auto-Caché (Preguntas Frecuentes)</h2>
+                    <h2> Candidatos de Auto-Caché (Preguntas Frecuentes)</h2>
                     <p style="color: #666; margin-bottom: 20px;">
                         Estas preguntas se han repetido {0} o más veces. Puedes agregarlas al caché para respuestas instantáneas.
                     </p>
@@ -6086,11 +6089,11 @@ def cache_manager():
                     html += f"""
                     <div class="category-item" style="border-left-color: #f39c12;">
                         <div class="category-header">
-                            <span class="category-name" style="color: #f39c12;">🔥 "{pregunta_orig[:50]}..."</span>
+                            <span class="category-name" style="color: #f39c12;"> "{pregunta_orig[:50]}..."</span>
                             <div>
                                 <span class="usage-badge" style="background: #f39c12;">{count} veces</span>
                                 <button class="btn-add-cache" onclick="agregarAlCache('{pregunta_safe}', '{respuesta_safe}')" style="margin-left: 10px; background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                                    ➕ Agregar al Caché
+                                     Agregar al Caché
                                 </button>
                             </div>
                         </div>
@@ -6112,7 +6115,7 @@ def cache_manager():
 
             if preguntas_cerca[:5]:
                 html += """
-                    <h3 style="margin-top: 30px; color: #666;">📊 Preguntas Emergentes</h3>
+                    <h3 style="margin-top: 30px; color: #666;"> Preguntas Emergentes</h3>
                 """
 
                 for pregunta_norm, datos in preguntas_cerca[:5]:
@@ -6135,7 +6138,7 @@ def cache_manager():
         html += """
                 <!-- Formulario para agregar nueva categoría -->
                 <div class="add-form">
-                    <h2>➕ Agregar Nueva Respuesta</h2>
+                    <h2> Agregar Nueva Respuesta</h2>
                     <form id="addForm">
                         <div class="form-group">
                             <label class="form-label">Categoría (ID única)</label>
@@ -6155,7 +6158,7 @@ def cache_manager():
                             <p class="help-text">La respuesta exacta que Bruce dirá cuando detecte los patrones</p>
                         </div>
 
-                        <button type="submit" class="btn-primary">💾 Guardar Respuesta</button>
+                        <button type="submit" class="btn-primary"> Guardar Respuesta</button>
                     </form>
                 </div>
             </div>
@@ -6187,13 +6190,13 @@ def cache_manager():
                         const result = await response.json();
 
                         if (response.ok) {
-                            alert('✅ ' + result.message);
+                            alert(' ' + result.message);
                             location.reload();
                         } else {
-                            alert('❌ Error: ' + result.error);
+                            alert(' Error: ' + result.error);
                         }
                     } catch (error) {
-                        alert('❌ Error: ' + error.message);
+                        alert(' Error: ' + error.message);
                     }
                 });
 
@@ -6227,13 +6230,13 @@ def cache_manager():
                         const result = await response.json();
 
                         if (response.ok) {
-                            alert('✅ Agregado al caché! El audio se pre-generará automáticamente.');
+                            alert(' Agregado al caché! El audio se pre-generará automáticamente.');
                             location.reload();
                         } else {
-                            alert('❌ Error: ' + result.error);
+                            alert(' Error: ' + result.error);
                         }
                     } catch (error) {
-                        alert('❌ Error: ' + error.message);
+                        alert(' Error: ' + error.message);
                     }
                 }
 
@@ -6256,13 +6259,13 @@ def cache_manager():
                         const result = await response.json();
 
                         if (response.ok) {
-                            alert('✅ ' + result.message);
+                            alert(' ' + result.message);
                             location.reload();
                         } else {
-                            alert('❌ Error: ' + result.error);
+                            alert(' Error: ' + result.error);
                         }
                     } catch (error) {
-                        alert('❌ Error: ' + error.message);
+                        alert(' Error: ' + error.message);
                     }
                 }
             </script>
@@ -6303,7 +6306,7 @@ def cargar_logs():
                 datos = json.load(f)
                 return deque(datos, maxlen=5000)
     except Exception as e:
-        print(f"⚠️ FIX 272.9: Error cargando logs: {e}")
+        print(f" FIX 272.9: Error cargando logs: {e}")
     return deque(maxlen=5000)
 
 def guardar_logs():
@@ -6314,12 +6317,12 @@ def guardar_logs():
             json.dump(list(log_buffer), f, ensure_ascii=False)
         return True
     except Exception as e:
-        print(f"⚠️ FIX 272.9: Error guardando logs: {e}")
+        print(f" FIX 272.9: Error guardando logs: {e}")
         return False
 
 # Cargar logs al iniciar
 log_buffer = cargar_logs()
-print(f"📋 FIX 272.9: {len(log_buffer)} logs cargados")
+print(f" FIX 272.9: {len(log_buffer)} logs cargados")
 
 # Contador para guardar logs cada N entradas
 _log_counter = 0
@@ -6389,7 +6392,7 @@ class LogCapture:
 import sys
 original_stdout = sys.stdout
 sys.stdout = LogCapture(original_stdout)
-print("✅ FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer")
+print(" FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer")
 
 
 # ============================================================================
@@ -6406,7 +6409,7 @@ def cargar_calificaciones():
             with open(CALIFICACIONES_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
     except Exception as e:
-        print(f"⚠️ FIX 272: Error cargando calificaciones: {e}")
+        print(f" FIX 272: Error cargando calificaciones: {e}")
     return {}
 
 def guardar_calificaciones(calificaciones):
@@ -6417,12 +6420,12 @@ def guardar_calificaciones(calificaciones):
             json.dump(calificaciones, f, ensure_ascii=False, indent=2)
         return True
     except Exception as e:
-        print(f"⚠️ FIX 272: Error guardando calificaciones: {e}")
+        print(f" FIX 272: Error guardando calificaciones: {e}")
         return False
 
 # Cargar calificaciones al iniciar
 calificaciones_llamadas = cargar_calificaciones()
-print(f"📊 FIX 272: {len(calificaciones_llamadas)} calificaciones cargadas")
+print(f" FIX 272: {len(calificaciones_llamadas)} calificaciones cargadas")
 
 
 @app.route("/historial-llamadas", methods=["GET"])
@@ -6456,7 +6459,7 @@ def historial_llamadas_dashboard():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>📞 Historial de Llamadas - Bruce W</title>
+        <title> Historial de Llamadas - Bruce W</title>
         <meta charset="UTF-8">
         <style>
             * { box-sizing: border-box; }
@@ -6686,13 +6689,13 @@ def historial_llamadas_dashboard():
         </style>
     </head>
     <body>
-        <h1>📞 Historial de Llamadas - Bruce W</h1>
+        <h1> Historial de Llamadas - Bruce W</h1>
         <p class="subtitle">Panel de calificación con semáforos y notas</p>
 
         <div class="nav-links">
-            <a href="/logs">📊 Dashboard Principal</a>
-            <a href="/stats">📈 Estadísticas</a>
-            <a href="/historial-llamadas">🔄 Refrescar</a>
+            <a href="/logs"> Dashboard Principal</a>
+            <a href="/stats"> Estadísticas</a>
+            <a href="/historial-llamadas"> Refrescar</a>
         </div>
 
         <div class="stats-semaforos">
@@ -6706,7 +6709,7 @@ def historial_llamadas_dashboard():
             </div>
             <div class="stat-item stat-rojo">
                 <span class="numero">""" + str(rojos) + """</span>
-                <span class="label">🔴 Malo</span>
+                <span class="label"> Malo</span>
             </div>
             <div class="stat-item stat-naranja">
                 <span class="numero">""" + str(naranjas) + """</span>
@@ -6714,15 +6717,15 @@ def historial_llamadas_dashboard():
             </div>
             <div class="stat-item stat-azul">
                 <span class="numero">""" + str(azules) + """</span>
-                <span class="label">🔵 Contestadora</span>
+                <span class="label"> Contestadora</span>
             </div>
             <div class="stat-item stat-gris">
                 <span class="numero">""" + str(max(0, sin_calificar)) + """</span>
-                <span class="label">⚪ Sin calificar</span>
+                <span class="label"> Sin calificar</span>
             </div>
         </div>
 
-        <div class="mensaje-guardado" id="mensajeGuardado">✅ Calificaciones guardadas</div>
+        <div class="mensaje-guardado" id="mensajeGuardado"> Calificaciones guardadas</div>
 
         <div class="tabla-container">
     """
@@ -6730,15 +6733,15 @@ def historial_llamadas_dashboard():
     if historial:
         html += """
             <div class="filtros" style="margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 8px;">
-                <label style="color: #fff; margin-right: 10px;">🔍 Filtrar por Estado:</label>
+                <label style="color: #fff; margin-right: 10px;"> Filtrar por Estado:</label>
                 <select id="filtroEstado" onchange="filtrarPorEstado()" style="padding: 8px; border-radius: 5px; background: #333; color: #fff; border: 1px solid #555;">
                     <option value="todos">Todos</option>
                     <option value="verde">🟢 Bueno</option>
                     <option value="amarillo">🟡 Medio</option>
-                    <option value="rojo">🔴 Malo</option>
+                    <option value="rojo"> Malo</option>
                     <option value="naranja">🟠 Buzón</option>
-                    <option value="azul">🔵 Contestadora</option>
-                    <option value="sin_calificar">⚪ Sin calificar</option>
+                    <option value="azul"> Contestadora</option>
+                    <option value="sin_calificar"> Sin calificar</option>
                 </select>
             </div>
             <table>
@@ -6815,7 +6818,7 @@ def historial_llamadas_dashboard():
             html += f"""
                 <tr data-call-id="{call_id}" data-estado="{estado_filtro}" class="{'fila-solucionada' if solucionado_actual else ''}">
                     <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
-                    <td><a href="{link_logs}" target="_blank" style="color: #4CAF50; text-decoration: none;" title="Ver logs de esta llamada"><strong>{bruce_id}</strong> 📋</a></td>
+                    <td><a href="{link_logs}" target="_blank" style="color: #4CAF50; text-decoration: none;" title="Ver logs de esta llamada"><strong>{bruce_id}</strong> </a></td>
                     <td title="{llamada.get('negocio', 'N/A')}">{llamada.get('negocio', 'N/A')[:25]}...</td>
                     <td style="font-size: 12px;">{llamada.get('telefono', 'N/A')}</td>
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
@@ -6857,7 +6860,7 @@ def historial_llamadas_dashboard():
                     </td>
                     <td style="text-align: center;">
                         <span class="semaforo-guardado" data-call-id="{call_id}">
-                            {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '🔴' if semaforo_actual == 'rojo' else '🟠' if semaforo_actual == 'naranja' else '🔵' if semaforo_actual == 'azul' else '⚪'}
+                            {'🟢' if semaforo_actual == 'verde' else '🟡' if semaforo_actual == 'amarillo' else '' if semaforo_actual == 'rojo' else '🟠' if semaforo_actual == 'naranja' else '' if semaforo_actual == 'azul' else ''}
                         </span>
                     </td>
                     <td style="font-size: 10px; color: #888;" title="{deploy_llamada}">{deploy_display}</td>
@@ -6868,7 +6871,7 @@ def historial_llamadas_dashboard():
     else:
         html += """
             <div class="empty-state">
-                <h3>📭 No hay historial de llamadas</h3>
+                <h3> No hay historial de llamadas</h3>
                 <p>El historial aparecerá aquí cuando se realicen llamadas.</p>
             </div>
         """
@@ -6876,7 +6879,7 @@ def historial_llamadas_dashboard():
     html += """
         </div>
 
-        <button class="btn-guardar" onclick="guardarTodo()">💾 Guardar Calificaciones</button>
+        <button class="btn-guardar" onclick="guardarTodo()"> Guardar Calificaciones</button>
 
         <script>
             // Almacenar cambios pendientes
@@ -6914,8 +6917,8 @@ def historial_llamadas_dashboard():
                 // Actualizar el emoji del estado guardado
                 const estadoSpan = fila.querySelector('.semaforo-guardado');
                 if (estadoSpan) {
-                    const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '🔴', 'naranja': '🟠', 'azul': '🔵' };
-                    estadoSpan.textContent = emojis[color] || '⚪';
+                    const emojis = { 'verde': '🟢', 'amarillo': '🟡', 'rojo': '', 'naranja': '🟠', 'azul': '' };
+                    estadoSpan.textContent = emojis[color] || '';
                 }
 
                 // FIX 272.10: Actualizar data-estado para el filtro
@@ -6945,7 +6948,7 @@ def historial_llamadas_dashboard():
             async function guardarTodo() {
                 const btn = document.querySelector('.btn-guardar');
                 btn.disabled = true;
-                btn.textContent = '⏳ Guardando...';
+                btn.textContent = ' Guardando...';
 
                 try {
                     const response = await fetch('/historial-llamadas/guardar', {
@@ -6975,7 +6978,7 @@ def historial_llamadas_dashboard():
                 }
 
                 btn.disabled = false;
-                btn.textContent = '💾 Guardar Calificaciones';
+                btn.textContent = ' Guardar Calificaciones';
             }
         </script>
     </body>
@@ -7018,13 +7021,13 @@ def guardar_calificaciones_endpoint():
 
         # Guardar en archivo
         if guardar_calificaciones(calificaciones_llamadas):
-            print(f"✅ FIX 272: {len(datos)} calificaciones guardadas")
+            print(f" FIX 272: {len(datos)} calificaciones guardadas")
             return {"success": True, "guardados": len(datos)}
         else:
             return {"success": False, "error": "Error al escribir archivo"}, 500
 
     except Exception as e:
-        print(f"❌ FIX 272: Error guardando calificaciones: {e}")
+        print(f" FIX 272: Error guardando calificaciones: {e}")
         return {"success": False, "error": str(e)}, 500
 
 
@@ -7059,11 +7062,11 @@ def escuchar_grabacion(recording_sid):
                 }
             )
         else:
-            print(f"⚠️ FIX 272.6: Error descargando grabación {recording_sid}: {response.status_code}")
+            print(f" FIX 272.6: Error descargando grabación {recording_sid}: {response.status_code}")
             return f"Error al obtener grabación: {response.status_code}", response.status_code
 
     except Exception as e:
-        print(f"❌ FIX 272.6: Error en proxy de grabación: {e}")
+        print(f" FIX 272.6: Error en proxy de grabación: {e}")
         return f"Error: {str(e)}", 500
 
 
@@ -7134,7 +7137,7 @@ def ver_logs_texto():
         <!DOCTYPE html>
         <html>
         <head>
-            <title>📜 Logs Bruce W</title>
+            <title> Logs Bruce W</title>
             <meta charset="UTF-8">
             <meta http-equiv="refresh" content="10">
             <style>
@@ -7185,13 +7188,13 @@ def ver_logs_texto():
             </style>
         </head>
         <body>
-            <h1>📜 Logs en Tiempo Real - Bruce W</h1>
+            <h1> Logs en Tiempo Real - Bruce W</h1>
 
             <div class="controls">
                 <strong>Descargar:</strong>
-                <a href="/logs/download?lineas=1000">📥 Últimos 1000</a>
-                <a href="/logs/download?lineas=5000">📥 Todos (5000)</a>
-                <a href="/logs/download?formato=json&lineas=1000">📥 JSON</a>
+                <a href="/logs/download?lineas=1000"> Últimos 1000</a>
+                <a href="/logs/download?lineas=5000"> Todos (5000)</a>
+                <a href="/logs/download?formato=json&lineas=1000"> JSON</a>
                 |
                 <strong>Filtrar:</strong>
                 <form style="display:inline" method="get">
@@ -7206,7 +7209,7 @@ def ver_logs_texto():
             </div>
 
             <div class="logs">
-                <strong>📊 Total en buffer: {len(log_buffer)} | Mostrando: {len(logs_list)} líneas</strong>
+                <strong> Total en buffer: {len(log_buffer)} | Mostrando: {len(logs_list)} líneas</strong>
                 <br><br>
                 {logs_html}
             </div>
@@ -7269,7 +7272,7 @@ def logs_api():
         <!DOCTYPE html>
         <html>
         <head>
-            <title>📋 Logs BRUCE{bruce_id}</title>
+            <title> Logs BRUCE{bruce_id}</title>
             <meta charset="UTF-8">
             <style>
                 body {{
@@ -7306,11 +7309,11 @@ def logs_api():
             </style>
         </head>
         <body>
-            <h1>📋 Logs de BRUCE{bruce_id}</h1>
+            <h1> Logs de BRUCE{bruce_id}</h1>
             <div class="nav">
                 <a href="/historial-llamadas">← Volver al Historial</a>
-                <a href="/logs">📊 Dashboard</a>
-                <a href="/logs/api?bruce_id={bruce_id}&formato=json" target="_blank">📥 JSON</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id={bruce_id}&formato=json" target="_blank"> JSON</a>
             </div>
             <div class="stats">
                 <strong>Total logs encontrados:</strong> {len(logs_list)} |
@@ -7328,9 +7331,9 @@ def logs_api():
                 css_class = "log-cliente"
             elif "[LLAMADA" in log:
                 css_class = "log-llamada"
-            elif "error" in log.lower() or "❌" in log:
+            elif "error" in log.lower() or "" in log:
                 css_class = "log-error"
-            elif "✅" in log or "éxito" in log.lower():
+            elif "" in log or "éxito" in log.lower():
                 css_class = "log-exito"
 
             # Escapar HTML
@@ -7398,7 +7401,7 @@ def on_deepgram_transcript(call_sid, texto, is_final):
         es_corto = len(palabras) <= 4  # Máximo 4 palabras para ser saludo
 
         if es_saludo and es_corto:
-            print(f"🚀 FIX 314: Saludo detectado en INTERIM: '{texto}' - Pre-cargando respuesta...")
+            print(f" FIX 314: Saludo detectado en INTERIM: '{texto}' - Pre-cargando respuesta...")
 
             # Marcar que ya pre-cargamos para no repetir
             respuesta_precargada[call_sid] = {
@@ -7409,16 +7412,16 @@ def on_deepgram_transcript(call_sid, texto, is_final):
 
             # Verificar que el audio de segunda_parte_saludo esté en cache
             if "segunda_parte_saludo" in audio_cache:
-                print(f"✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea")
+                print(f" FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea")
             else:
-                print(f"⚠️ FIX 314: Audio segunda_parte_saludo NO está en cache - generando...")
+                print(f" FIX 314: Audio segunda_parte_saludo NO está en cache - generando...")
                 # El audio se generará cuando se procese la respuesta
 
     # FIX 490: Proteger acceso concurrente a transcripciones con lock
     with deepgram_transcripciones_lock:
         if is_final:
             # Transcripción final - agregar al array
-            print(f"📝 FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
+            print(f" FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
             deepgram_transcripciones[call_sid].append(texto)
             # FIX 451: Marcar que recibimos transcripción FINAL
             with deepgram_ultima_final_lock:
@@ -7432,7 +7435,7 @@ def on_deepgram_transcript(call_sid, texto, is_final):
         else:
             # FIX 218: Transcripción parcial - reemplazar última entrada parcial
             # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
-            print(f"📝 FIX 212: [PARCIAL] '{texto}'")
+            print(f" FIX 212: [PARCIAL] '{texto}'")
             if deepgram_transcripciones[call_sid]:
                 # Si la última entrada es más corta que la nueva, reemplazarla
                 ultima = deepgram_transcripciones[call_sid][-1]
@@ -7468,7 +7471,7 @@ if FLASK_SOCK_AVAILABLE and sock:
         FIX 212: WebSocket endpoint para recibir MediaStream de Twilio
         y enviarlo a Deepgram para transcripción en tiempo real
         """
-        print(f"\n🔌 FIX 212: Nueva conexión WebSocket /media-stream")
+        print(f"\n FIX 212: Nueva conexión WebSocket /media-stream")
 
         call_sid = None
         transcriber = None
@@ -7493,7 +7496,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     stream_sid = start_data.get('streamSid')
                     call_sid = start_data.get('callSid')
 
-                    print(f"▶️ FIX 212: MediaStream iniciado")
+                    print(f" FIX 212: MediaStream iniciado")
                     print(f"   StreamSid: {stream_sid}")
                     print(f"   CallSid: {call_sid}")
 
@@ -7506,9 +7509,9 @@ if FLASK_SOCK_AVAILABLE and sock:
                             asyncio.set_event_loop(loop)
                             connected = loop.run_until_complete(transcriber.connect())
                             if connected:
-                                print(f"✅ FIX 212: Deepgram conectado para {call_sid}")
+                                print(f" FIX 212: Deepgram conectado para {call_sid}")
                             else:
-                                print(f"❌ FIX 212: Error conectando Deepgram para {call_sid}")
+                                print(f" FIX 212: Error conectando Deepgram para {call_sid}")
                                 transcriber = None
 
                 elif event == 'media':
@@ -7521,11 +7524,11 @@ if FLASK_SOCK_AVAILABLE and sock:
                         transcriber.send_audio_base64(payload)
 
                 elif event == 'stop':
-                    print(f"⏹️ FIX 212: MediaStream detenido - CallSid: {call_sid}")
+                    print(f" FIX 212: MediaStream detenido - CallSid: {call_sid}")
                     break
 
         except Exception as e:
-            print(f"❌ FIX 212: Error en WebSocket: {e}")
+            print(f" FIX 212: Error en WebSocket: {e}")
             traceback.print_exc()
 
         finally:
@@ -7536,7 +7539,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(transcriber.close())
                 except Exception as e:
-                    print(f"⚠️ Error cerrando transcriber: {e}")
+                    print(f" Error cerrando transcriber: {e}")
 
                 if call_sid:
                     eliminar_transcriber(call_sid)
@@ -7544,7 +7547,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     if call_sid in respuesta_precargada:
                         del respuesta_precargada[call_sid]
 
-            print(f"🔌 FIX 212: WebSocket cerrado - CallSid: {call_sid}")
+            print(f" FIX 212: WebSocket cerrado - CallSid: {call_sid}")
 
 
 if __name__ == "__main__":
@@ -7552,11 +7555,11 @@ if __name__ == "__main__":
     log_evento("Servidor iniciando...", "SISTEMA")
 
     print("\n" + "=" * 60)
-    print("🚀 SERVIDOR DE LLAMADAS NIOVAL")
+    print(" SERVIDOR DE LLAMADAS NIOVAL")
     print("=" * 60)
-    print("\n🚀 SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)")
+    print("\n SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)")
     print("=" * 60)
-    print("\n📞 Endpoints disponibles:")
+    print("\n Endpoints disponibles:")
     print("  POST /iniciar-llamada            - Inicia una llamada individual")
     print("  POST /llamadas-masivas           - Inicia múltiples llamadas")
     print("  GET  /status/<call_sid>          - Estado de una llamada")
@@ -7564,32 +7567,32 @@ if __name__ == "__main__":
     print("  POST /generate-cache             - Generar audios manualmente")
     print("  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente")
     print("  WS   /media-stream               - FIX 212: WebSocket para Deepgram")
-    print("\n🌐 URLs de acceso:")
-    print("  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
-    print("  🔍 Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia")
-    print("\n✅ FIX 79: Despedida cálida activa (deja puerta abierta)")
-    print("✅ FIX 81: Debug de detección de Truper activo")
+    print("\n URLs de acceso:")
+    print("   Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats")
+    print("   Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia")
+    print("\n FIX 79: Despedida cálida activa (deja puerta abierta)")
+    print(" FIX 81: Debug de detección de Truper activo")
 
     # FIX 212: Estado de Deepgram
     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
-        print("✅ FIX 212: Deepgram ACTIVO - Transcripción en tiempo real")
+        print(" FIX 212: Deepgram ACTIVO - Transcripción en tiempo real")
         print(f"   WebSocket: /media-stream")
     else:
-        print("⚠️ FIX 212: Deepgram NO disponible - Usando Whisper como fallback")
+        print(" FIX 212: Deepgram NO disponible - Usando Whisper como fallback")
         if not DEEPGRAM_API_KEY:
             print("   Falta: DEEPGRAM_API_KEY en variables de entorno")
 
-    print("\n⚠️  Asegúrate de configurar Twilio en .env")
+    print("\n  Asegúrate de configurar Twilio en .env")
     print("=" * 60 + "\n")
 
     # PASO 1: Cargar caché persistente desde disco (audios auto-generados)
-    print("🔄 Cargando caché desde disco...")
+    print(" Cargando caché desde disco...")
     cargar_cache_desde_disco()
 
     # PASO 2: Pre-generar caché manual de audios comunes con Multilingual v2
     pre_generar_audios_cache()
 
-    print(f"\n📊 Estadísticas de caché:")
+    print(f"\n Estadísticas de caché:")
     print(f"   • Audios en caché: {len(audio_cache)}")
     print(f"   • Directorio: {CACHE_DIR}")
     print(f"   • Ruta absoluta: {os.path.abspath(CACHE_DIR)}")
@@ -7613,7 +7616,7 @@ if __name__ == "__main__":
         ]
 
         fecha_hora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        mensaje = f"🚀 <b>Deploy completado</b>\n\n✅ Bruce Agent iniciado en Railway\n📅 {fecha_hora}\n📊 Audios en caché: {len(audio_cache)}"
+        mensaje = f" <b>Deploy completado</b>\n\n Bruce Agent iniciado en Railway\n {fecha_hora}\n Audios en caché: {len(audio_cache)}"
 
         for bot in TELEGRAM_BOTS:
             try:
@@ -7625,11 +7628,11 @@ if __name__ == "__main__":
                 }
                 response = requests.post(url, data=data, timeout=10)
                 if response.status_code == 200:
-                    print(f"✅ FIX 270: Telegram {bot['nombre']} notificado")
+                    print(f" FIX 270: Telegram {bot['nombre']} notificado")
                 else:
-                    print(f"⚠️ FIX 270: Error Telegram {bot['nombre']}: {response.status_code}")
+                    print(f" FIX 270: Error Telegram {bot['nombre']}: {response.status_code}")
             except Exception as e:
-                print(f"⚠️ FIX 270: Error Telegram {bot['nombre']}: {e}")
+                print(f" FIX 270: Error Telegram {bot['nombre']}: {e}")
 
     # Ejecutar notificación en background para no bloquear inicio
     import threading

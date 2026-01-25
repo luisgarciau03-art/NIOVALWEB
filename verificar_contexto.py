@@ -64,14 +64,14 @@ def generar_contexto_cliente(contacto_info):
 
     # REFERENCIA
     if contacto_info.get('referencia'):
-        contexto_partes.append(f"\n🔥 IMPORTANTE - REFERENCIA:")
+        contexto_partes.append(f"\n IMPORTANTE - REFERENCIA:")
         contexto_partes.append(f"- {contacto_info['referencia']}")
         contexto_partes.append(f"- Usa esta información en tu SALUDO INICIAL para generar confianza")
         contexto_partes.append(f"- Ejemplo: 'Hola, mi nombre es Bruce W. Me pasó su contacto [NOMBRE DEL REFERIDOR] de [EMPRESA]. Él me comentó que usted...'")
 
     # CONTEXTO DE REPROGRAMACIÓN
     if contacto_info.get('contexto_reprogramacion'):
-        contexto_partes.append(f"\n📞 LLAMADA REPROGRAMADA:")
+        contexto_partes.append(f"\n LLAMADA REPROGRAMADA:")
         contexto_partes.append(f"- {contacto_info['contexto_reprogramacion']}")
         contexto_partes.append(f"- Menciona que ya habían hablado antes y retomas la conversación")
         contexto_partes.append(f"- Ejemplo: 'Hola, qué tal. Como le había comentado la vez pasada, me comunico nuevamente...'")
@@ -84,24 +84,24 @@ def generar_contexto_cliente(contacto_info):
 
 # TEST
 print("\n" + "="*80)
-print("📋 VERIFICACIÓN DE CONTEXTO - BRUCE W")
+print(" VERIFICACIÓN DE CONTEXTO - BRUCE W")
 print("="*80 + "\n")
 
-print("🔍 CONTACTO DE PRUEBA:")
+print(" CONTACTO DE PRUEBA:")
 print(f"  Negocio: {contacto_info['nombre_negocio']}")
 print(f"  Ciudad: {contacto_info['ciudad']}")
 print(f"  Referencia: {contacto_info.get('referencia', 'N/A')}")
 print(f"  Reprogramación: {contacto_info.get('contexto_reprogramacion', 'N/A')}")
 
 print("\n" + "="*80)
-print("📨 CONTEXTO GENERADO (se inyecta como mensaje system):")
+print(" CONTEXTO GENERADO (se inyecta como mensaje system):")
 print("="*80 + "\n")
 
 contexto = generar_contexto_cliente(contacto_info)
 print(contexto)
 
 print("\n" + "="*80)
-print("✅ VERIFICACIÓN:")
+print(" VERIFICACIÓN:")
 print("="*80)
 
 verificaciones = {
@@ -116,15 +116,15 @@ verificaciones = {
 }
 
 for check, resultado in verificaciones.items():
-    print(f"  {'✅' if resultado else '❌'} {check}")
+    print(f"  {'' if resultado else ''} {check}")
 
 print("\n" + "="*80)
-print("🎯 RESUMEN:")
+print(" RESUMEN:")
 print("="*80)
 num_elementos = len([line for line in contexto.split('\n') if line.startswith('-')])
 print(f"  Total de elementos en contexto: {num_elementos}")
 print(f"  Caracteres totales: {len(contexto)}")
-print(f"\n  ✅ El contexto se genera correctamente")
-print(f"  ✅ Bruce TIENE esta información antes de empezar la llamada")
-print(f"  ✅ No debe preguntar estos datos al cliente")
+print(f"\n   El contexto se genera correctamente")
+print(f"   Bruce TIENE esta información antes de empezar la llamada")
+print(f"   No debe preguntar estos datos al cliente")
 print("\n" + "="*80)

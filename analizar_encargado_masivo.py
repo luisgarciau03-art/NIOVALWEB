@@ -208,7 +208,7 @@ class AnalizadorEncargado:
         Returns:
             dict: Resumen del análisis
         """
-        print(f"\n📂 Analizando archivo: {ruta_archivo}")
+        print(f"\n Analizando archivo: {ruta_archivo}")
 
         with open(ruta_archivo, 'r', encoding='utf-8') as f:
             contenido = f.read()
@@ -233,7 +233,7 @@ class AnalizadorEncargado:
                 log_llamada = llamadas_separadas[i + 1] if i + 1 < len(llamadas_separadas) else ""
 
                 if log_llamada.strip():
-                    print(f"\n  🔍 Analizando {bruce_id}...")
+                    print(f"\n   Analizando {bruce_id}...")
                     turnos = self.extraer_conversacion(log_llamada)
 
                     if turnos:
@@ -243,9 +243,9 @@ class AnalizadorEncargado:
                         if errores:
                             self.llamadas_con_errores += 1
                             self.errores_detectados.extend(errores)
-                            print(f"    ❌ {len(errores)} errores detectados")
+                            print(f"     {len(errores)} errores detectados")
                         else:
-                            print(f"    ✅ Sin errores")
+                            print(f"     Sin errores")
 
         return self.generar_resumen()
 
@@ -271,20 +271,20 @@ class AnalizadorEncargado:
     def imprimir_resumen(self, resumen):
         """Imprime resumen en consola de forma legible"""
         print("\n" + "=" * 100)
-        print("📊 RESUMEN DEL ANÁLISIS MASIVO - MANEJO DE ENCARGADO DE COMPRAS")
+        print(" RESUMEN DEL ANÁLISIS MASIVO - MANEJO DE ENCARGADO DE COMPRAS")
         print("=" * 100)
 
-        print(f"\n📞 Llamadas analizadas: {resumen['llamadas_analizadas']}")
-        print(f"   ✅ Sin errores: {resumen['llamadas_sin_errores']} ({resumen['llamadas_sin_errores']/resumen['llamadas_analizadas']*100:.1f}%)")
-        print(f"   ❌ Con errores: {resumen['llamadas_con_errores']} ({resumen['llamadas_con_errores']/resumen['llamadas_analizadas']*100:.1f}%)")
+        print(f"\n Llamadas analizadas: {resumen['llamadas_analizadas']}")
+        print(f"    Sin errores: {resumen['llamadas_sin_errores']} ({resumen['llamadas_sin_errores']/resumen['llamadas_analizadas']*100:.1f}%)")
+        print(f"    Con errores: {resumen['llamadas_con_errores']} ({resumen['llamadas_con_errores']/resumen['llamadas_analizadas']*100:.1f}%)")
 
-        print(f"\n🚨 Total de errores detectados: {resumen['total_errores']}")
+        print(f"\n Total de errores detectados: {resumen['total_errores']}")
 
-        print("\n📋 Errores por severidad:")
+        print("\n Errores por severidad:")
         for severidad, cantidad in sorted(resumen['errores_por_severidad'].items(), reverse=True):
             print(f"   {severidad}: {cantidad}")
 
-        print("\n📋 Errores por tipo:")
+        print("\n Errores por tipo:")
         for tipo, cantidad in sorted(resumen['errores_por_tipo'].items(), key=lambda x: x[1], reverse=True):
             tipo_legible = tipo.replace("_", " ").title()
             print(f"   {tipo_legible}: {cantidad}")
@@ -292,11 +292,11 @@ class AnalizadorEncargado:
         # Detallar errores
         if resumen['errores_detallados']:
             print("\n" + "=" * 100)
-            print("🔍 ERRORES DETALLADOS")
+            print(" ERRORES DETALLADOS")
             print("=" * 100)
 
             for i, error in enumerate(resumen['errores_detallados'], 1):
-                print(f"\n❌ ERROR {i}/{len(resumen['errores_detallados'])} - {error['tipo']}")
+                print(f"\n ERROR {i}/{len(resumen['errores_detallados'])} - {error['tipo']}")
                 print(f"   BRUCE ID: {error['bruce_id']}")
                 print(f"   Timestamp: {error['timestamp']}")
                 print(f"   Severidad: {error['severidad']}")
@@ -311,7 +311,7 @@ class AnalizadorEncargado:
         with open(ruta_salida, 'w', encoding='utf-8') as f:
             json.dump(resumen, f, ensure_ascii=False, indent=2)
 
-        print(f"\n💾 Resultados guardados en: {ruta_salida}")
+        print(f"\n Resultados guardados en: {ruta_salida}")
 
 
 def main():
@@ -319,11 +319,11 @@ def main():
     import sys
 
     print("=" * 100)
-    print("🔍 ANALIZADOR MASIVO DE MANEJO DE ENCARGADO DE COMPRAS - FIX 404")
+    print(" ANALIZADOR MASIVO DE MANEJO DE ENCARGADO DE COMPRAS - FIX 404")
     print("=" * 100)
 
     if len(sys.argv) < 2:
-        print("\n❌ Error: Debes proporcionar la ruta al archivo de logs")
+        print("\n Error: Debes proporcionar la ruta al archivo de logs")
         print("\nUso:")
         print(f"   python {sys.argv[0]} <ruta_archivo_logs.txt>")
         print("\nEjemplo:")
@@ -347,25 +347,25 @@ def main():
         analizador.guardar_resultados_json(resumen)
 
         # Conclusión
-        print("\n✅ Análisis completado")
+        print("\n Análisis completado")
 
         if resumen['llamadas_con_errores'] > 0:
             tasa_error = resumen['llamadas_con_errores'] / resumen['llamadas_analizadas'] * 100
-            print(f"\n⚠️  Tasa de error: {tasa_error:.1f}%")
+            print(f"\n  Tasa de error: {tasa_error:.1f}%")
 
             if tasa_error > 30:
-                print("   🚨 CRÍTICO: Más del 30% de llamadas tienen errores")
+                print("    CRÍTICO: Más del 30% de llamadas tienen errores")
             elif tasa_error > 15:
-                print("   ⚠️  ALTO: Más del 15% de llamadas tienen errores")
+                print("     ALTO: Más del 15% de llamadas tienen errores")
             else:
-                print("   ℹ️  Tasa de error aceptable pero mejorable")
+                print("   ℹ  Tasa de error aceptable pero mejorable")
         else:
-            print("\n🎉 ¡Excelente! No se detectaron errores")
+            print("\n ¡Excelente! No se detectaron errores")
 
     except FileNotFoundError:
-        print(f"\n❌ Error: No se encontró el archivo '{ruta_archivo}'")
+        print(f"\n Error: No se encontró el archivo '{ruta_archivo}'")
     except Exception as e:
-        print(f"\n❌ Error durante el análisis: {e}")
+        print(f"\n Error durante el análisis: {e}")
         import traceback
         traceback.print_exc()
 

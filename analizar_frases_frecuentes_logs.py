@@ -14,7 +14,7 @@ def extraer_frases_bruce(log_file):
     with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             # Buscar líneas con "BRUCE DICE:"
-            if "BRUCE DICE:" in line or "🤖 BRUCE DICE:" in line:
+            if "BRUCE DICE:" in line or " BRUCE DICE:" in line:
                 # Extraer la frase entre comillas
                 match = re.search(r'"([^"]+)"', line)
                 if match:
@@ -75,18 +75,18 @@ def main():
     print("ANALIZADOR DE FRASES FRECUENTES")
     print("="*70 + "\n")
 
-    print(f"📂 Archivo: {log_file}")
-    print("🔍 Buscando frases de Bruce...")
+    print(f" Archivo: {log_file}")
+    print(" Buscando frases de Bruce...")
 
     # Extraer frases
     frases = extraer_frases_bruce(log_file)
 
     if not frases:
-        print("\n❌ No se encontraron frases de Bruce en el log")
+        print("\n No se encontraron frases de Bruce en el log")
         print("   Verifica que el archivo contenga líneas con 'BRUCE DICE:'")
         return
 
-    print(f"✅ Encontradas {len(frases)} frases totales")
+    print(f" Encontradas {len(frases)} frases totales")
     print()
 
     # Analizar
@@ -126,7 +126,7 @@ def main():
         if acumulado >= total * 0.8:
             break
 
-    print(f"📊 Para cubrir el 80% de uso, necesitas cachear {frases_80} frases")
+    print(f" Para cubrir el 80% de uso, necesitas cachear {frases_80} frases")
     print()
 
     # Generar recomendación de cachés

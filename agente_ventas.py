@@ -15,6 +15,162 @@ from dotenv import load_dotenv
 from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
 
 
+# [EMOJI]
+# FIX 482 (AUDITORIA W04): SISTEMA DE MÉTRICAS E INSTRUMENTACIÓN
+# [EMOJI]
+
+class MetricsLogger:
+    """
+    FIX 482 (AUDITORIA W04): Logger de métricas completas para análisis de rendimiento.
+
+    Problema detectado en auditoría:
+    - NO hay visibilidad de latencias en producción
+    - NO sabemos dónde están los cuellos de botella
+    - NO podemos medir mejoras (FIX 475 redujo timeouts, ¿cuánto mejoró realmente?)
+
+    Métricas tracked:
+    - Timing: transcripción, GPT, generación audio, total por turno
+    - Calidad: transcripciones incorrectas, preguntas respondidas vs ignoradas
+    - Conversación: interrupciones, repeticiones, recuperaciones de error
+    """
+
+    def __init__(self):
+        self.metricas = {
+            # Métricas de timing (en segundos)
+            "tiempos_transcripcion": [],
+            "tiempos_gpt": [],
+            "tiempos_audio": [],
+            "tiempos_total_turno": [],
+
+            # Métricas de calidad
+            "preguntas_directas_respondidas": 0,
+            "preguntas_directas_total": 0,
+            "transcripciones_incorrectas": 0,
+            "transcripciones_total": 0,
+
+            # Métricas de interacción
+            "interrupciones_detectadas": 0,
+            "repeticiones_cliente": 0,
+            "recuperaciones_error": 0,
+            "respuestas_vacias_bloqueadas": 0,
+
+            # Metadata
+            "call_sid": None,
+            "inicio_llamada": None,
+            "fin_llamada": None,
+        }
+
+    def log_tiempo_transcripcion(self, segundos: float):
+        """Registra tiempo de transcripción (Deepgram)"""
+        self.metricas["tiempos_transcripcion"].append(segundos)
+
+    def log_tiempo_gpt(self, segundos: float):
+        """Registra tiempo de procesamiento GPT"""
+        self.metricas["tiempos_gpt"].append(segundos)
+
+    def log_tiempo_audio(self, segundos: float):
+        """Registra tiempo de generación de audio (ElevenLabs)"""
+        self.metricas["tiempos_audio"].append(segundos)
+
+    def log_tiempo_total_turno(self, segundos: float):
+        """Registra tiempo total de un turno conversacional"""
+        self.metricas["tiempos_total_turno"].append(segundos)
+
+    def log_pregunta_directa(self, respondida: bool):
+        """Registra si Bruce respondió o ignoró pregunta directa"""
+        self.metricas["preguntas_directas_total"] += 1
+        if respondida:
+            self.metricas["preguntas_directas_respondidas"] += 1
+
+    def log_transcripcion(self, correcta: bool):
+        """Registra si transcripción Deepgram fue correcta o tuvo errores"""
+        self.metricas["transcripciones_total"] += 1
+        if not correcta:
+            self.metricas["transcripciones_incorrectas"] += 1
+
+    def log_interrupcion_detectada(self):
+        """Registra que se detectó y evitó una interrupción (FIX 477)"""
+        self.metricas["interrupciones_detectadas"] += 1
+
+    def log_repeticion_cliente(self):
+        """Registra que cliente repitió pregunta (FIX 480)"""
+        self.metricas["repeticiones_cliente"] += 1
+
+    def log_recuperacion_error(self):
+        """Registra que Bruce se recuperó de un error (FIX 481)"""
+        self.metricas["recuperaciones_error"] += 1
+
+    def log_respuesta_vacia_bloqueada(self):
+        """Registra que se bloqueó respuesta vacía (FIX 479)"""
+        self.metricas["respuestas_vacias_bloqueadas"] += 1
+
+    def get_promedios(self) -> dict:
+        """Calcula promedios de todas las métricas de timing"""
+        def avg(lista):
+            return sum(lista) / len(lista) if lista else 0
+
+        return {
+            "tiempo_transcripcion_avg": avg(self.metricas["tiempos_transcripcion"]),
+            "tiempo_gpt_avg": avg(self.metricas["tiempos_gpt"]),
+            "tiempo_audio_avg": avg(self.metricas["tiempos_audio"]),
+            "tiempo_total_turno_avg": avg(self.metricas["tiempos_total_turno"]),
+            "tasa_preguntas_respondidas": (
+                self.metricas["preguntas_directas_respondidas"] / self.metricas["preguntas_directas_total"]
+                if self.metricas["preguntas_directas_total"] > 0 else 0
+            ),
+            "tasa_transcripciones_correctas": (
+                (self.metricas["transcripciones_total"] - self.metricas["transcripciones_incorrectas"]) /
+                self.metricas["transcripciones_total"]
+                if self.metricas["transcripciones_total"] > 0 else 0
+            ),
+        }
+
+    def generar_reporte(self) -> str:
+        """
+        Genera reporte legible de métricas para logs.
+
+        Returns:
+            String con reporte formateado
+        """
+        promedios = self.get_promedios()
+
+        reporte = "\n" + "="*60 + "\n"
+        reporte += "MÉTRICAS DE LLAMADA (FIX 482)\n"
+        reporte += "="*60 + "\n"
+
+        # Timing
+        reporte += "\nTIMING PROMEDIO:\n"
+        reporte += f"  Transcripción (Deepgram): {promedios['tiempo_transcripcion_avg']:.2f}s\n"
+        reporte += f"  Procesamiento (GPT-4o):   {promedios['tiempo_gpt_avg']:.2f}s\n"
+        reporte += f"  Audio (ElevenLabs):       {promedios['tiempo_audio_avg']:.2f}s\n"
+        reporte += f"  Total por turno:          {promedios['tiempo_total_turno_avg']:.2f}s\n"
+
+        # Calidad
+        reporte += "\nCALIDAD:\n"
+        reporte += f"  Preguntas respondidas:    {self.metricas['preguntas_directas_respondidas']}/{self.metricas['preguntas_directas_total']} "
+        reporte += f"({promedios['tasa_preguntas_respondidas']*100:.1f}%)\n"
+        reporte += f"  Transcripciones correctas: {self.metricas['transcripciones_total'] - self.metricas['transcripciones_incorrectas']}/{self.metricas['transcripciones_total']} "
+        reporte += f"({promedios['tasa_transcripciones_correctas']*100:.1f}%)\n"
+
+        # Interacciones
+        reporte += "\nINTERACCIONES:\n"
+        reporte += f"  Interrupciones evitadas:  {self.metricas['interrupciones_detectadas']}\n"
+        reporte += f"  Repeticiones cliente:     {self.metricas['repeticiones_cliente']}\n"
+        reporte += f"  Recuperaciones de error:  {self.metricas['recuperaciones_error']}\n"
+        reporte += f"  Respuestas vacías bloqueadas: {self.metricas['respuestas_vacias_bloqueadas']}\n"
+
+        reporte += "="*60 + "\n"
+
+        return reporte
+
+    def exportar_json(self) -> dict:
+        """Exporta métricas en formato JSON para análisis"""
+        return {
+            **self.metricas,
+            "promedios": self.get_promedios(),
+        }
+
+
 # FIX 339: Sistema de Estados de Conversación
 # Esto ayuda a Bruce a saber en qué punto de la conversación está
 # y evitar respuestas incoherentes o loops
@@ -47,13 +203,13 @@ USE_GITHUB_MODELS = os.getenv("USE_GITHUB_MODELS", "true").lower() == "true"
 
 # Inicializar clientes
 if USE_GITHUB_MODELS:
-    print("🔧 Modo: GitHub Models (Gratis - Para pruebas)")
+    print("[MODO] GitHub Models (Gratis - Para pruebas)")
     openai_client = OpenAI(
         base_url="https://models.inference.ai.azure.com",
         api_key=GITHUB_TOKEN
     )
 else:
-    print("🚀 Modo: OpenAI Directo (Producción)")
+    print("[MODO] OpenAI Directo (Produccion)")
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
@@ -261,6 +417,13 @@ class AgenteVentas:
         self.detector_ivr = DetectorIVR()  # FIX 202: Detector de sistemas IVR/contestadoras automáticas
         self.timeouts_deepgram = 0  # FIX 408: Contador de timeouts de Deepgram (máximo 2 pedidos de repetición)
 
+        # FIX 481 (AUDITORIA W04): Sistema de recuperación de errores
+        self.intentos_recuperacion = 0  # Contador de intentos de recuperación (max 3)
+        self.ultimo_error_detectado = None  # Tipo de error que se está recuperando
+
+        # FIX 482 (AUDITORIA W04): Sistema de métricas e instrumentación
+        self.metrics = MetricsLogger()
+
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
         self.estado_anterior = None  # Para tracking de transiciones
@@ -312,9 +475,9 @@ class AgenteVentas:
         # Contador para alternar frases de relleno (hace la conversación más natural)
         self.indice_frase_relleno = 0
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # [EMOJI]
     # FIX 491: SISTEMA DE CONTEXTO DINÁMICO
-    # ═══════════════════════════════════════════════════════════════════════════
+    # [EMOJI]
 
     def _detectar_fase_actual(self):
         """
@@ -440,7 +603,7 @@ class AgenteVentas:
         if not objeciones:
             return ""
 
-        texto = "\n⚠️ OBJECIONES DETECTADAS: " + ", ".join(objeciones) + "\n"
+        texto = "\n[WARN] OBJECIONES DETECTADAS: " + ", ".join(objeciones) + "\n"
 
         recordatorios = {
             "PRECIO": "→ NO inventar precios | Redirigir a catálogo | Si 'caro' → promoción $1,500",
@@ -475,29 +638,29 @@ class AgenteVentas:
         # Construir contexto compacto
         contexto = f"""
 
-═══════════════════════════════════════════════════════════════════════════════════
-🎯 CONTEXTO DINÁMICO - LLAMADA ACTUAL (FIX 491)
-═══════════════════════════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] CONTEXTO DINÁMICO - LLAMADA ACTUAL (FIX 491)
+[EMOJI]
 
 NEGOCIO: {self.nombre_negocio} | CIUDAD: {self.ciudad} | TEL: {self.telefono}
 
 DATOS CAPTURADOS:
 • Nombre: {nombre_enc} | WhatsApp: {whatsapp} | Correo: {correo}
 
-🔥 CRÍTICO: NO REPETIR PREGUNTAS POR DATOS YA CAPTURADOS
+[EMOJI] CRÍTICO: NO REPETIR PREGUNTAS POR DATOS YA CAPTURADOS
 Si un dato tiene valor (no dice "NO CAPTURADO"), YA LO TIENES. No preguntar de nuevo.
 
-───────────────────────────────────────────────────────────────────────────────────
-📍 FASE: {fase} | OBJETIVO: {self._obtener_objetivo_fase(fase)}
-───────────────────────────────────────────────────────────────────────────────────
+[EMOJI]
+[EMOJI] FASE: {fase} | OBJETIVO: {self._obtener_objetivo_fase(fase)}
+[EMOJI]
 
 SIGUIENTE ACCIÓN: {self._obtener_siguiente_accion(fase)}
 
 REGLAS CLAVE FASE: {self._obtener_reglas_criticas_fase(fase)}
 {self._generar_recordatorio_objeciones(objeciones)}
-═══════════════════════════════════════════════════════════════════════════════════
+[EMOJI]
 FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
-═══════════════════════════════════════════════════════════════════════════════════
+[EMOJI]
 """
 
         return contexto
@@ -523,14 +686,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Si estábamos pidiendo WhatsApp o hay números, está dictando
             if self.estado_conversacion in [EstadoConversacion.PIDIENDO_WHATSAPP, EstadoConversacion.PIDIENDO_CORREO]:
                 self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
-                print(f"📊 FIX 339: Estado → DICTANDO_NUMERO (cliente dictando: {len(digitos_encontrados)} dígitos)")
+                print(f"[EMOJI] FIX 339: Estado → DICTANDO_NUMERO (cliente dictando: {len(digitos_encontrados)} dígitos)")
                 # FIX 435: Retornar True (no None) - estado válido donde Bruce espera dictado completo
                 return True
 
         # Detectar si cliente está dictando correo (contiene @ o "arroba")
         if '@' in mensaje_lower or 'arroba' in mensaje_lower or 'punto com' in mensaje_lower:
             self.estado_conversacion = EstadoConversacion.DICTANDO_CORREO
-            print(f"📊 FIX 339: Estado → DICTANDO_CORREO")
+            print(f"[EMOJI] FIX 339: Estado → DICTANDO_CORREO")
             # FIX 435: Retornar True (no None) - estado válido donde Bruce espera dictado completo
             return True
 
@@ -553,7 +716,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             if es_pregunta_directa:
                 # Salir de ESPERANDO_TRANSFERENCIA - cliente pregunta directamente a Bruce
-                print(f"📊 FIX 399: Cliente hace PREGUNTA DIRECTA - Saliendo de ESPERANDO_TRANSFERENCIA")
+                print(f"[EMOJI] FIX 399: Cliente hace PREGUNTA DIRECTA - Saliendo de ESPERANDO_TRANSFERENCIA")
                 print(f"   Mensaje: '{mensaje_cliente}' - GPT responderá")
                 self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
                 # NO retornar aquí - dejar que GPT responda la pregunta
@@ -569,7 +732,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # FIX 396: Persona nueva detectada - RE-PRESENTARSE INMEDIATAMENTE
                     # NO dejar que GPT maneje, porque malinterpreta "¿Bueno?" como confirmación
                     self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
-                    print(f"📊 FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO")
+                    print(f"[EMOJI] FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO")
                     print(f"   Cliente dijo: '{mensaje_cliente}' - Bruce se presenta nuevamente")
                     # Retornar presentación inmediata
                     return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
@@ -615,7 +778,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'ya llegó', 'ya llego', 'acaba de llegar', 'ya está aquí', 'ya esta aqui'
         ]
         if any(p in mensaje_lower for p in patrones_encargado_disponible):
-            print(f"📊 FIX 394/395: Cliente ES el encargado - ENCARGADO DISPONIBLE")
+            print(f"[EMOJI] FIX 394/395: Cliente ES el encargado - ENCARGADO DISPONIBLE")
             print(f"   Detectado: '{mensaje_cliente}' - Ofreciendo catálogo DIRECTAMENTE")
             # Responder directamente sin preguntar por encargado
             return "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
@@ -640,7 +803,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         es_rechazo = any(rechazo in mensaje_lower for rechazo in patrones_rechazo)
 
         if es_rechazo:
-            print(f"📊 FIX 405: Cliente RECHAZÓ (no es transferencia)")
+            print(f"[EMOJI] FIX 405: Cliente RECHAZÓ (no es transferencia)")
             print(f"   Mensaje: '{mensaje_cliente}'")
             print(f"   Detectado patrón de rechazo - GPT manejará despedida")
             # NO activar ESPERANDO_TRANSFERENCIA - dejar que GPT maneje el rechazo
@@ -667,7 +830,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # FIX 416: NO hacer return - permitir que se detecte ENCARGADO_NO_ESTA
                     # Caso BRUCE1215: "No, no está ahorita. Si quiere más tarde"
                     # Debe detectar AMBOS: 1) Llamar después 2) Encargado no está
-                    print(f"📊 FIX 411/416: Cliente pide LLAMAR DESPUÉS (no transferencia)")
+                    print(f"[EMOJI] FIX 411/416: Cliente pide LLAMAR DESPUÉS (no transferencia)")
                     print(f"   Mensaje: '{mensaje_cliente}' - Continuando para detectar otros estados")
                     # NO activar ESPERANDO_TRANSFERENCIA - pero NO hacer return aún
                     # Continuar para detectar ENCARGADO_NO_ESTA u otros estados
@@ -689,7 +852,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     cliente_pide_numero = any(patron in mensaje_lower for patron in pide_numero_bruce)
 
                     if cliente_pide_numero:
-                        print(f"📊 FIX 411: Cliente PIDE NÚMERO de Bruce")
+                        print(f"[EMOJI] FIX 411: Cliente PIDE NÚMERO de Bruce")
                         print(f"   Mensaje: '{mensaje_cliente}' - GPT debe dar WhatsApp")
                         # NO activar ESPERANDO_TRANSFERENCIA
                         return  # Dejar que GPT maneje
@@ -717,7 +880,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     es_pregunta_directa = any(preg in mensaje_lower for preg in preguntas_directas)
 
                     if es_pregunta_directa:
-                        print(f"📊 FIX 411: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
+                        print(f"[EMOJI] FIX 411: 'Permítame' detectado pero es PREGUNTA DIRECTA - NO es transferencia")
                         print(f"   Mensaje: '{mensaje_cliente}' - GPT debe responder la pregunta")
                         # NO activar ESPERANDO_TRANSFERENCIA
                         return  # Dejar que GPT maneje
@@ -726,7 +889,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # FIX 417: Agregar "ocupado" a las exclusiones (casos BRUCE1216, BRUCE1219)
                     if not any(neg in mensaje_lower for neg in ['no está', 'no esta', 'no se encuentra', 'ocupado', 'busy']):
                         self.estado_conversacion = EstadoConversacion.ESPERANDO_TRANSFERENCIA
-                        print(f"📊 FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA")
+                        print(f"[EMOJI] FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA")
                         # FIX 435: Retornar True (no None) para que generar_respuesta() NO malinterprete como FIX 428
                         # Caso BRUCE1304: "ahorita le paso" → establecía ESPERANDO_TRANSFERENCIA
                         # pero return sin valor retornaba None → generar_respuesta() lo interpretaba como FIX 428 y colgaba
@@ -750,7 +913,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                            'no tengo', 'no tenemos', 'no contamos con', 'aquí no hay']
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
-            print(f"📊 FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
+            print(f"[EMOJI] FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
             return True
 
         # FIX 427/446: Detectar cuando cliente dice "soy yo" (él ES el encargado)
@@ -781,7 +944,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         ]
         if any(p in mensaje_lower for p in patrones_soy_yo):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_PRESENTE
-            print(f"📊 FIX 427: Cliente ES el encargado → Estado = ENCARGADO_PRESENTE")
+            print(f"[EMOJI] FIX 427: Cliente ES el encargado → Estado = ENCARGADO_PRESENTE")
             return True
 
         # FIX 428: Detectar problemas de comunicación (cliente no puede escuchar bien)
@@ -796,7 +959,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Mayoría de clientes SÍ estaban escuchando - solo es forma de contestar/hablar
         contador_bueno = mensaje_lower.count('¿bueno?') + mensaje_lower.count('bueno?') + mensaje_lower.count('¿bueno')
         if contador_bueno >= 5:
-            print(f"📊 FIX 428/433: Cliente dice '¿bueno?' {contador_bueno} veces → Problema de audio REAL detectado")
+            print(f"[EMOJI] FIX 428/433: Cliente dice '¿bueno?' {contador_bueno} veces → Problema de audio REAL detectado")
             print(f"   → NO procesar con GPT - retornar False para que sistema de respuestas vacías maneje")
             # Retornar False para que generar_respuesta() retorne None
             # El sistema de respuestas vacías se encargará de colgar si continúa
@@ -807,14 +970,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # saludos_simples = ['buen día', 'buen dia', 'buenas', 'buenos días', 'buenos dias']
         # frases_encontradas = [s for s in saludos_simples if mensaje_lower.count(s) >= 2]
         # if frases_encontradas:
-        #     print(f"📊 FIX 428: Cliente repite saludo '{frases_encontradas[0]}' → Posible problema de audio")
+        #     print(f"[EMOJI] FIX 428: Cliente repite saludo '{frases_encontradas[0]}' → Posible problema de audio")
         #     print(f"   → NO procesar con GPT - retornar False")
         #     return False
 
         # Detectar si ya capturamos contacto
         if self.lead_data.get("whatsapp") or self.lead_data.get("email"):
             self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
-            print(f"📊 FIX 339: Estado → CONTACTO_CAPTURADO")
+            print(f"[EMOJI] FIX 339: Estado → CONTACTO_CAPTURADO")
             return True
 
         # Si la respuesta de Bruce pregunta por WhatsApp/correo
@@ -822,13 +985,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             respuesta_lower = respuesta_bruce.lower()
             if 'whatsapp' in respuesta_lower and '?' in respuesta_lower:
                 self.estado_conversacion = EstadoConversacion.PIDIENDO_WHATSAPP
-                print(f"📊 FIX 339: Estado → PIDIENDO_WHATSAPP")
+                print(f"[EMOJI] FIX 339: Estado → PIDIENDO_WHATSAPP")
             elif 'correo' in respuesta_lower and '?' in respuesta_lower:
                 self.estado_conversacion = EstadoConversacion.PIDIENDO_CORREO
-                print(f"📊 FIX 339: Estado → PIDIENDO_CORREO")
+                print(f"[EMOJI] FIX 339: Estado → PIDIENDO_CORREO")
             elif 'encargado' in respuesta_lower and '?' in respuesta_lower:
                 self.estado_conversacion = EstadoConversacion.BUSCANDO_ENCARGADO
-                print(f"📊 FIX 339: Estado → BUSCANDO_ENCARGADO")
+                print(f"[EMOJI] FIX 339: Estado → BUSCANDO_ENCARGADO")
 
         # Continuar procesando normalmente
         return True
@@ -842,6 +1005,305 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             EstadoConversacion.DICTANDO_NUMERO,
             EstadoConversacion.DICTANDO_CORREO
         ]
+
+    def _cliente_esta_dando_informacion(self, texto_cliente: str) -> bool:
+        """
+        FIX 477 (AUDITORIA W04): Detecta si cliente está ACTIVAMENTE dando información.
+        Previene interrupciones cuando cliente dice números/correos parciales.
+
+        Problema observado en BRUCE1406:
+        - Cliente: "9 51. 9 51," (empezando a dar número)
+        - Bruce interrumpe: "¿Me puede dar el número del encargado?" [ERROR]
+
+        Returns:
+            True si cliente está dando información AHORA, False si no
+        """
+        import re
+        texto_lower = texto_cliente.lower().strip()
+
+        # 1. NÚMEROS PARCIALES (típicamente WhatsApp/teléfono)
+        # Patrones: "9 51", "662 415", "tres tres dos"
+        digitos = re.findall(r'\d', texto_cliente)
+        if len(digitos) >= 2 and len(digitos) < 10:
+            # Tiene 2-9 dígitos (incompleto para número mexicano de 10)
+            # Probablemente está dictando número
+            print(f"   [DEBUG] FIX 477: DETECTADO número parcial ({len(digitos)} dígitos) - Cliente probablemente sigue dictando")
+            return True
+
+        # 2. DELETREO DE CORREO (palabras clave)
+        palabras_deletreo_correo = [
+            "arroba", "@", "punto com", "punto mx", "punto net",
+            "gmail", "hotmail", "outlook", "yahoo",
+            "a de", "b de", "c de", "m de mama", "f de foca"  # deletreo fonético
+        ]
+        if any(p in texto_lower for p in palabras_deletreo_correo):
+            print(f"   [DEBUG] FIX 477: DETECTADO deletreo de correo - Cliente probablemente sigue dictando")
+            return True
+
+        # 3. FRASE TERMINA CON CONECTOR/PAUSA (sugiere continuación)
+        palabras_continuacion = [
+            ",", "y", "entonces", "este", "o sea", "pues", "bueno",
+            "es decir", "o", "pero", "como", "porque"
+        ]
+        for palabra in palabras_continuacion:
+            if texto_cliente.strip().endswith(palabra):
+                print(f"   [DEBUG] FIX 477: DETECTADO frase termina con '{palabra}' - Cliente probablemente continúa")
+                return True
+
+        # 4. NO está dando información
+        return False
+
+    def _cliente_repite_pregunta(self, texto_cliente: str) -> tuple:
+        """
+        FIX 480 (AUDITORIA W04): Detecta si cliente está repitiendo la MISMA pregunta.
+
+        Problema observado en BRUCE1405:
+        - Cliente preguntó 3 veces "¿De dónde habla?"
+        - Bruce respondió diferente cada vez
+        - NO detectó frustración del cliente
+
+        Returns:
+            (True/False, pregunta_repetida, veces_repetida)
+        """
+        from difflib import SequenceMatcher
+
+        texto_lower = texto_cliente.lower().strip()
+
+        # Obtener últimos 3-4 mensajes del cliente
+        mensajes_cliente = [
+            msg['content'].lower().strip() for msg in self.conversation_history[-10:]
+            if msg['role'] == 'user'
+        ]
+
+        if len(mensajes_cliente) < 2:
+            return (False, "", 0)
+
+        # Verificar si el mensaje actual es SIMILAR a alguno anterior
+        mensaje_actual = mensajes_cliente[-1] if mensajes_cliente else texto_lower
+
+        # Contador de repeticiones
+        veces_repetida = 0
+        pregunta_repetida = ""
+
+        for msg_previo in mensajes_cliente[-4:-1]:  # Revisar últimos 3 mensajes anteriores
+            # Calcular similitud (SequenceMatcher)
+            similitud = SequenceMatcher(None, mensaje_actual, msg_previo).ratio()
+
+            # Si similitud > 70%, considerar como repetición
+            if similitud > 0.7:
+                veces_repetida += 1
+                pregunta_repetida = msg_previo
+                self.metrics.log_repeticion_cliente()  # FIX 482: Métrica
+                print(f"\n[REPEAT] FIX 480: REPETICIÓN DETECTADA (similitud: {similitud*100:.1f}%)")
+                print(f"   Cliente repitió: '{msg_previo}'")
+                print(f"   Veces repetida: {veces_repetida}")
+
+        if veces_repetida >= 1:
+            return (True, pregunta_repetida, veces_repetida + 1)  # +1 por mensaje actual
+
+        return (False, "", 0)
+
+    def _generar_respuesta_para_repeticion(self, pregunta_repetida: str, veces: int) -> str:
+        """
+        FIX 480 (AUDITORIA W04): Genera respuesta CLARA cuando cliente repite pregunta.
+
+        Estrategia:
+        - 1ra repetición: Responder MÁS CORTO y MÁS CLARO
+        - 2da repetición: Ofrecer alternativa
+
+        Args:
+            pregunta_repetida: La pregunta que el cliente está repitiendo
+            veces: Número de veces que la repitió
+
+        Returns:
+            Respuesta adaptada
+        """
+        pregunta_lower = pregunta_repetida.lower()
+
+        # Identificar tipo de pregunta
+        if any(p in pregunta_lower for p in ["de dónde", "de donde", "ubicación", "dónde están"]):
+            if veces == 2:
+                return "Guadalajara, Jalisco. Hacemos envíos a toda la república. ¿Me comunica con el encargado?"
+            else:  # 3+ veces
+                return "Estamos en Guadalajara. ¿Prefiere que le llame en otro momento más conveniente?"
+
+        elif any(p in pregunta_lower for p in ["quién habla", "quien habla", "quién llama"]):
+            if veces == 2:
+                return "Bruce de NIOVAL, productos ferreteros. ¿Está el encargado de compras?"
+            else:
+                return "Me llamo Bruce, de NIOVAL. ¿Le puedo dejar un mensaje al encargado?"
+
+        elif any(p in pregunta_lower for p in ["qué vende", "que vende", "qué productos"]):
+            if veces == 2:
+                return "Productos de ferretería: cintas, grifería, herramientas. ¿Está el encargado?"
+            else:
+                return "Ferretería. ¿Le envío el catálogo por WhatsApp para que vea todo?"
+
+        elif any(p in pregunta_lower for p in ["qué marcas", "que marcas"]):
+            if veces == 2:
+                return "Marca NIOVAL. Es nuestra marca propia. ¿Está el encargado de compras?"
+            else:
+                return "NIOVAL. ¿Le gustaría recibir el catálogo por WhatsApp?"
+
+        # Respuesta genérica si no se identificó la pregunta
+        if veces == 2:
+            return "Disculpe, no escuché bien. ¿Me puede repetir su pregunta?"
+        else:
+            return "Parece que tenemos problemas de conexión. ¿Prefiere que le llame en otro momento?"
+
+    def _detectar_error_necesita_recuperacion(self, texto_cliente: str) -> tuple:
+        """
+        FIX 481 (AUDITORIA W04): Detecta si Bruce cometió un error que necesita recuperación.
+
+        Problema observado en auditoría:
+        - Cuando Bruce comete un error (no responde pregunta, alucina datos), NO HAY LÓGICA DE RECUPERACIÓN
+        - Cliente repite pregunta frustrado y Bruce responde diferente cada vez
+        - Esto destruye confianza y lleva a cuelgues
+
+        Casos de error detectables:
+        1. Cliente repite pregunta (ya detectado por FIX 480)
+        2. Cliente dice "No entendí" / "¿Cómo?" / "No le escucho bien"
+        3. Cliente dice "Eso no es lo que pregunté"
+        4. Cliente muestra frustración: "Ya le dije", "Le dije que..."
+
+        Returns:
+            (necesita_recuperacion: bool, tipo_error: str, contexto: str)
+        """
+        from difflib import SequenceMatcher
+
+        texto_lower = texto_cliente.lower().strip()
+
+        # TIPO 1: Indicadores directos de confusión
+        indicadores_confusion = [
+            'no entendí', 'no entendi', '¿cómo?', '¿como?', 'como dice',
+            'no le escucho', 'no escucho bien', 'no se le escucha',
+            'no entiendo', '¿qué dice?', '¿que dice?', 'qué dice',
+            'no le entiendo', 'no te entiendo', 'perdón', 'perdon',
+            'no me quedó claro', 'no me quedo claro'
+        ]
+
+        if any(ind in texto_lower for ind in indicadores_confusion):
+            print(f"\n[WRENCH] FIX 481: CONFUSIÓN DETECTADA - Cliente no entendió respuesta")
+            print(f"   Cliente dijo: '{texto_cliente}'")
+            return (True, "CONFUSION", texto_cliente)
+
+        # TIPO 2: Indicadores de frustración (ya le dije antes)
+        indicadores_frustracion = [
+            'ya le dije', 'ya te dije', 'ya le comenté', 'ya te comente',
+            'ya se lo dije', 'ya te lo dije', 'pero ya le',
+            'eso no es lo que', 'no es lo que pregunté', 'no es lo que pregunte',
+            'eso no fue lo que', 'no le pregunté eso', 'no le pregunte eso'
+        ]
+
+        if any(ind in texto_lower for ind in indicadores_frustracion):
+            print(f"\n[WRENCH] FIX 481: FRUSTRACIÓN DETECTADA - Cliente repitiendo información")
+            print(f"   Cliente dijo: '{texto_cliente}'")
+            return (True, "FRUSTRACION", texto_cliente)
+
+        # TIPO 3: Cliente corrige a Bruce
+        indicadores_correccion = [
+            'no, es', 'no es', 'no, le dije', 'le dije', 'dije que',
+            'pero le dije', 'le comenté que', 'le comente que',
+            'no, eso no', 'eso no es'
+        ]
+
+        if any(ind in texto_lower for ind in indicadores_correccion):
+            print(f"\n[WRENCH] FIX 481: CORRECCIÓN DETECTADA - Cliente corrigiendo a Bruce")
+            print(f"   Cliente dijo: '{texto_cliente}'")
+            return (True, "CORRECCION", texto_cliente)
+
+        # TIPO 4: Cliente repite pregunta (usar FIX 480)
+        es_repeticion, pregunta_repetida, veces = self._cliente_repite_pregunta(texto_cliente)
+        if es_repeticion and veces >= 2:
+            print(f"\n[WRENCH] FIX 481: PREGUNTA REPETIDA - Cliente preguntó {veces} veces sin respuesta clara")
+            return (True, "PREGUNTA_REPETIDA", pregunta_repetida)
+
+        return (False, "", "")
+
+    def _generar_respuesta_recuperacion_error(self, tipo_error: str, contexto: str) -> str:
+        """
+        FIX 481 (AUDITORIA W04): Genera respuesta de recuperación cuando Bruce cometió error.
+
+        Estrategia de recuperación:
+        1. Reconocer error: "Disculpe, me expliqué mal..."
+        2. Dar respuesta CLARA y DIRECTA
+        3. Si ya se intentó 3 veces, ofrecer alternativa (llamar después, enviar catálogo)
+
+        Args:
+            tipo_error: Tipo de error ("CONFUSION", "FRUSTRACION", "CORRECCION", "PREGUNTA_REPETIDA")
+            contexto: Contexto del error (texto del cliente)
+
+        Returns:
+            Respuesta de recuperación
+        """
+        self.intentos_recuperacion += 1
+        contexto_lower = contexto.lower()
+
+        # Si ya intentamos recuperar 3 veces → Ofrecer escalación/alternativa
+        if self.intentos_recuperacion >= 3:
+            print(f"\n[WARN] FIX 481: 3 INTENTOS DE RECUPERACIÓN FALLIDOS - Ofreciendo alternativa")
+            return (
+                "Disculpe, parece que tenemos problemas de comunicación. "
+                "¿Prefiere que le envíe el catálogo por WhatsApp y el encargado lo revisa con calma? "
+                "O si gusta puedo llamar en otro momento más conveniente."
+            )
+
+        # RECUPERACIÓN SEGÚN TIPO DE ERROR
+
+        if tipo_error == "CONFUSION":
+            # Cliente no entendió → Repetir MÁS CLARO y MÁS CORTO
+            print(f"   [WRENCH] FIX 481: Generando respuesta de recuperación (CONFUSIÓN - Intento {self.intentos_recuperacion}/3)")
+
+            # Detectar qué fue lo último que Bruce dijo para clarificar
+            ultimos_bruce = [
+                msg['content'].lower() for msg in self.conversation_history[-6:]
+                if msg['role'] == 'assistant'
+            ]
+
+            if ultimos_bruce:
+                ultimo_bruce = ultimos_bruce[-1]
+
+                # Si Bruce habló de NIOVAL → Clarificar empresa
+                if 'nioval' in ultimo_bruce or 'marca' in ultimo_bruce:
+                    return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos de ferretería. ¿Está el encargado de compras?"
+
+                # Si Bruce habló de productos → Clarificar productos
+                if 'producto' in ultimo_bruce or 'ferretería' in ultimo_bruce or 'grifería' in ultimo_bruce:
+                    return "Perdón, me explico mejor: vendemos productos para ferreterías como cintas, grifería, herramientas. ¿Me comunica con el encargado?"
+
+                # Si Bruce pidió contacto → Clarificar por qué
+                if 'whatsapp' in ultimo_bruce or 'correo' in ultimo_bruce:
+                    return "Disculpe. Le pido el WhatsApp para enviarle nuestro catálogo de productos. Es sin compromiso."
+
+            # Recuperación genérica
+            return "Disculpe, me expliqué mal. Hablo de NIOVAL, vendemos productos para ferreterías. ¿Se encontrará el encargado de compras?"
+
+        elif tipo_error == "FRUSTRACION":
+            # Cliente frustrado porque ya dio info → Disculparse y continuar
+            print(f"   [WRENCH] FIX 481: Generando respuesta de recuperación (FRUSTRACIÓN - Intento {self.intentos_recuperacion}/3)")
+
+            return (
+                "Tiene razón, disculpe. "
+                "¿Me puede confirmar el WhatsApp donde le envío el catálogo?"
+            )
+
+        elif tipo_error == "CORRECCION":
+            # Cliente corrigió a Bruce → Agradecer corrección y proceder
+            print(f"   [WRENCH] FIX 481: Generando respuesta de recuperación (CORRECCIÓN - Intento {self.intentos_recuperacion}/3)")
+
+            return (
+                "Disculpe, tiene razón. "
+                "¿Me confirma el WhatsApp del encargado para enviarle el catálogo?"
+            )
+
+        elif tipo_error == "PREGUNTA_REPETIDA":
+            # Cliente repitió pregunta → Usar FIX 480
+            print(f"   [WRENCH] FIX 481: Usando FIX 480 para respuesta de repetición")
+            _, _, veces = self._cliente_repite_pregunta(contexto)
+            return self._generar_respuesta_para_repeticion(contexto, veces)
+
+        # Fallback genérico
+        return "Disculpe, ¿me podría repetir? No escuché bien."
 
     def _obtener_frase_relleno(self, delay_segundos: float = 3.0) -> str:
         """
@@ -1129,7 +1591,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Detectar "No" solo, sin otras palabras (excepto puntuación)
             if ultimo_msg in ['no', 'nope', 'nel', 'no.', 'no,']:
                 cliente_dice_no_simple = True
-                print(f"\n🔍 FIX 397: Cliente dijo 'No' simple después de pregunta por encargado")
+                print(f"\n[DEBUG] FIX 397: Cliente dijo 'No' simple después de pregunta por encargado")
                 print(f"   Último mensaje cliente: '{ultimos_cliente[-1]}'")
                 print(f"   Bruce preguntó por encargado: {bruce_pregunto_encargado_reciente}")
 
@@ -1180,7 +1642,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             )
 
             if not tiene_whatsapp and not tiene_email and not tiene_dato_en_contexto:
-                print(f"\n🚫 FIX 397: REGLA 3 ACTIVADA - Bruce dice 'ya lo tengo' sin datos")
+                print(f"\n[EMOJI] FIX 397: REGLA 3 ACTIVADA - Bruce dice 'ya lo tengo' sin datos")
                 print(f"   Últimos mensajes cliente: '{ultimos_msg_cliente[:100]}...'")
                 print(f"   Tiene WhatsApp guardado: {tiene_whatsapp}")
                 print(f"   Tiene Email guardado: {tiene_email}")
@@ -1325,6 +1787,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
 
+        # FIX 479 (AUDITORIA W04): VALIDACIÓN DE RESPUESTAS VACÍAS
+        # Problema observado en BRUCE1404: Bruce respondió con string vacío
+        # Cliente esperó 49s y recibió respuesta vacía → colgó frustrado
+        if not respuesta or len(respuesta.strip()) == 0:
+            print(f"\n[WARN] FIX 479: RESPUESTA VACÍA DETECTADA - Usando respuesta de fallback")
+            self.metrics.log_respuesta_vacia_bloqueada()  # FIX 482: Métrica
+            return "Disculpe, ¿me podría repetir? No escuché bien."
+
+        # FIX 479: Si respuesta es muy corta (<5 caracteres), probablemente error
+        if len(respuesta.strip()) < 5:
+            print(f"\n[WARN] FIX 479: RESPUESTA MUY CORTA detectada ('{respuesta}') - Usando fallback")
+            self.metrics.log_respuesta_vacia_bloqueada()  # FIX 482: Métrica
+            return "Permítame un momento, por favor."
+
         respuesta_lower = respuesta.lower()
         respuesta_original = respuesta
         filtro_aplicado = False
@@ -1336,6 +1812,37 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if msg['role'] == 'user'
         ]
         contexto_cliente = ' '.join(ultimos_mensajes_cliente_global[-6:]) if ultimos_mensajes_cliente_global else ""
+
+        # ============================================================
+        # FIX 481 (AUDITORIA W04): RECUPERACIÓN DE ERRORES
+        # PRIORIDAD ULTRA-ALTA - Detectar si Bruce necesita corregir error
+        # ============================================================
+        # Obtener último mensaje del cliente
+        ultimo_mensaje_cliente = ""
+        if self.conversation_history:
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    ultimo_mensaje_cliente = msg['content']
+                    break
+
+        if ultimo_mensaje_cliente:
+            necesita_recuperacion, tipo_error, contexto_error = self._detectar_error_necesita_recuperacion(ultimo_mensaje_cliente)
+
+            if necesita_recuperacion:
+                # Bruce cometió error → Generar respuesta de recuperación
+                respuesta_recuperacion = self._generar_respuesta_recuperacion_error(tipo_error, contexto_error)
+                self.metrics.log_recuperacion_error()  # FIX 482: Métrica
+                print(f"\n[WRENCH] FIX 481: RECUPERACIÓN DE ERROR ACTIVADA")
+                print(f"   Tipo error: {tipo_error}")
+                print(f"   Respuesta original GPT: '{respuesta[:80]}'")
+                print(f"   Respuesta recuperación: '{respuesta_recuperacion[:80]}'")
+                return respuesta_recuperacion
+            else:
+                # No hay error → Resetear contador de recuperación
+                if self.intentos_recuperacion > 0:
+                    print(f"\n[OK] FIX 481: Conversación recuperada - Reseteando contador (era {self.intentos_recuperacion})")
+                    self.intentos_recuperacion = 0
+                    self.ultimo_error_detectado = None
 
         # ============================================================
         # FIX 398/400: REGLAS CRÍTICAS - SIEMPRE ACTIVAS (NO SKIPPEABLE)
@@ -1386,14 +1893,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 412: SOLO activar si cliente preguntó Y Bruce NO mencionó NIOVAL (ni ahora NI antes)
             if cliente_pregunta_de_donde and not bruce_menciona_nioval_en_respuesta_actual and not bruce_ya_se_presento:
-                print(f"\n🚫 FIX 400/405/412: REGLA CRÍTICA 2 - Cliente preguntó sobre empresa, Bruce NO se ha presentado")
+                print(f"\n[EMOJI] FIX 400/405/412: REGLA CRÍTICA 2 - Cliente preguntó sobre empresa, Bruce NO se ha presentado")
                 print(f"   Cliente dijo: '{contexto_cliente[:100]}'")
                 print(f"   Bruce iba a decir: '{respuesta[:80]}'")
                 respuesta = "Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
                 filtro_aplicado = True
             elif cliente_pregunta_de_donde and bruce_ya_se_presento:
                 # FIX 412: Bruce YA se presentó antes - NO sobrescribir
-                print(f"\n⏭️  FIX 412: Cliente preguntó pero Bruce YA se presentó antes - NO sobrescribiendo")
+                print(f"\n[EMOJI]  FIX 412: Cliente preguntó pero Bruce YA se presentó antes - NO sobrescribiendo")
                 print(f"   Respuesta actual: '{respuesta[:80]}'")
                 # NO activar filtro - dejar que la respuesta actual fluya
 
@@ -1444,7 +1951,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 )
 
                 if not tiene_dato_real:
-                    print(f"\n🚫 FIX 398: REGLA CRÍTICA 1 - Bloqueó 'ya lo tengo' sin datos")
+                    print(f"\n[EMOJI] FIX 398: REGLA CRÍTICA 1 - Bloqueó 'ya lo tengo' sin datos")
                     print(f"   WhatsApp guardado: {tiene_whatsapp}")
                     print(f"   Email guardado: {tiene_email}")
                     print(f"   Últimos mensajes: '{ultimos_msg_cliente[:100]}'")
@@ -1470,12 +1977,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             if bruce_dijo_espero_temp and self.estado_conversacion == EstadoConversacion.BUSCANDO_ENCARGADO:
                 # Persona nueva después de espera - SKIP FIX 384, dejar que FILTRO 5B maneje
-                print(f"\n⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
+                print(f"\n[EMOJI]  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia")
                 print(f"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación")
             elif skip_fix_384:
                 # FIX 392/398: Cliente confirmó - NO ejecutar FIX 384 OPCIONAL
                 # PERO: REGLAS CRÍTICAS ya se ejecutaron arriba
-                print(f"\n⏭️  FIX 392/398: Saltando FIX 384 OPCIONAL - Cliente confirmó")
+                print(f"\n[EMOJI]  FIX 392/398: Saltando FIX 384 OPCIONAL - Cliente confirmó")
                 print(f"   (REGLAS CRÍTICAS ya verificadas)")
                 print(f"   Cliente dijo: '{contexto_cliente[-60:] if len(contexto_cliente) > 60 else contexto_cliente}'")
                 print(f"   GPT generó: '{respuesta[:80]}...'")
@@ -1500,19 +2007,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ]
 
                 if estado_critico:
-                    print(f"\n⏭️  FIX 418: Saltando FIX 384 - Estado crítico: {self.estado_conversacion.value}")
+                    print(f"\n[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: {self.estado_conversacion.value}")
                     print(f"   GPT debe manejar con contexto de estado")
                     print(f"   Cliente dijo: '{contexto_cliente[-80:] if len(contexto_cliente) > 80 else contexto_cliente}'")
                 # Si GPT está pidiendo contacto, NO aplicar FIX 384
                 elif gpt_pide_contacto:
-                    print(f"\n⏭️  FIX 391: Saltando FIX 384 - GPT está pidiendo WhatsApp/correo correctamente")
+                    print(f"\n[EMOJI]  FIX 391: Saltando FIX 384 - GPT está pidiendo WhatsApp/correo correctamente")
                     print(f"   GPT generó: '{respuesta[:80]}...'")
                 else:
                     # FIX 384 normal
                     es_valida, razon = self._validar_sentido_comun(respuesta, contexto_cliente)
 
                     if not es_valida:
-                        print(f"\n🧠 FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
+                        print(f"\n[EMOJI] FIX 384: VALIDADOR DE SENTIDO COMÚN ACTIVADO")
                         print(f"   Razón: {razon}")
                         print(f"   Cliente dijo: '{contexto_cliente[:100]}...'")
                         print(f"   Bruce iba a decir: '{respuesta[:80]}...'")
@@ -1592,7 +2099,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ]
 
             if estado_critico_298:
-                print(f"\n⏭️  FIX 419: Saltando FIX 298/301 - Estado crítico: {self.estado_conversacion.value}")
+                print(f"\n[EMOJI]  FIX 419: Saltando FIX 298/301 - Estado crítico: {self.estado_conversacion.value}")
                 print(f"   GPT debe manejar con contexto de estado")
                 print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                 # NO sobrescribir - dejar respuesta de GPT
@@ -1630,7 +2137,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 if not rechazo_real or es_solo_gracias:
                     tipo_problema = "asume cosas" if bruce_asume_cosas else "despedida prematura"
-                    print(f"\n🚨 FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
+                    print(f"\n[EMOJI] FIX 298/301: CRÍTICO - Bruce {tipo_problema}")
                     print(f"   Mensajes de Bruce: {num_mensajes_bruce} (< 4)")
                     print(f"   Tiene contacto: {tiene_contacto}")
                     print(f"   Último cliente: '{ultimo_cliente[:50]}'")
@@ -1660,7 +2167,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                         if bruce_ya_pregunto_encargado:
                             # FIX 459: Ya preguntó por encargado - usar respuesta contextual
-                            print(f"   ✅ FIX 459: Bruce YA preguntó por encargado - NO volver a preguntar")
+                            print(f"   [OK] FIX 459: Bruce YA preguntó por encargado - NO volver a preguntar")
                             # Verificar si cliente indicó que no está el encargado
                             encargado_no_esta = any(frase in ultimo_cliente for frase in [
                                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
@@ -1711,7 +2218,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             for patron in patrones_repetir_correo:
                 if re.search(patron, respuesta_lower):
-                    print(f"\n🚨 FIX 226/251: FILTRO ACTIVADO - Bruce intentó repetir correo")
+                    print(f"\n[EMOJI] FIX 226/251: FILTRO ACTIVADO - Bruce intentó repetir correo")
                     print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                     respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
                     filtro_aplicado = True
@@ -1732,7 +2239,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                     # Si Bruce menciona el nombre de usuario del email (>4 chars)
                     if len(usuario) > 4 and usuario in respuesta_lower.replace(" ", ""):
-                        print(f"\n🚨 FIX 252: FILTRO ACTIVADO - Bruce mencionó email capturado ('{usuario}')")
+                        print(f"\n[EMOJI] FIX 252: FILTRO ACTIVADO - Bruce mencionó email capturado ('{usuario}')")
                         print(f"   Email capturado: {email_capturado}")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                         respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
@@ -1754,7 +2261,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 for patron in patrones_pedir_whatsapp:
                     if re.search(patron, respuesta_lower):
-                        print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce pidió WhatsApp pero ya tiene correo")
+                        print(f"\n[EMOJI] FIX 226: FILTRO ACTIVADO - Bruce pidió WhatsApp pero ya tiene correo")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                         respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo, que tenga excelente día."
                         filtro_aplicado = True
@@ -1774,7 +2281,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 for num in numeros_en_respuesta:
                     if num not in numero_cliente_limpio and numero_cliente_limpio not in num:
-                        print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Bruce mencionó número aleatorio: {num}")
+                        print(f"\n[EMOJI] FIX 226: FILTRO ACTIVADO - Bruce mencionó número aleatorio: {num}")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                         # Remover el número de la respuesta
                         respuesta = re.sub(r'\b\d{7,12}\b', '', respuesta)
@@ -1795,7 +2302,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 palabras_repetidas = sum(1 for c in conteo.values() if c > 3)
 
                 if palabras_repetidas > 5:
-                    print(f"\n🚨 FIX 226: FILTRO ACTIVADO - Respuesta con repeticiones excesivas")
+                    print(f"\n[EMOJI] FIX 226: FILTRO ACTIVADO - Respuesta con repeticiones excesivas")
                     print(f"   Respuesta original: \"{respuesta[:80]}...\"")
                     respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por correo electrónico?"
                     filtro_aplicado = True
@@ -1850,7 +2357,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 if cliente_no_escucho:
                     if bruce_ya_pregunto_escucha or bruce_ya_se_presento:
                         # Ya preguntamos o ya nos presentamos, usar frase DIFERENTE
-                        print(f"\n📞 FIX 297/351: Cliente sigue diciendo '{ultimo_cliente}' pero Bruce YA se presentó")
+                        print(f"\n[EMOJI] FIX 297/351: Cliente sigue diciendo '{ultimo_cliente}' pero Bruce YA se presentó")
                         print(f"   Usando frase diferente para evitar repetición")
                         # FIX 351: Alternar entre diferentes frases
                         if 'se encontrará el encargado' in ' '.join(mensajes_bruce_recientes):
@@ -1861,7 +2368,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         print(f"   Respuesta corregida: \"{respuesta}\"")
                     elif 'nioval' in respuesta_lower:
                         # Primera vez: confirmar presencia
-                        print(f"\n📞 FIX 234: FILTRO ACTIVADO - Cliente no escuchó, dice '{ultimo_cliente}'")
+                        print(f"\n[EMOJI] FIX 234: FILTRO ACTIVADO - Cliente no escuchó, dice '{ultimo_cliente}'")
                         print(f"   Bruce iba a repetir presentación")
                         respuesta = "Sí, ¿me escucha? Le llamo de la marca NIOVAL."
                         filtro_aplicado = True
@@ -1945,12 +2452,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 es_persona_nueva_estado = (self.estado_conversacion == EstadoConversacion.BUSCANDO_ENCARGADO)
 
                 if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion and not es_persona_nueva_estado:
-                    print(f"\n⏳ FIX 235/237/249/337: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
+                    print(f"\n[EMOJI] FIX 235/237/249/337: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
                     respuesta = "Claro, espero."
                     filtro_aplicado = True
                     print(f"   Respuesta: \"{respuesta}\"")
                 elif cliente_pide_espera and tiene_negacion:
-                    print(f"\n🚫 FIX 249: NO activar espera - Cliente dice 'ahorita' pero con negación: '{ultimo_cliente}'")
+                    print(f"\n[EMOJI] FIX 249: NO activar espera - Cliente dice 'ahorita' pero con negación: '{ultimo_cliente}'")
 
         # ============================================================
         # FILTRO 5B (FIX 287/289): Persona nueva después de transferencia
@@ -1996,7 +2503,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 es_saludo_nuevo = any(ultimo_cliente.strip() == s or ultimo_cliente.strip().startswith(s + '.') for s in saludos_persona_nueva)
 
                 if es_persona_nueva or (es_saludo_nuevo and bruce_dijo_espero):
-                    print(f"\n👋 FIX 289: PERSONA NUEVA detectada después de transferencia")
+                    print(f"\n[EMOJI] FIX 289: PERSONA NUEVA detectada después de transferencia")
                     print(f"   Cliente dice: '{ultimo_cliente}'")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                     # Re-presentarse brevemente
@@ -2062,7 +2569,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 bruce_dice_espero_ignorando = 'claro, espero' in respuesta_lower or 'claro espero' in respuesta_lower
 
                 if menciona_redireccion and (bruce_quiere_despedirse or bruce_ofrece_catalogo_ignorando or bruce_dice_espero_ignorando):
-                    print(f"\n🏢 FIX 291/369/373: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz/mostrador/distribución")
+                    print(f"\n[EMOJI] FIX 291/369/373: FILTRO ACTIVADO - Cliente mencionó sucursal/matriz/mostrador/distribución")
                     print(f"   Contexto: '{contexto_cliente[:80]}...'")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                     respuesta = "Entiendo. ¿Me podría proporcionar el número de las oficinas o del área de compras para contactarlos?"
@@ -2099,7 +2606,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_dice_no_manejan and bruce_invierte_sujeto:
-                    print(f"\n🔄 FIX 379: FILTRO ACTIVADO - Bruce invierte sujeto ('no manejamos' → 'ustedes no manejan')")
+                    print(f"\n[EMOJI] FIX 379: FILTRO ACTIVADO - Bruce invierte sujeto ('no manejamos' → 'ustedes no manejan')")
                     print(f"   Cliente dijo: '{contexto_cliente[:80]}...'")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                     respuesta = "Entiendo que ustedes no manejan ese tipo de producto actualmente. Aún así, le puedo enviar nuestro catálogo completo de ferretería por WhatsApp por si en el futuro les interesa. ¿Le parece?"
@@ -2155,7 +2662,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_quiere_dar_correo and not bruce_pide_correo:
-                    print(f"\n📧 FIX 231: FILTRO ACTIVADO - Cliente quiere dar correo")
+                    print(f"\n[EMAIL] FIX 231: FILTRO ACTIVADO - Cliente quiere dar correo")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Claro, dígame su correo electrónico por favor."
@@ -2242,14 +2749,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # FIX 376: Si cliente dice "no está" PERO pregunta sobre productos
                 # Bruce debe responder la pregunta primero
                 if cliente_dice_no_disponible and cliente_pregunta_productos:
-                    print(f"\n📦 FIX 376: FILTRO ACTIVADO - Cliente dice 'no está' pero pregunta sobre productos")
+                    print(f"\n[EMOJI] FIX 376: FILTRO ACTIVADO - Cliente dice 'no está' pero pregunta sobre productos")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Claro, manejamos grifería, cintas, herramientas y más productos de ferretería. ¿Le gustaría que le envíe el catálogo por WhatsApp para que el encargado lo revise?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
                 elif cliente_dice_no_disponible and (bruce_insiste_contacto or bruce_dice_ocupado):
-                    print(f"\n🚫 FIX 254/255/372/376: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
+                    print(f"\n[EMOJI] FIX 254/255/372/376: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
@@ -2308,7 +2815,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     ])
 
                     if bruce_vuelve_preguntar or 'entendido' in respuesta_lower:
-                        print(f"\n🎯 FIX 257: FILTRO ACTIVADO - Cliente ES el encargado")
+                        print(f"\n[EMOJI] FIX 257: FILTRO ACTIVADO - Cliente ES el encargado")
                         print(f"   Bruce preguntó: \"{ultimo_bruce[:60]}...\"")
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
@@ -2326,7 +2833,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     ])
 
                     if bruce_vuelve_preguntar:
-                        print(f"\n🎯 FIX 262: FILTRO ACTIVADO - Cliente dice 'Dígame' (está listo)")
+                        print(f"\n[EMOJI] FIX 262: FILTRO ACTIVADO - Cliente dice 'Dígame' (está listo)")
                         print(f"   Bruce preguntó: \"{ultimo_bruce[:60]}...\"")
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
@@ -2388,17 +2895,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 447: NO activar si cliente solo ha dicho saludos
             if cliente_solo_saludo:
-                print(f"\n⏭️  FIX 447: Cliente solo ha dicho saludos - NO aplicar FIX 263")
+                print(f"\n[EMOJI]  FIX 447: Cliente solo ha dicho saludos - NO aplicar FIX 263")
 
             if conversacion_avanzada and bruce_pregunta_encargado and not cliente_hizo_pregunta and not cliente_solo_saludo:
-                print(f"\n🚫 FIX 263: FILTRO ACTIVADO - Bruce pregunta por encargado cuando ya avanzamos")
+                print(f"\n[EMOJI] FIX 263: FILTRO ACTIVADO - Bruce pregunta por encargado cuando ya avanzamos")
                 print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                 # Ofrecer continuar o despedirse
                 respuesta = "Perfecto. ¿Hay algo más en lo que le pueda ayudar?"
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
             elif conversacion_avanzada and bruce_pregunta_encargado and cliente_hizo_pregunta:
-                print(f"\n⏭️  FIX 431: Cliente hizo pregunta directa → NO aplicar FIX 263")
+                print(f"\n[EMOJI]  FIX 431: Cliente hizo pregunta directa → NO aplicar FIX 263")
                 print(f"   Cliente preguntó: '{ultimos_mensajes_cliente[-1][:50]}...'")
                 print(f"   Bruce debe responder la pregunta, no cambiar tema")
 
@@ -2442,12 +2949,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         ])
 
                         if cliente_pregunta_origen:
-                            print(f"\n✅ FIX 466: Cliente pregunta DE DÓNDE LLAMAN - presentación ES la respuesta correcta")
+                            print(f"\n[OK] FIX 466: Cliente pregunta DE DÓNDE LLAMAN - presentación ES la respuesta correcta")
                             print(f"   Cliente dijo: '{ultimo_cliente_para_466[:60]}...'")
                             print(f"   NO se cambiará la respuesta de GPT")
                             break  # Salir del for sin aplicar filtro
 
-                        print(f"\n🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
+                        print(f"\n[EMOJI] FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta original: \"{respuesta[:80]}...\"")
 
@@ -2543,13 +3050,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             # FIX 443: Cliente ofrece dar correo/whatsapp/teléfono - aceptar y pedir el dato
                             if 'correo' in ultimo_cliente_msg or 'email' in ultimo_cliente_msg:
                                 respuesta = "Claro, con gusto le envío la información. ¿Cuál es su correo electrónico?"
-                                print(f"   🎯 FIX 443: Cliente OFRECE CORREO - aceptando oferta")
+                                print(f"   [EMOJI] FIX 443: Cliente OFRECE CORREO - aceptando oferta")
                             elif 'whatsapp' in ultimo_cliente_msg:
                                 respuesta = "Perfecto, ¿me puede confirmar su número de WhatsApp?"
-                                print(f"   🎯 FIX 443: Cliente OFRECE WHATSAPP - aceptando oferta")
+                                print(f"   [EMOJI] FIX 443: Cliente OFRECE WHATSAPP - aceptando oferta")
                             else:
                                 respuesta = "Claro, con gusto. ¿Me puede proporcionar el dato?"
-                                print(f"   🎯 FIX 443: Cliente OFRECE DATO - aceptando oferta")
+                                print(f"   [EMOJI] FIX 443: Cliente OFRECE DATO - aceptando oferta")
                             filtro_aplicado = True
                             print(f"   Respuesta corregida: \"{respuesta}\"")
                             break
@@ -2622,7 +3129,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # Verificar si ya preguntamos esto antes
                     ya_preguntado = any(re.search(patron, msg) for msg in ultimos_mensajes_bruce)
                     if ya_preguntado:
-                        print(f"\n🚫 FIX 263B/280: FILTRO ACTIVADO - Bruce repitiendo pregunta")
+                        print(f"\n[EMOJI] FIX 263B/280: FILTRO ACTIVADO - Bruce repitiendo pregunta")
                         print(f"   Patrón repetido: '{patron}'")
                         print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                         # FIX 280/285: Reformular mejor según contexto
@@ -2640,7 +3147,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         if cliente_quiere_dejar_mensaje:
                             # FIX 444: Cliente quiere dejar mensaje - dar contacto
                             respuesta = "Claro, puede enviar la información al WhatsApp 3 3 2 1 0 1 4 4 8 6 o al correo ventas arroba nioval punto com."
-                            print(f"   🎯 FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
+                            print(f"   [EMOJI] FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
                         elif cliente_hace_pregunta and not cliente_dando_info:
                             # FIX 464: BRUCE1390 - Detectar si cliente pregunta QUÉ VENDE
                             # Caso: "¿Qué mercancía vende?" → Bruce respondió "Sí, dígame" (INCORRECTO)
@@ -2656,14 +3163,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                             if cliente_pregunta_que_vende:
                                 # FIX 464: NO cambiar la respuesta de GPT - dejar que explique los productos
-                                print(f"   ✅ FIX 464: Cliente pregunta QUÉ VENDE - dejando respuesta de GPT")
+                                print(f"   [OK] FIX 464: Cliente pregunta QUÉ VENDE - dejando respuesta de GPT")
                                 # No cambiar respuesta, dejar que GPT explique los productos
                                 filtro_aplicado = False  # Cancelar el filtro
                                 break  # Salir del loop de patrones
                             else:
                                 # FIX 444 original: Cliente está preguntando algo genérico
                                 respuesta = "Sí, dígame."
-                                print(f"   🎯 FIX 444: Cliente hace PREGUNTA - no decir 'adelante con el dato'")
+                                print(f"   [EMOJI] FIX 444: Cliente hace PREGUNTA - no decir 'adelante con el dato'")
                         elif bruce_pidio_correo or cliente_dando_info:
                             # FIX 430: Verificar si REALMENTE tenemos contacto capturado
                             # Caso BRUCE1313: Bruce dijo "ya lo tengo registrado" pero cliente solo dijo nombre
@@ -2675,7 +3182,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                 respuesta = "Perfecto, ya lo tengo registrado. Le llegará el catálogo en las próximas horas."
                             else:
                                 # Cliente NO dio contacto completo, NO decir "ya lo tengo registrado"
-                                print(f"   ⚠️ FIX 430: NO tengo contacto capturado - NO decir 'ya lo tengo'")
+                                print(f"   [WARN] FIX 430: NO tengo contacto capturado - NO decir 'ya lo tengo'")
                                 respuesta = "Sí, lo escucho. Adelante con el dato."
                         elif 'whatsapp' in patron or 'catálogo' in patron or 'correo' in patron:
                             respuesta = "Sí, lo escucho. Adelante con el dato."
@@ -2756,7 +3263,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     ])
 
                     if not menciona_horario or respuesta_vacia:
-                        print(f"\n🚨 FIX 227/320: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
+                        print(f"\n[EMOJI] FIX 227/320: FILTRO ACTIVADO - Cliente dio horario pero Bruce no respondió")
                         print(f"   Cliente dijo: \"{ultimo_cliente[:60]}...\"")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                         # FIX 320: Pedir número directo del encargado
@@ -2794,7 +3301,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_ofrece_telefono and not bruce_pide_numero:
-                    print(f"\n📞 FIX 241: FILTRO ACTIVADO - Cliente ofrece teléfono/sucursal")
+                    print(f"\n[EMOJI] FIX 241: FILTRO ACTIVADO - Cliente ofrece teléfono/sucursal")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Perfecto, dígame el número y lo anoto para llamar."
@@ -2832,7 +3339,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_pregunta_ubicacion and not bruce_responde_ubicacion:
-                    print(f"\n📍 FIX 242: FILTRO ACTIVADO - Cliente pregunta ubicación")
+                    print(f"\n[EMOJI] FIX 242: FILTRO ACTIVADO - Cliente pregunta ubicación")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
@@ -2899,7 +3406,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_pregunta_quien and (not bruce_se_presenta or bruce_pregunta_nombre):
-                    print(f"\n👤 FIX 243/308: FILTRO ACTIVADO - Cliente pregunta quién habla")
+                    print(f"\n[EMOJI] FIX 243/308: FILTRO ACTIVADO - Cliente pregunta quién habla")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     # FIX 308: Solo presentarse, NO preguntar nombre del cliente
@@ -2960,7 +3467,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     resto = ultimo_cliente.strip()[3:]  # Después de "es "
                     if re.search(r'\d', resto):
                         cliente_dando_numero = True
-                        print(f"📞 FIX 483: Detectado 'es' + dígitos: '{ultimo_cliente[:40]}'")
+                        print(f"[EMOJI] FIX 483: Detectado 'es' + dígitos: '{ultimo_cliente[:40]}'")
 
                 # FIX 483: También detectar si el mensaje es PRINCIPALMENTE dígitos y Bruce pidió número
                 if not cliente_dando_numero and bruce_pidio_numero_contacto:
@@ -2969,7 +3476,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # Si más del 50% del mensaje son dígitos (o grupos de dígitos)
                     if digitos_en_mensaje >= 3 and palabras_en_mensaje <= 5:
                         cliente_dando_numero = True
-                        print(f"📞 FIX 483: Mensaje con dígitos después de pedir número: '{ultimo_cliente[:40]}'")
+                        print(f"[EMOJI] FIX 483: Mensaje con dígitos después de pedir número: '{ultimo_cliente[:40]}'")
 
                 # FIX 476B: BRUCE1438 - Excluir cuando cliente menciona HORAS o DÍAS (no es teléfono)
                 # Cliente dijo "Hasta el lunes a las 10 y media, 11" = callback, NO número de teléfono
@@ -2987,7 +3494,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # Si menciona hora o día, NO tratar como número de teléfono
                 if cliente_menciona_hora_o_dia:
                     cliente_dando_numero = False
-                    print(f"\n⏰ FIX 476B: Cliente menciona HORA/DÍA, NO número de teléfono")
+                    print(f"\n[EMOJI] FIX 476B: Cliente menciona HORA/DÍA, NO número de teléfono")
                     print(f"   Mensaje: '{ultimo_cliente[:80]}'")
 
                 # Condición más estricta: Bruce pidió contacto Y cliente está dando número Y NO menciona hora/día
@@ -3002,7 +3509,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     digitos = re.findall(r'\d', ultimo_cliente_convertido)
                     num_digitos = len(digitos)
 
-                    print(f"\n🔢 FIX 245 DEBUG: Cliente dio número con {num_digitos} dígitos")
+                    print(f"\n[EMOJI] FIX 245 DEBUG: Cliente dio número con {num_digitos} dígitos")
                     print(f"   Dígitos extraídos: {''.join(digitos)}")
                     print(f"   Mensaje completo: \"{ultimo_cliente[:80]}...\"")
 
@@ -3054,7 +3561,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                     if 3 <= num_digitos <= 8 and (tiene_patron_dictado or tiene_palabra_inicio or termina_en_coma):
                         cliente_esta_dictando = True
-                        print(f"\n⏸️  FIX 434/468: Cliente está DICTANDO número ({num_digitos} dígitos)")
+                        print(f"\n[PAUSE]  FIX 434/468: Cliente está DICTANDO número ({num_digitos} dígitos)")
                         print(f"   Patrón detectado: {ultimo_cliente[:80]}")
                         print(f"   Termina en coma: {termina_en_coma}")
                         print(f"   → NO interrumpir - esperar a que termine de dictar")
@@ -3065,11 +3572,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         # Respuesta corta de confirmación para que cliente sepa que escuchamos
                         respuesta = "Ajá..."
                         filtro_aplicado = True
-                        print(f"   ✅ FIX 468: Estado → DICTANDO_NUMERO, respuesta mínima para no interrumpir")
+                        print(f"   [OK] FIX 468: Estado → DICTANDO_NUMERO, respuesta mínima para no interrumpir")
 
                     # FIX 245: Validar número incompleto (SOLO si NO está dictando)
                     if not numero_completo and num_digitos > 0 and not bruce_pide_repeticion and not cliente_esta_dictando:
-                        print(f"\n📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
+                        print(f"\n[EMOJI] FIX 245/246: FILTRO ACTIVADO - Número incompleto ({num_digitos} dígitos)")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
                         if num_digitos < 10:
@@ -3082,7 +3589,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                     # FIX 247: Verificar número completo (repetirlo para confirmar)
                     elif numero_completo and num_digitos > 0 and not bruce_verifica_numero and not bruce_pide_repeticion:
-                        print(f"\n✅ FIX 247: FILTRO ACTIVADO - Verificar número completo ({num_digitos} dígitos)")
+                        print(f"\n[OK] FIX 247: FILTRO ACTIVADO - Verificar número completo ({num_digitos} dígitos)")
                         print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
                         # Formatear número con guiones para legibilidad
@@ -3136,7 +3643,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_ofrecio_numero and not bruce_pide_numero:
-                    print(f"\n📱 FIX 258/259/266: FILTRO ACTIVADO - Cliente ofreció número/dirección pero Bruce NO lo pidió")
+                    print(f"\n[PHONE] FIX 258/259/266: FILTRO ACTIVADO - Cliente ofreció número/dirección pero Bruce NO lo pidió")
                     print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Perfecto, dígame su número por favor."
@@ -3151,6 +3658,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Solución: Detectar confirmación y extraer número del historial de Bruce
         # ============================================================
         if not filtro_aplicado and not self.lead_data.get("whatsapp"):
+            # Obtener último mensaje del cliente
+            ultimos_msg_cliente_fix462 = [
+                msg['content'].lower() for msg in self.conversation_history[-3:]
+                if msg['role'] == 'user'
+            ]
+            ultimo_cliente = ultimos_msg_cliente_fix462[-1] if ultimos_msg_cliente_fix462 else ""
+
             # Detectar si cliente está CONFIRMANDO un número
             cliente_confirma_numero = any(frase in ultimo_cliente for frase in [
                 'es correcto', 'correcto', 'sí es', 'si es', 'así es', 'eso es',
@@ -3182,11 +3696,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                 self.lead_data["whatsapp"] = numero_whatsapp
                                 self.lead_data["whatsapp_valido"] = True
 
-                                print(f"\n✅ FIX 462: Cliente CONFIRMÓ número del historial")
+                                print(f"\n[OK] FIX 462: Cliente CONFIRMÓ número del historial")
                                 print(f"   Bruce dijo: '{msg['content'][:60]}...'")
                                 print(f"   Cliente confirmó: '{ultimo_cliente[:40]}'")
                                 print(f"   Número extraído: {numero_en_historial} → {numero_whatsapp}")
-                                print(f"   💾 WhatsApp guardado: {numero_whatsapp}")
+                                print(f"   [EMOJI] WhatsApp guardado: {numero_whatsapp}")
                                 break
 
         # ============================================================
@@ -3208,7 +3722,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # FIX 300: SIMPLIFICADO - Si NO tiene contacto, NO puede decir "ya lo tengo"
                 # No importa si Bruce pidió el contacto antes - si NO lo tiene, NO lo tiene
                 if not tiene_whatsapp and not tiene_email:
-                    print(f"\n🚫 FIX 295/300: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto")
+                    print(f"\n[EMOJI] FIX 295/300: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto")
                     print(f"   WhatsApp capturado: {self.lead_data.get('whatsapp')}")
                     print(f"   Email capturado: {self.lead_data.get('email')}")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
@@ -3252,7 +3766,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 tiene_whatsapp = bool(self.lead_data.get("whatsapp"))
 
                 if cliente_solicita_whatsapp and not bruce_pide_numero and not tiene_whatsapp:
-                    print(f"\n📱 FIX 310: FILTRO ACTIVADO - Cliente SOLICITA WhatsApp pero Bruce NO pidió número")
+                    print(f"\n[PHONE] FIX 310: FILTRO ACTIVADO - Cliente SOLICITA WhatsApp pero Bruce NO pidió número")
                     print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Claro que sí. ¿Me puede proporcionar el número de WhatsApp para enviarle la información?"
@@ -3297,7 +3811,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ]) and not bruce_acepta_oferta
 
                 if cliente_ofrece_info and bruce_respuesta_incoherente:
-                    print(f"\n📞 FIX 306: FILTRO ACTIVADO - Cliente OFRECE proporcionar contacto")
+                    print(f"\n[EMOJI] FIX 306: FILTRO ACTIVADO - Cliente OFRECE proporcionar contacto")
                     print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                     print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                     respuesta = "Sí, por favor, se lo agradezco mucho."
@@ -3384,7 +3898,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_es_sucursal and (bruce_se_despide or bruce_sigue_insistiendo) and not bruce_pide_matriz:
-                print(f"\n🏢 FIX 309/309b: FILTRO ACTIVADO - Cliente indica que es SUCURSAL/PUNTO DE VENTA")
+                print(f"\n[EMOJI] FIX 309/309b: FILTRO ACTIVADO - Cliente indica que es SUCURSAL/PUNTO DE VENTA")
                 print(f"   Cliente dijo: \"{contexto_cliente[:100]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:80]}...\"")
                 print(f"   Bruce se despide: {bruce_se_despide}, Bruce sigue insistiendo: {bruce_sigue_insistiendo}")
@@ -3417,7 +3931,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ]) or (contexto_cliente.strip() in ['no', 'no.', 'nel', 'nop', 'nope'])
 
             if bruce_pidio_numero_encargado and cliente_niega:
-                print(f"\n📞 FIX 311: FILTRO ACTIVADO - Cliente niega número del encargado, ofrecer catálogo")
+                print(f"\n[EMOJI] FIX 311: FILTRO ACTIVADO - Cliente niega número del encargado, ofrecer catálogo")
                 print(f"   Bruce pidió número del encargado y cliente dijo: \"{contexto_cliente[:50]}\"")
                 respuesta = "Entiendo, no hay problema. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo para que lo revise el encargado cuando regrese?"
                 filtro_aplicado = True
@@ -3477,11 +3991,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_ofrece_dato:
-                print(f"\n✅ FIX 457: Cliente OFRECE dato - NO aplicar FIX 311b")
+                print(f"\n[OK] FIX 457: Cliente OFRECE dato - NO aplicar FIX 311b")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce usará respuesta de GPT que acepta el dato")
             elif cliente_dice_no_esta and bruce_ofrece_catalogo and not bruce_ya_pidio_numero:
-                print(f"\n📞 FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
+                print(f"\n[EMOJI] FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
                 respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
@@ -3520,7 +4034,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_quiere_volver_llamar and bruce_ofrece_catalogo:
-                print(f"\n📞 FIX 474: FILTRO ACTIVADO - Cliente quiere que Bruce vuelva cuando llegue el dueño")
+                print(f"\n[EMOJI] FIX 474: FILTRO ACTIVADO - Cliente quiere que Bruce vuelva cuando llegue el dueño")
                 print(f"   Caso BRUCE1433: Cliente dijo 'mejor cuando venga el dueño, al rato llega'")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
@@ -3580,7 +4094,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         dia_mencionado = momento
                         break
 
-                print(f"\n📅 FIX 478: FILTRO ACTIVADO - Cliente pide callback en día específico")
+                print(f"\n[EMOJI] FIX 478: FILTRO ACTIVADO - Cliente pide callback en día específico")
                 print(f"   Caso BRUCE1444: Cliente dijo 'marque el lunes'")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Día detectado: {dia_mencionado}")
@@ -3628,7 +4142,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if bruce_ya_pidio_numero and cliente_confirma_o_espera and bruce_ofrece_catalogo:
-                print(f"\n📞 FIX 437: FILTRO ACTIVADO - Bruce YA pidió número, cliente confirmó, NO ofrecer catálogo")
+                print(f"\n[EMOJI] FIX 437: FILTRO ACTIVADO - Bruce YA pidió número, cliente confirmó, NO ofrecer catálogo")
                 print(f"   Caso: BRUCE1322 - Cliente dijo 'Por favor,' y Bruce ofreció catálogo")
                 print(f"   Historial Bruce: pidió número del encargado")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
@@ -3717,7 +4231,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_prefiere_correo and bruce_pide_whatsapp:
-                print(f"\n📧 FIX 315: FILTRO ACTIVADO - Cliente prefiere CORREO pero Bruce pide WhatsApp")
+                print(f"\n[EMAIL] FIX 315: FILTRO ACTIVADO - Cliente prefiere CORREO pero Bruce pide WhatsApp")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a pedir WhatsApp: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto, dígame el correo y lo anoto."
@@ -3725,7 +4239,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
             elif cliente_prefiere_whatsapp and bruce_pide_correo:
-                print(f"\n📱 FIX 315: FILTRO ACTIVADO - Cliente prefiere WHATSAPP pero Bruce pide correo")
+                print(f"\n[PHONE] FIX 315: FILTRO ACTIVADO - Cliente prefiere WHATSAPP pero Bruce pide correo")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a pedir correo: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
@@ -3734,7 +4248,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 329: Cliente ya dijo WhatsApp pero Bruce pregunta "WhatsApp o correo"
             elif cliente_prefiere_whatsapp and bruce_pregunta_ambas:
-                print(f"\n📱 FIX 329: FILTRO ACTIVADO - Cliente YA dijo WhatsApp pero Bruce pregunta ambas opciones")
+                print(f"\n[PHONE] FIX 329: FILTRO ACTIVADO - Cliente YA dijo WhatsApp pero Bruce pregunta ambas opciones")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a preguntar: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto. ¿Me confirma su número de WhatsApp para enviarle el catálogo?"
@@ -3743,7 +4257,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 329: Cliente ya dijo correo pero Bruce pregunta "WhatsApp o correo"
             elif cliente_prefiere_correo and bruce_pregunta_ambas:
-                print(f"\n📧 FIX 329: FILTRO ACTIVADO - Cliente YA dijo correo pero Bruce pregunta ambas opciones")
+                print(f"\n[EMAIL] FIX 329: FILTRO ACTIVADO - Cliente YA dijo correo pero Bruce pregunta ambas opciones")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a preguntar: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto, dígame el correo y lo anoto."
@@ -3794,7 +4308,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_ofrece_numero and bruce_ignora_oferta:
-                print(f"\n📞 FIX 330/332/335: FILTRO ACTIVADO - Cliente ofrece número pero Bruce ignora")
+                print(f"\n[EMOJI] FIX 330/332/335: FILTRO ACTIVADO - Cliente ofrece número pero Bruce ignora")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
@@ -3869,7 +4383,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 323/323b: Si cliente saluda/ofrece ayuda Y Bruce intenta despedirse = ERROR
             if ((contexto_es_saludo or cliente_ofrece_ayuda) and contexto_es_corto and bruce_se_despide) or \
                (cliente_solo_saluda and bruce_se_despide and not tiene_contacto):
-                print(f"\n🚨 FIX 316/323: FILTRO ACTIVADO - Cliente SALUDA/OFRECE AYUDA pero Bruce se DESPIDE")
+                print(f"\n[EMOJI] FIX 316/323: FILTRO ACTIVADO - Cliente SALUDA/OFRECE AYUDA pero Bruce se DESPIDE")
                 print(f"   Cliente dijo: \"{contexto_cliente}\"")
                 print(f"   Cliente ofrece ayuda: {cliente_ofrece_ayuda}")
                 print(f"   Historial cliente (solo saludos): {cliente_solo_saluda}")
@@ -3948,7 +4462,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # Solo activar si cliente dice "no está" Y Bruce responde mal Y NO es transferencia
             if cliente_dice_no_esta and bruce_responde_mal and not es_transferencia:
-                print(f"\n📞 FIX 341 CONSOLIDADO: Cliente dice NO ESTÁ pero Bruce responde mal")
+                print(f"\n[EMOJI] FIX 341 CONSOLIDADO: Cliente dice NO ESTÁ pero Bruce responde mal")
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
@@ -4007,7 +4521,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 342: Si cliente pregunta origen Y Bruce responde incoherente O no responde origen
             if cliente_pregunta_origen and (bruce_no_responde_origen or bruce_responde_incoherente):
-                print(f"\n📞 FIX 322/342: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
+                print(f"\n[EMOJI] FIX 322/342: FILTRO ACTIVADO - Cliente pregunta ORIGEN pero Bruce no responde")
                 print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 print(f"   No responde origen: {bruce_no_responde_origen}, Responde incoherente: {bruce_responde_incoherente}")
@@ -4017,7 +4531,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # FIX 327: Si preguntan específicamente "quién habla" y Bruce no dice su nombre
             elif cliente_pregunta_quien and (bruce_no_dice_nombre or bruce_responde_incoherente):
-                print(f"\n📞 FIX 327/342: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre")
+                print(f"\n[EMOJI] FIX 327/342: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre")
                 print(f"   Cliente preguntó: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
@@ -4069,7 +4583,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             tiene_dato_real = tiene_correo or tiene_whatsapp or cliente_dio_correo or cliente_dio_whatsapp
 
             if bruce_dice_registrado and not tiene_dato_real:
-                print(f"\n🚨 FIX 322: FILTRO ACTIVADO - Bruce dice 'registrado' SIN tener dato")
+                print(f"\n[EMOJI] FIX 322: FILTRO ACTIVADO - Bruce dice 'registrado' SIN tener dato")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 print(f"   tiene_correo={tiene_correo}, tiene_whatsapp={tiene_whatsapp}")
                 # Corregir a presentación
@@ -4111,7 +4625,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if (cliente_pide_info or cliente_menciona_medio) and bruce_pregunta_encargado:
-                print(f"\n📱 FIX 324: FILTRO ACTIVADO - Cliente PIDE INFO pero Bruce pregunta por encargado")
+                print(f"\n[PHONE] FIX 324: FILTRO ACTIVADO - Cliente PIDE INFO pero Bruce pregunta por encargado")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a preguntar por encargado: \"{respuesta[:60]}...\"")
                 # Responder aceptando enviar la información
@@ -4157,7 +4671,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_dice_este_numero and bruce_responde_mal:
-                print(f"\n📞 FIX 336/347: FILTRO ACTIVADO - Cliente dice 'a este número' pero Bruce responde mal")
+                print(f"\n[EMOJI] FIX 336/347: FILTRO ACTIVADO - Cliente dice 'a este número' pero Bruce responde mal")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Perfecto, entonces le envío el catálogo a este mismo número por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
@@ -4205,7 +4719,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_ofrece_correo and bruce_responde_incoherente:
-                print(f"\n📧 FIX 345: FILTRO ACTIVADO - Cliente ofrece correo pero Bruce responde incoherente")
+                print(f"\n[EMAIL] FIX 345: FILTRO ACTIVADO - Cliente ofrece correo pero Bruce responde incoherente")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Claro, dígame su correo electrónico por favor."
@@ -4249,7 +4763,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_pregunta_productos and bruce_no_responde_productos:
-                print(f"\n🔧 FIX 353: FILTRO ACTIVADO - Cliente pregunta productos pero Bruce no responde")
+                print(f"\n[WRENCH] FIX 353: FILTRO ACTIVADO - Cliente pregunta productos pero Bruce no responde")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Claro, somos de la marca NIOVAL. Manejamos productos de ferretería como herramientas, grifería, candados, cinta tapagoteras y más. ¿Le gustaría recibir el catálogo?"
@@ -4284,7 +4798,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ]) or '662 415' not in respuesta
 
             if cliente_pide_datos_bruce and bruce_responde_mal_datos:
-                print(f"\n📞 FIX 355: FILTRO ACTIVADO - Cliente pide datos de Bruce")
+                print(f"\n[EMOJI] FIX 355: FILTRO ACTIVADO - Cliente pide datos de Bruce")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 respuesta = "Claro, mi nombre es Bruce de la marca NIOVAL. Nuestro teléfono es 662 415 1997, eso es: seis seis dos, cuatro uno cinco, uno nueve nueve siete. Con gusto puede pasarle mis datos al encargado."
@@ -4330,7 +4844,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if digitos_en_cliente >= 6 and patron_dictando_numero and bruce_dice_espero:
-                print(f"\n📞 FIX 362: FILTRO ACTIVADO - Cliente DICTA NÚMERO pero Bruce dice 'espero'")
+                print(f"\n[EMOJI] FIX 362: FILTRO ACTIVADO - Cliente DICTA NÚMERO pero Bruce dice 'espero'")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Dígitos detectados: {digitos_en_cliente}")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
@@ -4445,7 +4959,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 cliente_acepta_sin_dato = cliente_solo_acepta and bruce_pregunto_medio
 
                 if not tiene_dato_confirmado or cliente_ofrece_dar_dato or cliente_acepta_sin_dato:
-                    print(f"\n🚨 FIX 363/365/366/367/368: FILTRO ACTIVADO - Bruce dice 'registrado' SIN DATO REAL")
+                    print(f"\n[EMOJI] FIX 363/365/366/367/368: FILTRO ACTIVADO - Bruce dice 'registrado' SIN DATO REAL")
                     print(f"   tiene_email_real={tiene_email_real}, tiene_whatsapp_real={tiene_whatsapp_real}")
                     print(f"   cliente_dio_email_real={cliente_dio_email_real}, cliente_dio_whatsapp_real={cliente_dio_whatsapp_real}")
                     print(f"   cliente_ofrece_dar_dato={cliente_ofrece_dar_dato}, cliente_acepta_sin_dato={cliente_acepta_sin_dato}")
@@ -4504,7 +5018,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # Verificar si tenemos el número del cliente
                 telefono_cliente = self.lead_data.get("telefono", "")
                 if telefono_cliente:
-                    print(f"\n📱 FIX 375/377/378: FILTRO ACTIVADO - Cliente pide info a 'este número'")
+                    print(f"\n[PHONE] FIX 375/377/378: FILTRO ACTIVADO - Cliente pide info a 'este número'")
                     print(f"   Cliente dijo: '{contexto_cliente[:80]}'")
                     print(f"   Número que Bruce marcó: {telefono_cliente}")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
@@ -4516,7 +5030,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # Solo guardar si parece un número válido (10+ dígitos)
                     if len(re.findall(r'\d', telefono_limpio)) >= 10:
                         self.lead_data["whatsapp"] = telefono_limpio
-                        print(f"   ✅ WhatsApp guardado: {telefono_limpio}")
+                        print(f"   [OK] WhatsApp guardado: {telefono_limpio}")
 
                     # Confirmar que vamos a usar ese número como WhatsApp
                     ultimos_4_digitos = telefono_cliente[-4:]
@@ -4558,7 +5072,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_pide_reprogramar and bruce_pide_whatsapp:
-                    print(f"\n📅 FIX 383: FILTRO ACTIVADO - Cliente pide reprogramar pero Bruce pide WhatsApp")
+                    print(f"\n[EMOJI] FIX 383: FILTRO ACTIVADO - Cliente pide reprogramar pero Bruce pide WhatsApp")
                     print(f"   Cliente dijo: '{contexto_cliente[:80]}...'")
                     print(f"   Bruce iba a decir: '{respuesta[:60]}...'")
                     respuesta = "Perfecto. ¿A qué hora sería mejor que llame de nuevo?"
@@ -4609,7 +5123,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             if cliente_indica_es_encargado and (bruce_pregunto_encargado or bruce_ignora):
-                print(f"\n👩‍💼 FIX 364: FILTRO ACTIVADO - Cliente dice que ES el/la encargado/a")
+                print(f"\n[EMOJI]‍[EMOJI] FIX 364: FILTRO ACTIVADO - Cliente dice que ES el/la encargado/a")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
                 # Continuar con la oferta del catálogo
@@ -4647,7 +5161,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 # Si cliente hizo pregunta O NO confirmó O rechazó → NO usar "Perfecto"
                 if cliente_hizo_pregunta or cliente_no_confirmo or cliente_rechazo:
-                    print(f"\n🚫 FIX 394: 'Perfecto' inapropiado detectado")
+                    print(f"\n[EMOJI] FIX 394: 'Perfecto' inapropiado detectado")
                     print(f"   Cliente dijo: '{ultimo_msg_cliente[:60]}...'")
                     print(f"   Razón: {'Pregunta' if cliente_hizo_pregunta else 'No confirmó' if cliente_no_confirmo else 'Rechazo'}")
 
@@ -4663,12 +5177,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         filtro_aplicado = True
 
         if filtro_aplicado:
-            print(f"✅ FIX 226-394: Filtro post-GPT aplicado exitosamente")
+            print(f"[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente")
 
         # FIX 467: BRUCE1404 - Fallback cuando GPT devuelve respuesta vacía
         # Esto ocurre a veces con transcripciones duplicadas/erróneas que confunden a GPT
         if not respuesta or len(respuesta.strip()) == 0:
-            print(f"\n⚠️ FIX 467: GPT devolvió respuesta VACÍA - generando fallback")
+            print(f"\n[WARN] FIX 467: GPT devolvió respuesta VACÍA - generando fallback")
             print(f"   Estado actual: {self.estado_conversacion}")
 
             # Generar respuesta según el estado de la conversación
@@ -4774,14 +5288,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # REFERENCIA - Si alguien lo refirió (columna U)
         if self.contacto_info.get('referencia'):
-            contexto_partes.append(f"\n🔥 IMPORTANTE - REFERENCIA:")
+            contexto_partes.append(f"\n[EMOJI] IMPORTANTE - REFERENCIA:")
             contexto_partes.append(f"- {self.contacto_info['referencia']}")
             contexto_partes.append(f"- Usa esta información en tu SALUDO INICIAL para generar confianza")
             contexto_partes.append(f"- Ejemplo: 'Hola, mi nombre es Bruce W. Me pasó su contacto [NOMBRE DEL REFERIDOR] de [EMPRESA]. Él me comentó que usted...'")
 
         # CONTEXTO DE REPROGRAMACIÓN - Si hubo llamadas previas (columna W)
         if self.contacto_info.get('contexto_reprogramacion'):
-            contexto_partes.append(f"\n📞 LLAMADA REPROGRAMADA:")
+            contexto_partes.append(f"\n[EMOJI] LLAMADA REPROGRAMADA:")
             contexto_partes.append(f"- {self.contacto_info['contexto_reprogramacion']}")
             contexto_partes.append(f"- Menciona que ya habían hablado antes y retomas la conversación")
             contexto_partes.append(f"- Ejemplo: 'Hola, qué tal. Como le había comentado la vez pasada, me comunico nuevamente...'")
@@ -4789,19 +5303,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Si el contexto indica que este número ES del encargado, agregar advertencia CRÍTICA
             contexto_lower = self.contacto_info['contexto_reprogramacion'].lower()
             if any(keyword in contexto_lower for keyword in ['encargado', 'dio número', 'dio numero', 'contacto del']):
-                contexto_partes.append(f"\n⚠️ CRÍTICO: Este número FUE PROPORCIONADO como el del ENCARGADO DE COMPRAS")
+                contexto_partes.append(f"\n[WARN] CRÍTICO: Este número FUE PROPORCIONADO como el del ENCARGADO DE COMPRAS")
                 contexto_partes.append(f"- NO preguntes 'se encuentra el encargado' - YA ESTÁS HABLANDO CON ÉL")
                 contexto_partes.append(f"- Saluda directamente y pide su nombre: '¿Con quién tengo el gusto?'")
 
         if len(contexto_partes) > 1:  # Más que solo el header
-            contexto_partes.append("\n🔒 Recuerda: NO preguntes nada de esta información, ya la tienes.")
+            contexto_partes.append("\n[EMOJI] Recuerda: NO preguntes nada de esta información, ya la tienes.")
             return "\n".join(contexto_partes)
 
         return ""
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # [EMOJI]
     # FIX 491: SISTEMA DE OPTIMIZACIÓN DE LATENCIA (Cache + Patrones + Tokens Dinámicos)
-    # ═══════════════════════════════════════════════════════════════════════════
+    # [EMOJI]
 
     def _detectar_patron_simple_optimizado(self, texto_cliente: str):
         """
@@ -4813,6 +5327,72 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
         texto_lower = texto_cliente.lower().strip()
+
+        # FIX 476 (AUDITORIA W04): PREGUNTAS DIRECTAS - PRIORIDAD MÁXIMA
+        # Problema: Bruce responde "Sí, dígame" en lugar de responder pregunta directa
+        # Ejemplo: Cliente: "¿De dónde habla?" → Bruce: "Sí, dígame" [ERROR]
+        # Solución: Detectar y responder preguntas ANTES de cualquier otro procesamiento
+
+        # Pregunta: ¿De dónde? / ¿Dónde están? / ¿Ubicación?
+        if any(p in texto_lower for p in [
+            "de dónde", "de donde", "dónde habla", "donde habla",
+            "dónde están", "donde estan", "dónde está", "donde esta",
+            "ubicados", "ubicación", "ubicacion",
+            "de qué ciudad", "de que ciudad", "de dónde son", "de donde son"
+        ]):
+            return {
+                "tipo": "PREGUNTA_UBICACION",
+                "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Me comunica con el encargado de compras?",
+                "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # Pregunta: ¿Quién habla? / ¿De parte de quién?
+        if any(p in texto_lower for p in [
+            "quién habla", "quien habla", "quién llama", "quien llama",
+            "de parte de quién", "de parte de quien", "quién es", "quien es",
+            "con quién hablo", "con quien hablo"
+        ]):
+            return {
+                "tipo": "PREGUNTA_IDENTIDAD",
+                "respuesta": "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me comunica con el encargado de compras?",
+                "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # Pregunta: ¿Qué vende? / ¿Qué productos?
+        if any(p in texto_lower for p in [
+            "qué vende", "que vende", "qué ofrece", "que ofrece",
+            "qué productos", "que productos", "qué maneja", "que maneja",
+            "qué es lo que", "que es lo que", "de qué se trata", "de que se trata"
+        ]):
+            return {
+                "tipo": "PREGUNTA_PRODUCTOS",
+                "respuesta": "Distribuimos productos de ferretería: cintas tapagoteras, grifería, herramientas, candados y más de 15 categorías. ¿Se encuentra el encargado de compras?",
+                "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # Pregunta: ¿Qué marcas?
+        if any(p in texto_lower for p in [
+            "qué marcas", "que marcas", "cuáles marcas", "cuales marcas",
+            "de qué marca", "de que marca", "cuál marca", "cual marca",
+            "marcas maneja", "marcas tiene", "marca propia"
+        ]):
+            return {
+                "tipo": "PREGUNTA_MARCAS",
+                "respuesta": "Manejamos la marca NIOVAL, que es nuestra marca propia. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?",
+                "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # Pregunta: ¿Cuánto cuesta? / ¿Qué precios?
+        if any(p in texto_lower for p in [
+            "cuánto cuesta", "cuanto cuesta", "cuánto vale", "cuanto vale",
+            "qué precio", "que precio", "cuánto sale", "cuanto sale",
+            "dame precios", "deme precios", "qué precios", "que precios"
+        ]):
+            return {
+                "tipo": "PREGUNTA_PRECIOS",
+                "respuesta": "Los precios varían según el producto. ¿Me proporciona su WhatsApp y le envío el catálogo completo con todos los precios?",
+                "accion": "RESPONDER_PREGUNTA"
+            }
 
         # 1. DESPEDIDAS (no necesita GPT)
         despedidas = ["adiós", "hasta luego", "bye", "nos vemos", "gracias", "lo reviso", "lo checo"]
@@ -4972,15 +5552,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # PASO 1: Detectar patrones simples (0.05s - 100x más rápido)
         patron_detectado = self._detectar_patron_simple_optimizado(respuesta_cliente)
         if patron_detectado:
-            print(f"⚡ FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
+            print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
+
+            # FIX 482: Métrica - Si es pregunta directa, registrarla como respondida
+            if patron_detectado.get('accion') == "RESPONDER_PREGUNTA":
+                self.metrics.log_pregunta_directa(respondida=True)
 
             # Ejecutar acción si hay
             if patron_detectado['accion'] == "GUARDAR_WHATSAPP" and 'dato' in patron_detectado:
                 self.lead_data["whatsapp"] = patron_detectado['dato']
-                print(f"   📱 WhatsApp guardado: {patron_detectado['dato']}")
+                print(f"   [PHONE] WhatsApp guardado: {patron_detectado['dato']}")
             elif patron_detectado['accion'] == "GUARDAR_CORREO" and 'dato' in patron_detectado:
                 self.lead_data["email"] = patron_detectado['dato']
-                print(f"   📧 Correo guardado: {patron_detectado['dato']}")
+                print(f"   [EMAIL] Correo guardado: {patron_detectado['dato']}")
 
             # Agregar respuesta al historial
             self.conversation_history.append({
@@ -4990,10 +5574,18 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return patron_detectado['respuesta']
 
+        # FIX 477 (AUDITORIA W04): Verificar si cliente está dando información PARCIAL
+        # NO interrumpir cuando está dictando número o correo
+        if self._cliente_esta_dando_informacion(respuesta_cliente):
+            self.metrics.log_interrupcion_detectada()  # FIX 482: Métrica
+            print(f"   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir (retornando None)")
+            print(f"   → Bruce esperará a que cliente termine de dictar")
+            return None
+
         # PASO 2: Buscar en cache de respuestas frecuentes (0.3-0.6s - 83-91% más rápido)
         respuesta_cache = self._obtener_respuesta_cache(respuesta_cliente)
         if respuesta_cache:
-            print(f"⚡ FIX 491: CACHE HIT - Latencia ~0.4s vs 3.5s GPT (reducción 89%)")
+            print(f"[EMOJI] FIX 491: CACHE HIT - Latencia ~0.4s vs 3.5s GPT (reducción 89%)")
 
             # Agregar respuesta al historial
             self.conversation_history.append({
@@ -5004,7 +5596,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return respuesta_cache
 
         # PASO 3: No hay match - continuar con GPT normal (3.5s)
-        print(f"🔄 FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)")
+        print(f"[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)")
 
         # ============================================================
         # FIX 389: INTEGRAR SISTEMA DE ESTADOS (FIX 339)
@@ -5015,7 +5607,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if not debe_continuar:
             # FIX 428 detectó problema de audio (¿bueno? repetido, etc.)
             # No generar respuesta - sistema de respuestas vacías manejará
-            print(f"   ⏭️  FIX 428: Problema de audio detectado → NO generar respuesta (retornando None)")
+            print(f"   [EMOJI]  FIX 428: Problema de audio detectado → NO generar respuesta (retornando None)")
             return None
 
         # ============================================================
@@ -5039,7 +5631,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ]
                 dictado_completo = any(dominio in respuesta_lower for dominio in dominios_completos)
 
-                print(f"\n⏸️  FIX 424: Cliente dictando CORREO - Verificando si está completo")
+                print(f"\n[PAUSE]  FIX 424: Cliente dictando CORREO - Verificando si está completo")
                 print(f"   Cliente dijo: \"{respuesta_cliente}\"")
                 print(f"   Correo completo: {dictado_completo}")
 
@@ -5048,7 +5640,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 digitos = re.findall(r'\d', respuesta_lower)
                 dictado_completo = len(digitos) >= 10
 
-                print(f"\n⏸️  FIX 424: Cliente dictando NÚMERO - Verificando si está completo")
+                print(f"\n[PAUSE]  FIX 424: Cliente dictando NÚMERO - Verificando si está completo")
                 print(f"   Cliente dijo: \"{respuesta_cliente}\"")
                 print(f"   Dígitos detectados: {len(digitos)} - Completo: {dictado_completo}")
 
@@ -5108,7 +5700,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # Si tiene frase de inicio pero NO tiene continuación → transcripción PARCIAL
         if tiene_frase_inicio and not tiene_continuacion:
-            print(f"\n⏸️  FIX 426: Transcripción PARCIAL detectada (frase de inicio sin continuación)")
+            print(f"\n[PAUSE]  FIX 426: Transcripción PARCIAL detectada (frase de inicio sin continuación)")
             print(f"   Cliente dijo: \"{respuesta_cliente}\"")
             print(f"   Tiene frase de inicio: {tiene_frase_inicio}")
             print(f"   Tiene continuación: {tiene_continuacion}")
@@ -5139,19 +5731,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
 
                 if cliente_volvio:
-                    print(f"\n✅ FIX 482: Cliente VOLVIÓ de la espera - '{respuesta_cliente}'")
+                    print(f"\n[OK] FIX 482: Cliente VOLVIÓ de la espera - '{respuesta_cliente}'")
                     print(f"   Cambiando estado a CONVERSACION_NORMAL para continuar")
                     self.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
                     # NO retornar None, continuar con procesamiento normal (GPT)
                 else:
                     # FIX 415: Ya dijo "Claro, espero." → SILENCIARSE (esperar en silencio sin responder)
-                    print(f"\n⏭️  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
+                    print(f"\n[EMOJI]  FIX 415: Bruce YA dijo 'Claro, espero.' - Esperando en SILENCIO")
                     print(f"   Cliente dijo: \"{respuesta_cliente}\" - NO responder (esperar transferencia)")
                     # Retornar None para indicar que NO debe generar audio
                     return None
 
             # Primera vez diciendo "Claro, espero." en esta transferencia
-            print(f"\n⏳ FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
+            print(f"\n[EMOJI] FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
             print(f"   Cliente dijo: \"{respuesta_cliente}\"")
             print(f"   → Respondiendo 'Claro, espero.' SIN llamar GPT")
 
@@ -5172,11 +5764,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Logging del sentimiento detectado
         if sentimiento_data['sentimiento'] != 'neutral':
             emoji_sentimiento = {
-                'muy_positivo': '😃',
-                'positivo': '🙂',
-                'neutral': '😐',
-                'negativo': '😕',
-                'muy_negativo': '😠'
+                'muy_positivo': '[EMOJI]',
+                'positivo': '[EMOJI]',
+                'neutral': '[EMOJI]',
+                'negativo': '[EMOJI]',
+                'muy_negativo': '[EMOJI]'
             }
 
             print(f"\n{emoji_sentimiento[sentimiento_data['sentimiento']]} FIX 386: Sentimiento detectado")
@@ -5185,7 +5777,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Clasificación: {sentimiento_data['sentimiento']}")
 
             if sentimiento_data['debe_colgar']:
-                print(f"   🚨 ACCIÓN: Cliente muy molesto/enojado → COLGAR INMEDIATAMENTE")
+                print(f"   [EMOJI] ACCIÓN: Cliente muy molesto/enojado → COLGAR INMEDIATAMENTE")
 
         # Si cliente está MUY molesto → Colgar con despedida educada
         if sentimiento_data['debe_colgar']:
@@ -5202,7 +5794,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             self.lead_data["estado_llamada"] = "Colgo"
             self.lead_data["estado_animo_cliente"] = "Muy Negativo - Enojado"
 
-            print(f"\n🚨 FIX 386: Terminando llamada por sentimiento muy negativo")
+            print(f"\n[EMOJI] FIX 386: Terminando llamada por sentimiento muy negativo")
             return despedida_disculpa
 
         # ============================================================
@@ -5220,7 +5812,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # Logging de detección
         if resultado_ivr["confianza"] >= 0.3:
-            emoji = "🚨" if resultado_ivr["es_ivr"] else "⚠️"
+            emoji = "[EMOJI]" if resultado_ivr["es_ivr"] else "[WARN]"
             print(f"\n{emoji} FIX 202: Análisis IVR")
             print(f"   Confianza: {resultado_ivr['confianza']:.0%}")
             print(f"   Acción: {resultado_ivr['accion'].upper()}")
@@ -5230,7 +5822,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # Si se detectó IVR con alta confianza → Colgar inmediatamente
         if resultado_ivr["accion"] == "colgar":
-            print(f"\n🚨🚨🚨 FIX 202: IVR/CONTESTADORA DETECTADO 🚨🚨🚨")
+            print(f"\n[EMOJI] FIX 202: IVR/CONTESTADORA DETECTADO [EMOJI]")
             print(f"   Confianza: {resultado_ivr['confianza']:.0%}")
             print(f"   Transcripción: \"{respuesta_cliente[:100]}...\"")
             print(f"   Categorías detectadas: {', '.join(resultado_ivr['categorias'])}")
@@ -5258,7 +5850,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         if es_objecion_corta:
             # Cliente quiere interrumpir/objetar - NO es fin de llamada
-            print(f"🚨 FIX 196: Objeción corta detectada: '{respuesta_cliente}' - continuando conversación")
+            print(f"[EMOJI] FIX 196: Objeción corta detectada: '{respuesta_cliente}' - continuando conversación")
 
             # Agregar contexto para que GPT maneje la objeción apropiadamente
             self.conversation_history.append({
@@ -5266,7 +5858,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "content": f"[SISTEMA] Cliente dijo '{respuesta_cliente}' (objeción/duda/interrupción). Responde apropiadamente: si es 'pero' pide que continúe ('¿Sí, dígame?'), si es 'espera' confirma que esperas, si es 'no' pregunta qué duda tiene, si es 'qué/mande/cómo' repite brevemente lo último que dijiste."
             })
 
-            print(f"   ✅ FIX 196: Contexto agregado para GPT - manejará objeción corta")
+            print(f"   [OK] FIX 196: Contexto agregado para GPT - manejará objeción corta")
 
         # FIX 128/129: DETECCIÓN AVANZADA DE INTERRUPCIONES Y TRANSCRIPCIONES ERRÓNEAS DE WHISPER
 
@@ -5398,7 +5990,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 razones.append("negaciones múltiples")
             if tiene_fragmento_email_sin_arroba:
                 razones.append("fragmento email")
-            print(f"⚠️ FIX 129: Posible error Whisper detectado: {', '.join(razones)}")
+            print(f"[WARN] FIX 129: Posible error Whisper detectado: {', '.join(razones)}")
 
         # Si detectamos interrupción o transcripción errónea, agregar indicación para usar nexo
         if (es_interrupcion_corta or es_transcripcion_erronea) and len(self.conversation_history) >= 3:
@@ -5430,34 +6022,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # NIVEL 1: ERROR CRÍTICO → Pedir repetir cortésmente
                     self.conversation_history.append({
                         "role": "system",
-                        "content": f"""[SISTEMA - FIX 198 NIVEL 1] 🚨 ERROR CRÍTICO DE TRANSCRIPCIÓN
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 1] [EMOJI] ERROR CRÍTICO DE TRANSCRIPCIÓN
 
 El cliente dijo algo pero la transcripción no tiene sentido: "{respuesta_cliente}"
 
-⚠️ CONTEXTO:
+[WARN] CONTEXTO:
 Tu último mensaje: {ultimo_mensaje_bruce[:80] if ultimo_mensaje_bruce else 'N/A'}
 
-🎯 ACCIÓN REQUERIDA:
+[EMOJI] ACCIÓN REQUERIDA:
 Pide cortésmente que repita: "Disculpe, no le escuché bien por la línea, ¿me lo podría repetir?"
 
-❌ NO menciones palabras de la transcripción errónea
-❌ NO repitas tu pregunta anterior textualmente (usa palabras diferentes)
-✅ SÍ usa frase genérica de "no escuché bien"
-✅ SÍ mantén tono profesional y cortés
+[ERROR] NO menciones palabras de la transcripción errónea
+[ERROR] NO repitas tu pregunta anterior textualmente (usa palabras diferentes)
+[OK] SÍ usa frase genérica de "no escuché bien"
+[OK] SÍ mantén tono profesional y cortés
 """
                     })
-                    print(f"🚨 FIX 198 NIVEL 1: Error crítico Whisper → pedir repetir")
+                    print(f"[EMOJI] FIX 198 NIVEL 1: Error crítico Whisper → pedir repetir")
 
                 elif estaba_pidiendo_dato:
                     # NIVEL 2: ERROR PARCIAL EN DATO → Intentar interpretar PRIMERO
                     self.conversation_history.append({
                         "role": "system",
-                        "content": f"""[SISTEMA - FIX 198 NIVEL 2] ⚠️ ERROR PARCIAL EN DATO SOLICITADO
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 2] [WARN] ERROR PARCIAL EN DATO SOLICITADO
 
 Estabas pidiendo: {ultimo_mensaje_bruce[:50]}...
 Cliente respondió (con posibles errores): "{respuesta_cliente}"
 
-🎯 ESTRATEGIA DE 3 PASOS:
+[EMOJI] ESTRATEGIA DE 3 PASOS:
 
 1. **PRIMERO: Intenta interpretar el dato**
    - Si parece WhatsApp (contiene números): Extrae los dígitos visibles
@@ -5472,24 +6064,24 @@ Cliente respondió (con posibles errores): "{respuesta_cliente}"
 3. **SI NO lograste interpretar ≥70%:**
    - Pide repetir MÁS DESPACIO: "Disculpe, no le escuché completo, ¿me lo podría repetir más despacio?"
 
-❌ NO digas "ya lo tengo" si NO lo tienes completo
-❌ NO repitas palabras erróneas al cliente
-✅ SÍ confirma el dato si lo interpretaste parcialmente
-✅ SÍ pide repetir SOLO si interpretación es <70%
-✅ SÍ mantén tono profesional (no hagas sentir mal al cliente)
+[ERROR] NO digas "ya lo tengo" si NO lo tienes completo
+[ERROR] NO repitas palabras erróneas al cliente
+[OK] SÍ confirma el dato si lo interpretaste parcialmente
+[OK] SÍ pide repetir SOLO si interpretación es <70%
+[OK] SÍ mantén tono profesional (no hagas sentir mal al cliente)
 """
                     })
-                    print(f"⚠️ FIX 198 NIVEL 2: Error parcial en dato → intentar interpretar")
+                    print(f"[WARN] FIX 198 NIVEL 2: Error parcial en dato → intentar interpretar")
 
                 else:
                     # NIVEL 3: ERROR LEVE → Interpretar intención y continuar
                     self.conversation_history.append({
                         "role": "system",
-                        "content": f"""[SISTEMA - FIX 198 NIVEL 3] ℹ️ ERROR LEVE DE TRANSCRIPCIÓN
+                        "content": f"""[SISTEMA - FIX 198 NIVEL 3] ℹ[EMOJI] ERROR LEVE DE TRANSCRIPCIÓN
 
 Cliente respondió (con errores leves): "{respuesta_cliente}"
 
-🎯 ESTRATEGIA:
+[EMOJI] ESTRATEGIA:
 1. Interpreta la INTENCIÓN general (positivo/negativo/pregunta/duda)
 2. Continúa la conversación basándote en la intención
 3. NO menciones las palabras erróneas
@@ -5500,15 +6092,15 @@ Ejemplo de interpretación:
 - Transcripción: "pero no sé" → Intención: Duda/inseguridad
 - Transcripción: "y eso que es" → Intención: Pregunta de aclaración
 
-❌ NO preguntes sobre palabras sin sentido
-❌ NO pidas repetir (es error leve, intención es clara)
-❌ NO hagas sentir al cliente que no lo entiendes
-✅ SÍ continúa la conversación fluidamente
-✅ SÍ responde basándote en la intención general
-✅ SÍ mantén naturalidad en la conversación
+[ERROR] NO preguntes sobre palabras sin sentido
+[ERROR] NO pidas repetir (es error leve, intención es clara)
+[ERROR] NO hagas sentir al cliente que no lo entiendes
+[OK] SÍ continúa la conversación fluidamente
+[OK] SÍ responde basándote en la intención general
+[OK] SÍ mantén naturalidad en la conversación
 """
                     })
-                    print(f"✅ FIX 198 NIVEL 3: Error leve → interpretar intención y continuar")
+                    print(f"[OK] FIX 198 NIVEL 3: Error leve → interpretar intención y continuar")
 
             elif es_interrupcion_corta and ultimo_mensaje_bruce and len(ultimo_mensaje_bruce) > 50:
                 # FIX 182/184: Detectar si estamos ESPERANDO información del cliente O si está deletreando
@@ -5544,11 +6136,11 @@ Ejemplo de interpretación:
                         # FIX 184: Cliente está DELETREANDO - NO interrumpir
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"""[SISTEMA - FIX 184] 🚨 CLIENTE ESTÁ DELETREANDO CORREO - NO INTERRUMPIR
+                            "content": f"""[SISTEMA - FIX 184] [EMOJI] CLIENTE ESTÁ DELETREANDO CORREO - NO INTERRUMPIR
 
 El cliente está DELETREANDO su correo electrónico: "{respuesta_cliente}"
 
-⚠️ CRÍTICO:
+[WARN] CRÍTICO:
 - NO digas NADA mientras deletrea (NO "Sigo aquí", NO "Adelante")
 - PERMANECE EN SILENCIO TOTAL
 - ESPERA a que TERMINE de deletrear COMPLETAMENTE
@@ -5562,12 +6154,12 @@ Bruce: [SILENCIO - NO INTERRUMPIR]
 (Sistema espera siguiente input del cliente o fin de deletreo)
 """
                         })
-                        print(f"🔄 FIX 184: Cliente DELETREANDO correo - NO INTERRUMPIR")
+                        print(f"[EMOJI] FIX 184: Cliente DELETREANDO correo - NO INTERRUMPIR")
                     else:
                         # Cliente está respondiendo pregunta normal
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"""[SISTEMA - FIX 182] ⚠️ CLIENTE ESTÁ RESPONDIENDO TU PREGUNTA
+                            "content": f"""[SISTEMA - FIX 182] [WARN] CLIENTE ESTÁ RESPONDIENDO TU PREGUNTA
 
 Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
 
@@ -5588,12 +6180,12 @@ Cliente: "issa punto com"
 Bruce: "Perfecto, ya lo tengo anotado."
 """
                         })
-                        print(f"🔄 FIX 182: Cliente respondiendo pregunta - usando continuidad simple")
+                        print(f"[EMOJI] FIX 182: Cliente respondiendo pregunta - usando continuidad simple")
                 else:
                     # Interrupción corta durante PRESENTACIÓN
                     self.conversation_history.append({
                         "role": "system",
-                        "content": f"""[SISTEMA - FIX 128/182] ⚠️ INTERRUPCIÓN EN PRESENTACIÓN
+                        "content": f"""[SISTEMA - FIX 128/182] [WARN] INTERRUPCIÓN EN PRESENTACIÓN
 
 Cliente interrumpió mientras hablabas. Tu último mensaje fue: "{ultimo_mensaje_bruce[:100]}..."
 
@@ -5609,13 +6201,13 @@ Ejemplo correcto:
 "Perfecto, entonces como le comentaba, me comunico de NIOVAL sobre productos ferreteros..."
 """
                     })
-                    print(f"🔄 FIX 128/182: Interrupción en presentación - forzando uso de nexo")
+                    print(f"[EMOJI] FIX 128/182: Interrupción en presentación - forzando uso de nexo")
 
         # FIX 75/81: DETECCIÓN TEMPRANA DE OBJECIONES - Terminar ANTES de llamar GPT
         # CRÍTICO: Detectar CUALQUIER mención de proveedor exclusivo/Truper y COLGAR
 
         # FIX 81: DEBUG - Imprimir SIEMPRE para verificar que este código se ejecuta
-        print(f"🔍 FIX 81 DEBUG: Verificando objeciones en: '{respuesta_cliente[:80]}'")
+        print(f"[DEBUG] FIX 81 DEBUG: Verificando objeciones en: '{respuesta_cliente[:80]}'")
 
         # Patrones de objeción definitiva (cliente NO quiere seguir)
         # FIX 75/80/81: AMPLIADOS para detectar TODAS las variaciones de "solo Truper"
@@ -5642,7 +6234,7 @@ Ejemplo correcto:
 
         for objecion in objeciones_terminales:
             if objecion in respuesta_lower:
-                print(f"🚨🚨🚨 FIX 75: OBJECIÓN TERMINAL DETECTADA - COLGANDO INMEDIATAMENTE")
+                print(f"[EMOJI] FIX 75: OBJECIÓN TERMINAL DETECTADA - COLGANDO INMEDIATAMENTE")
                 print(f"   Patrón detectado: '{objecion}'")
                 print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
@@ -5664,7 +6256,7 @@ Ejemplo correcto:
                 return respuesta_despedida
 
         # FIX 81: DEBUG - Si llegamos aquí, NO se detectó ninguna objeción
-        print(f"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.")
+        print(f"[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.")
 
         # FIX 170/237: Detectar cuando cliente va a PASAR al encargado (AHORA)
         # Estas frases indican transferencia INMEDIATA, NO futura
@@ -5732,11 +6324,11 @@ Ejemplo correcto:
         hay_negacion = any(neg in respuesta_lower for neg in patrones_negacion)
 
         if hay_negacion:
-            print(f"🚫 FIX 216: Detectada NEGACIÓN - NO es transferencia")
+            print(f"[EMOJI] FIX 216: Detectada NEGACIÓN - NO es transferencia")
             print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
             # NO retornar "Claro, espero" - continuar con flujo normal
         elif cliente_da_info:
-            print(f"📧 FIX 229: Cliente va a DAR INFORMACIÓN - NO es transferencia")
+            print(f"[EMAIL] FIX 229: Cliente va a DAR INFORMACIÓN - NO es transferencia")
             print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
             # NO retornar "Claro, espero" - dejar que GPT pida el correo/dato
         else:
@@ -5754,13 +6346,13 @@ Ejemplo correcto:
             ])
 
             if cliente_dice_llamar_despues:
-                print(f"📅 FIX 460: Cliente sugiere LLAMAR DESPUÉS - NO es transferencia")
+                print(f"[EMOJI] FIX 460: Cliente sugiere LLAMAR DESPUÉS - NO es transferencia")
                 print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
                 # NO activar transferencia - dejar que GPT maneje con despedida apropiada
             else:
                 for patron in patrones_transferencia_inmediata:
                     if patron in respuesta_lower:
-                        print(f"📞 FIX 170: Cliente va a PASAR al encargado AHORA")
+                        print(f"[EMOJI] FIX 170: Cliente va a PASAR al encargado AHORA")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
 
@@ -5775,7 +6367,7 @@ Ejemplo correcto:
                             "content": respuesta_espera
                         })
 
-                        print(f"✅ FIX 170: Bruce esperará (timeout extendido a 20s)")
+                        print(f"[OK] FIX 170: Bruce esperará (timeout extendido a 20s)")
                         return respuesta_espera
 
         # FIX 238/262: Detectar cuando encargado LLEGA después de esperar
@@ -5798,7 +6390,7 @@ Ejemplo correcto:
                                   for patron in patrones_encargado_llego)
 
             if encargado_llego:
-                print(f"\n📞 FIX 238: ENCARGADO LLEGÓ después de esperar")
+                print(f"\n[EMOJI] FIX 238: ENCARGADO LLEGÓ después de esperar")
                 print(f"   Cliente dijo: '{respuesta_cliente}'")
                 print(f"   Bruce estaba esperando transferencia")
 
@@ -5813,7 +6405,7 @@ Ejemplo correcto:
                     "content": respuesta_encargado
                 })
 
-                print(f"✅ FIX 238: Bruce se presenta al encargado")
+                print(f"[OK] FIX 238: Bruce se presenta al encargado")
                 return respuesta_encargado
 
         # Extraer información clave de la respuesta
@@ -5859,7 +6451,7 @@ Ejemplo correcto:
 
                 if bruce_ya_se_despidio:
                     # FIX 421: Ya dijo despedida → NO repetir (silencio)
-                    print(f"\n⏭️  FIX 421: Bruce YA se despidió - NO repetir despedida")
+                    print(f"\n[EMOJI]  FIX 421: Bruce YA se despidió - NO repetir despedida")
                     print(f"   Cliente dijo: \"{respuesta_cliente[:50]}\" - NO responder")
                     # Retornar cadena vacía para terminar llamada sin repetir
                     return ""
@@ -5893,18 +6485,18 @@ Ejemplo correcto:
             MAX_MENSAJES_CONVERSACION = 12
             if len(mensajes_conversacion) > MAX_MENSAJES_CONVERSACION:
                 mensajes_conversacion = mensajes_conversacion[-MAX_MENSAJES_CONVERSACION:]
-                print(f"🔧 FIX 68: Historial limitado a últimos {MAX_MENSAJES_CONVERSACION} mensajes")
+                print(f"[WRENCH] FIX 68: Historial limitado a últimos {MAX_MENSAJES_CONVERSACION} mensajes")
 
             # 4. Debug: Imprimir últimos 2 mensajes para diagnóstico
             if len(mensajes_conversacion) >= 2:
-                print(f"\n📝 FIX 68: Últimos 2 mensajes en historial:")
+                print(f"\n[EMOJI] FIX 68: Últimos 2 mensajes en historial:")
                 for msg in mensajes_conversacion[-2:]:
                     preview = msg['content'][:60] + "..." if len(msg['content']) > 60 else msg['content']
                     print(f"   {msg['role'].upper()}: {preview}")
 
             # FIX 491: Calcular max_tokens dinámicamente según complejidad
             max_tokens_dinamico = self._calcular_max_tokens_dinamico(respuesta_cliente)
-            print(f"⚙️  FIX 491: max_tokens dinámico = {max_tokens_dinamico} (basado en complejidad)")
+            print(f"[EMOJI]  FIX 491: max_tokens dinámico = {max_tokens_dinamico} (basado en complejidad)")
 
             response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -5927,7 +6519,7 @@ Ejemplo correcto:
             frase_relleno = ""
             if duracion_gpt > 3.0:
                 frase_relleno = self._obtener_frase_relleno(duracion_gpt)
-                print(f"⏱️ FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
+                print(f"[EMOJI] FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
 
             respuesta_agente = response.choices[0].message.content
 
@@ -5946,8 +6538,8 @@ Ejemplo correcto:
                         respuesta_agente = analisis_y_respuesta[1].strip()
 
                         # Logging del análisis interno (compacto)
-                        print(f"\n🧠 FIX 385: Razonamiento compacto → {analisis_interno}")
-                        print(f"   ✅ Respuesta: {respuesta_agente[:80]}...")
+                        print(f"\n[EMOJI] FIX 385: Razonamiento compacto → {analisis_interno}")
+                        print(f"   [OK] Respuesta: {respuesta_agente[:80]}...")
             elif "[ANÁLISIS]" in respuesta_agente and "[/ANÁLISIS]" in respuesta_agente:
                 # Formato legacy (largo)
                 partes = respuesta_agente.split("[ANÁLISIS]", 1)
@@ -5956,8 +6548,8 @@ Ejemplo correcto:
                     if len(analisis_y_respuesta) > 1:
                         analisis_interno = analisis_y_respuesta[0].strip()
                         respuesta_agente = analisis_y_respuesta[1].strip()
-                        print(f"\n🧠 FIX 385: Razonamiento detallado detectado")
-                        print(f"   ✅ Respuesta: {respuesta_agente[:80]}...")
+                        print(f"\n[EMOJI] FIX 385: Razonamiento detallado detectado")
+                        print(f"   [OK] Respuesta: {respuesta_agente[:80]}...")
 
             # Si hay frase de relleno, agregarla al inicio de la respuesta
             if frase_relleno:
@@ -6014,10 +6606,10 @@ Ejemplo correcto:
                 # FIX 398: Solo activar skip si confirmó Y NO es frase ambigua
                 if cliente_confirmo_recientemente and not es_frase_ambigua:
                     skip_fix_384 = True
-                    print(f"\n⏭️  FIX 398: Cliente confirmó CLARAMENTE - skip_fix_384 = True")
+                    print(f"\n[EMOJI]  FIX 398: Cliente confirmó CLARAMENTE - skip_fix_384 = True")
                     print(f"   Confirmación detectada: '{ultimo_cliente_pre}'")
                 elif es_frase_ambigua:
-                    print(f"\n✋ FIX 398: Frase ambigua detectada - NO es confirmación")
+                    print(f"\n[EMOJI] FIX 398: Frase ambigua detectada - NO es confirmación")
                     print(f"   Frase: '{ultimo_cliente_pre}'")
 
             # ============================================================
@@ -6064,14 +6656,14 @@ Ejemplo correcto:
                     # FIX 391/392: Si cliente confirmó recientemente, NO bloquear
                     # (puede ser respuesta útil en nuevo contexto)
                     if cliente_confirmo_recientemente:
-                        print(f"\n⏭️  FIX 391/392: Repetición detectada pero cliente confirmó - permitiendo respuesta")
+                        print(f"\n[EMOJI]  FIX 391/392: Repetición detectada pero cliente confirmó - permitiendo respuesta")
                         print(f"   Cliente dijo: '{ultimo_cliente[:60]}...'")
                         print(f"   Respuesta: '{respuesta_agente[:60]}...'")
                         print(f"   FIX 392: skip_fix_384 activado - FIX 384 NO se ejecutará")
                         break
 
                     repeticion_detectada = True
-                    print(f"\n🚨🚨🚨 FIX 204/393: REPETICIÓN IDÉNTICA DETECTADA 🚨🚨🚨")
+                    print(f"\n[EMOJI] FIX 204/393: REPETICIÓN IDÉNTICA DETECTADA [EMOJI]")
                     print(f"   Bruce intentó repetir: \"{respuesta_agente[:60]}...\"")
                     print(f"   Ya se dijo hace {i} respuesta(s)")
                     print(f"   → Modificando respuesta para evitar repetición")
@@ -6094,7 +6686,7 @@ Ejemplo correcto:
                         # Si la pregunta es idéntica
                         if pregunta_normalizada == pregunta_previa_norm:
                             repeticion_detectada = True
-                            print(f"\n🚨🚨🚨 FIX 393/394: REPETICIÓN DE PREGUNTA DETECTADA 🚨🚨🚨")
+                            print(f"\n[EMOJI] FIX 393/394: REPETICIÓN DE PREGUNTA DETECTADA [EMOJI]")
                             print(f"   Bruce intentó repetir PREGUNTA: \"{pregunta_actual[:60]}...?\"")
                             print(f"   Ya se preguntó hace {i} respuesta(s)")
                             print(f"   → Modificando respuesta para evitar repetición")
@@ -6104,25 +6696,25 @@ Ejemplo correcto:
                 # Modificar la respuesta para que GPT genere algo diferente
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""🚨 [SISTEMA - FIX 204/393] REPETICIÓN DETECTADA
+                    "content": f"""[EMOJI] [SISTEMA - FIX 204/393] REPETICIÓN DETECTADA
 
 Estabas a punto de decir EXACTAMENTE lo mismo que ya dijiste antes:
 "{respuesta_agente[:100]}..."
 
-🛑 NO repitas esto. El cliente YA lo escuchó.
+[EMOJI] NO repitas esto. El cliente YA lo escuchó.
 
-✅ OPCIONES VÁLIDAS:
+[OK] OPCIONES VÁLIDAS:
 1. Si el cliente no respondió tu pregunta: Reformula de manera DIFERENTE
 2. Si el cliente está ocupado/no interesado: Ofrece despedirte o llamar después
 3. Si no te entiende: Usa palabras más simples
 4. Si el cliente rechazó 2 veces: DESPÍDETE profesionalmente y cuelga
 
-💡 EJEMPLO DE REFORMULACIÓN:
+[EMOJI] EJEMPLO DE REFORMULACIÓN:
 ORIGINAL: "¿Le gustaría que le envíe el catálogo por WhatsApp?"
 REFORMULADO: "¿Tiene WhatsApp donde le pueda enviar información?"
 REFORMULADO 2: "¿Prefiere que le llame en otro momento?"
 
-🚨 FIX 393: Si el cliente ya rechazó 2 veces, NO insistas:
+[EMOJI] FIX 393: Si el cliente ya rechazó 2 veces, NO insistas:
 CLIENTE: "No, gracias" (1ra vez) → "No" (2da vez)
 BRUCE: "Entiendo. Le agradezco su tiempo. Buen día." [COLGAR]
 
@@ -6130,7 +6722,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                 })
 
                 # Regenerar respuesta con contexto de no repetir
-                print(f"🔄 FIX 204: Regenerando respuesta sin repetición...")
+                print(f"[EMOJI] FIX 204: Regenerando respuesta sin repetición...")
                 try:
                     response_reintento = openai_client.chat.completions.create(
                         model="gpt-4o",
@@ -6145,10 +6737,10 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                     )
 
                     respuesta_agente = response_reintento.choices[0].message.content
-                    print(f"✅ FIX 204: Nueva respuesta generada: \"{respuesta_agente[:60]}...\"")
+                    print(f"[OK] FIX 204: Nueva respuesta generada: \"{respuesta_agente[:60]}...\"")
 
                 except Exception as e:
-                    print(f"⚠️ FIX 204: Error al regenerar, usando despedida genérica")
+                    print(f"[WARN] FIX 204: Error al regenerar, usando despedida genérica")
                     respuesta_agente = "Entiendo. ¿Prefiere que le llame en otro momento más conveniente?"
 
             # Agregar al historial
@@ -6163,7 +6755,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             # FIX 305/307/352: Logging detallado del error para diagnóstico
             import traceback
             error_tipo = type(e).__name__
-            print(f"\n🚨🚨🚨 FIX 305: EXCEPCIÓN EN GPT 🚨🚨🚨")
+            print(f"\n[EMOJI] FIX 305: EXCEPCIÓN EN GPT [EMOJI]")
             print(f"   Error: {error_tipo}: {e}")
             print(f"   Traceback completo:")
             traceback.print_exc()
@@ -6193,7 +6785,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             cliente_acepta = any(p in respuesta_lower for p in ['sí', 'si', 'claro', 'adelante', 'dígame', 'digame', 'gusta'])
 
             if bruce_pidio_numero_encargado and cliente_acepta:
-                print(f"✅ FIX 422: Bruce pidió número del encargado y cliente aceptó")
+                print(f"[OK] FIX 422: Bruce pidió número del encargado y cliente aceptó")
                 print(f"   Cliente dijo: '{respuesta_cliente}' - Preguntando directamente por número")
                 return "Perfecto. ¿Cuál es el número?"
 
@@ -6236,7 +6828,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             self.lead_data["pregunta_0"] = "Buzon"
             self.lead_data["pregunta_7"] = "BUZON"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 FIX 72: Estado detectado: Buzón de voz - Frase: '{texto[:50]}'")
+            print(f"[EMOJI] FIX 72: Estado detectado: Buzón de voz - Frase: '{texto[:50]}'")
             return
 
         # FIX 24/420: Detección MÁS ESTRICTA de teléfono incorrecto
@@ -6271,7 +6863,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             self.lead_data["pregunta_0"] = "Telefono Incorrecto"
             self.lead_data["pregunta_7"] = "TELEFONO INCORRECTO"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: Teléfono Incorrecto - '{texto[:50]}...'")
+            print(f"[EMOJI] Estado detectado: Teléfono Incorrecto - '{texto[:50]}...'")
             return
 
         # FIX 22B: Detección MÁS ESTRICTA de "colgó" - solo frases completas
@@ -6285,7 +6877,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             self.lead_data["pregunta_0"] = "Colgo"
             self.lead_data["pregunta_7"] = "Colgo"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: Cliente colgó - '{texto[:50]}...'")
+            print(f"[EMOJI] Estado detectado: Cliente colgó - '{texto[:50]}...'")
             return
 
         if any(palabra in texto_lower for palabra in ["no contesta", "no responde", "sin respuesta"]):
@@ -6293,7 +6885,7 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             self.lead_data["pregunta_0"] = "No Contesta"
             self.lead_data["pregunta_7"] = "Nulo"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Estado detectado: No contesta")
+            print(f"[EMOJI] Estado detectado: No contesta")
             return
 
         # ============================================================
@@ -6316,19 +6908,19 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
             # Marcar que YA estamos hablando con el encargado
             if not hasattr(self, 'encargado_confirmado'):
                 self.encargado_confirmado = True
-                print(f"👤 CONFIRMADO: Cliente ES el encargado - '{texto[:50]}...'")
+                print(f"[EMOJI] CONFIRMADO: Cliente ES el encargado - '{texto[:50]}...'")
 
                 # Agregar mensaje al sistema para que GPT NO vuelva a preguntar
                 self.conversation_history.append({
                     "role": "system",
-                    "content": """⚠️⚠️⚠️ CRÍTICO: El cliente acaba de confirmar que ÉL/ELLA ES el encargado de compras.
+                    "content": """[WARN][WARN][WARN] CRÍTICO: El cliente acaba de confirmar que ÉL/ELLA ES el encargado de compras.
 
 ACCIÓN INMEDIATA:
 1. NO vuelvas a preguntar "¿Se encuentra el encargado?" NUNCA MÁS
 2. NO preguntas por horario del encargado
 3. NO pidas que te comuniquen con el encargado
 4. Continúa la conversación DIRECTAMENTE con esta persona
-5. 🚨 FIX 172: NO pidas el nombre (genera delays de audio)
+5. [EMOJI] FIX 172: NO pidas el nombre (genera delays de audio)
 6. Pregunta directamente: "¿Le gustaría recibir el catálogo por WhatsApp?"
 
 YA ESTÁS HABLANDO CON EL ENCARGADO. NO LO VUELVAS A BUSCAR."""
@@ -6348,32 +6940,32 @@ YA ESTÁS HABLANDO CON EL ENCARGADO. NO LO VUELVAS A BUSCAR."""
         ]
 
         if any(frase in texto_lower for frase in frases_pregunta_marcas):
-            print(f"🚨 FIX 46: Cliente pregunta por MARCAS - '{texto[:60]}...'")
+            print(f"[EMOJI] FIX 46: Cliente pregunta por MARCAS - '{texto[:60]}...'")
 
             self.conversation_history.append({
                 "role": "system",
-                "content": """🚨🚨🚨 ALERTA ULTRA-CRÍTICA: CLIENTE PREGUNTA POR MARCAS 🚨🚨🚨
+                "content": """[EMOJI] ALERTA ULTRA-CRÍTICA: CLIENTE PREGUNTA POR MARCAS [EMOJI]
 
 El cliente está preguntando QUÉ MARCAS maneja NIOVAL.
 
-⚠️⚠️⚠️ PROHIBICIONES ABSOLUTAS - NUNCA NUNCA NUNCA DIGAS:
-❌ "Manejamos marcas reconocidas como Truper"
-❌ "Trabajamos con Truper"
-❌ "Distribuimos Truper"
-❌ "Contamos con Pochteca"
-❌ "Manejamos Pretul"
-❌ "Trabajamos con marcas como [CUALQUIER NOMBRE DE MARCA EXTERNA]"
-❌ "Tenemos Stanley, Dewalt, Urrea"
-❌ NO MENCIONES NOMBRES DE MARCAS EXTERNAS
+[WARN][WARN][WARN] PROHIBICIONES ABSOLUTAS - NUNCA NUNCA NUNCA DIGAS:
+[ERROR] "Manejamos marcas reconocidas como Truper"
+[ERROR] "Trabajamos con Truper"
+[ERROR] "Distribuimos Truper"
+[ERROR] "Contamos con Pochteca"
+[ERROR] "Manejamos Pretul"
+[ERROR] "Trabajamos con marcas como [CUALQUIER NOMBRE DE MARCA EXTERNA]"
+[ERROR] "Tenemos Stanley, Dewalt, Urrea"
+[ERROR] NO MENCIONES NOMBRES DE MARCAS EXTERNAS
 
-✅✅✅ RESPUESTAS OBLIGATORIAS - USA EXACTAMENTE:
-✅ "Manejamos la marca NIOVAL, que es nuestra marca propia"
-✅ "Trabajamos con nuestra propia línea de productos bajo la marca NIOVAL"
-✅ "Al ser marca propia, ofrecemos mejores precios que marcas comerciales"
-✅ "¿Le gustaría que le envíe el catálogo completo para que vea todos nuestros productos?"
+[OK][OK][OK] RESPUESTAS OBLIGATORIAS - USA EXACTAMENTE:
+[OK] "Manejamos la marca NIOVAL, que es nuestra marca propia"
+[OK] "Trabajamos con nuestra propia línea de productos bajo la marca NIOVAL"
+[OK] "Al ser marca propia, ofrecemos mejores precios que marcas comerciales"
+[OK] "¿Le gustaría que le envíe el catálogo completo para que vea todos nuestros productos?"
 
 NIOVAL ES UNA MARCA PROPIA - NO ES DISTRIBUIDOR DE OTRAS MARCAS.
-TRUPER, POCHTECA, PRETUL = SON COMPETENCIA ❌❌❌
+TRUPER, POCHTECA, PRETUL = SON COMPETENCIA [ERROR][ERROR][ERROR]
 
 IMPORTANTE:
 - Si cliente pregunta: "¿Qué marcas?" → Responde: "Manejamos NIOVAL, nuestra marca propia"
@@ -6396,11 +6988,11 @@ IMPORTANTE:
         ]
 
         if any(frase in texto_lower for frase in frases_frustracion):
-            print(f"😤 FIX 33: Cliente muestra FRUSTRACIÓN - '{texto[:60]}...'")
+            print(f"[EMOJI] FIX 33: Cliente muestra FRUSTRACIÓN - '{texto[:60]}...'")
 
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️⚠️⚠️ [SISTEMA] ALERTA: EL CLIENTE ESTÁ FRUSTRADO
+                "content": """[WARN][WARN][WARN] [SISTEMA] ALERTA: EL CLIENTE ESTÁ FRUSTRADO
 
 El cliente acaba de decir "ya te lo dije" o similar. Esto significa que:
 1. YA dio esta información anteriormente en la conversación
@@ -6420,8 +7012,8 @@ INFORMACIÓN YA CAPTURADA:
 - Email: {email}
 - Productos de interés: {productos}
 
-❌ NO vuelvas a preguntar por NADA de lo de arriba
-✅ AVANZA con la conversación usando la info que YA TIENES""".format(
+[ERROR] NO vuelvas a preguntar por NADA de lo de arriba
+[OK] AVANZA con la conversación usando la info que YA TIENES""".format(
                     nombre=self.lead_data.get('nombre_contacto', 'No capturado'),
                     whatsapp=self.lead_data.get('whatsapp', 'No capturado'),
                     email=self.lead_data.get('email', 'No capturado'),
@@ -6453,36 +7045,36 @@ INFORMACIÓN YA CAPTURADA:
 
         if ya_pregunto_tamano and not hasattr(self, 'flag_pregunta_tamano_advertida'):
             self.flag_pregunta_tamano_advertida = True
-            print(f"✋ FIX 31: Ya preguntaste por TAMAÑO DE NEGOCIO - NO volver a preguntar")
+            print(f"[EMOJI] FIX 31: Ya preguntaste por TAMAÑO DE NEGOCIO - NO volver a preguntar")
 
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️⚠️⚠️ [SISTEMA] YA PREGUNTASTE POR TAMAÑO DE NEGOCIO
+                "content": """[WARN][WARN][WARN] [SISTEMA] YA PREGUNTASTE POR TAMAÑO DE NEGOCIO
 
 Detecté que YA preguntaste sobre el tamaño del negocio anteriormente.
 
-❌ NO vuelvas a preguntar: "¿Qué tamaño de negocio tienen?"
-❌ NO vuelvas a preguntar: "¿Si es ferretería local o distribuidora?"
-✅ YA TIENES esta información en el contexto de la conversación
-✅ AVANZA a la siguiente pregunta o tema
+[ERROR] NO vuelvas a preguntar: "¿Qué tamaño de negocio tienen?"
+[ERROR] NO vuelvas a preguntar: "¿Si es ferretería local o distribuidora?"
+[OK] YA TIENES esta información en el contexto de la conversación
+[OK] AVANZA a la siguiente pregunta o tema
 
 Si el cliente no respondió claramente la primera vez, está bien. NO insistas."""
             })
 
         if ya_pregunto_proveedores and not hasattr(self, 'flag_pregunta_proveedores_advertida'):
             self.flag_pregunta_proveedores_advertida = True
-            print(f"✋ FIX 31: Ya preguntaste por PROVEEDORES - NO volver a preguntar")
+            print(f"[EMOJI] FIX 31: Ya preguntaste por PROVEEDORES - NO volver a preguntar")
 
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️⚠️⚠️ [SISTEMA] YA PREGUNTASTE POR PROVEEDORES
+                "content": """[WARN][WARN][WARN] [SISTEMA] YA PREGUNTASTE POR PROVEEDORES
 
 Detecté que YA preguntaste sobre los proveedores actuales.
 
-❌ NO vuelvas a preguntar: "¿Trabajan con varios proveedores?"
-❌ NO vuelvas a preguntar: "¿Tienen uno principal?"
-✅ YA TIENES esta información en el contexto de la conversación
-✅ AVANZA a la siguiente pregunta o tema
+[ERROR] NO vuelvas a preguntar: "¿Trabajan con varios proveedores?"
+[ERROR] NO vuelvas a preguntar: "¿Tienen uno principal?"
+[OK] YA TIENES esta información en el contexto de la conversación
+[OK] AVANZA a la siguiente pregunta o tema
 
 Si el cliente no respondió claramente la primera vez, está bien. NO insistas."""
             })
@@ -6506,45 +7098,45 @@ Si el cliente no respondió claramente la primera vez, está bien. NO insistas."
                     break
 
             if email_ya_mencionado:
-                print(f"⚠️ FIX 198: Email '{email_actual}' YA fue mencionado en mensaje #{num_mensaje_anterior}")
+                print(f"[WARN] FIX 198: Email '{email_actual}' YA fue mencionado en mensaje #{num_mensaje_anterior}")
                 print(f"   Cliente está REPITIENDO el email (no es la primera vez)")
 
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""⚠️⚠️⚠️ [SISTEMA] EMAIL DUPLICADO DETECTADO - FIX 198
+                    "content": f"""[WARN][WARN][WARN] [SISTEMA] EMAIL DUPLICADO DETECTADO - FIX 198
 
 El cliente acaba de mencionar el email: {email_actual}
 
-🚨 IMPORTANTE: Este email YA fue proporcionado anteriormente en mensaje #{num_mensaje_anterior}
+[EMOJI] IMPORTANTE: Este email YA fue proporcionado anteriormente en mensaje #{num_mensaje_anterior}
 
-🎯 ACCIÓN REQUERIDA:
-- ✅ Responde: "Perfecto, ya lo tengo anotado desde antes. Muchas gracias."
-- ✅ NO pidas confirmación (ya lo tienes)
-- ✅ NO digas "adelante con el correo" (ya te lo dieron)
-- ✅ DESPIDE INMEDIATAMENTE
+[EMOJI] ACCIÓN REQUERIDA:
+- [OK] Responde: "Perfecto, ya lo tengo anotado desde antes. Muchas gracias."
+- [OK] NO pidas confirmación (ya lo tienes)
+- [OK] NO digas "adelante con el correo" (ya te lo dieron)
+- [OK] DESPIDE INMEDIATAMENTE
 
-❌ NUNCA pidas el email de nuevo
-❌ NUNCA digas "perfecto, adelante" (ya está adelante)
-❌ NUNCA actúes como si fuera la primera vez
+[ERROR] NUNCA pidas el email de nuevo
+[ERROR] NUNCA digas "perfecto, adelante" (ya está adelante)
+[ERROR] NUNCA actúes como si fuera la primera vez
 
 El cliente ya te dio este dato antes. Reconócelo y termina la llamada."""
                 })
-                print(f"   ✅ FIX 198: Contexto agregado para GPT - manejar email duplicado")
+                print(f"   [OK] FIX 198: Contexto agregado para GPT - manejar email duplicado")
             else:
                 # Primera vez que se menciona este email
-                print(f"✅ FIX 198: Email '{email_actual}' es NUEVO - primera mención")
+                print(f"[OK] FIX 198: Email '{email_actual}' es NUEVO - primera mención")
 
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""✅ [SISTEMA] NUEVO EMAIL CAPTURADO
+                    "content": f"""[OK] [SISTEMA] NUEVO EMAIL CAPTURADO
 
 Email capturado: {email_actual}
 
-❌ NO vuelvas a pedir el correo electrónico
-❌ NO digas "¿Me podría dar su correo?"
-❌ NO digas "¿Tiene correo electrónico?"
-✅ YA LO TIENES: {email_actual}
-✅ AVANZA con la conversación
+[ERROR] NO vuelvas a pedir el correo electrónico
+[ERROR] NO digas "¿Me podría dar su correo?"
+[ERROR] NO digas "¿Tiene correo electrónico?"
+[OK] YA LO TIENES: {email_actual}
+[OK] AVANZA con la conversación
 
 Responde: "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas."
 
@@ -6563,10 +7155,10 @@ DESPIDE INMEDIATAMENTE y COLGAR."""
         ]
 
         if any(frase in texto_lower for frase in frases_pide_nombre):
-            print(f"⚠️⚠️⚠️ FIX 172 VIOLADO: Bruce pidió nombre (genera delays de audio)")
+            print(f"[WARN][WARN][WARN] FIX 172 VIOLADO: Bruce pidió nombre (genera delays de audio)")
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️⚠️⚠️ ERROR CRÍTICO - FIX 172 VIOLADO:
+                "content": """[WARN][WARN][WARN] ERROR CRÍTICO - FIX 172 VIOLADO:
 
 Acabas de preguntar el nombre del cliente. Esto está PROHIBIDO porque:
 1. Genera delays de 1-4 segundos en la generación de audio con ElevenLabs
@@ -6603,11 +7195,11 @@ ACCIÓN INMEDIATA:
         if not cliente_rechaza_whatsapp and any(frase in texto_lower for frase in frases_pide_whatsapp):
             if not hasattr(self, 'cliente_confirmo_whatsapp'):
                 self.cliente_confirmo_whatsapp = True
-                print(f"✅ CRÍTICO: Cliente CONFIRMÓ que quiere WhatsApp (NO correo)")
+                print(f"[OK] CRÍTICO: Cliente CONFIRMÓ que quiere WhatsApp (NO correo)")
 
                 self.conversation_history.append({
                     "role": "system",
-                    "content": """⚠️⚠️⚠️ CRÍTICO - CLIENTE RECHAZÓ CORREO Y PIDIÓ WHATSAPP
+                    "content": """[WARN][WARN][WARN] CRÍTICO - CLIENTE RECHAZÓ CORREO Y PIDIÓ WHATSAPP
 
 El cliente acaba de decir que NO quiere correo, quiere WHATSAPP.
 
@@ -6691,7 +7283,7 @@ IMPORTANTE:
             self.lead_data["pregunta_7"] = "NO APTO - SOLO TRUPER"
             self.lead_data["resultado"] = "NEGADO"
             self.lead_data["nivel_interes_clasificado"] = "NO APTO"
-            print(f"🚫 OBJECIÓN TRUPER detectada - Marcando como NO APTO")
+            print(f"[EMOJI] OBJECIÓN TRUPER detectada - Marcando como NO APTO")
 
             # FIX 34: Agregar respuesta de despedida INMEDIATA al historial
             # para que GPT NO genere más preguntas
@@ -6702,8 +7294,8 @@ IMPORTANTE:
                 "content": respuesta_truper
             })
 
-            print(f"🚫 FIX 34: Protocolo TRUPER activado - respuesta de despedida agregada al historial")
-            print(f"🚫 Retornando despedida inmediata: '{respuesta_truper}'")
+            print(f"[EMOJI] FIX 34: Protocolo TRUPER activado - respuesta de despedida agregada al historial")
+            print(f"[EMOJI] Retornando despedida inmediata: '{respuesta_truper}'")
 
             # Retornar la despedida INMEDIATAMENTE sin procesar con GPT
             return respuesta_truper  # FIX 34: CRITICAL - Retornar despedida sin llamar a GPT
@@ -6775,7 +7367,7 @@ IMPORTANTE:
                             self.lead_data["referencia_nombre"] = nombre_referido
                             self.lead_data["referencia_telefono"] = ""  # Se capturará después si lo mencionan
                             self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
-                            print(f"👥 Referencia detectada: {nombre_referido}")
+                            print(f"[EMOJI] Referencia detectada: {nombre_referido}")
                             print(f"   Contexto: {texto[:100]}...")
                         break
                 else:
@@ -6784,7 +7376,7 @@ IMPORTANTE:
                         self.lead_data["referencia_nombre"] = ""  # Sin nombre todavía
                         self.lead_data["referencia_telefono"] = ""  # Se capturará después
                         self.lead_data["referencia_contexto"] = texto[:150]  # Contexto completo
-                        print(f"👥 Referencia detectada (sin nombre aún)")
+                        print(f"[EMOJI] Referencia detectada (sin nombre aún)")
                         print(f"   Contexto: {texto[:100]}...")
                     break
 
@@ -6800,12 +7392,12 @@ IMPORTANTE:
                 # PASO 2: Extraer TODOS los dígitos (quitar espacios, guiones, etc.)
                 numero = re.sub(r'[^\d]', '', texto_convertido)
 
-                print(f"🔍 Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+                print(f"[DEBUG] Scanner de dígitos: encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
                 # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
                 # cuando el cliente está en medio de dictar el número
                 if len(numero) >= 1 and len(numero) <= 5:
-                    print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                    print(f"[EMOJI] Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
                     # NO agregamos mensajes al sistema, dejamos que el cliente continúe
 
                 # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
@@ -6814,16 +7406,16 @@ IMPORTANTE:
                     if len(numero) == 10:
                         numero_completo = f"+52{numero}"
                         self.lead_data["referencia_telefono"] = numero_completo
-                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"[EMOJI] Número de referencia detectado: {numero_completo}")
                         print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
 
                         # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
                         numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"""[SISTEMA] ✅ Número completo capturado: {numero_formateado}
+                            "content": f"""[SISTEMA] [OK] Número completo capturado: {numero_formateado}
 
-🚨 FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
+[EMOJI] FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
 1. DEBES repetir el número EXACTAMENTE como lo capturaste: {numero_formateado}
 2. NO conviertas a palabras como "ochenta y siete" - USA SOLO DÍGITOS
 3. Di EXACTAMENTE: "Perfecto, el número es {numero_formateado}, ¿es correcto?"
@@ -6838,20 +7430,20 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
                         if len(numero) < 10:
                             # Número incompleto: Verificar si está en pares/grupos para pedir dígito por dígito
                             if detectar_numeros_en_grupos(texto):
-                                print(f"⚠️ Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
+                                print(f"[WARN] Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
                                 })
                             else:
-                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                print(f"[WARN] Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
                                 numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
                                 })
                         else:
-                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            print(f"[WARN] Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                             self.conversation_history.append({
                                 "role": "system",
@@ -6886,7 +7478,7 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
                         ]
                         if nombre.lower() not in palabras_invalidas and len(nombre) > 2:
                             self.lead_data["referencia_nombre"] = nombre
-                            print(f"👤 Nombre de referencia detectado: {nombre}")
+                            print(f"[EMOJI] Nombre de referencia detectado: {nombre}")
                             print(f"   Asociado al número: {self.lead_data.get('referencia_telefono')}")
                             break
 
@@ -6898,12 +7490,12 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
                 # PASO 2: Extraer TODOS los dígitos
                 numero = re.sub(r'[^\d]', '', texto_convertido)
 
-                print(f"🔍 Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
+                print(f"[DEBUG] Scanner de dígitos (sin nombre): encontrados {len(numero)} dígitos en '{texto[:50]}...'")
 
                 # IMPORTANTE: Ignorar secuencias muy cortas (1-5 dígitos) para evitar interrumpir
                 # cuando el cliente está en medio de dictar el número
                 if len(numero) >= 1 and len(numero) <= 5:
-                    print(f"🔇 Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
+                    print(f"[EMOJI] Ignorando fragmento corto: {numero} ({len(numero)} dígitos) - cliente aún dictando, no interrumpir")
                     # NO agregamos mensajes al sistema, dejamos que el cliente continúe
 
                 # Si encontramos 6+ dígitos, procesamos (ya está cerca del número completo)
@@ -6912,16 +7504,16 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
                     if len(numero) == 10:
                         numero_completo = f"+52{numero}"
                         self.lead_data["referencia_telefono"] = numero_completo
-                        print(f"📞 Número de referencia detectado: {numero_completo}")
+                        print(f"[EMOJI] Número de referencia detectado: {numero_completo}")
                         print(f"   Asociado a: {self.lead_data.get('referencia_nombre', 'Encargado')}")
 
                         # Formatear número para repetir al cliente (ej: 66 23 53 41 85)
                         numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                         self.conversation_history.append({
                             "role": "system",
-                            "content": f"""[SISTEMA] ✅ Número completo capturado: {numero_formateado}
+                            "content": f"""[SISTEMA] [OK] Número completo capturado: {numero_formateado}
 
-🚨 FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
+[EMOJI] FIX 175 - INSTRUCCIONES CRÍTICAS PARA REPETIR NÚMERO:
 1. DEBES repetir el número EXACTAMENTE como lo capturaste: {numero_formateado}
 2. NO conviertas a palabras como "ochenta y siete" - USA SOLO DÍGITOS
 3. Di EXACTAMENTE: "Perfecto, el número es {numero_formateado}, ¿es correcto?"
@@ -6936,20 +7528,20 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
                         if len(numero) < 10:
                             # Número incompleto: Verificar si está en pares/grupos para pedir dígito por dígito
                             if detectar_numeros_en_grupos(texto):
-                                print(f"⚠️ Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
+                                print(f"[WARN] Número incompleto Y detectado en pares/grupos: {numero} ({len(numero)} dígitos)")
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": "[SISTEMA] El cliente está proporcionando el número en PARES o GRUPOS (ej: '66 23 53' o 'veintitres cincuenta'). Esto puede causar errores en la captura. Debes pedirle de manera amable que repita el número DÍGITO POR DÍGITO para mayor claridad. Ejemplo: 'Para asegurarme de anotarlo correctamente, ¿podría repetirme el número dígito por dígito? Por ejemplo: seis, seis, dos, tres, cinco, tres...'"
                                 })
                             else:
-                                print(f"⚠️ Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
+                                print(f"[WARN] Número incompleto de referencia detectado: {numero} ({len(numero)} dígitos)")
                                 numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": f"[SISTEMA] El número del contacto está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos de manera natural."
                                 })
                         else:
-                            print(f"⚠️ Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
+                            print(f"[WARN] Número con dígitos de más de referencia detectado: {numero} ({len(numero)} dígitos)")
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                             self.conversation_history.append({
                                 "role": "system",
@@ -6968,10 +7560,10 @@ REPITE TEXTUALMENTE: {numero_formateado}"""
         ]
 
         if any(frase in texto_lower for frase in frases_ya_dio_numero):
-            print(f"⚠️ Cliente dice que YA dio el número antes")
+            print(f"[WARN] Cliente dice que YA dio el número antes")
             self.conversation_history.append({
                 "role": "system",
-                "content": """⚠️ CRÍTICO: El cliente dice que YA te dio el número de WhatsApp anteriormente.
+                "content": """[WARN] CRÍTICO: El cliente dice que YA te dio el número de WhatsApp anteriormente.
 
 ACCIÓN INMEDIATA:
 1. Revisa el historial de la conversación
@@ -7016,10 +7608,10 @@ NO sigas pidiendo el número sin revisar el historial primero."""
                             # Casos especiales según longitud
                             if len(numero) <= 7:
                                 # MUY CORTO (4-7 dígitos) - probablemente cliente interrumpido o número parcial
-                                print(f"🚨 Número MUY CORTO detectado: {numero} ({len(numero)} dígitos)")
+                                print(f"[EMOJI] Número MUY CORTO detectado: {numero} ({len(numero)} dígitos)")
                                 self.conversation_history.append({
                                     "role": "system",
-                                    "content": f"""[SISTEMA] ⚠️ NÚMERO MUY INCOMPLETO: Solo captaste {len(numero)} dígitos ({numero}).
+                                    "content": f"""[SISTEMA] [WARN] NÚMERO MUY INCOMPLETO: Solo captaste {len(numero)} dígitos ({numero}).
 
 Los números de WhatsApp en México SIEMPRE tienen 10 dígitos.
 
@@ -7032,14 +7624,14 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
                                 })
                             else:
                                 # 8-9 dígitos - casi completo
-                                print(f"⚠️ Número incompleto detectado: {numero} ({len(numero)} dígitos)")
+                                print(f"[WARN] Número incompleto detectado: {numero} ({len(numero)} dígitos)")
                                 numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                                 self.conversation_history.append({
                                     "role": "system",
                                     "content": f"[SISTEMA] El número de WhatsApp está incompleto: {numero_formateado} ({len(numero)} dígitos). Los números en México deben tener EXACTAMENTE 10 dígitos. Debes pedirle que confirme el número completo de 10 dígitos. Ejemplo: 'El número que tengo es {numero_formateado}, pero me parece que falta un dígito. ¿Me lo podría confirmar completo?'"
                                 })
                         else:
-                            print(f"⚠️ Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
+                            print(f"[WARN] Número con dígitos de más detectado: {numero} ({len(numero)} dígitos)")
                             numero_formateado = ' '.join([numero[i:i+2] for i in range(0, len(numero), 2)])
                             self.conversation_history.append({
                                 "role": "system",
@@ -7049,16 +7641,16 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
 
                     else:  # len(numero) == 10
                         numero_completo = f"+52{numero}"
-                        print(f"📱 WhatsApp detectado (10 dígitos): {numero_completo}")
+                        print(f"[PHONE] WhatsApp detectado (10 dígitos): {numero_completo}")
 
                         # Validación simple: solo verificar formato y cantidad de dígitos
                         # Asumimos que todos los números móviles mexicanos de 10 dígitos tienen WhatsApp
                         self.lead_data["whatsapp"] = numero_completo
                         self.lead_data["whatsapp_valido"] = True
-                        print(f"   ✅ Formato válido (10 dígitos)")
-                        print(f"   💾 WhatsApp guardado: {numero_completo}")
-                        print(f"   🎯 FIX 168: WhatsApp guardado - PRÓXIMA respuesta incluirá ANTI-CORREO + DESPEDIDA")
-                        print(f"   🚨 FIX 168: FLAG whatsapp_valido=True → GPT NO debe pedir correo ni WhatsApp")
+                        print(f"   [OK] Formato válido (10 dígitos)")
+                        print(f"   [EMOJI] WhatsApp guardado: {numero_completo}")
+                        print(f"   [EMOJI] FIX 168: WhatsApp guardado - PRÓXIMA respuesta incluirá ANTI-CORREO + DESPEDIDA")
+                        print(f"   [EMOJI] FIX 168: FLAG whatsapp_valido=True → GPT NO debe pedir correo ni WhatsApp")
 
                         # FIX 168: Mejorado de FIX 167
                         # Ya NO usamos mensaje [SISTEMA] (se filtra en línea 2040)
@@ -7067,7 +7659,7 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
 
                     break
         else:
-            print(f"🔄 Referencia pendiente detectada - números se guardarán como referencia_telefono")
+            print(f"[EMOJI] Referencia pendiente detectada - números se guardarán como referencia_telefono")
 
         # ============================================================
         # DETECCIÓN DE EMAIL (con validación y confirmación)
@@ -7127,7 +7719,7 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             if re.search(patron, texto_email_procesado, re.IGNORECASE):
                 texto_original = texto_email_procesado
                 texto_email_procesado = re.sub(patron, reemplazo, texto_email_procesado, flags=re.IGNORECASE)
-                print(f"🔧 FIX 221: Corregida ayuda mnemotécnica: '{texto_original}' → '{texto_email_procesado}'")
+                print(f"[WRENCH] FIX 221: Corregida ayuda mnemotécnica: '{texto_original}' → '{texto_email_procesado}'")
 
         # FIX 48: ELIMINAR AYUDAS MNEMOTÉCNICAS antes de procesar
         # Cliente dice: "Z a m de mamá r o D r y G de gato"
@@ -7178,7 +7770,7 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             # Limpiar espacios múltiples que quedan después de eliminar ayudas
             texto_email_procesado = re.sub(r'\s+', ' ', texto_email_procesado).strip()
 
-            print(f"🔧 FIX 48B/192 - Ayudas mnemotécnicas eliminadas (AGRESIVO)")
+            print(f"[WRENCH] FIX 48B/192 - Ayudas mnemotécnicas eliminadas (AGRESIVO)")
             print(f"   Original: '{texto[:100]}...'")
             print(f"   Paso 1 (X de Palabra): '{texto_original_debug[:100]}...'")
             print(f"   Paso 2 (sin ayudas): '{texto_email_procesado[:100]}...'")
@@ -7225,7 +7817,7 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
 
             email_reconstruido = f"{nombre_local}@{dominio}.{extension}"
 
-            print(f"🔧 FIX 45 - Email deletreado detectado y reconstruido:")
+            print(f"[WRENCH] FIX 45 - Email deletreado detectado y reconstruido:")
             print(f"   Original: '{texto[:80]}...'")
             print(f"   Procesado: '{texto_email_procesado[:80]}...'")
             print(f"   Email reconstruido: '{email_reconstruido}'")
@@ -7233,28 +7825,28 @@ IMPORTANTE: Espera a que el cliente dé los 10 dígitos completos antes de conti
             # Usar el email reconstruido directamente
             email_detectado = email_reconstruido
             self.lead_data["email"] = email_detectado
-            print(f"📧 Email detectado (deletreado): {email_detectado}")
+            print(f"[EMAIL] Email detectado (deletreado): {email_detectado}")
 
             # FIX 98/118: DESPEDIRSE INMEDIATAMENTE después de capturar email
             self.conversation_history.append({
                 "role": "system",
-                "content": f"""[SISTEMA] ✅ Email capturado (deletreado): {email_detectado}
+                "content": f"""[SISTEMA] [OK] Email capturado (deletreado): {email_detectado}
 
-⚠️⚠️⚠️ FIX 98/118: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
+[WARN][WARN][WARN] FIX 98/118: DESPEDIDA INMEDIATA - CLIENTE OCUPADO [WARN][WARN][WARN]
 
 El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
 DEBES DESPEDIRTE AHORA:
 "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 
-🚨 FIX 118: NO REPITAS EL CORREO
-❌ NUNCA digas el correo de vuelta (riesgo de deletrearlo mal)
-❌ Solo di: "ya lo tengo anotado" o "perfecto, anotado"
-❌ NO hagas más preguntas
-❌ NO pidas confirmación del correo (ya lo tienes)
-🚨 FIX 166: NO PIDAS MÁS DATOS❌ NO pidas WhatsApp (el email es suficiente)❌ NO pidas número telefónico
-❌ NO preguntes sobre productos, proveedores, etc.
-✅ DESPEDIRSE INMEDIATAMENTE y COLGAR
+[EMOJI] FIX 118: NO REPITAS EL CORREO
+[ERROR] NUNCA digas el correo de vuelta (riesgo de deletrearlo mal)
+[ERROR] Solo di: "ya lo tengo anotado" o "perfecto, anotado"
+[ERROR] NO hagas más preguntas
+[ERROR] NO pidas confirmación del correo (ya lo tienes)
+[EMOJI] FIX 166: NO PIDAS MÁS DATOS[ERROR] NO pidas WhatsApp (el email es suficiente)[ERROR] NO pidas número telefónico
+[ERROR] NO preguntes sobre productos, proveedores, etc.
+[OK] DESPEDIRSE INMEDIATAMENTE y COLGAR
 
 IMPORTANTE:
 - El cliente está OCUPADO - termina la llamada YA
@@ -7266,13 +7858,13 @@ IMPORTANTE:
         # FIX 117: Manejar cuando solo se dice dominio (ej: "coprofesa punto net")
         elif match_solo_dominio:
             dominio_completo = match_solo_dominio.group(1).replace(' ', '') + '.' + match_solo_dominio.group(2)
-            print(f"🔧 FIX 117 - Dominio parcial detectado: {dominio_completo}")
+            print(f"[WRENCH] FIX 117 - Dominio parcial detectado: {dominio_completo}")
             print(f"   Original: '{texto[:80]}...'")
 
             # Pedir el usuario del email
             self.conversation_history.append({
                 "role": "system",
-                "content": f"""[SISTEMA] ⚠️ Email incompleto detectado: {dominio_completo}
+                "content": f"""[SISTEMA] [WARN] Email incompleto detectado: {dominio_completo}
 
 El cliente proporcionó solo el DOMINIO ({dominio_completo}) pero falta el USUARIO antes del @.
 
@@ -7292,24 +7884,24 @@ Entonces formarás el email completo: [usuario]@{dominio_completo}"""
             if match_email:
                 email_detectado = match_email.group(0)
                 self.lead_data["email"] = email_detectado
-                print(f"📧 Email detectado: {email_detectado}")
+                print(f"[EMAIL] Email detectado: {email_detectado}")
 
                 # FIX 98: DESPEDIRSE INMEDIATAMENTE después de capturar email
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""[SISTEMA] ✅ Email capturado: {email_detectado}
+                    "content": f"""[SISTEMA] [OK] Email capturado: {email_detectado}
 
-⚠️⚠️⚠️ FIX 98: DESPEDIDA INMEDIATA - CLIENTE OCUPADO ⚠️⚠️⚠️
+[WARN][WARN][WARN] FIX 98: DESPEDIDA INMEDIATA - CLIENTE OCUPADO [WARN][WARN][WARN]
 
 El cliente está OCUPADO en mostrador. Ya tienes el EMAIL.
 
 DEBES DESPEDIRTE AHORA:
 "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 
-❌ NO hagas más preguntas
-❌ NO pidas confirmación del correo (ya lo tienes)
-❌ NO preguntes sobre productos, proveedores, etc.
-✅ DESPEDIRSE INMEDIATAMENTE y COLGAR
+[ERROR] NO hagas más preguntas
+[ERROR] NO pidas confirmación del correo (ya lo tienes)
+[ERROR] NO preguntes sobre productos, proveedores, etc.
+[OK] DESPEDIRSE INMEDIATAMENTE y COLGAR
 
 IMPORTANTE:
 - El cliente está OCUPADO - termina la llamada YA
@@ -7327,19 +7919,19 @@ IMPORTANTE:
                         self.email_intentos_fallidos = 0
 
                     self.email_intentos_fallidos += 1
-                    print(f"⚠️ Posible email incompleto o malformado detectado (Intento {self.email_intentos_fallidos}): '{texto[:100]}...'")
+                    print(f"[WARN] Posible email incompleto o malformado detectado (Intento {self.email_intentos_fallidos}): '{texto[:100]}...'")
 
                     # Si ya fallamos 2+ veces, ofrecer alternativa de WhatsApp
                     if self.email_intentos_fallidos >= 2:
-                        print(f"🚨 FIX 49: Email falló {self.email_intentos_fallidos} veces - ofrecer alternativa WhatsApp")
+                        print(f"[EMOJI] FIX 49: Email falló {self.email_intentos_fallidos} veces - ofrecer alternativa WhatsApp")
                         self.conversation_history.append({
                             "role": "system",
-                            "content": """[SISTEMA] 🚨 PROBLEMA PERSISTENTE CON EMAIL (2+ intentos fallidos)
+                            "content": """[SISTEMA] [EMOJI] PROBLEMA PERSISTENTE CON EMAIL (2+ intentos fallidos)
 
 El cliente ha intentado deletrear el email 2 o más veces pero sigue sin capturarse correctamente.
 La captura de emails por voz es POCO CONFIABLE cuando hay ayudas mnemotécnicas.
 
-⚠️⚠️⚠️ ACCIÓN OBLIGATORIA - OFRECER ALTERNATIVA:
+[WARN][WARN][WARN] ACCIÓN OBLIGATORIA - OFRECER ALTERNATIVA:
 
 Di EXACTAMENTE:
 "Disculpe, veo que hay dificultades con la captura del correo por teléfono. Para asegurarme de tenerlo correcto, tengo dos opciones:
@@ -7359,11 +7951,11 @@ IMPORTANTE:
                         # Primer intento fallido - pedir una vez más
                         self.conversation_history.append({
                             "role": "system",
-                            "content": """[SISTEMA] ⚠️ POSIBLE EMAIL INCOMPLETO - EL CLIENTE ESTÁ DELETREANDO
+                            "content": """[SISTEMA] [WARN] POSIBLE EMAIL INCOMPLETO - EL CLIENTE ESTÁ DELETREANDO
 
 Detecté que el cliente está proporcionando un email letra por letra, pero aún NO está completo.
 
-🚫🚫🚫 FIX 191: PROHIBIDO DECIR "PERFECTO, YA LO TENGO ANOTADO"
+[EMOJI] FIX 191: PROHIBIDO DECIR "PERFECTO, YA LO TENGO ANOTADO"
 El cliente AÚN está hablando. NO lo interrumpas con despedidas.
 
 ACCIÓN REQUERIDA:
@@ -7371,12 +7963,12 @@ ACCIÓN REQUERIDA:
 2. Di algo como: "Perfecto, excelente. Por favor, adelante con el correo."
 3. O: "Entiendo, ¿me podría proporcionar el correo electrónico para enviar la información?"
 
-❌ NO HACER:
+[ERROR] NO HACER:
 - NO digas "ya lo tengo anotado" (NO lo tienes completo)
 - NO te despidas (el cliente sigue hablando)
 - NO inventes el correo
 
-✅ HACER:
+[OK] HACER:
 - Escucha pacientemente cada letra
 - Deja que el cliente termine de deletrear
 - Solo cuando tengas el correo COMPLETO (ej: juan@gmail.com), ahí sí confirma"""
@@ -7414,7 +8006,7 @@ ACCIÓN REQUERIDA:
         # Detectar reprogramación
         if any(palabra in texto_lower for palabra in ["llama después", "llámame", "después", "más tarde", "reprograma", "otro día", "mañana"]):
             self.lead_data["estado_llamada"] = "reprogramar"
-            print(f"📅 Reprogramación detectada en texto: {texto[:50]}...")
+            print(f"[EMOJI] Reprogramación detectada en texto: {texto[:50]}...")
 
         # Agregar a notas
         if self.lead_data["notas"]:
@@ -7435,7 +8027,7 @@ ACCIÓN REQUERIDA:
 
         if match_completo:
             nombre_corregido = match_completo.group(1).strip()
-            print(f"🔧 FIX 47 - Corrección detectada: 'no me llamo X me llamo {nombre_corregido}'")
+            print(f"[WRENCH] FIX 47 - Corrección detectada: 'no me llamo X me llamo {nombre_corregido}'")
         else:
             # PATRONES ORIGINALES (para otros casos)
             patrones_correccion_nombre = [
@@ -7475,16 +8067,16 @@ ACCIÓN REQUERIDA:
                 # Actualizar nombre en lead_data
                 nombre_anterior = self.lead_data.get("nombre_contacto", "")
                 self.lead_data["nombre_contacto"] = nombre_corregido
-                print(f"✏️ Nombre CORREGIDO por cliente: '{nombre_anterior}' → '{nombre_corregido}'")
+                print(f"[EMOJI] Nombre CORREGIDO por cliente: '{nombre_anterior}' → '{nombre_corregido}'")
 
                 # FIX 47: Enviar instrucción ULTRA-CLARA a GPT para usar el nombre correcto
                 self.conversation_history.append({
                     "role": "system",
-                    "content": f"""🚨🚨🚨 CORRECCIÓN CRÍTICA DE NOMBRE 🚨🚨🚨
+                    "content": f"""[EMOJI] CORRECCIÓN CRÍTICA DE NOMBRE [EMOJI]
 
 El cliente acaba de corregir su nombre:
-❌ Nombre INCORRECTO que usaste antes: "{nombre_anterior}"
-✅ Nombre CORRECTO: "{nombre_corregido}"
+[ERROR] Nombre INCORRECTO que usaste antes: "{nombre_anterior}"
+[OK] Nombre CORRECTO: "{nombre_corregido}"
 
 ACCIÓN INMEDIATA OBLIGATORIA:
 1. PIDE DISCULPAS por el error: "Disculpe, {nombre_corregido}, tiene razón."
@@ -7520,17 +8112,17 @@ IMPORTANTE: El nombre correcto es "{nombre_corregido}", NO "{nombre_anterior}"."
             self.lead_data["whatsapp_valido"] = tiene_whatsapp
 
             if tiene_whatsapp:
-                print(f"✅ WhatsApp válido: {numero}")
+                print(f"[OK] WhatsApp válido: {numero}")
                 return True
             else:
-                print(f"⚠️ WhatsApp NO válido: {numero}")
+                print(f"[WARN] WhatsApp NO válido: {numero}")
                 # Limpiar el WhatsApp del lead_data ya que no es válido
                 self.lead_data["whatsapp"] = ""
                 self.lead_data["whatsapp_valido"] = False
                 return False
 
         except Exception as e:
-            print(f"❌ Error al validar WhatsApp: {e}")
+            print(f"[ERROR] Error al validar WhatsApp: {e}")
             return False
 
     def _capturar_respuestas_formulario(self, texto: str, texto_lower: str):
@@ -7586,57 +8178,57 @@ IMPORTANTE: El nombre correcto es "{nombre_corregido}", NO "{nombre_anterior}"."
             # Detección explícita
             if any(palabra in texto_lower for palabra in ["soy el dueño", "soy dueño", "yo autorizo", "yo decido", "yo soy quien", "sí, yo"]):
                 self.lead_data["pregunta_2"] = "Sí"
-                print(f"📝 Pregunta 2 detectada: Sí (toma decisiones)")
+                print(f"[EMOJI] Pregunta 2 detectada: Sí (toma decisiones)")
             elif any(palabra in texto_lower for palabra in ["tengo que consultar", "no soy el dueño", "no puedo decidir", "habla con", "consultar con"]):
                 self.lead_data["pregunta_2"] = "No"
-                print(f"📝 Pregunta 2 detectada: No (no toma decisiones)")
+                print(f"[EMOJI] Pregunta 2 detectada: No (no toma decisiones)")
             # Inferencia: Si dice que es encargado de compras o gerente
             elif any(palabra in texto_lower for palabra in ["encargado de compras", "yo soy el encargado", "gerente", "administrador", "yo manejo"]):
                 self.lead_data["pregunta_2"] = "Sí (Bruce)"
-                print(f"📝 Pregunta 2 inferida: Sí (Bruce) - es encargado/gerente")
+                print(f"[EMOJI] Pregunta 2 inferida: Sí (Bruce) - es encargado/gerente")
 
         # PREGUNTA 3: Pedido Inicial (Crear Pedido Inicial/No)
         if not self.lead_data["pregunta_3"]:
             if any(palabra in texto_lower for palabra in ["arma el pedido", "sí, armalo", "dale, arma", "prepara el pedido", "hazme el pedido"]):
                 self.lead_data["pregunta_3"] = "Crear Pedido Inicial Sugerido"
-                print(f"📝 Pregunta 3 detectada: Crear Pedido Inicial Sugerido")
+                print(f"[EMOJI] Pregunta 3 detectada: Crear Pedido Inicial Sugerido")
             elif any(palabra in texto_lower for palabra in ["no quiero pedido", "no hagas pedido", "todavía no", "aún no", "primero quiero ver"]):
                 self.lead_data["pregunta_3"] = "No"
-                print(f"📝 Pregunta 3 detectada: No")
+                print(f"[EMOJI] Pregunta 3 detectada: No")
 
         # PREGUNTA 4: Pedido de Muestra (Sí/No)
         if not self.lead_data["pregunta_4"]:
             # Detectar aceptación de pedido de muestra de $1,500
             if any(palabra in texto_lower for palabra in ["sí, la muestra", "acepto la muestra", "dale con la muestra", "sí, el pedido de muestra", "está bien $1,500", "está bien 1500"]):
                 self.lead_data["pregunta_4"] = "Sí"
-                print(f"📝 Pregunta 4 detectada: Sí (acepta muestra)")
+                print(f"[EMOJI] Pregunta 4 detectada: Sí (acepta muestra)")
             elif any(palabra in texto_lower for palabra in ["no, la muestra", "no quiero muestra", "no, gracias", "no me interesa la muestra"]):
                 self.lead_data["pregunta_4"] = "No"
-                print(f"📝 Pregunta 4 detectada: No (rechaza muestra)")
+                print(f"[EMOJI] Pregunta 4 detectada: No (rechaza muestra)")
 
         # PREGUNTA 5: Compromiso de Fecha (Sí/No/Tal vez)
         if not self.lead_data["pregunta_5"]:
             if any(palabra in texto_lower for palabra in ["sí, esta semana", "esta semana sí", "dale, esta semana", "arrancamos esta semana"]):
                 self.lead_data["pregunta_5"] = "Sí"
-                print(f"📝 Pregunta 5 detectada: Sí (esta semana)")
+                print(f"[EMOJI] Pregunta 5 detectada: Sí (esta semana)")
             elif any(palabra in texto_lower for palabra in ["no, esta semana no", "la próxima", "el próximo mes", "todavía no puedo"]):
                 self.lead_data["pregunta_5"] = "No"
-                print(f"📝 Pregunta 5 detectada: No")
+                print(f"[EMOJI] Pregunta 5 detectada: No")
             elif any(palabra in texto_lower for palabra in ["tal vez", "talvez", "lo veo", "no sé", "lo pensare", "a ver"]):
                 self.lead_data["pregunta_5"] = "Tal vez"
-                print(f"📝 Pregunta 5 detectada: Tal vez")
+                print(f"[EMOJI] Pregunta 5 detectada: Tal vez")
 
         # PREGUNTA 6: Método de Pago TDC (Sí/No/Tal vez)
         if not self.lead_data["pregunta_6"]:
             if any(palabra in texto_lower for palabra in ["sí, con tarjeta", "acepto tarjeta", "con tdc", "sí, cierro", "dale, cierro"]):
                 self.lead_data["pregunta_6"] = "Sí"
-                print(f"📝 Pregunta 6 detectada: Sí (acepta TDC)")
+                print(f"[EMOJI] Pregunta 6 detectada: Sí (acepta TDC)")
             elif any(palabra in texto_lower for palabra in ["no con tarjeta", "no quiero tarjeta", "prefiero efectivo", "solo efectivo"]):
                 self.lead_data["pregunta_6"] = "No"
-                print(f"📝 Pregunta 6 detectada: No")
+                print(f"[EMOJI] Pregunta 6 detectada: No")
             elif any(palabra in texto_lower for palabra in ["tal vez", "lo veo", "veo lo de la tarjeta"]):
                 self.lead_data["pregunta_6"] = "Tal vez"
-                print(f"📝 Pregunta 6 detectada: Tal vez")
+                print(f"[EMOJI] Pregunta 6 detectada: Tal vez")
 
         # PREGUNTA 7: Conclusión (se determina automáticamente al final de la llamada)
         # No se captura aquí, se determina en el método _determinar_conclusion()
@@ -7651,44 +8243,44 @@ IMPORTANTE: El nombre correcto es "{nombre_corregido}", NO "{nombre_anterior}"."
         # PREGUNTA 2: Si no respondió pero capturamos WhatsApp, probablemente toma decisiones
         if not self.lead_data["pregunta_2"] and self.lead_data["whatsapp"]:
             self.lead_data["pregunta_2"] = "Sí (Bruce)"
-            print(f"📝 Pregunta 2 inferida: Sí (Bruce) - dio WhatsApp, probablemente toma decisiones")
+            print(f"[EMOJI] Pregunta 2 inferida: Sí (Bruce) - dio WhatsApp, probablemente toma decisiones")
 
         # PREGUNTA 3: Si dijo que no quiere pedido o solo quiere catálogo
         if not self.lead_data["pregunta_3"]:
             if self.lead_data["whatsapp"] and any(palabra in notas_lower for palabra in ["catálogo", "catalogo", "lo reviso", "envía", "manda"]):
                 self.lead_data["pregunta_3"] = "No (Bruce)"
-                print(f"📝 Pregunta 3 inferida: No (Bruce) - solo quiere catálogo")
+                print(f"[EMOJI] Pregunta 3 inferida: No (Bruce) - solo quiere catálogo")
             elif not self.lead_data["whatsapp"]:
                 # Si no dio WhatsApp, definitivamente no quiere pedido
                 self.lead_data["pregunta_3"] = "No (Bruce)"
-                print(f"📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp")
+                print(f"[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp")
 
         # PREGUNTA 4: Si no aceptó P3, probablemente no quiere muestra tampoco
         if not self.lead_data["pregunta_4"]:
             if self.lead_data["pregunta_3"] in ["No", "No (Bruce)"]:
                 self.lead_data["pregunta_4"] = "No (Bruce)"
-                print(f"📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial")
+                print(f"[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial")
             elif not self.lead_data["whatsapp"]:
                 self.lead_data["pregunta_4"] = "No (Bruce)"
-                print(f"📝 Pregunta 4 inferida: No (Bruce) - no dio WhatsApp")
+                print(f"[EMOJI] Pregunta 4 inferida: No (Bruce) - no dio WhatsApp")
 
         # PREGUNTA 5: Si dijo "sí está bien" o aceptó, inferir que sí
         if not self.lead_data["pregunta_5"]:
             if any(palabra in notas_lower for palabra in ["sí está bien", "si esta bien", "le parece bien", "está bien"]):
                 self.lead_data["pregunta_5"] = "Sí (Bruce)"
-                print(f"📝 Pregunta 5 inferida: Sí (Bruce) - aceptó con 'está bien'")
+                print(f"[EMOJI] Pregunta 5 inferida: Sí (Bruce) - aceptó con 'está bien'")
             elif self.lead_data["pregunta_4"] in ["No", "No (Bruce)"]:
                 self.lead_data["pregunta_5"] = "No (Bruce)"
-                print(f"📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra")
+                print(f"[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra")
 
         # PREGUNTA 6: Si no mencionó TDC, inferir según interés
         if not self.lead_data["pregunta_6"]:
             if self.lead_data["pregunta_5"] in ["Sí", "Sí (Bruce)"]:
                 self.lead_data["pregunta_6"] = "Sí (Bruce)"
-                print(f"📝 Pregunta 6 inferida: Sí (Bruce) - aceptó fecha")
+                print(f"[EMOJI] Pregunta 6 inferida: Sí (Bruce) - aceptó fecha")
             elif self.lead_data["pregunta_5"] in ["No", "No (Bruce)"]:
                 self.lead_data["pregunta_6"] = "No (Bruce)"
-                print(f"📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha")
+                print(f"[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha")
 
     def _analizar_estado_animo_e_interes(self):
         """
@@ -7750,13 +8342,13 @@ Responde SOLO en este formato JSON:
             self.lead_data["nivel_interes_clasificado"] = analisis.get("nivel_interes", "Medio")
             self.lead_data["opinion_bruce"] = analisis.get("opinion_bruce", "Llamada completada.")
 
-            print(f"\n📊 Análisis de la llamada:")
+            print(f"\n[EMOJI] Análisis de la llamada:")
             print(f"   Estado de ánimo: {self.lead_data['estado_animo_cliente']}")
             print(f"   Nivel de interés: {self.lead_data['nivel_interes_clasificado']}")
             print(f"   Opinión de Bruce: {self.lead_data['opinion_bruce']}")
 
         except Exception as e:
-            print(f"⚠️ Error al analizar estado de ánimo: {e}")
+            print(f"[WARN] Error al analizar estado de ánimo: {e}")
             # Valores por defecto si falla el análisis
             self.lead_data["estado_animo_cliente"] = "Neutral"
             self.lead_data["nivel_interes_clasificado"] = "Medio"
@@ -7783,11 +8375,11 @@ Responde SOLO en este formato JSON:
         if not forzar_recalculo and self.lead_data["pregunta_7"]:
             # Si ya tiene conclusión DEFINITIVA (no temporal), no recalcular
             if self.lead_data["pregunta_7"] not in conclusiones_temporales:
-                print(f"📝 Conclusión ya determinada: {self.lead_data['pregunta_7']} (no recalcular)")
+                print(f"[EMOJI] Conclusión ya determinada: {self.lead_data['pregunta_7']} (no recalcular)")
                 return
             else:
                 # Si es temporal, permitir recálculo
-                print(f"📝 FIX 177: Conclusión temporal '{self.lead_data['pregunta_7']}' - recalculando con datos capturados...")
+                print(f"[EMOJI] FIX 177: Conclusión temporal '{self.lead_data['pregunta_7']}' - recalculando con datos capturados...")
 
         # Opciones de conclusión:
         # - "Pedido" - Cliente va a hacer un pedido
@@ -7805,37 +8397,37 @@ Responde SOLO en este formato JSON:
             self.lead_data["pregunta_6"] == "Sí"):
             self.lead_data["pregunta_7"] = "Pedido"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Pedido (APROBADO)")
+            print(f"[EMOJI] Conclusión determinada: Pedido (APROBADO)")
 
         # Si tiene WhatsApp y mostró interés, va a revisar catálogo
         elif self.lead_data["whatsapp"] and self.lead_data["interesado"]:
             self.lead_data["pregunta_7"] = "Revisara el Catalogo"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Revisara el Catalogo (APROBADO)")
+            print(f"[EMOJI] Conclusión determinada: Revisara el Catalogo (APROBADO)")
 
         # Si solo tiene email, conclusión es Correo
         elif self.lead_data["email"] and not self.lead_data["whatsapp"]:
             self.lead_data["pregunta_7"] = "Correo"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Correo (APROBADO)")
+            print(f"[EMOJI] Conclusión determinada: Correo (APROBADO)")
 
         # Si pactó fecha (Pregunta 5 con fecha específica o "Tal vez")
         elif self.lead_data["pregunta_5"] == "Tal vez":
             self.lead_data["pregunta_7"] = "Avance (Fecha Pactada)"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Avance (APROBADO)")
+            print(f"[EMOJI] Conclusión determinada: Avance (APROBADO)")
 
         # Si dijo "lo veo", "lo consulto", etc
         elif any(palabra in self.lead_data["notas"].lower() for palabra in ["lo consulto", "lo veo", "después", "lo pienso"]):
             self.lead_data["pregunta_7"] = "Continuacion (Cliente Esperando Alguna Situacion)"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Continuacion (APROBADO)")
+            print(f"[EMOJI] Conclusión determinada: Continuacion (APROBADO)")
 
         # Si rechazó todo o no mostró interés
         elif not self.lead_data["interesado"]:
             self.lead_data["pregunta_7"] = "Nulo"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Conclusión determinada: Nulo (NEGADO)")
+            print(f"[EMOJI] Conclusión determinada: Nulo (NEGADO)")
 
         # FIX 175: Incluir referencia_telefono en clasificación
         # Default: Si hay algún dato capturado (WhatsApp, email O referencia), considerar APROBADO
@@ -7844,13 +8436,13 @@ Responde SOLO en este formato JSON:
               self.lead_data.get("referencia_telefono")):
             self.lead_data["pregunta_7"] = "Revisara el Catalogo"
             self.lead_data["resultado"] = "APROBADO"
-            print(f"📝 Conclusión determinada: Revisara el Catalogo (APROBADO) - Dato capturado: WhatsApp={bool(self.lead_data['whatsapp'])}, Email={bool(self.lead_data['email'])}, Ref={bool(self.lead_data.get('referencia_telefono'))}")
+            print(f"[EMOJI] Conclusión determinada: Revisara el Catalogo (APROBADO) - Dato capturado: WhatsApp={bool(self.lead_data['whatsapp'])}, Email={bool(self.lead_data['email'])}, Ref={bool(self.lead_data.get('referencia_telefono'))}")
 
         # Si no hay nada, es Nulo
         else:
             self.lead_data["pregunta_7"] = "Nulo"
             self.lead_data["resultado"] = "NEGADO"
-            print(f"📝 Conclusión determinada: Nulo (NEGADO)")
+            print(f"[EMOJI] Conclusión determinada: Nulo (NEGADO)")
 
     def _determinar_estado_llamada(self) -> str:
         """Determina el estado final de la llamada"""
@@ -7892,19 +8484,19 @@ Responde SOLO en este formato JSON:
 
             if any(historial.values()):
                 contexto_recontacto = "\n# CONTEXTO DE RE-CONTACTO (NÚMERO CAMBIÓ)\n"
-                contexto_recontacto += "⚠️ IMPORTANTE: Ya contactamos a esta tienda anteriormente con otro número.\n"
+                contexto_recontacto += "[WARN] IMPORTANTE: Ya contactamos a esta tienda anteriormente con otro número.\n"
                 contexto_recontacto += "El contacto anterior nos dio este nuevo número de teléfono.\n\n"
 
                 if historial.get('referencia'):
-                    contexto_recontacto += f"📋 Referencia anterior: {historial['referencia']}\n"
+                    contexto_recontacto += f"[EMOJI] Referencia anterior: {historial['referencia']}\n"
 
                 if historial.get('contexto_reprogramacion'):
-                    contexto_recontacto += f"📅 Contexto de reprogramación: {historial['contexto_reprogramacion']}\n"
+                    contexto_recontacto += f"[EMOJI] Contexto de reprogramación: {historial['contexto_reprogramacion']}\n"
 
                 if historial.get('intentos_buzon'):
-                    contexto_recontacto += f"📞 Intentos previos: {historial['intentos_buzon']}\n"
+                    contexto_recontacto += f"[EMOJI] Intentos previos: {historial['intentos_buzon']}\n"
 
-                contexto_recontacto += "\n💡 Usa este contexto para ser más efectivo. Menciona que ya contactamos la tienda si es relevante.\n\n"
+                contexto_recontacto += "\n[EMOJI] Usa este contexto para ser más efectivo. Menciona que ya contactamos la tienda si es relevante.\n\n"
 
         # Agregar memoria de corto plazo (últimas 3 respuestas del cliente)
         memoria_corto_plazo = ""
@@ -7921,7 +8513,7 @@ Responde SOLO en este formato JSON:
             ultimas_bruce = respuestas_bruce[-3:] if len(respuestas_bruce) > 0 else []
 
             if ultimas_bruce:
-                memoria_corto_plazo += "\n🚨 FIX 66: TUS ÚLTIMAS RESPUESTAS FUERON:\n"
+                memoria_corto_plazo += "\n[EMOJI] FIX 66: TUS ÚLTIMAS RESPUESTAS FUERON:\n"
                 for i, resp_bruce in enumerate(ultimas_bruce, 1):
                     memoria_corto_plazo += f"   {i}. TÚ DIJISTE: \"{resp_bruce['content']}\"\n"
 
@@ -7944,10 +8536,10 @@ Responde SOLO en este formato JSON:
                         objeciones_detectadas.append(frase)
                         break
 
-            memoria_corto_plazo += "\n🚨🚨🚨 REGLAS CRÍTICAS DE CONVERSACIÓN:\n"
+            memoria_corto_plazo += "\n[EMOJI] REGLAS CRÍTICAS DE CONVERSACIÓN:\n"
 
             if tiene_objeciones:
-                memoria_corto_plazo += f"⚠️⚠️⚠️ ALERTA: El cliente mostró DESINTERÉS/OBJECIÓN\n"
+                memoria_corto_plazo += f"[WARN][WARN][WARN] ALERTA: El cliente mostró DESINTERÉS/OBJECIÓN\n"
                 memoria_corto_plazo += f"   Dijeron: '{objeciones_detectadas[0]}'\n"
                 memoria_corto_plazo += "   ACCIÓN REQUERIDA:\n"
                 memoria_corto_plazo += "   1. RECONOCE su objeción profesionalmente\n"
@@ -7961,31 +8553,31 @@ Responde SOLO en este formato JSON:
             memoria_corto_plazo += "2. SI el cliente ya respondió algo, NO repitas la pregunta\n"
             memoria_corto_plazo += "3. SI ya dijeron 'soy yo' o 'está hablando conmigo', NO vuelvas a preguntar si está el encargado\n"
             memoria_corto_plazo += "4. AVANZA en la conversación, NO te quedes en loop\n"
-            memoria_corto_plazo += "5. 🚨 FIX 171: NO uses el nombre del cliente en tus respuestas (genera delays de 1-4s en audio)\n"
+            memoria_corto_plazo += "5. [EMOJI] FIX 171: NO uses el nombre del cliente en tus respuestas (genera delays de 1-4s en audio)\n"
             memoria_corto_plazo += "6. SI el cliente dice 'ya te dije', es porque estás repitiendo - PARA y cambia de tema\n\n"
 
         # FIX 168: Verificar si YA tenemos WhatsApp capturado (MEJORADO)
         instruccion_whatsapp_capturado = ""
         if self.lead_data.get("whatsapp") and self.lead_data.get("whatsapp_valido"):
             whatsapp_capturado = self.lead_data["whatsapp"]
-            print(f"   ⚡ FIX 168: Agregando instrucción ANTI-CORREO al prompt (WhatsApp: {whatsapp_capturado})")
+            print(f"   [EMOJI] FIX 168: Agregando instrucción ANTI-CORREO al prompt (WhatsApp: {whatsapp_capturado})")
             instruccion_whatsapp_capturado = f"""
 
-═══════════════════════════════════════════════════════════════
-🚨🚨🚨 FIX 168 - WHATSAPP YA CAPTURADO: {whatsapp_capturado} 🚨🚨🚨
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] FIX 168 - WHATSAPP YA CAPTURADO: {whatsapp_capturado} [EMOJI]
+[EMOJI]
 
-⚠️⚠️⚠️ INSTRUCCIÓN CRÍTICA - MÁXIMA PRIORIDAD - NO IGNORAR ⚠️⚠️⚠️
+[WARN][WARN][WARN] INSTRUCCIÓN CRÍTICA - MÁXIMA PRIORIDAD - NO IGNORAR [WARN][WARN][WARN]
 
-✅ CONFIRMACIÓN: Ya tienes el WhatsApp del cliente: {whatsapp_capturado}
+[OK] CONFIRMACIÓN: Ya tienes el WhatsApp del cliente: {whatsapp_capturado}
 
-🛑 PROHIBIDO ABSOLUTAMENTE:
-   ❌ NO pidas WhatsApp nuevamente (YA LO TIENES GUARDADO)
-   ❌ NO pidas correo electrónico (WhatsApp es SUFICIENTE)
-   ❌ NO pidas nombre (innecesario para envío de catálogo)
-   ❌ NO hagas MÁS preguntas sobre datos de contacto
+[EMOJI] PROHIBIDO ABSOLUTAMENTE:
+   [ERROR] NO pidas WhatsApp nuevamente (YA LO TIENES GUARDADO)
+   [ERROR] NO pidas correo electrónico (WhatsApp es SUFICIENTE)
+   [ERROR] NO pidas nombre (innecesario para envío de catálogo)
+   [ERROR] NO hagas MÁS preguntas sobre datos de contacto
 
-✅ ACCIÓN OBLIGATORIA INMEDIATA:
+[OK] ACCIÓN OBLIGATORIA INMEDIATA:
    → DESPÍDETE AHORA confirmando envío por WhatsApp
    → USA esta frase EXACTA:
 
@@ -7993,11 +8585,11 @@ Responde SOLO en este formato JSON:
     por WhatsApp al {whatsapp_capturado}. Muchas gracias por su tiempo.
     Que tenga un excelente día."
 
-⚠️ SI EL CLIENTE DICE "YA TE LO PASÉ" o "YA TE DI EL NÚMERO":
+[WARN] SI EL CLIENTE DICE "YA TE LO PASÉ" o "YA TE DI EL NÚMERO":
    1. Confirma: "Sí, tengo su número {whatsapp_capturado}"
    2. Despídete INMEDIATAMENTE (NO hagas más preguntas)
 
-═══════════════════════════════════════════════════════════════
+[EMOJI]
 
 """
 
@@ -8028,37 +8620,37 @@ Responde SOLO en este formato JSON:
 
         # Construir sección de memoria conversacional
         memoria_conversacional = f"""
-═══════════════════════════════════════════════════════════════
-📝 FIX 407: MEMORIA DE CONTEXTO CONVERSACIONAL
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] FIX 407: MEMORIA DE CONTEXTO CONVERSACIONAL
+[EMOJI]
 
-🧠 LO QUE YA HAS MENCIONADO EN ESTA LLAMADA:
+[EMOJI] LO QUE YA HAS MENCIONADO EN ESTA LLAMADA:
 
 - Empresa (NIOVAL): {veces_menciono_nioval} {'vez' if veces_menciono_nioval == 1 else 'veces'}
 - Pregunta por encargado: {veces_pregunto_encargado} {'vez' if veces_pregunto_encargado == 1 else 'veces'}
 - Oferta de catálogo: {veces_ofrecio_catalogo} {'vez' if veces_ofrecio_catalogo == 1 else 'veces'}
 
-⚠️ REGLA ANTI-REPETICIÓN:
+[WARN] REGLA ANTI-REPETICIÓN:
 - Si ya mencionaste algo 2+ veces, NO lo vuelvas a mencionar SALVO que:
   1. Cliente pregunte directamente ("¿De qué empresa?")
   2. Cliente no escuchó bien ("¿Cómo dijo?")
   3. Es la primera vez que hablas CON EL ENCARGADO (si antes hablabas con recepcionista)
 
-✅ AVANZA la conversación en lugar de repetir lo mismo.
+[OK] AVANZA la conversación en lugar de repetir lo mismo.
 
-═══════════════════════════════════════════════════════════════
+[EMOJI]
 
 """
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
         prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + memoria_conversacional + """
-═══════════════════════════════════════════════════════════════
-🧠 FIX 384/385: SISTEMA DE RAZONAMIENTO CHAIN-OF-THOUGHT 🧠
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] FIX 384/385: SISTEMA DE RAZONAMIENTO CHAIN-OF-THOUGHT [EMOJI]
+[EMOJI]
 
-🎯 METODOLOGÍA: Razonamiento ultra-rápido (notación compacta)
+[EMOJI] METODOLOGÍA: Razonamiento ultra-rápido (notación compacta)
 
-📋 FORMATO OBLIGATORIO - MÁXIMA VELOCIDAD:
+[EMOJI] FORMATO OBLIGATORIO - MÁXIMA VELOCIDAD:
 
 Usa notación COMPACTA entre [A] y [/A], luego tu respuesta.
 
@@ -8081,44 +8673,44 @@ Cliente: "No me cuelgue, voy a buscar al encargado"
 Cliente: "Si gustas marca en otro momento"
 [A]NO|reprog|hora[/A]Perfecto. ¿A qué hora sería mejor que llame?
 
-⚠️ CRÍTICO:
+[WARN] CRÍTICO:
 - [A]...[/A] es INTERNO (NO se dice al cliente)
 - Máximo 3-5 palabras en [A]
 - Respuesta DESPUÉS de [/A] SÍ se dice al cliente
 
-═══════════════════════════════════════════════════════════════
+[EMOJI]
 
-⚠️ GUÍA DE ANÁLISIS - RESPONDE ESTOS 5 PUNTOS EN TU [ANÁLISIS]:
+[WARN] GUÍA DE ANÁLISIS - RESPONDE ESTOS 5 PUNTOS EN TU [ANÁLISIS]:
 
-1️⃣ ¿QUÉ ACABA DE DECIR EL CLIENTE?
-   □ ¿Está disponible el encargado? → SÍ / NO / BUSCANDO
-   □ ¿Mostró interés? → POSITIVO / NEUTRAL / NEGATIVO
-   □ ¿Dio algún dato? → WhatsApp / Correo / Horario / Ninguno
-   □ ¿Hizo alguna pregunta? → ¿Cuál?
-   □ ¿Pidió algo específico? → ¿Qué?
+1[EMOJI]⃣ ¿QUÉ ACABA DE DECIR EL CLIENTE?
+   [EMOJI] ¿Está disponible el encargado? → SÍ / NO / BUSCANDO
+   [EMOJI] ¿Mostró interés? → POSITIVO / NEUTRAL / NEGATIVO
+   [EMOJI] ¿Dio algún dato? → WhatsApp / Correo / Horario / Ninguno
+   [EMOJI] ¿Hizo alguna pregunta? → ¿Cuál?
+   [EMOJI] ¿Pidió algo específico? → ¿Qué?
 
-2️⃣ ¿QUÉ DATOS YA TENGO?
-   □ WhatsApp capturado: """ + ("✅ SÍ - " + str(self.lead_data.get("whatsapp", "")) if self.lead_data.get("whatsapp") else "❌ NO") + """
-   □ Correo capturado: """ + ("✅ SÍ - " + str(self.lead_data.get("email", "")) if self.lead_data.get("email") else "❌ NO") + """
-   □ ¿Ya tengo TODO lo necesario?: """ + ("✅ SÍ" if (self.lead_data.get("whatsapp") or self.lead_data.get("email")) else "❌ NO") + """
+2[EMOJI]⃣ ¿QUÉ DATOS YA TENGO?
+   [EMOJI] WhatsApp capturado: """ + ("[OK] SÍ - " + str(self.lead_data.get("whatsapp", "")) if self.lead_data.get("whatsapp") else "[ERROR] NO") + """
+   [EMOJI] Correo capturado: """ + ("[OK] SÍ - " + str(self.lead_data.get("email", "")) if self.lead_data.get("email") else "[ERROR] NO") + """
+   [EMOJI] ¿Ya tengo TODO lo necesario?: """ + ("[OK] SÍ" if (self.lead_data.get("whatsapp") or self.lead_data.get("email")) else "[ERROR] NO") + """
 
-3️⃣ ¿QUÉ NECESITO HACER AHORA? (Prioridad en orden)
-   ✅ Si cliente PREGUNTÓ algo → RESPONDER su pregunta PRIMERO
-   ✅ Si cliente DIO dato (número/correo/horario) → CONFIRMAR y AGRADECER
-   ✅ Si dijo "este número"/"sería este" → Es el número que marqué, YA LO TENGO
-   ✅ Si dijo "no está"/"no se encuentra" → Ofrecer catálogo, NO insistir
-   ✅ Si dijo "marcar en otro momento" → Preguntar horario, NO pedir WhatsApp
-   ✅ Si YA tengo WhatsApp/correo → DESPEDIRME, NO pedir más datos
-   ✅ Si está esperando/buscando encargado → QUEDARME CALLADO
+3[EMOJI]⃣ ¿QUÉ NECESITO HACER AHORA? (Prioridad en orden)
+   [OK] Si cliente PREGUNTÓ algo → RESPONDER su pregunta PRIMERO
+   [OK] Si cliente DIO dato (número/correo/horario) → CONFIRMAR y AGRADECER
+   [OK] Si dijo "este número"/"sería este" → Es el número que marqué, YA LO TENGO
+   [OK] Si dijo "no está"/"no se encuentra" → Ofrecer catálogo, NO insistir
+   [OK] Si dijo "marcar en otro momento" → Preguntar horario, NO pedir WhatsApp
+   [OK] Si YA tengo WhatsApp/correo → DESPEDIRME, NO pedir más datos
+   [OK] Si está esperando/buscando encargado → QUEDARME CALLADO
 
-4️⃣ ¿TIENE SENTIDO MI PRÓXIMA RESPUESTA?
-   ❌ ¿Ya tengo este dato? → NO pedir de nuevo
-   ❌ ¿Cliente pidió/preguntó algo? → Cumplir/responder PRIMERO
-   ❌ ¿Es el momento correcto? → NO interrumpir si está buscando
-   ❌ ¿Estoy repitiendo algo? → Verificar últimas 3 respuestas
-   ❌ ¿Cliente dijo "no"? → NO insistir con lo mismo
+4[EMOJI]⃣ ¿TIENE SENTIDO MI PRÓXIMA RESPUESTA?
+   [ERROR] ¿Ya tengo este dato? → NO pedir de nuevo
+   [ERROR] ¿Cliente pidió/preguntó algo? → Cumplir/responder PRIMERO
+   [ERROR] ¿Es el momento correcto? → NO interrumpir si está buscando
+   [ERROR] ¿Estoy repitiendo algo? → Verificar últimas 3 respuestas
+   [ERROR] ¿Cliente dijo "no"? → NO insistir con lo mismo
 
-5️⃣ EJEMPLOS DE RAZONAMIENTO CORRECTO:
+5[EMOJI]⃣ EJEMPLOS DE RAZONAMIENTO CORRECTO:
 
 EJEMPLO 1:
 Cliente: "No, sería este número, pero no se encuentra el encargado."
@@ -8149,120 +8741,120 @@ ANÁLISIS:
 - ¿Qué hacer? Preguntar horario, NO pedir WhatsApp
 RESPUESTA: "Perfecto. ¿A qué hora sería mejor que llame?"
 
-═══════════════════════════════════════════════════════════════
-🎯 FIX 407: PRIORIZACIÓN DE RESPUESTAS - ¿QUÉ RESPONDER PRIMERO?
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] FIX 407: PRIORIZACIÓN DE RESPUESTAS - ¿QUÉ RESPONDER PRIMERO?
+[EMOJI]
 
 ORDEN DE PRIORIDAD (de mayor a menor):
 
-1️⃣ MÁXIMA PRIORIDAD - Preguntas directas del cliente
+1[EMOJI]⃣ MÁXIMA PRIORIDAD - Preguntas directas del cliente
    Cliente: "¿De dónde habla?" → RESPONDER esto PRIMERO
    Cliente: "¿Qué necesita?" → RESPONDER esto PRIMERO
    Cliente: "¿Qué productos?" → RESPONDER esto PRIMERO
 
-2️⃣ ALTA PRIORIDAD - Confirmar datos que dio
+2[EMOJI]⃣ ALTA PRIORIDAD - Confirmar datos que dio
    Cliente: "Este número" → CONFIRMAR número PRIMERO
    Cliente: "Es el 662..." → CONFIRMAR número PRIMERO
 
-3️⃣ MEDIA PRIORIDAD - Responder objeciones
+3[EMOJI]⃣ MEDIA PRIORIDAD - Responder objeciones
    Cliente: "Ya tengo proveedor" → DAR razón para considerar NIOVAL
 
-4️⃣ BAJA PRIORIDAD - Continuar script
+4[EMOJI]⃣ BAJA PRIORIDAD - Continuar script
    Solo si NO hay preguntas/datos/objeciones pendientes
 
 EJEMPLO CORRECTO:
 Cliente: "¿De dónde habla? ¿Qué productos tienen?"
 [A]preg_2|resp_emp_prod[/A]Me comunico de NIOVAL, manejamos grifería, cintas y herramientas de ferretería. ¿Se encontrará el encargado?
 
-═══════════════════════════════════════════════════════════════
-✅ FIX 407: VERIFICACIÓN DE COHERENCIA - ANTES DE RESPONDER
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[OK] FIX 407: VERIFICACIÓN DE COHERENCIA - ANTES DE RESPONDER
+[EMOJI]
 
-⚠️ ANTES DE GENERAR TU RESPUESTA, VERIFICA:
+[WARN] ANTES DE GENERAR TU RESPUESTA, VERIFICA:
 
-1. ✅ ¿Mi respuesta RESPONDE lo que preguntó el cliente?
-   ❌ Cliente: "¿Qué necesita?" → Bruce: "¿Se encuentra el encargado?" (NO RESPONDE)
-   ✅ Cliente: "¿Qué necesita?" → Bruce: "Me comunico de NIOVAL..." (SÍ RESPONDE)
+1. [OK] ¿Mi respuesta RESPONDE lo que preguntó el cliente?
+   [ERROR] Cliente: "¿Qué necesita?" → Bruce: "¿Se encuentra el encargado?" (NO RESPONDE)
+   [OK] Cliente: "¿Qué necesita?" → Bruce: "Me comunico de NIOVAL..." (SÍ RESPONDE)
 
-2. ✅ ¿Estoy REPITIENDO lo que ya dije antes?
-   ❌ Ya mencioné empresa 3 veces → NO decirlo de nuevo
-   ✅ Primera vez → Sí explicar empresa
+2. [OK] ¿Estoy REPITIENDO lo que ya dije antes?
+   [ERROR] Ya mencioné empresa 3 veces → NO decirlo de nuevo
+   [OK] Primera vez → Sí explicar empresa
 
-3. ✅ ¿Tiene SENTIDO en este contexto?
-   ❌ Cliente: "No está" → Bruce: "¿Le envío catálogo?" (SIN CONTEXTO)
-   ✅ Cliente: "No está" → Bruce: "¿Le envío catálogo para que lo revise cuando regrese?" (CON CONTEXTO)
+3. [OK] ¿Tiene SENTIDO en este contexto?
+   [ERROR] Cliente: "No está" → Bruce: "¿Le envío catálogo?" (SIN CONTEXTO)
+   [OK] Cliente: "No está" → Bruce: "¿Le envío catálogo para que lo revise cuando regrese?" (CON CONTEXTO)
 
-4. ✅ ¿Ya tengo este dato?
-   ❌ Ya tengo WhatsApp → Pedir WhatsApp (REDUNDANTE)
-   ✅ Ya tengo WhatsApp → Despedirse (LÓGICO)
+4. [OK] ¿Ya tengo este dato?
+   [ERROR] Ya tengo WhatsApp → Pedir WhatsApp (REDUNDANTE)
+   [OK] Ya tengo WhatsApp → Despedirse (LÓGICO)
 
-5. ✅ ¿Cliente está ocupado/apurado?
-   ❌ Cliente: "Estoy ocupado" → Respuesta larga de 30 segundos (MALO)
-   ✅ Cliente: "Estoy ocupado" → Respuesta corta 5 segundos (BUENO)
+5. [OK] ¿Cliente está ocupado/apurado?
+   [ERROR] Cliente: "Estoy ocupado" → Respuesta larga de 30 segundos (MALO)
+   [OK] Cliente: "Estoy ocupado" → Respuesta corta 5 segundos (BUENO)
 
-═══════════════════════════════════════════════════════════════
-📚 FIX 407: EJEMPLOS MEJORADOS - CASOS REALES
-═══════════════════════════════════════════════════════════════
+[EMOJI]
+[EMOJI] FIX 407: EJEMPLOS MEJORADOS - CASOS REALES
+[EMOJI]
 
-❌ EJEMPLO INCORRECTO 1 - No responde pregunta directa:
+[ERROR] EJEMPLO INCORRECTO 1 - No responde pregunta directa:
 Cliente: "¿Qué necesita?"
 [A]NO|preg|enc[/A]¿Se encuentra el encargado de compras?
-🚫 PROBLEMA: Cliente preguntó propósito, Bruce ignoró y preguntó por encargado
+[EMOJI] PROBLEMA: Cliente preguntó propósito, Bruce ignoró y preguntó por encargado
 
-✅ EJEMPLO CORRECTO 1 - Responde pregunta directa PRIMERO:
+[OK] EJEMPLO CORRECTO 1 - Responde pregunta directa PRIMERO:
 Cliente: "¿Qué necesita?"
 [A]NO|preg_directa|resp_emp[/A]Me comunico de NIOVAL para ofrecer productos de ferretería. ¿Se encontrará el encargado?
-✅ CORRECTO: Respondió pregunta, luego continuó con script
+[OK] CORRECTO: Respondió pregunta, luego continuó con script
 
-───────────────────────────────────────────────────────────────
+[EMOJI]
 
-❌ EJEMPLO INCORRECTO 2 - No confirma dato que dio cliente:
+[ERROR] EJEMPLO INCORRECTO 2 - No confirma dato que dio cliente:
 Cliente: "Este número, pero no está el encargado."
 [A]NO|cat[/A]¿Le envío el catálogo completo por WhatsApp?
-🚫 PROBLEMA: Cliente dijo "este número" pero Bruce no confirmó
+[EMOJI] PROBLEMA: Cliente dijo "este número" pero Bruce no confirmó
 
-✅ EJEMPLO CORRECTO 2 - Confirma dato PRIMERO:
+[OK] EJEMPLO CORRECTO 2 - Confirma dato PRIMERO:
 Cliente: "Este número, pero no está el encargado."
 [A]NO|SI_num|conf[/A]Perfecto, le envío el catálogo a este WhatsApp. Muchas gracias.
-✅ CORRECTO: Confirmó número que cliente dio
+[OK] CORRECTO: Confirmó número que cliente dio
 
-───────────────────────────────────────────────────────────────
+[EMOJI]
 
-❌ EJEMPLO INCORRECTO 3 - Respuesta larga cuando cliente ocupado:
+[ERROR] EJEMPLO INCORRECTO 3 - Respuesta larga cuando cliente ocupado:
 Cliente: "Estoy ocupado, ¿qué quiere?"
 [A]NEG|ocup|emp[/A]Me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. Manejamos grifería, cintas, herramientas...
-🚫 PROBLEMA: Respuesta muy larga para alguien con prisa
+[EMOJI] PROBLEMA: Respuesta muy larga para alguien con prisa
 
-✅ EJEMPLO CORRECTO 3 - Respuesta corta cuando ocupado:
+[OK] EJEMPLO CORRECTO 3 - Respuesta corta cuando ocupado:
 Cliente: "Estoy ocupado, ¿qué quiere?"
 [A]NEG|ocup|desp_rapida[/A]NIOVAL, ferretería. ¿Le envío catálogo por WhatsApp?
-✅ CORRECTO: Respuesta ultra-corta (5 segundos vs 25 segundos)
+[OK] CORRECTO: Respuesta ultra-corta (5 segundos vs 25 segundos)
 
-───────────────────────────────────────────────────────────────
+[EMOJI]
 
-❌ EJEMPLO INCORRECTO 4 - Repite empresa cuando ya la mencionó 3 veces:
+[ERROR] EJEMPLO INCORRECTO 4 - Repite empresa cuando ya la mencionó 3 veces:
 Cliente: "Ok, ¿qué más?"
 [A]OK|preg|prod[/A]Como le comentaba, me comunico de NIOVAL...
-🚫 PROBLEMA: Ya mencionó NIOVAL 3 veces, cliente ya sabe
+[EMOJI] PROBLEMA: Ya mencionó NIOVAL 3 veces, cliente ya sabe
 
-✅ EJEMPLO CORRECTO 4 - No repite lo ya dicho:
+[OK] EJEMPLO CORRECTO 4 - No repite lo ya dicho:
 Cliente: "Ok, ¿qué más?"
 [A]OK|preg|prod[/A]Manejamos grifería, cintas y herramientas. ¿Le envío el catálogo?
-✅ CORRECTO: Avanza sin repetir empresa
+[OK] CORRECTO: Avanza sin repetir empresa
 
-───────────────────────────────────────────────────────────────
+[EMOJI]
 
-❌ EJEMPLO INCORRECTO 5 - Responde múltiples preguntas pero solo 1:
+[ERROR] EJEMPLO INCORRECTO 5 - Responde múltiples preguntas pero solo 1:
 Cliente: "¿Qué productos? ¿Tienen garantía? ¿Cómo es el envío?"
 [A]OK|preg_mult|resp[/A]Manejamos grifería, cintas y herramientas de ferretería.
-🚫 PROBLEMA: Cliente hizo 3 preguntas, solo respondió 1
+[EMOJI] PROBLEMA: Cliente hizo 3 preguntas, solo respondió 1
 
-✅ EJEMPLO CORRECTO 5 - Responde TODAS las preguntas:
+[OK] EJEMPLO CORRECTO 5 - Responde TODAS las preguntas:
 Cliente: "¿Qué productos? ¿Tienen garantía? ¿Cómo es el envío?"
 [A]OK|preg_3|resp_completa[/A]Manejamos grifería, cintas y herramientas. Todos tienen garantía extendida y el envío es sin costo en pedidos mayores. ¿Le envío el catálogo?
-✅ CORRECTO: Respondió las 3 preguntas del cliente
+[OK] CORRECTO: Respondió las 3 preguntas del cliente
 
-═══════════════════════════════════════════════════════════════
+[EMOJI]
 
 # IDENTIDAD
 Eres Bruce W, asesor comercial mexicano de NIOVAL (distribuidores de productos de ferretería en México).
@@ -8285,56 +8877,56 @@ PALABRAS PROBLEMÁTICAS - Pronuncia correctamente:
 
 # CATÁLOGO NIOVAL - 131 PRODUCTOS CONFIRMADOS
 
-✅ PRODUCTOS QUE SÍ MANEJAMOS:
+[OK] PRODUCTOS QUE SÍ MANEJAMOS:
 
 1. GRIFERÍA (34 productos) - CATEGORÍA PRINCIPAL
-   ✅ Llaves mezcladoras (monomando y doble comando)
-   ✅ Grifos para cocina, baño, fregadero, lavabo
-   ✅ Manerales y chapetones para regadera
-   ✅ Mezcladoras cromadas, negro mate, doradas
-   ✅ Mangueras de regadera
-   ✅ Llaves angulares
+   [OK] Llaves mezcladoras (monomando y doble comando)
+   [OK] Grifos para cocina, baño, fregadero, lavabo
+   [OK] Manerales y chapetones para regadera
+   [OK] Mezcladoras cromadas, negro mate, doradas
+   [OK] Mangueras de regadera
+   [OK] Llaves angulares
 
 2. CINTAS (23 productos) - INCLUYE PRODUCTO ESTRELLA
-   ✅ Cinta para goteras (PRODUCTO ESTRELLA)
-   ✅ Cintas reflejantes (amarillo, rojo/blanco)
-   ✅ Cintas adhesivas para empaque
-   ✅ Cinta antiderrapante
-   ✅ Cinta de aluminio, kapton, velcro
-   ✅ Cinta canela, perimetral
+   [OK] Cinta para goteras (PRODUCTO ESTRELLA)
+   [OK] Cintas reflejantes (amarillo, rojo/blanco)
+   [OK] Cintas adhesivas para empaque
+   [OK] Cinta antiderrapante
+   [OK] Cinta de aluminio, kapton, velcro
+   [OK] Cinta canela, perimetral
 
 3. HERRAMIENTAS (28 productos)
-   ✅ Juegos de dados y matracas (16, 40, 46, 53, 100 piezas)
-   ✅ Dados magnéticos para taladro
-   ✅ Llaves de tubo extensión
-   ✅ Kits de desarmadores de precisión
-   ✅ Dados de alto impacto
+   [OK] Juegos de dados y matracas (16, 40, 46, 53, 100 piezas)
+   [OK] Dados magnéticos para taladro
+   [OK] Llaves de tubo extensión
+   [OK] Kits de desarmadores de precisión
+   [OK] Dados de alto impacto
 
 4. CANDADOS Y CERRADURAS (18 productos)
-   ✅ Cerraduras de gatillo (latón, cromo, níquel)
-   ✅ Chapas para puertas principales
-   ✅ Cerraduras de perilla y manija
-   ✅ Candados de combinación y seguridad
-   ✅ Candados loto (bloqueo seguridad)
+   [OK] Cerraduras de gatillo (latón, cromo, níquel)
+   [OK] Chapas para puertas principales
+   [OK] Cerraduras de perilla y manija
+   [OK] Candados de combinación y seguridad
+   [OK] Candados loto (bloqueo seguridad)
 
 5. ACCESORIOS AUTOMOTRIZ (10 productos)
-   ✅ Cables para bocina (calibre 16, 18, 22)
-   ✅ Bocinas 6.5 y 8 pulgadas (150W, 200W, 250W)
+   [OK] Cables para bocina (calibre 16, 18, 22)
+   [OK] Bocinas 6.5 y 8 pulgadas (150W, 200W, 250W)
 
 6. MOCHILAS Y MALETINES (13 productos)
-   ✅ Mochilas para laptop (con USB antirrobo)
-   ✅ Maletines porta laptop
-   ✅ Loncheras térmicas
-   ✅ Bolsas térmicas
-   ✅ Neceseres de viaje
+   [OK] Mochilas para laptop (con USB antirrobo)
+   [OK] Maletines porta laptop
+   [OK] Loncheras térmicas
+   [OK] Bolsas térmicas
+   [OK] Neceseres de viaje
 
 7. OTROS PRODUCTOS (5 productos)
-   ✅ Etiquetas térmicas
-   ✅ Rampas y escaleras para mascotas
-   ✅ Sillas de oficina
-   ✅ Paraguas de bolsillo
+   [OK] Etiquetas térmicas
+   [OK] Rampas y escaleras para mascotas
+   [OK] Sillas de oficina
+   [OK] Paraguas de bolsillo
 
-⚠️ CÓMO RESPONDER PREGUNTAS SOBRE PRODUCTOS:
+[WARN] CÓMO RESPONDER PREGUNTAS SOBRE PRODUCTOS:
 
 PREGUNTA: "¿Manejan grifería / griferías / llaves?"
 RESPUESTA: "¡Sí! Grifería es nuestra categoría principal con 34 modelos: mezcladoras, grifos para cocina y baño, manerales. ¿Le envío el catálogo por WhatsApp?"
@@ -8354,7 +8946,7 @@ RESPUESTA: "Sí, manejamos bocinas para auto y cables para bocina. ¿Le envío e
 PREGUNTA: "¿Manejan mochilas / loncheras?"
 RESPUESTA: "Sí, manejamos 13 modelos de mochilas para laptop, loncheras térmicas, maletines. ¿Le envío el catálogo?"
 
-⚠️ PRODUCTOS QUE NO TENEMOS - SIEMPRE OFRECE EL CATÁLOGO:
+[WARN] PRODUCTOS QUE NO TENEMOS - SIEMPRE OFRECE EL CATÁLOGO:
 
 PREGUNTA: "¿Manejan tubo PVC / tubería / codos?"
 RESPUESTA: "Actualmente no manejamos tubería. Pero le envío el catálogo completo para que vea nuestras categorías de grifería, herramientas y cintas, por si le interesa algo más. ¿Cuál es su WhatsApp?"
@@ -8365,7 +8957,7 @@ RESPUESTA: "No manejamos selladores. Tenemos cintas adhesivas y para goteras que
 PREGUNTA: "¿Manejan pinturas / brochas?"
 RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas y cintas. De todos modos le envío el catálogo por si algo le interesa para el futuro. ¿Cuál es su WhatsApp?"
 
-⚠️ REGLA CRÍTICA CUANDO NO TIENES EL PRODUCTO:
+[WARN] REGLA CRÍTICA CUANDO NO TIENES EL PRODUCTO:
 1. Sé honesto: "No manejamos [producto]"
 2. Menciona qué SÍ tienes relacionado: "Pero tenemos [categoría relacionada]"
 3. SIEMPRE ofrece el catálogo: "Le envío el catálogo completo por si le interesa algo más"
@@ -8373,7 +8965,7 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 5. NUNCA termines la conversación solo porque no tienes UN producto
 6. El cliente puede interesarse en OTROS productos del catálogo
 
-⚠️ REGLA GENERAL:
+[WARN] REGLA GENERAL:
 - Si el producto ESTÁ en las 7 categorías → Confirma con entusiasmo y ofrece catálogo
 - Si el producto NO está listado → Di honestamente "No manejamos X, pero..." y SIEMPRE ofrece catálogo
 - NUNCA inventes productos
@@ -8386,9 +8978,9 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 - Envío gratis desde cinco mil pesos
 - Crédito disponible, pago con tarjeta sin comisión
 
-# 🎯 FIX 388: MANEJO DE OBJECIONES (Negociación Básica)
+# [EMOJI] FIX 388: MANEJO DE OBJECIONES (Negociación Básica)
 
-⚠️ OBJECIONES COMUNES Y RESPUESTAS PROFESIONALES:
+[WARN] OBJECIONES COMUNES Y RESPUESTAS PROFESIONALES:
 
 1. OBJECIÓN: "Es muy caro" / "Sus precios son altos" / "Está caro"
    RESPUESTA: "Entiendo. ¿Qué precio maneja actualmente con su proveedor? Le puedo enviar nuestra lista de precios para que compare."
@@ -8422,7 +9014,7 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
    RESPUESTA: "Sin problema. De todos modos le dejo el catálogo por WhatsApp por si en el futuro necesita algo de ferretería. ¿Cuál es su número?"
    ACCIÓN: Intentar dejar catálogo como opción futura
 
-⚠️ PRINCIPIOS DE NEGOCIACIÓN:
+[WARN] PRINCIPIOS DE NEGOCIACIÓN:
 - NUNCA discutas con el cliente
 - Usa "Entiendo" o "Sin problema" para validar su objeción
 - Haz preguntas para entender su situación real
@@ -8431,20 +9023,20 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 - Si rechaza 2+ veces, despídete profesionalmente
 
 # REGLAS ABSOLUTAS
-✓ ESPAÑOL MEXICANO SIEMPRE - pronunciación nativa clara
-✓ Evita palabras difíciles de pronunciar, usa sinónimos
-✓ UNA pregunta a la vez
-✓ Máximo 2-3 oraciones por turno (30 palabras máximo)
-✗ CERO inglés - todo en español
-✗ NO uses "ferreteros", di "de ferretería"
-✗ NO digas que no puedes enviar catálogos (SÍ puedes)
-✗ NO des listas largas de productos - menciona 1-2 ejemplos máximo
+[EMOJI] ESPAÑOL MEXICANO SIEMPRE - pronunciación nativa clara
+[EMOJI] Evita palabras difíciles de pronunciar, usa sinónimos
+[EMOJI] UNA pregunta a la vez
+[EMOJI] Máximo 2-3 oraciones por turno (30 palabras máximo)
+[EMOJI] CERO inglés - todo en español
+[EMOJI] NO uses "ferreteros", di "de ferretería"
+[EMOJI] NO digas que no puedes enviar catálogos (SÍ puedes)
+[EMOJI] NO des listas largas de productos - menciona 1-2 ejemplos máximo
 
-🔥 FIX 203 - BREVEDAD CRÍTICA (Prevenir delays de 8-12s):
-⏱️ LÍMITE ESTRICTO: 15-25 palabras por respuesta (NUNCA más de 30)
-✅ CORRECTO (18 palabras): "Entiendo. ¿Hay un mejor momento para llamar y hablar con el encargado de compras?"
-❌ INCORRECTO (44 palabras): "Entiendo, es importante respetar esos tiempos. El motivo de mi llamada es muy breve: nosotros distribuimos productos de ferretería con alta rotación, especialmente nuestra cinta para goteras..."
-💡 ESTRATEGIA: Una idea + una pregunta. NO monólogos. Conversación = ping-pong."""
+[EMOJI] FIX 203 - BREVEDAD CRÍTICA (Prevenir delays de 8-12s):
+[EMOJI] LÍMITE ESTRICTO: 15-25 palabras por respuesta (NUNCA más de 30)
+[OK] CORRECTO (18 palabras): "Entiendo. ¿Hay un mejor momento para llamar y hablar con el encargado de compras?"
+[ERROR] INCORRECTO (44 palabras): "Entiendo, es importante respetar esos tiempos. El motivo de mi llamada es muy breve: nosotros distribuimos productos de ferretería con alta rotación, especialmente nuestra cinta para goteras..."
+[EMOJI] ESTRATEGIA: Una idea + una pregunta. NO monólogos. Conversación = ping-pong."""
 
         # Determinar fase actual según datos capturados
         fase_actual = []
@@ -8478,9 +9070,9 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
                 fase_actual.append("""
 # FASE ACTUAL: APERTURA (FIX 112: SALUDO EN 2 PARTES)
 
-🚨 IMPORTANTE: El saludo inicial fue solo "Hola, buen dia"
+[EMOJI] IMPORTANTE: El saludo inicial fue solo "Hola, buen dia"
 
-✅ FIX 198: El cliente respondió apropiadamente al saludo.
+[OK] FIX 198: El cliente respondió apropiadamente al saludo.
 
 Ahora di la segunda parte:
 "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
@@ -8493,7 +9085,7 @@ Si dicen "Sí" / "Sí está" (indicando que el encargado SÍ está disponible): 
 Si dicen "Yo soy" / "Soy yo" / "Habla con él": "Perfecto. ¿Le gustaría recibir el catálogo por WhatsApp o correo electrónico?"
 Si dicen NO / "No está" / "No se encuentra": "Entendido. ¿Me podría proporcionar un número de WhatsApp o correo para enviar información?"
 
-⚠️⚠️⚠️ FIX 99/101: SI OFRECEN CORREO, ACEPTARLO Y DESPEDIRSE INMEDIATAMENTE
+[WARN][WARN][WARN] FIX 99/101: SI OFRECEN CORREO, ACEPTARLO Y DESPEDIRSE INMEDIATAMENTE
 Si el cliente ofrece dar el CORREO del encargado:
 - "Puedo darle su correo" / "Le paso su email" / "Mejor le doy el correo"
 
@@ -8504,16 +9096,16 @@ FIX 101: Después de recibir correo - DESPEDIDA INMEDIATA (SIN PEDIR NOMBRE):
 "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo. Que tenga un excelente día."
 [TERMINA LLAMADA - NO PIDAS NOMBRE]
 
-❌ NO preguntes el nombre (abruma al cliente que no es de compras)
-❌ NO insistas en número si ofrecen correo
-✅ El correo es SUFICIENTE - Despedida inmediata
-✅ Cliente se siente ayudado, NO comprometido
+[ERROR] NO preguntes el nombre (abruma al cliente que no es de compras)
+[ERROR] NO insistas en número si ofrecen correo
+[OK] El correo es SUFICIENTE - Despedida inmediata
+[OK] Cliente se siente ayudado, NO comprometido
 
-⚠️ IMPORTANTE - Detectar cuando YA te transfirieron:
+[WARN] IMPORTANTE - Detectar cuando YA te transfirieron:
 Si después de pedir la transferencia, alguien dice "Hola" / "Bueno" / "Quién habla?" / "Dígame":
 - Esta es LA PERSONA TRANSFERIDA (el encargado), NO una nueva llamada
 - NO vuelvas a pedir que te comuniquen con el encargado
-- 🚨 FIX 172: NO pidas el nombre
+- [EMOJI] FIX 172: NO pidas el nombre
 - Responde: "¿Bueno? Muy buen día. Me comunico de la marca nioval para ofrecerle nuestro catálogo. ¿Le gustaría recibirlo por WhatsApp?"
 
 IMPORTANTE - Si el cliente ofrece dar el número:
@@ -8521,9 +9113,9 @@ IMPORTANTE - Si el cliente ofrece dar el número:
 - Si preguntan "¿Tienes donde anotar?": Di solo "Sí, adelante por favor." y ESPERA el número SIN volver a pedirlo.
 - NUNCA repitas la solicitud del número si el cliente ya ofreció darlo.
 
-⚠️ FLUJO OBLIGATORIO SI DAN NÚMERO DE CONTACTO DE REFERENCIA:
+[WARN] FLUJO OBLIGATORIO SI DAN NÚMERO DE CONTACTO DE REFERENCIA:
 [Si dan número de teléfono del encargado]
-⚠️⚠️⚠️ FIX 98: FLUJO ULTRA-RÁPIDO - CLIENTE OCUPADO ⚠️⚠️⚠️
+[WARN][WARN][WARN] FIX 98: FLUJO ULTRA-RÁPIDO - CLIENTE OCUPADO [WARN][WARN][WARN]
 
 PASO 1: "Perfecto, muchas gracias. ¿Me podría decir su nombre para poder mencionarle que usted me facilitó su contacto?"
 [Esperar nombre]
@@ -8534,14 +9126,14 @@ PASO 2 (SIMPLIFICADO): "Gracias [NOMBRE]. Perfecto, le enviaré el catálogo com
 PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las próximas horas. Muchas gracias por su tiempo, [NOMBRE]. Que tenga un excelente día."
 [FIN DE LLAMADA]
 
-❌ NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades, horarios)
-❌ NUNCA preguntes "¿Qué tipo de productos manejan? ¿Son ferretería local o mayorista?"
-❌ La persona está OCUPADA en mostrador - ir DIRECTO al correo
-✅ Solo: Nombre → Correo → Despedida (máximo 3 intercambios)
+[ERROR] NUNCA hagas 3-4 preguntas largas (productos, proveedores, necesidades, horarios)
+[ERROR] NUNCA preguntes "¿Qué tipo de productos manejan? ¿Son ferretería local o mayorista?"
+[ERROR] La persona está OCUPADA en mostrador - ir DIRECTO al correo
+[OK] Solo: Nombre → Correo → Despedida (máximo 3 intercambios)
 """)
                 # FIX 201: Marcar que se dijo la segunda parte del saludo
                 self.segunda_parte_saludo_dicha = True
-                print(f"✅ FIX 201: Se activó la segunda parte del saludo. No se repetirá.")
+                print(f"[OK] FIX 201: Se activó la segunda parte del saludo. No se repetirá.")
 
             elif self.segunda_parte_saludo_dicha:
                 # FIX 201: Cliente dijo "Dígame" u otro saludo DESPUÉS de que ya se dijo la segunda parte
@@ -8549,18 +9141,18 @@ PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las
                 fase_actual.append(f"""
 # FASE ACTUAL: CONTINUACIÓN DESPUÉS DEL SALUDO - FIX 201
 
-🚨 IMPORTANTE: Ya dijiste la presentación completa anteriormente.
+[EMOJI] IMPORTANTE: Ya dijiste la presentación completa anteriormente.
 
 Cliente dijo: "{ultima_respuesta_cliente}"
 
-🎯 ANÁLISIS:
+[EMOJI] ANÁLISIS:
 El cliente está diciendo "{ultima_respuesta_cliente}" como una forma de decir "continúa" o "te escucho".
 
-✅ NO repitas tu presentación
-✅ NO vuelvas a decir "Me comunico de la marca nioval..."
-✅ YA lo dijiste antes
+[OK] NO repitas tu presentación
+[OK] NO vuelvas a decir "Me comunico de la marca nioval..."
+[OK] YA lo dijiste antes
 
-🎯 ACCIÓN CORRECTA:
+[EMOJI] ACCIÓN CORRECTA:
 Si preguntaste por el encargado de compras y el cliente dice "Dígame":
 → Interpreta esto como que ÉL ES el encargado o está escuchando
 → Continúa con: "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
@@ -8568,18 +9160,18 @@ Si preguntaste por el encargado de compras y el cliente dice "Dígame":
 Si no has preguntado por el encargado aún:
 → Pregunta directamente: "¿Se encuentra el encargado o encargada de compras?"
 """)
-                print(f"✅ FIX 201: Cliente dijo '{ultima_respuesta_cliente}' después de la segunda parte. NO se repetirá la introducción.")
+                print(f"[OK] FIX 201: Cliente dijo '{ultima_respuesta_cliente}' después de la segunda parte. NO se repetirá la introducción.")
 
             else:
                 # FIX 198: Cliente NO respondió con saludo estándar
                 fase_actual.append(f"""
 # FASE ACTUAL: APERTURA - FIX 198: MANEJO DE RESPUESTA NO ESTÁNDAR
 
-🚨 El cliente NO respondió con un saludo estándar.
+[EMOJI] El cliente NO respondió con un saludo estándar.
 
 Cliente dijo: "{ultima_respuesta_cliente}"
 
-🎯 ANÁLISIS Y ACCIÓN:
+[EMOJI] ANÁLISIS Y ACCIÓN:
 
 Si parece una PREGUNTA ("¿Quién habla?", "¿De dónde?", "¿Qué desea?"):
 → Responde la pregunta Y LUEGO di tu presentación completa:
@@ -8593,9 +9185,9 @@ Si parece RECHAZO ("Ocupado", "No me interesa", "No tengo tiempo"):
 → Respeta su tiempo y ofrece alternativa rápida:
    "Entiendo que está ocupado. ¿Le gustaría que le envíe el catálogo por WhatsApp o correo para revisarlo cuando tenga tiempo?"
 
-✅ SIEMPRE termina preguntando por el encargado de compras
-✅ NO insistas si muestran rechazo claro
-✅ Mantén tono profesional y respetuoso
+[OK] SIEMPRE termina preguntando por el encargado de compras
+[OK] NO insistas si muestran rechazo claro
+[OK] Mantén tono profesional y respetuoso
 """)
 
         # FASE 2: Si ya tenemos nombre pero aún no presentamos valor
@@ -8624,7 +9216,7 @@ Mantén conversación natural mientras capturas esta info.
 # FASE ACTUAL: CAPTURA DE WHATSAPP
 Ya tienes: Nombre={self.lead_data.get("nombre_contacto", "N/A")}
 
-⚠️⚠️⚠️ CRÍTICO - VERIFICAR HISTORIAL ANTES DE PEDIR CORREO ⚠️⚠️⚠️
+[WARN][WARN][WARN] CRÍTICO - VERIFICAR HISTORIAL ANTES DE PEDIR CORREO [WARN][WARN][WARN]
 ANTES DE PEDIR CORREO ELECTRÓNICO, REVISA CUIDADOSAMENTE EL HISTORIAL DE LA CONVERSACIÓN:
 - Si el cliente YA mencionó su WhatsApp anteriormente (ej: "3331234567"), NO pidas correo
 - Si el cliente dice "ya te lo pasé" o "ya te lo di", es porque SÍ te dio el WhatsApp antes
@@ -8652,9 +9244,9 @@ IMPORTANTE - Respuestas comunes del cliente:
 NUNCA repitas la solicitud del número si el cliente ya ofreció darlo o está a punto de darlo.
 NUNCA digas que no puedes enviar el catálogo. SIEMPRE puedes enviarlo.
 
-⚠️⚠️⚠️ TIMING DE ENVÍO DEL CATÁLOGO - CRÍTICO:
-❌ NUNCA NUNCA NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
-✅ SIEMPRE SIEMPRE SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
+[WARN][WARN][WARN] TIMING DE ENVÍO DEL CATÁLOGO - CRÍTICO:
+[ERROR] NUNCA NUNCA NUNCA digas: "en un momento", "ahorita", "al instante", "inmediatamente", "ya se lo envío"
+[OK] SIEMPRE SIEMPRE SIEMPRE di: "en el transcurso del día" o "en las próximas 2 horas"
 Razón: Un compañero del equipo lo envía, NO es automático.
 
 Ejemplos CORRECTOS cuando confirmas WhatsApp:
@@ -8662,9 +9254,9 @@ Ejemplos CORRECTOS cuando confirmas WhatsApp:
 - "Excelente, le envío el catálogo en el transcurso del día"
 
 Ejemplos INCORRECTOS (NUNCA uses):
-- "En un momento le enviaré..." ❌
-- "Ahorita le envío..." ❌
-- "Se lo envío al instante..." ❌
+- "En un momento le enviaré..." [ERROR]
+- "Ahorita le envío..." [ERROR]
+- "Se lo envío al instante..." [ERROR]
 """)
 
         # FASE 4: Si ya tenemos WhatsApp, proceder al cierre
@@ -8695,15 +9287,15 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             archivo_excel = "leads_nioval_backup.xlsx"
             ruta_completa = os.path.abspath(archivo_excel)
 
-            print(f"📁 Intentando guardar backup en: {ruta_completa}")
+            print(f"[EMOJI] Intentando guardar backup en: {ruta_completa}")
 
             # Intentar cargar archivo existente
             try:
                 df = pd.read_excel(archivo_excel)
-                print(f"📂 Archivo existente cargado con {len(df)} filas")
+                print(f"[EMOJI] Archivo existente cargado con {len(df)} filas")
             except FileNotFoundError:
                 df = pd.DataFrame()
-                print(f"📄 Creando nuevo archivo Excel")
+                print(f"[EMOJI] Creando nuevo archivo Excel")
 
             # Convertir objeciones a string
             lead_data_excel = self.lead_data.copy()
@@ -8715,12 +9307,12 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 
             # Guardar
             df.to_excel(archivo_excel, index=False)
-            print(f"✅ Backup guardado en {ruta_completa} ({len(df)} filas totales)")
+            print(f"[OK] Backup guardado en {ruta_completa} ({len(df)} filas totales)")
 
         except Exception as e:
             import traceback
-            print(f"⚠️ No se pudo guardar backup en Excel: {e}")
-            print(f"⚠️ Traceback: {traceback.format_exc()}")
+            print(f"[WARN] No se pudo guardar backup en Excel: {e}")
+            print(f"[WARN] Traceback: {traceback.format_exc()}")
 
     def autoevaluar_llamada(self):
         """
@@ -8802,7 +9394,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             return 5
 
         except Exception as e:
-            print(f"⚠️ Error en autoevaluación: {e}")
+            print(f"[WARN] Error en autoevaluación: {e}")
             return 5  # Calificación neutra si hay error
 
     def guardar_llamada_y_lead(self):
@@ -8811,11 +9403,11 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
         (Llamado desde servidor_llamadas.py al finalizar llamada)
         """
         if not self.resultados_manager:
-            print("⚠️ ResultadosSheetsAdapter no disponible - no se puede guardar")
+            print("[WARN] ResultadosSheetsAdapter no disponible - no se puede guardar")
             return
 
         try:
-            print("📊 Guardando resultados en 'Bruce FORMS'...")
+            print("[EMOJI] Guardando resultados en 'Bruce FORMS'...")
 
             # Calcular duración de la llamada ANTES de guardar
             if self.lead_data.get("fecha_inicio"):
@@ -8823,20 +9415,23 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                     inicio = datetime.strptime(self.lead_data["fecha_inicio"], "%Y-%m-%d %H:%M:%S")
                     duracion = (datetime.now() - inicio).total_seconds()
                     self.lead_data["duracion_segundos"] = int(duracion)
-                    print(f"⏱️ Duración de la llamada: {self.lead_data['duracion_segundos']} segundos")
+                    print(f"[EMOJI] Duración de la llamada: {self.lead_data['duracion_segundos']} segundos")
                 except Exception as e:
-                    print(f"⚠️ Error calculando duración: {e}")
+                    print(f"[WARN] Error calculando duración: {e}")
                     self.lead_data["duracion_segundos"] = 0
             else:
-                print(f"⚠️ No hay fecha_inicio - duración = 0")
+                print(f"[WARN] No hay fecha_inicio - duración = 0")
                 self.lead_data["duracion_segundos"] = 0
+
+            # FIX 482 (AUDITORIA W04): Imprimir reporte de métricas
+            print(self.metrics.generar_reporte())
 
             # Determinar conclusión antes de guardar
             self._determinar_conclusion()
 
             # Autoevaluar llamada (Bruce se califica del 1-10)
             calificacion_bruce = self.autoevaluar_llamada()
-            print(f"⭐ Bruce se autoevaluó: {calificacion_bruce}/10")
+            print(f"[EMOJI] Bruce se autoevaluó: {calificacion_bruce}/10")
 
             # Guardar en "Bruce FORMS"
             resultado_guardado = self.resultados_manager.guardar_resultado_llamada({
@@ -8861,18 +9456,18 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             })
 
             if resultado_guardado:
-                print(f"✅ Resultados guardados en 'Bruce FORMS'")
+                print(f"[OK] Resultados guardados en 'Bruce FORMS'")
             else:
-                print(f"❌ Error al guardar resultados")
+                print(f"[ERROR] Error al guardar resultados")
 
             print("\n" + "=" * 60)
-            print("📋 ACTUALIZACIONES EN LISTA DE CONTACTOS")
+            print("[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS")
             print("=" * 60)
 
             # Actualizar WhatsApp y Email en LISTA DE CONTACTOS si están disponibles
             if self.sheets_manager and self.contacto_info:
                 fila = self.contacto_info.get('fila') or self.contacto_info.get('ID')
-                print(f"\n📝 Verificando actualización en LISTA DE CONTACTOS...")
+                print(f"\n[EMOJI] Verificando actualización en LISTA DE CONTACTOS...")
                 print(f"   Fila: {fila}")
                 print(f"   WhatsApp capturado: {self.lead_data['whatsapp']}")
                 print(f"   Referencia capturada: {self.lead_data.get('referencia_telefono', '')}")
@@ -8892,27 +9487,27 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 
                 # Actualizar columna E si tenemos algún número
                 if numero_para_columna_e and fila:
-                    print(f"   ➡️ Actualizando columna E:E fila {fila} con {tipo_numero}...")
+                    print(f"   [EMOJI] Actualizando columna E:E fila {fila} con {tipo_numero}...")
                     self.sheets_manager.actualizar_numero_con_whatsapp(
                         fila=fila,
                         whatsapp=numero_para_columna_e
                     )
-                    print(f"✅ Columna E actualizada con {tipo_numero}: {numero_para_columna_e}")
+                    print(f"[OK] Columna E actualizada con {tipo_numero}: {numero_para_columna_e}")
                 elif not numero_para_columna_e:
-                    print(f"⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E")
+                    print(f"[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E")
                 elif not fila:
-                    print(f"⚠️ No se tiene fila del contacto - no se puede actualizar")
+                    print(f"[WARN] No se tiene fila del contacto - no se puede actualizar")
 
                 if self.lead_data["email"] and fila:
                     self.sheets_manager.registrar_email_capturado(
                         fila=fila,
                         email=self.lead_data["email"]
                     )
-                    print(f"✅ Email actualizado en LISTA DE CONTACTOS")
+                    print(f"[OK] Email actualizado en LISTA DE CONTACTOS")
 
                 # Guardar referencia si se detectó una (solo necesitamos el teléfono)
                 if "referencia_nombre" in self.lead_data and self.lead_data.get("referencia_telefono"):
-                    print(f"\n👥 Procesando referencia...")
+                    print(f"\n[EMOJI] Procesando referencia...")
                     print(f"   Nombre del referido: {self.lead_data['referencia_nombre']}")
                     print(f"   Teléfono del referido: {self.lead_data['referencia_telefono']}")
 
@@ -8927,7 +9522,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         # IMPORTANTE: Excluir la fila actual para evitar referencia circular
                         if contacto['telefono'] == telefono_referido and contacto['fila'] != fila:
                             fila_referido = contacto['fila']
-                            print(f"   ✅ Referido encontrado en fila {contacto['fila']}: {contacto.get('nombre_negocio', 'Sin nombre')}")
+                            print(f"   [OK] Referido encontrado en fila {contacto['fila']}: {contacto.get('nombre_negocio', 'Sin nombre')}")
                             break
 
                     if fila_referido:
@@ -8944,7 +9539,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             contexto=contexto,
                             numero_llamado=telefono_referido  # Número del nuevo contacto
                         )
-                        print(f"✅ Referencia guardada en fila {fila_referido} (columna U)")
+                        print(f"[OK] Referencia guardada en fila {fila_referido} (columna U)")
 
                         # 2. Guardar contexto en columna W de la fila ACTUAL indicando que dio una referencia
                         nombre_ref = self.lead_data.get('referencia_nombre', 'Encargado')
@@ -8958,10 +9553,10 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             motivo=f"Pasó contacto de {nombre_ref}",
                             notas=contexto_actual
                         )
-                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+                        print(f"[OK] Contexto de referencia guardado en fila {fila} (columna W)")
 
                         # 3. INICIAR LLAMADA AUTOMÁTICA AL REFERIDO
-                        print(f"\n📞 Iniciando llamada automática al referido...")
+                        print(f"\n[EMOJI] Iniciando llamada automática al referido...")
                         try:
                             import requests
                             import os
@@ -8976,9 +9571,9 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                                 "fila": fila_referido
                             }
 
-                            print(f"   🌐 Enviando solicitud a {endpoint}")
-                            print(f"   📱 Teléfono: {telefono_referido}")
-                            print(f"   📋 Fila: {fila_referido}")
+                            print(f"   [EMOJI] Enviando solicitud a {endpoint}")
+                            print(f"   [PHONE] Teléfono: {telefono_referido}")
+                            print(f"   [EMOJI] Fila: {fila_referido}")
 
                             # Hacer la solicitud POST (con timeout para no bloquear)
                             response = requests.post(
@@ -8990,20 +9585,20 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             if response.status_code == 200:
                                 data = response.json()
                                 call_sid = data.get("call_sid", "Unknown")
-                                print(f"   ✅ Llamada iniciada exitosamente!")
-                                print(f"   📞 Call SID: {call_sid}")
+                                print(f"   [OK] Llamada iniciada exitosamente!")
+                                print(f"   [EMOJI] Call SID: {call_sid}")
                             else:
-                                print(f"   ⚠️ Error al iniciar llamada: {response.status_code}")
+                                print(f"   [WARN] Error al iniciar llamada: {response.status_code}")
                                 print(f"   Respuesta: {response.text}")
 
                         except requests.exceptions.Timeout:
-                            print(f"   ⚠️ Timeout al iniciar llamada - la llamada puede haberse iniciado de todas formas")
+                            print(f"   [WARN] Timeout al iniciar llamada - la llamada puede haberse iniciado de todas formas")
                         except Exception as e:
-                            print(f"   ❌ Error al iniciar llamada automática: {e}")
+                            print(f"   [ERROR] Error al iniciar llamada automática: {e}")
                             print(f"   La llamada deberá iniciarse manualmente")
 
                     else:
-                        print(f"⚠️ No se encontró el número {telefono_referido} en LISTA DE CONTACTOS")
+                        print(f"[WARN] No se encontró el número {telefono_referido} en LISTA DE CONTACTOS")
                         print(f"   La referencia NO se guardó - agregar el contacto manualmente")
 
                         # Guardar en columna W que dio una referencia pero no está en la lista
@@ -9017,11 +9612,11 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                             motivo=f"Dio número {telefono_referido} ({nombre_ref}) - NO ESTÁ EN LISTA",
                             notas="Agregar contacto manualmente a LISTA DE CONTACTOS"
                         )
-                        print(f"✅ Contexto de referencia guardado en fila {fila} (columna W)")
+                        print(f"[OK] Contexto de referencia guardado en fila {fila} (columna W)")
 
                 # Guardar contexto de reprogramación si el cliente pidió ser llamado después
                 if self.lead_data.get("estado_llamada") == "reprogramar" and fila:
-                    print(f"\n📅 Guardando contexto de reprogramación...")
+                    print(f"\n[EMOJI] Guardando contexto de reprogramación...")
 
                     # Extraer fecha y motivo si están disponibles
                     fecha_reprogramacion = self.fecha_reprogramacion or "Próximos días"
@@ -9033,22 +9628,22 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         motivo=motivo,
                         notas=f"Interés: {self.lead_data['nivel_interes']} | WhatsApp: {self.lead_data['whatsapp'] or 'No capturado'}"
                     )
-                    print(f"✅ Contexto de reprogramación guardado en columna W")
+                    print(f"[OK] Contexto de reprogramación guardado en columna W")
 
                     # Limpiar columna F para que vuelva a aparecer como pendiente
                     self.sheets_manager.marcar_estado_final(fila, "")
-                    print(f"✅ Columna F limpiada - contacto volverá a aparecer como pendiente")
+                    print(f"[OK] Columna F limpiada - contacto volverá a aparecer como pendiente")
             else:
-                print("⚠️ No hay sheets_manager o contacto_info - omitiendo actualizaciones")
-                print(f"   sheets_manager: {'✓' if self.sheets_manager else '✗'}")
-                print(f"   contacto_info: {'✓' if self.contacto_info else '✗'}")
+                print("[WARN] No hay sheets_manager o contacto_info - omitiendo actualizaciones")
+                print(f"   sheets_manager: {'[EMOJI]' if self.sheets_manager else '[EMOJI]'}")
+                print(f"   contacto_info: {'[EMOJI]' if self.contacto_info else '[EMOJI]'}")
 
             print("\n" + "=" * 60)
-            print("✅ GUARDADO COMPLETO - Todos los datos procesados")
+            print("[OK] GUARDADO COMPLETO - Todos los datos procesados")
             print("=" * 60 + "\n")
 
         except Exception as e:
-            print(f"❌ Error al guardar llamada: {e}")
+            print(f"[ERROR] Error al guardar llamada: {e}")
             import traceback
             traceback.print_exc()
 
@@ -9068,7 +9663,7 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
 def demo_interactiva():
     """Demo interactiva por consola"""
     print("=" * 60)
-    print("🤖 AGENTE DE VENTAS NIOVAL - Bruce W")
+    print("[EMOJI] AGENTE DE VENTAS NIOVAL - Bruce W")
     print("=" * 60)
     print()
     
@@ -9076,7 +9671,7 @@ def demo_interactiva():
     
     # Mensaje inicial
     mensaje_inicial = agente.iniciar_conversacion()
-    print(f"🎙️ Bruce W: {mensaje_inicial}")
+    print(f"[EMOJI] Bruce W: {mensaje_inicial}")
     print()
     
     # Frases de despedida del cliente (mejoradas para México)
@@ -9092,13 +9687,13 @@ def demo_interactiva():
 
     # Bucle conversacional
     while True:
-        respuesta_cliente = input("👤 Cliente: ").strip()
+        respuesta_cliente = input("[EMOJI] Cliente: ").strip()
         
         if not respuesta_cliente:
             continue
         
         if respuesta_cliente.lower() in ["salir", "exit", "terminar"]:
-            print("\n📊 Guardando información del lead...")
+            print("\n[EMOJI] Guardando información del lead...")
             agente.guardar_llamada_y_lead()
             print("\n" + "=" * 60)
             print("RESUMEN DE LA CONVERSACIÓN:")
@@ -9108,12 +9703,12 @@ def demo_interactiva():
         
         # Procesar y responder
         respuesta_agente = agente.procesar_respuesta(respuesta_cliente)
-        print(f"\n🎙️ Bruce W: {respuesta_agente}\n")
+        print(f"\n[EMOJI] Bruce W: {respuesta_agente}\n")
 
         # Detectar estados de llamada sin respuesta (terminar automáticamente)
         if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
-            print(f"💼 Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
-            print("📊 Guardando información del lead...\n")
+            print(f"[EMOJI] Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
+            print("[EMOJI] Guardando información del lead...\n")
             agente.guardar_llamada_y_lead()
             print("\n" + "=" * 60)
             print("RESUMEN DE LA CONVERSACIÓN:")
@@ -9137,8 +9732,8 @@ def demo_interactiva():
 
         # Si el cliente se despidió, Bruce responde y termina
         if cliente_se_despide:
-            print("\n💼 Bruce W detectó despedida. Finalizando llamada...")
-            print("📊 Guardando información del lead...\n")
+            print("\n[EMOJI] Bruce W detectó despedida. Finalizando llamada...")
+            print("[EMOJI] Guardando información del lead...\n")
             agente.guardar_llamada_y_lead()
             print("\n" + "=" * 60)
             print("RESUMEN DE LA CONVERSACIÓN:")
@@ -9157,11 +9752,11 @@ def procesar_contactos_automaticamente():
         from resultados_sheets_adapter import ResultadosSheetsAdapter
 
         print("\n" + "=" * 60)
-        print("🚀 SISTEMA AUTOMÁTICO DE LLAMADAS - NIOVAL")
+        print("[ROCKET] SISTEMA AUTOMÁTICO DE LLAMADAS - NIOVAL")
         print("=" * 60)
 
         # Inicializar adaptadores
-        print("\n📊 Conectando con Google Sheets...")
+        print("\n[EMOJI] Conectando con Google Sheets...")
         nioval_adapter = NiovalSheetsAdapter()
         resultados_adapter = ResultadosSheetsAdapter()
 
@@ -9172,18 +9767,18 @@ def procesar_contactos_automaticamente():
         # Procesar contactos continuamente (recargar lista después de cada uno)
         while contactos_procesados < max_contactos:
             # Recargar contactos pendientes (siempre obtiene el primero disponible)
-            print("📋 Leyendo contactos pendientes...")
+            print("[EMOJI] Leyendo contactos pendientes...")
             contactos = nioval_adapter.obtener_contactos_pendientes(limite=1)  # Solo obtener el primero
 
             if not contactos:
-                print(f"\n✅ No hay más contactos pendientes")
+                print(f"\n[OK] No hay más contactos pendientes")
                 break
 
             contacto = contactos[0]  # Tomar el primer contacto
             contactos_procesados += 1
 
             print("\n" + "=" * 60)
-            print(f"📞 CONTACTO #{contactos_procesados}")
+            print(f"[EMOJI] CONTACTO #{contactos_procesados}")
             print(f"   Negocio: {contacto.get('nombre_negocio', 'Sin nombre')}")
             print(f"   Teléfono: {contacto.get('telefono', 'Sin teléfono')}")
             print(f"   Ciudad: {contacto.get('ciudad', 'Sin ciudad')}")
@@ -9194,7 +9789,7 @@ def procesar_contactos_automaticamente():
 
             # Iniciar conversación
             mensaje_inicial = agente.iniciar_conversacion()
-            print(f"🎙️ Bruce W: {mensaje_inicial}\n")
+            print(f"[EMOJI] Bruce W: {mensaje_inicial}\n")
 
             # Bucle conversacional
             despedidas_cliente = [
@@ -9208,22 +9803,22 @@ def procesar_contactos_automaticamente():
             ]
 
             while True:
-                respuesta_cliente = input("👤 Cliente: ").strip()
+                respuesta_cliente = input("[EMOJI] Cliente: ").strip()
 
                 if not respuesta_cliente:
                     continue
 
                 if respuesta_cliente.lower() in ["salir", "exit", "terminar"]:
-                    print("\n📊 Finalizando conversación...")
+                    print("\n[EMOJI] Finalizando conversación...")
                     break
 
                 # Procesar y responder
                 respuesta_agente = agente.procesar_respuesta(respuesta_cliente)
-                print(f"\n🎙️ Bruce W: {respuesta_agente}\n")
+                print(f"\n[EMOJI] Bruce W: {respuesta_agente}\n")
 
                 # Detectar estados de llamada sin respuesta (terminar automáticamente)
                 if agente.lead_data["estado_llamada"] in ["Buzon", "Telefono Incorrecto", "Colgo", "No Respondio", "No Contesta"]:
-                    print(f"💼 Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
+                    print(f"[EMOJI] Estado detectado: {agente.lead_data['estado_llamada']}. Finalizando llamada automáticamente...")
                     break
 
                 # Detectar despedida
@@ -9238,7 +9833,7 @@ def procesar_contactos_automaticamente():
                 )
 
                 if cliente_se_despide:
-                    print("\n💼 Bruce W detectó despedida. Finalizando conversación...")
+                    print("\n[EMOJI] Bruce W detectó despedida. Finalizando conversación...")
                     break
 
             # Calcular duración de llamada
@@ -9249,11 +9844,11 @@ def procesar_contactos_automaticamente():
                 agente.lead_data["duracion_segundos"] = int(duracion)
 
             # Realizar análisis y determinar conclusión ANTES de guardar
-            print("\n📊 Analizando llamada...")
+            print("\n[EMOJI] Analizando llamada...")
             agente._determinar_conclusion()
 
             # Guardar resultados en Google Sheets
-            print("\n📝 Guardando resultados en Google Sheets...")
+            print("\n[EMOJI] Guardando resultados en Google Sheets...")
 
             try:
                 # 1. Guardar en "Bruce FORMS" (7 preguntas + análisis)
@@ -9276,7 +9871,7 @@ def procesar_contactos_automaticamente():
                     'opinion_bruce': agente.lead_data["opinion_bruce"]
                 })
                 if resultado_guardado:
-                    print(f"   ✅ Formulario guardado correctamente")
+                    print(f"   [OK] Formulario guardado correctamente")
 
                 # 2. Actualizar contacto en "LISTA DE CONTACTOS"
                 if agente.lead_data["whatsapp"]:
@@ -9284,14 +9879,14 @@ def procesar_contactos_automaticamente():
                         fila=contacto['fila'],
                         whatsapp=agente.lead_data["whatsapp"]
                     )
-                    print(f"   ✅ WhatsApp actualizado en LISTA DE CONTACTOS (celda E)")
+                    print(f"   [OK] WhatsApp actualizado en LISTA DE CONTACTOS (celda E)")
 
                 if agente.lead_data["email"]:
                     nioval_adapter.registrar_email_capturado(
                         fila=contacto['fila'],
                         email=agente.lead_data["email"]
                     )
-                    print(f"   ✅ Email actualizado en LISTA DE CONTACTOS (celda T)")
+                    print(f"   [OK] Email actualizado en LISTA DE CONTACTOS (celda T)")
 
                 # 3. Manejo especial de BUZÓN (4 reintentos: 2 por día x 2 días)
                 if agente.lead_data["estado_llamada"] == "Buzon":
@@ -9300,60 +9895,60 @@ def procesar_contactos_automaticamente():
 
                     if intentos <= 3:
                         # Intentos 1, 2, 3 - mover al final para reintentar
-                        print(f"   📞 Intento #{intentos} de buzón detectado")
-                        print(f"   ↩️  Moviendo contacto al final de la lista para reintentar...")
+                        print(f"   [EMOJI] Intento #{intentos} de buzón detectado")
+                        print(f"   ↩[EMOJI]  Moviendo contacto al final de la lista para reintentar...")
                         nioval_adapter.mover_fila_al_final(contacto['fila'])
 
                         if intentos == 1:
-                            print(f"   ✅ Contacto reagendado para intento #2 (mismo día)")
+                            print(f"   [OK] Contacto reagendado para intento #2 (mismo día)")
                         elif intentos == 2:
-                            print(f"   ✅ Contacto reagendado para intento #3 (siguiente ronda)")
+                            print(f"   [OK] Contacto reagendado para intento #3 (siguiente ronda)")
                         elif intentos == 3:
-                            print(f"   ✅ Contacto reagendado para intento #4 (último intento)")
+                            print(f"   [OK] Contacto reagendado para intento #4 (último intento)")
 
                     elif intentos >= 4:
                         # Cuarto intento de buzón - clasificar como TELEFONO INCORRECTO
-                        print(f"   📞 Cuarto intento de buzón detectado")
-                        print(f"   ❌ Número no válido después de 4 intentos (2 días)")
-                        print(f"   📋 Clasificando como TELEFONO INCORRECTO")
+                        print(f"   [EMOJI] Cuarto intento de buzón detectado")
+                        print(f"   [ERROR] Número no válido después de 4 intentos (2 días)")
+                        print(f"   [EMOJI] Clasificando como TELEFONO INCORRECTO")
                         nioval_adapter.marcar_estado_final(contacto['fila'], "TELEFONO INCORRECTO")
-                        print(f"   📋 Moviendo contacto al final de la lista (números no válidos)")
+                        print(f"   [EMOJI] Moviendo contacto al final de la lista (números no válidos)")
                         nioval_adapter.mover_fila_al_final(contacto['fila'])
-                        print(f"   ✅ Contacto archivado al final con estado: TELEFONO INCORRECTO")
+                        print(f"   [OK] Contacto archivado al final con estado: TELEFONO INCORRECTO")
                 else:
                     # Para otros estados (Respondio, Telefono Incorrecto, Colgo, No Contesta)
                     # Marcar el estado final en columna F
                     estado_final = agente.lead_data["estado_llamada"]
                     nioval_adapter.marcar_estado_final(contacto['fila'], estado_final)
-                    print(f"   ✅ Estado final marcado: {estado_final}")
+                    print(f"   [OK] Estado final marcado: {estado_final}")
 
                 # 4. Mostrar resumen
                 print("\n" + "=" * 60)
-                print("📊 RESUMEN DE LA CONVERSACIÓN:")
-                print(f"📝 Conclusión: {agente.lead_data['pregunta_7']} ({agente.lead_data['resultado']})")
+                print("[EMOJI] RESUMEN DE LA CONVERSACIÓN:")
+                print(f"[EMOJI] Conclusión: {agente.lead_data['pregunta_7']} ({agente.lead_data['resultado']})")
                 print(json.dumps(agente.obtener_resumen(), indent=2, ensure_ascii=False))
                 print("=" * 60)
 
             except Exception as e:
-                print(f"   ❌ Error al guardar en Sheets: {e}")
+                print(f"   [ERROR] Error al guardar en Sheets: {e}")
 
             # Continuar automáticamente con el siguiente contacto (sin preguntar)
-            print(f"\n⏩ Continuando automáticamente con el siguiente contacto...\n")
+            print(f"\n[EMOJI] Continuando automáticamente con el siguiente contacto...\n")
 
         # Fin del bucle while
         print("\n" + "=" * 60)
-        print("✅ PROCESO COMPLETADO")
+        print("[OK] PROCESO COMPLETADO")
         print(f"   Total procesados: {contactos_procesados}")
         print("=" * 60 + "\n")
 
     except Exception as e:
-        print(f"\n❌ Error en el proceso automático: {e}")
+        print(f"\n[ERROR] Error en el proceso automático: {e}")
         import traceback
         traceback.print_exc()
 
 
 if __name__ == "__main__":
-    print("\n⚠️  NOTA: Asegúrate de configurar las API keys en variables de entorno:")
+    print("\n[WARN]  NOTA: Asegúrate de configurar las API keys en variables de entorno:")
     print("   - OPENAI_API_KEY")
     print("   - ELEVENLABS_API_KEY")
     print("   - ELEVENLABS_VOICE_ID\n")

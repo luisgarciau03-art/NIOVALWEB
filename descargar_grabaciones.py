@@ -67,7 +67,7 @@ for idx, call in enumerate(calls, 1):
             # Nombre del archivo
             filename = f"grabaciones/{call_sid}_{rec_idx}.mp3"
 
-            print(f"    📥 Descargando grabación {rec_idx + 1}...")
+            print(f"     Descargando grabación {rec_idx + 1}...")
 
             try:
                 # Descargar con autenticación
@@ -81,14 +81,14 @@ for idx, call in enumerate(calls, 1):
                     with open(filename, 'wb') as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             f.write(chunk)
-                    print(f"    ✅ Guardada en: {filename}")
+                    print(f"     Guardada en: {filename}")
                 else:
-                    print(f"    ❌ Error descargando: {response.status_code}")
+                    print(f"     Error descargando: {response.status_code}")
 
             except Exception as e:
-                print(f"    ❌ Error: {e}")
+                print(f"     Error: {e}")
     else:
-        print(f"    ⚠️  No hay grabaciones para esta llamada")
+        print(f"      No hay grabaciones para esta llamada")
 
 print("\n" + "=" * 70)
 print("DESCARGA COMPLETADA")

@@ -56,7 +56,7 @@ class AutoMejoraBruce:
         Incluye análisis de objeciones, frases efectivas y problemas recurrentes
         """
         print("\n" + "=" * 60)
-        print("🧠 FIX 387: META-APRENDIZAJE AUTOMÁTICO - BRUCE W")
+        print(" FIX 387: META-APRENDIZAJE AUTOMÁTICO - BRUCE W")
         print("=" * 60)
 
         try:
@@ -64,16 +64,16 @@ class AutoMejoraBruce:
             stats = self._obtener_estadisticas_semana()
 
             if not stats:
-                print("❌ No hay datos suficientes para analizar")
+                print(" No hay datos suficientes para analizar")
                 return None
 
             # FIX 387: Verificar mínimo de llamadas para análisis confiable
             if stats['total_llamadas'] < self.min_llamadas_confiable:
-                print(f"\n⚠️  Solo {stats['total_llamadas']} llamadas analizadas.")
+                print(f"\n  Solo {stats['total_llamadas']} llamadas analizadas.")
                 print(f"   Mínimo recomendado: {self.min_llamadas_confiable} para análisis confiable")
                 print("   Continuando con análisis limitado...\n")
 
-            print(f"\n📊 Datos de la última semana:")
+            print(f"\n Datos de la última semana:")
             print(f"   Total de llamadas: {stats['total_llamadas']}")
             print(f"   Tasa de conversión: {stats['tasa_conversion']:.1f}%")
             print(f"   WhatsApps capturados: {stats['whatsapps_capturados']}")
@@ -98,30 +98,30 @@ class AutoMejoraBruce:
             stats['problemas_detectados'] = self.problemas_detectados
 
             # Analizar patrones con GPT
-            print("\n🤖 Analizando patrones con GPT-4o-mini...")
+            print("\n Analizando patrones con GPT-4o-mini...")
             analisis_gpt = self._analizar_con_gpt(stats)
 
             if analisis_gpt:
-                print("\n📋 RECOMENDACIONES GENERADAS:")
+                print("\n RECOMENDACIONES GENERADAS:")
                 print(f"\n{analisis_gpt['resumen']}")
 
                 if analisis_gpt.get('mejoras_criticas'):
-                    print("\n🔴 Mejoras Críticas:")
+                    print("\n Mejoras Críticas:")
                     for mejora in analisis_gpt['mejoras_criticas']:
                         print(f"   • {mejora}")
 
                 if analisis_gpt.get('mejoras_sugeridas'):
-                    print("\n🟡 Mejoras Sugeridas:")
+                    print("\n Mejoras Sugeridas:")
                     for mejora in analisis_gpt['mejoras_sugeridas']:
                         print(f"   • {mejora}")
 
                 # FIX 387: Verificar si se requiere auto-actualización
                 print("\n" + "=" * 60)
                 if stats['tasa_conversion'] >= self.umbral_auto_update * 100:
-                    print(f"✅ FIX 387: TASA DE ÉXITO ≥ {self.umbral_auto_update*100:.0f}%")
+                    print(f" FIX 387: TASA DE ÉXITO ≥ {self.umbral_auto_update*100:.0f}%")
                     print("   Sistema funcionando ÓPTIMAMENTE - No se requieren cambios automáticos")
                 else:
-                    print(f"⚠️  FIX 387: TASA DE ÉXITO < {self.umbral_auto_update*100:.0f}%")
+                    print(f"  FIX 387: TASA DE ÉXITO < {self.umbral_auto_update*100:.0f}%")
                     print("   Revisar recomendaciones manualmente y actualizar prompt")
                 print("=" * 60)
 
@@ -133,7 +133,7 @@ class AutoMejoraBruce:
                 }
 
         except Exception as e:
-            print(f"❌ Error al analizar semana: {e}")
+            print(f" Error al analizar semana: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -229,7 +229,7 @@ class AutoMejoraBruce:
             }
 
         except Exception as e:
-            print(f"❌ Error al obtener estadísticas: {e}")
+            print(f" Error al obtener estadísticas: {e}")
             return None
 
     def _analizar_objeciones_frecuentes(self, todas_filas):
@@ -237,7 +237,7 @@ class AutoMejoraBruce:
         FIX 387: Analiza objeciones frecuentes en llamadas fallidas
         Busca patrones comunes en la columna de notas/transcripción
         """
-        print("\n🔍 FIX 387: Analizando objeciones frecuentes...")
+        print("\n FIX 387: Analizando objeciones frecuentes...")
 
         patrones_objecion = {
             'ya_tengo_proveedor': r'ya\s+tengo\s+proveedor|tengo\s+proveedor\s+fijo',
@@ -278,7 +278,7 @@ class AutoMejoraBruce:
         """
         FIX 387: Identifica frases/patrones en llamadas exitosas
         """
-        print("\n💡 FIX 387: Identificando frases efectivas...")
+        print("\n FIX 387: Identificando frases efectivas...")
 
         # Patrones de frases que Bruce usa frecuentemente
         patrones_frases = {
@@ -317,7 +317,7 @@ class AutoMejoraBruce:
         """
         FIX 387: Detecta problemas recurrentes basados en métricas
         """
-        print("\n⚠️  FIX 387: Detectando problemas recurrentes...")
+        print("\n  FIX 387: Detectando problemas recurrentes...")
 
         # Problema 1: Tasa de conversión muy baja
         if stats['tasa_conversion'] < 20:
@@ -358,7 +358,7 @@ class AutoMejoraBruce:
             for i, problema in enumerate(self.problemas_detectados, 1):
                 print(f"   {i}. {problema}")
         else:
-            print("   ✅ No se detectaron problemas críticos")
+            print("    No se detectaron problemas críticos")
 
     def _analizar_con_gpt(self, stats):
         """
@@ -383,7 +383,7 @@ class AutoMejoraBruce:
                 ])
 
             # FIX 387: Construir sección de problemas
-            problemas_texto = "✅ No se detectaron problemas críticos"
+            problemas_texto = " No se detectaron problemas críticos"
             if stats.get('problemas_detectados'):
                 problemas_texto = "\n".join([
                     f"  {i}. {problema}"
@@ -392,7 +392,7 @@ class AutoMejoraBruce:
 
             prompt = f"""Eres un experto en optimización de scripts de ventas telefónicas. Analiza estas métricas de Bruce W (agente de ventas de NIOVAL) con FIX 387: META-APRENDIZAJE AUTOMÁTICO y genera cambios ESPECÍFICOS Y TEXTUALES para el SYSTEM_PROMPT.
 
-📊 MÉTRICAS DE LA SEMANA:
+ MÉTRICAS DE LA SEMANA:
 - Total de llamadas: {stats['total_llamadas']}
 - Tasa de conversión: {stats['tasa_conversion']:.1f}%
 - WhatsApps capturados: {stats['whatsapps_capturados']}
@@ -405,13 +405,13 @@ Distribución de interés:
 Distribución de ánimo:
 {self._generar_distribucion(stats['estados_animo'])}
 
-🔍 FIX 387: OBJECIONES MÁS FRECUENTES (en llamadas fallidas):
+ FIX 387: OBJECIONES MÁS FRECUENTES (en llamadas fallidas):
 {objeciones_texto}
 
-💡 FIX 387: FRASES MÁS EFECTIVAS (en llamadas exitosas):
+ FIX 387: FRASES MÁS EFECTIVAS (en llamadas exitosas):
 {frases_texto}
 
-⚠️ FIX 387: PROBLEMAS RECURRENTES DETECTADOS:
+ FIX 387: PROBLEMAS RECURRENTES DETECTADOS:
 {problemas_texto}
 
 INSTRUCCIONES CRÍTICAS:
@@ -422,12 +422,12 @@ INSTRUCCIONES CRÍTICAS:
 5. Basa tus sugerencias en los datos: si la conversión es baja, propón mejores cierres; si el ánimo es negativo, propón lenguaje más empático
 
 EJEMPLO DE CAMBIO BIEN HECHO:
-❌ MAL: "Mejorar la apertura para generar más interés"
-✅ BIEN: "Reemplazar 'Buenos días' por: 'Buenos días, ¿hablo con [Nombre]? Excelente, le llamo de NIOVAL porque veo que tiene una [ferretería/abarrotes] y queremos apoyarle con mejores precios en sus compras. ¿Tiene un minuto?'"
+ MAL: "Mejorar la apertura para generar más interés"
+ BIEN: "Reemplazar 'Buenos días' por: 'Buenos días, ¿hablo con [Nombre]? Excelente, le llamo de NIOVAL porque veo que tiene una [ferretería/abarrotes] y queremos apoyarle con mejores precios en sus compras. ¿Tiene un minuto?'"
 
 EJEMPLO DE MOTIVO BIEN HECHO:
-❌ MAL: "Para mejorar conversión"
-✅ BIEN: "Solo 12% de llamadas superaron la apertura - el cliente cuelga antes de entender el valor. Necesitamos captar atención en primeros 10 segundos."
+ MAL: "Para mejorar conversión"
+ BIEN: "Solo 12% de llamadas superaron la apertura - el cliente cuelga antes de entender el valor. Necesitamos captar atención en primeros 10 segundos."
 
 Responde SOLO en formato JSON:
 {{
@@ -480,7 +480,7 @@ RECUERDA: Cada "cambio" debe ser TEXTO LITERAL que se pueda usar directamente en
             return json.loads(analisis_texto)
 
         except Exception as e:
-            print(f"❌ Error al analizar con GPT: {e}")
+            print(f" Error al analizar con GPT: {e}")
             return None
 
     def _generar_distribucion(self, lista):
@@ -511,10 +511,10 @@ RECUERDA: Cada "cambio" debe ser TEXTO LITERAL que se pueda usar directamente en
             with open(self.archivo_historial, 'w', encoding='utf-8') as f:
                 json.dump(historial, f, indent=2, ensure_ascii=False)
 
-            print(f"\n✅ Historial actualizado: {self.archivo_historial}")
+            print(f"\n Historial actualizado: {self.archivo_historial}")
 
         except Exception as e:
-            print(f"❌ Error al guardar historial: {e}")
+            print(f" Error al guardar historial: {e}")
 
     def aplicar_mejoras(self, analisis, auto=False):
         """
@@ -525,17 +525,17 @@ RECUERDA: Cada "cambio" debe ser TEXTO LITERAL que se pueda usar directamente en
             auto: Si es True, aplica automáticamente sin confirmación
         """
         if not analisis or 'analisis' not in analisis:
-            print("❌ No hay análisis para aplicar")
+            print(" No hay análisis para aplicar")
             return
 
         modificaciones = analisis['analisis'].get('modificaciones_prompt', [])
 
         if not modificaciones:
-            print("ℹ️ No hay modificaciones sugeridas para el prompt")
+            print("ℹ No hay modificaciones sugeridas para el prompt")
             return
 
         print("\n" + "=" * 60)
-        print("🔧 APLICACIÓN DE MEJORAS AL SYSTEM_PROMPT")
+        print(" APLICACIÓN DE MEJORAS AL SYSTEM_PROMPT")
         print("=" * 60)
 
         print("\nModificaciones sugeridas:")
@@ -546,10 +546,10 @@ RECUERDA: Cada "cambio" debe ser TEXTO LITERAL que se pueda usar directamente en
         if not auto:
             confirmar = input("\n¿Deseas aplicar estas mejoras? (s/n): ").strip().lower()
             if confirmar != 's':
-                print("❌ Mejoras canceladas")
+                print(" Mejoras canceladas")
                 return
 
-        print("\n⚠️ NOTA: Las mejoras se guardan en el historial.")
+        print("\n NOTA: Las mejoras se guardan en el historial.")
         print("   Para aplicarlas manualmente, revisa el archivo:")
         print(f"   {self.archivo_historial}")
         print("\n   Y actualiza el SYSTEM_PROMPT en agente_ventas.py")
@@ -557,7 +557,7 @@ RECUERDA: Cada "cambio" debe ser TEXTO LITERAL que se pueda usar directamente en
         # Guardar en historial
         self.guardar_historial(analisis)
 
-        print("\n✅ Proceso completado")
+        print("\n Proceso completado")
 
 
 def ejecutar_analisis_semanal():
@@ -578,5 +578,5 @@ def ejecutar_analisis_semanal():
 
 
 if __name__ == "__main__":
-    print("\n🤖 SISTEMA DE AUTO-MEJORA CONTINUA - BRUCE W")
+    print("\n SISTEMA DE AUTO-MEJORA CONTINUA - BRUCE W")
     ejecutar_analisis_semanal()

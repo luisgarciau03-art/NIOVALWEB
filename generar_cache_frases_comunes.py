@@ -78,7 +78,7 @@ def generar_cache_key(texto):
 def generar_audio(texto, cache_key):
     """Genera audio con ElevenLabs y guarda en caché"""
     try:
-        print(f"\n📝 Generando: {cache_key}")
+        print(f"\n Generando: {cache_key}")
         print(f"   Texto: {texto[:60]}...")
 
         # Generar audio
@@ -97,11 +97,11 @@ def generar_audio(texto, cache_key):
             for chunk in audio_generator:
                 f.write(chunk)
 
-        print(f"   ✅ Guardado: {filename}")
+        print(f"    Guardado: {filename}")
         return True
 
     except Exception as e:
-        print(f"   ❌ Error: {e}")
+        print(f"    Error: {e}")
         return False
 
 def main():
@@ -109,9 +109,9 @@ def main():
     print("GENERADOR DE CACHÉS - FRASES MÁS COMUNES")
     print("="*70 + "\n")
 
-    print(f"📋 Total frases a generar: {len(FRASES_CRITICAS)}")
-    print(f"📂 Directorio: {CACHE_DIR}")
-    print(f"🎤 Voz: {ELEVENLABS_VOICE_ID} (Bruce)")
+    print(f" Total frases a generar: {len(FRASES_CRITICAS)}")
+    print(f" Directorio: {CACHE_DIR}")
+    print(f" Voz: {ELEVENLABS_VOICE_ID} (Bruce)")
     print()
 
     # Verificar créditos antes de empezar
@@ -121,20 +121,20 @@ def main():
             caracteres_restantes = subscription.character_limit - subscription.character_count
             llamadas_estimadas = caracteres_restantes // 300
 
-            print(f"💰 Créditos disponibles: {caracteres_restantes:,} caracteres")
-            print(f"📊 Llamadas estimadas: ~{llamadas_estimadas}")
+            print(f" Créditos disponibles: {caracteres_restantes:,} caracteres")
+            print(f" Llamadas estimadas: ~{llamadas_estimadas}")
 
             # Calcular créditos necesarios
             total_caracteres = sum(len(texto) for texto in FRASES_CRITICAS.values())
-            print(f"📝 Créditos necesarios: ~{total_caracteres * 7:,} caracteres")
+            print(f" Créditos necesarios: ~{total_caracteres * 7:,} caracteres")
             print()
 
             if caracteres_restantes < total_caracteres * 7:
-                print("⚠️  ADVERTENCIA: Créditos insuficientes para generar todos los cachés")
+                print("  ADVERTENCIA: Créditos insuficientes para generar todos los cachés")
                 print("   Se generarán tantos como sea posible")
                 print()
     except Exception as e:
-        print(f"⚠️ No se pudo verificar créditos ElevenLabs: {e}")
+        print(f" No se pudo verificar créditos ElevenLabs: {e}")
 
     respuesta = input("¿Continuar? (s/n): ")
     if respuesta.lower() != 's':
@@ -154,7 +154,7 @@ def main():
         # Verificar si ya existe
         filepath = os.path.join(CACHE_DIR, f"{cache_key}.mp3")
         if os.path.exists(filepath):
-            print(f"\n⏭️  Saltando: {nombre} (ya existe)")
+            print(f"\n  Saltando: {nombre} (ya existe)")
             exitosos += 1
             continue
 
@@ -170,13 +170,13 @@ def main():
     print("\n" + "="*70)
     print("RESUMEN")
     print("="*70)
-    print(f"\n✅ Exitosos: {exitosos}/{len(FRASES_CRITICAS)}")
-    print(f"❌ Fallidos: {fallidos}/{len(FRASES_CRITICAS)}")
+    print(f"\n Exitosos: {exitosos}/{len(FRASES_CRITICAS)}")
+    print(f" Fallidos: {fallidos}/{len(FRASES_CRITICAS)}")
     print()
 
     if exitosos > 0:
-        print("🎉 Cachés generados exitosamente")
-        print("📌 Estos audios ahora se reproducirán instantáneamente (0s delay)")
+        print(" Cachés generados exitosamente")
+        print(" Estos audios ahora se reproducirán instantáneamente (0s delay)")
         print()
         print("Próximo paso: Subir audio_cache/ a Railway")
         print("  1. Comprimir: tar -czf audio_cache.tar.gz audio_cache/")

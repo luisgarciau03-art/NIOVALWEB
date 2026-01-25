@@ -22,7 +22,7 @@ class SistemaLlamadasNioval:
     def __init__(self):
         """Inicializa el sistema"""
         print("\n" + "=" * 60)
-        print("🚀 SISTEMA DE LLAMADAS NIOVAL")
+        print(" SISTEMA DE LLAMADAS NIOVAL")
         print("=" * 60 + "\n")
 
         # Inicializar componentes
@@ -33,8 +33,8 @@ class SistemaLlamadasNioval:
         # Configuración
         self.delay_entre_llamadas = int(os.getenv("DELAY_LLAMADAS_SEG", "5"))  # 5 segundos para testing
 
-        print(f"\n✅ Sistema listo")
-        print(f"⏱️  Delay entre llamadas: {self.delay_entre_llamadas}s")
+        print(f"\n Sistema listo")
+        print(f"  Delay entre llamadas: {self.delay_entre_llamadas}s")
 
     def _inicializar_sheets(self) -> NiovalSheetsAdapter:
         """Inicializa la conexión a Google Sheets"""
@@ -42,7 +42,7 @@ class SistemaLlamadasNioval:
             adapter = NiovalSheetsAdapter()
             return adapter
         except Exception as e:
-            print(f"❌ Error al conectar con Google Sheets: {e}")
+            print(f" Error al conectar con Google Sheets: {e}")
             raise
 
     def _inicializar_resultados(self) -> ResultadosSheetsAdapter:
@@ -51,7 +51,7 @@ class SistemaLlamadasNioval:
             adapter = ResultadosSheetsAdapter()
             return adapter
         except Exception as e:
-            print(f"❌ Error al conectar con spreadsheet de resultados: {e}")
+            print(f" Error al conectar con spreadsheet de resultados: {e}")
             raise
 
     def _inicializar_whatsapp(self) -> WhatsAppValidatorCache:
@@ -60,10 +60,10 @@ class SistemaLlamadasNioval:
             method = os.getenv("WHATSAPP_VALIDATOR_METHOD", "formato")
             validator = WhatsAppValidator(method=method)
             validator_cache = WhatsAppValidatorCache(validator)
-            print(f"✅ Validador de WhatsApp: {method}")
+            print(f" Validador de WhatsApp: {method}")
             return validator_cache
         except Exception as e:
-            print(f"⚠️ Error al inicializar validador: {e}")
+            print(f" Error al inicializar validador: {e}")
             return None
 
     def ejecutar_llamadas(self, cantidad: int = 10):
@@ -74,17 +74,17 @@ class SistemaLlamadasNioval:
             cantidad: Número de llamadas a realizar
         """
         print("\n" + "=" * 60)
-        print(f"📞 INICIANDO LLAMADAS - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        print(f" INICIANDO LLAMADAS - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         print("=" * 60 + "\n")
 
         # Obtener contactos pendientes
         contactos = self.sheets_adapter.obtener_contactos_pendientes(limite=cantidad)
 
         if not contactos:
-            print("ℹ️ No hay contactos pendientes")
+            print("ℹ No hay contactos pendientes")
             return
 
-        print(f"📋 Contactos a llamar: {len(contactos)}\n")
+        print(f" Contactos a llamar: {len(contactos)}\n")
 
         # Estadísticas
         resultados = {
@@ -98,7 +98,7 @@ class SistemaLlamadasNioval:
         # Ejecutar llamadas
         for idx, contacto in enumerate(contactos, 1):
             print(f"\n{'='*60}")
-            print(f"📞 LLAMADA {idx}/{len(contactos)}")
+            print(f" LLAMADA {idx}/{len(contactos)}")
             print(f"{'='*60}")
 
             try:
@@ -121,11 +121,11 @@ class SistemaLlamadasNioval:
 
                 # Delay entre llamadas
                 if idx < len(contactos):
-                    print(f"\n⏳ Esperando {self.delay_entre_llamadas}s...")
+                    print(f"\n Esperando {self.delay_entre_llamadas}s...")
                     time.sleep(self.delay_entre_llamadas)
 
             except Exception as e:
-                print(f"❌ Error en llamada: {e}")
+                print(f" Error en llamada: {e}")
                 resultados['errores'] += 1
 
         # Resumen final
@@ -145,7 +145,7 @@ class SistemaLlamadasNioval:
         nombre = contacto['nombre_negocio']
         telefono = contacto['telefono']
 
-        print(f"\n📞 Fila {fila}: {nombre}")
+        print(f"\n Fila {fila}: {nombre}")
         print(f"   Teléfono: {telefono}")
 
         # Crear agente para esta llamada
@@ -166,25 +166,25 @@ class SistemaLlamadasNioval:
                 whatsapp_capturado = resultado['whatsapp_capturado']
 
                 # Validar que el número tenga WhatsApp activo
-                print(f"\n📱 Validando WhatsApp: {whatsapp_capturado}")
+                print(f"\n Validando WhatsApp: {whatsapp_capturado}")
 
                 if self.whatsapp_validator:
                     validacion = self.whatsapp_validator.validar(whatsapp_capturado)
 
                     if validacion.get('tiene_whatsapp'):
                         # WhatsApp confirmado: actualizar columna E
-                        print(f"✅ WhatsApp validado correctamente")
+                        print(f" WhatsApp validado correctamente")
                         self.sheets_adapter.actualizar_numero_con_whatsapp(
                             fila=fila,
                             whatsapp=whatsapp_capturado
                         )
                     else:
                         # No tiene WhatsApp: solo informar, no actualizar
-                        print(f"⚠️ El número no tiene WhatsApp activo (no se actualiza columna E)")
+                        print(f" El número no tiene WhatsApp activo (no se actualiza columna E)")
                         print(f"   Método: {validacion.get('metodo', 'N/A')}")
                 else:
                     # Si no hay validador, asumir que es válido (modo formato)
-                    print(f"⚠️ Sin validador configurado, actualizando sin validación")
+                    print(f" Sin validador configurado, actualizando sin validación")
                     self.sheets_adapter.actualizar_numero_con_whatsapp(
                         fila=fila,
                         whatsapp=whatsapp_capturado
@@ -203,7 +203,7 @@ class SistemaLlamadasNioval:
             return resultado
 
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f" Error: {e}")
             return {
                 'exito': False,
                 'error': str(e)
@@ -220,11 +220,11 @@ class SistemaLlamadasNioval:
         Returns:
             Dict con resultado de la simulación
         """
-        print("\n🧪 MODO SIMULACIÓN")
+        print("\n MODO SIMULACIÓN")
 
         # Mensaje inicial
         mensaje_inicial = agente.iniciar_conversacion()
-        print(f"\n🎙️ Bruce: {mensaje_inicial}")
+        print(f"\n Bruce: {mensaje_inicial}")
 
         # Simular respuestas del cliente
         import random
@@ -264,7 +264,7 @@ class SistemaLlamadasNioval:
 
         caso = random.choice(respuestas_simuladas)
 
-        print(f"👤 Cliente: {caso['texto']}")
+        print(f" Cliente: {caso['texto']}")
 
         # Si no contesta
         if "[SIN RESPUESTA]" in caso['texto']:
@@ -277,14 +277,14 @@ class SistemaLlamadasNioval:
 
         # Procesar primera respuesta
         respuesta_agente = agente.procesar_respuesta(caso['texto'])
-        print(f"🎙️ Bruce: {respuesta_agente}")
+        print(f" Bruce: {respuesta_agente}")
 
         # Procesar respuestas de seguimiento
         for respuesta_cliente in caso['seguimiento']:
-            print(f"\n👤 Cliente: {respuesta_cliente}")
+            print(f"\n Cliente: {respuesta_cliente}")
 
             respuesta_agente = agente.procesar_respuesta(respuesta_cliente)
-            print(f"🎙️ Bruce: {respuesta_agente}")
+            print(f" Bruce: {respuesta_agente}")
 
             # Pequeña pausa
             time.sleep(0.5)
@@ -299,14 +299,14 @@ class SistemaLlamadasNioval:
         }
 
         # Mostrar resumen
-        print(f"\n{'─'*60}")
-        print("📊 RESUMEN DE LA LLAMADA:")
-        print(f"   Interesado: {'✅ Sí' if resultado['interesado'] else '❌ No'}")
+        print(f"\n{''*60}")
+        print(" RESUMEN DE LA LLAMADA:")
+        print(f"   Interesado: {' Sí' if resultado['interesado'] else ' No'}")
         if resultado['whatsapp_capturado']:
-            print(f"   📱 WhatsApp: {resultado['whatsapp_capturado']}")
+            print(f"    WhatsApp: {resultado['whatsapp_capturado']}")
         if resultado['email_capturado']:
-            print(f"   📧 Email: {resultado['email_capturado']}")
-        print(f"{'─'*60}")
+            print(f"    Email: {resultado['email_capturado']}")
+        print(f"{''*60}")
 
         return resultado
 
@@ -319,7 +319,7 @@ class SistemaLlamadasNioval:
             contacto: Dict con información del contacto
         """
         try:
-            print(f"\n💾 Guardando resultado en spreadsheet...")
+            print(f"\n Guardando resultado en spreadsheet...")
 
             # Obtener lead_data del resultado
             lead_data = resultado.get('lead_data', {})
@@ -352,47 +352,47 @@ class SistemaLlamadasNioval:
             exito = self.resultados_adapter.guardar_resultado_llamada(datos_guardado)
 
             if exito:
-                print(f"✅ Resultado guardado exitosamente")
+                print(f" Resultado guardado exitosamente")
             else:
-                print(f"⚠️ No se pudo guardar el resultado")
+                print(f" No se pudo guardar el resultado")
 
         except Exception as e:
-            print(f"❌ Error al guardar resultado: {e}")
+            print(f" Error al guardar resultado: {e}")
             import traceback
             traceback.print_exc()
 
     def _mostrar_resumen(self, resultados: Dict, total: int):
         """Muestra resumen de las llamadas"""
         print("\n\n" + "=" * 60)
-        print("📊 RESUMEN DE LLAMADAS")
+        print(" RESUMEN DE LLAMADAS")
         print("=" * 60)
-        print(f"📞 Total llamadas: {total}")
-        print(f"✅ Exitosas: {resultados['exitosas']}")
-        print(f"📱 WhatsApps capturados: {resultados['con_whatsapp']}")
-        print(f"📧 Emails capturados: {resultados['con_email']}")
-        print(f"🔥 Con interés: {resultados['exitosas'] - resultados['sin_interes']}")
-        print(f"❄️  Sin interés: {resultados['sin_interes']}")
-        print(f"❌ Errores: {resultados['errores']}")
+        print(f" Total llamadas: {total}")
+        print(f" Exitosas: {resultados['exitosas']}")
+        print(f" WhatsApps capturados: {resultados['con_whatsapp']}")
+        print(f" Emails capturados: {resultados['con_email']}")
+        print(f" Con interés: {resultados['exitosas'] - resultados['sin_interes']}")
+        print(f"  Sin interés: {resultados['sin_interes']}")
+        print(f" Errores: {resultados['errores']}")
 
         if resultados['exitosas'] > 0:
             tasa_whatsapp = (resultados['con_whatsapp'] / resultados['exitosas']) * 100
-            print(f"\n📈 Tasa captura WhatsApp: {tasa_whatsapp:.1f}%")
+            print(f"\n Tasa captura WhatsApp: {tasa_whatsapp:.1f}%")
 
         print("=" * 60 + "\n")
 
     def ver_estadisticas(self):
         """Muestra estadísticas generales del spreadsheet"""
         print("\n" + "=" * 60)
-        print("📊 ESTADÍSTICAS GENERALES")
+        print(" ESTADÍSTICAS GENERALES")
         print("=" * 60)
 
         stats = self.sheets_adapter.obtener_estadisticas()
 
-        print(f"\n📋 Total contactos: {stats.get('total_contactos', 0)}")
-        print(f"📱 Con número: {stats.get('con_numero', 0)}")
-        print(f"✅ Llamados: {stats.get('llamados', 0)}")
-        print(f"⏳ Pendientes: {stats.get('pendientes', 0)}")
-        print(f"📊 Progreso: {stats.get('porcentaje_completado', 0)}%")
+        print(f"\n Total contactos: {stats.get('total_contactos', 0)}")
+        print(f" Con número: {stats.get('con_numero', 0)}")
+        print(f" Llamados: {stats.get('llamados', 0)}")
+        print(f" Pendientes: {stats.get('pendientes', 0)}")
+        print(f" Progreso: {stats.get('porcentaje_completado', 0)}%")
 
         print("\n" + "=" * 60)
 
@@ -400,10 +400,10 @@ class SistemaLlamadasNioval:
 def main():
     """Función principal"""
     print("""
-╔═══════════════════════════════════════════════════════╗
-║  SISTEMA DE LLAMADAS NIOVAL                           ║
-║  Integrado con Google Sheets                          ║
-╚═══════════════════════════════════════════════════════╝
+
+  SISTEMA DE LLAMADAS NIOVAL                           
+  Integrado con Google Sheets                          
+
     """)
 
     try:
@@ -412,7 +412,7 @@ def main():
 
         # Menú
         while True:
-            print("\n📋 OPCIONES:")
+            print("\n OPCIONES:")
             print("1. Ver estadísticas generales")
             print("2. Ejecutar 5 llamadas de prueba")
             print("3. Ejecutar 10 llamadas")
@@ -431,20 +431,20 @@ def main():
                 sistema.ejecutar_llamadas(cantidad=10)
 
             elif opcion == "4":
-                confirmar = input("⚠️  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
+                confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
                 if confirmar == 's':
                     sistema.ejecutar_llamadas(cantidad=50)
 
             elif opcion == "0":
-                print("\n👋 Hasta pronto!")
+                print("\n Hasta pronto!")
                 break
 
             else:
-                print("❌ Opción inválida")
+                print(" Opción inválida")
 
     except Exception as e:
-        print(f"\n❌ Error fatal: {e}")
-        print("\n💡 Verifica:")
+        print(f"\n Error fatal: {e}")
+        print("\n Verifica:")
         print("   1. Archivo de credenciales: bubbly-subject-412101-c969f4a975c5.json")
         print("   2. Acceso al spreadsheet compartido")
         print("   3. Hoja 'LISTA DE CONTACTOS' existe")

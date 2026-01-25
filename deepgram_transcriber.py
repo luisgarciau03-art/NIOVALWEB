@@ -22,13 +22,13 @@ from collections import defaultdict
 try:
     from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions
     DEEPGRAM_AVAILABLE = True
-    print("✅ FIX 212: deepgram-sdk importado correctamente")
+    print(" FIX 212: deepgram-sdk importado correctamente")
 except ImportError as e:
     DEEPGRAM_AVAILABLE = False
-    print(f"⚠️ FIX 212: deepgram-sdk no instalado: {e}")
+    print(f" FIX 212: deepgram-sdk no instalado: {e}")
 except Exception as e:
     DEEPGRAM_AVAILABLE = False
-    print(f"❌ FIX 212: Error importando deepgram-sdk: {type(e).__name__}: {e}")
+    print(f" FIX 212: Error importando deepgram-sdk: {type(e).__name__}: {e}")
 
 # Configuración
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
@@ -68,11 +68,11 @@ class DeepgramTranscriber:
     async def connect(self):
         """Establece conexión con Deepgram"""
         if not DEEPGRAM_AVAILABLE:
-            print(f"❌ FIX 212: Deepgram SDK no disponible")
+            print(f" FIX 212: Deepgram SDK no disponible")
             return False
 
         if not DEEPGRAM_API_KEY:
-            print(f"❌ FIX 212: DEEPGRAM_API_KEY no configurada")
+            print(f" FIX 212: DEEPGRAM_API_KEY no configurada")
             return False
 
         try:
@@ -107,21 +107,21 @@ class DeepgramTranscriber:
             self.dg_connection.on(LiveTranscriptionEvents.Close, self._on_close)
 
             # FIX 222: Iniciar conexión con mejor manejo de errores
-            print(f"🔄 FIX 222: Iniciando conexión Deepgram...")
+            print(f" FIX 222: Iniciando conexión Deepgram...")
             print(f"   Opciones: model={options.model}, language={options.language}, encoding={options.encoding}")
 
             result = self.dg_connection.start(options)
             if result:
                 self.is_connected = True
-                print(f"✅ FIX 212: Deepgram conectado para CallSid: {self.call_sid}")
+                print(f" FIX 212: Deepgram conectado para CallSid: {self.call_sid}")
                 return True
             else:
-                print(f"❌ FIX 222: Deepgram.start() retornó False")
+                print(f" FIX 222: Deepgram.start() retornó False")
                 return False
 
         except Exception as e:
             import traceback
-            print(f"❌ FIX 222: Error conectando a Deepgram: {type(e).__name__}: {e}")
+            print(f" FIX 222: Error conectando a Deepgram: {type(e).__name__}: {e}")
             traceback.print_exc()
             return False
 
@@ -160,7 +160,7 @@ class DeepgramTranscriber:
             if is_final:
                 self.final_transcripts.append(transcript)
                 self.transcript_buffer = ""  # Limpiar buffer al recibir final
-                print(f"📝 FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms)")
+                print(f" FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms)")
 
                 # Llamar callback con transcripción final
                 if self.on_transcript_callback:
@@ -169,23 +169,23 @@ class DeepgramTranscriber:
                 self.transcript_buffer = transcript
                 # FIX 218: Solo loguear parciales largos para reducir spam
                 if len(transcript) > 10:
-                    print(f"📝 FIX 212: [PARCIAL] '{transcript}'")
+                    print(f" FIX 212: [PARCIAL] '{transcript}'")
 
                 # FIX 218: Llamar callback con transcripción parcial para tener datos más rápido
                 if self.on_transcript_callback and len(transcript) > 5:
                     self.on_transcript_callback(self.call_sid, transcript, False)
 
         except Exception as e:
-            print(f"❌ FIX 212: Error procesando transcripción: {e}")
+            print(f" FIX 212: Error procesando transcripción: {e}")
 
     def _on_error(self, *args, **kwargs):
         """Callback cuando hay error"""
         error = kwargs.get('error') or (args[1] if len(args) > 1 else "Unknown")
-        print(f"❌ FIX 212: Error Deepgram - CallSid: {self.call_sid}: {error}")
+        print(f" FIX 212: Error Deepgram - CallSid: {self.call_sid}: {error}")
 
     def _on_close(self, *args, **kwargs):
         """Callback cuando se cierra la conexión"""
-        print(f"🔴 FIX 212: Conexión Deepgram cerrada - CallSid: {self.call_sid}")
+        print(f" FIX 212: Conexión Deepgram cerrada - CallSid: {self.call_sid}")
         self.is_connected = False
 
     def send_audio(self, audio_data):
@@ -203,7 +203,7 @@ class DeepgramTranscriber:
             self.audio_chunks_received += 1
             return True
         except Exception as e:
-            print(f"❌ FIX 212: Error enviando audio: {e}")
+            print(f" FIX 212: Error enviando audio: {e}")
             return False
 
     def send_audio_base64(self, audio_base64):
@@ -217,7 +217,7 @@ class DeepgramTranscriber:
             audio_bytes = base64.b64decode(audio_base64)
             return self.send_audio(audio_bytes)
         except Exception as e:
-            print(f"❌ FIX 212: Error decodificando audio base64: {e}")
+            print(f" FIX 212: Error decodificando audio base64: {e}")
             return False
 
     def get_transcript(self):
@@ -235,9 +235,9 @@ class DeepgramTranscriber:
         if self.dg_connection and self.is_connected:
             try:
                 self.dg_connection.finish()
-                print(f"✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: {self.call_sid}")
+                print(f" FIX 212: Conexión Deepgram cerrada correctamente - CallSid: {self.call_sid}")
             except Exception as e:
-                print(f"⚠️ FIX 212: Error cerrando conexión Deepgram: {e}")
+                print(f" FIX 212: Error cerrando conexión Deepgram: {e}")
         self.is_connected = False
 
     def get_stats(self):
@@ -265,7 +265,7 @@ def crear_transcriber(call_sid, on_transcript_callback=None):
         DeepgramTranscriber o None si falla
     """
     if call_sid in transcripciones_activas:
-        print(f"⚠️ FIX 212: Ya existe transcriber para CallSid: {call_sid}")
+        print(f" FIX 212: Ya existe transcriber para CallSid: {call_sid}")
         return transcripciones_activas[call_sid]
 
     transcriber = DeepgramTranscriber(call_sid, on_transcript_callback)
@@ -303,17 +303,17 @@ def verificar_configuracion():
         errores.append("DEEPGRAM_API_KEY no configurada")
 
     if errores:
-        print(f"❌ FIX 212: Errores de configuración Deepgram:")
+        print(f" FIX 212: Errores de configuración Deepgram:")
         for error in errores:
             print(f"   - {error}")
         return False
 
-    print(f"✅ FIX 212: Deepgram configurado correctamente")
+    print(f" FIX 212: Deepgram configurado correctamente")
     print(f"   API Key: {DEEPGRAM_API_KEY[:10]}...{DEEPGRAM_API_KEY[-4:]}")
     return True
 
 
 # Verificar configuración al importar
 if __name__ != "__main__":
-    print("\n🎙️ FIX 212: Inicializando módulo Deepgram...")
+    print("\n FIX 212: Inicializando módulo Deepgram...")
     verificar_configuracion()

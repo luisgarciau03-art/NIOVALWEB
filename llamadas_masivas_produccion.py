@@ -33,18 +33,18 @@ class SistemaLlamadasMasivas:
 
     def __init__(self):
         """Inicializa conexión con Google Sheets y Twilio"""
-        print("\n🚀 Inicializando Sistema de Llamadas Masivas...")
+        print("\n Inicializando Sistema de Llamadas Masivas...")
         self.sheets_adapter = NiovalSheetsAdapter()
 
         # FIX 178: Inicializar cliente Twilio para verificar estado de llamadas
         if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
             self.twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-            print("✅ Cliente Twilio inicializado")
+            print(" Cliente Twilio inicializado")
         else:
             self.twilio_client = None
-            print("⚠️  Cliente Twilio no disponible (credenciales faltantes)")
+            print("  Cliente Twilio no disponible (credenciales faltantes)")
 
-        print("✅ Conectado a Google Sheets\n")
+        print(" Conectado a Google Sheets\n")
 
     def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 10, pedir_confirmacion: bool = True):
         """
@@ -56,32 +56,32 @@ class SistemaLlamadasMasivas:
             pedir_confirmacion: Si False, omite mensaje de confirmación (default: True)
         """
         print("\n" + "=" * 60)
-        print(f"📞 INICIANDO LLAMADAS MASIVAS EN PRODUCCIÓN")
+        print(f" INICIANDO LLAMADAS MASIVAS EN PRODUCCIÓN")
         print("=" * 60 + "\n")
 
         # Obtener contactos pendientes (sin valor en columna F)
-        print("📋 Obteniendo contactos pendientes de Google Sheets...")
+        print(" Obteniendo contactos pendientes de Google Sheets...")
         contactos = self.sheets_adapter.obtener_contactos_pendientes(limite=cantidad)
 
         if not contactos:
-            print("ℹ️  No hay contactos pendientes")
+            print("ℹ  No hay contactos pendientes")
             return
 
-        print(f"✅ Encontrados {len(contactos)} contactos pendientes\n")
+        print(f" Encontrados {len(contactos)} contactos pendientes\n")
 
         # Mostrar primeros contactos
-        print("📝 Primeros 3 contactos:")
+        print(" Primeros 3 contactos:")
         for c in contactos[:3]:
             print(f"   Fila {c['fila']}: {c['nombre_negocio']} - {c['telefono']}")
 
-        print(f"\n📞 Se realizarán {len(contactos)} llamadas")
-        print(f"⏱️  Delay entre llamadas: {delay_entre_llamadas} segundos\n")
+        print(f"\n Se realizarán {len(contactos)} llamadas")
+        print(f"  Delay entre llamadas: {delay_entre_llamadas} segundos\n")
 
         # Confirmar (opcional)
         if pedir_confirmacion:
-            confirmar = input("⚠️  ¿Deseas continuar? (s/n): ").strip().lower()
+            confirmar = input("  ¿Deseas continuar? (s/n): ").strip().lower()
             if confirmar != 's':
-                print("❌ Cancelado")
+                print(" Cancelado")
                 return
 
         # Ejecutar llamadas
@@ -93,54 +93,54 @@ class SistemaLlamadasMasivas:
 
         for i, contacto in enumerate(contactos, 1):
             print("\n" + "=" * 60)
-            print(f"📞 LLAMADA {i}/{len(contactos)} - PROGRESO: {round(i/len(contactos)*100)}%")
+            print(f" LLAMADA {i}/{len(contactos)} - PROGRESO: {round(i/len(contactos)*100)}%")
             print("=" * 60 + "\n")
 
             fila = contacto['fila']
             nombre = contacto['nombre_negocio']
             telefono = contacto['telefono']
 
-            print(f"📋 Contacto #{i}:")
+            print(f" Contacto #{i}:")
             print(f"   Fila: {fila}")
             print(f"   Negocio: {nombre}")
             print(f"   Teléfono: {telefono}")
             print(f"   Progreso: {i}/{len(contactos)} ({round(i/len(contactos)*100)}%)")
 
             # FIX 88: Hacer llamada vía Railway y obtener Call SID
-            print(f"\n🚀 Iniciando llamada...")
+            print(f"\n Iniciando llamada...")
             call_sid = self._iniciar_llamada_railway(contacto)
 
             if call_sid:
                 resultados['exitosas'] += 1
-                print(f"✅ Llamada iniciada - Call SID: {call_sid[:15]}...")
+                print(f" Llamada iniciada - Call SID: {call_sid[:15]}...")
 
                 # FIX 178: ESPERAR A QUE LA LLAMADA TERMINE VERIFICANDO ESTADO REAL
-                print(f"⏳ Esperando finalización de llamada...")
+                print(f" Esperando finalización de llamada...")
                 duracion = self._esperar_fin_llamada(call_sid, contacto)
                 if duracion is not None:
-                    print(f"✅ Llamada completada - Duración: {duracion}s")
+                    print(f" Llamada completada - Duración: {duracion}s")
                 else:
-                    print("⚠️  No se pudo verificar finalización de llamada")
+                    print("  No se pudo verificar finalización de llamada")
             else:
                 resultados['fallidas'] += 1
-                print("❌ Error al iniciar llamada")
+                print(" Error al iniciar llamada")
 
             # Mostrar resumen parcial
-            print(f"\n📊 Resumen parcial: {resultados['exitosas']} exitosas / {resultados['fallidas']} fallidas de {i} llamadas")
+            print(f"\n Resumen parcial: {resultados['exitosas']} exitosas / {resultados['fallidas']} fallidas de {i} llamadas")
 
             # FIX 88: Esperar delay DESPUÉS de que termine la llamada (excepto en la última)
             if i < len(contactos):
-                print(f"\n⏱️  Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
+                print(f"\n  Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
                 time.sleep(delay_entre_llamadas)
 
         # Resumen final
         print("\n" + "=" * 60)
-        print("📊 RESUMEN DE LLAMADAS")
+        print(" RESUMEN DE LLAMADAS")
         print("=" * 60)
         print(f"Total: {resultados['total']}")
-        print(f"✅ Exitosas: {resultados['exitosas']}")
-        print(f"❌ Fallidas: {resultados['fallidas']}")
-        print(f"📈 Tasa de éxito: {round(resultados['exitosas']/resultados['total']*100, 1)}%")
+        print(f" Exitosas: {resultados['exitosas']}")
+        print(f" Fallidas: {resultados['fallidas']}")
+        print(f" Tasa de éxito: {round(resultados['exitosas']/resultados['total']*100, 1)}%")
         print("=" * 60 + "\n")
 
     def _iniciar_llamada_railway(self, contacto: dict) -> str:
@@ -161,7 +161,7 @@ class SistemaLlamadasMasivas:
             referencia = self.sheets_adapter.obtener_referencia(fila)
             if referencia:
                 contacto['referencia'] = referencia
-                print(f"👥 Referencia encontrada: {referencia[:50]}...")
+                print(f" Referencia encontrada: {referencia[:50]}...")
 
             # Enviar contacto completo con TODA la información
             payload = {
@@ -172,21 +172,21 @@ class SistemaLlamadasMasivas:
                 "deshabilitar_reintentos": True
             }
 
-            print(f"🌐 Enviando solicitud a Railway: {url}")
+            print(f" Enviando solicitud a Railway: {url}")
 
             response = requests.post(url, json=payload, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
                 call_sid = data.get('call_sid', None)
-                print(f"📞 Call SID: {call_sid}")
+                print(f" Call SID: {call_sid}")
                 return call_sid  # FIX 88: Retornar Call SID
             else:
-                print(f"❌ Error HTTP {response.status_code}: {response.text}")
+                print(f" Error HTTP {response.status_code}: {response.text}")
                 return None
 
         except Exception as e:
-            print(f"❌ Error al iniciar llamada: {e}")
+            print(f" Error al iniciar llamada: {e}")
             return None
 
     def _esperar_fin_llamada(self, call_sid: str, contacto: dict, max_tiempo_espera: int = 180) -> int:
@@ -213,7 +213,7 @@ class SistemaLlamadasMasivas:
         - canceled: Cancelada
         """
         if not call_sid or not self.twilio_client:
-            print("⚠️  No se puede verificar estado (Call SID o cliente Twilio faltante)")
+            print("  No se puede verificar estado (Call SID o cliente Twilio faltante)")
             # Fallback: esperar tiempo fijo
             time.sleep(45)
             return None
@@ -250,7 +250,7 @@ class SistemaLlamadasMasivas:
                 # Mostrar cambio de estado
                 if estado_actual != ultimo_estado:
                     estado_texto = estados_es.get(estado_actual, estado_actual)
-                    print(f"   📞 Estado: {estado_texto}")
+                    print(f"    Estado: {estado_texto}")
                     print(f"      Contacto: {nombre_negocio} ({telefono})")
                     print(f"      Tiempo transcurrido: {int(tiempo_transcurrido)}s")
                     ultimo_estado = estado_actual
@@ -259,7 +259,7 @@ class SistemaLlamadasMasivas:
                 if estado_actual in estados_finales:
                     duracion_total = int(duracion) if duracion else 0
                     estado_texto = estados_es.get(estado_actual, estado_actual)
-                    print(f"\n   ✅ Llamada finalizada: {estado_texto}")
+                    print(f"\n    Llamada finalizada: {estado_texto}")
                     print(f"      Duración total: {duracion_total}s")
                     print(f"      Contacto: {nombre_negocio}")
                     return duracion_total
@@ -269,20 +269,20 @@ class SistemaLlamadasMasivas:
                 tiempo_transcurrido = int(time.time() - inicio)
 
             except Exception as e:
-                print(f"   ⚠️  Error consultando estado: {e}")
+                print(f"     Error consultando estado: {e}")
                 # Esperar y reintentar
                 time.sleep(5)
                 tiempo_transcurrido = int(time.time() - inicio)
 
         # Si llegamos aquí, se agotó el tiempo máximo
-        print(f"   ⚠️  Timeout alcanzado ({max_tiempo_espera}s) - continuando de todas formas")
+        print(f"     Timeout alcanzado ({max_tiempo_espera}s) - continuando de todas formas")
         print(f"      Contacto: {nombre_negocio}")
         return None
 
     def ver_estadisticas(self):
         """Muestra estadísticas de contactos"""
         print("\n" + "=" * 60)
-        print("📊 ESTADÍSTICAS DE CONTACTOS")
+        print(" ESTADÍSTICAS DE CONTACTOS")
         print("=" * 60 + "\n")
 
         stats = self.sheets_adapter.obtener_estadisticas()
@@ -302,7 +302,7 @@ def main():
 
         while True:
             print("\n" + "=" * 60)
-            print("📞 SISTEMA DE LLAMADAS MASIVAS - PRODUCCIÓN")
+            print(" SISTEMA DE LLAMADAS MASIVAS - PRODUCCIÓN")
             print("=" * 60 + "\n")
 
             print("1. Ver estadísticas")
@@ -332,7 +332,7 @@ def main():
                 sistema.ejecutar_llamadas(cantidad=10, delay_entre_llamadas=30)
 
             elif opcion == "6":
-                confirmar = input("⚠️  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
+                confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
                 if confirmar == 's':
                     sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=30)
 
@@ -342,19 +342,19 @@ def main():
                     delay = int(input("¿Delay entre llamadas (segundos)? [default: 30]: ") or "30")
                     sistema.ejecutar_llamadas(cantidad=cantidad, delay_entre_llamadas=delay)
                 except ValueError:
-                    print("❌ Valores inválidos")
+                    print(" Valores inválidos")
 
             elif opcion == "0":
-                print("\n👋 Hasta pronto!")
+                print("\n Hasta pronto!")
                 break
 
             else:
-                print("❌ Opción inválida")
+                print(" Opción inválida")
 
     except KeyboardInterrupt:
-        print("\n\n⚠️  Programa interrumpido por el usuario")
+        print("\n\n  Programa interrumpido por el usuario")
     except Exception as e:
-        print(f"\n❌ Error fatal: {e}")
+        print(f"\n Error fatal: {e}")
         import traceback
         traceback.print_exc()
 

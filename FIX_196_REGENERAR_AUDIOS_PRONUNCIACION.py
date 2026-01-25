@@ -63,17 +63,17 @@ def generar_audio_id(texto):
 def regenerar_audio(key, texto, motivo):
     """Regenera un audio específico con pronunciación corregida"""
     print(f"\n{'='*80}")
-    print(f"🔧 REGENERANDO: {key}")
-    print(f"📝 Texto original: {texto}")
+    print(f" REGENERANDO: {key}")
+    print(f" Texto original: {texto}")
 
     # Aplicar corrección de pronunciación
     texto_corregido = corregir_pronunciacion(texto)
-    print(f"✅ Texto corregido: {texto_corregido}")
-    print(f"📌 Motivo: {motivo}")
+    print(f" Texto corregido: {texto_corregido}")
+    print(f" Motivo: {motivo}")
 
     # Verificar que realmente cambió
     if texto == texto_corregido:
-        print(f"⚠️ ADVERTENCIA: No hubo cambios en el texto - verificar correcciones")
+        print(f" ADVERTENCIA: No hubo cambios en el texto - verificar correcciones")
 
     try:
         # Buscar archivo viejo en caché
@@ -84,17 +84,17 @@ def regenerar_audio(key, texto, motivo):
         ]
 
         if archivos_relacionados:
-            print(f"🗑️ Archivos viejos encontrados: {archivos_relacionados}")
+            print(f" Archivos viejos encontrados: {archivos_relacionados}")
             for archivo_viejo in archivos_relacionados:
                 ruta_vieja = os.path.join(AUDIO_CACHE_DIR, archivo_viejo)
                 # Renombrar en vez de eliminar (backup)
                 backup_name = archivo_viejo.replace('.mp3', '.OLD.mp3')
                 backup_path = os.path.join(AUDIO_CACHE_DIR, backup_name)
                 os.rename(ruta_vieja, backup_path)
-                print(f"   ✅ Respaldo creado: {backup_name}")
+                print(f"    Respaldo creado: {backup_name}")
 
         # Generar nuevo audio con ElevenLabs
-        print(f"🎙️ Generando nuevo audio con ElevenLabs...")
+        print(f" Generando nuevo audio con ElevenLabs...")
         audio_generator = elevenlabs_client.text_to_speech.convert(
             voice_id=ELEVENLABS_VOICE_ID,
             text=texto_corregido,
@@ -112,13 +112,13 @@ def regenerar_audio(key, texto, motivo):
                 if chunk:
                     f.write(chunk)
 
-        print(f"✅ Audio regenerado exitosamente: {nuevo_nombre}")
-        print(f"📂 Ruta: {nueva_ruta}")
+        print(f" Audio regenerado exitosamente: {nuevo_nombre}")
+        print(f" Ruta: {nueva_ruta}")
 
         return True
 
     except Exception as e:
-        print(f"❌ ERROR al regenerar audio: {str(e)}")
+        print(f" ERROR al regenerar audio: {str(e)}")
         return False
 
 
@@ -130,7 +130,7 @@ def main():
     print()
 
     if not ELEVENLABS_API_KEY:
-        print("❌ ERROR: Variable ELEVENLABS_API_KEY no configurada")
+        print(" ERROR: Variable ELEVENLABS_API_KEY no configurada")
         print("   Ejecutar: $env:ELEVENLABS_API_KEY='tu_api_key'")
         return
 
@@ -157,7 +157,7 @@ def main():
         },
     }
 
-    print(f"📋 Total de audios a regenerar: {len(audios_a_regenerar)}")
+    print(f" Total de audios a regenerar: {len(audios_a_regenerar)}")
     print()
 
     exitos = 0
@@ -170,23 +170,23 @@ def main():
             fallos += 1
 
     print("\n" + "=" * 80)
-    print("📊 RESUMEN")
+    print(" RESUMEN")
     print("=" * 80)
-    print(f"✅ Audios regenerados exitosamente: {exitos}")
-    print(f"❌ Audios con errores: {fallos}")
-    print(f"📂 Ubicación: {os.path.abspath(AUDIO_CACHE_DIR)}")
+    print(f" Audios regenerados exitosamente: {exitos}")
+    print(f" Audios con errores: {fallos}")
+    print(f" Ubicación: {os.path.abspath(AUDIO_CACHE_DIR)}")
     print()
 
     if fallos == 0:
-        print("🎉 COMPLETADO - Todos los audios regenerados con pronunciación correcta")
+        print(" COMPLETADO - Todos los audios regenerados con pronunciación correcta")
         print()
-        print("📌 PRÓXIMOS PASOS:")
+        print(" PRÓXIMOS PASOS:")
         print("   1. Verificar audios regenerados escuchándolos manualmente")
         print("   2. Desplegar a Railway (git push)")
         print("   3. Hacer llamada de prueba y verificar pronunciación")
         print("   4. Si OK, eliminar archivos .OLD.mp3 del caché")
     else:
-        print("⚠️ ADVERTENCIA - Algunos audios no se regeneraron correctamente")
+        print(" ADVERTENCIA - Algunos audios no se regeneraron correctamente")
         print("   Revisar errores arriba y reintentar")
 
 
