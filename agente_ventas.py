@@ -5618,6 +5618,53 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "PEDIR_WHATSAPP"
             }
 
+        # ================================================================
+        # FIX 496: BRUCE1472 - Cliente OFRECE dar correo/WhatsApp
+        # PROBLEMA: Cliente dijo "¿Te puedo pasar el correo?" y Bruce respondió "Claro, espero."
+        #           Bruce NO entendió que el cliente estaba OFRECIENDO el correo
+        # SOLUCIÓN: Detectar frases de ofrecimiento y ACEPTAR inmediatamente
+        # ================================================================
+        patrones_ofrece_correo = [
+            'te puedo pasar el correo', 'le puedo pasar el correo',
+            'te paso el correo', 'le paso el correo',
+            'te doy el correo', 'le doy el correo',
+            'quiere el correo', 'quieres el correo',
+            'te mando el correo', 'le mando el correo',
+            'anota el correo', 'anote el correo',
+            'apunta el correo', 'apunte el correo',
+            'tengo el correo', 'aquí tengo el correo',
+            'puedo darle el correo', 'puedo darte el correo'
+        ]
+        if any(p in texto_lower for p in patrones_ofrece_correo):
+            print(f"[OK] FIX 496: Cliente OFRECE dar CORREO: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_OFRECE_CORREO",
+                "respuesta": "Sí, por favor, dígame el correo.",
+                "accion": "ACEPTAR_CORREO"
+            }
+
+        # FIX 496: Cliente OFRECE dar WhatsApp
+        patrones_ofrece_whatsapp = [
+            'te puedo pasar el whatsapp', 'le puedo pasar el whatsapp',
+            'te paso el whatsapp', 'le paso el whatsapp',
+            'te doy el whatsapp', 'le doy el whatsapp',
+            'quiere el whatsapp', 'quieres el whatsapp',
+            'te mando el whatsapp', 'le mando el whatsapp',
+            'anota el whatsapp', 'anote el whatsapp',
+            'apunta el whatsapp', 'apunte el whatsapp',
+            'tengo el whatsapp', 'aquí tengo el whatsapp',
+            'puedo darle el whatsapp', 'puedo darte el whatsapp',
+            'te paso el número', 'le paso el número',
+            'te doy el número', 'le doy el número'
+        ]
+        if any(p in texto_lower for p in patrones_ofrece_whatsapp):
+            print(f"[OK] FIX 496: Cliente OFRECE dar WHATSAPP: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_OFRECE_WHATSAPP",
+                "respuesta": "Sí, por favor, dígame el número.",
+                "accion": "ACEPTAR_WHATSAPP"
+            }
+
         # FIX 476 (AUDITORIA W04): PREGUNTAS DIRECTAS - PRIORIDAD MÁXIMA
         # Problema: Bruce responde "Sí, dígame" en lugar de responder pregunta directa
         # Ejemplo: Cliente: "¿De dónde habla?" → Bruce: "Sí, dígame" [ERROR]
