@@ -5710,6 +5710,67 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # ================================================================
+        # FIX 505: BRUCE1480 - Detectar EMAIL COMPLETO DICTADO
+        # PROBLEMA: Cliente dice "Luis García 0 3 arroba Gmail punto com"
+        # FIX 496 lo detectaba como "OFRECE_CORREO" y respondía "dígame el correo"
+        # PERO el cliente YA ESTÁ DANDO el correo completo
+        # SOLUCIÓN: Si tiene arroba + dominio + terminación = EMAIL COMPLETO
+        # ================================================================
+        dominios_email = ['gmail', 'hotmail', 'outlook', 'yahoo', 'live', 'icloud', 'prodigy', 'aol']
+        terminaciones_email = ['punto com', 'punto mx', 'punto net', 'punto org', '.com', '.mx', '.net', '.org']
+
+        tiene_arroba = 'arroba' in texto_lower or '@' in texto_lower
+        tiene_dominio = any(dom in texto_lower for dom in dominios_email)
+        tiene_terminacion = any(term in texto_lower for term in terminaciones_email)
+
+        # Si tiene los 3 componentes = EMAIL COMPLETO DICTADO
+        if tiene_arroba and tiene_dominio and tiene_terminacion:
+            print(f"[OK] FIX 505: EMAIL COMPLETO DICTADO detectado: '{texto_cliente[:60]}'")
+            print(f"   Arroba: {tiene_arroba}, Dominio: {tiene_dominio}, Terminación: {tiene_terminacion}")
+
+            # Extraer y guardar el email
+            # Convertir texto a formato email
+            import re
+            texto_email = texto_lower
+
+            # FIX 505: Eliminar ayudas mnemotécnicas primero
+            # "u de uva" → "u", "b de burro" → "b", etc.
+            texto_email = re.sub(r'\b([a-z])\s+de\s+\w+\b', r'\1', texto_email)
+
+            # Eliminar palabras de contexto que no son parte del email
+            palabras_eliminar = [
+                'es', 'el', 'la', 'mi', 'su', 'correo', 'email', 'mail',
+                'entonces', 'pues', 'bueno', 'ok', 'este', 'seria', 'sería',
+                'luis', 'garcía', 'garcia', 'juan', 'pedro', 'maria', 'maría',  # Nombres comunes
+            ]
+            for palabra in palabras_eliminar:
+                texto_email = re.sub(rf'\b{palabra}\b', '', texto_email)
+
+            # Convertir "arroba" → "@"
+            texto_email = re.sub(r'\b(arroba|aroba)\b', '@', texto_email)
+            # Convertir "punto com" → ".com"
+            texto_email = re.sub(r'\bpunto\s*', '.', texto_email)
+            # Quitar espacios
+            texto_email = re.sub(r'\s+', '', texto_email)
+
+            print(f"   Texto procesado: '{texto_email}'")
+
+            # Buscar patrón de email
+            match_email = re.search(r'[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}', texto_email)
+            if match_email:
+                email_extraido = match_email.group(0)
+                print(f"   Email extraído: {email_extraido}")
+                self.lead_data["email"] = email_extraido
+            else:
+                print(f"   [WARN] No se pudo extraer email del texto procesado")
+
+            return {
+                "tipo": "CLIENTE_DICTA_EMAIL_COMPLETO",
+                "respuesta": "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo.",
+                "accion": "DESPEDIRSE"
+            }
+
+        # ================================================================
         # FIX 496/497: DETECCIÓN ROBUSTA - Cliente OFRECE dar contacto
         # PROBLEMA: Cliente dijo "¿Te puedo pasar el correo?" y Bruce no entendió
         # AMPLIADO: Todas las formas de ofrecer información de contacto
