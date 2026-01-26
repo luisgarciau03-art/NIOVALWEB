@@ -3407,6 +3407,8 @@ def procesar_respuesta():
         agente.lead_data["estado_llamada"] = "IVR"
         agente.lead_data["pregunta_7"] = "IVR/Contestadora automática"
         agente.guardar_llamada_y_lead()
+        # FIX 503: Despedirse educadamente antes de colgar (por si no es IVR)
+        response.say("Disculpe, parece que entró la contestadora. Le llamaré en otro momento. Que tenga buen día.", language="es-MX")
         response.hangup()
         return Response(str(response), mimetype="text/xml")
 
@@ -3416,14 +3418,14 @@ def procesar_respuesta():
         print(f" FIX 498: Respuesta vacía (modo espera silencioso) - Continuando sin audio")
         bruce_id = agente.lead_data.get("bruce_id", "N/A")
         log_evento(f"{bruce_id} - ESPERANDO EN SILENCIO (FIX 498)", "BRUCE")
-        # NO colgar, seguir escuchando al cliente
-        response.gather(
-            input="speech",
-            action=request.url_root + "llamada/continuar",
-            language="es-MX",
-            speechTimeout="3",
-            timeout="8",
-            speechModel="phone_call"
+        # FIX 503: Corregir ruta - usar /procesar-respuesta con Record
+        response.record(
+            action="/procesar-respuesta",
+            method="POST",
+            max_length=30,
+            timeout=3,
+            play_beep=False,
+            trim="trim-silence"
         )
         return Response(str(response), mimetype="text/xml")
 
