@@ -2671,13 +2671,14 @@ def procesar_respuesta():
                     audio_url = request.url_root + f"audio/{audio_id}"
                     response = VoiceResponse()
                     response.play(audio_url)
-                    response.gather(
-                        input="speech",
-                        action=request.url_root + "llamada/continuar",
-                        language="es-MX",
-                        speechTimeout="3",
-                        timeout="8",
-                        speechModel="phone_call"
+                    # FIX 502: Corregir ruta - usar /procesar-respuesta con Record (como el resto del código)
+                    response.record(
+                        action="/procesar-respuesta",
+                        method="POST",
+                        max_length=30,
+                        timeout=3,
+                        play_beep=False,
+                        trim="trim-silence"
                     )
                     return Response(str(response), mimetype="text/xml")
 
