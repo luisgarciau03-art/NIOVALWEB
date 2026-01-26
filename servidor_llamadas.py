@@ -2517,6 +2517,8 @@ def procesar_respuesta():
                 print(f"    FIX 253: Cliente deletreando email (detectado: {[p for p in palabras_deletreo_email if p in speech_result.lower()]})")
             elif esta_deletreando_email and email_detectado_completo:
                 print(f"    FIX 499: Email COMPLETO detectado - NO esperar más, procesar ahora")
+                # FIX 504: BRUCE1479 - Forzar que NO espere cuando email ya está completo
+                frase_parece_incompleta = False
 
             # FIX 286: Detectar si cliente está repitiendo lo mismo (indica que espera respuesta)
             if hasattr(agente, 'transcripcion_parcial_acumulada') and len(agente.transcripcion_parcial_acumulada) >= 2:
@@ -2694,11 +2696,14 @@ def procesar_respuesta():
             ]
             cliente_dictando_datos = any(frase in frase_limpia for frase in frases_dictando_datos)
 
-            if cliente_dictando_datos:
+            # FIX 504: BRUCE1479 - Si ya hay email completo, NO sobrescribir con espera
+            if cliente_dictando_datos and not email_detectado_completo:
                 print(f"    FIX 443: CLIENTE DICTANDO DATOS - esperar a que termine")
                 print(f"   Detectado: '{speech_result}'")
                 frase_parece_incompleta = True  # Forzar espera para captar el dato completo
                 esta_deletreando_email = True  # Usar timeout largo (2.5s) igual que con emails
+            elif cliente_dictando_datos and email_detectado_completo:
+                print(f"    FIX 504: Dictado detectado PERO email ya completo - procesar ahora")
 
             if frase_parece_incompleta:
                 print(f"\n FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine")
