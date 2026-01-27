@@ -1227,6 +1227,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # FIX 509: TIPO 2b: Cliente dice que NO tiene el dato/contacto
         # BRUCE1528: Cliente dijo "Le dije que no lo tengo" → Bruce pidió WhatsApp del encargado (ERROR)
+        # FIX 509b: BRUCE1533/1534 - "no tengo WhatsApp" (sin "el") / "teléfono es directo"
         # Esto debe detectarse ANTES de CORRECCION porque "le dije" activa CORRECCION incorrectamente
         indicadores_no_tiene_dato = [
             'no lo tengo', 'no tengo el', 'no tengo su',
@@ -1240,7 +1241,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'no le sé', 'no le se', 'no me lo sé', 'no me lo se',
             'no cuento con ese', 'no cuento con esa',
             'no manejo esa información', 'no manejo esa informacion',
-            'desconozco', 'no lo conozco', 'no la conozco'
+            'desconozco', 'no lo conozco', 'no la conozco',
+            # FIX 509b: BRUCE1533/1534 - Variantes adicionales
+            'no tengo whatsapp',  # Sin "el" - caso BRUCE1533
+            'no manejo whatsapp', 'no uso whatsapp',
+            'teléfono es directo', 'telefono es directo',
+            'teléfono directo', 'telefono directo',
+            'es telmex', 'línea directa', 'linea directa',
+            'es línea fija', 'es linea fija', 'teléfono fijo', 'telefono fijo',
+            'no tenemos whatsapp', 'no manejamos whatsapp',
+            'aquí no hay whatsapp', 'aqui no hay whatsapp',
+            'este número no tiene', 'este numero no tiene'
         ]
 
         if any(ind in texto_lower for ind in indicadores_no_tiene_dato):
@@ -6032,6 +6043,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "tipo": "PREGUNTA_PRECIOS",
                 "respuesta": "Los precios varían según el producto. ¿Me proporciona su WhatsApp y le envío el catálogo completo con todos los precios?",
                 "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL
+        # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
+        # Cliente está pidiendo que Bruce le dé SU número de contacto
+        if any(p in texto_lower for p in [
+            "démelo", "damelo", "dámelo",  # "Démelo" - pidiendo el número
+            "me lo da", "me lo das", "me lo puede dar",
+            "pásame el número", "pasame el numero", "páseme el número", "paseme el numero",
+            "dame tu número", "dame su número", "deme su número",
+            "cuál es su número", "cual es su numero", "cuál es tu número", "cual es tu numero",
+            "cuál es el whatsapp", "cual es el whatsapp",
+            "cuál es el teléfono", "cual es el telefono",
+            "me das el número", "me da el número",
+            "su contacto", "tu contacto", "el contacto",
+            "cómo los contacto", "como los contacto",
+            "número para llamar", "numero para llamar",
+            "a qué número", "a que numero"
+        ]):
+            print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
+            return {
+                "tipo": "PIDE_CONTACTO_NIOVAL",
+                "respuesta": "Claro, nuestro WhatsApp es 3 3 2 1 0 1 4 4 8 6 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos.",
+                "accion": "DAR_CONTACTO"
             }
 
         # 1. DESPEDIDAS (no necesita GPT)

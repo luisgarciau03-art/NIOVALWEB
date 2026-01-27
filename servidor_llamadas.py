@@ -1672,10 +1672,15 @@ def procesar_respuesta():
 
     # FIX 212/217/218/219/401: Verificar si hay transcripción de Deepgram disponible
     # FIX 401: Deepgram es el sistema PRINCIPAL - esperar suficiente tiempo
+    # FIX 511: BRUCE1546 - Timeout escalonado para reducir delays de 42s
+    #   - 3s: Si hay PARCIAL disponible, usarla (no esperar 5s por FINAL)
+    #   - 5s: Timeout absoluto (fallback completo)
     import time
-    max_wait_deepgram = 5.0  # FIX 401: Aumentado a 5s - Deepgram tarda ~4s, NO usar Whisper
+    max_wait_deepgram = 5.0  # FIX 401: Timeout absoluto máximo
+    max_wait_parcial_fallback = 3.0  # FIX 511: Usar PARCIAL después de 3s si no hay FINAL
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
+    parcial_disponible_desde = None  # FIX 511: Cuándo detectamos primera PARCIAL
 
     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
         # FIX 451: Variable para rastrear si esperamos FINAL
@@ -1708,11 +1713,25 @@ def procesar_respuesta():
                 es_final = info_ultima.get("es_final", False)
 
             if transcripciones_dg:
+                # FIX 511: Registrar cuándo detectamos primera PARCIAL
+                if parcial_disponible_desde is None:
+                    parcial_disponible_desde = time.time()
+
                 # FIX 451: Verificar si la transcripción es FINAL
                 if not es_final and esperando_final:
                     # FIX 477: Si la PARCIAL es saludo corto, reducir tiempo de espera
                     parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
                     es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
+
+                    # FIX 511: Si ya pasaron 3s desde que tenemos PARCIAL, usarla inmediatamente
+                    # Esto reduce delays de 5s a 3s cuando Deepgram tarda en enviar FINAL
+                    tiempo_con_parcial = time.time() - parcial_disponible_desde
+                    if tiempo_con_parcial >= max_wait_parcial_fallback:
+                        print(f"\n FIX 511: PARCIAL disponible por {tiempo_con_parcial:.1f}s sin FINAL - usando como fallback")
+                        print(f"   PARCIAL: '{parcial_actual}'")
+                        # Forzar uso de PARCIAL
+                        esperando_final = False
+                        tiempo_espera_final_extra = max_espera_final_extra + 1  # Saltar la espera
 
                     # FIX 475 (AUDITORIA W04): Timeout universal de 0.3s para todas las transcripciones
                     # No diferenciar entre saludos y otras frases - consistencia de latencia
