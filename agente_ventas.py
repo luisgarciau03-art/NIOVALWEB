@@ -3374,12 +3374,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                 'qué ofrece', 'que ofrece'
                             ])
 
+                            # FIX 508: BRUCE1525 - Cliente pide repetir la marca
+                            # Caso: "Repites tu marca, por favor?" → Bruce respondió "Sí, dígame" (INCORRECTO)
+                            cliente_pide_repetir_marca = any(frase in ultimo_cliente_lower for frase in [
+                                'repite tu marca', 'repites tu marca', 'me repites tu marca',
+                                'repíteme la marca', 'repiteme la marca',
+                                'cuál es tu marca', 'cual es tu marca',
+                                'cuál marca es', 'cual marca es',
+                                'cómo se llama la marca', 'como se llama la marca',
+                                'qué marca es', 'que marca es', 'qué marca dices', 'que marca dices',
+                                'dime la marca', 'me dices la marca',
+                                'no escuché la marca', 'no escuche la marca',
+                                'perdón la marca', 'perdon la marca',
+                                'repíteme', 'repiteme', 'me repite', 'repite por favor'
+                            ])
+
                             if cliente_pregunta_que_vende:
                                 # FIX 464: NO cambiar la respuesta de GPT - dejar que explique los productos
                                 print(f"   [OK] FIX 464: Cliente pregunta QUÉ VENDE - dejando respuesta de GPT")
                                 # No cambiar respuesta, dejar que GPT explique los productos
                                 filtro_aplicado = False  # Cancelar el filtro
                                 break  # Salir del loop de patrones
+                            elif cliente_pide_repetir_marca:
+                                # FIX 508: Cliente pide que repita la marca - responder con NIOVAL
+                                print(f"   [OK] FIX 508: Cliente pide repetir MARCA - respondiendo con NIOVAL")
+                                respuesta = "Manejamos la marca NIOVAL, que es nuestra marca propia de productos de ferretería."
+                                filtro_aplicado = True
+                                print(f"   Respuesta corregida: \"{respuesta}\"")
+                                break
                             else:
                                 # FIX 444 original: Cliente está preguntando algo genérico
                                 respuesta = "Sí, dígame."
@@ -5298,6 +5320,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Bruce preguntó "¿Se encontrará el encargado?" y cliente dice "Ella habla"
         # = la persona en la línea ES la encargada
         # FIX 367: Agregar "soy yo, dígame" como indicador de encargado
+        # FIX 508: BRUCE1525 - Solo aplicar si cliente indica en el ÚLTIMO mensaje, no todo el historial
         # ============================================================
         if not filtro_aplicado:
             # Detectar si cliente indica que es el/la encargado/a
@@ -5316,7 +5339,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 r'yo\s+soy,?\s*d[ií]game', r's[ií],?\s*adelante'
             ]
 
-            cliente_indica_es_encargado = any(re.search(p, contexto_cliente) for p in patrones_ella_el_habla)
+            # FIX 508: Obtener SOLO el último mensaje del cliente, no todo el historial
+            # BRUCE1525: Cliente dijo "con ella habla" ANTES, luego preguntó "¿qué productos manejas?"
+            # El filtro estaba usando contexto_cliente (historial completo) y detectaba el viejo mensaje
+            ultimos_mensajes_cliente_fix508 = [
+                msg['content'].lower() for msg in self.conversation_history[-2:]
+                if msg['role'] == 'user'
+            ]
+            ultimo_mensaje_cliente_fix508 = ultimos_mensajes_cliente_fix508[-1] if ultimos_mensajes_cliente_fix508 else ""
+
+            # Solo detectar si el cliente indica que es encargado en el ÚLTIMO mensaje
+            cliente_indica_es_encargado = any(re.search(p, ultimo_mensaje_cliente_fix508) for p in patrones_ella_el_habla)
 
             # Bruce preguntó por encargado recientemente
             mensajes_bruce_recientes = [
