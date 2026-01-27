@@ -1225,6 +1225,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Cliente dijo: '{texto_cliente}'")
             return (True, "FRUSTRACION", texto_cliente)
 
+        # FIX 509: TIPO 2b: Cliente dice que NO tiene el dato/contacto
+        # BRUCE1528: Cliente dijo "Le dije que no lo tengo" → Bruce pidió WhatsApp del encargado (ERROR)
+        # Esto debe detectarse ANTES de CORRECCION porque "le dije" activa CORRECCION incorrectamente
+        indicadores_no_tiene_dato = [
+            'no lo tengo', 'no tengo el', 'no tengo su',
+            'no cuento con', 'no me sé', 'no me se',
+            'no sé cuál es', 'no se cual es', 'no sé su', 'no se su',
+            'no tengo ese dato', 'no tengo esa información', 'no tengo esa informacion',
+            'no tengo el número', 'no tengo el numero',
+            'no tengo el whatsapp', 'no tengo el correo',
+            'no sé el número', 'no se el numero',
+            'no sé el whatsapp', 'no se el whatsapp',
+            'no le sé', 'no le se', 'no me lo sé', 'no me lo se',
+            'no cuento con ese', 'no cuento con esa',
+            'no manejo esa información', 'no manejo esa informacion',
+            'desconozco', 'no lo conozco', 'no la conozco'
+        ]
+
+        if any(ind in texto_lower for ind in indicadores_no_tiene_dato):
+            print(f"\n[WRENCH] FIX 509: CLIENTE NO TIENE DATO - Cliente indica que no tiene el contacto")
+            print(f"   Cliente dijo: '{texto_cliente}'")
+            return (True, "NO_TIENE_DATO", texto_cliente)
+
         # TIPO 3: Cliente corrige a Bruce
         indicadores_correccion = [
             'no, es', 'no es', 'no, le dije', 'le dije', 'dije que',
@@ -1332,6 +1355,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return (
                 "Tiene razón, disculpe. "
                 "¿Me puede confirmar el WhatsApp donde le envío el catálogo?"
+            )
+
+        elif tipo_error == "NO_TIENE_DATO":
+            # FIX 509: BRUCE1528 - Cliente dice que NO tiene el contacto del encargado
+            # En este caso, ofrecemos el WhatsApp de NIOVAL para que el encargado les contacte
+            print(f"   [WRENCH] FIX 509: Generando respuesta de recuperación (NO TIENE DATO - Intento {self.intentos_recuperacion}/3)")
+
+            return (
+                "Entiendo perfectamente, no se preocupe. "
+                "Si gusta le puedo dejar nuestro WhatsApp 3 3 2 1 0 1 4 4 8 6 "
+                "para cuando el encargado pueda comunicarse con nosotros."
             )
 
         elif tipo_error == "CORRECCION":
