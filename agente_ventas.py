@@ -6172,11 +6172,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # FIX 477 (AUDITORIA W04): Verificar si cliente está dando información PARCIAL
         # NO interrumpir cuando está dictando número o correo
+        # FIX 506b: BRUCE1489/1495/1503 - Retornar "" en lugar de None para evitar falso IVR
+        # Problema: None era interpretado por FIX 304 como IVR y colgaba
         if self._cliente_esta_dando_informacion(respuesta_cliente):
             self.metrics.log_interrupcion_detectada()  # FIX 482: Métrica
-            print(f"   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir (retornando None)")
+            print(f"   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir")
             print(f"   → Bruce esperará a que cliente termine de dictar")
-            return None
+            print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
+            return ""  # FIX 506b: "" = pausar, None = IVR real
 
         # PASO 2: Buscar en cache de respuestas frecuentes (0.3-0.6s - 83-91% más rápido)
         respuesta_cache = self._obtener_respuesta_cache(respuesta_cliente)
@@ -6203,8 +6206,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if not debe_continuar:
             # FIX 428 detectó problema de audio (¿bueno? repetido, etc.)
             # No generar respuesta - sistema de respuestas vacías manejará
-            print(f"   [EMOJI]  FIX 428: Problema de audio detectado → NO generar respuesta (retornando None)")
-            return None
+            # FIX 506b: Retornar "" en lugar de None para evitar falso IVR
+            print(f"   [EMOJI]  FIX 428: Problema de audio detectado → NO generar respuesta")
+            print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
+            return ""  # FIX 506b: "" = pausar, None = IVR real
 
         # ============================================================
         # FIX 424: NO INTERRUMPIR cuando cliente está dictando correo/número
@@ -6242,8 +6247,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             if not dictado_completo:
                 # Dictado INCOMPLETO - NO responder, esperar a que cliente termine
-                print(f"   → Dictado INCOMPLETO - Esperando más información (retornando None)")
-                return None
+                # FIX 506b: Retornar "" en lugar de None para evitar falso IVR
+                print(f"   → Dictado INCOMPLETO - Esperando más información")
+                print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
+                return ""  # FIX 506b: "" = pausar, None = IVR real
 
         # ============================================================
         # FIX 426: NO PROCESAR transcripciones PARCIALES incompletas
@@ -6295,13 +6302,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         tiene_continuacion = any(palabra in palabras_limpias for palabra in palabras_continuacion)
 
         # Si tiene frase de inicio pero NO tiene continuación → transcripción PARCIAL
+        # FIX 506b: Retornar "" en lugar de None para evitar falso IVR
         if tiene_frase_inicio and not tiene_continuacion:
             print(f"\n[PAUSE]  FIX 426: Transcripción PARCIAL detectada (frase de inicio sin continuación)")
             print(f"   Cliente dijo: \"{respuesta_cliente}\"")
             print(f"   Tiene frase de inicio: {tiene_frase_inicio}")
             print(f"   Tiene continuación: {tiene_continuacion}")
-            print(f"   → Esperando transcripción COMPLETA (retornando None)")
-            return None
+            print(f"   → Esperando transcripción COMPLETA")
+            print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
+            return ""  # FIX 506b: "" = pausar, None = IVR real
 
         # FIX 389/415: Si cliente pidió esperar (transferencia) → Responder inmediatamente SIN llamar GPT
         # PERO: Si cambió a BUSCANDO_ENCARGADO (persona nueva), SÍ llamar GPT para re-presentarse

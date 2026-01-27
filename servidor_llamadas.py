@@ -3225,9 +3225,19 @@ def procesar_respuesta():
             respuesta_texto = respuesta_container["respuesta"]
 
             # FIX 304: Si respuesta es None (IVR detectado), no procesar audio
+            # FIX 506b: BRUCE1489/1495/1503 - Distinguir None (IVR) de "" (pausar)
+            # None = IVR real detectado → salir sin audio
+            # "" = FIX 477/428 indica pausar → también salir pero sin marcar IVR
             if respuesta_texto is None:
                 print(f" FIX 304: respuesta_texto es None (IVR detectado) - saliendo del thread")
                 audio_container["audio_id"] = None
+                audio_container["completado"] = True
+                return  # Salir del thread sin procesar audio
+
+            # FIX 506b: Si respuesta es cadena vacía, pausar sin marcar IVR
+            if respuesta_texto == "":
+                print(f" FIX 506b: respuesta_texto es '' (pausar/esperar) - saliendo del thread SIN marcar IVR")
+                audio_container["audio_id"] = "PAUSAR"  # Valor especial para indicar pausa
                 audio_container["completado"] = True
                 return  # Salir del thread sin procesar audio
 

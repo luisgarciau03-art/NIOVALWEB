@@ -1,9 +1,16 @@
 """
 FIX 202: Detector de Sistemas IVR/Contestadoras Automáticas
+FIX 506: BRUCE1489/1495/1503 - Reducir falsos positivos
 
 Este módulo detecta cuando Bruce está conversando con un sistema automatizado
 (IVR, contestadora, menú telefónico) y permite terminar la llamada temprano
 para ahorrar tiempo y créditos.
+
+FIX 506 CAMBIOS:
+- "bienvenido a" y "gracias por comunicarse" movidos a confianza MEDIA (no alta)
+- Umbral para colgar inmediato aumentado de 0.7 a 0.85
+- Detecciones sospechosas necesarias aumentadas de 2 a 3
+- Requerir MÚLTIPLES indicadores para colgar (no solo una frase)
 
 Uso:
     from detector_ivr import DetectorIVR
@@ -60,7 +67,7 @@ class DetectorIVR:
         "cero", "asterisco", "gato", "numeral"
     ]
 
-    # Frases típicas de IVR (alta confianza)
+    # Frases típicas de IVR (alta confianza) - SOLO frases que NUNCA diría un humano
     FRASES_IVR_ALTA_CONFIANZA = [
         "marque el",
         "digite el",
@@ -70,9 +77,16 @@ class DetectorIVR:
         "para escuchar nuevamente este menú",
         "su llamada será contestada",
         "permanezca en la línea",
-        "bienvenido a",
-        "ha llamado a",
-        "gracias por comunicarse con"
+        # FIX 506: "bienvenido a" y "gracias por comunicarse" REMOVIDOS
+        # porque negocios reales pueden usarlos como saludo
+    ]
+
+    # FIX 506: Frases de CONFIANZA MEDIA - pueden ser IVR o humano, requieren más contexto
+    FRASES_IVR_MEDIA_CONFIANZA = [
+        "bienvenido a",  # Negocio real puede decir "Bienvenido a Ferretería X"
+        "ha llamado a",  # Puede ser saludo de negocio
+        "gracias por comunicarse con",  # Puede ser despedida de persona real
+        "gracias por llamar a",  # Similar
     ]
 
     def __init__(self):
@@ -80,7 +94,7 @@ class DetectorIVR:
         Inicializa el detector de IVR
         """
         self.detecciones_sospechosas = 0
-        self.max_detecciones = 2  # Colgar después de 2 detecciones sospechosas
+        self.max_detecciones = 3  # FIX 506: Aumentado de 2 a 3 para reducir falsos positivos
         self.historial_confianzas = []  # Para análisis de tendencias
 
     def analizar_respuesta(self, texto: str, es_primera_respuesta: bool = False) -> dict:
@@ -109,11 +123,17 @@ class DetectorIVR:
         palabras_ivr = 0
         categorias_detectadas = []
         frases_alta_confianza = []
+        frases_media_confianza = []  # FIX 506
 
         # === VERIFICACIÓN 1: Frases de alta confianza ===
         for frase in self.FRASES_IVR_ALTA_CONFIANZA:
             if frase in texto_lower:
                 frases_alta_confianza.append(frase)
+
+        # === FIX 506: Frases de confianza media (requieren más contexto) ===
+        for frase in self.FRASES_IVR_MEDIA_CONFIANZA:
+            if frase in texto_lower:
+                frases_media_confianza.append(frase)
 
         # === VERIFICACIÓN 2: Patrones por categoría ===
         for categoria, patrones in self.PATRONES_IVR.items():
@@ -135,18 +155,27 @@ class DetectorIVR:
         # === CALCULAR CONFIANZA ===
         confianza = 0.0
         razones = []
+        indicadores_ivr = 0  # FIX 506: Contador de indicadores diferentes
 
         # Factor 1: Frases de alta confianza (peso muy alto)
         if frases_alta_confianza:
             confianza += 0.5
+            indicadores_ivr += 1
             razones.append(f"Frases IVR detectadas: {', '.join(frases_alta_confianza[:2])}")
+
+        # FIX 506: Factor 1b - Frases de confianza media (peso menor, solo 0.2)
+        elif frases_media_confianza:  # Solo si NO hay frases de alta confianza
+            confianza += 0.2  # Menos peso que antes (era 0.5 cuando estaban juntas)
+            razones.append(f"Frases IVR media confianza: {', '.join(frases_media_confianza[:2])}")
 
         # Factor 2: Palabras clave de IVR
         if palabras_ivr >= 3:
             confianza += 0.3
+            indicadores_ivr += 1  # FIX 506
             razones.append(f"{palabras_ivr} palabras clave IVR")
         elif palabras_ivr >= 2:
             confianza += 0.2
+            indicadores_ivr += 1  # FIX 506
             razones.append(f"{palabras_ivr} palabras clave IVR")
         elif palabras_ivr >= 1:
             confianza += 0.1
@@ -154,9 +183,11 @@ class DetectorIVR:
         # Factor 3: Números de menú (especialmente si hay múltiples)
         if numeros_menu_detectados >= 3:
             confianza += 0.25
+            indicadores_ivr += 1  # FIX 506
             razones.append(f"{numeros_menu_detectados} números de menú")
         elif numeros_menu_detectados >= 2:
             confianza += 0.15
+            indicadores_ivr += 1  # FIX 506
             razones.append(f"{numeros_menu_detectados} números de menú")
         elif numeros_menu_detectados >= 1:
             confianza += 0.05
@@ -193,11 +224,19 @@ class DetectorIVR:
         es_ivr = confianza >= 0.5
         accion = "continuar"
 
-        if confianza >= 0.7:
-            # Alta confianza → Colgar inmediatamente
+        # FIX 506: Aumentado umbral de 0.7 a 0.85, y requerir múltiples indicadores
+        if confianza >= 0.85 and indicadores_ivr >= 2:
+            # MUY Alta confianza + múltiples indicadores → Colgar inmediatamente
             accion = "colgar"
             self.detecciones_sospechosas = 999  # Forzar cuelgue
-            razones.append("ALTA CONFIANZA → Colgar")
+            razones.append(f"MUY ALTA CONFIANZA ({indicadores_ivr} indicadores) → Colgar")
+
+        elif confianza >= 0.7 and indicadores_ivr >= 2:
+            # FIX 506: Alta confianza PERO solo si hay 2+ indicadores diferentes
+            # Antes colgaba con 0.7 y cualquier indicador (causaba falsos positivos)
+            accion = "colgar"
+            self.detecciones_sospechosas = 999
+            razones.append(f"ALTA CONFIANZA ({indicadores_ivr} indicadores) → Colgar")
 
         elif confianza >= 0.5:
             # Confianza media → Incrementar contador
@@ -228,6 +267,8 @@ class DetectorIVR:
             "numeros_menu": numeros_menu_detectados,
             "longitud_palabras": longitud_palabras,
             "frases_alta_confianza": frases_alta_confianza,
+            "frases_media_confianza": frases_media_confianza,  # FIX 506
+            "indicadores_ivr": indicadores_ivr,  # FIX 506: Cantidad de indicadores diferentes
             "accion": accion,
             "detecciones_acumuladas": self.detecciones_sospechosas,
             "razon": " | ".join(razones) if razones else "Respuesta normal"
