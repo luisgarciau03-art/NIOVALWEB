@@ -514,7 +514,8 @@ class AgenteVentas:
             return "CALIFICACION"
 
         # Fase 3: CAPTURA (es encargado pero falta contacto)
-        tiene_contacto = bool(self.whatsapp or self.correo)
+        # FIX 507b: Usar lead_data.get() para evitar AttributeError
+        tiene_contacto = bool(self.lead_data.get("whatsapp") or self.lead_data.get("email"))
         if es_encargado and not tiene_contacto:
             return "CAPTURA"
 
@@ -643,7 +644,7 @@ class AgenteVentas:
 [EMOJI] CONTEXTO DINÁMICO - LLAMADA ACTUAL (FIX 491)
 [EMOJI]
 
-NEGOCIO: {self.nombre_negocio} | CIUDAD: {self.ciudad} | TEL: {self.telefono}
+NEGOCIO: {self.lead_data.get("nombre_negocio", "N/A")} | CIUDAD: {self.lead_data.get("ciudad", "N/A")} | TEL: {self.lead_data.get("telefono", "N/A")}
 
 DATOS CAPTURADOS:
 • Nombre: {nombre_enc} | WhatsApp: {whatsapp} | Correo: {correo}
