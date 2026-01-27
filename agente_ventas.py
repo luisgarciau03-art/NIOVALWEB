@@ -631,9 +631,10 @@ class AgenteVentas:
         objeciones = self._detectar_objeciones_activas()
 
         # Formatear datos capturados
-        nombre_enc = self.nombre_encargado if self.nombre_encargado else "NO CAPTURADO"
-        whatsapp = self.whatsapp if self.whatsapp else "NO CAPTURADO"
-        correo = self.correo if self.correo else "NO CAPTURADO"
+        # FIX 507: BRUCE1492 - Usar lead_data.get() para evitar AttributeError
+        nombre_enc = self.lead_data.get("nombre_encargado", "") or "NO CAPTURADO"
+        whatsapp = self.lead_data.get("whatsapp", "") or "NO CAPTURADO"
+        correo = self.lead_data.get("email", "") or "NO CAPTURADO"
 
         # Construir contexto compacto
         contexto = f"""
