@@ -6867,6 +6867,7 @@ def historial_llamadas_dashboard():
                     <th>Teléfono</th>
                     <th>Resultado</th>
                     <th>Duración</th>
+                    <th>Colgó</th>
                     <th>Grabación</th>
                     <th>Semáforo</th>
                     <th>Notas del Error</th>
@@ -6930,6 +6931,15 @@ def historial_llamadas_dashboard():
             # Estado para el filtro
             estado_filtro = semaforo_actual if semaforo_actual else 'sin_calificar'
 
+            # FIX 517: Determinar quién colgó (C=Cliente, B=Bruce, -=N/A)
+            quien_colgo = "-"
+            if 'colgo' in resultado_lower or 'colgó' in resultado_lower:
+                quien_colgo = "C"  # Cliente colgó
+            elif 'catálogo' in resultado_lower or 'éxito' in resultado_lower or 'despedida' in resultado_lower:
+                quien_colgo = "B"  # Bruce terminó exitosamente
+            elif 'nulo' in resultado_lower and llamada.get('duracion', 0) > 30:
+                quien_colgo = "C"  # Llamada larga sin resultado = cliente colgó
+
             html += f"""
                 <tr data-call-id="{call_id}" data-estado="{estado_filtro}" class="{'fila-solucionada' if solucionado_actual else ''}">
                     <td style="font-size: 11px; white-space: nowrap;">{llamada.get('timestamp', 'N/A')}</td>
@@ -6938,6 +6948,7 @@ def historial_llamadas_dashboard():
                     <td style="font-size: 12px;">{llamada.get('telefono', 'N/A')}</td>
                     <td><span class="badge {badge_class}">{resultado[:20]}</span></td>
                     <td>{llamada.get('duracion', 0)}s</td>
+                    <td style="text-align:center; font-weight:bold; color:{'#f44336' if quien_colgo == 'C' else '#4CAF50' if quien_colgo == 'B' else '#666'};">{quien_colgo}</td>
                     <td>
                         {'<audio controls preload="none" style="width:150px; height:32px;"><source src="' + link_grabacion + '" type="audio/mpeg">Tu navegador no soporta audio</audio>' if link_grabacion else '<span style="color:#666">-</span>'}
                     </td>

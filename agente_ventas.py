@@ -6231,7 +6231,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "ahorita no puedo", "ahorita estoy ocupado", "ahorita estoy ocupada",
             "estoy ocupado", "estoy ocupada", "no puedo ahorita",
             "regrese la llamada", "vuelva a llamar", "vuelve a llamar",
-            "intente más tarde", "intente mas tarde"
+            "intente más tarde", "intente mas tarde",
+            # FIX 517 BRUCE1637: Variantes con "gusta" (forma cortés mexicana)
+            "gusta llamar más tarde", "gusta llamar mas tarde",
+            "gusta marcar más tarde", "gusta marcar mas tarde",
+            "gusta llamar después", "gusta llamar despues",
+            "si gusta llamar", "si gusta marcar",
+            "si gusta llámele", "si gusta llamele",
+            "le gustaría llamar", "le gustaria llamar",
+            # FIX 517: Cliente dice que ÉL volverá a llamar (implica callback)
+            "vuelvo a llamar", "le vuelvo a llamar", "yo le llamo",
+            "yo le marco", "le marco después", "le marco despues"
         ]):
             # Verificar que no sea "no me llame" o rechazo total
             if not any(neg in texto_lower for neg in ["no me llame", "no llames", "no vuelva", "deja de llamar"]):
