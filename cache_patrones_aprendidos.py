@@ -30,7 +30,7 @@ class CachePatronesAprendidos:
 
     # Categorías de respuestas para clasificar
     CATEGORIAS_RESPUESTA = {
-        "PIDE_CONTACTO": ["whatsapp", "correo", "número", "contacto", "3321014486"],
+        "PIDE_CONTACTO": ["whatsapp", "correo", "número", "contacto", "6624151997"],
         "CALLBACK": ["llamo más tarde", "qué hora", "horario", "vuelvo a llamar"],
         "DESPEDIDA": ["gracias por su tiempo", "excelente día", "hasta luego"],
         "ENCARGADO_NO_ESTA": ["no está", "no se encuentra", "más tarde"],

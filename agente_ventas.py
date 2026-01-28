@@ -196,6 +196,9 @@ class EstadoConversacion(Enum):
     CONTACTO_CAPTURADO = "contacto_capturado"  # Ya tenemos WhatsApp o correo
     DESPEDIDA = "despedida"                    # Conversación terminando
     CONVERSACION_NORMAL = "conversacion_normal"  # FIX 488: Estado normal de conversación
+    # FIX 520 BRUCE1652: Flujo para ofrecer contacto de Bruce cuando cliente no puede dar info
+    OFRECIENDO_CONTACTO_BRUCE = "ofreciendo_contacto_bruce"  # Bruce ofreció dejar su número
+    ESPERANDO_DONDE_ANOTAR = "esperando_donde_anotar"        # Bruce preguntó si tiene dónde anotar
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -431,6 +434,10 @@ class AgenteVentas:
 
         # FIX 482 (AUDITORIA W04): Sistema de métricas e instrumentación
         self.metrics = MetricsLogger()
+
+        # FIX 522 BRUCE1659: Flag para evitar repetir oferta de catálogo
+        self.catalogo_prometido = False  # True cuando Bruce ya dijo "le envío el catálogo"
+        self.numero_parcial_recibido = None  # Guardar número parcial para pedir completo
 
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
@@ -1383,7 +1390,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return (
                 "Entiendo perfectamente, no se preocupe. "
-                "Si gusta le puedo dejar nuestro WhatsApp 3 3 2 1 0 1 4 4 8 6 "
+                "Si gusta le puedo dejar nuestro WhatsApp 6 6 2 4 1 5 1 9 9 7 "
                 "para cuando el encargado pueda comunicarse con nosotros."
             )
 
@@ -3437,7 +3444,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                         if cliente_quiere_dejar_mensaje:
                             # FIX 444: Cliente quiere dejar mensaje - dar contacto
-                            respuesta = "Claro, puede enviar la información al WhatsApp 3 3 2 1 0 1 4 4 8 6 o al correo ventas arroba nioval punto com."
+                            respuesta = "Claro, puede enviar la información al WhatsApp 6 6 2 4 1 5 1 9 9 7 o al correo ventas arroba nioval punto com."
                             print(f"   [EMOJI] FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
                         elif cliente_hace_pregunta and not cliente_dando_info:
                             # FIX 464: BRUCE1390 - Detectar si cliente pregunta QUÉ VENDE
@@ -5525,6 +5532,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             print(f"   Respuesta fallback: \"{respuesta}\"")
 
+        # ================================================================
+        # FIX 522 BRUCE1659: Detectar promesa de catálogo y evitar repetir
+        # ================================================================
+        respuesta_lower = respuesta.lower() if respuesta else ""
+
+        # Detectar si Bruce promete enviar el catálogo
+        if any(frase in respuesta_lower for frase in [
+            'le envío el catálogo', 'le envio el catalogo',
+            'envío el catálogo', 'envio el catalogo',
+            'le mando el catálogo', 'le mando el catalogo'
+        ]):
+            if not self.catalogo_prometido:
+                self.catalogo_prometido = True
+                print(f"   FIX 522: Catálogo PROMETIDO - flag activado")
+
+        # Si ya se prometió el catálogo y Bruce vuelve a ofrecer, convertir en despedida
+        if self.catalogo_prometido:
+            # Detectar si está volviendo a ofrecer catálogo
+            vuelve_a_ofrecer = any(frase in respuesta_lower for frase in [
+                '¿le gustaría recibirlo', '¿le gustaria recibirlo',
+                '¿le envío el catálogo', '¿le envio el catalogo',
+                '¿por whatsapp o correo', '¿whatsapp o correo'
+            ])
+            if vuelve_a_ofrecer:
+                print(f"   FIX 522: Ya se prometió catálogo - evitando repetir oferta")
+                respuesta = "Perfecto, entonces le envío el catálogo. Muchas gracias por su tiempo, que tenga excelente día."
+
         return respuesta
 
     def iniciar_conversacion(self):
@@ -5653,6 +5687,96 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         texto_lower = texto_cliente.lower().strip()
 
         # ================================================================
+        # FIX 520 BRUCE1652: Flujo de ofrecer contacto de Bruce
+        # Cuando cliente no puede dar info del encargado, Bruce ofrece su número
+        # ================================================================
+
+        # Fase 1: Bruce ofreció dejar su número, esperando respuesta del cliente
+        if self.estado_conversacion == EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE:
+            # Detectar si cliente acepta recibir el contacto
+            cliente_acepta = any(p in texto_lower for p in [
+                'sí', 'si', 'claro', 'adelante', 'va', 'sale', 'ok', 'okay',
+                'dígame', 'digame', 'dime', 'pásemelo', 'pasemelo', 'démelo', 'demelo',
+                'anote', 'anota', 'deje', 'deja', 'por favor', 'perfecto',
+                'cómo no', 'como no', 'órale', 'orale', 'ándale', 'andale',
+                'está bien', 'esta bien', 'bueno', 'pues sí', 'pues si'
+            ])
+
+            # Detectar si cliente rechaza
+            cliente_rechaza = any(p in texto_lower for p in [
+                'no gracias', 'no, gracias', 'no hace falta', 'no es necesario',
+                'no se preocupe', 'no te preocupes', 'así está bien', 'asi esta bien',
+                'mejor no', 'no por ahora', 'ahorita no'
+            ])
+
+            if cliente_rechaza:
+                print(f"   FIX 520: Cliente RECHAZA recibir contacto - despedirse amablemente")
+                self.estado_conversacion = EstadoConversacion.DESPEDIDA
+                return {
+                    "tipo": "CLIENTE_RECHAZA_CONTACTO_BRUCE",
+                    "respuesta": "Entendido, no se preocupe. Le vuelvo a llamar más tarde. Muchas gracias por su tiempo.",
+                    "accion": "DESPEDIRSE"
+                }
+            elif cliente_acepta:
+                print(f"   FIX 520: Cliente ACEPTA recibir contacto - preguntar si tiene dónde anotar")
+                self.estado_conversacion = EstadoConversacion.ESPERANDO_DONDE_ANOTAR
+                return {
+                    "tipo": "CLIENTE_ACEPTA_CONTACTO_BRUCE",
+                    "respuesta": "Perfecto. ¿Tiene dónde anotar?",
+                    "accion": "PREGUNTAR_DONDE_ANOTAR"
+                }
+            else:
+                # Respuesta ambigua - repetir ofrecimiento
+                print(f"   FIX 520: Respuesta ambigua - clarificar ofrecimiento")
+                return {
+                    "tipo": "CLARIFICAR_OFRECIMIENTO",
+                    "respuesta": "¿Me permite dejarle el número para que el encargado nos contacte?",
+                    "accion": "REPETIR_OFRECIMIENTO"
+                }
+
+        # Fase 2: Bruce preguntó si tiene dónde anotar, esperando confirmación
+        if self.estado_conversacion == EstadoConversacion.ESPERANDO_DONDE_ANOTAR:
+            # Detectar si cliente tiene dónde anotar
+            tiene_donde_anotar = any(p in texto_lower for p in [
+                'sí', 'si', 'claro', 'adelante', 'dígame', 'digame', 'dime',
+                'anoto', 'apunto', 'tengo', 'ya', 'listo', 'pásemelo', 'pasemelo',
+                'démelo', 'demelo', 'dámelo', 'damelo', 'va', 'sale', 'ok',
+                'ajá', 'aja', 'órale', 'orale', 'ándale', 'andale', 'espere', 'espera',
+                'déjeme', 'dejeme', 'déjame', 'dejame', 'un momento', 'un segundo'
+            ])
+
+            # Detectar si no tiene dónde anotar
+            no_tiene = any(p in texto_lower for p in [
+                'no tengo', 'ahorita no', 'no traigo', 'no encuentro',
+                'espéreme', 'espereme', 'deje busco', 'deja busco'
+            ])
+
+            if no_tiene:
+                print(f"   FIX 520: Cliente NO tiene dónde anotar - esperar")
+                return {
+                    "tipo": "ESPERANDO_QUE_ANOTE",
+                    "respuesta": "Claro, lo espero.",
+                    "accion": "ESPERAR"
+                }
+            elif tiene_donde_anotar:
+                print(f"   FIX 520: Cliente TIENE dónde anotar - dar número y marca")
+                self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
+                return {
+                    "tipo": "DAR_CONTACTO_BRUCE",
+                    "respuesta": "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
+                    "accion": "CONTACTO_DADO"
+                }
+            else:
+                # Asumir que sí tiene y dar el número
+                print(f"   FIX 520: Respuesta ambigua - asumir que sí tiene y dar número")
+                self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
+                return {
+                    "tipo": "DAR_CONTACTO_BRUCE",
+                    "respuesta": "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
+                    "accion": "CONTACTO_DADO"
+                }
+
+        # ================================================================
         # FIX 497: SISTEMA DE DETECCIÓN SEMÁNTICA ROBUSTO
         # PROBLEMA: Variaciones regionales de México no se detectaban
         # - Querétaro: "No está"
@@ -5680,7 +5804,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Incluye variaciones regionales de todo México
         patrones_no_esta = [
             # Básicos (Querétaro, Bajío)
-            'no está', 'no esta', 'no se encuentra', 'no anda',
+            # FIX 525 BRUCE1670: Incluir "no se encuentre" (error común de transcripción)
+            'no está', 'no esta', 'no se encuentra', 'no se encuentre', 'no anda',
             # Salió/Fue (General)
             'salió', 'salio', 'se fue', 'se salió', 'anda fuera',
             'fue a', 'anda en', 'está afuera', 'esta afuera',
@@ -5777,13 +5902,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "respuesta": "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?",
                         "accion": "PREGUNTAR_HORARIO"
                     }
-                # FIX 518: Si ya pidió WhatsApp y cliente no puede, despedirse
+                # FIX 520 BRUCE1652: Si ya pidió WhatsApp y cliente no puede, OFRECER CONTACTO DE BRUCE
                 elif bruce_ya_pidio_whatsapp and cliente_no_puede:
-                    print(f"   FIX 518: Ya pidió WhatsApp + cliente no puede - Despedirse")
+                    print(f"   FIX 520: Ya pidió WhatsApp + cliente no puede - Ofrecer contacto de Bruce")
+                    self.estado_conversacion = EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE
                     return {
-                        "tipo": "CLIENTE_NO_PUEDE_DAR_INFO",
-                        "respuesta": "Entiendo, no se preocupe. Le vuelvo a llamar más tarde entonces. Muchas gracias.",
-                        "accion": "DESPEDIRSE_CALLBACK"
+                        "tipo": "OFRECER_CONTACTO_BRUCE",
+                        "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?",
+                        "accion": "OFRECER_CONTACTO"
                     }
                 # FIX 518: Si ya pidió WhatsApp, NO volver a pedir - preguntar horario
                 elif bruce_ya_pidio_whatsapp:
@@ -6059,22 +6185,37 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Ejemplo: Cliente: "¿De dónde habla?" → Bruce: "Sí, dígame" [ERROR]
         # Solución: Detectar y responder preguntas ANTES de cualquier otro procesamiento
 
-        # Pregunta: ¿De dónde? / ¿Dónde están? / ¿Ubicación?
+        # Pregunta: ¿Dónde están ubicados? / ¿Ubicación? (pregunta geográfica específica)
+        # NOTA FIX 521: "¿De dónde habla?" en México = "¿De qué empresa?" (NO es ubicación)
         if any(p in texto_lower for p in [
-            "de dónde", "de donde", "dónde habla", "donde habla",
-            "dónde están", "donde estan", "dónde está", "donde esta",
+            "dónde están ubicados", "donde estan ubicados",
             "ubicados", "ubicación", "ubicacion",
-            "de qué ciudad", "de que ciudad", "de dónde son", "de donde son"
+            "de qué ciudad son", "de que ciudad son", "de qué estado", "de que estado",
+            "en qué parte de", "en que parte de", "qué ciudad son", "que ciudad son"
         ]):
+            # FIX 521 BRUCE1657: Si ya sabemos que el encargado NO está, NO preguntar por él
+            if self.estado_conversacion == EstadoConversacion.ENCARGADO_NO_ESTA:
+                print(f"   FIX 521: Pregunta ubicación + encargado NO está - Ofrecer WhatsApp")
+                return {
+                    "tipo": "PREGUNTA_UBICACION_SIN_ENCARGADO",
+                    "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Me puede proporcionar el WhatsApp del encargado para enviarle el catálogo?",
+                    "accion": "PEDIR_WHATSAPP"
+                }
             return {
                 "tipo": "PREGUNTA_UBICACION",
                 "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Me comunica con el encargado de compras?",
                 "accion": "RESPONDER_PREGUNTA"
             }
 
-        # Pregunta: ¿Quién habla? / ¿De parte de quién? / ¿De qué empresa?
+        # Pregunta: ¿De dónde habla? / ¿Quién habla? / ¿De parte de quién? / ¿De qué empresa?
+        # FIX 521 BRUCE1657: "¿De dónde habla?" en México = "¿De qué empresa habla?" (NO ubicación)
         # FIX 513 BRUCE1580: Agregar "¿de qué empresa?" que no se detectaba
         if any(p in texto_lower for p in [
+            # FIX 521: "De dónde habla/llama" = pregunta de EMPRESA, NO ubicación
+            "de dónde habla", "de donde habla", "de dónde llama", "de donde llama",
+            "de dónde me habla", "de donde me habla", "de dónde me llama", "de donde me llama",
+            "de dónde es", "de donde es",  # "¿De dónde es la llamada?"
+            # Variantes de quién habla
             "quién habla", "quien habla", "quién llama", "quien llama",
             "de parte de quién", "de parte de quien", "quién es", "quien es",
             "con quién hablo", "con quien hablo",
@@ -6082,6 +6223,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "de qué empresa", "de que empresa", "qué empresa", "que empresa",
             "de qué compañía", "de que compañia", "qué compañía", "que compañia"
         ]):
+            # FIX 521 BRUCE1657: Si ya sabemos que el encargado NO está, NO preguntar por él
+            if self.estado_conversacion == EstadoConversacion.ENCARGADO_NO_ESTA:
+                print(f"   FIX 521: Pregunta identidad + encargado NO está - Ofrecer WhatsApp")
+                return {
+                    "tipo": "PREGUNTA_IDENTIDAD_SIN_ENCARGADO",
+                    "respuesta": "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me puede proporcionar el WhatsApp del encargado para enviarle el catálogo?",
+                    "accion": "PEDIR_WHATSAPP"
+                }
             return {
                 "tipo": "PREGUNTA_IDENTIDAD",
                 "respuesta": "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me comunica con el encargado de compras?",
@@ -6094,6 +6243,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "qué productos", "que productos", "qué maneja", "que maneja",
             "qué es lo que", "que es lo que", "de qué se trata", "de que se trata"
         ]):
+            # FIX 521 BRUCE1657: Si ya sabemos que el encargado NO está, NO preguntar por él
+            if self.estado_conversacion == EstadoConversacion.ENCARGADO_NO_ESTA:
+                print(f"   FIX 521: Pregunta productos + encargado NO está - Ofrecer WhatsApp")
+                return {
+                    "tipo": "PREGUNTA_PRODUCTOS_SIN_ENCARGADO",
+                    "respuesta": "Distribuimos productos de ferretería: cintas tapagoteras, grifería, herramientas, candados y más de 15 categorías. ¿Me puede proporcionar el WhatsApp del encargado para enviarle el catálogo?",
+                    "accion": "PEDIR_WHATSAPP"
+                }
             return {
                 "tipo": "PREGUNTA_PRODUCTOS",
                 "respuesta": "Distribuimos productos de ferretería: cintas tapagoteras, grifería, herramientas, candados y más de 15 categorías. ¿Se encuentra el encargado de compras?",
@@ -6171,22 +6328,44 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "PEDIR_CORREO"
             }
 
-        # FIX 513 BRUCE1591: No pueden dar contacto / No tiene permitido
-        # Caso: "No tengo permitido daros ningún WhatsApp" → Bruce entró en falla
+        # FIX 513 BRUCE1591 + FIX 520 BRUCE1652: No pueden dar contacto / No tiene permitido
+        # Caso: "No tengo permitido daros ningún WhatsApp" → Ofrecer contacto de Bruce
+        # MEJORADO FIX 520: En lugar de pedir horario, ofrecer dejar nuestro contacto
         if any(p in texto_lower for p in [
+            # Variantes de "no permitido"
             "no tengo permitido", "no me permiten", "no puedo dar", "no puedo darte",
             "no puedo darle", "no le puedo dar", "no te puedo dar",
             "no está permitido", "no esta permitido", "no me dejan",
             "no estoy autorizado", "no estoy autorizada", "no tengo autorización",
             "no puedo pasar", "no le puedo pasar", "no te puedo pasar",
             "prohibido dar", "no damos información", "no damos numeros",
-            "política de la empresa", "politica de la empresa"
+            "política de la empresa", "politica de la empresa",
+            # FIX 520: Variantes adicionales de "no puedo"
+            "no puedo proporcionarle", "no puedo proporcionarte", "no le puedo proporcionar",
+            "no te puedo proporcionar", "no cuento con esa información", "no cuento con esa informacion",
+            "no tengo esa información", "no tengo esa informacion", "no manejo esa información",
+            "no sé el número", "no se el numero", "no sé su número", "no se su numero",
+            "no lo sé", "no lo se", "no sé", "no se", "desconozco",
+            "no tengo acceso", "no tengo el dato", "no tengo ese dato",
+            "no me lo sé", "no me lo se", "no me lo han dado", "no me lo dieron",
+            "eso no me lo dan", "eso no lo sé", "eso no lo se",
+            "no manejo números", "no manejo numeros", "no manejo esos datos",
+            # FIX 520: Variantes de rechazo cortés
+            "solamente ellos", "solo ellos", "nada más ellos", "nomas ellos",
+            "ellos lo manejan", "él lo maneja", "ella lo maneja",
+            "tendría que ser con él", "tendria que ser con el", "tendría que ser con ella",
+            "eso lo ve el encargado", "eso lo ve la encargada", "eso lo maneja el jefe",
+            "no soy quien para dar", "no me corresponde", "no es mi área",
+            # FIX 520: Variantes de negación simple
+            "no, no puedo", "no no puedo", "no, solamente", "no solamente",
+            "apenas", "apenas y", "nada más", "nomas", "nomás"
         ]):
-            print(f"[OK] FIX 513: NO PUEDE DAR CONTACTO: '{texto_cliente[:50]}'")
+            print(f"[OK] FIX 513/520: NO PUEDE DAR CONTACTO - Ofrecer contacto de Bruce: '{texto_cliente[:50]}'")
+            self.estado_conversacion = EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE
             return {
-                "tipo": "NO_PUEDE_DAR_CONTACTO",
-                "respuesta": "Entiendo perfectamente. ¿Me podría indicar cuándo está el encargado para llamarle directamente?",
-                "accion": "PEDIR_HORARIO_ENCARGADO"
+                "tipo": "OFRECER_CONTACTO_BRUCE",
+                "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?",
+                "accion": "OFRECER_CONTACTO"
             }
 
         # FIX 513 BRUCE1585: Confirma mismo número / Este número
@@ -6366,7 +6545,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
                 "tipo": "PIDE_CONTACTO_NIOVAL",
-                "respuesta": "Claro, nuestro WhatsApp es 3 3 2 1 0 1 4 4 8 6 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos.",
+                "respuesta": "Claro, nuestro WhatsApp es 6 6 2 4 1 5 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos.",
                 "accion": "DAR_CONTACTO"
             }
 
@@ -6380,7 +6559,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # 2. CONFIRMACIONES SIMPLES (no necesita GPT)
-        if texto_lower in ["ok", "okay", "sale", "va", "sí", "si", "claro", "ajá", "aja"]:
+        # FIX 522 BRUCE1659: Incluir "ándale" y variantes mexicanas
+        if texto_lower in ["ok", "okay", "sale", "va", "sí", "si", "claro", "ajá", "aja",
+                           "ándale", "andale", "órale", "orale", "ok ándale", "ok andale"]:
+            # FIX 522: Si ya se prometió el catálogo, despedirse
+            if self.catalogo_prometido:
+                print(f"   FIX 522: Confirmación simple + catálogo ya prometido - Despedirse")
+                return {
+                    "tipo": "CONFIRMACION_CATALOGO_PROMETIDO",
+                    "respuesta": "Perfecto, le envío el catálogo entonces. Muchas gracias por su tiempo, que tenga excelente día.",
+                    "accion": "TERMINAR_LLAMADA"
+                }
             return {
                 "tipo": "CONFIRMACION_SIMPLE",
                 "respuesta": "Perfecto, adelante por favor.",
@@ -6388,13 +6577,39 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # 3. SALUDOS INICIALES (no necesita GPT)
+        # FIX 524 BRUCE1669: NO tratar como saludo si contiene números (cliente dictando + "¿Bueno?")
         saludos = ["hola", "bueno", "buenos días", "buenos dias", "buenas tardes", "diga", "sí dígame", "si digame"]
-        if any(s in texto_lower for s in saludos) and len(texto_lower) < 20:
+        tiene_digitos = bool(re.search(r'\d', texto_lower))
+
+        if any(s in texto_lower for s in saludos) and len(texto_lower) < 20 and not tiene_digitos:
             if self.estado_conversacion == EstadoConversacion.INICIO:
                 return {
                     "tipo": "SALUDO_INICIAL",
                     "respuesta": "Hola, buen día.",
                     "accion": "AVANZAR_A_PRESENTACION"
+                }
+
+        # FIX 524 BRUCE1669: Si tiene números + "¿Bueno?", cliente verifica conexión mientras dicta
+        if tiene_digitos and ("bueno" in texto_lower or "¿bueno?" in texto_lower):
+            digitos = re.findall(r'\d', texto_lower)
+            num_digitos = len(digitos)
+            print(f"   FIX 524: Cliente dictando número ({num_digitos} dígitos) + verificando conexión")
+
+            if num_digitos < 10:
+                # Número incompleto - pedir el resto
+                return {
+                    "tipo": "NUMERO_PARCIAL_CON_VERIFICACION",
+                    "respuesta": f"Sí, aquí estoy. Llevo anotados {num_digitos} dígitos. ¿Me puede dar el número completo?",
+                    "accion": "PEDIR_NUMERO_COMPLETO"
+                }
+            else:
+                # Número completo - confirmar
+                numero_str = ''.join(digitos[:10])
+                numero_formateado = f"{numero_str[0:3]}-{numero_str[3:6]}-{numero_str[6:8]}-{numero_str[8:10]}"
+                return {
+                    "tipo": "NUMERO_COMPLETO_CON_VERIFICACION",
+                    "respuesta": f"Sí, aquí estoy. Tengo anotado {numero_formateado}, ¿es correcto?",
+                    "accion": "CONFIRMAR_NUMERO"
                 }
 
         # 4. TRANSFERENCIAS (no necesita GPT)
@@ -6405,6 +6620,37 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "respuesta": "Perfecto, muchas gracias por comunicarme.",
                 "accion": "ESPERAR_TRANSFERENCIA"
             }
+
+        # FIX 523 BRUCE1661: Cliente ofrece dar correo/número
+        # Caso: "¿Tiene para anotar un correo?" = cliente quiere DAR su correo
+        if any(p in texto_lower for p in [
+            "tiene para anotar", "tienes para anotar",
+            "tiene donde anotar", "tienes donde anotar",
+            "tiene dónde anotar", "tienes dónde anotar",
+            "puede anotar", "puedes anotar",
+            "le doy un correo", "le doy mi correo", "le doy el correo",
+            "le doy un número", "le doy mi número", "le doy el número",
+            "le paso un correo", "le paso mi correo",
+            "le paso un número", "le paso mi número",
+            "anote un correo", "anota un correo", "anote el correo",
+            "anote un número", "anota un número", "anote el número"
+        ]):
+            print(f"   FIX 523: Cliente OFRECE dar correo/número - aceptar")
+            # Detectar si es correo o número
+            if "correo" in texto_lower or "email" in texto_lower or "mail" in texto_lower:
+                self.estado_conversacion = EstadoConversacion.DICTANDO_CORREO
+                return {
+                    "tipo": "CLIENTE_OFRECE_CORREO",
+                    "respuesta": "Sí, claro, dígame su correo por favor.",
+                    "accion": "ESPERAR_CORREO"
+                }
+            else:
+                self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                return {
+                    "tipo": "CLIENTE_OFRECE_NUMERO",
+                    "respuesta": "Sí, claro, dígame el número por favor.",
+                    "accion": "ESPERAR_NUMERO"
+                }
 
         # 5. WHATSAPP DETECTADO (regex, no necesita GPT)
         whatsapp_regex = r'\b\d{10}\b|\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b'
@@ -7021,10 +7267,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # "no no" sin contexto válido
         elif "no no" in respuesta_lower:
             # Verificar si NO es un caso válido como "así no, no está"
+            # FIX 525 BRUCE1670: Agregar casos válidos para "no, no sé" y "no, no se encuentra"
             casos_validos = [
                 "así no, no", "ahorita no, no", "ahora no, no",
                 "todavía no, no", "pues no, no", "no sé, no",
-                "creo que no, no", "por ahora no, no"
+                "creo que no, no", "por ahora no, no",
+                # FIX 525: Casos donde cliente dice "no, no sé" o "no, no se encuentra"
+                "no, no sé", "no, no se", "no no sé", "no no se",
+                "no, no está", "no, no esta", "no no está", "no no esta",
+                "no, no hay", "no no hay",
+                "no, no lo", "no no lo",  # "no, no lo conozco"
+                "no, no la", "no no la",  # "no, no la tengo"
+                "no, no tengo", "no no tengo",
+                "no, no puedo", "no no puedo"
             ]
             if not any(caso in respuesta_lower for caso in casos_validos):
                 tiene_negaciones_multiples = True
