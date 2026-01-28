@@ -2533,6 +2533,25 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         break
 
         # ============================================================
+        # FILTRO 1B (FIX 516 BRUCE1619): No preguntar WhatsApp si cliente dijo que NO tiene
+        # ============================================================
+        if not filtro_aplicado and self.lead_data.get("sin_whatsapp"):
+            # Si cliente ya dijo "no tenemos WhatsApp" y Bruce vuelve a preguntar → corregir
+            patrones_preguntar_whatsapp = [
+                r'whatsapp', r'watsapp', r'wats', r'wasa',
+                r'su\s+número.*enviar', r'número.*catálogo',
+                r'confirma.*número', r'me\s+da.*número'
+            ]
+            for patron in patrones_preguntar_whatsapp:
+                if re.search(patron, respuesta_lower):
+                    print(f"\n[PHONE] FIX 516: FILTRO ACTIVADO - Bruce preguntó WhatsApp pero cliente dijo que NO tiene")
+                    print(f"   Respuesta original: \"{respuesta[:80]}...\"")
+                    respuesta = "Entendido. ¿Me puede dar un correo electrónico para enviarle la información?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
+                    break
+
+        # ============================================================
         # FILTRO 2: Detectar números aleatorios/sin sentido
         # ============================================================
         if not filtro_aplicado:
@@ -6076,19 +6095,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "PEDIR_HORARIO_CALLBACK"
             }
 
-        # FIX 513 BRUCE1586: No tienen WhatsApp
-        # Caso: "No, no tenemos WhatsApp" → Bruce no entendió
+        # FIX 513 BRUCE1586 + FIX 516 BRUCE1619: No tienen WhatsApp
+        # Caso: "No, no tenemos WhatsApp" → Bruce no entendió y volvió a preguntar (incorrecto)
+        # FIX 516: Agregar más variantes y marcar que NO tiene WhatsApp
         if any(p in texto_lower for p in [
             "no tenemos whatsapp", "no tengo whatsapp", "no hay whatsapp",
             "no manejo whatsapp", "no manejamos whatsapp", "no uso whatsapp",
             "no usamos whatsapp", "no cuento con whatsapp", "sin whatsapp",
-            "no tenemos wasa", "no tengo wasa", "no tenemos wats", "no tengo wats"
+            "no tenemos wasa", "no tengo wasa", "no tenemos wats", "no tengo wats",
+            # FIX 516: Más variantes detectadas en BRUCE1619
+            "aquí no hay whatsapp", "aqui no hay whatsapp",
+            "no lo tenemos", "no lo tengo",  # Contexto: después de preguntar WhatsApp
+            "no contamos con whatsapp", "no contamos con wasa",
+            "ese no lo tenemos", "ese no lo tengo",
+            "whatsapp no", "wasa no", "wats no",
+            "no, whatsapp no", "no, wasa no",
+            "no tienen whatsapp", "no tiene whatsapp"
         ]):
-            print(f"[OK] FIX 513: CLIENTE NO TIENE WHATSAPP: '{texto_cliente[:50]}'")
+            print(f"[OK] FIX 513/516: CLIENTE NO TIENE WHATSAPP: '{texto_cliente[:50]}'")
+            # FIX 516: Marcar que cliente NO tiene WhatsApp para evitar volver a preguntar
+            self.lead_data["sin_whatsapp"] = True
             return {
                 "tipo": "CLIENTE_NO_TIENE_WHATSAPP",
-                "respuesta": "No hay problema. ¿Me puede dar un correo electrónico o número de teléfono para enviarle la información?",
-                "accion": "PEDIR_CORREO_O_TELEFONO"
+                "respuesta": "Entendido. ¿Me puede dar un correo electrónico para enviarle la información?",
+                "accion": "PEDIR_CORREO"
             }
 
         # FIX 513 BRUCE1591: No pueden dar contacto / No tiene permitido
@@ -6126,25 +6156,91 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "CONFIRMAR_ENVIO"
             }
 
-        # FIX 513 BRUCE1592: Transferencia completada / Regreso después de espera
-        # Caso: Cliente dijo "Un momento", luego "¿Bueno?" al regresar → Bruce no detectó transferencia
+        # FIX 513 BRUCE1592 + FIX 515 BRUCE1613: Transferencia completada / Persona nueva
+        # Caso BRUCE1592: Cliente dijo "Un momento", luego "¿Bueno?" al regresar
+        # Caso BRUCE1613: Cliente transfirió y el encargado contestó - Bruce debe PRESENTARSE
         # Verificar si antes hubo una espera/transferencia
         ultimos_mensajes = [msg['content'].lower() for msg in self.conversation_history[-6:] if msg['role'] == 'user']
         hubo_espera = any(esp in ' '.join(ultimos_mensajes) for esp in [
             'un momento', 'espere', 'espérame', 'esperame', 'ahorita le paso',
-            'le comunico', 'permítame', 'permitame', 'déjeme', 'dejeme'
+            'le comunico', 'permítame', 'permitame', 'déjeme', 'dejeme',
+            'le transfiero', 'lo comunico', 'la comunico', 'se lo paso', 'se la paso'
         ])
-        if hubo_espera and any(p in texto_lower for p in [
-            "¿bueno?", "bueno?", "¿bueno", "bueno,", "bueno sí",
-            "¿sí?", "si?", "¿hola?", "hola?", "¿me escucha", "me escucha",
-            "¿sigue ahí", "sigue ahi", "¿está ahí", "esta ahi"
+
+        # FIX 515: Patrones que indican que el ENCARGADO ya está en línea
+        patrones_encargado_presente = [
+            # Saludos que indican persona nueva
+            "¿bueno?", "bueno?", "¿bueno", "bueno,", "bueno sí", "bueno si",
+            "¿sí?", "si?", "¿hola?", "hola?", "hola,", "hola buenos",
+            "¿me escucha", "me escucha", "¿sigue ahí", "sigue ahi", "¿está ahí", "esta ahi",
+            # FIX 515: Patrones de encargado respondiendo directamente
+            "sí dígame", "si digame", "dígame", "digame", "a sus órdenes", "a sus ordenes",
+            "¿qué se le ofrece", "que se le ofrece", "¿en qué le ayudo", "en que le ayudo",
+            "¿en qué le puedo ayudar", "en que le puedo ayudar",
+            "¿quién habla?", "quien habla?", "¿de dónde llama", "de donde llama",
+            "¿de parte de quién", "de parte de quien", "¿con quién hablo", "con quien hablo",
+            "mande", "mándeme", "mandeme", "a ver", "sí, bueno", "si, bueno"
+        ]
+
+        if hubo_espera and any(p in texto_lower for p in patrones_encargado_presente):
+            # FIX 515: Determinar si es el ENCARGADO o solo alguien regresando
+            # Si preguntan "¿quién habla?" o "¿en qué le ayudo?" → ES el encargado, PRESENTARSE
+            es_encargado_directo = any(p in texto_lower for p in [
+                "dígame", "digame", "¿qué se le ofrece", "que se le ofrece",
+                "¿en qué le ayudo", "en que le ayudo", "¿en qué le puedo",
+                "a sus órdenes", "a sus ordenes", "mande"
+            ])
+
+            if es_encargado_directo:
+                print(f"[OK] FIX 515: ENCARGADO PRESENTE después de transferencia: '{texto_cliente[:50]}'")
+                return {
+                    "tipo": "TRANSFERENCIA_COMPLETADA_ENCARGADO",
+                    "respuesta": "Hola, me comunico de la marca NIOVAL para ofrecer información de nuestros productos de ferretería. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo?",
+                    "accion": "PRESENTARSE_A_ENCARGADO"
+                }
+            else:
+                print(f"[OK] FIX 513: REGRESO DESPUÉS DE ESPERA: '{texto_cliente[:50]}'")
+                return {
+                    "tipo": "REGRESO_DE_ESPERA",
+                    "respuesta": "Sí, aquí estoy. ¿Me comunica con el encargado de compras?",
+                    "accion": "RETOMAR_CONVERSACION"
+                }
+
+        # FIX 514 BRUCE1595: Cliente pide LLAMAR DESPUÉS/MÁS TARDE
+        # Caso: Cliente dice "llámeme más tarde" → Bruce ofreció catálogo (INCORRECTO)
+        # Cuando cliente pide callback, NO ofrecer catálogo ni pedir contacto - solo pedir horario
+        if any(p in texto_lower for p in [
+            # Variantes de "llamar más tarde"
+            "llame más tarde", "llame mas tarde", "llámeme más tarde", "llameme mas tarde",
+            "llama más tarde", "llama mas tarde", "llámame más tarde", "llamame mas tarde",
+            "llámenos más tarde", "llamenos mas tarde",
+            # Variantes de "llamar después"
+            "llame después", "llame despues", "llámeme después", "llameme despues",
+            "llama después", "llama despues", "llámame después", "llamame despues",
+            # Variantes de "marcar más tarde/después"
+            "marque más tarde", "marque mas tarde", "márqueme más tarde", "marqueme mas tarde",
+            "marca más tarde", "marca mas tarde", "márcame más tarde", "marcame mas tarde",
+            "marque después", "marque despues", "márqueme después", "marqueme despues",
+            # Variantes de "otro momento/día"
+            "llame en otro momento", "llama en otro momento",
+            "llámeme otro día", "llameme otro dia", "llama otro día", "llama otro dia",
+            "marque otro día", "marque otro dia", "marca otro día", "marca otro dia",
+            # Variantes cortas que indican callback
+            "mejor más tarde", "mejor mas tarde", "mejor después", "mejor despues",
+            "al rato", "en un rato me llama", "en un rato me llamas",
+            "ahorita no puedo", "ahorita estoy ocupado", "ahorita estoy ocupada",
+            "estoy ocupado", "estoy ocupada", "no puedo ahorita",
+            "regrese la llamada", "vuelva a llamar", "vuelve a llamar",
+            "intente más tarde", "intente mas tarde"
         ]):
-            print(f"[OK] FIX 513: REGRESO DESPUÉS DE ESPERA: '{texto_cliente[:50]}'")
-            return {
-                "tipo": "REGRESO_DE_ESPERA",
-                "respuesta": "Sí, aquí estoy. ¿Me comunica con el encargado de compras?",
-                "accion": "RETOMAR_CONVERSACION"
-            }
+            # Verificar que no sea "no me llame" o rechazo total
+            if not any(neg in texto_lower for neg in ["no me llame", "no llames", "no vuelva", "deja de llamar"]):
+                print(f"[OK] FIX 514: CLIENTE PIDE LLAMAR DESPUÉS: '{texto_cliente[:50]}'")
+                return {
+                    "tipo": "CLIENTE_PIDE_LLAMAR_DESPUES",
+                    "respuesta": "Claro, sin problema. ¿A qué hora le vendría mejor que le llame?",
+                    "accion": "AGENDAR_CALLBACK"
+                }
 
         # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL
         # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
