@@ -439,6 +439,9 @@ class AgenteVentas:
         self.catalogo_prometido = False  # True cuando Bruce ya dijo "le envío el catálogo"
         self.numero_parcial_recibido = None  # Guardar número parcial para pedir completo
 
+        # FIX 526 BRUCE1677: Flag para cuando Bruce pregunta por hora de callback
+        self.esperando_hora_callback = False  # True cuando Bruce preguntó "¿A qué hora...?"
+
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
         self.estado_anterior = None  # Para tracking de transiciones
@@ -1037,6 +1040,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
         texto_lower = texto_cliente.lower().strip()
+
+        # FIX 526 BRUCE1677: Si Bruce preguntó por HORA, los números son hora, no teléfono
+        if self.esperando_hora_callback:
+            print(f"   [DEBUG] FIX 526: esperando_hora_callback=True - NO interpretar números como teléfono")
+            return False  # No está dictando teléfono, está dando hora
 
         # 1. NÚMEROS PARCIALES (típicamente WhatsApp/teléfono)
         # Patrones: "9 51", "662 415", "tres tres dos"
@@ -5547,6 +5555,18 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.catalogo_prometido = True
                 print(f"   FIX 522: Catálogo PROMETIDO - flag activado")
 
+        # FIX 526 BRUCE1677: Detectar si Bruce pregunta por hora de callback
+        if any(frase in respuesta_lower for frase in [
+            '¿a qué hora', '¿a que hora', 'qué hora sería', 'que hora seria',
+            '¿qué hora le', '¿que hora le', 'a qué hora le', 'a que hora le'
+        ]):
+            self.esperando_hora_callback = True
+            print(f"   FIX 526: Bruce pregunta por HORA - esperando_hora_callback=True")
+        elif self.esperando_hora_callback:
+            # Si Bruce dice algo diferente, resetear el flag
+            self.esperando_hora_callback = False
+            print(f"   FIX 526: Bruce no pregunta por hora - resetear flag")
+
         # Si ya se prometió el catálogo y Bruce vuelve a ofrecer, convertir en despedida
         if self.catalogo_prometido:
             # Detectar si está volviendo a ofrecer catálogo
@@ -6610,6 +6630,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "tipo": "NUMERO_COMPLETO_CON_VERIFICACION",
                     "respuesta": f"Sí, aquí estoy. Tengo anotado {numero_formateado}, ¿es correcto?",
                     "accion": "CONFIRMAR_NUMERO"
+                }
+
+        # FIX 526 BRUCE1677: Si esperamos hora y cliente da números, interpretar como hora
+        if self.esperando_hora_callback and tiene_digitos:
+            digitos = re.findall(r'\d', texto_lower)
+            print(f"   FIX 526: esperando_hora_callback=True + dígitos detectados ({digitos})")
+
+            # Intentar interpretar como hora
+            # "31, 29" podría ser "3:30" o "1:29" (transcripción errónea)
+            # Simplemente confirmar el callback sin interpretar exactamente
+            self.esperando_hora_callback = False  # Reset flag
+
+            # Detectar patrones comunes de hora
+            hora_texto = texto_lower
+            if any(h in hora_texto for h in ['mañana', 'manana', 'tarde', 'noche']):
+                return {
+                    "tipo": "HORA_CALLBACK_CONFIRMADA",
+                    "respuesta": "Perfecto, entonces le llamo en ese horario. Muchas gracias por su tiempo.",
+                    "accion": "CONFIRMAR_CALLBACK"
+                }
+            else:
+                # Si solo son números, confirmar genéricamente
+                return {
+                    "tipo": "HORA_CALLBACK_CONFIRMADA",
+                    "respuesta": "Perfecto, le llamo más tarde entonces. Muchas gracias por su tiempo.",
+                    "accion": "CONFIRMAR_CALLBACK"
                 }
 
         # 4. TRANSFERENCIAS (no necesita GPT)
