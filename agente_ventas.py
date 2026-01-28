@@ -5731,9 +5731,27 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if veces_pregunto >= 1:  # Si ya preguntó al menos 1 vez
                 print(f"[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó {veces_pregunto} vez(ces)")
 
+                # FIX 518 BRUCE1644: Verificar si Bruce ya pidió WhatsApp (evitar loop)
+                bruce_ya_pidio_whatsapp = any(
+                    'whatsapp del encargado' in msg or 'whatsapp del' in msg
+                    for msg in ultimas_bruce
+                )
+
+                # FIX 518: Detectar si cliente dice que NO PUEDE dar info
+                cliente_no_puede = any(p in texto_lower for p in [
+                    'no puedo', 'no, no', 'no no', 'apenas', 'nada más',
+                    'solo mostrador', 'en el mostrador', 'no están', 'no estan'
+                ])
+
                 # Detectar si cliente dio horario
                 patron_horario = r'(?:llega|viene|regresa|está|esta).*?(?:a las|las|a la|la)\s*(\d{1,2})'
                 match_horario = re.search(patron_horario, texto_lower)
+
+                # FIX 518: Detectar "más tarde" / "después" sin hora específica
+                indica_callback_generico = any(p in texto_lower for p in [
+                    'más tarde', 'mas tarde', 'después', 'despues',
+                    'al rato', 'en un rato', 'luego', 'ahorita no'
+                ])
 
                 if match_horario:
                     hora = match_horario.group(1)
@@ -5742,6 +5760,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "tipo": "ENCARGADO_NO_ESTA_CON_HORARIO",
                         "respuesta": f"Perfecto, le llamo a las {hora} entonces. Muchas gracias por su tiempo.",
                         "accion": "AGENDAR_CALLBACK"
+                    }
+                # FIX 518: Si cliente indica callback genérico, preguntar horario
+                elif indica_callback_generico:
+                    print(f"   FIX 518: Cliente indica callback genérico ('más tarde') - Preguntar horario")
+                    return {
+                        "tipo": "ENCARGADO_LLEGA_MAS_TARDE",
+                        "respuesta": "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?",
+                        "accion": "PREGUNTAR_HORARIO"
+                    }
+                # FIX 518: Si ya pidió WhatsApp y cliente no puede, despedirse
+                elif bruce_ya_pidio_whatsapp and cliente_no_puede:
+                    print(f"   FIX 518: Ya pidió WhatsApp + cliente no puede - Despedirse")
+                    return {
+                        "tipo": "CLIENTE_NO_PUEDE_DAR_INFO",
+                        "respuesta": "Entiendo, no se preocupe. Le vuelvo a llamar más tarde entonces. Muchas gracias.",
+                        "accion": "DESPEDIRSE_CALLBACK"
+                    }
+                # FIX 518: Si ya pidió WhatsApp, NO volver a pedir - preguntar horario
+                elif bruce_ya_pidio_whatsapp:
+                    print(f"   FIX 518: Ya pidió WhatsApp - Preguntar horario en lugar de repetir")
+                    return {
+                        "tipo": "EVITAR_LOOP_WHATSAPP",
+                        "respuesta": "Entendido. ¿A qué hora me recomienda llamar para hablar con el encargado?",
+                        "accion": "PREGUNTAR_HORARIO"
                     }
                 else:
                     print(f"   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp")
@@ -6255,6 +6297,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL
         # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
         # Cliente está pidiendo que Bruce le dé SU número de contacto
+        # FIX 518b BRUCE1647: Agregar patrones tolerantes a transcripciones parciales
         if any(p in texto_lower for p in [
             "démelo", "damelo", "dámelo",  # "Démelo" - pidiendo el número
             "me lo da", "me lo das", "me lo puede dar",
@@ -6267,7 +6310,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "su contacto", "tu contacto", "el contacto",
             "cómo los contacto", "como los contacto",
             "número para llamar", "numero para llamar",
-            "a qué número", "a que numero"
+            "a qué número", "a que numero",
+            # FIX 518b: Patrones parciales para transcripciones incompletas de Deepgram
+            # Ej: "si gusta mejor deme" = cliente pide el número de NIOVAL
+            "mejor deme", "mejor déme", "mejor dame",
+            "si gusta deme", "si gusta déme", "si gusta dame",
+            "gusta deme", "gusta déme",  # transcripción parcial sin "si"
+            "pero deme", "pero déme", "pero dame",
+            "deme el", "déme el", "dame el",  # "déme el número"
+            "deme su", "déme su", "dame su",  # "déme su número"
+            "mejor el suyo", "deme el suyo", "el de ustedes"
         ]):
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
