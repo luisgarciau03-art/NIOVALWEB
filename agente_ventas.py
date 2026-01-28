@@ -6319,7 +6319,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "pero deme", "pero déme", "pero dame",
             "deme el", "déme el", "dame el",  # "déme el número"
             "deme su", "déme su", "dame su",  # "déme su número"
-            "mejor el suyo", "deme el suyo", "el de ustedes"
+            "mejor el suyo", "deme el suyo", "el de ustedes",
+            # FIX 518c: Más variantes para transcripciones parciales
+            # Variantes con "pasa/pase/paso"
+            "páselo", "paselo", "pásalo", "pasalo", "pásemelo", "pasemelo",
+            "me lo pasa", "me lo pasas", "pásame", "pasame",
+            # Variantes con "diga/dice/dime"
+            "dígame el", "digame el", "dime el", "dígamelo", "digamelo", "dímelo", "dimelo",
+            "me lo dice", "me lo dices", "a ver dime", "a ver dígame", "a ver digame",
+            # Variantes con "anoto/apunto" (cliente va a anotar)
+            "lo anoto", "anoto", "lo apunto", "apunto", "déjame anotar", "dejame anotar",
+            "espere anoto", "espera anoto", "deje anoto", "deja anoto",
+            # Variantes con "dicta/repite"
+            "díctame", "dictame", "dícteme", "dicteme", "dicta el", "dicte el",
+            "repítelo", "repitelo", "repítalo", "repitalo", "repítame", "repitame",
+            # Variantes con interjecciones mexicanas
+            "órale deme", "orale deme", "ándale deme", "andale deme",
+            "va deme", "sale deme", "bueno deme", "bueno dame",
+            "pues deme", "pues dame", "entonces deme", "entonces dame",
+            "sí deme", "si deme", "ok deme", "okay deme",
+            # Variantes preguntando por WhatsApp/teléfono de NIOVAL
+            "tienes whatsapp", "tiene whatsapp", "tienen whatsapp",
+            "tienes número", "tiene número", "tienen número",
+            "cuál sería", "cual seria", "cuál es", "cual es",
+            "y su número", "y tu número", "y el número", "y el whatsapp",
+            # Variantes con "déjame/déjeme"
+            "déjame el", "dejame el", "déjeme el", "dejeme el",
+            "déjame su", "dejame su", "déjeme su", "dejeme su",
+            # Variantes para cuando dicen "el tuyo/suyo"
+            "el tuyo", "el suyo", "el de usted", "tu número", "su número",
+            "me pasas el tuyo", "me pasa el suyo",
+            # Variantes parciales comunes de Deepgram
+            "número de", "el número", "un número", "algún número", "algun numero",
+            "para contactar", "para llamar", "para comunicar",
+            "cómo te llamo", "como te llamo", "cómo le llamo", "como le llamo",
+            "a dónde llamo", "a donde llamo", "dónde les llamo", "donde les llamo"
         ]):
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
