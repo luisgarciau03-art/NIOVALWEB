@@ -14,6 +14,14 @@ import pandas as pd
 from dotenv import load_dotenv
 from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
 
+# FIX 519: Sistema de auto-aprendizaje de patrones
+try:
+    from cache_patrones_aprendidos import obtener_cache_patrones, inicializar_cache_patrones
+    CACHE_PATRONES_DISPONIBLE = True
+except ImportError:
+    CACHE_PATRONES_DISPONIBLE = False
+    print("   [WARN] FIX 519: cache_patrones_aprendidos no disponible")
+
 
 # [EMOJI]
 # FIX 482 (AUDITORIA W04): SISTEMA DE MÉTRICAS E INSTRUMENTACIÓN
@@ -6594,6 +6602,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # PASO 3: No hay match - continuar con GPT normal (3.5s)
         print(f"[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)")
 
+        # FIX 519: Marcar que esta transcripción no fue reconocida (se guardará después con la respuesta)
+        self._transcripcion_pendiente_aprender = respuesta_cliente
+
         # ============================================================
         # FIX 389: INTEGRAR SISTEMA DE ESTADOS (FIX 339)
         # Actualizar estado de conversación ANTES de cualquier análisis
@@ -7576,6 +7587,21 @@ Ejemplo correcto:
                 print(f"[EMOJI] FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
 
             respuesta_agente = response.choices[0].message.content
+
+            # FIX 519: Guardar transcripción + respuesta para aprendizaje automático
+            if CACHE_PATRONES_DISPONIBLE and hasattr(self, '_transcripcion_pendiente_aprender') and self._transcripcion_pendiente_aprender:
+                try:
+                    cache = obtener_cache_patrones()
+                    if cache:
+                        cache.registrar_transcripcion_no_reconocida(
+                            texto_cliente=self._transcripcion_pendiente_aprender,
+                            respuesta_bruce=respuesta_agente,
+                            bruce_id=getattr(self, 'bruce_id', None)
+                        )
+                except Exception as e:
+                    print(f"   [WARN] FIX 519: Error guardando patrón: {e}")
+                finally:
+                    self._transcripcion_pendiente_aprender = None
 
             # ============================================================
             # FIX 385: Extraer Chain-of-Thought compacto (análisis interno)

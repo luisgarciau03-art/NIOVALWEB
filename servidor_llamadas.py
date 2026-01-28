@@ -122,6 +122,15 @@ except Exception as e:
     print(f"  WhatsApp Validator no disponible: {e}")
     print("  No se validarán números de WhatsApp")
 
+# FIX 519: Inicializar Cache de Patrones Aprendidos
+try:
+    from cache_patrones_aprendidos import inicializar_cache_patrones
+    cache_patrones = inicializar_cache_patrones()
+    print(" FIX 519: Cache de Patrones Aprendidos inicializado")
+except Exception as e:
+    print(f"  FIX 519: Cache de Patrones no disponible: {e}")
+    cache_patrones = None
+
 # Configuración Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
@@ -4704,6 +4713,100 @@ def info_cache():
 
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+@app.route("/patrones-aprendidos", methods=["GET"])
+def ver_patrones_aprendidos():
+    """
+    FIX 519: Endpoint para ver patrones aprendidos automáticamente
+    Acceso: GET /patrones-aprendidos
+    """
+    try:
+        from cache_patrones_aprendidos import obtener_cache_patrones
+
+        cache = obtener_cache_patrones()
+        if not cache:
+            return "<h1>Cache de patrones no inicializado</h1>", 500
+
+        stats = cache.obtener_estadisticas()
+        sugerencias = cache.obtener_sugerencias()
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>FIX 519 - Patrones Aprendidos</title>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial; max-width: 95%; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }}
+                h1 {{ color: #4CAF50; border-bottom: 2px solid #4CAF50; }}
+                h2 {{ color: #00bcd4; }}
+                .card {{ background: #16213e; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4CAF50; }}
+                .sugerencia {{ background: #1a1a2e; border: 1px solid #4CAF50; padding: 15px; margin: 10px 0; border-radius: 8px; }}
+                .count {{ color: #ff9800; font-weight: bold; }}
+                .categoria {{ background: #4CAF50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }}
+                code {{ background: #0d1b2a; padding: 10px; display: block; border-radius: 4px; overflow-x: auto; color: #00ff88; }}
+                .ejemplo {{ color: #aaa; font-style: italic; }}
+                table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+                th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #333; }}
+                th {{ background: #16213e; color: #4CAF50; }}
+            </style>
+        </head>
+        <body>
+            <h1>🧠 FIX 519: Patrones Aprendidos Automáticamente</h1>
+
+            <div class="card">
+                <h2>📊 Estadísticas</h2>
+                <p>Total patrones guardados: <span class="count">{stats['total_patrones']}</span></p>
+                <p>Sugerencias listas: <span class="count">{stats['total_sugerencias']}</span></p>
+                <p>Última actualización: {stats['ultima_actualizacion'] or 'N/A'}</p>
+            </div>
+
+            <h2>🏆 Top 10 Patrones Más Frecuentes</h2>
+            <table>
+                <tr><th>Patrón</th><th>Ocurrencias</th></tr>
+        """
+
+        for patron, count in stats['top_10_frecuentes']:
+            html += f"<tr><td>{patron[:60]}...</td><td class='count'>{count}</td></tr>"
+
+        html += "</table>"
+
+        html += "<h2>💡 Sugerencias para Agregar al Código</h2>"
+
+        if sugerencias:
+            for sug in sugerencias[:20]:
+                ejemplos_html = "<br>".join([f"• {ej[:80]}" for ej in sug.get('ejemplos', [])])
+                html += f"""
+                <div class="sugerencia">
+                    <p><strong>Patrón:</strong> "{sug['patron_clave']}"</p>
+                    <p><span class="categoria">{sug['categoria']}</span> | <span class="count">{sug['count']} ocurrencias</span></p>
+                    <p class="ejemplo"><strong>Ejemplos:</strong><br>{ejemplos_html}</p>
+                    <code>{sug.get('codigo_sugerido', 'N/A')}</code>
+                </div>
+                """
+        else:
+            html += "<p>No hay sugerencias todavía. Se necesitan al menos 3 ocurrencias de un patrón.</p>"
+
+        html += """
+            <h2>📈 Por Categoría</h2>
+            <table>
+                <tr><th>Categoría</th><th>Cantidad</th></tr>
+        """
+
+        for cat, count in stats.get('por_categoria', {}).items():
+            html += f"<tr><td>{cat}</td><td class='count'>{count}</td></tr>"
+
+        html += """
+            </table>
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return f"<h1>Error: {e}</h1>", 500
 
 
 @app.route("/stats", methods=["GET"])
