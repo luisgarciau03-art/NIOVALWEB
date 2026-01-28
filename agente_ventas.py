@@ -2291,7 +2291,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             # FIX 392/393/400: Ofrecer alternativas (enviar catálogo o reprogramar)
                             # FIX 393: NO usar "Perfecto" cuando cliente rechaza
                             # FIX 400: Si cliente preguntó "¿De dónde habla?" + "no se encuentra", responder ambas
-                            if any(patron in contexto_cliente.lower() for patron in ['¿de dónde', 'de dónde', '¿de donde', 'de donde']):
+                            # FIX 513 BRUCE1580: Incluir "¿de qué empresa?" y "¿de qué marca?"
+                            if any(patron in contexto_cliente.lower() for patron in [
+                                '¿de dónde', 'de dónde', '¿de donde', 'de donde',
+                                '¿de qué empresa', 'de qué empresa', '¿de que empresa', 'de que empresa',
+                                '¿de qué marca', 'de qué marca', '¿de que marca', 'de que marca',
+                                '¿qué empresa', 'qué empresa', '¿que empresa', 'que empresa'
+                            ]):
                                 respuesta = "Me comunico de la marca NIOVAL para ofrecer información de productos de ferretería. Entiendo que el encargado no se encuentra. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise cuando regrese?"
                             else:
                                 respuesta = "Entiendo. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise el encargado cuando regrese?"
@@ -5997,11 +6003,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "RESPONDER_PREGUNTA"
             }
 
-        # Pregunta: ¿Quién habla? / ¿De parte de quién?
+        # Pregunta: ¿Quién habla? / ¿De parte de quién? / ¿De qué empresa?
+        # FIX 513 BRUCE1580: Agregar "¿de qué empresa?" que no se detectaba
         if any(p in texto_lower for p in [
             "quién habla", "quien habla", "quién llama", "quien llama",
             "de parte de quién", "de parte de quien", "quién es", "quien es",
-            "con quién hablo", "con quien hablo"
+            "con quién hablo", "con quien hablo",
+            # FIX 513: BRUCE1580 - "¿De qué empresa dice que habla?"
+            "de qué empresa", "de que empresa", "qué empresa", "que empresa",
+            "de qué compañía", "de que compañia", "qué compañía", "que compañia"
         ]):
             return {
                 "tipo": "PREGUNTA_IDENTIDAD",
@@ -6043,6 +6053,97 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "tipo": "PREGUNTA_PRECIOS",
                 "respuesta": "Los precios varían según el producto. ¿Me proporciona su WhatsApp y le envío el catálogo completo con todos los precios?",
                 "accion": "RESPONDER_PREGUNTA"
+            }
+
+        # ================================================================
+        # FIX 513: NUEVOS PATRONES DETECTADOS EN AUDITORÍA
+        # BRUCE1581, BRUCE1585, BRUCE1586, BRUCE1591, BRUCE1592
+        # ================================================================
+
+        # FIX 513 BRUCE1581: Tienda cerrada / Negocio cerrado
+        # Caso: "Está marcando a la tienda cerrada" → Bruce no entendió
+        if any(p in texto_lower for p in [
+            "tienda cerrada", "está cerrada", "esta cerrada", "estamos cerrados",
+            "ya cerramos", "ya cerró", "ya cerro", "negocio cerrado",
+            "no estamos abiertos", "cerramos a las", "cerré", "cerre",
+            "fuera de horario", "no hay horario", "hasta mañana", "hasta el lunes",
+            "ya no atendemos", "ya nos fuimos", "ya se fueron"
+        ]):
+            print(f"[OK] FIX 513: TIENDA CERRADA detectado: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "TIENDA_CERRADA",
+                "respuesta": "Entiendo, disculpe la molestia. ¿A qué hora puedo llamar mañana para encontrarlos?",
+                "accion": "PEDIR_HORARIO_CALLBACK"
+            }
+
+        # FIX 513 BRUCE1586: No tienen WhatsApp
+        # Caso: "No, no tenemos WhatsApp" → Bruce no entendió
+        if any(p in texto_lower for p in [
+            "no tenemos whatsapp", "no tengo whatsapp", "no hay whatsapp",
+            "no manejo whatsapp", "no manejamos whatsapp", "no uso whatsapp",
+            "no usamos whatsapp", "no cuento con whatsapp", "sin whatsapp",
+            "no tenemos wasa", "no tengo wasa", "no tenemos wats", "no tengo wats"
+        ]):
+            print(f"[OK] FIX 513: CLIENTE NO TIENE WHATSAPP: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CLIENTE_NO_TIENE_WHATSAPP",
+                "respuesta": "No hay problema. ¿Me puede dar un correo electrónico o número de teléfono para enviarle la información?",
+                "accion": "PEDIR_CORREO_O_TELEFONO"
+            }
+
+        # FIX 513 BRUCE1591: No pueden dar contacto / No tiene permitido
+        # Caso: "No tengo permitido daros ningún WhatsApp" → Bruce entró en falla
+        if any(p in texto_lower for p in [
+            "no tengo permitido", "no me permiten", "no puedo dar", "no puedo darte",
+            "no puedo darle", "no le puedo dar", "no te puedo dar",
+            "no está permitido", "no esta permitido", "no me dejan",
+            "no estoy autorizado", "no estoy autorizada", "no tengo autorización",
+            "no puedo pasar", "no le puedo pasar", "no te puedo pasar",
+            "prohibido dar", "no damos información", "no damos numeros",
+            "política de la empresa", "politica de la empresa"
+        ]):
+            print(f"[OK] FIX 513: NO PUEDE DAR CONTACTO: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "NO_PUEDE_DAR_CONTACTO",
+                "respuesta": "Entiendo perfectamente. ¿Me podría indicar cuándo está el encargado para llamarle directamente?",
+                "accion": "PEDIR_HORARIO_ENCARGADO"
+            }
+
+        # FIX 513 BRUCE1585: Confirma mismo número / Este número
+        # Caso: "Este número, ya te confirmo si sí" → Bruce no respondió
+        if any(p in texto_lower for p in [
+            "este número", "este numero", "a este mismo", "este mismo",
+            "aquí mismo", "aqui mismo", "a éste", "en este",
+            "al que estás llamando", "al que estas llamando",
+            "al que me llamas", "al que me hablas",
+            "ya te confirmo", "te confirmo", "le confirmo",
+            "es el mismo", "el mismo número", "el mismo numero"
+        ]) and not any(neg in texto_lower for neg in ["no es", "no tengo", "no tiene"]):
+            print(f"[OK] FIX 513: CONFIRMA MISMO NÚMERO: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "CONFIRMA_MISMO_NUMERO",
+                "respuesta": "Perfecto, le envío el catálogo a este número entonces. Muchas gracias por su tiempo.",
+                "accion": "CONFIRMAR_ENVIO"
+            }
+
+        # FIX 513 BRUCE1592: Transferencia completada / Regreso después de espera
+        # Caso: Cliente dijo "Un momento", luego "¿Bueno?" al regresar → Bruce no detectó transferencia
+        # Verificar si antes hubo una espera/transferencia
+        ultimos_mensajes = [msg['content'].lower() for msg in self.conversation_history[-6:] if msg['role'] == 'user']
+        hubo_espera = any(esp in ' '.join(ultimos_mensajes) for esp in [
+            'un momento', 'espere', 'espérame', 'esperame', 'ahorita le paso',
+            'le comunico', 'permítame', 'permitame', 'déjeme', 'dejeme'
+        ])
+        if hubo_espera and any(p in texto_lower for p in [
+            "¿bueno?", "bueno?", "¿bueno", "bueno,", "bueno sí",
+            "¿sí?", "si?", "¿hola?", "hola?", "¿me escucha", "me escucha",
+            "¿sigue ahí", "sigue ahi", "¿está ahí", "esta ahi"
+        ]):
+            print(f"[OK] FIX 513: REGRESO DESPUÉS DE ESPERA: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "REGRESO_DE_ESPERA",
+                "respuesta": "Sí, aquí estoy. ¿Me comunica con el encargado de compras?",
+                "accion": "RETOMAR_CONVERSACION"
             }
 
         # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL

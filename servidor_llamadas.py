@@ -2147,11 +2147,15 @@ def procesar_respuesta():
 
     # FIX 105: Detectar buzón por contenido del SpeechResult (cuando Twilio no lo detecta por AMD)
     # Keywords comunes en mensajes de buzón de voz en México
+    # FIX 512: BRUCE1488/BRUCE1490 - Agregar "no está disponible" y "graba tu mensaje"
     keywords_buzon = [
         "buzón de voz", "buzon de voz", "deje su mensaje", "deja tu mensaje",
         "dejar un mensaje", "dejar mensaje", "después del tono", "despues del tono",
         "no puede atender", "no disponible en este momento", "mailbox is full",
-        "buzón está lleno", "buzon esta lleno", "no se puede dejar", "intente más tarde"
+        "buzón está lleno", "buzon esta lleno", "no se puede dejar", "intente más tarde",
+        # FIX 512: Nuevos patrones de buzón detectados en auditoría
+        "no está disponible", "no esta disponible", "graba tu mensaje", "graba un mensaje",
+        "la persona con la que intentas comunicarte", "persona que intentas comunicarte"
     ]
 
     speech_lower = speech_result.lower() if speech_result else ""
