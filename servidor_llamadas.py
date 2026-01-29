@@ -4752,6 +4752,230 @@ def info_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/reporte-cache", methods=["GET"])
+def reporte_cache_html():
+    """
+    Endpoint para ver reporte visual del caché en HTML
+    Acceso: GET /reporte-cache
+    """
+    from datetime import datetime
+
+    try:
+        # Obtener datos del caché
+        archivos_disco = []
+        tamano_total = 0
+        if os.path.exists(CACHE_DIR):
+            archivos_disco = os.listdir(CACHE_DIR)
+            for archivo in archivos_disco:
+                filepath = os.path.join(CACHE_DIR, archivo)
+                if os.path.isfile(filepath):
+                    tamano_total += os.path.getsize(filepath)
+
+        # Top frases
+        frases_ordenadas = sorted(
+            frase_stats.items(),
+            key=lambda x: x[1]["count"],
+            reverse=True
+        )[:15]
+
+        # Construir filas de tabla
+        filas_top = ""
+        for i, (k, v) in enumerate(frases_ordenadas, 1):
+            texto = v["texto"][:60] + "..." if len(v["texto"]) > 60 else v["texto"]
+            usos = v["count"]
+            en_cache = k in audio_cache
+            estado = '<span class="badge badge-success">En Cache</span>' if en_cache else '<span class="badge badge-warning">Pendiente</span>'
+            filas_top += f'''
+                <tr>
+                    <td>{i}</td>
+                    <td class="text-truncate">{texto}</td>
+                    <td><span class="badge badge-info">{usos}x</span></td>
+                    <td>{estado}</td>
+                </tr>'''
+
+        # Archivos recientes
+        filas_archivos = ""
+        for i, archivo in enumerate(archivos_disco[:10], 1):
+            filas_archivos += f'''
+                <tr>
+                    <td>{i}</td>
+                    <td class="text-truncate">{archivo}</td>
+                </tr>'''
+
+        fecha_hora = datetime.now().strftime('%d/%m/%Y %H:%M')
+        tamano_mb = round(tamano_total / (1024 * 1024), 1)
+
+        html = f'''<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Cache Bruce - {fecha_hora}</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+        h1 {{
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }}
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        .stat-card {{
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }}
+        .stat-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+        }}
+        .stat-number {{
+            font-size: 3em;
+            font-weight: bold;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0,212,255,0.5);
+        }}
+        .stat-label {{
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        .section {{
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }}
+        .section h2 {{
+            color: #00d4ff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0,212,255,0.3);
+        }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        th, td {{
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }}
+        th {{
+            background: rgba(0,212,255,0.2);
+            color: #00d4ff;
+            font-weight: 600;
+        }}
+        tr:hover {{ background: rgba(255,255,255,0.05); }}
+        .badge {{
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }}
+        .badge-success {{ background: #00c853; color: #fff; }}
+        .badge-warning {{ background: #ff9800; color: #000; }}
+        .badge-info {{ background: #00d4ff; color: #000; }}
+        .footer {{
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }}
+        .text-truncate {{
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reporte Cache Bruce</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{len(audio_cache)}</div>
+                <div class="stat-label">Audios en Cache</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{len(frase_stats)}</div>
+                <div class="stat-label">Frases Registradas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{FRECUENCIA_MIN_CACHE}</div>
+                <div class="stat-label">Umbral Minimo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{tamano_mb}</div>
+                <div class="stat-label">Tamano (MB)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Top Frases en Cache</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Frase</th>
+                        <th>Usos</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>{filas_top}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Archivos de Audio Recientes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Archivo</th>
+                    </tr>
+                </thead>
+                <tbody>{filas_archivos}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>Generado automaticamente - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+            <p>Bruce W - Sistema de Llamadas Automatizadas</p>
+        </div>
+    </div>
+</body>
+</html>'''
+
+        return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+    except Exception as e:
+        return f"<h1>Error: {str(e)}</h1>", 500
+
+
 @app.route("/patrones-aprendidos", methods=["GET"])
 def ver_patrones_aprendidos():
     """
