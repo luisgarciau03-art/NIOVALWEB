@@ -252,6 +252,40 @@ class DeepgramTranscriber:
                 print(f" FIX 212: Error cerrando conexión Deepgram: {e}")
         self.is_connected = False
 
+    # FIX 536: Método para reconectar después de error
+    async def reconnect(self):
+        """
+        FIX 536: Intenta reconectar a Deepgram después de un error de conexión
+        Returns:
+            bool: True si reconexión exitosa
+        """
+        print(f" FIX 536: Intentando reconectar Deepgram para CallSid: {self.call_sid}")
+
+        # Cerrar conexión anterior si existe
+        if self.dg_connection:
+            try:
+                self.dg_connection.finish()
+            except:
+                pass
+            self.dg_connection = None
+            self.is_connected = False
+
+        # Esperar un momento antes de reconectar
+        await asyncio.sleep(0.5)
+
+        # Intentar reconectar
+        try:
+            result = await self.connect()
+            if result:
+                print(f" FIX 536: Reconexión exitosa para CallSid: {self.call_sid}")
+                return True
+            else:
+                print(f" FIX 536: Reconexión fallida para CallSid: {self.call_sid}")
+                return False
+        except Exception as e:
+            print(f" FIX 536: Error en reconexión: {e}")
+            return False
+
     def get_stats(self):
         """Obtiene estadísticas de la sesión"""
         return {

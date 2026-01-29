@@ -442,6 +442,10 @@ class AgenteVentas:
         # FIX 526 BRUCE1677: Flag para cuando Bruce pregunta por hora de callback
         self.esperando_hora_callback = False  # True cuando Bruce preguntó "¿A qué hora...?"
 
+        # FIX 535: Flag para prevenir pérdida de contexto después de silencios
+        # Una vez que Bruce avanza de INICIO, NUNCA volver a responder "Hola, buen día"
+        self.conversacion_iniciada = False  # True una vez que Bruce ha dicho algo más que saludo
+
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
         self.estado_anterior = None  # Para tracking de transiciones
@@ -5556,12 +5560,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   FIX 522: Catálogo PROMETIDO - flag activado")
 
         # FIX 526 BRUCE1677: Detectar si Bruce pregunta por hora de callback
+        # FIX 533 BRUCE1665: Expandir patrones - "hora me" además de "hora le"
         if any(frase in respuesta_lower for frase in [
             '¿a qué hora', '¿a que hora', 'qué hora sería', 'que hora seria',
-            '¿qué hora le', '¿que hora le', 'a qué hora le', 'a que hora le'
+            '¿qué hora le', '¿que hora le', 'a qué hora le', 'a que hora le',
+            # FIX 533: Agregar variantes con "me" en lugar de "le"
+            '¿qué hora me', '¿que hora me', 'a qué hora me', 'a que hora me',
+            'qué hora puedo', 'que hora puedo', 'a qué hora puedo', 'a que hora puedo',
+            # FIX 533: Más variantes de preguntas por horario
+            '¿cuándo puedo', '¿cuando puedo', 'cuándo le', 'cuando le',
+            'horario para', 'mejor hora', 'mejor horario',
+            '¿a qué hora regresa', '¿a que hora regresa', '¿a qué hora llega', '¿a que hora llega'
         ]):
             self.esperando_hora_callback = True
-            print(f"   FIX 526: Bruce pregunta por HORA - esperando_hora_callback=True")
+            print(f"   FIX 526/533: Bruce pregunta por HORA - esperando_hora_callback=True")
         elif self.esperando_hora_callback:
             # Si Bruce dice algo diferente, resetear el flag
             self.esperando_hora_callback = False
@@ -6650,11 +6662,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 }
 
         if any(s in texto_lower for s in saludos) and len(texto_lower) < 20 and not tiene_digitos:
-            if self.estado_conversacion == EstadoConversacion.INICIO:
+            # FIX 535: SOLO responder "Hola, buen día" si NUNCA hemos avanzado de INICIO
+            # Previene pérdida de contexto después de silencios (BRUCE1665)
+            if self.estado_conversacion == EstadoConversacion.INICIO and not self.conversacion_iniciada:
+                # FIX 535: Marcar que la conversación ya inició
+                self.conversacion_iniciada = True
                 return {
                     "tipo": "SALUDO_INICIAL",
                     "respuesta": "Hola, buen día.",
                     "accion": "AVANZAR_A_PRESENTACION"
+                }
+            elif self.conversacion_iniciada:
+                # FIX 535: Conversación ya iniciada - responder como verificación de conexión
+                print(f"   FIX 535: Conversación ya iniciada - NO repetir saludo inicial")
+                return {
+                    "tipo": "VERIFICACION_CONEXION",
+                    "respuesta": "Sí, aquí estoy. ¿Me decía?",
+                    "accion": "CONTINUAR_CONVERSACION"
                 }
 
         # FIX 524 BRUCE1669: Si tiene números + "¿Bueno?", cliente verifica conexión mientras dicta
@@ -6681,30 +6705,67 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 }
 
         # FIX 526 BRUCE1677: Si esperamos hora y cliente da números, interpretar como hora
-        if self.esperando_hora_callback and tiene_digitos:
-            digitos = re.findall(r'\d', texto_lower)
-            print(f"   FIX 526: esperando_hora_callback=True + dígitos detectados ({digitos})")
+        # FIX 533 BRUCE1665: También manejar respuestas de horario SIN dígitos ("por la tarde", "en la mañana")
+        if self.esperando_hora_callback:
+            # Patrones de horario sin necesidad de dígitos explícitos
+            patrones_horario_sin_digitos = [
+                'por la tarde', 'en la tarde', 'la tarde', 'tarde',
+                'por la mañana', 'en la mañana', 'la mañana', 'mañana', 'manana',
+                'por la noche', 'en la noche', 'la noche', 'noche',
+                'después de', 'despues de', 'como a las', 'como las',
+                'a partir de', 'después del', 'despues del',
+                'en un rato', 'más tarde', 'mas tarde', 'al rato',
+                'después de comer', 'despues de comer', 'hora de comida',
+                'medio día', 'medio dia', 'mediodía', 'mediodia',
+                'sería por la', 'seria por la', 'sería en la', 'seria en la',
+                # FIX 533: "como a las 5" tiene número pero el patrón clave es "como a las"
+                'a las', 'las'
+            ]
 
-            # Intentar interpretar como hora
-            # "31, 29" podría ser "3:30" o "1:29" (transcripción errónea)
-            # Simplemente confirmar el callback sin interpretar exactamente
-            self.esperando_hora_callback = False  # Reset flag
+            tiene_patron_horario = any(p in texto_lower for p in patrones_horario_sin_digitos)
 
-            # Detectar patrones comunes de hora
-            hora_texto = texto_lower
-            if any(h in hora_texto for h in ['mañana', 'manana', 'tarde', 'noche']):
-                return {
-                    "tipo": "HORA_CALLBACK_CONFIRMADA",
-                    "respuesta": "Perfecto, entonces le llamo en ese horario. Muchas gracias por su tiempo.",
-                    "accion": "CONFIRMAR_CALLBACK"
-                }
-            else:
-                # Si solo son números, confirmar genéricamente
-                return {
-                    "tipo": "HORA_CALLBACK_CONFIRMADA",
-                    "respuesta": "Perfecto, le llamo más tarde entonces. Muchas gracias por su tiempo.",
-                    "accion": "CONFIRMAR_CALLBACK"
-                }
+            if tiene_digitos or tiene_patron_horario:
+                digitos = re.findall(r'\d', texto_lower)
+                print(f"   FIX 526/533: esperando_hora_callback=True + horario detectado (dígitos={digitos}, patrón={tiene_patron_horario})")
+
+                # Reset flag
+                self.esperando_hora_callback = False
+
+                # Detectar patrones comunes de hora para personalizar respuesta
+                hora_texto = texto_lower
+                if any(h in hora_texto for h in ['mañana', 'manana']):
+                    return {
+                        "tipo": "HORA_CALLBACK_CONFIRMADA",
+                        "respuesta": "Perfecto, entonces le llamo por la mañana. Muchas gracias por su tiempo.",
+                        "accion": "CONFIRMAR_CALLBACK"
+                    }
+                elif any(h in hora_texto for h in ['tarde']):
+                    return {
+                        "tipo": "HORA_CALLBACK_CONFIRMADA",
+                        "respuesta": "Perfecto, entonces le llamo por la tarde. Muchas gracias por su tiempo.",
+                        "accion": "CONFIRMAR_CALLBACK"
+                    }
+                elif any(h in hora_texto for h in ['noche']):
+                    return {
+                        "tipo": "HORA_CALLBACK_CONFIRMADA",
+                        "respuesta": "Perfecto, entonces le llamo por la noche. Muchas gracias por su tiempo.",
+                        "accion": "CONFIRMAR_CALLBACK"
+                    }
+                else:
+                    # Respuesta genérica con la hora si se detectó
+                    if digitos:
+                        hora_num = ''.join(digitos[:2])  # Tomar primeros 2 dígitos como hora
+                        return {
+                            "tipo": "HORA_CALLBACK_CONFIRMADA",
+                            "respuesta": f"Perfecto, entonces le llamo a las {hora_num}. Muchas gracias por su tiempo.",
+                            "accion": "CONFIRMAR_CALLBACK"
+                        }
+                    else:
+                        return {
+                            "tipo": "HORA_CALLBACK_CONFIRMADA",
+                            "respuesta": "Perfecto, le llamo más tarde entonces. Muchas gracias por su tiempo.",
+                            "accion": "CONFIRMAR_CALLBACK"
+                        }
 
         # 4. TRANSFERENCIAS (no necesita GPT)
         transferencias = ["espere", "le paso", "ahorita le comunico", "permítame", "permitame"]
@@ -10609,7 +10670,9 @@ PASO 3 (DESPEDIDA INMEDIATA): "Perfecto, ya lo tengo anotado. Le llegará en las
 """)
                 # FIX 201: Marcar que se dijo la segunda parte del saludo
                 self.segunda_parte_saludo_dicha = True
-                print(f"[OK] FIX 201: Se activó la segunda parte del saludo. No se repetirá.")
+                # FIX 535: Marcar conversación iniciada para prevenir pérdida de contexto
+                self.conversacion_iniciada = True
+                print(f"[OK] FIX 201/535: Se activó la segunda parte del saludo. conversacion_iniciada=True")
 
             elif self.segunda_parte_saludo_dicha:
                 # FIX 201: Cliente dijo "Dígame" u otro saludo DESPUÉS de que ya se dijo la segunda parte

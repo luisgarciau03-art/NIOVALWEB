@@ -1684,9 +1684,28 @@ def procesar_respuesta():
     # FIX 511: BRUCE1546 - Timeout escalonado para reducir delays de 42s
     #   - 3s: Si hay PARCIAL disponible, usarla (no esperar 5s por FINAL)
     #   - 5s: Timeout absoluto (fallback completo)
+    # FIX 534: Timeout progresivo - reducir timeouts si ya hubo timeouts previos
     import time
-    max_wait_deepgram = 5.0  # FIX 401: Timeout absoluto máximo
-    max_wait_parcial_fallback = 3.0  # FIX 511: Usar PARCIAL después de 3s si no hay FINAL
+
+    # FIX 534: Obtener contador de timeouts del agente para ajuste progresivo
+    agente_temp = conversaciones_activas.get(call_sid)
+    timeouts_previos = getattr(agente_temp, 'timeouts_deepgram', 0) if agente_temp else 0
+
+    # FIX 534: Ajustar timeouts según historial
+    if timeouts_previos >= 2:
+        # Después de 2+ timeouts, ser muy agresivo
+        max_wait_deepgram = 2.5  # FIX 534: Reducido de 5s a 2.5s
+        max_wait_parcial_fallback = 1.5  # FIX 534: Reducido de 3s a 1.5s
+        print(f"   FIX 534: Timeouts previos={timeouts_previos} - usando timeouts reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+    elif timeouts_previos == 1:
+        # Después de 1 timeout, ser moderadamente agresivo
+        max_wait_deepgram = 3.5  # FIX 534: Reducido de 5s a 3.5s
+        max_wait_parcial_fallback = 2.0  # FIX 534: Reducido de 3s a 2s
+        print(f"   FIX 534: Timeouts previos={timeouts_previos} - usando timeouts moderados ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+    else:
+        # Sin timeouts previos, usar valores normales
+        max_wait_deepgram = 5.0  # FIX 401: Timeout absoluto máximo
+        max_wait_parcial_fallback = 3.0  # FIX 511: Usar PARCIAL después de 3s si no hay FINAL
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
     parcial_disponible_desde = None  # FIX 511: Cuándo detectamos primera PARCIAL
@@ -1958,6 +1977,13 @@ def procesar_respuesta():
             else:
                 print(f" FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
                 print(f"    Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
+
+                # FIX 534: Incrementar contador de timeouts para ajuste progresivo
+                if call_sid in conversaciones_activas:
+                    agente_timeout = conversaciones_activas[call_sid]
+                    if hasattr(agente_timeout, 'timeouts_deepgram'):
+                        agente_timeout.timeouts_deepgram += 1
+                        print(f"    FIX 534: Timeout Deepgram #{agente_timeout.timeouts_deepgram}")
 
     # FIX 401: WHISPER DESHABILITADO - Deepgram es el único sistema de transcripción
     # Whisper genera demasiadas transcripciones basura ("subtítulos de amara.org")
@@ -7759,17 +7785,37 @@ if FLASK_SOCK_AVAILABLE and sock:
                     media_data = data.get('media', {})
                     payload = media_data.get('payload')  # Audio en base64
 
-                    if payload and transcriber and transcriber.is_connected:
-                        # Enviar audio a Deepgram
-                        transcriber.send_audio_base64(payload)
+                    if payload and transcriber:
+                        # FIX 536: Verificar conexión y reconectar si es necesario
+                        if not transcriber.is_connected:
+                            print(f" FIX 536: Deepgram desconectado - intentando reconectar")
+                            try:
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+                                reconnected = loop.run_until_complete(transcriber.reconnect())
+                                if not reconnected:
+                                    print(f" FIX 536: Reconexión fallida - continuando sin Deepgram")
+                            except Exception as recon_error:
+                                print(f" FIX 536: Error en reconexión: {recon_error}")
+
+                        # Enviar audio si está conectado
+                        if transcriber.is_connected:
+                            transcriber.send_audio_base64(payload)
 
                 elif event == 'stop':
                     print(f" FIX 212: MediaStream detenido - CallSid: {call_sid}")
                     break
 
         except Exception as e:
+            error_str = str(e)
             print(f" FIX 212: Error en WebSocket: {e}")
-            traceback.print_exc()
+
+            # FIX 536: Detectar errores específicos de WebSocket
+            if '1005' in error_str or '1011' in error_str or 'ConnectionClosed' in error_str:
+                print(f" FIX 536: Error de conexión WebSocket detectado ({error_str[:50]})")
+                # No hacer traceback para errores esperados de cierre de conexión
+            else:
+                traceback.print_exc()
 
         finally:
             # Limpiar recursos
