@@ -1062,10 +1062,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # 2. DELETREO DE CORREO (palabras clave)
         palabras_deletreo_correo = [
             "arroba", "@", "punto com", "punto mx", "punto net",
-            "gmail", "hotmail", "outlook", "yahoo",
-            "a de", "b de", "c de", "m de mama", "f de foca"  # deletreo fonético
+            "gmail", "hotmail", "outlook", "yahoo"
         ]
-        if any(p in texto_lower for p in palabras_deletreo_correo):
+        # FIX 527: BRUCE1776 - Deletreo fonético más específico
+        # Problema: "a de" coincidía con "segurA DE 9" en frases de horario
+        # Solución: Buscar patrón " X de " donde X es una letra sola
+        import re
+        deletreo_fonetico = re.search(r'\b[a-z] de [a-z]', texto_lower)  # "a de avión", "m de mamá"
+
+        if any(p in texto_lower for p in palabras_deletreo_correo) or deletreo_fonetico:
             print(f"   [DEBUG] FIX 477: DETECTADO deletreo de correo - Cliente probablemente sigue dictando")
             return True
 

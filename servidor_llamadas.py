@@ -1844,11 +1844,21 @@ def procesar_respuesta():
                         esperando_final = False
                         # No hacer continue, dejar que fluya al código de procesamiento
 
+                    # FIX 528: BRUCE1775 - Si cliente dictó número de WhatsApp COMPLETO (10 dígitos), procesar INMEDIATO
+                    # Problema: Cliente dictó "72, 27 0 7 27 84." (10 dígitos) pero Bruce no respondió
+                    import re
+                    digitos_en_final = re.findall(r'\d', final_texto)
+                    es_numero_completo = len(digitos_en_final) >= 10
+                    if es_numero_completo:
+                        print(f" FIX 528: Número COMPLETO detectado ({len(digitos_en_final)} dígitos) - procesando INMEDIATO")
+                        esperando_final = False
+
                     # FIX 456: BRUCE1375 - Esperar para ver si cliente sigue hablando
                     # El cliente puede pausar brevemente pero continuar hablando
-                    # FIX 525: Solo esperar si NO es respuesta de presencia
+                    # FIX 525/528: Solo esperar si NO es respuesta especial
+                    procesar_inmediato = es_respuesta_presencia or es_numero_completo
                     tiempo_espera_post_final = 0.0
-                    max_espera_post_final = 0.35 if not es_respuesta_presencia else 0.0  # FIX 525: 0 para presencia
+                    max_espera_post_final = 0.35 if not procesar_inmediato else 0.0  # FIX 525/528: 0 para casos especiales
                     timestamp_final = info_ultima.get("timestamp", time.time())
 
                     while tiempo_espera_post_final < max_espera_post_final:
