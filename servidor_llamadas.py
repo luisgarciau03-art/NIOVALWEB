@@ -2572,7 +2572,12 @@ def procesar_respuesta():
                 'mande', 'sí', 'si', 'sí dígame', 'si digame',
                 # FIX 458: BRUCE1377 - Agregar variantes con coma/puntuación
                 'sí, dígame', 'si, digame', 'sí, diga', 'si, diga',
-                'buen día, dígame', 'buen dia, digame'
+                'buen día, dígame', 'buen dia, digame',
+                # FIX 529 BRUCE1686: Saludos combinados con "sí" al inicio
+                'sí buenos días', 'si buenos dias', 'sí buen día', 'si buen dia',
+                'sí buenas tardes', 'si buenas tardes', 'sí buenas', 'si buenas',
+                'sí hola', 'si hola', 'hola buenos días', 'hola buenos dias',
+                'hola buen día', 'hola buen dia', 'hola buenas tardes'
             ]
             # FIX 458: Limpiar TODA la puntuación (incluyendo comas internas) para comparar
             frase_para_comparar = re.sub(r'[.,;:!?¿¡]', '', frase_limpia).strip()

@@ -6388,15 +6388,22 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "OFRECER_CONTACTO"
             }
 
-        # FIX 513 BRUCE1585: Confirma mismo número / Este número
+        # FIX 513 BRUCE1585 + FIX 528 BRUCE1704: Confirma mismo número / Este número
         # Caso: "Este número, ya te confirmo si sí" → Bruce no respondió
+        # Caso BRUCE1704: "Es este número" → Cliente indica que su WhatsApp es el número actual
         if any(p in texto_lower for p in [
             "este número", "este numero", "a este mismo", "este mismo",
             "aquí mismo", "aqui mismo", "a éste", "en este",
             "al que estás llamando", "al que estas llamando",
             "al que me llamas", "al que me hablas",
             "ya te confirmo", "te confirmo", "le confirmo",
-            "es el mismo", "el mismo número", "el mismo numero"
+            "es el mismo", "el mismo número", "el mismo numero",
+            # FIX 528 BRUCE1704: Patrones adicionales para "es este número"
+            "es este", "es éste", "es ese", "sería este", "seria este",
+            "el que aparece", "el que te aparece", "el que le aparece",
+            "el que marca", "el que te marca", "el que le marca",
+            "el de aquí", "el de aqui", "el que estás viendo", "el que estas viendo",
+            "pues este", "pues éste", "sí, este", "si, este", "sí este", "si este"
         ]) and not any(neg in texto_lower for neg in ["no es", "no tengo", "no tiene"]):
             print(f"[OK] FIX 513: CONFIRMA MISMO NÚMERO: '{texto_cliente[:50]}'")
             return {
@@ -6600,6 +6607,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 524 BRUCE1669: NO tratar como saludo si contiene números (cliente dictando + "¿Bueno?")
         saludos = ["hola", "bueno", "buenos días", "buenos dias", "buenas tardes", "diga", "sí dígame", "si digame"]
         tiene_digitos = bool(re.search(r'\d', texto_lower))
+
+        # FIX 527 BRUCE1694: "¿Bueno?" sin números DESPUÉS de que Bruce ya habló = verificación de conexión
+        # NO debe responder "Hola, buen día" sino "Sí, aquí estoy"
+        verificacion_conexion = texto_lower.strip() in ["bueno", "¿bueno?", "bueno?", "hola", "¿hola?", "hola?", "oye", "¿oye?"]
+
+        if verificacion_conexion and not tiene_digitos:
+            if self.estado_conversacion != EstadoConversacion.INICIO:
+                # Ya pasamos del inicio - cliente verifica que seguimos en línea
+                print(f"   FIX 527: Cliente verifica conexión ('{texto_lower}') - NO es saludo inicial")
+                return {
+                    "tipo": "VERIFICACION_CONEXION",
+                    "respuesta": "Sí, aquí estoy. ¿Me decía?",
+                    "accion": "CONTINUAR_CONVERSACION"
+                }
 
         if any(s in texto_lower for s in saludos) and len(texto_lower) < 20 and not tiene_digitos:
             if self.estado_conversacion == EstadoConversacion.INICIO:
