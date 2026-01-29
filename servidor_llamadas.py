@@ -4752,6 +4752,41 @@ def info_cache():
         return {"error": str(e)}, 500
 
 
+@app.route("/frases-sin-audio", methods=["GET"])
+def frases_sin_audio():
+    """
+    Endpoint para obtener todas las frases registradas que no tienen audio en cache
+    Ordenadas por frecuencia de uso (las más usadas primero)
+    """
+    try:
+        # Obtener todas las frases sin audio
+        frases_pendientes = []
+        for key, data in frase_stats.items():
+            if key not in audio_cache:
+                frases_pendientes.append({
+                    "key": key,
+                    "texto": data.get("texto", ""),
+                    "usos": data.get("count", 0),
+                    "tiene_nombre": data.get("tiene_nombre", False)
+                })
+
+        # Ordenar por usos (descendente)
+        frases_pendientes.sort(key=lambda x: x["usos"], reverse=True)
+
+        # Limitar a las primeras 100 para no saturar
+        limit = request.args.get("limit", 100, type=int)
+        frases_pendientes = frases_pendientes[:limit]
+
+        return {
+            "total_sin_audio": len([k for k in frase_stats if k not in audio_cache]),
+            "total_con_audio": len(audio_cache),
+            "total_registradas": len(frase_stats),
+            "frases": frases_pendientes
+        }
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 @app.route("/reporte-cache", methods=["GET"])
 def reporte_cache_html():
     """
