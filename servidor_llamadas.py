@@ -2370,6 +2370,86 @@ def procesar_respuesta():
     bruce_id_cliente = agente.lead_data.get("bruce_id", "N/A") if agente else "N/A"
     log_evento(f"{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
 
+    # ============================================================================
+    # FIX 507 BRUCE1721: Detectar TRANSCRIPCIONES CORRUPTAS de Deepgram
+    # Problema: Deepgram a veces devuelve transcripciones sin sentido
+    # Ejemplo: "¿Un váter o nada más? Pero hazme ya para torta." (BRUCE1721)
+    # Solución: Detectar palabras/frases que NO tienen sentido en contexto ferretero
+    # ============================================================================
+    if speech_result and speech_result.strip():
+        speech_lower_507 = speech_result.lower().strip()
+
+        # Palabras que NUNCA deberían aparecer en una llamada de ventas de ferretería
+        # y que indican transcripción corrupta de Deepgram
+        palabras_corruptas = [
+            'váter', 'vater', 'torta', 'hazme ya', 'para torta',
+            'pizza', 'hamburguesa', 'taco', 'burrito', 'sushi',
+            'fútbol', 'futbol', 'partido', 'gol',
+            'canción', 'cancion', 'bailar', 'música', 'musica',
+            'película', 'pelicula', 'serie', 'netflix',
+            'amor', 'te amo', 'te quiero', 'beso', 'abrazo',
+            'sexo', 'porno', 'xxx',
+            'matar', 'morir', 'sangre', 'violencia',
+            'droga', 'marihuana', 'cocaína', 'cocaina'
+        ]
+
+        # Patrones de frases sin sentido (combinaciones que no tienen contexto)
+        frases_sin_sentido = [
+            'hazme ya para', 'nada más pero', 'o nada más pero',
+            'váter o nada', 'vater o nada'
+        ]
+
+        tiene_palabra_corrupta = any(p in speech_lower_507 for p in palabras_corruptas)
+        tiene_frase_sin_sentido = any(f in speech_lower_507 for f in frases_sin_sentido)
+
+        if tiene_palabra_corrupta or tiene_frase_sin_sentido:
+            print(f"\n[WARN] FIX 507: TRANSCRIPCIÓN CORRUPTA DETECTADA")
+            print(f"   Transcripción: '{speech_result}'")
+            print(f"   → Pidiendo repetición al cliente")
+
+            # Incrementar contador de transcripciones corruptas
+            if not hasattr(agente, 'transcripciones_corruptas'):
+                agente.transcripciones_corruptas = 0
+            agente.transcripciones_corruptas += 1
+
+            # Si ya van 2+ corruptas seguidas, puede ser problema de audio real
+            if agente.transcripciones_corruptas >= 2:
+                print(f"   [WARN] {agente.transcripciones_corruptas} transcripciones corruptas seguidas")
+                print(f"   → Posible problema de audio/conexión")
+
+            # Pedir repetición
+            response = VoiceResponse()
+            mensajes_repetir = [
+                "Disculpe, no le escuché bien. ¿Me puede repetir?",
+                "Perdón, tuve problemas de audio. ¿Qué me decía?",
+                "Lo siento, no logré entenderle. ¿Me lo repite por favor?"
+            ]
+            import random
+            mensaje = random.choice(mensajes_repetir)
+
+            audio_id = f"repetir_corrupta_{call_sid}"
+            result = generar_audio_elevenlabs(mensaje, audio_id)
+
+            if result:
+                audio_url = request.url_root + f"audio/{audio_id}"
+                response.play(audio_url)
+            else:
+                response.say(mensaje, voice="alice", language="es-MX")
+
+            response.record(
+                action="/procesar-respuesta",
+                method="POST",
+                max_length=30,
+                timeout=5,
+                play_beep=False,
+                trim="trim-silence"
+            )
+            return Response(str(response), mimetype="text/xml")
+        else:
+            # Transcripción válida - resetear contador
+            if hasattr(agente, 'transcripciones_corruptas'):
+                agente.transcripciones_corruptas = 0
+
     # Registrar mensaje del cliente en LOGS
     if logs_manager and speech_result and agente.bruce_id:
         nombre_tienda = agente.lead_data.get('nombre_negocio', '')
@@ -2458,6 +2538,29 @@ def procesar_respuesta():
                 'en un momento', 'un minuto', 'un minutito'
             ]
             cliente_pidio_espera = any(frase in frase_limpia for frase in frases_espera_cliente)
+
+            # FIX 501: BRUCE1721 - Validar contexto NEGATIVO antes de activar modo espera
+            # Problema: Cliente dijo "permítame un momentito, pero no. No lo tenemos permitido."
+            # El FIX 470 detectó "permítame" pero ignoró la negación posterior
+            # Solución: Verificar que NO haya negaciones/rechazos en la misma frase
+            contexto_negativo = False
+            if cliente_pidio_espera:
+                frases_negativas = [
+                    'pero no', 'no puedo', 'no tenemos permitido', 'no lo tenemos',
+                    'no está permitido', 'no me permiten', 'no nos permiten',
+                    'no es posible', 'no se puede', 'imposible',
+                    'sucursal', 'oficinas', 'área equivocada', 'departamento equivocado',
+                    'no es mi área', 'no manejo eso', 'no me corresponde',
+                    'no soy el encargado', 'no soy la encargada', 'no soy quien',
+                    'no tengo autorización', 'no estoy autorizado', 'no estoy autorizada'
+                ]
+                contexto_negativo = any(neg in frase_limpia for neg in frases_negativas)
+
+                if contexto_negativo:
+                    print(f"\n FIX 501: CONTEXTO NEGATIVO detectado - NO activar modo espera")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → Cliente NO está transfiriendo, está rechazando/explicando")
+                    cliente_pidio_espera = False  # Desactivar modo espera
 
             if cliente_pidio_espera:
                 print(f"\n FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
@@ -3499,9 +3602,102 @@ def procesar_respuesta():
     # FIX 498: BRUCE1473 - Si respuesta es cadena vacía = modo espera silencioso
     # NO colgar, solo esperar sin generar audio y seguir escuchando
     if respuesta_agente == "":
-        print(f" FIX 498: Respuesta vacía (modo espera silencioso) - Continuando sin audio")
         bruce_id = agente.lead_data.get("bruce_id", "N/A")
+
+        # FIX 502: BRUCE1716 - Contador de silencios durante dictado de número
+        # Problema: Cliente dicta número en partes, Bruce entra en silencio pero NUNCA confirma
+        # Solución: Después de 2 silencios, intentar confirmar el número acumulado
+        import re
+        from agente_ventas import convertir_numeros_escritos_a_digitos
+        if not hasattr(agente, 'silencios_durante_dictado'):
+            agente.silencios_durante_dictado = 0
+        if not hasattr(agente, 'digitos_acumulados'):
+            agente.digitos_acumulados = []
+
+        # Acumular dígitos del speech_result actual (si hay)
+        # Primero convertir palabras a dígitos (ej: "veintiuno" → "21")
+        texto_convertido = convertir_numeros_escritos_a_digitos(speech_result) if speech_result else ""
+        digitos_actuales = re.findall(r'\d', texto_convertido)
+        if digitos_actuales:
+            agente.digitos_acumulados.extend(digitos_actuales)
+            print(f" FIX 502: Acumulando {len(digitos_actuales)} dígitos → Total: {len(agente.digitos_acumulados)}")
+            print(f"   Texto original: '{speech_result}' → Convertido: '{texto_convertido}'")
+
+        agente.silencios_durante_dictado += 1
+        print(f" FIX 498/502: Respuesta vacía (silencio #{agente.silencios_durante_dictado}) - Continuando sin audio")
         log_evento(f"{bruce_id} - ESPERANDO EN SILENCIO (FIX 498)", "BRUCE")
+
+        # FIX 502: Verificar si debemos confirmar el número acumulado
+        total_digitos = len(agente.digitos_acumulados)
+
+        # Si tenemos 10+ dígitos Y 2+ silencios → Confirmar número
+        if total_digitos >= 10 and agente.silencios_durante_dictado >= 2:
+            numero_completo = ''.join(agente.digitos_acumulados[-10:])  # Últimos 10 dígitos
+            print(f"\n FIX 502: NÚMERO COMPLETO DETECTADO después de {agente.silencios_durante_dictado} silencios")
+            print(f"   Número: {numero_completo}")
+
+            # Guardar en lead_data
+            agente.lead_data["whatsapp"] = numero_completo
+            print(f"   WhatsApp guardado: {numero_completo}")
+
+            # Generar confirmación
+            respuesta_confirmacion = f"Perfecto, le envío el catálogo al {numero_completo[-4:]}. Muchas gracias por su tiempo, que tenga excelente día."
+            audio_id = f"confirmacion_{call_sid}"
+            result = generar_audio_elevenlabs(respuesta_confirmacion, audio_id)
+
+            # Resetear contadores
+            agente.silencios_durante_dictado = 0
+            agente.digitos_acumulados = []
+
+            if result:
+                audio_url = request.url_root + f"audio/{audio_id}"
+                response.play(audio_url)
+            else:
+                response.say(respuesta_confirmacion, voice="alice", language="es-MX")
+
+            log_evento(f"{bruce_id} DICE: \"{respuesta_confirmacion}\" (FIX 502: confirmación automática)", "BRUCE")
+
+            # Marcar como despedida y continuar
+            agente.lead_data["estado_llamada"] = "Respondio"
+            response.record(
+                action="/procesar-respuesta",
+                method="POST",
+                max_length=10,
+                timeout=3,
+                play_beep=False,
+                trim="trim-silence"
+            )
+            return Response(str(response), mimetype="text/xml")
+
+        # FIX 502: Si llevamos 3+ silencios sin número completo → Pedir que repita
+        if agente.silencios_durante_dictado >= 3 and total_digitos > 0 and total_digitos < 10:
+            print(f"\n FIX 502: {agente.silencios_durante_dictado} silencios con número incompleto ({total_digitos} dígitos)")
+            respuesta_repetir = "Disculpe, ¿me puede repetir el número completo? Creo que no lo escuché bien."
+            audio_id = f"repetir_{call_sid}"
+            result = generar_audio_elevenlabs(respuesta_repetir, audio_id)
+
+            # Resetear contadores para nuevo intento
+            agente.silencios_durante_dictado = 0
+            agente.digitos_acumulados = []
+
+            if result:
+                audio_url = request.url_root + f"audio/{audio_id}"
+                response.play(audio_url)
+            else:
+                response.say(respuesta_repetir, voice="alice", language="es-MX")
+
+            log_evento(f"{bruce_id} DICE: \"{respuesta_repetir}\" (FIX 502: pedir repetición)", "BRUCE")
+
+            response.record(
+                action="/procesar-respuesta",
+                method="POST",
+                max_length=30,
+                timeout=5,
+                play_beep=False,
+                trim="trim-silence"
+            )
+            return Response(str(response), mimetype="text/xml")
+
         # FIX 503: Corregir ruta - usar /procesar-respuesta con Record
         response.record(
             action="/procesar-respuesta",
@@ -3512,6 +3708,13 @@ def procesar_respuesta():
             trim="trim-silence"
         )
         return Response(str(response), mimetype="text/xml")
+
+    # FIX 502: Resetear contadores de silencio cuando Bruce da respuesta normal
+    # Esto evita acumulación incorrecta entre diferentes contextos de dictado
+    if hasattr(agente, 'silencios_durante_dictado'):
+        agente.silencios_durante_dictado = 0
+    if hasattr(agente, 'digitos_acumulados'):
+        agente.digitos_acumulados = []
 
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id = agente.lead_data.get("bruce_id", "N/A")

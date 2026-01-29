@@ -6366,9 +6366,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 513 BRUCE1591 + FIX 520 BRUCE1652: No pueden dar contacto / No tiene permitido
         # Caso: "No tengo permitido daros ningún WhatsApp" → Ofrecer contacto de Bruce
         # MEJORADO FIX 520: En lugar de pedir horario, ofrecer dejar nuestro contacto
+        # FIX 505 BRUCE1721: Agregar "no lo tenemos permitido" y variantes plurales
         if any(p in texto_lower for p in [
-            # Variantes de "no permitido"
-            "no tengo permitido", "no me permiten", "no puedo dar", "no puedo darte",
+            # Variantes de "no permitido" (singular y plural)
+            "no tengo permitido", "no tenemos permitido", "no lo tenemos permitido",
+            "no me permiten", "no nos permiten", "no puedo dar", "no puedo darte",
             "no puedo darle", "no le puedo dar", "no te puedo dar",
             "no está permitido", "no esta permitido", "no me dejan",
             "no estoy autorizado", "no estoy autorizada", "no tengo autorización",
@@ -7195,6 +7197,27 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Respondiendo para confirmar que seguimos en línea")
                     # Responder para confirmar presencia pero seguir esperando
                     return "Sí, aquí estoy. Le espero."
+
+                # FIX 506 BRUCE1721: Detectar si cliente CLARIFICA que NO puede ayudar
+                # Caso: Bruce dijo "Claro, espero." pero cliente dice "estoy en sucursal, no en oficinas"
+                # Esto NO es transferencia - cliente está explicando que NO puede ayudar
+                patrones_no_puede_ayudar = [
+                    'sucursal', 'oficinas', 'área equivocada', 'area equivocada',
+                    'departamento equivocado', 'no es mi área', 'no es mi area',
+                    'no manejo eso', 'no me corresponde', 'no soy el encargado',
+                    'no soy la encargada', 'no tengo autorización', 'no tengo autorizacion',
+                    'no estoy autorizado', 'no estoy autorizada',
+                    'no lo tenemos permitido', 'no tenemos permitido', 'no me permiten',
+                    'no puedo dar', 'no le puedo dar', 'prohibido',
+                    'no soy quien', 'no me dejan', 'no está permitido', 'no esta permitido'
+                ]
+                cliente_no_puede_ayudar = any(p in cliente_lower_482 for p in patrones_no_puede_ayudar)
+
+                if cliente_no_puede_ayudar:
+                    print(f"\n[OK] FIX 506: Cliente CLARIFICA que NO puede ayudar - '{respuesta_cliente}'")
+                    print(f"   Saliendo de ESPERANDO_TRANSFERENCIA → Ofrecer contacto de Bruce")
+                    self.estado_conversacion = EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE
+                    return "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?"
 
                 if cliente_volvio:
                     print(f"\n[OK] FIX 482: Cliente VOLVIÓ de la espera - '{respuesta_cliente}'")
