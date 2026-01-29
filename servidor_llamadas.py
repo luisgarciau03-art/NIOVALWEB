@@ -1826,10 +1826,29 @@ def procesar_respuesta():
                 elif es_final:
                     print(f" FIX 451: Transcripción FINAL recibida")
 
+                    # FIX 525: BRUCE1766 - Si es respuesta de PRESENCIA corta, procesar INMEDIATAMENTE
+                    # "Dígame", "Sí", "Bueno", etc. son respuestas completas que no necesitan esperar
+                    final_texto = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
+                    final_sin_puntuacion = final_texto.rstrip('.,;:!?¿¡')
+                    respuestas_presencia = [
+                        'dígame', 'digame', 'diga', 'mande', 'sí', 'si', 'bueno', 'alo', 'aló',
+                        'sí dígame', 'si digame', 'sí diga', 'si diga', 'adelante',
+                        'a sus órdenes', 'a sus ordenes', 'para servirle', 'en qué le ayudo',
+                        'en que le ayudo', 'qué se le ofrece', 'que se le ofrece'
+                    ]
+                    es_respuesta_presencia = final_sin_puntuacion in respuestas_presencia
+
+                    if es_respuesta_presencia:
+                        print(f" FIX 525: Respuesta de PRESENCIA '{final_texto}' - procesando INMEDIATO sin espera")
+                        # Saltar la espera de 350ms y procesar directamente
+                        esperando_final = False
+                        # No hacer continue, dejar que fluya al código de procesamiento
+
                     # FIX 456: BRUCE1375 - Esperar para ver si cliente sigue hablando
                     # El cliente puede pausar brevemente pero continuar hablando
+                    # FIX 525: Solo esperar si NO es respuesta de presencia
                     tiempo_espera_post_final = 0.0
-                    max_espera_post_final = 0.35  # 350ms para detectar si sigue hablando
+                    max_espera_post_final = 0.35 if not es_respuesta_presencia else 0.0  # FIX 525: 0 para presencia
                     timestamp_final = info_ultima.get("timestamp", time.time())
 
                     while tiempo_espera_post_final < max_espera_post_final:
