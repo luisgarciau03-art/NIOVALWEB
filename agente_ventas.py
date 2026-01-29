@@ -2090,6 +2090,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Respuesta anti-loop: '{respuesta}' (problemas de conexión)")
             return respuesta
 
+        # FIX 517 BRUCE1733: Anti-loop para "¿Me permite dejarle el número?"
+        # Problema: Bruce repitió esta frase 4 veces sin dar el número
+        preguntas_dejar_numero = [
+            'me permite dejarle', 'me permite darle',
+            'le puedo dejar mi número', 'le puedo dar mi número',
+            'dejarle el número', 'dejarle mi número',
+            'para que el encargado nos contacte'
+        ]
+        veces_ofrecio_dejar_numero = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in preguntas_dejar_numero)
+        )
+        ofrece_dejar_numero = any(p in respuesta_lower for p in preguntas_dejar_numero)
+
+        # Si ya ofreció 2+ veces dejar número, DAR EL NÚMERO directamente
+        if ofrece_dejar_numero and veces_ofrecio_dejar_numero >= 2:
+            print(f"\n[WARN] FIX 517 ANTI-LOOP: Bruce iba a ofrecer dejar número ({veces_ofrecio_dejar_numero+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            # DAR EL NÚMERO DIRECTAMENTE
+            respuesta = "Nuestro WhatsApp es 6 6 2 4 1 5 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos."
+            print(f"   Respuesta anti-loop: '{respuesta}' (dar número directo)")
+            return respuesta
+
         # FIX 338: Definir contexto_cliente GLOBAL para todos los filtros
         # Incluir últimos 6 mensajes del cliente para mejor detección
         ultimos_mensajes_cliente_global = [
@@ -2560,7 +2583,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         break
 
         # ============================================================
-        # FILTRO 1B (FIX 516 BRUCE1619): No preguntar WhatsApp si cliente dijo que NO tiene
+        # FILTRO 1B (FIX 516 BRUCE1619 + FIX 510 BRUCE1724): No preguntar WhatsApp si cliente dijo que NO tiene
         # ============================================================
         if not filtro_aplicado and self.lead_data.get("sin_whatsapp"):
             # Si cliente ya dijo "no tenemos WhatsApp" y Bruce vuelve a preguntar → corregir
@@ -2571,9 +2594,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ]
             for patron in patrones_preguntar_whatsapp:
                 if re.search(patron, respuesta_lower):
-                    print(f"\n[PHONE] FIX 516: FILTRO ACTIVADO - Bruce preguntó WhatsApp pero cliente dijo que NO tiene")
+                    print(f"\n[PHONE] FIX 516/510: FILTRO ACTIVADO - Bruce preguntó WhatsApp pero cliente dijo que NO tiene")
                     print(f"   Respuesta original: \"{respuesta[:80]}...\"")
-                    respuesta = "Entendido. ¿Me puede dar un correo electrónico para enviarle la información?"
+                    # FIX 510 BRUCE1724: Si cliente indicó que es teléfono fijo, pedir teléfono no correo
+                    if self.lead_data.get("es_telefono_fijo"):
+                        respuesta = "Disculpe, ¿me podría repetir el número de teléfono?"
+                        print(f"   FIX 510: Cliente indicó teléfono fijo, pidiendo teléfono")
+                    else:
+                        respuesta = "Entendido. ¿Me puede dar un correo electrónico para enviarle la información?"
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
                     break
@@ -6088,6 +6116,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # AMPLIADO: Todas las formas de ofrecer información de contacto
         # ================================================================
         patrones_ofrece_correo = [
+            # FIX 514 BRUCE1733: Agregar variantes con "un" en lugar de "el"
+            # Caso: "si gusta, le puedo dar un correo" → Bruce no lo detectó
+            'le puedo dar un correo', 'te puedo dar un correo',
+            'puedo darle un correo', 'puedo darte un correo',
+            'si gusta le puedo dar', 'si gusta te puedo dar',  # sin "correo" al final
+            'gusta le doy', 'gusta te doy',  # variantes cortas
             # Preguntas de ofrecimiento
             'te puedo pasar el correo', 'le puedo pasar el correo',
             'te puedo dar el correo', 'le puedo dar el correo',
@@ -6162,6 +6196,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'sí tengo', 'si tengo', 'claro que sí', 'claro que si', 'cómo no', 'como no'
         ]
         if any(p in texto_lower for p in patrones_ofrece_whatsapp):
+            # FIX 513 BRUCE1728: Si cliente ya está DICTANDO dígitos, NO repetir "dígame el número"
+            # Problema: Cliente dijo "Es el 99, 99" y Bruce repitió "dígame el número" 2 veces
+            import re
+            digitos_dictados = re.findall(r'\d', texto_cliente)
+            if len(digitos_dictados) >= 2:
+                print(f"[OK] FIX 513: Cliente DICTANDO número ({len(digitos_dictados)} dígitos) - esperando silencio")
+                return {
+                    "tipo": "CLIENTE_DICTANDO_NUMERO",
+                    "respuesta": "",  # Silencio - esperar que termine de dictar
+                    "accion": "ESPERAR_NUMERO"
+                }
             print(f"[OK] FIX 496: Cliente OFRECE dar WHATSAPP: '{texto_cliente[:50]}'")
             return {
                 "tipo": "CLIENTE_OFRECE_WHATSAPP",
@@ -6363,6 +6408,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "PEDIR_CORREO"
             }
 
+        # FIX 509: BRUCE1724 - Detectar "número normal" / "es de teléfono" / "línea fija"
+        # Caso: Cliente dijo "No, número normal, es de teléfono" después de dictar dígitos
+        # Problema: Bruce no capturó el número porque esperaba "WhatsApp"
+        # Solución: Detectar esta aclaración y pedir que confirme el número fijo
+        if any(p in texto_lower for p in [
+            "número normal", "numero normal", "es de teléfono", "es de telefono",
+            "teléfono fijo", "telefono fijo", "línea fija", "linea fija",
+            "es línea", "es linea", "teléfono normal", "telefono normal",
+            "no es whatsapp", "no es wats", "es fijo", "número fijo", "numero fijo",
+            "teléfono de la sucursal", "telefono de la sucursal", "teléfono de oficina",
+            "telefono de oficina", "número de oficina", "numero de oficina"
+        ]):
+            print(f"[OK] FIX 509: BRUCE1724 - Cliente aclara que es TELÉFONO FIJO, no WhatsApp")
+            print(f"   Texto: '{texto_cliente}'")
+            self.lead_data["sin_whatsapp"] = True
+            self.lead_data["es_telefono_fijo"] = True
+            # Extraer dígitos del texto actual o del historial reciente
+            import re
+            digitos_texto = re.findall(r'\d', texto_cliente)
+            if len(digitos_texto) >= 7:
+                numero_extraido = ''.join(digitos_texto[-10:]) if len(digitos_texto) >= 10 else ''.join(digitos_texto)
+                print(f"   Número extraído del texto: {numero_extraido}")
+                return {
+                    "tipo": "CONFIRMAR_TELEFONO_FIJO",
+                    "respuesta": f"Perfecto, entonces le marco al {numero_extraido[-4:]}. ¿Es correcto?",
+                    "accion": "CONFIRMAR_TELEFONO",
+                    "telefono": numero_extraido
+                }
+            else:
+                return {
+                    "tipo": "PEDIR_TELEFONO_FIJO",
+                    "respuesta": "Entendido. ¿Me podría repetir el número de teléfono fijo?",
+                    "accion": "PEDIR_TELEFONO_FIJO"
+                }
+
         # FIX 513 BRUCE1591 + FIX 520 BRUCE1652: No pueden dar contacto / No tiene permitido
         # Caso: "No tengo permitido daros ningún WhatsApp" → Ofrecer contacto de Bruce
         # MEJORADO FIX 520: En lugar de pedir horario, ofrecer dejar nuestro contacto
@@ -6553,7 +6633,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
         # Cliente está pidiendo que Bruce le dé SU número de contacto
         # FIX 518b BRUCE1647: Agregar patrones tolerantes a transcripciones parciales
+        # FIX 515 BRUCE1733: Agregar "¿Qué número es?" y variantes - cliente pregunta por el número
         if any(p in texto_lower for p in [
+            # FIX 515 BRUCE1733: Cliente pregunta qué número es
+            "qué número es", "que numero es", "qué número", "que numero",
+            "cuál número", "cual numero", "qué números", "que numeros",
+            "me da su número", "me das tu número", "me da tu número",
+            "me das su número", "me das tu numero", "me da su numero",
+            # Variantes con "perdón" / clarificación
+            "qué número es, perdón", "que numero es perdon",
+            "perdón qué número", "perdon que numero",
             "démelo", "damelo", "dámelo",  # "Démelo" - pidiendo el número
             "me lo da", "me lo das", "me lo puede dar",
             "pásame el número", "pasame el numero", "páseme el número", "paseme el numero",

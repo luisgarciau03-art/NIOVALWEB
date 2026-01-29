@@ -2539,6 +2539,83 @@ def procesar_respuesta():
             ]
             cliente_pidio_espera = any(frase in frase_limpia for frase in frases_espera_cliente)
 
+            # FIX 511: BRUCE1725 - Detectar PREGUNTAS en la misma frase ANTES de activar modo espera
+            # Problema: Cliente dijo "Sí, un momentito. ¿Qué marca, me dijo?"
+            # FIX 470 detectó "momentito" pero ignoró la pregunta "¿Qué marca?"
+            # Solución: Si hay una PREGUNTA, NO activar modo espera - dejar que agente responda
+            contiene_pregunta = False
+            if cliente_pidio_espera:
+                preguntas_prioritarias = [
+                    '¿qué marca', '¿que marca', 'qué marca', 'que marca',
+                    '¿de qué', '¿de que', 'de qué empresa', 'de que empresa',
+                    '¿quién habla', '¿quien habla', 'quién habla', 'quien habla',
+                    '¿de dónde', '¿de donde', 'de dónde habla', 'de donde habla',
+                    '¿qué vende', '¿que vende', 'qué venden', 'que venden',
+                    '¿de parte de', 'de parte de quién', 'de parte de quien',
+                    '¿para qué', '¿para que', 'para qué es', 'para que es',
+                    'me dijo', 'me dijiste', 'me decía', 'me decia'  # "¿Qué marca me dijo?"
+                ]
+                contiene_pregunta = any(preg in frase_limpia for preg in preguntas_prioritarias)
+
+                if contiene_pregunta:
+                    print(f"\n FIX 511: PREGUNTA detectada en frase con 'espera' - NO activar modo espera")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → Cliente hizo PREGUNTA, dejar que agente responda")
+                    cliente_pidio_espera = False  # Desactivar modo espera
+
+            # FIX 518: BRUCE1736 - Detectar "MARQUE A OTRO NÚMERO" vs transferencia
+            # Problema: Cliente dijo "marcó este número, pero con terminación 00, ahí le comunican"
+            # FIX 470 detectó "le comunican" como transferencia, pero cliente decía LLAME A OTRO NÚMERO
+            # Solución: Si menciona "otro número", "terminación", "extensión" → NO es transferencia
+            if cliente_pidio_espera:
+                indicadores_otro_numero = [
+                    'otro número', 'otro numero', 'a otro', 'al otro',
+                    'con terminación', 'con terminacion', 'terminación 0', 'terminacion 0',
+                    'extensión', 'extension', 'marque a', 'marcar a', 'marca a',
+                    'ahí le comunican', 'ahi le comunican', 'ahí le contestan', 'ahi le contestan',
+                    'en ese número', 'en ese numero', 'a ese número', 'a ese numero',
+                    'ese es el número', 'ese es el numero', 'el número es', 'el numero es',
+                    'pero con', 'pero al'  # "pero con terminación 00"
+                ]
+                indica_otro_numero = any(ind in frase_limpia for ind in indicadores_otro_numero)
+
+                if indica_otro_numero:
+                    print(f"\n FIX 518: BRUCE1736 - Cliente indica OTRO NÚMERO, no transferencia")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → NO activar modo espera, procesar como información de contacto")
+                    cliente_pidio_espera = False
+
+            # FIX 508: BRUCE1723 - Evitar LOOP de "Claro, espero"
+            # Problema: Bruce dijo "Claro, espero" 3 veces seguidas en 16 segundos
+            # Solución: Si ya dijo "Claro, espero" en los últimos 30 segundos, NO repetir
+            if cliente_pidio_espera:
+                import time
+                if not hasattr(agente, 'ultimo_claro_espero_timestamp'):
+                    agente.ultimo_claro_espero_timestamp = 0
+
+                tiempo_actual = time.time()
+                tiempo_desde_ultimo = tiempo_actual - agente.ultimo_claro_espero_timestamp
+
+                if tiempo_desde_ultimo < 30:  # Menos de 30 segundos desde el último
+                    print(f"\n FIX 508: ANTI-LOOP - Ya dijo 'Claro, espero' hace {tiempo_desde_ultimo:.1f}s")
+                    print(f"   → NO repetir, dejar que agente procese la frase")
+                    cliente_pidio_espera = False  # Desactivar modo espera
+                else:
+                    # Actualizar timestamp si vamos a decir "Claro, espero"
+                    agente.ultimo_claro_espero_timestamp = tiempo_actual
+
+            # FIX 512: BRUCE1724 - NO activar modo espera si cliente está dictando NÚMEROS
+            # Problema: Cliente dijo "Es de la sucursal. Es 99, 99, 44, 60 32" y Bruce dijo "Claro, espero"
+            # Solución: Si la frase contiene 4+ dígitos, cliente está dictando número, NO esperar
+            if cliente_pidio_espera:
+                import re
+                digitos_en_frase = re.findall(r'\d', frase_limpia)
+                if len(digitos_en_frase) >= 4:
+                    print(f"\n FIX 512: BRUCE1724 - Cliente dictando NÚMERO ({len(digitos_en_frase)} dígitos)")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → NO activar modo espera, dejar que agente capture el número")
+                    cliente_pidio_espera = False
+
             # FIX 501: BRUCE1721 - Validar contexto NEGATIVO antes de activar modo espera
             # Problema: Cliente dijo "permítame un momentito, pero no. No lo tenemos permitido."
             # El FIX 470 detectó "permítame" pero ignoró la negación posterior
@@ -2561,6 +2638,59 @@ def procesar_respuesta():
                     print(f"   Frase: '{speech_result}'")
                     print(f"   → Cliente NO está transfiriendo, está rechazando/explicando")
                     cliente_pidio_espera = False  # Desactivar modo espera
+
+            # FIX 519: SENTIDO COMÚN con GPT - Analizar frases LARGAS/AMBIGUAS
+            # Problema: BRUCE1736 - "marcó este número, pero con terminación 00, ahí le comunican"
+            # Los patrones rígidos no pueden cubrir todas las variantes del lenguaje humano
+            # Solución: Usar GPT mini para analizar la INTENCIÓN de frases ambiguas (>40 chars)
+            if cliente_pidio_espera and len(speech_result) > 40:
+                print(f"\n FIX 519: Frase larga ({len(speech_result)} chars) - Analizando intención con GPT...")
+                try:
+                    from openai import OpenAI
+                    gpt_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+                    prompt_intencion = f"""Analiza esta frase de un cliente en una llamada telefónica y determina su INTENCIÓN:
+
+Frase del cliente: "{speech_result}"
+
+El agente (Bruce) está preguntando por el encargado de compras. Determina qué quiere decir el cliente:
+
+A) TRANSFERENCIA - El cliente va a TRANSFERIR la llamada o pasar el teléfono a otra persona
+B) OTRO_NUMERO - El cliente está dando información de OTRO NÚMERO donde llamar (extensión, terminación, otro teléfono)
+C) PREGUNTA - El cliente está haciendo una PREGUNTA (¿qué marca?, ¿de dónde?, etc.)
+D) RECHAZO - El cliente está RECHAZANDO o diciendo que no puede ayudar
+E) OTRO - Ninguna de las anteriores
+
+Responde SOLO con una letra: A, B, C, D o E"""
+
+                    response_gpt = gpt_client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": prompt_intencion}],
+                        max_tokens=5,
+                        temperature=0
+                    )
+
+                    intencion = response_gpt.choices[0].message.content.strip().upper()
+                    print(f"   GPT analizó intención: {intencion}")
+
+                    # Si NO es transferencia, desactivar modo espera
+                    if intencion != "A":
+                        print(f"   FIX 519: GPT determinó que NO es transferencia ({intencion})")
+                        if intencion == "B":
+                            print(f"   → Cliente da información de OTRO NÚMERO")
+                        elif intencion == "C":
+                            print(f"   → Cliente hace PREGUNTA")
+                        elif intencion == "D":
+                            print(f"   → Cliente RECHAZA/no puede ayudar")
+                        else:
+                            print(f"   → Otra intención")
+                        cliente_pidio_espera = False
+                    else:
+                        print(f"   FIX 519: GPT confirmó que ES transferencia - activar modo espera")
+
+                except Exception as e:
+                    print(f"   FIX 519: Error en GPT ({e}) - usando lógica de patrones")
+                    # Si GPT falla, continuar con la lógica de patrones existente
 
             if cliente_pidio_espera:
                 print(f"\n FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
@@ -3553,8 +3683,10 @@ def procesar_respuesta():
             print(f" GPT+Audio procesando - reproduciendo tono de pensando...")
             # FIX 54B: Usar frases variables pre-cacheadas con VOZ DE BRUCE
             # Seleccionar aleatoriamente una de las 8 frases de "pensando"
+            # FIX 516 BRUCE1730: Import local para evitar UnboundLocalError
+            import random as random_module
             pensando_keys = [f"pensando_{i}" for i in range(1, 9)]
-            pensando_key = random.choice(pensando_keys)
+            pensando_key = random_module.choice(pensando_keys)
 
             # Verificar si existe en caché
             if pensando_key in audio_cache:
