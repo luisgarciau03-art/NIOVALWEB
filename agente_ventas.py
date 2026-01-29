@@ -6290,10 +6290,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # Pregunta: ¿Cuánto cuesta? / ¿Qué precios?
+        # FIX 530 BRUCE1671: Agregar "lista de precios" como pregunta de precios
         if any(p in texto_lower for p in [
             "cuánto cuesta", "cuanto cuesta", "cuánto vale", "cuanto vale",
             "qué precio", "que precio", "cuánto sale", "cuanto sale",
-            "dame precios", "deme precios", "qué precios", "que precios"
+            "dame precios", "deme precios", "qué precios", "que precios",
+            # FIX 530 BRUCE1671: Cliente preguntó "una lista de precios?" pero Bruce quedó en silencio
+            "lista de precios", "lista precios", "una lista de precios"
         ]):
             return {
                 "tipo": "PREGUNTA_PRECIOS",
@@ -6386,6 +6389,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "tipo": "OFRECER_CONTACTO_BRUCE",
                 "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?",
                 "accion": "OFRECER_CONTACTO"
+            }
+
+        # FIX 532 BRUCE1673: Solicitud de callback al mismo número
+        # Caso: "Nos gustaría llamar a esta línea" = Quieren que Bruce llame de nuevo al mismo número
+        # Esto ocurre cuando el encargado no está y piden ser llamados después
+        if any(p in texto_lower for p in [
+            "llamar a esta línea", "llamar a esta linea",
+            "llamar a esta misma línea", "llamar a esta misma linea",
+            "marcar a esta línea", "marcar a esta linea",
+            "llame a esta línea", "llame a esta linea",
+            "llamarnos a este número", "llamarnos a este numero",
+            "llamen a este número", "llamen a este numero",
+            "llámenos a este", "llamenos a este",
+            "vuelva a llamar", "vuelvan a llamar",
+            "regresa la llamada", "regresar la llamada",
+            "me marca después", "me marca despues",
+            "le marco después", "le marco despues"
+        ]) and not any(neg in texto_lower for neg in ["no vuelva", "no llame", "no marque"]):
+            print(f"[OK] FIX 532: SOLICITUD CALLBACK AL MISMO NÚMERO: '{texto_cliente[:50]}'")
+            # Preguntar por hora o confirmar callback
+            return {
+                "tipo": "SOLICITUD_CALLBACK",
+                "respuesta": "Perfecto, con gusto le vuelvo a llamar. ¿A qué hora le convendría más?",
+                "accion": "CONFIRMAR_CALLBACK"
             }
 
         # FIX 513 BRUCE1585 + FIX 528 BRUCE1704: Confirma mismo número / Este número

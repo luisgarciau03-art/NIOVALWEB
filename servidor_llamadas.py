@@ -2574,15 +2574,21 @@ def procesar_respuesta():
                 'sí, dígame', 'si, digame', 'sí, diga', 'si, diga',
                 'buen día, dígame', 'buen dia, digame',
                 # FIX 529 BRUCE1686: Saludos combinados con "sí" al inicio
-                'sí buenos días', 'si buenos dias', 'sí buen día', 'si buen dia',
+                # FIX 531 BRUCE1672: Agregar TODAS las variantes con/sin acentos
+                'sí buenos días', 'si buenos dias', 'sí buenos dias', 'si buenos días',
+                'sí buen día', 'si buen dia', 'sí buen dia', 'si buen día',
                 'sí buenas tardes', 'si buenas tardes', 'sí buenas', 'si buenas',
                 'sí hola', 'si hola', 'hola buenos días', 'hola buenos dias',
-                'hola buen día', 'hola buen dia', 'hola buenas tardes'
+                'hola buen día', 'hola buen dia', 'hola buenas tardes',
+                # FIX 531: Variantes adicionales detectadas
+                'buenos días', 'buen dia', 'bueno buen día', 'bueno buen dia'
             ]
             # FIX 458: Limpiar TODA la puntuación (incluyendo comas internas) para comparar
+            # FIX 531: También normalizar espacios múltiples que quedan después de eliminar puntuación
             frase_para_comparar = re.sub(r'[.,;:!?¿¡]', '', frase_limpia).strip()
+            frase_para_comparar = re.sub(r'\s+', ' ', frase_para_comparar)  # FIX 531: Colapsar espacios múltiples
             # También crear lista de saludos sin puntuación para comparar
-            saludos_sin_puntuacion = [re.sub(r'[.,;:!?¿¡]', '', s).strip() for s in saludos_simples]
+            saludos_sin_puntuacion = [re.sub(r'\s+', ' ', re.sub(r'[.,;:!?¿¡]', '', s)).strip() for s in saludos_simples]
             frase_es_saludo_simple = frase_para_comparar in saludos_sin_puntuacion or frase_limpia.strip('.,;:!?¿¡') in saludos_simples
 
             # FIX 453: Caso BRUCE1347 - NO tratar "Sí" como saludo si cliente estaba dando dato
