@@ -6087,6 +6087,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'whatsapp está bien', 'whatsapp esta bien', 'whatsapp por favor',
             'prefiero whatsapp', 'mejor whatsapp', 'mejor por whatsapp',
             'sí whatsapp', 'si whatsapp', 'sí, whatsapp', 'si, whatsapp',
+            # FIX 523: BRUCE1752 - Variantes con "vía" (ej: "por vía whatsapp estaría bien")
+            'por vía whatsapp', 'por via whatsapp', 'vía whatsapp', 'via whatsapp',
+            'whatsapp estaría bien', 'whatsapp estaria bien',
+            'sí por whatsapp', 'si por whatsapp', 'sí, por whatsapp', 'si, por whatsapp',
             # Acciones
             'mándame al whatsapp', 'mandame al whatsapp', 'mándalo al whatsapp', 'mandalo al whatsapp',
             'envíame al whatsapp', 'enviame al whatsapp', 'envíalo al whatsapp', 'envialo al whatsapp',
@@ -6207,6 +6211,26 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "respuesta": "",  # Silencio - esperar que termine de dictar
                     "accion": "ESPERAR_NUMERO"
                 }
+
+            # FIX 524: BRUCE1761 - Si cliente TAMBIÉN pregunta de dónde habla, responder PRIMERO
+            # Problema: Cliente dijo "¿Cómo no? ¿De dónde dice que llama?" y Bruce ignoró la pregunta
+            preguntas_empresa = [
+                'de dónde habla', 'de donde habla', 'de dónde llama', 'de donde llama',
+                'de dónde me habla', 'de donde me habla', 'de dónde me llama', 'de donde me llama',
+                'quién habla', 'quien habla', 'quién llama', 'quien llama',
+                'de parte de quién', 'de parte de quien', 'de qué empresa', 'de que empresa',
+                'cuál empresa', 'cual empresa', 'qué empresa', 'que empresa'
+            ]
+            cliente_pregunta_empresa = any(p in texto_lower for p in preguntas_empresa)
+
+            if cliente_pregunta_empresa:
+                print(f"[OK] FIX 524: Cliente OFRECE WhatsApp + pregunta empresa - Respondiendo ambos")
+                return {
+                    "tipo": "CLIENTE_OFRECE_WHATSAPP_CON_PREGUNTA",
+                    "respuesta": "Le llamo de NIOVAL, somos distribuidores de productos ferreteros. Sí, dígame su número por favor.",
+                    "accion": "ACEPTAR_WHATSAPP_CON_RESPUESTA"
+                }
+
             print(f"[OK] FIX 496: Cliente OFRECE dar WHATSAPP: '{texto_cliente[:50]}'")
             return {
                 "tipo": "CLIENTE_OFRECE_WHATSAPP",

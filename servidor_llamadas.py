@@ -2980,7 +2980,14 @@ Responde SOLO con una letra: A, B, C, D o E"""
                 'quieres el whatsapp', 'quiere el whatsapp', 'quieres el número',
                 'quiere el número', 'te puedo dar el número', 'le puedo dar el número',
                 'por whatsapp', 'mejor por whatsapp', 'al whatsapp', 'a tu whatsapp',
-                'te lo mando por whatsapp', 'se lo mando por whatsapp'
+                'te lo mando por whatsapp', 'se lo mando por whatsapp',
+                # FIX 523: BRUCE1752 - Variantes de "por vía whatsapp" y aceptaciones directas
+                'por vía whatsapp', 'por via whatsapp', 'vía whatsapp', 'via whatsapp',
+                'whatsapp estaría bien', 'whatsapp estaria bien', 'whatsapp está bien', 'whatsapp esta bien',
+                'sí por whatsapp', 'si por whatsapp', 'sí, por whatsapp', 'si, por whatsapp',
+                'sí whatsapp', 'si whatsapp', 'whatsapp sí', 'whatsapp si',
+                'prefiero whatsapp', 'mejor whatsapp', 'whatsapp mejor',
+                'a mi whatsapp', 'a este whatsapp', 'a su whatsapp'
             ]
 
             cliente_ofrece_correo = any(frase in frase_limpia for frase in frases_oferta_correo)
