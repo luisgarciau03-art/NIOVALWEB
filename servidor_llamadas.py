@@ -2522,6 +2522,42 @@ def procesar_respuesta():
             # FIX 260: Pre-detectar si es una pregunta para evitar falsos positivos
             frase_limpia = speech_result.strip().lower()
 
+            # FIX 520: BRUCE1739/BRUCE1743 - Detectar cuando cliente VUELVE después de "Claro, espero"
+            # Problema: Bruce entró en modo ESPERANDO_TRANSFERENCIA pero cuando cliente volvió
+            # diciendo "¿Bueno?", "¿Vuelvo?", "están hablando de una ferretería?", Bruce NO respondió
+            # Solución: Si estamos en ESPERANDO_TRANSFERENCIA y cliente dice algo (no petición de espera),
+            # SALIR del modo espera y procesar normalmente
+            from agente_ventas import EstadoConversacion
+            if agente.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+                # Detectar si cliente "volvió" (está hablando con Bruce, no pidiendo más espera)
+                frases_cliente_volvio = [
+                    '¿bueno?', 'bueno', '¿vuelvo?', 'vuelvo',
+                    '¿hola?', 'hola', '¿sí?', 'si', '¿diga?', 'diga',
+                    'aquí estoy', 'ahi estoy', 'ya estoy', 'listo',
+                    '¿qué', '¿que', 'qué marca', 'que marca', 'qué vende', 'que vende',
+                    '¿quién habla', '¿quien habla', 'quién es', 'quien es',
+                    '¿de dónde', '¿de donde', 'de parte de',
+                    'están hablando', 'estan hablando', 'habla de', 'hablan de',
+                    'ferretería', 'ferreteria', 'empresa', 'negocio',
+                    'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
+                    'no tenemos', 'no manejamos', 'no nos interesa'
+                ]
+
+                # Si NO es petición de más espera → cliente volvió
+                frases_mas_espera = ['un momento', 'momentito', 'espere', 'tantito', 'un segundo']
+                es_mas_espera = any(f in frase_limpia for f in frases_mas_espera)
+                cliente_volvio = any(f in frase_limpia for f in frases_cliente_volvio) or not es_mas_espera
+
+                if cliente_volvio and len(frase_limpia) > 2:  # Al menos 3 caracteres
+                    print(f"\n FIX 520: CLIENTE VOLVIÓ después de espera - '{speech_result}'")
+                    print(f"   Estado anterior: ESPERANDO_TRANSFERENCIA")
+                    print(f"   → Saliendo del modo espera, procesando normalmente")
+                    agente.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                    agente.respuestas_vacias_consecutivas = 0
+                    # Resetear silencios
+                    if hasattr(agente, 'silencios_durante_dictado'):
+                        agente.silencios_durante_dictado = 0
+
             # FIX 470: BRUCE1412 - Detectar frases de ESPERA ANTES de cualquier otra lógica
             # Si el cliente dice "Permítame un segundo", "Un momento", etc., debemos
             # establecer estado ESPERANDO_TRANSFERENCIA y NO tratarlo como frase incompleta
@@ -3650,15 +3686,16 @@ Responde SOLO con una letra: A, B, C, D o E"""
         # GPT+Audio aún procesando - dar señal auditiva
 
         # FIX 133: Si cliente está desesperado, responder INMEDIATAMENTE y esperar GPT
+        # FIX 522: BRUCE1744/1745 - Reducir timeout de 10.5s a 5s total
         if cliente_desesperado:
             print(f" FIX 133: Cliente desesperado - confirmando presencia INMEDIATAMENTE")
 
-            # Esperar a que GPT termine (máximo 5s más)
-            gpt_thread.join(timeout=5.0)
+            # FIX 522: Esperar a que GPT termine (máximo 2.5s más - reducido de 5s)
+            gpt_thread.join(timeout=2.5)
 
             if not respuesta_container["completado"]:
                 # GPT aún no termina - dar confirmación y seguir esperando
-                print(f" FIX 133 + FIX 162A: GPT aún procesando - usando audio de relleno")
+                print(f" FIX 133 + FIX 162A + FIX 522: GPT aún procesando - usando audio de relleno")
                 # FIX 162A: Usar audio de relleno en lugar de Twilio
                 if "un_momento" in audio_cache:
                     audio_url = request.url_root + "audio_cache/un_momento"
@@ -3667,12 +3704,12 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     audio_url = request.url_root + "audio_cache/pensando_1"
                     response.play(audio_url)
 
-                # Esperar otros 5s (total 10.5s máximo)
-                gpt_thread.join(timeout=5.0)
+                # FIX 522: Esperar otros 2.5s (total 5s máximo - reducido de 10.5s)
+                gpt_thread.join(timeout=2.5)
 
                 if not respuesta_container["completado"]:
-                    # GPT tardó más de 10.5s - timeout
-                    print(f" FIX 133: GPT timeout después de 10.5s")
+                    # FIX 522: GPT tardó más de 5s - timeout (antes era 10.5s)
+                    print(f" FIX 522: GPT timeout después de 5s (reducido de 10.5s)")
                     response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
                     response.hangup()
                     return Response(str(response), mimetype="text/xml")
@@ -3703,12 +3740,13 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     response.play(request.url_root + "audio_cache/un_momento")
                 # Si no hay ninguno, continuar sin audio
 
-        # FIX 102: Esperar otros 5 segundos (total 10s máximo)
-        gpt_thread.join(timeout=5.0)
+        # FIX 102 + FIX 522: Esperar otros 3 segundos (total 5s máximo - reducido de 10s)
+        # BRUCE1744/1745: Clientes cuelgan cuando GPT tarda >4-5 segundos
+        gpt_thread.join(timeout=3.0)
 
         if not respuesta_container["completado"]:
-            # GPT tardó más de 10 segundos total - timeout real
-            print(f" GPT timeout después de 10s")
+            # FIX 522: GPT tardó más de 5 segundos total - timeout (antes 10s)
+            print(f" FIX 522: GPT timeout después de 5s (reducido de 10s)")
             response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
             response.hangup()
             return Response(str(response), mimetype="text/xml")

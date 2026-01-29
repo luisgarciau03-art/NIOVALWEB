@@ -6922,6 +6922,40 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "dato": correo
             }
 
+        # ================================================================
+        # FIX 521: BRUCE1744 - Confirmación INSTANTÁNEA de números dictados
+        # Problema: GPT tardó 10+ segundos cuando cliente dictó número
+        # Solución: Si hay 7+ dígitos (número parcial/completo), confirmar SIN GPT
+        # ================================================================
+        digitos_en_texto = re.findall(r'\d', texto_cliente)
+        num_digitos = len(digitos_en_texto)
+
+        if num_digitos >= 7:
+            # Construir número para mostrar
+            numero_capturado = ''.join(digitos_en_texto)
+            print(f"[OK] FIX 521: NÚMERO DICTADO detectado ({num_digitos} dígitos): {numero_capturado}")
+
+            if num_digitos >= 10:
+                # Número completo (10+ dígitos) - confirmar
+                numero_final = numero_capturado[:10]
+                numero_formateado = f"{numero_final[0:3]} {numero_final[3:6]} {numero_final[6:8]} {numero_final[8:10]}"
+                self.lead_data["whatsapp"] = numero_final
+                self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
+                return {
+                    "tipo": "NUMERO_COMPLETO_DICTADO",
+                    "respuesta": f"Perfecto, tengo anotado {numero_formateado}. Le envío el catálogo en breve. Muchas gracias por su tiempo.",
+                    "accion": "GUARDAR_WHATSAPP",
+                    "dato": numero_final
+                }
+            else:
+                # Número parcial (7-9 dígitos) - pedir los que faltan
+                digitos_faltantes = 10 - num_digitos
+                return {
+                    "tipo": "NUMERO_PARCIAL_DICTADO",
+                    "respuesta": f"Perfecto, llevo anotados {num_digitos} dígitos. ¿Me puede dar los {digitos_faltantes} que faltan?",
+                    "accion": "ESPERAR_NUMERO_COMPLETO"
+                }
+
         # NO hay patrón simple → Necesita GPT
         return None
 
