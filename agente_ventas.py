@@ -8170,20 +8170,55 @@ Ejemplo correcto:
             max_tokens_dinamico = self._calcular_max_tokens_dinamico(respuesta_cliente)
             print(f"[EMOJI]  FIX 491: max_tokens dinámico = {max_tokens_dinamico} (basado en complejidad)")
 
-            response = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": prompt_optimizado},
-                    *mensajes_conversacion
-                ],
-                temperature=0.7,
-                max_tokens=max_tokens_dinamico,  # FIX 491: Dinámico 50-200 según complejidad (vs fijo 150)
-                presence_penalty=0.6,
-                frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
-                timeout=4.0,  # FIX 406: Aumentado de 3.0s a 4.0s para acomodar 150 tokens
-                stream=False,
-                top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
-            )
+            # FIX 533: AUDITORIA 29/01 - Retry automático en APITimeoutError de OpenAI
+            # Problema: 9 timeouts de OpenAI detectados sin retry
+            # Solución: Intentar 2 veces con timeouts progresivamente más cortos
+            response = None
+            intentos_gpt = 0
+            max_intentos_gpt = 2
+            timeouts_gpt = [4.0, 2.0]  # FIX 533: Primer intento 4s, retry 2s
+            max_tokens_retry = [max_tokens_dinamico, 50]  # FIX 533: Segundo intento con menos tokens
+
+            while intentos_gpt < max_intentos_gpt:
+                try:
+                    timeout_actual = timeouts_gpt[intentos_gpt]
+                    tokens_actual = max_tokens_retry[intentos_gpt]
+
+                    if intentos_gpt > 0:
+                        print(f"   FIX 533: Reintento #{intentos_gpt} con timeout={timeout_actual}s, tokens={tokens_actual}")
+
+                    response = openai_client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": prompt_optimizado},
+                            *mensajes_conversacion
+                        ],
+                        temperature=0.7,
+                        max_tokens=tokens_actual,  # FIX 491/533: Dinámico, reducido en retry
+                        presence_penalty=0.6,
+                        frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
+                        timeout=timeout_actual,  # FIX 533: Timeout progresivo
+                        stream=False,
+                        top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
+                    )
+                    # Éxito - salir del loop
+                    if intentos_gpt > 0:
+                        print(f"   FIX 533: Reintento exitoso en intento #{intentos_gpt + 1}")
+                    break
+
+                except Exception as e_gpt:
+                    error_tipo = type(e_gpt).__name__
+                    intentos_gpt += 1
+
+                    if 'Timeout' in error_tipo or 'timeout' in str(e_gpt).lower():
+                        print(f"   FIX 533: APITimeoutError en intento {intentos_gpt}/{max_intentos_gpt}")
+                        if intentos_gpt >= max_intentos_gpt:
+                            print(f"   FIX 533: Agotados {max_intentos_gpt} intentos - usando fallback")
+                            raise  # Re-lanzar para que el except global maneje
+                        # Continuar al siguiente intento
+                    else:
+                        # Error no es timeout - re-lanzar inmediatamente
+                        raise
 
             duracion_gpt = time.time() - inicio_gpt
 
