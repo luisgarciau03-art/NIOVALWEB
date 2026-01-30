@@ -2950,6 +2950,22 @@ Responde SOLO con una letra: A, B, C, D o E"""
                 print(f"    FIX 473: BRUCE1425 - '{speech_result}' es frase de CORTESIA - NO esperar")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
 
+            # FIX 529: BRUCE1802 - "sí dígame" y variantes con prefijos son respuestas de PRESENCIA
+            # Cliente dice "este, sí, dígame" o "ajá, dígame" indicando que está listo para escuchar
+            # El problema es que FIX 244 los marca como "incompletos" por hablar rápido
+            respuestas_presencia_completas = [
+                'dígame', 'digame', 'diga', 'mande',
+                'sí dígame', 'si digame', 'sí, dígame', 'si, digame',
+                'sí diga', 'si diga', 'sí, diga', 'si, diga',
+                'adelante', 'a la orden'
+            ]
+            # Verificar si la frase CONTIENE (no solo termina) en respuesta de presencia
+            es_presencia_con_prefijo = any(resp in frase_limpia for resp in respuestas_presencia_completas)
+
+            if frase_parece_incompleta and es_presencia_con_prefijo:
+                print(f"    FIX 529: BRUCE1802 - '{speech_result}' contiene respuesta de PRESENCIA - NO esperar")
+                frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             # FIX 471: BRUCE1415 - "No tengo" es respuesta completa, NO esperar continuación
             # El cliente está diciendo que no hay encargado de compras
             respuestas_no_hay_encargado = [

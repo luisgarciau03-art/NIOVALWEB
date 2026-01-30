@@ -4735,15 +4735,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 if msg['role'] == 'user'
             ])
 
+            # FIX 531: BRUCE1806 - "ella habla", "él habla", "yo soy" indican que el cliente ES el encargado
+            # NO deben clasificarse como "solo saludos", son información importante
+            frases_cliente_es_encargado = [
+                'ella habla', 'él habla', 'el habla', 'yo habla',  # Variantes de "él/ella habla"
+                'yo soy', 'yo soy el', 'yo soy la', 'soy el encargado', 'soy la encargada',
+                'soy yo', 'sería yo', 'seria yo', 'conmigo', 'es conmigo',
+                'yo mero', 'yo mera', 'servidor', 'servidora', 'un servidor', 'una servidora'
+            ]
+            cliente_es_encargado = any(frase in historial_cliente for frase in frases_cliente_es_encargado)
+
+            if cliente_es_encargado:
+                print(f"    FIX 531: BRUCE1806 - Cliente indicó que ES el encargado - NO aplicar filtro de 'solo saludos'")
+
             # FIX 323b: Palabras neutrales que NO cuentan como "información"
             palabras_neutrales = saludos_simples + [
                 'sí', 'si', 'alo', 'aló', 'bueno', 'en', 'qué', 'que', 'le', 'puedo',
                 'ayudar', 'cómo', 'como', 'mande', 'diga', 'se', 'ofrece', 'a'
             ]
-            cliente_solo_saluda = all(
+            # FIX 531: Si cliente ES encargado, NO clasificar como "solo saludos"
+            cliente_solo_saluda = False if cliente_es_encargado else (all(
                 any(saludo in palabra for saludo in palabras_neutrales)
                 for palabra in historial_cliente.split()
-            ) if historial_cliente else True
+            ) if historial_cliente else True)
 
             # FIX 323/323b: Si cliente saluda/ofrece ayuda Y Bruce intenta despedirse = ERROR
             if ((contexto_es_saludo or cliente_ofrece_ayuda) and contexto_es_corto and bruce_se_despide) or \
@@ -6769,7 +6783,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # FIX 527 BRUCE1694: "¿Bueno?" sin números DESPUÉS de que Bruce ya habló = verificación de conexión
         # NO debe responder "Hola, buen día" sino "Sí, aquí estoy"
-        verificacion_conexion = texto_lower.strip() in ["bueno", "¿bueno?", "bueno?", "hola", "¿hola?", "hola?", "oye", "¿oye?"]
+        # FIX 530: BRUCE1803 - Agregar variantes repetidas como "¿bueno, bueno?" o "bueno bueno"
+        verificaciones_conexion_exactas = [
+            "bueno", "¿bueno?", "bueno?", "hola", "¿hola?", "hola?", "oye", "¿oye?",
+            # FIX 530: Variantes repetidas cuando cliente verifica que siguen en línea
+            "bueno bueno", "¿bueno? ¿bueno?", "bueno, bueno", "¿bueno, bueno?",
+            "hola hola", "¿hola? ¿hola?", "hola, hola"
+        ]
+        verificacion_conexion = texto_lower.strip().rstrip('.,;:!?¿¡') in verificaciones_conexion_exactas or \
+                               texto_lower.strip() in verificaciones_conexion_exactas
 
         if verificacion_conexion and not tiene_digitos:
             if self.estado_conversacion != EstadoConversacion.INICIO:
