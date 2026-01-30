@@ -6806,6 +6806,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if any(s in texto_lower for s in saludos) and len(texto_lower) < 20 and not tiene_digitos:
             # FIX 535: SOLO responder "Hola, buen día" si NUNCA hemos avanzado de INICIO
             # Previene pérdida de contexto después de silencios (BRUCE1665)
+            # FIX 535b: BRUCE1821 - También verificar tamaño del historial
+            # Si conversation_history >= 4, significa que Bruce ya habló presentación
+            # Cliente dijo "Diga." interrumpiendo = NO es saludo inicial, es verificación
+            historial_avanzado = len(self.conversation_history) >= 4
+            if historial_avanzado:
+                print(f"   FIX 535b: BRUCE1821 - Historial tiene {len(self.conversation_history)} mensajes - NO es saludo inicial")
+                return {
+                    "tipo": "VERIFICACION_CONEXION",
+                    "respuesta": "Sí, aquí estoy. ¿Me decía?",
+                    "accion": "CONTINUAR_CONVERSACION"
+                }
             if self.estado_conversacion == EstadoConversacion.INICIO and not self.conversacion_iniciada:
                 # FIX 535: Marcar que la conversación ya inició
                 self.conversacion_iniciada = True

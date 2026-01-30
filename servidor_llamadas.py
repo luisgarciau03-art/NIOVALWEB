@@ -2564,7 +2564,13 @@ def procesar_respuesta():
             # Un email completo tiene: algo@algo.algo (arroba + punto + dominio)
             tiene_arroba = "arroba" in frase_lower or "@" in frase_lower
             tiene_punto = "punto" in frase_lower or "." in frase_lower
-            tiene_dominio = any(dom in frase_lower for dom in ["com", "mx", "net", "org", "edu", "gmail", "hotmail", "yahoo", "outlook"])
+            # FIX 534: BRUCE1819 - Deepgram transcribe ".mx" como "punto m x" o "punto eme equis"
+            # Cliente dijo "Arroba Home Tools punto m x" que no coincidía con "mx"
+            dominios_normales = ["com", "mx", "net", "org", "edu", "gmail", "hotmail", "yahoo", "outlook"]
+            dominios_espaciados = ["m x", "c o m", "n e t", "o r g"]  # Deletreados con espacios
+            dominios_deletreados = ["eme equis", "ce o eme", "ene e te", "eme ene"]  # Fonéticos
+            todos_dominios = dominios_normales + dominios_espaciados + dominios_deletreados
+            tiene_dominio = any(dom in frase_lower for dom in todos_dominios)
 
             email_parece_completo = tiene_arroba and tiene_punto and tiene_dominio
 
