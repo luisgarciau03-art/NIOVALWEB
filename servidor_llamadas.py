@@ -1692,20 +1692,23 @@ def procesar_respuesta():
     timeouts_previos = getattr(agente_temp, 'timeouts_deepgram', 0) if agente_temp else 0
 
     # FIX 534: Ajustar timeouts según historial
+    # FIX 532: AUDITORIA 29/01 - 404 timeouts detectados - REDUCIR timeouts agresivamente
+    # Los valores anteriores (5s/3s/3.5s/2s/2.5s/1.5s) eran demasiado altos
+    # Deepgram debería responder en <1s, timeouts largos indican problema de red/servicio
     if timeouts_previos >= 2:
-        # Después de 2+ timeouts, ser muy agresivo
-        max_wait_deepgram = 2.5  # FIX 534: Reducido de 5s a 2.5s
-        max_wait_parcial_fallback = 1.5  # FIX 534: Reducido de 3s a 1.5s
-        print(f"   FIX 534: Timeouts previos={timeouts_previos} - usando timeouts reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        # Después de 2+ timeouts, ser MUY agresivo - no desperdiciar tiempo
+        max_wait_deepgram = 1.5  # FIX 532: Reducido de 2.5s a 1.5s
+        max_wait_parcial_fallback = 0.8  # FIX 532: Reducido de 1.5s a 0.8s
+        print(f"   FIX 532/534: Timeouts previos={timeouts_previos} - usando timeouts ULTRA-reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     elif timeouts_previos == 1:
-        # Después de 1 timeout, ser moderadamente agresivo
-        max_wait_deepgram = 3.5  # FIX 534: Reducido de 5s a 3.5s
-        max_wait_parcial_fallback = 2.0  # FIX 534: Reducido de 3s a 2s
-        print(f"   FIX 534: Timeouts previos={timeouts_previos} - usando timeouts moderados ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        # Después de 1 timeout, ser agresivo
+        max_wait_deepgram = 2.0  # FIX 532: Reducido de 3.5s a 2.0s
+        max_wait_parcial_fallback = 1.2  # FIX 532: Reducido de 2s a 1.2s
+        print(f"   FIX 532/534: Timeouts previos={timeouts_previos} - usando timeouts reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     else:
-        # Sin timeouts previos, usar valores normales
-        max_wait_deepgram = 5.0  # FIX 401: Timeout absoluto máximo
-        max_wait_parcial_fallback = 3.0  # FIX 511: Usar PARCIAL después de 3s si no hay FINAL
+        # Sin timeouts previos, usar valores REDUCIDOS (antes eran 5s/3s)
+        max_wait_deepgram = 3.0  # FIX 532: Reducido de 5s a 3s (suficiente para Deepgram)
+        max_wait_parcial_fallback = 1.8  # FIX 532: Reducido de 3s a 1.8s
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
     parcial_disponible_desde = None  # FIX 511: Cuándo detectamos primera PARCIAL
@@ -1751,10 +1754,66 @@ def procesar_respuesta():
                     parcial_actual = transcripciones_dg[-1].strip().lower() if transcripciones_dg else ""
                     es_saludo_corto = any(parcial_actual == saludo or parcial_actual.startswith(saludo + '.') or parcial_actual.startswith(saludo + ',') for saludo in saludos_cortos)
 
-                    # FIX 511: Si ya pasaron 3s desde que tenemos PARCIAL, usarla inmediatamente
-                    # Esto reduce delays de 5s a 3s cuando Deepgram tarda en enviar FINAL
+                    # FIX 532: DETECCIÓN INTELIGENTE DE FRASES COMPLETAS
+                    # Si la PARCIAL parece una frase completa, usarla INMEDIATAMENTE sin esperar FINAL
+                    # Esto elimina delays innecesarios cuando Deepgram tarda en confirmar
+                    parcial_sin_espacios = parcial_actual.strip()
+                    frase_parece_completa = False
+
+                    # 1. Termina con puntuación fuerte = frase completa
+                    if parcial_sin_espacios and parcial_sin_espacios[-1] in '.?!':
+                        frase_parece_completa = True
+                        print(f"    FIX 532: PARCIAL termina con puntuación '{parcial_sin_espacios[-1]}' - parece COMPLETA")
+
+                    # 2. Es una respuesta común completa (aunque no tenga puntuación)
+                    respuestas_completas_comunes = [
+                        # Saludos
+                        'bueno', 'hola', 'alo', 'aló', 'diga', 'dígame', 'digame', 'mande',
+                        'buenos días', 'buenos dias', 'buenas tardes', 'buenas noches',
+                        # Afirmaciones/negaciones
+                        'sí', 'si', 'no', 'claro', 'ok', 'okay', 'va', 'sale', 'órale', 'orale',
+                        'sí claro', 'si claro', 'no gracias', 'no me interesa', 'ya tenemos',
+                        # Presencia
+                        'sí dígame', 'si digame', 'a sus órdenes', 'a sus ordenes', 'para servirle',
+                        'en qué le ayudo', 'que se le ofrece', 'adelante',
+                        # Espera
+                        'un momento', 'un momentito', 'espere', 'espéreme', 'ahorita le paso',
+                        'déjeme ver', 'dejeme ver', 'permítame', 'permitame',
+                        # Despedida
+                        'gracias', 'muchas gracias', 'hasta luego', 'adiós', 'adios', 'bye',
+                        # Transferencia
+                        'le paso', 'se lo paso', 'le comunico', 'un momento le paso',
+                        # No disponible
+                        'no está', 'no esta', 'no se encuentra', 'salió', 'salio', 'está ocupado',
+                        # Confirmaciones
+                        'correcto', 'exacto', 'así es', 'asi es', 'eso es', 'ajá', 'aja'
+                    ]
+                    parcial_limpia = parcial_sin_espacios.rstrip('.,;:!?¿¡')
+                    if parcial_limpia in respuestas_completas_comunes:
+                        frase_parece_completa = True
+                        print(f"    FIX 532: PARCIAL '{parcial_limpia}' es respuesta común COMPLETA")
+
+                    # 3. Es frase corta (<=5 palabras) sin conectores = probablemente completa
+                    palabras = parcial_sin_espacios.split()
+                    conectores_finales = ['y', 'pero', 'o', 'que', 'porque', 'este', 'pues', 'entonces', 'como', 'cuando']
+                    if len(palabras) <= 5 and len(palabras) >= 1:
+                        ultima_palabra = palabras[-1].rstrip('.,;:!?¿¡')
+                        if ultima_palabra not in conectores_finales and not parcial_sin_espacios.endswith(','):
+                            # Frase corta sin conectores al final
+                            if len(palabras) >= 2 or parcial_limpia in respuestas_completas_comunes:
+                                frase_parece_completa = True
+                                print(f"    FIX 532: PARCIAL corta ({len(palabras)} palabras) sin conectores - parece COMPLETA")
+
+                    # FIX 532: Si la frase parece completa, USAR INMEDIATAMENTE
+                    if frase_parece_completa:
+                        print(f" FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '{parcial_actual}'")
+                        esperando_final = False
+                        tiempo_espera_final_extra = max_espera_final_extra + 1  # Saltar espera
+                        # Continuar al código de procesamiento (no continue, dejar fluir)
+
+                    # FIX 511: Si ya pasaron Xs desde que tenemos PARCIAL, usarla (fallback)
                     tiempo_con_parcial = time.time() - parcial_disponible_desde
-                    if tiempo_con_parcial >= max_wait_parcial_fallback:
+                    if tiempo_con_parcial >= max_wait_parcial_fallback and esperando_final:
                         print(f"\n FIX 511: PARCIAL disponible por {tiempo_con_parcial:.1f}s sin FINAL - usando como fallback")
                         print(f"   PARCIAL: '{parcial_actual}'")
                         # Forzar uso de PARCIAL
