@@ -3070,6 +3070,41 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     print(f"   'No' es respuesta COMPLETA - NO esperar continuacion")
                     frase_parece_incompleta = False  # Forzar respuesta inmediata
 
+            # FIX 536: BRUCE1826 - Frases de ACEPTACIÓN de catálogo por correo/WhatsApp
+            # Cuando el cliente acepta recibir el catálogo, es respuesta COMPLETA
+            # Problema: "Puedes mándamelo al correo" se marcaba como incompleta por ser "rápida"
+            frases_acepta_correo = [
+                'mándamelo al correo', 'mandamelo al correo', 'mándalo al correo', 'mandalo al correo',
+                'envíamelo al correo', 'enviamelo al correo', 'envíalo al correo', 'envialo al correo',
+                'pásalo al correo', 'pasalo al correo', 'pásamelo al correo', 'pasamelo al correo',
+                'por correo está bien', 'por correo esta bien', 'al correo está bien', 'al correo esta bien',
+                'sí al correo', 'si al correo', 'al correo por favor', 'al correo porfavor',
+                'puedes mandármelo al correo', 'puedes mandarmelo al correo',
+                'me lo mandas al correo', 'me lo envías al correo', 'me lo envias al correo'
+            ]
+            frases_acepta_whatsapp = [
+                'mándamelo al whatsapp', 'mandamelo al whatsapp', 'mándalo al whatsapp', 'mandalo al whatsapp',
+                'envíamelo al whatsapp', 'enviamelo al whatsapp', 'envíalo al whatsapp', 'envialo al whatsapp',
+                'pásalo al whatsapp', 'pasalo al whatsapp', 'pásamelo al whatsapp', 'pasamelo al whatsapp',
+                'por whatsapp está bien', 'por whatsapp esta bien', 'al whatsapp está bien', 'al whatsapp esta bien',
+                'mándamelo a este número', 'mandamelo a este numero', 'mándalo a este número', 'mandalo a este numero',
+                'a este mismo número', 'a este mismo numero', 'al mismo número', 'al mismo numero',
+                'puedes mandármelo al whatsapp', 'puedes mandarmelo al whatsapp',
+                'me lo mandas al whatsapp', 'me lo envías al whatsapp', 'me lo envias al whatsapp',
+                'podría mandar whatsapp', 'podria mandar whatsapp', 'puedes mandar whatsapp',
+                'manda whatsapp a este', 'mandar whatsapp a este'
+            ]
+
+            cliente_acepta_correo = any(frase in frase_limpia for frase in frases_acepta_correo)
+            cliente_acepta_whatsapp = any(frase in frase_limpia for frase in frases_acepta_whatsapp)
+
+            if frase_parece_incompleta and (cliente_acepta_correo or cliente_acepta_whatsapp):
+                tipo_acepta = "correo" if cliente_acepta_correo else "WhatsApp"
+                print(f"    FIX 536: BRUCE1826 - Cliente ACEPTA recibir por {tipo_acepta}")
+                print(f"   Frase: '{speech_result}'")
+                print(f"   Es respuesta COMPLETA - NO esperar continuación")
+                frase_parece_incompleta = False  # Forzar respuesta inmediata
+
             # FIX 500: BRUCE1476 - Separar OFERTAS de DICTADO
             # OFERTAS: Cliente PREGUNTA si quieres el correo → Responder inmediatamente
             # DICTADO: Cliente YA ESTÁ dando el correo → Esperar a que termine
@@ -3216,6 +3251,24 @@ Responde SOLO con una letra: A, B, C, D o E"""
         # Resetear tracking de habla activa (cliente terminó de hablar)
         if call_sid in cliente_hablando_activo:
             del cliente_hablando_activo[call_sid]
+
+    # FIX 537: BRUCE1825 - Si hay timeout pero tenemos transcripción parcial acumulada, USARLA
+    # Problema: FIX 244 esperaba continuación, hubo timeout Deepgram, se perdió lo que ya teníamos
+    # Solución: Si hay transcripcion_parcial_acumulada, usar esa en lugar de pedir repetir
+    if (not speech_result or speech_result.strip() == "") and hasattr(agente, 'transcripcion_parcial_acumulada') and agente.transcripcion_parcial_acumulada:
+        print(f"\n FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada")
+        print(f"   Transcripciones guardadas: {len(agente.transcripcion_parcial_acumulada)}")
+        for i, parcial in enumerate(agente.transcripcion_parcial_acumulada):
+            print(f"   [{i}] '{parcial}'")
+
+        # Concatenar todas las partes que teníamos
+        speech_result = " ".join(agente.transcripcion_parcial_acumulada)
+        print(f"    FIX 537: Usando transcripción recuperada: '{speech_result}'")
+
+        # Limpiar acumulador
+        agente.transcripcion_parcial_acumulada = []
+
+        # Ahora speech_result tiene contenido, continuará el procesamiento normal
 
     # FIX 92: Detectar respuestas vacías y pedir repetición antes de colgar
     if not speech_result or speech_result.strip() == "":
