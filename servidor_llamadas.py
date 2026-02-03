@@ -2574,6 +2574,17 @@ def procesar_respuesta():
 
             email_parece_completo = tiene_arroba and tiene_punto and tiene_dominio
 
+            # FIX 539: BRUCE1835 - Si tiene PROVEEDOR conocido + dominio, es COMPLETO aunque no diga "arroba"
+            # Deepgram puede enviar "arroba" como transcripción separada que se pierde
+            # Patrones: "nombre hotmail punto com" = completo (el @ se infiere)
+            proveedores_email = ["gmail", "hotmail", "yahoo", "outlook", "live", "prodigy", "icloud"]
+            tiene_proveedor = any(prov in frase_lower for prov in proveedores_email)
+            if not email_parece_completo and tiene_proveedor and tiene_punto and tiene_dominio:
+                print(f"    FIX 539: BRUCE1835 - Email tiene proveedor+dominio conocido")
+                print(f"   Aunque no detectó 'arroba' explícito, el email está COMPLETO")
+                print(f"   Proveedor detectado: {[p for p in proveedores_email if p in frase_lower]}")
+                email_parece_completo = True
+
             if not email_parece_completo:
                 # Email incompleto - esperar más
                 print(f"\n FIX 265: CLIENTE DELETREANDO EMAIL (incompleto)")
@@ -8504,11 +8515,27 @@ def on_deepgram_transcript(call_sid, texto, is_final):
             # FIX 218: Transcripción parcial - reemplazar última entrada parcial
             # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
             print(f" FIX 212: [PARCIAL] '{texto}'")
+
+            # FIX 538: BRUCE1835 - Las PARCIALES NO deben reemplazar FINALES
+            # Problema: 'arroba' (FINAL, 6 chars) fue reemplazada por 'Hotmail punto com' (PARCIAL, 18 chars)
+            # Solución: Solo reemplazar si la última entrada era PARCIAL, no FINAL
+            ultima_fue_final = False
+            with deepgram_ultima_final_lock:
+                ultima_info = deepgram_ultima_final.get(call_sid, {})
+                if ultima_info.get("es_final") and (time.time() - ultima_info.get("timestamp", 0)) < 1.0:
+                    # Hay un FINAL reciente - NO reemplazar, agregar nueva entrada
+                    ultima_fue_final = True
+
             if deepgram_transcripciones[call_sid]:
-                # Si la última entrada es más corta que la nueva, reemplazarla
-                ultima = deepgram_transcripciones[call_sid][-1]
-                if len(texto) > len(ultima):
-                    deepgram_transcripciones[call_sid][-1] = texto
+                if ultima_fue_final:
+                    # FIX 538: La última fue FINAL - agregar PARCIAL como nueva entrada
+                    deepgram_transcripciones[call_sid].append(texto)
+                    print(f"    FIX 538: PARCIAL agregada (última era FINAL)")
+                else:
+                    # La última fue PARCIAL - se puede reemplazar si es más larga
+                    ultima = deepgram_transcripciones[call_sid][-1]
+                    if len(texto) > len(ultima):
+                        deepgram_transcripciones[call_sid][-1] = texto
             else:
                 deepgram_transcripciones[call_sid].append(texto)
 
