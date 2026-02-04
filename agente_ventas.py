@@ -6486,11 +6486,18 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "accion": "PEDIR_TELEFONO_FIJO"
                 }
 
+        # FIX 547: BRUCE1880/1882 - NO ofrecer contacto si cliente está DANDO número
+        # Problema: Cliente dice "le mando el numero a ver... E56 40" pero FIX 513/520 interrumpe
+        # Solución: Verificar flag esperando_dictado_numero antes de activar oferta
+        cliente_dando_numero = hasattr(self, 'esperando_dictado_numero') and self.esperando_dictado_numero
+        puede_ofrecer = not cliente_dando_numero
+
         # FIX 513 BRUCE1591 + FIX 520 BRUCE1652: No pueden dar contacto / No tiene permitido
         # Caso: "No tengo permitido daros ningún WhatsApp" → Ofrecer contacto de Bruce
         # MEJORADO FIX 520: En lugar de pedir horario, ofrecer dejar nuestro contacto
         # FIX 505 BRUCE1721: Agregar "no lo tenemos permitido" y variantes plurales
-        if any(p in texto_lower for p in [
+        # FIX 547: SOLO activar si puede_ofrecer == True
+        if puede_ofrecer and any(p in texto_lower for p in [
             # Variantes de "no permitido" (singular y plural)
             "no tengo permitido", "no tenemos permitido", "no lo tenemos permitido",
             "no me permiten", "no nos permiten", "no puedo dar", "no puedo darte",
@@ -10409,6 +10416,57 @@ Responde SOLO en este formato JSON:
             # Resetear flag después de usarlo
             self.esperando_dictado_ofrecido = False
 
+        # FIX 549: BRUCE1885 - Cliente responde pregunta de horario
+        instruccion_respuesta_horario = ""
+        # Verificar si la última pregunta de Bruce fue sobre horario
+        ultima_respuesta_bruce = ""
+        if self.conversation_history:
+            mensajes_bruce = [msg for msg in self.conversation_history if msg['role'] == 'assistant']
+            if mensajes_bruce:
+                ultima_respuesta_bruce = mensajes_bruce[-1]['content'].lower()
+
+        pregunto_hora = any(frase in ultima_respuesta_bruce for frase in [
+            '¿a qué hora', 'a qué hora', 'qué hora', 'que hora',
+            'hora me recomienda', 'hora sería mejor', 'hora seria mejor',
+            'hora le convendría', 'hora le vendría', 'hora le queda'
+        ])
+
+        # Si Bruce preguntó por hora y cliente acaba de responder
+        if pregunto_hora and texto_cliente:
+            tiene_horario = any(palabra in texto_cliente.lower() for palabra in [
+                'mañana', 'tarde', 'noche', 'hora', 'am', 'pm', 'a.m.', 'p.m.',
+                'lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes',
+                '10', '11', '12', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+            ])
+
+            if tiene_horario:
+                print(f"   [EMOJI] FIX 549: Cliente respondió pregunta de HORARIO - extrayendo info")
+                instruccion_respuesta_horario = f"""
+
+[EMOJI]
+[EMOJI] FIX 549 - CLIENTE RESPONDIÓ TU PREGUNTA DE HORARIO [EMOJI]
+[EMOJI]
+
+[WARN][WARN][WARN] INSTRUCCIÓN CRÍTICA - EXTRAER HORARIO [WARN][WARN][WARN]
+
+[OK] CONTEXTO: Acabas de preguntar "¿A qué hora...?" y el cliente respondió:
+   Cliente dijo: "{texto_cliente}"
+
+[OK] ACCIÓN OBLIGATORIA:
+   1. EXTRAE el horario/día de la respuesta del cliente
+   2. CONFIRMA que entendiste: "Perfecto, le llamo [día] a las [hora]"
+   3. NUNCA vuelvas a preguntar "¿A qué hora...?" en esta llamada
+   4. AGRADECE y DESPIDE con el catálogo
+
+[ERROR] PROHIBIDO:
+   - Repetir la pregunta "¿A qué hora me recomienda llamar?"
+   - Ignorar el horario que el cliente acaba de dar
+   - Hacer CUALQUIER otra pregunta excepto confirmar y despedir
+
+[EMOJI]
+
+"""
+
         # ============================================================
         # FIX 407: MEMORIA DE CONTEXTO CONVERSACIONAL (Python PRE-GPT)
         # Calcular ANTES de crear prompt para evitar delay
@@ -10459,7 +10517,7 @@ Responde SOLO en este formato JSON:
 """
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
-        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + instruccion_oferta_contacto + memoria_conversacional + """
+        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + instruccion_oferta_contacto + instruccion_respuesta_horario + memoria_conversacional + """
 [EMOJI]
 [EMOJI] FIX 384/385: SISTEMA DE RAZONAMIENTO CHAIN-OF-THOUGHT [EMOJI]
 [EMOJI]

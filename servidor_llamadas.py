@@ -2074,24 +2074,42 @@ def procesar_respuesta():
 
                 # Usar las transcripciones acumuladas
                 if len(transcripciones_acumuladas) > 1:
+                    # FIX 546: BRUCE1883/1885 - Preservar palabras críticas cortas
+                    # Problema: Concatenación elimina "No", "Sí", horarios importantes
+                    # Solución: NO eliminar transcripciones con palabras críticas
+                    palabras_criticas = [
+                        'no', 'sí', 'si', 'mañana', 'tarde', 'noche',
+                        'hora', 'am', 'pm', 'a.m.', 'p.m.',
+                        'lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado', 'domingo',
+                        'días', 'dias', 'semana'
+                    ]
+
                     # Eliminar duplicados y concatenar
                     transcripciones_unicas = []
                     for t in transcripciones_acumuladas:
                         t_normalizada = t.lower().strip().rstrip('.,;:!?')
+
+                        # FIX 546: Verificar si tiene palabras críticas
+                        tiene_palabra_critica = any(palabra in t_normalizada.split() for palabra in palabras_criticas)
+
                         es_duplicado = False
                         for existente in transcripciones_unicas:
                             existente_norm = existente.lower().strip().rstrip('.,;:!?')
                             if t_normalizada == existente_norm:
                                 es_duplicado = True
                                 break
-                            if t_normalizada in existente_norm or existente_norm in t_normalizada:
-                                if len(t) > len(existente):
-                                    transcripciones_unicas.remove(existente)
-                                    transcripciones_unicas.append(t)
-                                es_duplicado = True
-                                break
+                            # FIX 546: NO marcar como duplicado si tiene palabra crítica
+                            if not tiene_palabra_critica:
+                                if t_normalizada in existente_norm or existente_norm in t_normalizada:
+                                    if len(t) > len(existente):
+                                        transcripciones_unicas.remove(existente)
+                                        transcripciones_unicas.append(t)
+                                    es_duplicado = True
+                                    break
                         if not es_duplicado:
                             transcripciones_unicas.append(t)
+                            if tiene_palabra_critica:
+                                print(f"    FIX 546: Preservando transcripción con palabra crítica: '{t}'")
 
                     transcripcion_deepgram = " ".join(transcripciones_unicas)
                     print(f"    FIX 469: Concatenando {len(transcripciones_unicas)} partes: '{transcripcion_deepgram}'")
@@ -3814,8 +3832,30 @@ Responde SOLO con una letra: A, B, C, D o E"""
             'le paso', 'te paso', 'le dejo', 'te dejo'
         ]
 
+        # FIX 547: BRUCE1880/1882 - Detectar cuando cliente está DANDO número (no solo ofreciendo)
+        # Problema: Cliente dice "le mando el numero a ver... E56 40 E56 41" (DANDO)
+        # pero FIX 513/520 activa "OFRECER_CONTACTO_BRUCE" y Bruce interrumpe con SU número
+        # Solución: Si cliente está DANDO, desactivar oferta de contacto de Bruce
+        frases_cliente_da_numero = [
+            'le mando el numero', 'le mando el número', 'te mando el numero', 'te mando el número',
+            'el numero es', 'el número es', 'es el', 'son el',
+            'anota', 'apunta', 'apunte', 'anote',
+            'te doy el', 'le doy el', 'aquí está el', 'aqui esta el',
+            'a ver', 'a ver es'  # "le mando el numero a ver..." = está dictando
+        ]
+
+        cliente_da_numero = any(frase in speech_lower for frase in frases_cliente_da_numero)
+        if cliente_da_numero and agente:
+            print(f" FIX 547: Cliente está DANDO número - '{speech_result[:80]}...'")
+            print(f"    Activando modo captura, DESACTIVANDO oferta de contacto Bruce")
+            agente.esperando_dictado_numero = True
+            # Desactivar FIX 513/520 para este mensaje
+            if hasattr(agente, 'puede_ofrecer_contacto'):
+                agente.puede_ofrecer_contacto = False
+
         cliente_ofrece_contacto = any(frase in speech_lower for frase in frases_oferta_contacto)
-        if cliente_ofrece_contacto and agente:
+        # FIX 547: NO marcar oferta si cliente está DANDO
+        if cliente_ofrece_contacto and agente and not cliente_da_numero:
             print(f" FIX 544: Cliente OFRECE contacto - '{speech_result[:80]}...'")
             print(f"    Marcando flag para que Bruce ESPERE el dictado")
             # Agregar al contexto del agente para que GPT sepa que debe esperar
@@ -8585,17 +8625,69 @@ SALUDOS_RAPIDOS = [
     "sí", "si", "aló", "alo", "qué tal", "que tal", "mande"
 ]
 
+# FIX 548: BRUCE1874 - Validar idioma de transcripciones ElevenLabs
+def es_texto_valido_espanol(texto):
+    """
+    FIX 548: Detecta si el texto tiene caracteres de alfabeto latino/español
+    Problema: ElevenLabs transcribió en Santali/Bengali ('ᱪᱮᱫ ᱵᱚᱱ', 'কি হয়')
+    Solución: Rechazar transcripciones con caracteres no-latinos
+    """
+    import unicodedata
+
+    if not texto or len(texto.strip()) == 0:
+        return False
+
+    # Contar caracteres latinos vs no-latinos
+    caracteres_latinos = 0
+    caracteres_no_latinos = 0
+
+    for char in texto:
+        # Ignorar espacios, puntuación y números
+        if char.isspace() or not char.isalpha():
+            continue
+
+        nombre = unicodedata.name(char, '')
+
+        # Detectar scripts no-latinos
+        if any(script in nombre for script in [
+            'SANTALI', 'BENGALI', 'DEVANAGARI', 'TIBETAN',
+            'ARABIC', 'HEBREW', 'CHINESE', 'JAPANESE', 'KOREAN',
+            'THAI', 'LAO', 'KHMER', 'MYANMAR', 'GEORGIAN'
+        ]):
+            caracteres_no_latinos += 1
+        elif 'LATIN' in nombre or char.isascii():
+            caracteres_latinos += 1
+        else:
+            # Caracteres desconocidos - contar como no-latinos
+            caracteres_no_latinos += 1
+
+    # Si hay más del 30% de caracteres no-latinos → rechazar
+    total_chars = caracteres_latinos + caracteres_no_latinos
+    if total_chars == 0:
+        return True  # Solo números/puntuación = válido
+
+    porcentaje_no_latino = (caracteres_no_latinos / total_chars) * 100
+    return porcentaje_no_latino < 30
+
+
 # FIX 540: Callback para ElevenLabs Scribe (STT primario)
 def on_elevenlabs_transcript(call_sid, texto, is_final):
     """
     FIX 540: Callback cuando ElevenLabs Scribe transcribe algo
     Funciona igual que on_deepgram_transcript pero con mejor precisión (~5% WER)
     FIX 540.1: Corregido race condition y duplicación de transcripciones
+    FIX 548: Validar idioma para rechazar transcripciones corruptas
     """
     if not texto or not texto.strip():
         return
 
     texto = texto.strip()
+
+    # FIX 548: Validar que el texto sea español/latino
+    if not es_texto_valido_espanol(texto):
+        print(f" FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): '{texto[:80]}'")
+        return  # NO procesar esta transcripción
+
     texto_lower = texto.lower()
     import time
 
