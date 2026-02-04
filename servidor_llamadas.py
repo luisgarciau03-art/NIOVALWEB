@@ -3797,17 +3797,21 @@ Responde SOLO con una letra: A, B, C, D o E"""
     if not respuesta_desde_cache:
         cache_respuestas_stats["cache_misses"] += 1
 
-        # FIX 544: BRUCE1816/1797/1824 - Detectar cuando cliente OFRECE contacto
+        # FIX 544: BRUCE1816/1797/1824/1871 - Detectar cuando cliente OFRECE contacto
         # Problema: Cliente dice "si quieres mandar un correo" o "le voy a proporcionar"
         # pero Bruce NO lo detecta y cambia de tema (pregunta otra cosa)
         # Solución: Agregar flag al agente para que sepa que debe ESPERAR el contacto
         speech_lower = speech_result.lower() if speech_result else ""
         frases_oferta_contacto = [
             'si quieres mandar', 'si quiere mandar', 'si gusta mandar',
-            'le voy a proporcionar', 'te voy a dar', 'te doy',
-            'le puedo dar', 'te puedo dar', 'aquí está',
+            'le voy a proporcionar', 'le vamos a proporcionar',
+            'le puedo proporcionar', 'le pueden proporcionar', 'le podían proporcionar',
+            'te voy a dar', 'te doy', 'le doy',
+            'le puedo dar', 'te puedo dar', 'le pueden dar',
+            'aquí está', 'aquí tiene', 'aqui esta', 'aqui tiene',
             'anote', 'apunte', 'es el', 'son el',
-            'mándame', 'mandame', 'mándale', 'mandale'
+            'mándame', 'mandame', 'mándale', 'mandale',
+            'le paso', 'te paso', 'le dejo', 'te dejo'
         ]
 
         cliente_ofrece_contacto = any(frase in speech_lower for frase in frases_oferta_contacto)
@@ -5167,6 +5171,61 @@ def status_callback():
             print(f"    FIX 207: Llamada registrada en dashboard")
         except Exception as e:
             print(f"    Error registrando en dashboard: {e}")
+
+    # FIX 543: BRUCE1824 - Último intento de capturar WhatsApp/Email antes de cerrar
+    # Problema: Cliente ofrece contacto pero cuelga antes de que Bruce lo procese
+    # Solución: Cuando la llamada termina, revisar transcripciones pendientes
+    if call_sid in conversaciones_activas:
+        agente = conversaciones_activas[call_sid]
+        # Solo si NO capturamos WhatsApp ni Email aún
+        if not agente.lead_data.get("whatsapp") and not agente.lead_data.get("email"):
+            # Revisar si hay transcripciones pendientes en deepgram_transcripciones
+            with deepgram_transcripciones_lock:
+                transcripciones_pendientes = deepgram_transcripciones.get(call_sid, [])
+
+            if transcripciones_pendientes:
+                print(f" FIX 543: Llamada terminó sin contacto - revisando {len(transcripciones_pendientes)} transcripciones pendientes")
+
+                # Concatenar todas las transcripciones
+                texto_completo = " ".join(transcripciones_pendientes)
+                print(f"   Texto completo: '{texto_completo[:100]}...'")
+
+                # Intentar extraer WhatsApp
+                import re
+                # Patrón para números de 10 dígitos (móviles mexicanos)
+                patron_whatsapp = r'\b(\d{10})\b'
+                matches = re.findall(patron_whatsapp, texto_completo)
+
+                if matches:
+                    numero_encontrado = matches[0]  # Primer match
+                    print(f" FIX 543: WhatsApp encontrado en transcripciones: {numero_encontrado}")
+                    agente.lead_data["whatsapp"] = numero_encontrado
+                    agente.lead_data["whatsapp_valido"] = True
+                    # Re-calcular conclusión con el dato capturado
+                    agente._determinar_conclusion(forzar_recalculo=True)
+                    # Guardar nuevamente
+                    try:
+                        agente.guardar_llamada_y_lead()
+                        print(f"   WhatsApp guardado exitosamente antes de cerrar")
+                    except Exception as e:
+                        print(f"   Error guardando WhatsApp rescatado: {e}")
+                else:
+                    # Intentar extraer email
+                    patron_email = r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b'
+                    matches_email = re.findall(patron_email, texto_completo.lower())
+
+                    if matches_email:
+                        email_encontrado = matches_email[0]
+                        print(f" FIX 543: Email encontrado en transcripciones: {email_encontrado}")
+                        agente.lead_data["email"] = email_encontrado
+                        agente._determinar_conclusion(forzar_recalculo=True)
+                        try:
+                            agente.guardar_llamada_y_lead()
+                            print(f"   Email guardado exitosamente antes de cerrar")
+                        except Exception as e:
+                            print(f"   Error guardando email rescatado: {e}")
+                    else:
+                        print(f" FIX 543: No se encontró contacto en transcripciones pendientes")
 
     return Response("OK", status=200)
 
