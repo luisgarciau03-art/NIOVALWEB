@@ -8477,6 +8477,7 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
     """
     FIX 540: Callback cuando ElevenLabs Scribe transcribe algo
     Funciona igual que on_deepgram_transcript pero con mejor precisión (~5% WER)
+    FIX 540.1: Corregido race condition y duplicación de transcripciones
     """
     if not texto or not texto.strip():
         return
@@ -8484,10 +8485,6 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
     texto = texto.strip()
     texto_lower = texto.lower()
     import time
-
-    # Inicializar diccionarios si no existen
-    if call_sid not in elevenlabs_transcripciones:
-        elevenlabs_transcripciones[call_sid] = []
 
     # FIX 244: Tracking de habla activa (compartido con Deepgram)
     if call_sid not in cliente_hablando_activo:
@@ -8517,8 +8514,12 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
             if "segunda_parte_saludo" in audio_cache:
                 print(f" FIX 314: Audio segunda_parte_saludo YA está en cache")
 
-    # FIX 540: Guardar transcripciones de ElevenLabs
+    # FIX 540.1: Guardar transcripciones de ElevenLabs (con inicialización DENTRO del lock)
     with elevenlabs_transcripciones_lock:
+        # Inicializar DENTRO del lock para evitar race condition
+        if call_sid not in elevenlabs_transcripciones:
+            elevenlabs_transcripciones[call_sid] = []
+
         if is_final:
             print(f" FIX 540: [FINAL ElevenLabs] '{texto}'")
             elevenlabs_transcripciones[call_sid].append(texto)
@@ -8530,37 +8531,56 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
         else:
             if len(texto) > 10:
                 print(f" FIX 540: [PARCIAL ElevenLabs] '{texto}'")
-            # Agregar parcial solo si es más larga que la última
+
+            # FIX 540.1: Aplicar misma lógica que FIX 538 - PARCIAL no reemplaza FINAL
+            ultima_fue_final = False
+            ultima_info_el = elevenlabs_ultima_final.get(call_sid, {})
+            if ultima_info_el.get("es_final") and (time.time() - ultima_info_el.get("timestamp", 0)) < 1.0:
+                ultima_fue_final = True
+
             if elevenlabs_transcripciones[call_sid]:
-                ultima = elevenlabs_transcripciones[call_sid][-1]
-                if len(texto) > len(ultima):
-                    elevenlabs_transcripciones[call_sid][-1] = texto
+                if ultima_fue_final:
+                    # La última fue FINAL - agregar PARCIAL como nueva entrada
+                    elevenlabs_transcripciones[call_sid].append(texto)
+                    print(f"    FIX 540.1: PARCIAL agregada (última era FINAL)")
+                else:
+                    # Agregar parcial solo si es más larga que la última
+                    ultima = elevenlabs_transcripciones[call_sid][-1]
+                    if len(texto) > len(ultima):
+                        elevenlabs_transcripciones[call_sid][-1] = texto
             else:
                 elevenlabs_transcripciones[call_sid].append(texto)
 
-    # FIX 540: También copiar a deepgram_transcripciones para compatibilidad
-    # Esto permite que el código existente use las transcripciones de ElevenLabs sin cambios
+    # FIX 540.1: Copiar a deepgram_transcripciones para compatibilidad
+    # IMPORTANTE: Marcar como fuente "elevenlabs" para evitar duplicados cuando Deepgram también transcribe
     with deepgram_transcripciones_lock:
         if call_sid not in deepgram_transcripciones:
             deepgram_transcripciones[call_sid] = []
 
         if is_final:
-            deepgram_transcripciones[call_sid].append(texto)
-            with deepgram_ultima_final_lock:
-                deepgram_ultima_final[call_sid] = {
-                    "timestamp": time.time(),
-                    "texto": texto,
-                    "es_final": True
-                }
+            # FIX 540.1: Verificar si ya existe esta transcripción (evitar duplicados)
+            texto_norm = texto.lower().strip()
+            ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
+            if not ya_existe:
+                deepgram_transcripciones[call_sid].append(texto)
+                with deepgram_ultima_final_lock:
+                    deepgram_ultima_final[call_sid] = {
+                        "timestamp": time.time(),
+                        "texto": texto,
+                        "es_final": True,
+                        "fuente": "elevenlabs"  # FIX 540.1: Marcar fuente
+                    }
         else:
-            if deepgram_transcripciones[call_sid]:
+            # Para parciales, solo actualizar si no hay FINAL reciente
+            with deepgram_ultima_final_lock:
                 ultima_info = deepgram_ultima_final.get(call_sid, {})
-                if not ultima_info.get("es_final") or (time.time() - ultima_info.get("timestamp", 0)) > 1.0:
+            if not ultima_info.get("es_final") or (time.time() - ultima_info.get("timestamp", 0)) > 1.0:
+                if deepgram_transcripciones[call_sid]:
                     ultima = deepgram_transcripciones[call_sid][-1]
                     if len(texto) > len(ultima):
                         deepgram_transcripciones[call_sid][-1] = texto
-            else:
-                deepgram_transcripciones[call_sid].append(texto)
+                else:
+                    deepgram_transcripciones[call_sid].append(texto)
 
 
 # Callback que se llama cuando Deepgram completa una transcripción
@@ -8575,12 +8595,11 @@ def on_deepgram_transcript(call_sid, texto, is_final):
 
     texto = texto.strip()
     texto_lower = texto.lower()
+    import time
 
-    if call_sid not in deepgram_transcripciones:
-        deepgram_transcripciones[call_sid] = []
+    # FIX 540.2: Inicialización movida DENTRO del lock más abajo (evita race condition)
 
     # FIX 244: Tracking de habla activa
-    import time
     if call_sid not in cliente_hablando_activo:
         cliente_hablando_activo[call_sid] = {
             "inicio": time.time(),
@@ -8619,19 +8638,36 @@ def on_deepgram_transcript(call_sid, texto, is_final):
 
     # FIX 490: Proteger acceso concurrente a transcripciones con lock
     with deepgram_transcripciones_lock:
+        # FIX 540.2: Inicialización DENTRO del lock (evita race condition)
+        if call_sid not in deepgram_transcripciones:
+            deepgram_transcripciones[call_sid] = []
+
         if is_final:
-            # Transcripción final - agregar al array
-            print(f" FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
-            deepgram_transcripciones[call_sid].append(texto)
-            # FIX 451: Marcar que recibimos transcripción FINAL
-            with deepgram_ultima_final_lock:
-                if call_sid not in deepgram_ultima_final:
-                    deepgram_ultima_final[call_sid] = {}
-                deepgram_ultima_final[call_sid] = {
-                    "timestamp": time.time(),
-                    "texto": texto,
-                    "es_final": True
-                }
+            # FIX 540.2: Verificar si ElevenLabs ya agregó esta transcripción (evita duplicados)
+            texto_norm = texto.lower().strip()
+            ya_existe = False
+            ultimas_3 = deepgram_transcripciones[call_sid][-3:] if deepgram_transcripciones[call_sid] else []
+            for t in ultimas_3:
+                if t and t.lower().strip() == texto_norm:
+                    ya_existe = True
+                    break
+
+            if ya_existe:
+                print(f" FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '{texto}'")
+            else:
+                # Transcripción final - agregar al array
+                print(f" FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
+                deepgram_transcripciones[call_sid].append(texto)
+                # FIX 451: Marcar que recibimos transcripción FINAL
+                with deepgram_ultima_final_lock:
+                    if call_sid not in deepgram_ultima_final:
+                        deepgram_ultima_final[call_sid] = {}
+                    deepgram_ultima_final[call_sid] = {
+                        "timestamp": time.time(),
+                        "texto": texto,
+                        "es_final": True,
+                        "fuente": "deepgram"  # FIX 540.2: Marcar fuente
+                    }
         else:
             # FIX 218: Transcripción parcial - reemplazar última entrada parcial
             # Esto permite que /procesar-respuesta tenga datos aunque no haya llegado el final
@@ -8816,6 +8852,12 @@ if FLASK_SOCK_AVAILABLE and sock:
 
                 if call_sid:
                     eliminar_transcriber_elevenlabs(call_sid)
+                    # FIX 540.2: Limpiar diccionarios locales de ElevenLabs (evita memory leak)
+                    with elevenlabs_transcripciones_lock:
+                        if call_sid in elevenlabs_transcripciones:
+                            del elevenlabs_transcripciones[call_sid]
+                        if call_sid in elevenlabs_ultima_final:
+                            del elevenlabs_ultima_final[call_sid]
 
             # Limpiar recursos de Deepgram
             if transcriber_deepgram:
