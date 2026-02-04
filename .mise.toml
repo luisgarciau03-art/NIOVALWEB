@@ -1,0 +1,5 @@
+# Configuración de mise para Railway (Railpack)
+# FIX: Railway no tiene Python 3.13 precompilado, usar 3.11
+
+[tools]
+python = "3.11"
