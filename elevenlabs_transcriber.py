@@ -27,7 +27,8 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 # WebSocket endpoint para Scribe v2 Realtime
 # Formato: ulaw_8000 (mu-law 8kHz - formato de Twilio)
-ELEVENLABS_STT_WS_URL = "wss://api.elevenlabs.io/v1/speech-to-text/realtime?audio_format=ulaw_8000"
+# FIX 550: Forzar transcripción SOLO en español (evita Santali/Bengali/etc)
+ELEVENLABS_STT_WS_URL = "wss://api.elevenlabs.io/v1/speech-to-text/realtime?audio_format=ulaw_8000&language=es"
 
 # Almacenamiento de transcribers activos por CallSid
 transcribers_activos = {}
