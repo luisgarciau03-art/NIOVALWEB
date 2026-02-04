@@ -16,6 +16,7 @@ twilio>=8.10.0              # Sistema de llamadas
 
 # ===== WEBSOCKETS =====
 websockets>=12.0            # FIX 212: WebSocket para streaming de audio Twilio→Deepgram
+websocket-client>=1.6.0     # FIX 540: WebSocket cliente para ElevenLabs Scribe STT
 flask-sock>=0.7.0           # FIX 212: WebSocket support para Flask
 
 # ===== GOOGLE SHEETS INTEGRATION =====

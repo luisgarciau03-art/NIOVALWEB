@@ -62,6 +62,36 @@ except ImportError as e:
     DEEPGRAM_AVAILABLE = False
     print(f" FIX 212: Módulo deepgram_transcriber no disponible: {e}")
 
+# FIX 540: Importar módulo de ElevenLabs Scribe (STT primario, Deepgram como fallback)
+USE_ELEVENLABS_STT = os.getenv("USE_ELEVENLABS_STT", "true").lower() == "true"
+ELEVENLABS_STT_AVAILABLE = False
+elevenlabs_transcriber_module = None
+
+try:
+    import elevenlabs_transcriber as elevenlabs_transcriber_module
+    from elevenlabs_transcriber import (
+        ElevenLabsTranscriber,
+        crear_transcriber as crear_transcriber_elevenlabs,
+        obtener_transcriber as obtener_transcriber_elevenlabs,
+        eliminar_transcriber as eliminar_transcriber_elevenlabs,
+        verificar_configuracion as verificar_elevenlabs_stt,
+        ELEVENLABS_STT_AVAILABLE as EL_STT_AVAIL
+    )
+    ELEVENLABS_STT_AVAILABLE = EL_STT_AVAIL and USE_ELEVENLABS_STT
+    if ELEVENLABS_STT_AVAILABLE:
+        print(" FIX 540: ElevenLabs Scribe configurado como STT PRIMARIO")
+        print("    Deepgram será usado como FALLBACK")
+    else:
+        print(" FIX 540: ElevenLabs Scribe no disponible - usando solo Deepgram")
+except ImportError as e:
+    ELEVENLABS_STT_AVAILABLE = False
+    print(f" FIX 540: Módulo elevenlabs_transcriber no disponible: {e}")
+
+# FIX 540: Almacenamiento de transcripciones de ElevenLabs
+elevenlabs_transcripciones = {}  # call_sid -> [transcripciones]
+elevenlabs_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es_final": bool}
+elevenlabs_transcripciones_lock = threading.Lock()
+
 # Almacenamiento de transcripciones pendientes de Deepgram
 deepgram_transcripciones = {}  # call_sid -> transcripción
 # FIX 451: Tracking de transcripciones FINAL vs PARCIAL
@@ -8442,6 +8472,97 @@ SALUDOS_RAPIDOS = [
     "sí", "si", "aló", "alo", "qué tal", "que tal", "mande"
 ]
 
+# FIX 540: Callback para ElevenLabs Scribe (STT primario)
+def on_elevenlabs_transcript(call_sid, texto, is_final):
+    """
+    FIX 540: Callback cuando ElevenLabs Scribe transcribe algo
+    Funciona igual que on_deepgram_transcript pero con mejor precisión (~5% WER)
+    """
+    if not texto or not texto.strip():
+        return
+
+    texto = texto.strip()
+    texto_lower = texto.lower()
+    import time
+
+    # Inicializar diccionarios si no existen
+    if call_sid not in elevenlabs_transcripciones:
+        elevenlabs_transcripciones[call_sid] = []
+
+    # FIX 244: Tracking de habla activa (compartido con Deepgram)
+    if call_sid not in cliente_hablando_activo:
+        cliente_hablando_activo[call_sid] = {
+            "inicio": time.time(),
+            "palabras_dichas": 0
+        }
+
+    # Contar palabras
+    num_palabras = len(texto.split())
+    if num_palabras > cliente_hablando_activo[call_sid]["palabras_dichas"]:
+        cliente_hablando_activo[call_sid]["palabras_dichas"] = num_palabras
+
+    # FIX 314: Detectar saludos en interim para pre-cargar audio
+    if not is_final and call_sid not in respuesta_precargada:
+        es_saludo = any(saludo in texto_lower for saludo in SALUDOS_RAPIDOS)
+        palabras = texto.split()
+        es_corto = len(palabras) <= 4
+
+        if es_saludo and es_corto:
+            print(f" FIX 540/314: Saludo detectado en INTERIM (ElevenLabs): '{texto}' - Pre-cargando respuesta...")
+            respuesta_precargada[call_sid] = {
+                "audio_listo": True,
+                "tipo": "segunda_parte_saludo",
+                "timestamp": time.time()
+            }
+            if "segunda_parte_saludo" in audio_cache:
+                print(f" FIX 314: Audio segunda_parte_saludo YA está en cache")
+
+    # FIX 540: Guardar transcripciones de ElevenLabs
+    with elevenlabs_transcripciones_lock:
+        if is_final:
+            print(f" FIX 540: [FINAL ElevenLabs] '{texto}'")
+            elevenlabs_transcripciones[call_sid].append(texto)
+            elevenlabs_ultima_final[call_sid] = {
+                "timestamp": time.time(),
+                "texto": texto,
+                "es_final": True
+            }
+        else:
+            if len(texto) > 10:
+                print(f" FIX 540: [PARCIAL ElevenLabs] '{texto}'")
+            # Agregar parcial solo si es más larga que la última
+            if elevenlabs_transcripciones[call_sid]:
+                ultima = elevenlabs_transcripciones[call_sid][-1]
+                if len(texto) > len(ultima):
+                    elevenlabs_transcripciones[call_sid][-1] = texto
+            else:
+                elevenlabs_transcripciones[call_sid].append(texto)
+
+    # FIX 540: También copiar a deepgram_transcripciones para compatibilidad
+    # Esto permite que el código existente use las transcripciones de ElevenLabs sin cambios
+    with deepgram_transcripciones_lock:
+        if call_sid not in deepgram_transcripciones:
+            deepgram_transcripciones[call_sid] = []
+
+        if is_final:
+            deepgram_transcripciones[call_sid].append(texto)
+            with deepgram_ultima_final_lock:
+                deepgram_ultima_final[call_sid] = {
+                    "timestamp": time.time(),
+                    "texto": texto,
+                    "es_final": True
+                }
+        else:
+            if deepgram_transcripciones[call_sid]:
+                ultima_info = deepgram_ultima_final.get(call_sid, {})
+                if not ultima_info.get("es_final") or (time.time() - ultima_info.get("timestamp", 0)) > 1.0:
+                    ultima = deepgram_transcripciones[call_sid][-1]
+                    if len(texto) > len(ultima):
+                        deepgram_transcripciones[call_sid][-1] = texto
+            else:
+                deepgram_transcripciones[call_sid].append(texto)
+
+
 # Callback que se llama cuando Deepgram completa una transcripción
 def on_deepgram_transcript(call_sid, texto, is_final):
     """
@@ -8563,14 +8684,16 @@ if FLASK_SOCK_AVAILABLE and sock:
     @sock.route('/media-stream')
     def media_stream(ws):
         """
-        FIX 212: WebSocket endpoint para recibir MediaStream de Twilio
-        y enviarlo a Deepgram para transcripción en tiempo real
+        FIX 212/540: WebSocket endpoint para recibir MediaStream de Twilio
+        y enviarlo a ElevenLabs Scribe (primario) + Deepgram (fallback)
         """
         print(f"\n FIX 212: Nueva conexión WebSocket /media-stream")
 
         call_sid = None
-        transcriber = None
+        transcriber_deepgram = None  # FIX 540: Renombrado para claridad
+        transcriber_elevenlabs = None  # FIX 540: Transcriber de ElevenLabs
         stream_sid = None
+        usando_elevenlabs = False  # FIX 540: Flag para saber cuál está activo
 
         try:
             while True:
@@ -8595,41 +8718,78 @@ if FLASK_SOCK_AVAILABLE and sock:
                     print(f"   StreamSid: {stream_sid}")
                     print(f"   CallSid: {call_sid}")
 
-                    # Crear transcriber de Deepgram para esta llamada
+                    # FIX 540: SISTEMA DUAL - ElevenLabs primario, Deepgram fallback
+                    # Intentar ElevenLabs Scribe primero
+                    if ELEVENLABS_STT_AVAILABLE:
+                        print(f" FIX 540: Intentando ElevenLabs Scribe (primario)...")
+                        transcriber_elevenlabs = crear_transcriber_elevenlabs(call_sid, on_elevenlabs_transcript)
+                        if transcriber_elevenlabs:
+                            connected = transcriber_elevenlabs.connect()
+                            if connected:
+                                print(f" FIX 540: ElevenLabs Scribe conectado para {call_sid}")
+                                usando_elevenlabs = True
+                            else:
+                                print(f" FIX 540: Error conectando ElevenLabs - usando Deepgram fallback")
+                                transcriber_elevenlabs = None
+
+                    # Crear Deepgram como fallback (o primario si ElevenLabs no está disponible)
                     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
-                        transcriber = crear_transcriber(call_sid, on_deepgram_transcript)
-                        if transcriber:
+                        transcriber_deepgram = crear_transcriber(call_sid, on_deepgram_transcript)
+                        if transcriber_deepgram:
                             # Conectar a Deepgram (sync wrapper para async)
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
-                            connected = loop.run_until_complete(transcriber.connect())
+                            connected = loop.run_until_complete(transcriber_deepgram.connect())
                             if connected:
-                                print(f" FIX 212: Deepgram conectado para {call_sid}")
+                                if usando_elevenlabs:
+                                    print(f" FIX 540: Deepgram conectado como FALLBACK para {call_sid}")
+                                else:
+                                    print(f" FIX 212: Deepgram conectado como PRIMARIO para {call_sid}")
                             else:
                                 print(f" FIX 212: Error conectando Deepgram para {call_sid}")
-                                transcriber = None
+                                transcriber_deepgram = None
+
+                    # Resumen del sistema activo
+                    if usando_elevenlabs and transcriber_deepgram:
+                        print(f" FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)")
+                    elif usando_elevenlabs:
+                        print(f" FIX 540: Solo ElevenLabs activo")
+                    elif transcriber_deepgram:
+                        print(f" FIX 540: Solo Deepgram activo")
+                    else:
+                        print(f" FIX 540: ADVERTENCIA - Sin transcriber activo!")
 
                 elif event == 'media':
                     # Audio chunk recibido de Twilio
                     media_data = data.get('media', {})
                     payload = media_data.get('payload')  # Audio en base64
 
-                    if payload and transcriber:
-                        # FIX 536: Verificar conexión y reconectar si es necesario
-                        if not transcriber.is_connected:
-                            print(f" FIX 536: Deepgram desconectado - intentando reconectar")
-                            try:
-                                loop = asyncio.new_event_loop()
-                                asyncio.set_event_loop(loop)
-                                reconnected = loop.run_until_complete(transcriber.reconnect())
-                                if not reconnected:
-                                    print(f" FIX 536: Reconexión fallida - continuando sin Deepgram")
-                            except Exception as recon_error:
-                                print(f" FIX 536: Error en reconexión: {recon_error}")
+                    if payload:
+                        # FIX 540: Enviar a ElevenLabs si está activo
+                        if transcriber_elevenlabs and transcriber_elevenlabs.is_connected:
+                            transcriber_elevenlabs.send_audio_base64(payload)
+                        elif transcriber_elevenlabs and not transcriber_elevenlabs.is_connected:
+                            # ElevenLabs se desconectó - marcar para usar Deepgram
+                            print(f" FIX 540: ElevenLabs desconectado - switching a Deepgram")
+                            usando_elevenlabs = False
 
-                        # Enviar audio si está conectado
-                        if transcriber.is_connected:
-                            transcriber.send_audio_base64(payload)
+                        # FIX 540: Enviar también a Deepgram (como backup o primario)
+                        if transcriber_deepgram:
+                            # FIX 536: Verificar conexión y reconectar si es necesario
+                            if not transcriber_deepgram.is_connected:
+                                print(f" FIX 536: Deepgram desconectado - intentando reconectar")
+                                try:
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    reconnected = loop.run_until_complete(transcriber_deepgram.reconnect())
+                                    if not reconnected:
+                                        print(f" FIX 536: Reconexión fallida - continuando sin Deepgram")
+                                except Exception as recon_error:
+                                    print(f" FIX 536: Error en reconexión: {recon_error}")
+
+                            # Enviar audio si está conectado
+                            if transcriber_deepgram.is_connected:
+                                transcriber_deepgram.send_audio_base64(payload)
 
                 elif event == 'stop':
                     print(f" FIX 212: MediaStream detenido - CallSid: {call_sid}")
@@ -8647,14 +8807,24 @@ if FLASK_SOCK_AVAILABLE and sock:
                 traceback.print_exc()
 
         finally:
-            # Limpiar recursos
-            if transcriber:
+            # FIX 540: Limpiar recursos de ElevenLabs
+            if transcriber_elevenlabs:
+                try:
+                    transcriber_elevenlabs.close()
+                except Exception as e:
+                    print(f" Error cerrando ElevenLabs transcriber: {e}")
+
+                if call_sid:
+                    eliminar_transcriber_elevenlabs(call_sid)
+
+            # Limpiar recursos de Deepgram
+            if transcriber_deepgram:
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    loop.run_until_complete(transcriber.close())
+                    loop.run_until_complete(transcriber_deepgram.close())
                 except Exception as e:
-                    print(f" Error cerrando transcriber: {e}")
+                    print(f" Error cerrando Deepgram transcriber: {e}")
 
                 if call_sid:
                     eliminar_transcriber(call_sid)
