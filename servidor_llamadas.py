@@ -2327,6 +2327,24 @@ def procesar_respuesta():
             print(f"   Mensaje: '{speech_result[:80]}...'")
             es_buzon_por_contenido = False
 
+    # FIX 541: BRUCE1854 - NO detectar buzón si hubo interacción previa
+    # Caso: Cliente dijo "Hola, buen día" y luego "No está disponible, puede marcar más tarde"
+    # Esto NO es buzón - es una PERSONA REAL diciendo que el encargado no está
+    # Los buzones automáticos NO tienen conversación previa (solo mensaje grabado)
+    if es_buzon_por_contenido:
+        agente_temp = conversaciones_activas.get(call_sid)
+        if agente_temp and hasattr(agente_temp, 'conversation_history'):
+            # Contar mensajes del usuario en el historial
+            mensajes_usuario = sum(1 for msg in agente_temp.conversation_history if msg.get("role") == "user")
+            # Si hay más de 1 mensaje del usuario, hubo interacción real (no es buzón)
+            # Buzón típico: Solo 1 mensaje (el mensaje grabado del buzón)
+            # Persona real: Múltiples turnos de conversación
+            if mensajes_usuario > 1:
+                print(f" FIX 541: NO es buzón - hubo {mensajes_usuario} interacciones previas del cliente")
+                print(f"   Esto indica PERSONA REAL diciendo que el encargado no está")
+                print(f"   Mensaje actual: '{speech_result[:80]}...'")
+                es_buzon_por_contenido = False
+
     if es_buzon_por_contenido:
         print(f" FIX 105: Buzón detectado por contenido del SpeechResult")
         print(f"   Mensaje: '{speech_result[:100]}...'")
