@@ -1834,6 +1834,21 @@ def procesar_respuesta():
                                 frase_parece_completa = True
                                 print(f"    FIX 532: PARCIAL corta ({len(palabras)} palabras) sin conectores - parece COMPLETA")
 
+                    # FIX 542: BRUCE1839/1852 - NO usar PARCIAL si contiene palabras de CONTINUACIÓN
+                    # Problema: Cliente dice "No, oiga, no," o "Mira, te comento" → parece completa pero sigue hablando
+                    # Solución: Si detectamos palabras que indican que el cliente va a continuar, ESPERAR
+                    if frase_parece_completa:
+                        palabras_continuacion = [
+                            'si gusta', 'mira', 'te comento', 'oiga', 'entonces',
+                            'por favor', 'este', 'pues', 'bueno', 'a ver',
+                            'déjame', 'dejame', 'permítame', 'permitame', 'espera', 'espérate',
+                            'lo que pasa', 'es que', 'porque', 'ya que', 'como'
+                        ]
+                        tiene_continuacion = any(palabra in parcial_sin_espacios for palabra in palabras_continuacion)
+                        if tiene_continuacion:
+                            frase_parece_completa = False
+                            print(f"    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto")
+
                     # FIX 532: Si la frase parece completa, USAR INMEDIATAMENTE
                     if frase_parece_completa:
                         print(f" FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '{parcial_actual}'")
@@ -3781,6 +3796,27 @@ Responde SOLO con una letra: A, B, C, D o E"""
     # Solo llamar a GPT si NO hay respuesta en caché
     if not respuesta_desde_cache:
         cache_respuestas_stats["cache_misses"] += 1
+
+        # FIX 544: BRUCE1816/1797/1824 - Detectar cuando cliente OFRECE contacto
+        # Problema: Cliente dice "si quieres mandar un correo" o "le voy a proporcionar"
+        # pero Bruce NO lo detecta y cambia de tema (pregunta otra cosa)
+        # Solución: Agregar flag al agente para que sepa que debe ESPERAR el contacto
+        speech_lower = speech_result.lower() if speech_result else ""
+        frases_oferta_contacto = [
+            'si quieres mandar', 'si quiere mandar', 'si gusta mandar',
+            'le voy a proporcionar', 'te voy a dar', 'te doy',
+            'le puedo dar', 'te puedo dar', 'aquí está',
+            'anote', 'apunte', 'es el', 'son el',
+            'mándame', 'mandame', 'mándale', 'mandale'
+        ]
+
+        cliente_ofrece_contacto = any(frase in speech_lower for frase in frases_oferta_contacto)
+        if cliente_ofrece_contacto and agente:
+            print(f" FIX 544: Cliente OFRECE contacto - '{speech_result[:80]}...'")
+            print(f"    Marcando flag para que Bruce ESPERE el dictado")
+            # Agregar al contexto del agente para que GPT sepa que debe esperar
+            if not hasattr(agente, 'esperando_dictado_ofrecido'):
+                agente.esperando_dictado_ofrecido = True
 
         def procesar_gpt_y_audio():
             """FIX 97: Procesar GPT y cuando termine, iniciar audio INMEDIATAMENTE"""

@@ -10373,6 +10373,42 @@ Responde SOLO en este formato JSON:
 
 """
 
+        # FIX 544: BRUCE1816/1797/1824 - Cliente OFRECE contacto
+        instruccion_oferta_contacto = ""
+        if hasattr(self, 'esperando_dictado_ofrecido') and self.esperando_dictado_ofrecido:
+            print(f"   [EMOJI] FIX 544: Agregando instrucción ESPERAR DICTADO al prompt")
+            instruccion_oferta_contacto = """
+
+[EMOJI]
+[EMOJI] FIX 544 - CLIENTE ESTÁ OFRECIENDO SU CONTACTO [EMOJI]
+[EMOJI]
+
+[WARN][WARN][WARN] INSTRUCCIÓN CRÍTICA - MÁXIMA PRIORIDAD [WARN][WARN][WARN]
+
+[OK] CONTEXTO: El cliente acaba de decir algo como:
+   - "Si quieres mandar un correo"
+   - "Le voy a proporcionar mi WhatsApp"
+   - "Te doy mi número"
+   - "Aquí está mi correo"
+
+[OK] ACCIÓN OBLIGATORIA:
+   1. NO cambies de tema
+   2. NO hagas otra pregunta diferente
+   3. ESPERA a que el cliente dicte el contacto
+   4. Si aún no lo dio, di: "Sí, por favor, dígame el [correo/WhatsApp/número]"
+   5. ESCUCHA el dictado completo antes de responder
+
+[ERROR] PROHIBIDO:
+   - Preguntar "¿A qué hora puedo llamar?" cuando ofrecieron contacto
+   - Cambiar de tema a horarios o encargado
+   - Hacer CUALQUIER pregunta que NO sea pedir el contacto ofrecido
+
+[EMOJI]
+
+"""
+            # Resetear flag después de usarlo
+            self.esperando_dictado_ofrecido = False
+
         # ============================================================
         # FIX 407: MEMORIA DE CONTEXTO CONVERSACIONAL (Python PRE-GPT)
         # Calcular ANTES de crear prompt para evitar delay
@@ -10423,7 +10459,7 @@ Responde SOLO en este formato JSON:
 """
 
         # Sección base (siempre se incluye) - CONTEXTO DEL CLIENTE PRIMERO
-        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + memoria_conversacional + """
+        prompt_base = contexto_cliente + contexto_recontacto + memoria_corto_plazo + instruccion_whatsapp_capturado + instruccion_oferta_contacto + memoria_conversacional + """
 [EMOJI]
 [EMOJI] FIX 384/385: SISTEMA DE RAZONAMIENTO CHAIN-OF-THOUGHT [EMOJI]
 [EMOJI]
@@ -10817,6 +10853,47 @@ RESPUESTA: "No manejamos pinturas. Nos especializamos en grifería, herramientas
 [OK] CORRECTO (18 palabras): "Entiendo. ¿Hay un mejor momento para llamar y hablar con el encargado de compras?"
 [ERROR] INCORRECTO (44 palabras): "Entiendo, es importante respetar esos tiempos. El motivo de mi llamada es muy breve: nosotros distribuimos productos de ferretería con alta rotación, especialmente nuestra cinta para goteras..."
 [EMOJI] ESTRATEGIA: Una idea + una pregunta. NO monólogos. Conversación = ping-pong."""
+
+        # FIX 545: BRUCE1821 - NO volver a saludar si ya se dijo el pitch
+        # Problema: Cliente dijo "Diga" después del pitch y Bruce repitió "Hola, buen día"
+        # Solución: Si ya se dijo la segunda parte del saludo, NO permitir volver a saludar
+        if self.segunda_parte_saludo_dicha:
+            # Obtener última respuesta del cliente
+            ultima_respuesta_cliente = ""
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    ultima_respuesta_cliente = msg['content']
+                    break
+
+            respuesta_lower = ultima_respuesta_cliente.lower() if ultima_respuesta_cliente else ""
+            # Si cliente dice "Diga", "Dígame", "Mande", etc. después del pitch
+            palabras_continuacion = ["diga", "dígame", "digame", "mande", "adelante", "si", "sí"]
+            if any(palabra in respuesta_lower for palabra in palabras_continuacion):
+                print(f"[OK] FIX 545: Cliente dijo '{ultima_respuesta_cliente}' después del pitch - NO volver a saludar")
+                print(f"   Interpretando como 'continúa' o 'te escucho'")
+                # Agregar instrucción especial al prompt
+                prompt_base += """
+
+[EMOJI]
+[EMOJI] FIX 545 - CLIENTE DIJO "DIGA/ADELANTE" DESPUÉS DEL PITCH [EMOJI]
+[EMOJI]
+
+[WARN] IMPORTANTE: Ya dijiste tu presentación completa antes.
+
+El cliente dice "Diga", "Adelante" o similar = "Te escucho, continúa"
+
+[ERROR] PROHIBIDO:
+- Volver a saludar con "Hola, buen día"
+- Repetir "Me comunico de la marca nioval..."
+- Volver a dar el pitch completo
+
+[OK] ACCIÓN CORRECTA:
+- Continúa con la conversación normalmente
+- Si preguntaste por el encargado, asume que ÉL ES o está escuchando
+- Ofrece el catálogo directamente
+
+[EMOJI]
+"""
 
         # Determinar fase actual según datos capturados
         fase_actual = []
