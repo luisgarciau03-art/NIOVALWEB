@@ -200,6 +200,16 @@ class EstadoConversacion(Enum):
     OFRECIENDO_CONTACTO_BRUCE = "ofreciendo_contacto_bruce"  # Bruce ofreció dejar su número
     ESPERANDO_DONDE_ANOTAR = "esperando_donde_anotar"        # Bruce preguntó si tiene dónde anotar
 
+# FIX 552: Máquina de Estados para Flujo de Email/Correo
+# PROBLEMA BRUCE1889: FIX 496/491 se dispara incorrectamente durante dictado
+# SOLUCIÓN: Rastrear estado explícito del flujo de correo
+class EstadoEmail(Enum):
+    INICIAL = "inicial"            # Sin interacción sobre email
+    OFRECIDO = "ofrecido"          # Cliente ofreció dar email
+    ESPERANDO = "esperando"        # Cliente pidió esperar antes de dictar
+    DICTANDO = "dictando"          # Cliente está DICTANDO email - NO INTERRUMPIR
+    CAPTURADO = "capturado"        # Email ya fue capturado - NO volver a pedir
+
 # Cargar variables de entorno desde .env
 load_dotenv()
 
@@ -449,6 +459,9 @@ class AgenteVentas:
         # FIX 339: Estado de conversación para evitar respuestas incoherentes
         self.estado_conversacion = EstadoConversacion.INICIO
         self.estado_anterior = None  # Para tracking de transiciones
+
+        # FIX 552: Estado de flujo de email/correo (previene repeticiones durante dictado)
+        self.estado_email = EstadoEmail.INICIAL
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
@@ -1044,6 +1057,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
         texto_lower = texto_cliente.lower().strip()
+
+        # FIX 553: BRUCE1893 - NO pausar si hay pregunta directa o negocio no apto
+        # Problema: Cliente dijo "sí, aquí es un taller mecánico. ¿Qué quiere?" y Bruce NO respondió
+        # FIX 477 pausó porque detectó que terminaba con "o", pero había pregunta directa después
+
+        # VERIFICAR 1: ¿Hay pregunta directa en el texto?
+        preguntas_directas = ["¿qué quiere?", "¿qué se le ofrece?", "¿de qué se trata?", "¿qué necesita?"]
+        tiene_pregunta_directa = any(pregunta in texto_lower for pregunta in preguntas_directas)
+        if tiene_pregunta_directa:
+            print(f"   [DEBUG] FIX 553: Pregunta directa detectada - NO pausar")
+            return False  # NO pausar, responder la pregunta
+
+        # VERIFICAR 2: ¿Es negocio no apto para ferreterías?
+        negocios_no_aptos = [
+            "taller mecánico", "taller automotriz", "taller de autos",
+            "hospital", "clínica", "consultorio",
+            "escuela", "primaria", "secundaria", "preparatoria",
+            "restaurante", "café", "cafetería"
+        ]
+        es_negocio_no_apto = any(negocio in texto_lower for negocio in negocios_no_aptos)
+        if es_negocio_no_apto:
+            print(f"   [DEBUG] FIX 553: Negocio no apto detectado - NO pausar")
+            return False  # NO pausar, Bruce debe responder/despedirse
 
         # FIX 526 BRUCE1677: Si Bruce preguntó por HORA, los números son hora, no teléfono
         if self.esperando_hora_callback:
@@ -5955,25 +5991,58 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'solo mostrador', 'en el mostrador', 'no están', 'no estan'
                 ])
 
-                # Detectar si cliente dio horario
-                patron_horario = r'(?:llega|viene|regresa|está|esta).*?(?:a las|las|a la|la)\s*(\d{1,2})'
-                match_horario = re.search(patron_horario, texto_lower)
+                # FIX 555: BRUCE1895 - Mejorar detección de horarios específicos
+                # PROBLEMA: "Después de las 5:00 de la tarde" era detectado como callback genérico
+                # SOLUCIÓN: Detectar PRIMERO horarios específicos antes de callback genérico
 
-                # FIX 518: Detectar "más tarde" / "después" sin hora específica
+                def _detectar_horario_especifico(texto: str) -> tuple:
+                    """
+                    FIX 555: Detecta horarios específicos en el texto
+                    Returns: (tiene_horario: bool, hora_texto: str)
+                    """
+                    import re
+
+                    # Patrón 1: "X:XX" formato (5:00, 17:30, etc.)
+                    patron_numero = r'\b(\d{1,2}):(\d{2})\b'
+                    match = re.search(patron_numero, texto)
+                    if match:
+                        return (True, f"{match.group(1)}:{match.group(2)}")
+
+                    # Patrón 2: "a las X", "las X", "después de las X", "antes de las X"
+                    patron_las = r'(?:a las|las|después de las|despues de las|antes de las)\s*(\d{1,2})'
+                    match = re.search(patron_las, texto)
+                    if match:
+                        return (True, match.group(1))
+
+                    # Patrón 3: "X de la mañana/tarde/noche", "X am/pm"
+                    patron_periodo = r'(\d{1,2})\s*(?:de la|por la)?\s*(?:mañana|tarde|noche|am|pm|a\.?m\.?|p\.?m\.?)'
+                    match = re.search(patron_periodo, texto)
+                    if match:
+                        return (True, match.group(1))
+
+                    # Patrón 4: Día específico (implica horario concreto)
+                    dias_semana = ['lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado', 'domingo']
+                    if any(dia in texto for dia in dias_semana):
+                        return (True, "día específico")
+
+                    return (False, "")
+
+                tiene_horario_especifico, hora_texto = _detectar_horario_especifico(texto_lower)
+
+                # FIX 518: Detectar "más tarde" / "después" SOLO si NO hay hora específica
                 indica_callback_generico = any(p in texto_lower for p in [
                     'más tarde', 'mas tarde', 'después', 'despues',
                     'al rato', 'en un rato', 'luego', 'ahorita no'
-                ])
+                ]) and not tiene_horario_especifico  # FIX 555: Añadir verificación
 
-                if match_horario:
-                    hora = match_horario.group(1)
-                    print(f"   FIX 493: Cliente dio horario ({hora} hrs) - Confirmar callback")
+                if tiene_horario_especifico:
+                    print(f"   FIX 555: Cliente dio horario ESPECÍFICO ({hora_texto}) - Confirmar callback")
                     return {
                         "tipo": "ENCARGADO_NO_ESTA_CON_HORARIO",
-                        "respuesta": f"Perfecto, le llamo a las {hora} entonces. Muchas gracias por su tiempo.",
+                        "respuesta": f"Perfecto, le llamo entonces. Muchas gracias por su tiempo.",
                         "accion": "AGENDAR_CALLBACK"
                     }
-                # FIX 518: Si cliente indica callback genérico, preguntar horario
+                # FIX 518: Si cliente indica callback genérico (sin hora específica), preguntar horario
                 elif indica_callback_generico:
                     print(f"   FIX 518: Cliente indica callback genérico ('más tarde') - Preguntar horario")
                     return {
@@ -6065,6 +6134,60 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "respuesta": "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas. Muchas gracias por su tiempo.",
                 "accion": "DESPEDIRSE"
             }
+
+        # ================================================================
+        # FIX 554: BRUCE1895 - Cliente OFRECE recibir información por canal específico
+        # PROBLEMA: Cliente dijo "se lo agradecería enviándomelo a un correo" y Bruce NO detectó
+        # SOLUCIÓN: Detectar ofertas de canal del cliente (no solo aceptaciones)
+        # ================================================================
+        patrones_ofrece_recibir_info = [
+            # Ofertas con "gustar"
+            'si gusta dejarme', 'si gusta enviarme', 'si gusta mandarme',
+            'si gusta me lo envía', 'si gusta me lo manda',
+            # Ofertas con "agradecería"
+            'se lo agradecería enviándomelo', 'se lo agradecería enviandome',
+            'se lo agradecería mandándomelo', 'se lo agradeceria mandandome',
+            'se lo agradecería si me lo envía', 'se lo agradeceria si me lo envia',
+            # Ofertas con "puede"
+            'puede enviarme', 'puede mandarme', 'puede dejarme',
+            'pueden enviarme', 'pueden mandarme', 'pueden dejarme',
+            'podría enviarme', 'podría mandarme', 'podría dejarme',
+            # Con canal específico
+            'enviármelo a un correo', 'enviarmelo a un correo',
+            'mandármelo a un correo', 'mandarmelo a un correo',
+            'enviármelo por correo', 'enviarmelo por correo',
+            'mandármelo por whatsapp', 'mandarmelo por whatsapp',
+            # Solicitudes directas
+            'dejar información', 'dejarme información', 'déjame información',
+            'enviar información', 'enviarme información', 'envíame información',
+            'mandar información', 'mandarme información', 'mándame información'
+        ]
+
+        if any(p in texto_lower for p in patrones_ofrece_recibir_info):
+            print(f"[OK] FIX 554: Cliente OFRECE recibir información: '{texto_cliente[:60]}'")
+            # Detectar canal específico mencionado
+            if 'correo' in texto_lower or 'mail' in texto_lower:
+                print(f"   Canal detectado: CORREO")
+                return {
+                    "tipo": "CLIENTE_OFRECE_RECIBIR_CORREO",
+                    "respuesta": "Perfecto, con gusto le envío el catálogo. ¿Me permite su correo electrónico?",
+                    "accion": "PEDIR_CORREO"
+                }
+            elif 'whatsapp' in texto_lower:
+                print(f"   Canal detectado: WHATSAPP")
+                return {
+                    "tipo": "CLIENTE_OFRECE_RECIBIR_WHATSAPP",
+                    "respuesta": "Perfecto, con gusto le envío el catálogo. ¿Me confirma su número de WhatsApp?",
+                    "accion": "PEDIR_WHATSAPP"
+                }
+            else:
+                # Canal no especificado - ofrecer opciones
+                print(f"   Canal NO especificado - ofrecer opciones")
+                return {
+                    "tipo": "CLIENTE_OFRECE_RECIBIR_INFO_GENERICO",
+                    "respuesta": "Con gusto. ¿Prefiere que le envíe el catálogo por WhatsApp o correo electrónico?",
+                    "accion": "OFRECER_CANALES"
+                }
 
         # ================================================================
         # FIX 495/497: DETECCIÓN ROBUSTA - Cliente ACEPTA correo
@@ -6168,7 +6291,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'es arroba', 'arroba gmail', 'arroba hotmail', 'arroba outlook', 'arroba yahoo'
         ]
         if any(p in texto_lower for p in patrones_ofrece_correo):
+            # FIX 552: Verificar estado_email antes de activar FIX 496
+            # PROBLEMA BRUCE1889: Repetía "dígame el correo" durante dictado
+            if hasattr(self, 'estado_email'):
+                if self.estado_email == EstadoEmail.DICTANDO:
+                    print(f"⚠️ FIX 552: Cliente está DICTANDO email - NO interrumpir")
+                    return None  # NO activar patrón
+                elif self.estado_email == EstadoEmail.CAPTURADO:
+                    print(f"⚠️ FIX 552: Email ya capturado - NO volver a pedir")
+                    return None  # NO activar patrón
+
             print(f"[OK] FIX 496: Cliente OFRECE dar CORREO: '{texto_cliente[:50]}'")
+            # FIX 552: Actualizar estado a OFRECIDO
+            if hasattr(self, 'estado_email'):
+                self.estado_email = EstadoEmail.OFRECIDO
             return {
                 "tipo": "CLIENTE_OFRECE_CORREO",
                 "respuesta": "Sí, por favor, dígame el correo.",

@@ -2672,6 +2672,13 @@ def procesar_respuesta():
                 print(f"   Transcripción parcial: '{speech_result}'")
                 print(f"   tiene_arroba: {tiene_arroba}, tiene_punto: {tiene_punto}, tiene_dominio: {tiene_dominio}")
 
+                # FIX 552: Actualizar estado a DICTANDO
+                if agente and hasattr(agente, 'estado_email'):
+                    from agente_ventas import EstadoEmail
+                    if agente.estado_email != EstadoEmail.DICTANDO:
+                        agente.estado_email = EstadoEmail.DICTANDO
+                        print(f"    FIX 552: Estado email → DICTANDO")
+
                 # Almacenar transcripción parcial
                 if not hasattr(agente, 'transcripcion_parcial_acumulada'):
                     agente.transcripcion_parcial_acumulada = []
@@ -2694,6 +2701,11 @@ def procesar_respuesta():
                 print(f"    FIX 265: Email parece completo - procesar normalmente")
                 # FIX 499: Marcar que el email está completo para NO esperar más
                 email_detectado_completo = True
+                # FIX 552: Actualizar estado a CAPTURADO
+                if agente and hasattr(agente, 'estado_email'):
+                    from agente_ventas import EstadoEmail
+                    agente.estado_email = EstadoEmail.CAPTURADO
+                    print(f"    FIX 552: Estado email → CAPTURADO")
 
         # Verificar si el cliente tiene historial de habla activa
         if call_sid in cliente_hablando_activo:
@@ -4601,7 +4613,16 @@ Responde SOLO con una letra: A, B, C, D o E"""
         ]
         contiene_interrupcion_valida = any(frase in trans_lower for frase in frases_interrupcion_valida)
 
-        if contiene_dia_callback or contiene_telefono or contiene_interrupcion_valida:
+        # FIX 556: BRUCE1889 - Preservar emails completos SIEMPRE
+        # PROBLEMA: "Martín Compras arroba Grupo Balmar" fue DESCARTADO por FIX 455
+        # SOLUCIÓN: Detectar emails completos y NUNCA descartarlos
+        palabras_email = ['arroba', '@', 'gmail', 'hotmail', 'yahoo', 'outlook']
+        dominios = ['com', 'mx', 'net', 'org']
+        contiene_email = any(p in trans_lower for p in palabras_email) and any(d in trans_lower for d in dominios)
+        if contiene_email:
+            print(f" FIX 556: Email completo detectado - NO descartar: '{trans}'")
+
+        if contiene_dia_callback or contiene_telefono or contiene_interrupcion_valida or contiene_email:
             transcripciones_importantes.append(trans)
             if contiene_interrupcion_valida:
                 print(f" FIX 486: Preservando INTERRUPCIÓN VÁLIDA: '{trans}'")
