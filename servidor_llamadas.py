@@ -2779,6 +2779,7 @@ def procesar_respuesta():
             # establecer estado ESPERANDO_TRANSFERENCIA y NO tratarlo como frase incompleta
             frases_espera_cliente = [
                 'permítame', 'permitame', 'permíteme', 'permiteme',
+                'permiso', 'con permiso', 'con su permiso',  # FIX 576: variantes de "permítame"
                 'un momento', 'un momentito', 'un segundo', 'un segundito',
                 'dame un momento', 'deme un momento', 'dame un segundo', 'deme un segundo',
                 'espere', 'espéreme', 'espereme', 'espera', 'espérame', 'esperame',
@@ -4191,6 +4192,34 @@ Responde SOLO con una letra: A, B, C, D o E"""
     # NO colgar, solo esperar sin generar audio y seguir escuchando
     if respuesta_agente == "":
         bruce_id = agente.lead_data.get("bruce_id", "N/A")
+
+        # FIX 577: Si el cliente dijo algo significativo y NO estamos en espera/dictado,
+        # generar fallback en vez de quedarse mudo
+        from agente_ventas import EstadoConversacion as EC577
+        estado_actual_577 = getattr(agente, 'estado_conversacion', None)
+        tiene_digitos_577 = getattr(agente, 'digitos_acumulados_flag', False)
+        speech_limpio_577 = (speech_result or "").strip()
+        palabras_577 = speech_limpio_577.split()
+        fillers_577 = {'mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uh', 'pues', 'uhm'}
+        palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
+
+        if (len(palabras_significativas_577) >= 3
+            and estado_actual_577 != EC577.ESPERANDO_TRANSFERENCIA
+            and not tiene_digitos_577):
+            print(f" FIX 577: GPT vacío pero cliente dijo '{speech_limpio_577[:50]}' ({len(palabras_significativas_577)} palabras)")
+            print(f"   Estado: {estado_actual_577} - Generando fallback inmediato")
+            respuesta_fallback_577 = "Disculpe, ¿me puede repetir eso último?"
+            agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback_577})
+            response = VoiceResponse()
+            audio_id_577 = f"fallback_577_{call_sid}"
+            result_577 = generar_audio_elevenlabs(respuesta_fallback_577, audio_id_577)
+            if result_577:
+                response.play(request.url_root + f"audio/{audio_id_577}")
+            else:
+                response.say(respuesta_fallback_577, voice="alice", language="es-MX")
+            log_evento(f"{bruce_id} DICE: \"{respuesta_fallback_577}\" (FIX 577: fallback speech real)", "BRUCE")
+            response.record(action="/procesar-respuesta", method="POST", max_length=30, timeout=3, play_beep=False, trim="trim-silence")
+            return Response(str(response), mimetype="text/xml")
 
         # FIX 502: BRUCE1716 - Contador de silencios durante dictado de número
         # Problema: Cliente dicta número en partes, Bruce entra en silencio pero NUNCA confirma

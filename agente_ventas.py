@@ -866,7 +866,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # GPT debería despedirse cortésmente
         else:
             # Detectar si cliente pide esperar (SOLO si NO es rechazo)
-            patrones_espera = ['permítame', 'permitame', 'espere', 'espéreme', 'espereme',
+            patrones_espera = ['permítame', 'permitame', 'permiso', 'con permiso',  # FIX 576
+                              'espere', 'espéreme', 'espereme',
                               'un momento', 'un segundito', 'ahorita', 'tantito']
             if any(p in mensaje_lower for p in patrones_espera):
                 # FIX 411: Verificar que NO sea solicitud de llamar después
@@ -5643,8 +5644,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 respuesta = "¿Me puede repetir el número, por favor?"
                 print(f"   FIX 467: Estado PIDIENDO_WHATSAPP - solicitando repetición")
             elif self.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-                respuesta = "Claro, espero."
-                print(f"   FIX 467: Estado ESPERANDO_TRANSFERENCIA - esperando")
+                # FIX 574: NO repetir "Claro, espero." - ya se dijo en FIX 470
+                # Devolver vacío para mantener silencio de espera (FIX 498 manejará)
+                respuesta = ""
+                print(f"   FIX 574: Estado ESPERANDO_TRANSFERENCIA - silencio (ya se dijo 'Claro, espero')")
             else:
                 respuesta = "Sí, dígame."
                 print(f"   FIX 467: Estado genérico - respuesta neutral")
@@ -6067,13 +6070,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "accion": "AGENDAR_CALLBACK"
                     }
                 # FIX 518: Si cliente indica callback genérico (sin hora específica), preguntar horario
+                # FIX 575: Memoria de estado - no repetir misma pregunta
                 elif indica_callback_generico:
-                    print(f"   FIX 518: Cliente indica callback genérico ('más tarde') - Preguntar horario")
-                    return {
-                        "tipo": "ENCARGADO_LLEGA_MAS_TARDE",
-                        "respuesta": "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?",
-                        "accion": "PREGUNTAR_HORARIO"
-                    }
+                    ya_pregunto_horario = getattr(self, 'pregunto_horario_count', 0)
+                    self.pregunto_horario_count = ya_pregunto_horario + 1
+                    if ya_pregunto_horario == 0:
+                        print(f"   FIX 518: Cliente indica callback genérico - Preguntar horario (1ra vez)")
+                        return {
+                            "tipo": "ENCARGADO_LLEGA_MAS_TARDE",
+                            "respuesta": "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?",
+                            "accion": "PREGUNTAR_HORARIO"
+                        }
+                    else:
+                        print(f"   FIX 575: Ya preguntó horario {ya_pregunto_horario}x - ofreciendo alternativa")
+                        return {
+                            "tipo": "ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA",
+                            "respuesta": "Entiendo que es difícil localizarlo. ¿Me podría proporcionar un número de WhatsApp o correo para enviarle la información?",
+                            "accion": "OFRECER_ALTERNATIVA"
+                        }
                 # FIX 520 BRUCE1652: Si ya pidió WhatsApp y cliente no puede, OFRECER CONTACTO DE BRUCE
                 elif bruce_ya_pidio_whatsapp and cliente_no_puede:
                     print(f"   FIX 520: Ya pidió WhatsApp + cliente no puede - Ofrecer contacto de Bruce")
