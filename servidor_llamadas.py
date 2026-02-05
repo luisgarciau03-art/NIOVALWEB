@@ -2372,7 +2372,7 @@ def procesar_respuesta():
             # Si hay más de 1 mensaje del usuario, hubo interacción real (no es buzón)
             # Buzón típico: Solo 1 mensaje (el mensaje grabado del buzón)
             # Persona real: Múltiples turnos de conversación
-            if mensajes_usuario > 1:
+            if mensajes_usuario >= 1:  # FIX 568: Off-by-one fix - 1+ mensajes = persona real, no buzón
                 print(f" FIX 541: NO es buzón - hubo {mensajes_usuario} interacciones previas del cliente")
                 print(f"   Esto indica PERSONA REAL diciendo que el encargado no está")
                 print(f"   Mensaje actual: '{speech_result[:80]}...'")
@@ -2649,9 +2649,16 @@ def procesar_respuesta():
             # Cliente dijo "Arroba Home Tools punto m x" que no coincidía con "mx"
             dominios_normales = ["com", "mx", "net", "org", "edu", "gmail", "hotmail", "yahoo", "outlook"]
             dominios_espaciados = ["m x", "c o m", "n e t", "o r g"]  # Deletreados con espacios
-            dominios_deletreados = ["eme equis", "ce o eme", "ene e te", "eme ene"]  # Fonéticos
+            # FIX 572: Variantes fonéticas extendidas para .mx
+            dominios_deletreados = [
+                "eme equis", "ce o eme", "ene e te", "eme ene",
+                "punto eme equis", "punto emex", "punto eme x",
+                "emex", "eme x", "punto eme", "punto m",
+            ]
             todos_dominios = dominios_normales + dominios_espaciados + dominios_deletreados
-            tiene_dominio = any(dom in frase_lower for dom in todos_dominios)
+            # FIX 572: Normalizar artefactos comunes de STT antes de detectar dominio
+            frase_normalizada_572 = frase_lower.replace("eme equis", "mx").replace("emex", "mx").replace("eme x", "mx").replace("m x", "mx").replace("ce o eme", "com")
+            tiene_dominio = any(dom in frase_lower for dom in todos_dominios) or any(dom in frase_normalizada_572 for dom in dominios_normales)
 
             email_parece_completo = tiene_arroba and tiene_punto and tiene_dominio
 
@@ -2746,7 +2753,18 @@ def procesar_respuesta():
                 es_mas_espera = any(f in frase_limpia for f in frases_mas_espera)
                 cliente_volvio = any(f in frase_limpia for f in frases_cliente_volvio) or not es_mas_espera
 
-                if cliente_volvio and len(frase_limpia) > 2:  # Al menos 3 caracteres
+                # FIX 569: Filtrar audio de fondo - requerir contenido significativo
+                palabras_espanol_569 = ['hola', 'bueno', 'si', 'no', 'que', 'como', 'quien', 'donde',
+                    'esta', 'aqui', 'mande', 'diga', 'oiga', 'por', 'favor', 'gracias',
+                    'espere', 'momento', 'listo', 'ya', 'voy', 'estoy', 'el', 'la',
+                    'encargado', 'ferreteria', 'marca', 'empresa', 'negocio', 'interesa']
+                palabras_en_texto_569 = frase_limpia.split()
+                tiene_palabras_reconocibles = any(
+                    any(esp in palabra.lower() for esp in palabras_espanol_569)
+                    for palabra in palabras_en_texto_569
+                ) if palabras_en_texto_569 else False
+
+                if cliente_volvio and len(frase_limpia) > 10 and tiene_palabras_reconocibles:  # FIX 569: min 10 chars + palabras españolas
                     print(f"\n FIX 520: CLIENTE VOLVIÓ después de espera - '{speech_result}'")
                     print(f"   Estado anterior: ESPERANDO_TRANSFERENCIA")
                     print(f"   → Saliendo del modo espera, procesando normalmente")
@@ -3310,19 +3328,46 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     agente.transcripcion_parcial_acumulada = []
                 agente.transcripcion_parcial_acumulada.append(speech_result)
 
+                # FIX 567: Detectar fillers consecutivos - si 3+ "mhm/ajá/este", forzar procesamiento
+                fillers_567 = ['mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uhm', 'pues', 'uh']
+                if len(agente.transcripcion_parcial_acumulada) >= 3:
+                    ultimas_3_567 = agente.transcripcion_parcial_acumulada[-3:]
+                    todas_fillers_567 = all(
+                        any(f in parcial.lower().strip() for f in fillers_567) and len(parcial.strip()) < 15
+                        for parcial in ultimas_3_567
+                    )
+                    if todas_fillers_567:
+                        print(f" FIX 567: 3+ fillers consecutivos detectados: {ultimas_3_567}")
+                        print(f"   Forzando procesamiento en lugar de esperar más")
+                        frase_parece_incompleta = False  # Forzar procesamiento
+
                 # FIX 286: Limitar a máximo 5 esperas para evitar loops infinitos
                 if len(agente.transcripcion_parcial_acumulada) >= 5:
                     print(f"\n FIX 286: LÍMITE DE ESPERA ALCANZADO ({len(agente.transcripcion_parcial_acumulada)} parciales)")
                     print(f"   Forzando respuesta para evitar timeout infinito")
                     # NO retornar - dejar que procese con GPT
-                else:
+                elif frase_parece_incompleta:  # FIX 566/567: Solo esperar si SIGUE siendo incompleta
                     # Generar TwiML para seguir escuchando SIN interrumpir
                     response = VoiceResponse()
 
                     # FIX 244/395/442: Timeout dinámico basado en contenido
                     # - 2.5s para deletreo de email (necesita más tiempo)
                     # - 1.5s para otras frases (reducir delay percibido - casos BRUCE1329-1332)
-                    timeout_espera = 2.5 if esta_deletreando_email else 1.5
+                    # FIX 566: Reducir wait non-email de 1.5s a 1.0s
+                    timeout_espera = 2.5 if esta_deletreando_email else 1.0
+
+                    # FIX 566: Check si ElevenLabs ya tiene transcripción final antes de esperar
+                    if ELEVENLABS_STT_AVAILABLE:
+                        import time as time_566
+                        with elevenlabs_transcripciones_lock:
+                            ultima_el_566 = elevenlabs_ultima_final.get(call_sid, {})
+                            if ultima_el_566.get("es_final") and (time_566.time() - ultima_el_566.get("timestamp", 0)) < 3.0:
+                                el_texto_566 = ultima_el_566.get("texto", "").strip()
+                                if el_texto_566 and len(el_texto_566) > len(speech_result):
+                                    print(f" FIX 566: ElevenLabs tiene FINAL: '{el_texto_566}'")
+                                    print(f"   Usando ElevenLabs en lugar de esperar {timeout_espera}s")
+                                    speech_result = el_texto_566
+                                    frase_parece_incompleta = False  # No esperar
 
                     response.record(
                         action="/procesar-respuesta",
@@ -3399,6 +3444,33 @@ Responde SOLO con una letra: A, B, C, D o E"""
             print(f"    FIX 470: Continuando espera con timeout de 30s...")
             return Response(str(response), mimetype="text/xml")
 
+        # FIX 565: Si Bruce ha estado en silencio por 5+ segundos, generar fallback
+        import time as time_565
+        if hasattr(agente, 'bruce_silence_start') and agente.bruce_silence_start:
+            silencio_duracion = time_565.time() - agente.bruce_silence_start
+            if silencio_duracion > 5.0:
+                print(f" FIX 565: Bruce SILENCIOSO por {silencio_duracion:.1f}s - generando fallback")
+                agente.bruce_silence_start = None
+                # Forzar respuesta de fallback en lugar de seguir en silencio
+                speech_result = speech_result if speech_result else ""
+                respuesta_fallback = "Disculpe, ¿me puede repetir?"
+                agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback})
+                response = VoiceResponse()
+                audio_id_565 = f"fallback_silencio_{call_sid}"
+                result_565 = generar_audio_elevenlabs(respuesta_fallback, audio_id_565)
+                if result_565:
+                    response.play(request.url_root + f"audio/{audio_id_565}")
+                else:
+                    response.say(respuesta_fallback, voice="alice", language="es-MX")
+                response.record(action="/procesar-respuesta", method="POST", max_length=1, timeout=2, play_beep=False, trim="trim-silence")
+                return Response(str(response), mimetype="text/xml")
+        # FIX 565: Iniciar tracking de silencio si no hay speech
+        if not speech_result or speech_result.strip() == "":
+            if not hasattr(agente, 'bruce_silence_start') or not agente.bruce_silence_start:
+                agente.bruce_silence_start = time_565.time()
+        else:
+            agente.bruce_silence_start = None  # Resetear si hay contenido
+
         agente.respuestas_vacias_consecutivas += 1
         print(f" Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
@@ -3409,125 +3481,150 @@ Responde SOLO con una letra: A, B, C, D o E"""
         es_primer_mensaje = len(mensajes_usuario) == 0
 
         if es_primer_mensaje:
-            # FIX 408: Lógica progresiva de timeouts - NO asumir "bueno" inmediatamente
-            # Cliente podría haber dicho "no está" y perdemos la conversación
+            # FIX 564: ANTES de declarar timeout, verificar si ElevenLabs tiene transcripción
+            import time as time_564
+            elevenlabs_texto_564 = None
+            if ELEVENLABS_STT_AVAILABLE:
+                with elevenlabs_transcripciones_lock:
+                    if call_sid in elevenlabs_transcripciones and elevenlabs_transcripciones[call_sid]:
+                        ultima_el = elevenlabs_ultima_final.get(call_sid, {})
+                        if ultima_el and (time_564.time() - ultima_el.get("timestamp", 0)) < 5.0:
+                            elevenlabs_texto_564 = ultima_el.get("texto", "").strip()
+                            if elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2:
+                                print(f" FIX 564: ElevenLabs TIENE transcripción válida: '{elevenlabs_texto_564}'")
+                                print(f"   Usando ElevenLabs en lugar de declarar timeout Deepgram")
 
-            # Incrementar contador de timeouts
-            agente.timeouts_deepgram += 1
-            print(f" FIX 408: Primer mensaje vacío (timeout #{agente.timeouts_deepgram})")
-
-            agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
-            response = VoiceResponse()
-            bruce_id = agente.lead_data.get("bruce_id", "N/A")
-
-            # LÓGICA PROGRESIVA: Máximo 2 pedidos de repetición
-            if agente.timeouts_deepgram == 1:
-                # PRIMER TIMEOUT: Pedir repetición natural
-                respuesta_timeout = "Disculpe, no alcancé a escucharle bien, ¿me podría repetir?"
-                print(f"    FIX 408: Primer timeout - pidiendo repetición natural")
-
-                # Agregar al historial
-                agente.conversation_history.append({
-                    "role": "user",
-                    "content": "[Timeout Deepgram - no se transcribió]"
-                })
-                agente.conversation_history.append({
-                    "role": "assistant",
-                    "content": respuesta_timeout
-                })
-
-                # Generar audio
-                audio_id = f"timeout1_{call_sid}"
-                result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
-                if result:
-                    audio_url = request.url_root + f"audio/{audio_id}"
-                    response.play(audio_url)
-                else:
-                    response.say(respuesta_timeout, voice="alice", language="es-MX")
-
-                log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #1)", "BRUCE")
-
-            elif agente.timeouts_deepgram == 2:
-                # SEGUNDO TIMEOUT: Pedir repetición más directa
-                respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
-                print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
-
-                # Agregar al historial
-                agente.conversation_history.append({
-                    "role": "user",
-                    "content": "[Timeout Deepgram #2 - no se transcribió]"
-                })
-                agente.conversation_history.append({
-                    "role": "assistant",
-                    "content": respuesta_timeout
-                })
-
-                # Generar audio
-                audio_id = f"timeout2_{call_sid}"
-                result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
-                if result:
-                    audio_url = request.url_root + f"audio/{audio_id}"
-                    response.play(audio_url)
-                else:
-                    response.say(respuesta_timeout, voice="alice", language="es-MX")
-
-                log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #2)", "BRUCE")
-
+            if elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2:
+                # FIX 564: Usar transcripción de ElevenLabs - tratar como si Deepgram funcionara
+                speech_result = elevenlabs_texto_564
+                agente.respuestas_vacias_consecutivas = 0
+                if hasattr(agente, 'timeouts_deepgram') and agente.timeouts_deepgram > 0:
+                    print(f"    FIX 564: Reseteando timeouts_deepgram (era {agente.timeouts_deepgram})")
+                    agente.timeouts_deepgram = 0
+                # Continuar con procesamiento normal (NO entrar al bloque de timeout)
             else:
-                # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
-                print(f"    FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
-                segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+                # FIX 408: Lógica progresiva de timeouts - NO asumir "bueno" inmediatamente
+                pass  # Marcador - el bloque original sigue abajo
 
-                # Agregar al historial como si hubiera respondido
-                agente.conversation_history.append({
-                    "role": "user",
-                    "content": "[Cliente respondió - problema de audio]"
-                })
-                agente.conversation_history.append({
-                    "role": "assistant",
-                    "content": segunda_parte
-                })
+            # FIX 408: Lógica progresiva de timeouts (solo si NO se usó ElevenLabs)
+            if not (elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2):
 
-                # FIX 455: Limpiar transcripciones antes de enviar segunda parte
-                import time as time_mod  # FIX 455: Import local
-                if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
-                    print(f" FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones (segunda parte)")
-                    deepgram_transcripciones[call_sid] = []
-                    if call_sid in deepgram_ultima_final:
-                        deepgram_ultima_final[call_sid] = {}
-                bruce_audio_enviado_timestamp[call_sid] = time_mod.time()
+                # Incrementar contador de timeouts
+                agente.timeouts_deepgram += 1
+                print(f" FIX 408: Primer mensaje vacío (timeout #{agente.timeouts_deepgram})")
 
-                # Usar audio pre-generado si existe
-                if "segunda_parte_saludo" in audio_cache:
-                    audio_id = f"segunda_parte_vacio_{call_sid}"
-                    audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
-                    audio_url = request.url_root + f"audio/{audio_id}"
-                    print(f" FIX 408: Usando audio pre-generado de segunda_parte_saludo")
-                    response.play(audio_url)
-                else:
-                    # Generar audio si no está en caché
-                    audio_id = f"segunda_parte_vacio_{call_sid}"
-                    result = generar_audio_elevenlabs(segunda_parte, audio_id)
+                agente.respuestas_vacias_consecutivas = 0  # No contar como vacía
+                response = VoiceResponse()
+                bruce_id = agente.lead_data.get("bruce_id", "N/A")
+
+                # LÓGICA PROGRESIVA: Máximo 2 pedidos de repetición
+                if agente.timeouts_deepgram == 1:
+                    # PRIMER TIMEOUT: Pedir repetición natural
+                    respuesta_timeout = "Disculpe, no alcancé a escucharle bien, ¿me podría repetir?"
+                    print(f"    FIX 408: Primer timeout - pidiendo repetición natural")
+
+                    # Agregar al historial
+                    agente.conversation_history.append({
+                        "role": "user",
+                        "content": "[Timeout Deepgram - no se transcribió]"
+                    })
+                    agente.conversation_history.append({
+                        "role": "assistant",
+                        "content": respuesta_timeout
+                    })
+
+                    # Generar audio
+                    audio_id = f"timeout1_{call_sid}"
+                    result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
                     if result:
                         audio_url = request.url_root + f"audio/{audio_id}"
                         response.play(audio_url)
                     else:
-                        response.say(segunda_parte, voice="alice", language="es-MX")
+                        response.say(respuesta_timeout, voice="alice", language="es-MX")
 
-                log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 408: timeout #3+, continuando)", "BRUCE")
+                    log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #1)", "BRUCE")
 
-            # FIX 214/215: Record en lugar de Gather (elimina costos de Speech Recognition)
-            response.record(
-                action="/procesar-respuesta",
-                method="POST",
-                max_length=1,
-                timeout=2,  # FIX 215: Reducido de 8s a 2s
-                play_beep=False,
-                trim="trim-silence"
-            )
+                elif agente.timeouts_deepgram == 2:
+                    # SEGUNDO TIMEOUT: Pedir repetición más directa
+                    respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
+                    print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
 
-            print(f" FIX 408: Respuesta enviada según nivel de timeout")
-            return Response(str(response), mimetype="text/xml")
+                    # Agregar al historial
+                    agente.conversation_history.append({
+                        "role": "user",
+                        "content": "[Timeout Deepgram #2 - no se transcribió]"
+                    })
+                    agente.conversation_history.append({
+                        "role": "assistant",
+                        "content": respuesta_timeout
+                    })
+
+                    # Generar audio
+                    audio_id = f"timeout2_{call_sid}"
+                    result = generar_audio_elevenlabs(respuesta_timeout, audio_id)
+                    if result:
+                        audio_url = request.url_root + f"audio/{audio_id}"
+                        response.play(audio_url)
+                    else:
+                        response.say(respuesta_timeout, voice="alice", language="es-MX")
+
+                    log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #2)", "BRUCE")
+
+                else:
+                    # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
+                    print(f"    FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
+                    segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+                    # Agregar al historial como si hubiera respondido
+                    agente.conversation_history.append({
+                        "role": "user",
+                        "content": "[Cliente respondió - problema de audio]"
+                    })
+                    agente.conversation_history.append({
+                        "role": "assistant",
+                        "content": segunda_parte
+                    })
+
+                    # FIX 455: Limpiar transcripciones antes de enviar segunda parte
+                    import time as time_mod  # FIX 455: Import local
+                    if call_sid in deepgram_transcripciones and deepgram_transcripciones[call_sid]:
+                        print(f" FIX 455: Limpiando {len(deepgram_transcripciones[call_sid])} transcripciones (segunda parte)")
+                        deepgram_transcripciones[call_sid] = []
+                        if call_sid in deepgram_ultima_final:
+                            deepgram_ultima_final[call_sid] = {}
+                    bruce_audio_enviado_timestamp[call_sid] = time_mod.time()
+
+                    # Usar audio pre-generado si existe
+                    if "segunda_parte_saludo" in audio_cache:
+                        audio_id = f"segunda_parte_vacio_{call_sid}"
+                        audio_files[audio_id] = audio_cache["segunda_parte_saludo"]
+                        audio_url = request.url_root + f"audio/{audio_id}"
+                        print(f" FIX 408: Usando audio pre-generado de segunda_parte_saludo")
+                        response.play(audio_url)
+                    else:
+                        # Generar audio si no está en caché
+                        audio_id = f"segunda_parte_vacio_{call_sid}"
+                        result = generar_audio_elevenlabs(segunda_parte, audio_id)
+                        if result:
+                            audio_url = request.url_root + f"audio/{audio_id}"
+                            response.play(audio_url)
+                        else:
+                            response.say(segunda_parte, voice="alice", language="es-MX")
+
+                    log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 408: timeout #3+, continuando)", "BRUCE")
+
+                # FIX 214/215: Record en lugar de Gather (elimina costos de Speech Recognition)
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=2,  # FIX 215: Reducido de 8s a 2s
+                    play_beep=False,
+                    trim="trim-silence"
+                )
+
+                print(f" FIX 408: Respuesta enviada según nivel de timeout")
+                return Response(str(response), mimetype="text/xml")
 
         # FIX 143: Si acabamos de responder a cliente desesperado, NO pedir repetición
         # El cliente necesita tiempo para procesar la confirmación "Sí, estoy aquí"
@@ -4104,6 +4201,7 @@ Responde SOLO con una letra: A, B, C, D o E"""
             agente.silencios_durante_dictado = 0
         if not hasattr(agente, 'digitos_acumulados'):
             agente.digitos_acumulados = []
+        agente.digitos_acumulados_flag = False  # FIX 571: Reset
 
         # Acumular dígitos del speech_result actual (si hay)
         # Primero convertir palabras a dígitos (ej: "veintiuno" → "21")
@@ -4111,12 +4209,36 @@ Responde SOLO con una letra: A, B, C, D o E"""
         digitos_actuales = re.findall(r'\d', texto_convertido)
         if digitos_actuales:
             agente.digitos_acumulados.extend(digitos_actuales)
+            agente.digitos_acumulados_flag = True  # FIX 571: Señalizar dictado activo
             print(f" FIX 502: Acumulando {len(digitos_actuales)} dígitos → Total: {len(agente.digitos_acumulados)}")
             print(f"   Texto original: '{speech_result}' → Convertido: '{texto_convertido}'")
 
         agente.silencios_durante_dictado += 1
         print(f" FIX 498/502: Respuesta vacía (silencio #{agente.silencios_durante_dictado}) - Continuando sin audio")
         log_evento(f"{bruce_id} - ESPERANDO EN SILENCIO (FIX 498)", "BRUCE")
+
+        # FIX 573: Detectar transcripciones fantasma de música/tono de espera
+        # Si >20 dígitos acumulados sin confirmación = probable música
+        if len(agente.digitos_acumulados) > 20:
+            print(f" FIX 573: Más de 20 dígitos acumulados ({len(agente.digitos_acumulados)}) - probable música/ruido")
+            agente.digitos_acumulados = []
+            agente.digitos_acumulados_flag = False  # FIX 571: Reset
+            agente.silencios_durante_dictado = 0
+        # FIX 573: Detectar patrones secuenciales (1,2,3,4,5 = tonos)
+        elif len(agente.digitos_acumulados) >= 5:
+            ultimos_5 = agente.digitos_acumulados[-5:]
+            try:
+                es_secuencial = all(
+                    abs(int(ultimos_5[i+1]) - int(ultimos_5[i])) == 1
+                    for i in range(len(ultimos_5)-1)
+                )
+                if es_secuencial:
+                    print(f" FIX 573: Patrón secuencial detectado ({ultimos_5}) - probable música")
+                    agente.digitos_acumulados = []
+                    agente.digitos_acumulados_flag = False  # FIX 571: Reset
+                    agente.silencios_durante_dictado = 0
+            except (ValueError, IndexError):
+                pass
 
         # FIX 502: Verificar si debemos confirmar el número acumulado
         total_digitos = len(agente.digitos_acumulados)
@@ -4139,6 +4261,7 @@ Responde SOLO con una letra: A, B, C, D o E"""
             # Resetear contadores
             agente.silencios_durante_dictado = 0
             agente.digitos_acumulados = []
+            agente.digitos_acumulados_flag = False  # FIX 571: Reset
 
             if result:
                 audio_url = request.url_root + f"audio/{audio_id}"
@@ -4170,6 +4293,7 @@ Responde SOLO con una letra: A, B, C, D o E"""
             # Resetear contadores para nuevo intento
             agente.silencios_durante_dictado = 0
             agente.digitos_acumulados = []
+            agente.digitos_acumulados_flag = False  # FIX 571: Reset
 
             if result:
                 audio_url = request.url_root + f"audio/{audio_id}"
@@ -4206,6 +4330,7 @@ Responde SOLO con una letra: A, B, C, D o E"""
         agente.silencios_durante_dictado = 0
     if hasattr(agente, 'digitos_acumulados'):
         agente.digitos_acumulados = []
+        agente.digitos_acumulados_flag = False  # FIX 571: Reset
 
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id = agente.lead_data.get("bruce_id", "N/A")

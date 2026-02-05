@@ -462,6 +462,12 @@ class AgenteVentas:
 
         # FIX 552: Estado de flujo de email/correo (previene repeticiones durante dictado)
         self.estado_email = EstadoEmail.INICIAL
+        # FIX 561: Counter anti-repetición REGRESO_DE_ESPERA
+        self.regreso_espera_count = 0
+        # FIX 565: Tracking silencio de Bruce
+        self.bruce_silence_start = None
+        # FIX 571: Flag dictado de dígitos activo
+        self.digitos_acumulados_flag = False
 
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
@@ -837,6 +843,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'no vuelva a llamar', 'no vuelvan a llamar'
         ]
 
+        # FIX 560: "Muchas gracias" = rechazo cortés SOLO si Bruce ya presentó (4+ mensajes)
+        if len(self.conversation_history) >= 4:
+            patrones_rechazo.extend([
+                'muchas gracias', 'muchas gracias que tenga buen día',
+                'muchas gracias que tenga buen dia',
+                'gracias que tenga buen día', 'gracias que tenga buen dia',
+                'gracias hasta luego', 'gracias, hasta luego',
+                'no pues gracias', 'no, pues gracias',
+            ])
+
         es_rechazo = any(rechazo in mensaje_lower for rechazo in patrones_rechazo)
 
         if es_rechazo:
@@ -1057,6 +1073,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
         texto_lower = texto_cliente.lower().strip()
+
+        # FIX 571: Si dígitos están siendo acumulados (FIX 502 en servidor), forzar silencio
+        if getattr(self, 'digitos_acumulados_flag', False):
+            print(f"   [DEBUG] FIX 571: Dígitos acumulándose (FIX 502) - forzar silencio")
+            return True
 
         # FIX 553: BRUCE1893 - NO pausar si hay pregunta directa o negocio no apto
         # Problema: Cliente dijo "sí, aquí es un taller mecánico. ¿Qué quiere?" y Bruce NO respondió
@@ -6394,6 +6415,40 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # ================================================================
+        # FIX 558: SOLICITUD CALLBACK - EVALUAR ANTES que CLIENTE_ES_ENCARGADO
+        # (Movido aquí desde más abajo para evitar que "dígame" capture primero)
+        # FIX 532 BRUCE1673: Solicitud de callback al mismo número
+        # ================================================================
+        if any(p in texto_lower for p in [
+            "llamar a esta línea", "llamar a esta linea",
+            "llamar a esta misma línea", "llamar a esta misma linea",
+            "marcar a esta línea", "marcar a esta linea",
+            "llame a esta línea", "llame a esta linea",
+            "llamarnos a este número", "llamarnos a este numero",
+            "llamen a este número", "llamen a este numero",
+            "llámenos a este", "llamenos a este",
+            "vuelva a llamar", "vuelvan a llamar",
+            "regresa la llamada", "regresar la llamada",
+            "me marca después", "me marca despues",
+            "le marco después", "le marco despues",
+            # FIX 558: Patrones adicionales de callback
+            "me puede regresar la llamada", "puede regresar la llamada",
+            "regrese la llamada", "regréseme la llamada",
+            "llame en", "llámeme en", "llameme en",
+            "marque en", "márqueme en", "marqueme en",
+            "llame más tarde", "llame mas tarde",
+            "llámeme más tarde", "llameme mas tarde",
+            "puede llamar más tarde", "puede llamar mas tarde",
+            "puede marcar más tarde", "puede marcar mas tarde"
+        ]) and not any(neg in texto_lower for neg in ["no vuelva", "no llame", "no marque"]):
+            print(f"[OK] FIX 532/558: SOLICITUD CALLBACK AL MISMO NÚMERO: '{texto_cliente[:50]}'")
+            return {
+                "tipo": "SOLICITUD_CALLBACK",
+                "respuesta": "Perfecto, con gusto le vuelvo a llamar. ¿A qué hora le convendría más?",
+                "accion": "CONFIRMAR_CALLBACK"
+            }
+
+        # ================================================================
         # FIX 497: DETECCIÓN ROBUSTA - Cliente ES el encargado
         # PROBLEMA: Bruce sigue preguntando por encargado cuando YA está hablando con él
         # AMPLIADO: Variaciones regionales de confirmación
@@ -6412,7 +6467,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Regional - confirmación informal
             'sí, yo', 'si, yo', 'yo, dígame', 'yo, digame', 'yo, ¿qué pasó', 'yo, que paso',
             'yo, ¿qué necesita', 'yo, que necesita', 'yo, ¿en qué le ayudo', 'yo, en que le ayudo',
-            'mande', 'mande usted', 'dígame', 'digame', 'usted dirá', 'usted dira',
+            # FIX 557: Removidos 'mande', 'dígame', 'usted dirá' (son saludos genéricos, no confirmación de encargado)
             # Confirmación de que es él/ella
             'el mismo', 'la misma', 'yo mismo', 'yo misma',
             'conmigo', 'con un servidor', 'con una servidora',
@@ -6426,7 +6481,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         ]
 
         # Verificar si cliente dice que ES el encargado
-        if any(p in texto_lower for p in patrones_soy_encargado):
+        # FIX 559: No re-disparar si encargado ya fue confirmado (previene repetición del pitch)
+        encargado_ya_confirmado = getattr(self, 'encargado_confirmado', False)
+        if any(p in texto_lower for p in patrones_soy_encargado) and not encargado_ya_confirmado:
             # Marcar que el encargado está confirmado
             self.encargado_confirmado = True
             print(f"[OK] FIX 497: Cliente ES el encargado: '{texto_cliente[:50]}'")
@@ -6671,29 +6728,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "OFRECER_CONTACTO"
             }
 
-        # FIX 532 BRUCE1673: Solicitud de callback al mismo número
-        # Caso: "Nos gustaría llamar a esta línea" = Quieren que Bruce llame de nuevo al mismo número
-        # Esto ocurre cuando el encargado no está y piden ser llamados después
-        if any(p in texto_lower for p in [
-            "llamar a esta línea", "llamar a esta linea",
-            "llamar a esta misma línea", "llamar a esta misma linea",
-            "marcar a esta línea", "marcar a esta linea",
-            "llame a esta línea", "llame a esta linea",
-            "llamarnos a este número", "llamarnos a este numero",
-            "llamen a este número", "llamen a este numero",
-            "llámenos a este", "llamenos a este",
-            "vuelva a llamar", "vuelvan a llamar",
-            "regresa la llamada", "regresar la llamada",
-            "me marca después", "me marca despues",
-            "le marco después", "le marco despues"
-        ]) and not any(neg in texto_lower for neg in ["no vuelva", "no llame", "no marque"]):
-            print(f"[OK] FIX 532: SOLICITUD CALLBACK AL MISMO NÚMERO: '{texto_cliente[:50]}'")
-            # Preguntar por hora o confirmar callback
-            return {
-                "tipo": "SOLICITUD_CALLBACK",
-                "respuesta": "Perfecto, con gusto le vuelvo a llamar. ¿A qué hora le convendría más?",
-                "accion": "CONFIRMAR_CALLBACK"
-            }
+        # FIX 558: SOLICITUD_CALLBACK movido ANTES de CLIENTE_ES_ENCARGADO (ver arriba)
 
         # FIX 513 BRUCE1585 + FIX 528 BRUCE1704: Confirma mismo número / Este número
         # Caso: "Este número, ya te confirmo si sí" → Bruce no respondió
@@ -6710,7 +6745,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "el que aparece", "el que te aparece", "el que le aparece",
             "el que marca", "el que te marca", "el que le marca",
             "el de aquí", "el de aqui", "el que estás viendo", "el que estas viendo",
-            "pues este", "pues éste", "sí, este", "si, este", "sí este", "si este"
+            "pues este", "pues éste", "sí, este", "si, este", "sí este", "si este",
+            # FIX 563: Patrones "mándelo a este número/teléfono"
+            "mándelo a este", "mandelo a este", "envíelo a este", "envielo a este",
+            "mándelo aquí", "mandelo aqui", "envíelo aquí", "envielo aqui",
+            "a este teléfono", "a este telefono", "a este celular",
+            "mande la información aquí", "mande la informacion aqui",
+            "envíe el catálogo aquí", "envie el catalogo aqui",
+            "mande a este", "envíe a este", "envie a este",
+            "mándalo a este", "mandalo a este", "sí, a este", "si, a este"
         ]) and not any(neg in texto_lower for neg in ["no es", "no tengo", "no tiene"]):
             print(f"[OK] FIX 513: CONFIRMA MISMO NÚMERO: '{texto_cliente[:50]}'")
             return {
@@ -6762,12 +6805,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "accion": "PRESENTARSE_A_ENCARGADO"
                 }
             else:
-                print(f"[OK] FIX 513: REGRESO DESPUÉS DE ESPERA: '{texto_cliente[:50]}'")
-                return {
-                    "tipo": "REGRESO_DE_ESPERA",
-                    "respuesta": "Sí, aquí estoy. ¿Me comunica con el encargado de compras?",
-                    "accion": "RETOMAR_CONVERSACION"
-                }
+                # FIX 561: Anti-repetición - no dar misma respuesta más de 1 vez
+                self.regreso_espera_count = getattr(self, 'regreso_espera_count', 0) + 1
+                if self.regreso_espera_count <= 1:
+                    print(f"[OK] FIX 513: REGRESO DESPUÉS DE ESPERA: '{texto_cliente[:50]}'")
+                    return {
+                        "tipo": "REGRESO_DE_ESPERA",
+                        "respuesta": "Sí, aquí estoy. ¿Me comunica con el encargado de compras?",
+                        "accion": "RETOMAR_CONVERSACION"
+                    }
+                else:
+                    print(f"   FIX 561: REGRESO_DE_ESPERA ya dado {self.regreso_espera_count} veces - dejando a GPT")
 
         # FIX 514 BRUCE1595: Cliente pide LLAMAR DESPUÉS/MÁS TARDE
         # Caso: Cliente dice "llámeme más tarde" → Bruce ofreció catálogo (INCORRECTO)
@@ -7064,8 +7112,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         }
 
         # 4. TRANSFERENCIAS (no necesita GPT)
+        # FIX 562: Excluir "te/le paso el correo/número" - eso es DAR info, no transferir
+        info_keywords_562 = ["correo", "email", "mail", "número", "numero", "teléfono", "telefono", "whatsapp", "catálogo", "catalogo"]
+        es_dar_info_562 = any(k in texto_lower for k in info_keywords_562)
         transferencias = ["espere", "le paso", "ahorita le comunico", "permítame", "permitame"]
-        if any(t in texto_lower for t in transferencias) and len(texto_lower) < 40:
+        if any(t in texto_lower for t in transferencias) and len(texto_lower) < 40 and not es_dar_info_562:
             return {
                 "tipo": "TRANSFERENCIA",
                 "respuesta": "Perfecto, muchas gracias por comunicarme.",
@@ -7283,6 +7334,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # PASO 1: Detectar patrones simples (0.05s - 100x más rápido)
         patron_detectado = self._detectar_patron_simple_optimizado(respuesta_cliente)
+
+        # FIX 570: Si texto termina en conector/coma, el cliente NO terminó de hablar
+        # No usar fast-match, dejar que GPT procese con contexto completo
+        if patron_detectado:
+            conectores_finales_570 = [' y', ' o', ' pero', ' que', ' con', ' para', ' por', ' de',
+                ' en', ' a', ' como', ' cuando', ',', '...', ' si', ' pues']
+            texto_patron_lower = respuesta_cliente.strip().lower()
+            texto_termina_conector = any(texto_patron_lower.endswith(c) for c in conectores_finales_570)
+            if texto_termina_conector:
+                print(f"   FIX 570: Patrón detectado ({patron_detectado['tipo']}) PERO texto termina en conector - dejando a GPT")
+                print(f"   Texto: '{respuesta_cliente[-40:]}'")
+                patron_detectado = None
+
         if patron_detectado:
             print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
 
