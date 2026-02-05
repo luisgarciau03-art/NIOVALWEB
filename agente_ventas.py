@@ -466,6 +466,9 @@ class AgenteVentas:
         self.regreso_espera_count = 0
         # FIX 565: Tracking silencio de Bruce
         self.bruce_silence_start = None
+        self.bruce_silence_fallback_count = 0  # FIX 565: Limitar fallbacks a 2 máximo
+        # FIX 559: Flag encargado ya confirmado (previene re-disparo del pitch)
+        self.encargado_confirmado = False
         # FIX 571: Flag dictado de dígitos activo
         self.digitos_acumulados_flag = False
 

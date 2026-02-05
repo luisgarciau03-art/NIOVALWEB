@@ -2754,13 +2754,13 @@ def procesar_respuesta():
                 cliente_volvio = any(f in frase_limpia for f in frases_cliente_volvio) or not es_mas_espera
 
                 # FIX 569: Filtrar audio de fondo - requerir contenido significativo
-                palabras_espanol_569 = ['hola', 'bueno', 'si', 'no', 'que', 'como', 'quien', 'donde',
-                    'esta', 'aqui', 'mande', 'diga', 'oiga', 'por', 'favor', 'gracias',
+                palabras_espanol_569 = {'hola', 'bueno', 'si', 'sí', 'no', 'que', 'qué', 'como', 'cómo', 'quien', 'quién', 'donde', 'dónde',
+                    'esta', 'está', 'aqui', 'aquí', 'mande', 'diga', 'oiga', 'por', 'favor', 'gracias',
                     'espere', 'momento', 'listo', 'ya', 'voy', 'estoy', 'el', 'la',
-                    'encargado', 'ferreteria', 'marca', 'empresa', 'negocio', 'interesa']
-                palabras_en_texto_569 = frase_limpia.split()
+                    'encargado', 'ferreteria', 'ferretería', 'marca', 'empresa', 'negocio', 'interesa'}
+                palabras_en_texto_569 = frase_limpia.lower().split()
                 tiene_palabras_reconocibles = any(
-                    any(esp in palabra.lower() for esp in palabras_espanol_569)
+                    palabra in palabras_espanol_569
                     for palabra in palabras_en_texto_569
                 ) if palabras_en_texto_569 else False
 
@@ -3444,15 +3444,15 @@ Responde SOLO con una letra: A, B, C, D o E"""
             print(f"    FIX 470: Continuando espera con timeout de 30s...")
             return Response(str(response), mimetype="text/xml")
 
-        # FIX 565: Si Bruce ha estado en silencio por 5+ segundos, generar fallback
+        # FIX 565: Si Bruce ha estado en silencio por 5+ segundos, generar fallback (max 2 veces)
         import time as time_565
-        if hasattr(agente, 'bruce_silence_start') and agente.bruce_silence_start:
+        bruce_fallback_count = getattr(agente, 'bruce_silence_fallback_count', 0)
+        if hasattr(agente, 'bruce_silence_start') and agente.bruce_silence_start and bruce_fallback_count < 2:
             silencio_duracion = time_565.time() - agente.bruce_silence_start
             if silencio_duracion > 5.0:
-                print(f" FIX 565: Bruce SILENCIOSO por {silencio_duracion:.1f}s - generando fallback")
+                agente.bruce_silence_fallback_count = bruce_fallback_count + 1
+                print(f" FIX 565: Bruce SILENCIOSO por {silencio_duracion:.1f}s - fallback #{agente.bruce_silence_fallback_count}/2")
                 agente.bruce_silence_start = None
-                # Forzar respuesta de fallback en lugar de seguir en silencio
-                speech_result = speech_result if speech_result else ""
                 respuesta_fallback = "Disculpe, ¿me puede repetir?"
                 agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback})
                 response = VoiceResponse()
