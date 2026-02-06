@@ -900,28 +900,14 @@ def pre_generar_audios_cache():
         cache_key = f"respuesta_cache_{categoria}"
         frases_comunes[cache_key] = datos["respuesta"]
 
-    # FIX 591: Reusar audio existente de "Hola, buen dia" del cache en vez de regenerar
-    # Buscar en cache un audio que ya tenga "hola, buen dia" o "saludo_buen_dia"
-    audio_buen_dia_existente = None
-    for key_buscar in ["saludo_buen_dia", "hola,_buen_dia", "hola,_buen_dia.", "hola_buen_dia"]:
-        if key_buscar in audio_cache:
-            audio_buen_dia_existente = audio_cache[key_buscar]
-            print(f"   FIX 591: Encontrado audio existente de 'Hola, buen dia' en cache key: '{key_buscar}'")
-            break
+    # FIX 591: Forzar regeneración de saludo_inicial con texto corto "Hola, buen dia"
+    # El cache anterior tenía audio del saludo COMPLETO - debe regenerarse
     for key_check in ["saludo_inicial", "saludo_inicial_encargado"]:
-        if key_check in audio_cache and key_check in frases_comunes:
-            texto_actual = frases_comunes[key_check]
-            if len(texto_actual) < 30:  # "Hola, buen dia" = 14 chars
-                if audio_buen_dia_existente:
-                    # Reusar audio existente sin gastar créditos ElevenLabs
-                    audio_cache[key_check] = audio_buen_dia_existente
-                    print(f"   FIX 591: Reusando audio existente para '{key_check}' (0 créditos)")
-                else:
-                    # No hay audio existente - forzar regeneración
-                    print(f"   FIX 591: Forzando regeneración de '{key_check}' (no se encontró audio corto en cache)")
-                    del audio_cache[key_check]
-                    if key_check in cache_metadata:
-                        del cache_metadata[key_check]
+        if key_check in audio_cache:
+            print(f"   FIX 591: Eliminando cache viejo de '{key_check}' para regenerar con texto corto")
+            del audio_cache[key_check]
+            if key_check in cache_metadata:
+                del cache_metadata[key_check]
 
     for key, texto in frases_comunes.items():
         # IMPORTANTE: Solo generar si NO existe en cache (ahorra créditos)
