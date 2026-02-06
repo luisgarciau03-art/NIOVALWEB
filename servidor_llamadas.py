@@ -541,7 +541,49 @@ def cargar_cache_desde_disco():
                 audio_cache[key] = filepath
                 print(f"   Cargado desde disco: {key}")
 
-        print(f" {len(audio_cache)} audios cargados desde caché persistente\n")
+        print(f" {len(audio_cache)} audios cargados desde metadata.json")
+
+    # FIX 589: Recuperar archivos MP3 huérfanos (en disco pero no en metadata.json)
+    # Problema: metadata.json se puede sobrescribir con menos entradas al reiniciar,
+    # dejando archivos MP3 válidos sin registrar (1178 archivos vs 54 en metadata)
+    archivos_recuperados = 0
+    archivos_en_metadata = set(cache_metadata.values())
+    for archivo in os.listdir(CACHE_DIR):
+        if not archivo.endswith('.mp3'):
+            continue
+        if archivo in archivos_en_metadata:
+            continue  # Ya está registrado
+
+        # Extraer key del nombre: {key}_{hash12}.mp3
+        # Ejemplo: "respuesta_cache_ocupado_a1b2c3d4e5f6.mp3" → "respuesta_cache_ocupado"
+        if len(archivo) > 17 and archivo[-17] == '_':
+            # Últimos 16 chars = _hash12chars.mp3
+            key_recuperada = archivo[:-17]
+        else:
+            # Nombre sin hash estándar - usar nombre sin extensión
+            key_recuperada = archivo.rsplit('.', 1)[0]
+
+        filepath = os.path.join(CACHE_DIR, archivo)
+        file_size = os.path.getsize(filepath)
+
+        # Solo recuperar archivos con contenido válido (>1KB)
+        if file_size < 1024:
+            continue
+
+        # Solo agregar si la key no existe ya en cache
+        if key_recuperada not in audio_cache:
+            audio_cache[key_recuperada] = filepath
+            cache_metadata[key_recuperada] = archivo
+            archivos_recuperados += 1
+
+    if archivos_recuperados > 0:
+        # Guardar metadata actualizado
+        with open(metadata_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_metadata, f, ensure_ascii=False, indent=2)
+        print(f" FIX 589: {archivos_recuperados} audios huérfanos recuperados del disco")
+        print(f" TOTAL audios en caché: {len(audio_cache)}\n")
+    else:
+        print(f" Sin audios huérfanos\n")
 
     # Cargar estadísticas de frases
     stats_file = os.path.join(CACHE_DIR, "frase_stats.json")
@@ -628,8 +670,18 @@ def guardar_cache_en_disco(key, texto, audio_path):
     # Actualizar metadata
     cache_metadata[key] = filename
 
-    # Guardar metadata
+    # FIX 589: Merge con metadata en disco antes de guardar (evita perder entradas)
     metadata_file = os.path.join(CACHE_DIR, "metadata.json")
+    if os.path.exists(metadata_file):
+        try:
+            with open(metadata_file, 'r', encoding='utf-8') as f:
+                metadata_disco = json.load(f)
+            # Merge: disco como base, memoria sobrescribe (no pierde entradas de disco)
+            metadata_disco.update(cache_metadata)
+            cache_metadata.update(metadata_disco)
+        except Exception:
+            pass  # Si falla lectura, guardar lo que tenemos
+
     with open(metadata_file, 'w', encoding='utf-8') as f:
         json.dump(cache_metadata, f, ensure_ascii=False, indent=2)
 
