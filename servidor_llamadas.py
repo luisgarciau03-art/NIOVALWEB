@@ -3789,7 +3789,10 @@ Responde SOLO con una letra: A, B, C, D o E"""
         "muy buenas", "muy buenas tardes", "muy buenos días", "muy buenos dias",
         # Respuestas cortas de atención
         "aquí", "aqui", "presente", "escucho", "le escucho", "lo escucho",
-        "dígame en qué le ayudo", "digame en que le ayudo"
+        "dígame en qué le ayudo", "digame en que le ayudo",
+        # FIX 588: Respuestas comunes detectadas en BRUCE1965 y llamadas reales
+        "permítame", "permitame", "un momento", "un momentito",
+        "ahorita no", "ahorita estoy ocupado"
     ]
 
     # FIX 121/314: Si es saludo simple en primera respuesta, usar caché inmediato
@@ -8925,14 +8928,17 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
             else:
                 elevenlabs_transcripciones[call_sid].append(texto)
 
-    # FIX 540.1: Copiar a deepgram_transcripciones para compatibilidad
-    # IMPORTANTE: Marcar como fuente "elevenlabs" para evitar duplicados cuando Deepgram también transcribe
-    with deepgram_transcripciones_lock:
-        if call_sid not in deepgram_transcripciones:
-            deepgram_transcripciones[call_sid] = []
+    # FIX 588: BRUCE1965 - Solo copiar FINALs de ElevenLabs a deepgram_transcripciones
+    # Problema: PARCIALs de ElevenLabs crecen con texto corrupto más largo que sobrescribe
+    # transcripciones correctas de Deepgram (ej: "Permítame" → "Los permítanme ahí me gusta")
+    # Solución: Copiar solo FINALs (estables y rápidos) para aprovechar baja latencia de ElevenLabs.
+    # PARCIALs NO se copian (crecen y corrompen).
+    if is_final:
+        with deepgram_transcripciones_lock:
+            if call_sid not in deepgram_transcripciones:
+                deepgram_transcripciones[call_sid] = []
 
-        if is_final:
-            # FIX 540.1: Verificar si ya existe esta transcripción (evitar duplicados)
+            # Solo copiar si no existe ya (evitar duplicados con Deepgram)
             texto_norm = texto.lower().strip()
             ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
             if not ya_existe:
@@ -8942,19 +8948,9 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
                         "timestamp": time.time(),
                         "texto": texto,
                         "es_final": True,
-                        "fuente": "elevenlabs"  # FIX 540.1: Marcar fuente
+                        "fuente": "elevenlabs"
                     }
-        else:
-            # Para parciales, solo actualizar si no hay FINAL reciente
-            with deepgram_ultima_final_lock:
-                ultima_info = deepgram_ultima_final.get(call_sid, {})
-            if not ultima_info.get("es_final") or (time.time() - ultima_info.get("timestamp", 0)) > 1.0:
-                if deepgram_transcripciones[call_sid]:
-                    ultima = deepgram_transcripciones[call_sid][-1]
-                    if len(texto) > len(ultima):
-                        deepgram_transcripciones[call_sid][-1] = texto
-                else:
-                    deepgram_transcripciones[call_sid].append(texto)
+                print(f"    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)")
 
 
 # Callback que se llama cuando Deepgram completa una transcripción
