@@ -4475,12 +4475,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
                 print(f"   Bruce usará respuesta de GPT que acepta el dato")
             elif cliente_dice_no_esta and bruce_ofrece_catalogo and not bruce_ya_pidio_numero:
-                print(f"\n[EMOJI] FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
-                print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
-                print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
-                respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
-                filtro_aplicado = True
-                print(f"   Respuesta corregida: \"{respuesta}\"")
+                # FIX 605 BRUCE2021: NO pedir número si cliente ya dijo que NO PUEDE dar contacto
+                cliente_rechazo_contacto_605 = any(p in contexto_cliente for p in [
+                    'no puedo mandarle', 'no puedo dar', 'no puedo enviar',
+                    'no le puedo dar', 'no le puedo mandar', 'no le puedo pasar',
+                    'no puedo proporcion', 'no me permiten', 'no nos permiten',
+                    'no puedo compartir', 'no, no, no puedo', 'no no puedo'
+                ])
+                if cliente_rechazo_contacto_605:
+                    print(f"\n[OK] FIX 605: Cliente RECHAZÓ dar contacto - Ofrecer contacto de Bruce en vez de pedir número")
+                    respuesta = "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?"
+                    filtro_aplicado = True
+                else:
+                    print(f"\n[EMOJI] FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo")
+                    print(f"   Cliente dijo: \"{contexto_cliente[:60]}...\"")
+                    print(f"   Bruce iba a ofrecer catálogo: \"{respuesta[:60]}...\"")
+                    respuesta = "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+                    filtro_aplicado = True
+                    print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
         # FILTRO 19B2 (FIX 474): BRUCE1433 - Cliente quiere que Bruce vuelva cuando llegue el dueño
@@ -6858,7 +6870,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "no soy quien para dar", "no me corresponde", "no es mi área",
             # FIX 520: Variantes de negación simple
             "no, no puedo", "no no puedo", "no, solamente", "no solamente",
-            "apenas", "apenas y", "nada más", "nomas", "nomás"
+            "apenas", "apenas y", "nada más", "nomas", "nomás",
+            # FIX 605 BRUCE2021: "no puedo mandarle su celular" no matcheaba
+            "no puedo mandarle", "no puedo enviarle", "no puedo mandarte",
+            "no puedo enviarte", "no le puedo mandar", "no te puedo mandar",
+            "no le puedo enviar", "no te puedo enviar",
+            "no puedo compartir", "no le puedo compartir", "no te puedo compartir",
+            "no, no, no puedo"
         ]):
             print(f"[OK] FIX 513/520: NO PUEDE DAR CONTACTO - Ofrecer contacto de Bruce: '{texto_cliente[:50]}'")
             self.estado_conversacion = EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE

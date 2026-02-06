@@ -4312,6 +4312,19 @@ Responde SOLO con una letra: A, B, C, D o E"""
             elif any(p in speech_lower_597 for p in ['momento', 'espere', 'espera', 'ahorita', 'tantito']):
                 respuesta_fallback_577 = "Claro, espero."
                 print(f"   FIX 597: Fallback contextual - cliente pide espera")
+            # FIX 606 BRUCE2011: Más categorías de fallback cuando GPT devuelve vacío
+            elif any(p in speech_lower_597 for p in ['material', 'recibido', 'producto', 'pedido', 'entrega', 'paquete']):
+                respuesta_fallback_577 = "Disculpe, nosotros somos de la marca NIOVAL, distribuidores de productos ferreteros. ¿Se encontrará el encargado de compras?"
+                print(f"   FIX 606: Fallback - cliente pregunta sobre material/pedido, re-presentamos")
+            elif any(p in speech_lower_597 for p in ['quién', 'quien', 'qué empresa', 'que empresa', 'de dónde', 'de donde', 'qué marca', 'que marca']):
+                respuesta_fallback_577 = "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros como cintas, grifería y herramientas."
+                print(f"   FIX 606: Fallback - cliente pregunta identidad/empresa")
+            elif any(p in speech_lower_597 for p in ['no compramos', 'no compro', 'no nos interesa', 'no interesa', 'no gracias', 'no, gracias']):
+                respuesta_fallback_577 = "Entiendo, le agradezco mucho su tiempo. Que tenga excelente día."
+                print(f"   FIX 606: Fallback - cliente rechaza, despedida cortés")
+            elif len(palabras_significativas_577) >= 4:
+                respuesta_fallback_577 = "Disculpe, no le escuché bien. Le comento, me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+                print(f"   FIX 606: Fallback largo ({len(palabras_significativas_577)} palabras) - re-presentamos")
             else:
                 respuesta_fallback_577 = "Disculpe, ¿me puede repetir eso último?"
             agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback_577})
