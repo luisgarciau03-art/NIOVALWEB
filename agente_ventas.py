@@ -7599,6 +7599,53 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   → Derivando a GPT para respuesta contextual")
                 patron_detectado = None  # Invalidar patrón, GPT decidirá
 
+        # FIX 600: SPLITTER ADVERSATIVO - "pero/sin embargo/aunque" cambia intención
+        # Problema: "No está pero yo le ayudo" → patrón matchea "no está" e ignora "yo le ayudo"
+        # Solución: Si texto tiene conjunción adversativa y la parte después tiene contenido
+        # sustancial (>=3 palabras), invalidar patrón porque la intención real está DESPUÉS del "pero"
+        if patron_detectado:
+            texto_600 = respuesta_cliente.strip().lower()
+            conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada más que ', ' nomas que ']
+            # Patrones que SÍ sobreviven al "pero" (despedida, confirmaciones negativas)
+            patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL'}
+            tipo_600 = patron_detectado.get('tipo', '')
+
+            if tipo_600 not in patrones_inmunes_pero:
+                for conj in conjunciones_adversativas:
+                    if conj in texto_600:
+                        parte_despues = texto_600.split(conj, 1)[1].strip()
+                        palabras_despues = [p for p in parte_despues.split() if len(p) > 2]
+                        if len(palabras_despues) >= 2:
+                            print(f"   FIX 600: SPLITTER ADVERSATIVO: Texto tiene '{conj.strip()}' + {len(palabras_despues)} palabras después")
+                            print(f"   Antes: '{texto_600.split(conj, 1)[0].strip()[:40]}'")
+                            print(f"   Después: '{parte_despues[:40]}'")
+                            print(f"   Patrón '{tipo_600}' INVALIDADO → GPT decidirá con contexto completo")
+                            patron_detectado = None
+                        break
+
+        # FIX 601: UMBRAL DE COMPLEJIDAD - Textos largos multi-cláusula → GPT
+        # Problema: Textos de >12 palabras con múltiples oraciones son demasiado complejos
+        # para pattern matching simple. Ej: "No está el jefe, salió a comer, pero si quiere
+        # le paso al encargado del área de compras" → patrón ve "no está" e ignora todo lo demás
+        # Solución: Si texto tiene >12 palabras Y >1 cláusula (separada por punto/coma/;) → GPT
+        if patron_detectado:
+            texto_601 = respuesta_cliente.strip()
+            palabras_601 = texto_601.split()
+            tipo_601 = patron_detectado.get('tipo', '')
+            # Solo aplicar a textos largos, no a confirmaciones cortas
+            patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'RECHAZO_DEFINITIVO',
+                                    'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO'}
+            if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
+                # Contar cláusulas (separadores: . , ; ¿ ?)
+                num_clausulas = 1
+                for sep in ['. ', ', ', '; ', '¿', '?']:
+                    num_clausulas += texto_601.count(sep)
+                if num_clausulas >= 3:
+                    print(f"   FIX 601: UMBRAL COMPLEJIDAD: {len(palabras_601)} palabras + {num_clausulas} cláusulas")
+                    print(f"   Texto: '{texto_601[:60]}...'")
+                    print(f"   Patrón '{tipo_601}' INVALIDADO → GPT maneja complejidad mejor")
+                    patron_detectado = None
+
         if patron_detectado:
             print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
 
