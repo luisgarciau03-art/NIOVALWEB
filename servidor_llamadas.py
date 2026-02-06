@@ -870,12 +870,13 @@ def pre_generar_audios_cache():
         "pensando_7": "Permítame un segundo...",
         "pensando_8": "Déjame verificar...",
 
-        # FIX 93: Saludo inicial ACTUALIZADO (FIX 91) - más corto y natural
-        # Versión 1: Cuando NO sabemos si es encargado (más común)
-        "saludo_inicial": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Se encuentra el encargado o encargada de compras?",
+        # FIX 591: Saludo inicial es SOLO "Hola, buen dia" (FIX 112)
+        # El saludo completo se dividió en 2 partes: primero saludo corto,
+        # esperar respuesta del cliente, luego segunda_parte_saludo
+        "saludo_inicial": "Hola, buen dia",
 
         # Versión 2: Cuando YA sabemos que es encargado (menos común)
-        "saludo_inicial_encargado": "Hola, que tal, buen dia, me comunico de la marca nioval, queria brindar informacion de nuestros productos ferreteros, ¿Con quién tengo el gusto?",
+        "saludo_inicial_encargado": "Hola, buen dia",
 
         # Despedidas comunes
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
@@ -898,6 +899,18 @@ def pre_generar_audios_cache():
     for categoria, datos in respuestas_cache.items():
         cache_key = f"respuesta_cache_{categoria}"
         frases_comunes[cache_key] = datos["respuesta"]
+
+    # FIX 591: Invalidar cache de saludos si el texto cambió (de largo a corto)
+    for key_check in ["saludo_inicial", "saludo_inicial_encargado"]:
+        if key_check in audio_cache and key_check in frases_comunes:
+            # Verificar si el audio en cache corresponde al texto actual
+            # Si el texto actual es corto ("Hola, buen dia") pero el cache tiene audio largo, regenerar
+            texto_actual = frases_comunes[key_check]
+            if len(texto_actual) < 30:  # "Hola, buen dia" = 14 chars
+                print(f"   FIX 591: Forzando regeneración de '{key_check}' (texto cambió a corto: '{texto_actual}')")
+                del audio_cache[key_check]
+                if key_check in cache_metadata:
+                    del cache_metadata[key_check]
 
     for key, texto in frases_comunes.items():
         # IMPORTANTE: Solo generar si NO existe en cache (ahorra créditos)
