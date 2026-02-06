@@ -4383,7 +4383,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Cliente dice "no" o similar
             cliente_niega = any(frase in contexto_cliente for frase in [
                 'no tengo', 'no lo tengo', 'no sé', 'no se', 'no puedo',
-                'no te puedo', 'no le puedo', 'no cuento con'
+                'no te puedo', 'no le puedo', 'no cuento con',
+                # FIX 590 BRUCE1977: Variantes plurales
+                'no podemos', 'no lo podemos', 'no le podemos', 'no los podemos',
+                'no se lo puedo', 'no se lo podemos'
             ]) or (contexto_cliente.strip() in ['no', 'no.', 'nel', 'nop', 'nope'])
 
             if bruce_pidio_numero_encargado and cliente_niega:
@@ -6757,6 +6760,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "no está permitido", "no esta permitido", "no me dejan",
             "no estoy autorizado", "no estoy autorizada", "no tengo autorización",
             "no puedo pasar", "no le puedo pasar", "no te puedo pasar",
+            # FIX 590 BRUCE1977: Variantes PLURALES "no podemos pasar/dar"
+            "no podemos pasar", "no lo podemos pasar", "no los podemos pasar",
+            "no le podemos pasar", "no te podemos pasar", "no se lo podemos pasar",
+            "no podemos dar", "no lo podemos dar", "no le podemos dar",
+            "no podemos proporcion", "no lo podemos proporcion",
             "prohibido dar", "no damos información", "no damos numeros",
             "política de la empresa", "politica de la empresa",
             # FIX 520: Variantes adicionales de "no puedo"
