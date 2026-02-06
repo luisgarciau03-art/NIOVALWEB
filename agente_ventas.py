@@ -7507,30 +7507,38 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # Tabla de contradicciones: {tipo_patron: [keywords que invalidan el patrón]}
             contradicciones_598 = {
-                # Si callback pero cliente ofrece contacto → no hacer callback, capturar contacto
+                # Si callback pero cliente ofrece contacto o ES el encargado → GPT
                 "ENCARGADO_NO_ESTA_CON_HORARIO": [
                     'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
                     'te paso', 'le paso', 'anota', 'anote', 'apunta', 'apunte',
                     'pero dígame', 'pero digame', 'en qué le ayudo', 'en que le ayudo',
-                    'le puedo ayudar', 'te puedo ayudar', 'lo puedo ayudar'
+                    'le puedo ayudar', 'te puedo ayudar', 'lo puedo ayudar',
+                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'soy el encargado',
+                    'soy la encargada', 'soy el dueño', 'soy la dueña'
                 ],
                 "ENCARGADO_LLEGA_MAS_TARDE": [
                     'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
                     'te paso', 'le paso', 'pero dígame', 'pero digame',
-                    'en qué le ayudo', 'en que le ayudo'
+                    'en qué le ayudo', 'en que le ayudo',
+                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'soy el encargado',
+                    'soy la encargada', 'soy el dueño', 'soy la dueña'
                 ],
                 # Si respuesta identidad pero cliente pregunta ubicación → GPT
                 "PREGUNTA_IDENTIDAD": [
                     'dónde están', 'donde estan', 'qué ciudad', 'que ciudad',
                     'dónde se ubican', 'donde se ubican'
                 ],
-                # Si encargado no está pero cliente ofrece ayudar → no hacer callback
+                # Si encargado no está pero cliente ofrece ayudar o ES el encargado → GPT
                 "ENCARGADO_NO_ESTA_SIN_HORARIO": [
                     'pero dígame', 'pero digame', 'pero dime',
                     'en qué le ayudo', 'en que le ayudo', 'que se le ofrece',
                     'le puedo ayudar', 'lo puedo ayudar', 'puedo ayudarle',
                     'yo le ayudo', 'yo lo ayudo', 'yo le atiendo', 'yo lo atiendo',
-                    'dígame a mí', 'digame a mi', 'dime a mí', 'dime a mi'
+                    'dígame a mí', 'digame a mi', 'dime a mí', 'dime a mi',
+                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'soy el encargado',
+                    'soy la encargada', 'soy el dueño', 'soy la dueña',
+                    'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
+                    'te paso', 'le paso'
                 ],
                 # Si despedida pero cliente hace pregunta nueva → no despedirse
                 "DESPEDIDA": [
@@ -7540,6 +7548,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "OFRECER_CONTACTO_BRUCE": [
                     'correo', 'mail', 'email', 'te doy', 'le doy',
                     'te paso', 'le paso'
+                ],
+                # FIX 599: SOLICITUD_CALLBACK contradice si cliente ofrece contacto directo
+                "SOLICITUD_CALLBACK": [
+                    'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
+                    'te paso', 'le paso', 'anota', 'anote', 'apunta', 'apunte',
+                    'yo le ayudo', 'yo lo ayudo', 'yo le atiendo', 'yo lo atiendo',
+                    'dígame a mí', 'digame a mi', 'conmigo', 'yo mero'
+                ],
+                # FIX 599: Si patrón pide transferir pero CLIENTE ES el encargado → GPT
+                "TRANSFERENCIA": [
+                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'aquí estoy',
+                    'yo le atiendo', 'yo lo atiendo', 'yo le ayudo', 'yo lo ayudo',
+                    'soy el encargado', 'soy la encargada', 'soy el dueño',
+                    'soy la dueña', 'soy el responsable', 'soy la responsable'
+                ],
+                # FIX 599: CONFIRMACION_SIMPLE contradice si después del "sí" hay contenido importante
+                "CONFIRMACION_SIMPLE": [
+                    'correo', 'mail', 'email', 'whatsapp', 'catálogo', 'catalogo',
+                    'precio', 'precios', 'cotización', 'cotizacion',
+                    'qué productos', 'que productos', 'qué manejan', 'que manejan',
+                    'qué venden', 'que venden', 'qué marcas', 'que marcas',
+                    'envíame', 'enviame', 'mándame', 'mandame',
+                    'te doy', 'le doy', 'te paso', 'le paso'
                 ],
             }
 
