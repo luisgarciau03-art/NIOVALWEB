@@ -8823,26 +8823,20 @@ def es_texto_valido_espanol(texto):
 
         nombre = unicodedata.name(char, '')
 
-        # Detectar scripts no-latinos
-        if any(script in nombre for script in [
-            'SANTALI', 'BENGALI', 'DEVANAGARI', 'TIBETAN',
-            'ARABIC', 'HEBREW', 'CHINESE', 'JAPANESE', 'KOREAN',
-            'THAI', 'LAO', 'KHMER', 'MYANMAR', 'GEORGIAN'
-        ]):
-            caracteres_no_latinos += 1
-        elif 'LATIN' in nombre or char.isascii():
+        # FIX 581: Detectar ANY script no-latino (más agresivo)
+        if 'LATIN' in nombre or char.isascii():
             caracteres_latinos += 1
         else:
-            # Caracteres desconocidos - contar como no-latinos
+            # TODO script no-latino: Bengali, Devanagari, Arabic, CJK, etc.
             caracteres_no_latinos += 1
 
-    # Si hay más del 30% de caracteres no-latinos → rechazar
+    # FIX 581: Umbral reducido de 30% a 10% - ser más estricto
     total_chars = caracteres_latinos + caracteres_no_latinos
     if total_chars == 0:
         return True  # Solo números/puntuación = válido
 
     porcentaje_no_latino = (caracteres_no_latinos / total_chars) * 100
-    return porcentaje_no_latino < 30
+    return porcentaje_no_latino < 10
 
 
 # FIX 540: Callback para ElevenLabs Scribe (STT primario)

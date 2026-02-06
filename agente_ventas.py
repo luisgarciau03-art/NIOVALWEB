@@ -5828,6 +5828,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         import re
         texto_lower = texto_cliente.lower().strip()
 
+        # FIX 579: Connector check universal - si texto termina en conector, cliente no terminó
+        # No hacer fast-match, dejar que GPT espere frase completa
+        conectores_579 = [' y', ' o', ' pero', ' que', ' con', ' para', ' por', ' de',
+            ' en', ' a', ' como', ' cuando', ',', '...', ' si', ' pues', ' no sé si',
+            ' no se si', ' si es que', ' aunque']
+        if any(texto_lower.endswith(c) for c in conectores_579):
+            print(f"   FIX 579: Texto termina en conector ('{texto_lower[-10:]}') - dejando a GPT")
+            return None
+
         # ================================================================
         # FIX 520 BRUCE1652: Flujo de ofrecer contacto de Bruce
         # Cuando cliente no puede dar info del encargado, Bruce ofrece su número
@@ -6707,7 +6716,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # MEJORADO FIX 520: En lugar de pedir horario, ofrecer dejar nuestro contacto
         # FIX 505 BRUCE1721: Agregar "no lo tenemos permitido" y variantes plurales
         # FIX 547: SOLO activar si puede_ofrecer == True
-        if puede_ofrecer and any(p in texto_lower for p in [
+        # FIX 582: Solo ofrecer contacto de Bruce si ya hubo al menos 3 intercambios
+        # (previene disparo en primer mensaje con input corrupto)
+        historial_suficiente_582 = len(self.conversation_history) >= 4
+        if puede_ofrecer and historial_suficiente_582 and any(p in texto_lower for p in [
             # Variantes de "no permitido" (singular y plural)
             "no tengo permitido", "no tenemos permitido", "no lo tenemos permitido",
             "no me permiten", "no nos permiten", "no puedo dar", "no puedo darte",
@@ -6770,7 +6782,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "mande la información aquí", "mande la informacion aqui",
             "envíe el catálogo aquí", "envie el catalogo aqui",
             "mande a este", "envíe a este", "envie a este",
-            "mándalo a este", "mandalo a este", "sí, a este", "si, a este"
+            "mándalo a este", "mandalo a este", "sí, a este", "si, a este",
+            # FIX 580: "Puede enviar la información a este número de WhatsApp"
+            "enviar la información a este", "enviar la informacion a este",
+            "enviar información a este", "enviar informacion a este",
+            "puede enviar a este", "pueden enviar a este",
+            "mandar la información a este", "mandar la informacion a este",
+            "enviar por este", "mandar por este",
+            "a este whatsapp", "a este número de whatsapp", "a este numero de whatsapp",
+            "por este whatsapp", "por este número", "por este numero",
+            "puede enviar su información", "pueden enviar su información",
+            "puede enviar su informacion", "pueden enviar su informacion"
         ]) and not any(neg in texto_lower for neg in ["no es", "no tengo", "no tiene"]):
             print(f"[OK] FIX 513: CONFIRMA MISMO NÚMERO: '{texto_cliente[:50]}'")
             return {
@@ -7640,19 +7662,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # FIX 498: Retornar cadena vacía para silenciarse SIN colgar (None = IVR = colgar)
                     return ""
 
-            # Primera vez diciendo "Claro, espero." en esta transferencia
-            print(f"\n[EMOJI] FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
-            print(f"   Cliente dijo: \"{respuesta_cliente}\"")
-            print(f"   → Respondiendo 'Claro, espero.' SIN llamar GPT")
+            # FIX 578: Re-verificar estado - FIX 482 pudo haberlo cambiado a CONVERSACION_NORMAL
+            if self.estado_conversacion != EstadoConversacion.ESPERANDO_TRANSFERENCIA:
+                print(f"   FIX 578: Estado cambió a {self.estado_conversacion} - NO decir 'Claro, espero'")
+                # No hacer return - caer al procesamiento normal (GPT más abajo)
+            else:
+                # Primera vez diciendo "Claro, espero." en esta transferencia
+                print(f"\n[EMOJI] FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA")
+                print(f"   Cliente dijo: \"{respuesta_cliente}\"")
+                print(f"   → Respondiendo 'Claro, espero.' SIN llamar GPT")
 
-            respuesta_espera = "Claro, espero."
+                respuesta_espera = "Claro, espero."
 
-            self.conversation_history.append({
-                "role": "assistant",
-                "content": respuesta_espera
-            })
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_espera
+                })
 
-            return respuesta_espera
+                return respuesta_espera
 
         # ============================================================
         # FIX 386: ANÁLISIS DE SENTIMIENTO EN TIEMPO REAL
