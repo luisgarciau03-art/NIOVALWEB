@@ -7497,6 +7497,77 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Texto: '{respuesta_cliente[-40:]}'")
                 patron_detectado = None
 
+        # FIX 598: VALIDADOR POST-PATRÓN - Detectar contradicciones antes de responder
+        # Problema: El pattern detector responde en 0.05s pero a veces la respuesta
+        # CONTRADICE lo que el cliente dijo (ej: cliente ofrece correo pero Bruce dice "le llamo")
+        # Solución: Tabla de contradicciones patron→keywords. Si se detecta contradicción, GPT decide.
+        if patron_detectado:
+            tipo_patron = patron_detectado.get('tipo', '')
+            texto_validacion = respuesta_cliente.strip().lower()
+
+            # Tabla de contradicciones: {tipo_patron: [keywords que invalidan el patrón]}
+            contradicciones_598 = {
+                # Si callback pero cliente ofrece contacto → no hacer callback, capturar contacto
+                "ENCARGADO_NO_ESTA_CON_HORARIO": [
+                    'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
+                    'te paso', 'le paso', 'anota', 'anote', 'apunta', 'apunte',
+                    'pero dígame', 'pero digame', 'en qué le ayudo', 'en que le ayudo',
+                    'le puedo ayudar', 'te puedo ayudar', 'lo puedo ayudar'
+                ],
+                "ENCARGADO_LLEGA_MAS_TARDE": [
+                    'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
+                    'te paso', 'le paso', 'pero dígame', 'pero digame',
+                    'en qué le ayudo', 'en que le ayudo'
+                ],
+                # Si respuesta identidad pero cliente pregunta ubicación → GPT
+                "PREGUNTA_IDENTIDAD": [
+                    'dónde están', 'donde estan', 'qué ciudad', 'que ciudad',
+                    'dónde se ubican', 'donde se ubican'
+                ],
+                # Si encargado no está pero cliente ofrece ayudar → no hacer callback
+                "ENCARGADO_NO_ESTA_SIN_HORARIO": [
+                    'pero dígame', 'pero digame', 'pero dime',
+                    'en qué le ayudo', 'en que le ayudo', 'que se le ofrece',
+                    'le puedo ayudar', 'lo puedo ayudar', 'puedo ayudarle',
+                    'yo le ayudo', 'yo lo ayudo', 'yo le atiendo', 'yo lo atiendo',
+                    'dígame a mí', 'digame a mi', 'dime a mí', 'dime a mi'
+                ],
+                # Si despedida pero cliente hace pregunta nueva → no despedirse
+                "DESPEDIDA": [
+                    '¿', 'que productos', 'qué productos', 'catálogo', 'catalogo',
+                    'envíame', 'enviame', 'mándame', 'mandame'
+                ],
+                "OFRECER_CONTACTO_BRUCE": [
+                    'correo', 'mail', 'email', 'te doy', 'le doy',
+                    'te paso', 'le paso'
+                ],
+            }
+
+            keywords_contradiccion = contradicciones_598.get(tipo_patron, [])
+            contradiccion_encontrada = None
+            for kw in keywords_contradiccion:
+                if kw in texto_validacion:
+                    contradiccion_encontrada = kw
+                    break
+
+            # También verificar: si el texto tiene 2+ cláusulas y la segunda tiene "?" → GPT
+            # Ej: "No se encuentra. ¿De dónde habla?" → la pregunta es más importante que el estado
+            tiene_pregunta_segunda_clausula = False
+            partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
+            if len(partes_texto) >= 2:
+                for parte in partes_texto[1:]:
+                    if '?' in parte or parte.startswith('qué') or parte.startswith('que') or parte.startswith('cómo') or parte.startswith('como') or parte.startswith('cuál') or parte.startswith('cual') or parte.startswith('dónde') or parte.startswith('donde') or parte.startswith('quién') or parte.startswith('quien'):
+                        tiene_pregunta_segunda_clausula = True
+                        contradiccion_encontrada = f"pregunta en 2da cláusula: '{parte[:30]}'"
+                        break
+
+            if contradiccion_encontrada:
+                print(f"   FIX 598: VALIDADOR POST-PATRÓN: Patrón '{tipo_patron}' CONTRADICHO por '{contradiccion_encontrada}'")
+                print(f"   Texto cliente: '{texto_validacion[:80]}'")
+                print(f"   Respuesta que SE EVITÓ: '{patron_detectado['respuesta'][:60]}...'")
+                print(f"   → Derivando a GPT para respuesta contextual")
+                patron_detectado = None  # Invalidar patrón, GPT decidirá
+
         if patron_detectado:
             print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
 
