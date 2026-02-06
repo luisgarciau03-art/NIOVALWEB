@@ -7605,7 +7605,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # sustancial (>=3 palabras), invalidar patrón porque la intención real está DESPUÉS del "pero"
         if patron_detectado:
             texto_600 = respuesta_cliente.strip().lower()
-            conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada más que ', ' nomas que ']
+            conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada más que ', ' nomas que ',
+                                        ' la verdad ', ' es que ', ' lo que pasa es que ', ' lo que pasa ', ' la neta ']
             # Patrones que SÍ sobreviven al "pero" (despedida, confirmaciones negativas)
             patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL'}
             tipo_600 = patron_detectado.get('tipo', '')
