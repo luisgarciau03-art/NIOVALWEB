@@ -1164,6 +1164,36 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         texto_lower = texto_cliente.lower().strip()
 
+        # FIX 583: Whitelist de frases conversacionales que naturalmente se repiten
+        # Estas NO son repeticiones problemáticas - son reconocimientos normales
+        frases_whitelist_583 = {
+            'si', 'sí', 'no', 'bueno', 'ok', 'aja', 'ajá', 'mhm',
+            'si claro', 'sí claro', 'si por favor', 'sí por favor',
+            'claro', 'claro que si', 'claro que sí', 'por supuesto',
+            'buenos dias', 'buenos días', 'buenas tardes', 'buenas noches',
+            'digame', 'dígame', 'mande', 'mande usted',
+            'si digame', 'sí dígame', 'bueno si', 'bueno sí',
+            'buenos dias digame', 'buenos días dígame',
+            'si buenos dias', 'sí buenos días',
+            'si buenas tardes', 'sí buenas tardes',
+            'ah ok', 'ah bueno', 'ah ya', 'ya', 'ya veo',
+            'esta bien', 'está bien', 'sale', 'va', 'orale', 'órale',
+            'eso si', 'eso sí', 'asi es', 'así es', 'correcto',
+            'con permiso', 'permiso', 'un momento', 'momentito',
+        }
+        # Normalizar: quitar signos de puntuación para comparar
+        import re as re_583
+        texto_normalizado_583 = re_583.sub(r'[¿?¡!.,;:\-]', '', texto_lower).strip()
+        if texto_normalizado_583 in frases_whitelist_583:
+            print(f"   FIX 583: Frase conversacional común '{texto_normalizado_583}' - NO es repetición")
+            return (False, "", 0)
+
+        # FIX 583: Frases de 3 palabras o menos son demasiado cortas para ser repeticiones
+        palabras_583 = texto_normalizado_583.split()
+        if len(palabras_583) <= 3:
+            print(f"   FIX 583: Frase corta ({len(palabras_583)} palabras) - ignorando detección de repetición")
+            return (False, "", 0)
+
         # Obtener últimos 3-4 mensajes del cliente
         mensajes_cliente = [
             msg['content'].lower().strip() for msg in self.conversation_history[-10:]
