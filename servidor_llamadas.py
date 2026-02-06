@@ -3626,9 +3626,19 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #1)", "BRUCE")
 
                 elif agente.timeouts_deepgram == 2:
-                    # SEGUNDO TIMEOUT: Pedir repetición más directa
-                    respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
-                    print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
+                    # FIX 603: Si estamos en inicio de llamada (pocos mensajes), NO decir "interferencia"
+                    # El cliente puede estar procesando el saludo o tardando en responder
+                    # En ese caso, ir directo al pitch (segunda_parte_saludo)
+                    mensajes_usuario_603 = [msg for msg in agente.conversation_history if msg['role'] == 'user'
+                                            and '[Timeout' not in msg.get('content', '')]
+                    es_inicio_llamada_603 = len(mensajes_usuario_603) <= 1
+
+                    if es_inicio_llamada_603:
+                        respuesta_timeout = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
+                        print(f"    FIX 603: Segundo timeout en INICIO - usando pitch directo en vez de 'interferencia'")
+                    else:
+                        respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
+                        print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
 
                     # Agregar al historial
                     agente.conversation_history.append({

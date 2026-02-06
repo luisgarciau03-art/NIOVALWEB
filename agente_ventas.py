@@ -7136,6 +7136,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         if verificacion_conexion and not tiene_digitos:
             if self.estado_conversacion != EstadoConversacion.INICIO:
+                # FIX 604: Si es primer turno real (cliente dice "¿Bueno?" al inicio),
+                # ir directo al pitch en vez de "¿Me decía?" pasivo
+                mensajes_usuario_604 = [msg for msg in self.conversation_history if msg['role'] == 'user'
+                                        and '[Timeout' not in msg.get('content', '')]
+                es_inicio_604 = len(mensajes_usuario_604) <= 1
+
+                if es_inicio_604:
+                    print(f"   FIX 604: '¿Bueno?' en primer turno → pitch directo en vez de '¿Me decía?'")
+                    return {
+                        "tipo": "VERIFICACION_CONEXION_INICIO",
+                        "respuesta": "Sí, le comento, me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?",
+                        "accion": "AVANZAR_A_PRESENTACION"
+                    }
+
                 # Ya pasamos del inicio - cliente verifica que seguimos en línea
                 print(f"   FIX 527: Cliente verifica conexión ('{texto_lower}') - NO es saludo inicial")
                 return {
