@@ -7647,6 +7647,72 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Patrón '{tipo_601}' INVALIDADO → GPT maneja complejidad mejor")
                     patron_detectado = None
 
+        # FIX 602: VALIDADOR DE CONTEXTO CONVERSACIONAL
+        # Problema: El patrón detectado puede ser técnicamente correcto pero INCOHERENTE
+        # con lo que Bruce preguntó. Ej: Bruce pidió correo → cliente dice "no" → patrón RECHAZO
+        # pero lo correcto es que GPT pida alternativa (WhatsApp).
+        # Solución: Extraer el tema de la última pregunta de Bruce y validar coherencia.
+        if patron_detectado and len(self.conversation_history) >= 2:
+            tipo_602 = patron_detectado.get('tipo', '')
+            # Obtener último mensaje de Bruce
+            ultimo_bruce_602 = None
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'assistant':
+                    ultimo_bruce_602 = msg['content'].lower()
+                    break
+
+            if ultimo_bruce_602:
+                # Detectar tema de la última pregunta de Bruce
+                tema_bruce = None
+                if any(kw in ultimo_bruce_602 for kw in ['correo', 'email', 'mail']):
+                    tema_bruce = 'PIDIENDO_CORREO'
+                elif any(kw in ultimo_bruce_602 for kw in ['whatsapp', 'número', 'numero', 'teléfono', 'telefono', 'celular']):
+                    tema_bruce = 'PIDIENDO_TELEFONO'
+                elif any(kw in ultimo_bruce_602 for kw in ['encargado', 'responsable', 'dueño', 'jefe', 'gerente']):
+                    tema_bruce = 'PIDIENDO_ENCARGADO'
+                elif any(kw in ultimo_bruce_602 for kw in ['catálogo', 'catalogo', 'productos', 'marcas', 'líneas', 'lineas']):
+                    tema_bruce = 'OFRECIENDO_CATALOGO'
+                elif any(kw in ultimo_bruce_602 for kw in ['horario', 'hora', 'cuándo', 'cuando', 'qué día', 'que dia']):
+                    tema_bruce = 'PREGUNTANDO_HORARIO'
+
+                # Patrones INCOHERENTES según contexto de Bruce
+                # Si Bruce pidió dato de contacto → respuestas de estado de encargado son incoherentes
+                incoherencias_por_contexto = {
+                    'PIDIENDO_CORREO': [
+                        'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
+                        'ENCARGADO_LLEGA_MAS_TARDE', 'SOLICITUD_CALLBACK',
+                        'PREGUNTA_IDENTIDAD', 'PREGUNTA_UBICACION',
+                        'OFRECER_CONTACTO_BRUCE', 'TRANSFERENCIA'
+                    ],
+                    'PIDIENDO_TELEFONO': [
+                        'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
+                        'ENCARGADO_LLEGA_MAS_TARDE', 'SOLICITUD_CALLBACK',
+                        'PREGUNTA_IDENTIDAD', 'PREGUNTA_UBICACION',
+                        'OFRECER_CONTACTO_BRUCE', 'TRANSFERENCIA'
+                    ],
+                    'PIDIENDO_ENCARGADO': [
+                        'CONFIRMACION_SIMPLE', 'DESPEDIDA',
+                        'OFRECER_CONTACTO_BRUCE'
+                    ],
+                    'OFRECIENDO_CATALOGO': [
+                        'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
+                        'SOLICITUD_CALLBACK', 'TRANSFERENCIA'
+                    ],
+                    'PREGUNTANDO_HORARIO': [
+                        'CONFIRMACION_SIMPLE', 'OFRECER_CONTACTO_BRUCE',
+                        'PREGUNTA_IDENTIDAD'
+                    ],
+                }
+
+                if tema_bruce:
+                    patrones_incoherentes = incoherencias_por_contexto.get(tema_bruce, [])
+                    if tipo_602 in patrones_incoherentes:
+                        print(f"   FIX 602: VALIDADOR CONTEXTO: Bruce estaba en '{tema_bruce}'")
+                        print(f"   Patrón '{tipo_602}' es INCOHERENTE con el contexto")
+                        print(f"   Último Bruce: '{ultimo_bruce_602[:60]}'")
+                        print(f"   → GPT dará respuesta contextual coherente")
+                        patron_detectado = None
+
         if patron_detectado:
             print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
 
