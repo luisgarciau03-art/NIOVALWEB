@@ -3097,11 +3097,29 @@ Responde SOLO con una letra: A, B, C, D o E"""
             )
 
             # FIX 260: Si es pregunta, NO marcar como incompleta aunque termine en "es"
-            if ultima_palabra in palabras_continuacion and not es_pregunta:
+            # FIX 593 BRUCE1993/1994: NO marcar como incompleta si es frase coloquial completa
+            # Problema: "Ok. Cual es?" → "es" triggereaba continuacion esperada → 5 seg delay
+            # Problema: "andan en la hora de la comida" → "la" triggereaba → 6 seg delay
+            frases_completas_593 = [
+                'cual es', 'cuál es', 'donde es', 'dónde es',
+                'de la comida', 'de la mañana', 'de la tarde', 'de la noche',
+                'hora de la', 'en la hora', 'a la hora',
+                'en la comida', 'en la mañana', 'en la tarde', 'en la noche',
+                'no se encuentra', 'no está', 'no esta',
+                'ahorita no', 'en este momento no',
+                'andan en la', 'están en la', 'estan en la',
+                'salió a', 'salio a', 'fue a', 'se fue a',
+            ]
+            frase_es_completa_593 = any(fc in frase_limpia for fc in frases_completas_593)
+            # También verificar: si termina en "?", es pregunta completa
+            if speech_result.strip().endswith('?'):
+                frase_es_completa_593 = True
+
+            if ultima_palabra in palabras_continuacion and not es_pregunta and not frase_es_completa_593:
                 frase_parece_incompleta = True
                 print(f"    FIX 244/250: Frase termina en '{ultima_palabra}' (continuación esperada)")
-            elif ultima_palabra in palabras_continuacion and es_pregunta:
-                print(f"    FIX 260: Frase termina en '{ultima_palabra}' pero ES PREGUNTA - responder inmediatamente")
+            elif ultima_palabra in palabras_continuacion and (es_pregunta or frase_es_completa_593):
+                print(f"    FIX 593: Frase termina en '{ultima_palabra}' pero es frase COMPLETA/PREGUNTA - responder inmediatamente")
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
             # FIX 264: Pero NO si es una pregunta o termina en signo de interrogación
@@ -4268,12 +4286,24 @@ Responde SOLO con una letra: A, B, C, D o E"""
         fillers_577 = {'mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uh', 'pues', 'uhm'}
         palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
 
-        if (len(palabras_significativas_577) >= 3
+        if (len(palabras_significativas_577) >= 2
             and estado_actual_577 != EC577.ESPERANDO_TRANSFERENCIA
             and not tiene_digitos_577):
             print(f" FIX 577: GPT vacío pero cliente dijo '{speech_limpio_577[:50]}' ({len(palabras_significativas_577)} palabras)")
             print(f"   Estado: {estado_actual_577} - Generando fallback inmediato")
-            respuesta_fallback_577 = "Disculpe, ¿me puede repetir eso último?"
+            # FIX 597 BRUCE1990: Fallback contextual en vez de "me puede repetir"
+            # Problema: Cliente dijo "lo puede ayudar" (STT truncó "dígame en qué")
+            # Bruce respondió "me puede repetir?" → incoherente
+            # Solución: Si el texto contiene "ayudar/servir/ofrecer", responder con presentación
+            speech_lower_597 = speech_limpio_577.lower()
+            if any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
+                respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
+                print(f"   FIX 597: Fallback contextual - cliente ofrece ayuda, respondemos con presentación")
+            elif any(p in speech_lower_597 for p in ['momento', 'espere', 'espera', 'ahorita', 'tantito']):
+                respuesta_fallback_577 = "Claro, espero."
+                print(f"   FIX 597: Fallback contextual - cliente pide espera")
+            else:
+                respuesta_fallback_577 = "Disculpe, ¿me puede repetir eso último?"
             agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback_577})
             response = VoiceResponse()
             audio_id_577 = f"fallback_577_{call_sid}"
@@ -8995,24 +9025,50 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
     # transcripciones correctas de Deepgram (ej: "Permítame" → "Los permítanme ahí me gusta")
     # Solución: Copiar solo FINALs (estables y rápidos) para aprovechar baja latencia de ElevenLabs.
     # PARCIALs NO se copian (crecen y corrompen).
+    # FIX 596 BRUCE1993: NO copiar FINALs de ElevenLabs que son ACUMULATIVAS
+    # Problema: ElevenLabs envía FINALs que contienen TODA la conversación acumulada
+    # "Bueno, mande. Ya marcaron. OK. Cual es? Si." → contamina Deepgram
+    # Solución: Rechazar FINALs > 100 chars o que contengan texto de turnos anteriores
     if is_final:
-        with deepgram_transcripciones_lock:
-            if call_sid not in deepgram_transcripciones:
-                deepgram_transcripciones[call_sid] = []
+        # FIX 596: Verificar que la FINAL no sea acumulativa
+        texto_len = len(texto.strip())
+        es_acumulativa = False
 
-            # Solo copiar si no existe ya (evitar duplicados con Deepgram)
-            texto_norm = texto.lower().strip()
-            ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
-            if not ya_existe:
-                deepgram_transcripciones[call_sid].append(texto)
-                with deepgram_ultima_final_lock:
-                    deepgram_ultima_final[call_sid] = {
-                        "timestamp": time.time(),
-                        "texto": texto,
-                        "es_final": True,
-                        "fuente": "elevenlabs"
-                    }
-                print(f"    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)")
+        # Regla 1: Si la FINAL es demasiado larga para un solo turno (> 100 chars), probablemente es acumulativa
+        if texto_len > 100:
+            es_acumulativa = True
+            print(f"    FIX 596: FINAL ElevenLabs RECHAZADA ({texto_len} chars > 100) - probable transcripcion ACUMULATIVA")
+
+        # Regla 2: Comparar con Deepgram existentes - si contiene texto de turno anterior, es acumulativa
+        if not es_acumulativa:
+            with deepgram_transcripciones_lock:
+                existentes = deepgram_transcripciones.get(call_sid, [])
+                if existentes:
+                    for prev in existentes[-3:]:
+                        # Si una transcripcion anterior aparece DENTRO de esta nueva, es acumulativa
+                        if prev and len(prev.strip()) > 5 and prev.strip().lower() in texto.lower():
+                            es_acumulativa = True
+                            print(f"    FIX 596: FINAL ElevenLabs RECHAZADA - contiene turno anterior: '{prev[:40]}...'")
+                            break
+
+        if not es_acumulativa:
+            with deepgram_transcripciones_lock:
+                if call_sid not in deepgram_transcripciones:
+                    deepgram_transcripciones[call_sid] = []
+
+                # Solo copiar si no existe ya (evitar duplicados con Deepgram)
+                texto_norm = texto.lower().strip()
+                ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
+                if not ya_existe:
+                    deepgram_transcripciones[call_sid].append(texto)
+                    with deepgram_ultima_final_lock:
+                        deepgram_ultima_final[call_sid] = {
+                            "timestamp": time.time(),
+                            "texto": texto,
+                            "es_final": True,
+                            "fuente": "elevenlabs"
+                        }
+                    print(f"    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)")
 
 
 # Callback que se llama cuando Deepgram completa una transcripción

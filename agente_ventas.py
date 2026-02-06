@@ -1136,12 +1136,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return True
 
         # 3. FRASE TERMINA CON CONECTOR/PAUSA (sugiere continuación)
+        # FIX 592 BRUCE1988: NO pausar por coma si es confirmación/saludo corto
+        # Problema: "Sí, señor," → FIX 477 pausaba por la coma → Bruce mudo 15 seg
+        confirmaciones_cortas_592 = [
+            'si', 'sí', 'no', 'bueno', 'claro', 'ok', 'aja', 'ajá', 'mhm',
+            'si señor', 'sí señor', 'si senor', 'sí senor',
+            'no señor', 'no senor', 'si claro', 'sí claro',
+            'bueno si', 'bueno sí', 'si digame', 'sí dígame',
+            'si mande', 'sí mande', 'mande', 'digame', 'dígame',
+            'si bueno', 'sí bueno', 'buenos dias', 'buenos días',
+            'buenas tardes', 'buenas noches', 'si gracias', 'sí gracias'
+        ]
+        texto_limpio_592 = re.sub(r'[,.\s]+$', '', texto_lower).strip()
+        es_confirmacion_corta = texto_limpio_592 in confirmaciones_cortas_592
+
         palabras_continuacion = [
             ",", "y", "entonces", "este", "o sea", "pues", "bueno",
             "es decir", "o", "pero", "como", "porque"
         ]
         for palabra in palabras_continuacion:
             if texto_cliente.strip().endswith(palabra):
+                if palabra == "," and es_confirmacion_corta:
+                    print(f"   [DEBUG] FIX 592: Frase '{texto_limpio_592}' termina con coma pero es CONFIRMACION CORTA - NO pausar")
+                    return False
+                # FIX 592: Para conectores (no coma), también verificar si es frase corta sin datos
+                if es_confirmacion_corta:
+                    print(f"   [DEBUG] FIX 592: Frase '{texto_limpio_592}' termina con '{palabra}' pero es confirmacion - NO pausar")
+                    return False
                 print(f"   [DEBUG] FIX 477: DETECTADO frase termina con '{palabra}' - Cliente probablemente continúa")
                 return True
 
@@ -6105,6 +6126,35 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ]) and not tiene_horario_especifico  # FIX 555: Añadir verificación
 
                 if tiene_horario_especifico:
+                    # FIX 594 BRUCE1987: Si cliente OFRECE correo/whatsapp, priorizar captura
+                    # Problema: "Llega hasta el lunes, te doy el correo mejor" → Bruce decía "le llamo entonces"
+                    # El patrón ENCARGADO_NO_ESTA_CON_HORARIO ignoraba que el cliente OFRECÍA contacto
+                    palabras_ofrece_contacto_594 = [
+                        'te doy el correo', 'le doy el correo', 'doy el correo',
+                        'te doy mi correo', 'le doy mi correo',
+                        'te paso el correo', 'le paso el correo', 'paso el correo',
+                        'te mando el correo', 'le mando el correo',
+                        'anota el correo', 'anote el correo',
+                        'te doy el mail', 'le doy el mail',
+                        'te doy el email', 'le doy el email',
+                        'te doy el whatsapp', 'le doy el whatsapp',
+                        'te doy el número', 'le doy el número',
+                        'te doy el numero', 'le doy el numero',
+                        'te paso el número', 'le paso el número',
+                        'te paso el numero', 'le paso el numero',
+                        'mándalo por correo', 'mandalo por correo',
+                        'mándalo por mail', 'mandalo por mail',
+                        'mejor por correo', 'correo mejor',
+                        'mejor el correo', 'mejor el mail'
+                    ]
+                    if any(p in texto_lower for p in palabras_ofrece_contacto_594):
+                        print(f"   FIX 594: Cliente OFRECE contacto (correo/whatsapp) - PRIORIDAD sobre callback")
+                        print(f"     Texto: '{texto_lower[:80]}'")
+                        return {
+                            "tipo": "CLIENTE_OFRECE_CONTACTO_DIRECTO",
+                            "respuesta": "Perfecto, dígame el correo y lo anoto.",
+                            "accion": "CAPTURAR_CORREO"
+                        }
                     print(f"   FIX 555: Cliente dio horario ESPECÍFICO ({hora_texto}) - Confirmar callback")
                     return {
                         "tipo": "ENCARGADO_NO_ESTA_CON_HORARIO",
@@ -6595,13 +6645,36 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "de qué empresa", "de que empresa", "qué empresa", "que empresa",
             "de qué compañía", "de que compañia", "qué compañía", "que compañia"
         ]):
+            # FIX 595 BRUCE1992: Distinguir "¿de dónde es?" (UBICACION) vs "¿quién habla?" (IDENTIDAD)
+            # Problema: Cliente preguntó "De donde es?" queriendo saber la ciudad, no la empresa
+            # Bruce respondió con identidad + repitió pregunta del encargado (incoherente)
+            es_pregunta_ubicacion = any(p in texto_lower for p in [
+                "de dónde es", "de donde es", "de dónde son", "de donde son",
+                "dónde están", "donde estan", "dónde están ubicados", "donde estan ubicados",
+                "de qué ciudad", "de que ciudad", "de qué estado", "de que estado"
+            ])
+
             # FIX 521 BRUCE1657: Si ya sabemos que el encargado NO está, NO preguntar por él
             if self.estado_conversacion == EstadoConversacion.ENCARGADO_NO_ESTA:
+                if es_pregunta_ubicacion:
+                    print(f"   FIX 595: Pregunta UBICACION + encargado NO está - Responder ubicación + WhatsApp")
+                    return {
+                        "tipo": "PREGUNTA_UBICACION_SIN_ENCARGADO",
+                        "respuesta": "Somos de Guadalajara, Jalisco. Distribuimos productos de ferretería de la marca NIOVAL. ¿Me puede proporcionar el WhatsApp del encargado para enviarle el catálogo?",
+                        "accion": "PEDIR_WHATSAPP"
+                    }
                 print(f"   FIX 521: Pregunta identidad + encargado NO está - Ofrecer WhatsApp")
                 return {
                     "tipo": "PREGUNTA_IDENTIDAD_SIN_ENCARGADO",
                     "respuesta": "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me puede proporcionar el WhatsApp del encargado para enviarle el catálogo?",
                     "accion": "PEDIR_WHATSAPP"
+                }
+            if es_pregunta_ubicacion:
+                print(f"   FIX 595: Pregunta de UBICACION detectada - Responder con ciudad")
+                return {
+                    "tipo": "PREGUNTA_UBICACION",
+                    "respuesta": "Somos de Guadalajara, Jalisco. Distribuimos productos de ferretería de la marca NIOVAL. ¿Se encuentra el encargado de compras?",
+                    "accion": "RESPONDER_PREGUNTA"
                 }
             return {
                 "tipo": "PREGUNTA_IDENTIDAD",
