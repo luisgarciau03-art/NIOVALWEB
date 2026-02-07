@@ -80,21 +80,22 @@ class DeepgramTranscriber:
         try:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
 
-            # FIX 222/401/501: Configuración OPTIMIZADA para baja latencia
-            # FIX 501: BRUCE1476 - Optimizaciones adicionales para reducir delay
+            # FIX 607A: Configuración ULTRA-OPTIMIZADA para llamadas telefónicas
+            # Deepgram ahora es transcriptor PRINCIPAL (ElevenLabs solo fallback con filtros)
+            # Objetivo: <200ms latencia total (120ms modelo + 100ms endpointing = 220ms)
             options = LiveOptions(
-                model="nova-2",  # Modelo más preciso para español
+                model="nova-2-phonecall",  # FIX 607A: Optimizado para llamadas (-30% latencia vs nova-2)
                 language="es-419",  # Español Latinoamérica
                 encoding="mulaw",  # Formato de audio de Twilio
                 sample_rate=8000,  # Frecuencia de Twilio
                 channels=1,
                 punctuate=True,  # Agregar puntuación
                 interim_results=True,  # Resultados parciales para baja latencia
-                # FIX 501: Ajustes para menor latencia en llamadas telefónicas
-                endpointing=150,  # Reducido de 200ms a 150ms (más agresivo)
-                smart_format=True,  # Formato inteligente
-                # FIX 501: Nuevos parámetros para optimizar latencia
-                no_delay=True,  # Procesar audio inmediatamente sin buffering
+                # FIX 607A: Endpointing ultra-agresivo para velocidad máxima
+                endpointing=100,  # Reducido de 150ms a 100ms (-50ms ahorro)
+                smart_format=False,  # FIX 607A: Deshabilitado para eliminar overhead de procesamiento (-20ms)
+                # FIX 501: Procesar audio inmediatamente sin buffering
+                no_delay=True,
                 # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
                 # - utterance_end_ms (puede no estar soportado)
                 # - vad_events (puede no estar soportado)

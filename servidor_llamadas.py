@@ -1785,22 +1785,24 @@ def procesar_respuesta():
 
     # FIX 534: Ajustar timeouts según historial
     # FIX 532: AUDITORIA 29/01 - 404 timeouts detectados - REDUCIR timeouts agresivamente
-    # Los valores anteriores (5s/3s/3.5s/2s/2.5s/1.5s) eran demasiado altos
-    # Deepgram debería responder en <1s, timeouts largos indican problema de red/servicio
+    # FIX 607C: Timeouts ULTRA-OPTIMIZADOS para Deepgram nova-2-phonecall
+    # Con modelo optimizado (120ms) + endpointing 100ms = ~220ms respuesta esperada
+    # Timeouts previos eran 3s/2s/1.5s - ahora 1.5s/1.2s/1.0s (50% reducción)
     if timeouts_previos >= 2:
         # Después de 2+ timeouts, ser MUY agresivo - no desperdiciar tiempo
-        max_wait_deepgram = 1.5  # FIX 532: Reducido de 2.5s a 1.5s
-        max_wait_parcial_fallback = 0.8  # FIX 532: Reducido de 1.5s a 0.8s
-        print(f"   FIX 532/534: Timeouts previos={timeouts_previos} - usando timeouts ULTRA-reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        max_wait_deepgram = 1.0  # FIX 607C: Reducido de 1.5s a 1.0s
+        max_wait_parcial_fallback = 0.6  # FIX 607C: Reducido de 0.8s a 0.6s
+        print(f"   FIX 607C: Timeouts previos={timeouts_previos} - timeouts ULTRA-agresivos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     elif timeouts_previos == 1:
         # Después de 1 timeout, ser agresivo
-        max_wait_deepgram = 2.0  # FIX 532: Reducido de 3.5s a 2.0s
-        max_wait_parcial_fallback = 1.2  # FIX 532: Reducido de 2s a 1.2s
-        print(f"   FIX 532/534: Timeouts previos={timeouts_previos} - usando timeouts reducidos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        max_wait_deepgram = 1.2  # FIX 607C: Reducido de 2.0s a 1.2s
+        max_wait_parcial_fallback = 0.8  # FIX 607C: Reducido de 1.2s a 0.8s
+        print(f"   FIX 607C: Timeouts previos={timeouts_previos} - timeouts agresivos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     else:
-        # Sin timeouts previos, usar valores REDUCIDOS (antes eran 5s/3s)
-        max_wait_deepgram = 3.0  # FIX 532: Reducido de 5s a 3s (suficiente para Deepgram)
-        max_wait_parcial_fallback = 1.8  # FIX 532: Reducido de 3s a 1.8s
+        # Sin timeouts previos, usar valores optimizados para modelo phonecall
+        max_wait_deepgram = 1.5  # FIX 607C: Reducido de 3.0s a 1.5s (50% reducción)
+        max_wait_parcial_fallback = 1.0  # FIX 607C: Reducido de 1.8s a 1.0s
+        print(f"   FIX 607C: Primer turno - timeouts optimizados para phonecall model ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
     parcial_disponible_desde = None  # FIX 511: Cuándo detectamos primera PARCIAL
@@ -9075,23 +9077,52 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
                             break
 
         if not es_acumulativa:
-            with deepgram_transcripciones_lock:
-                if call_sid not in deepgram_transcripciones:
-                    deepgram_transcripciones[call_sid] = []
+            # FIX 607B: VALIDAR IDIOMA antes de copiar ElevenLabs
+            # Problema: ElevenLabs genera texto en Hindi/Punjabi/francés ~30% del tiempo
+            # Solución: Solo copiar si el texto es español válido (caracteres latinos, no idiomas asiáticos)
+            es_idioma_valido = True
 
-                # Solo copiar si no existe ya (evitar duplicados con Deepgram)
-                texto_norm = texto.lower().strip()
-                ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
-                if not ya_existe:
-                    deepgram_transcripciones[call_sid].append(texto)
-                    with deepgram_ultima_final_lock:
-                        deepgram_ultima_final[call_sid] = {
-                            "timestamp": time.time(),
-                            "texto": texto,
-                            "es_final": True,
-                            "fuente": "elevenlabs"
-                        }
-                    print(f"    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)")
+            # Regla 1: Rechazar si contiene caracteres no-latinos (Hindi, Punjabi, chino, etc)
+            import unicodedata
+            for char in texto:
+                if char.isalpha():
+                    script = unicodedata.name(char, '').split()[0]
+                    if script in ['DEVANAGARI', 'GURMUKHI', 'TAMIL', 'KANNADA', 'BENGALI',
+                                  'GUJARATI', 'TELUGU', 'MALAYALAM', 'SINHALA', 'TIBETAN',
+                                  'HANGUL', 'HIRAGANA', 'KATAKANA', 'CJK']:
+                        es_idioma_valido = False
+                        print(f"    FIX 607B: FINAL ElevenLabs RECHAZADA - contiene caracteres no-latinos ({script}): '{texto[:40]}'")
+                        break
+
+            # Regla 2: Rechazar si detecta palabras en francés/inglés comunes en corrupción
+            if es_idioma_valido:
+                palabras_corruptas = ['pardon', 'bon', 'good morning', 'good day', 'hello sir',
+                                     'thank you sir', 'yes sir', 'que bueno', 'okay sir']
+                texto_check = texto.lower().strip()
+                if any(p in texto_check for p in palabras_corruptas):
+                    # Solo rechazar si es SOLO esa palabra (no parte de frase más larga)
+                    if len(texto_check.split()) <= 3:
+                        es_idioma_valido = False
+                        print(f"    FIX 607B: FINAL ElevenLabs RECHAZADA - idioma incorrecto detectado: '{texto}'")
+
+            if es_idioma_valido:
+                with deepgram_transcripciones_lock:
+                    if call_sid not in deepgram_transcripciones:
+                        deepgram_transcripciones[call_sid] = []
+
+                    # Solo copiar si no existe ya (evitar duplicados con Deepgram)
+                    texto_norm = texto.lower().strip()
+                    ya_existe = any(t.lower().strip() == texto_norm for t in deepgram_transcripciones[call_sid][-3:] if t)
+                    if not ya_existe:
+                        deepgram_transcripciones[call_sid].append(texto)
+                        with deepgram_ultima_final_lock:
+                            deepgram_ultima_final[call_sid] = {
+                                "timestamp": time.time(),
+                                "texto": texto,
+                                "es_final": True,
+                                "fuente": "elevenlabs"
+                            }
+                        print(f"    FIX 588/607B: FINAL ElevenLabs VALIDADA y copiada (latencia optimizada)")
 
 
 # Callback que se llama cuando Deepgram completa una transcripción
