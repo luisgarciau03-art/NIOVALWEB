@@ -79,10 +79,10 @@ try:
     )
     ELEVENLABS_STT_AVAILABLE = EL_STT_AVAIL and USE_ELEVENLABS_STT
     if ELEVENLABS_STT_AVAILABLE:
-        print(" FIX 540: ElevenLabs Scribe configurado como STT PRIMARIO")
-        print("    Deepgram será usado como FALLBACK")
+        print(" FIX 607: Deepgram configurado como STT PRIMARIO")
+        print("    ElevenLabs Scribe activo como COMPLEMENTO (con filtro de idioma FIX 607B)")
     else:
-        print(" FIX 540: ElevenLabs Scribe no disponible - usando solo Deepgram")
+        print(" FIX 607: ElevenLabs Scribe no disponible - usando solo Deepgram")
 except ImportError as e:
     ELEVENLABS_STT_AVAILABLE = False
     print(f" FIX 540: Módulo elevenlabs_transcriber no disponible: {e}")
