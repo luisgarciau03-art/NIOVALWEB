@@ -830,7 +830,8 @@ def registrar_frase_usada(texto):
                 voice_id=ELEVENLABS_VOICE_ID,
                 text=texto_para_cache,  # Usar plantilla con (NAME) si tiene nombre
                 model_id="eleven_multilingual_v2",
-                output_format="mp3_44100_128"
+                output_format="mp3_44100_128",
+                optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
             )
 
             # Guardar en archivo temporal
@@ -922,7 +923,8 @@ def pre_generar_audios_cache():
                 voice_id=ELEVENLABS_VOICE_ID,
                 text=texto,
                 model_id="eleven_multilingual_v2",  # Mejor acento
-                output_format="mp3_44100_128"
+                output_format="mp3_44100_128",
+                optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
             )
 
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
@@ -1024,7 +1026,8 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
         voice_id=ELEVENLABS_VOICE_ID,
         text=texto_final,
         model_id="eleven_multilingual_v2",
-        output_format="mp3_44100_128"
+        output_format="mp3_44100_128",
+        optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
     )
 
     # Guardar en archivo temporal
@@ -1123,11 +1126,15 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
             try:
                 print(f" FIX 162A: Generando audio (intento {intento}/{max_intentos})")
 
+                # FIX 608A: Optimización de latencia de streaming
+                # optimize_streaming_latency: 0-4, donde 4 es máxima velocidad (menos buffering)
+                # Reduce tiempo hasta primer chunk en ~300-500ms
                 audio_generator = elevenlabs_client.text_to_speech.convert(
                     voice_id=ELEVENLABS_VOICE_ID,
                     text=texto_corregido,
                     model_id=modelo,
-                    output_format="mp3_44100_128"
+                    output_format="mp3_44100_128",
+                    optimize_streaming_latency=4  # FIX 608A: Máxima velocidad (-500ms hasta primer chunk)
                 )
 
                 # Guardar en archivo temporal con streaming
@@ -6486,7 +6493,8 @@ def generar_cache_manual():
                     voice_id=ELEVENLABS_VOICE_ID,
                     text=texto,
                     model_id="eleven_multilingual_v2",
-                    output_format="mp3_44100_128"
+                    output_format="mp3_44100_128",
+                    optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
                 )
 
                 # Guardar en memoria
@@ -8920,6 +8928,24 @@ SALUDOS_RAPIDOS = [
     "sí", "si", "aló", "alo", "qué tal", "que tal", "mande"
 ]
 
+# FIX 608B: Patrones adicionales para detección en interim (adelantar decisión)
+PATRONES_RAPIDOS_608B = {
+    "DESPEDIDA": [
+        "gracias adiós", "gracias adios", "hasta luego", "que le vaya bien",
+        "que tenga buen día", "que tenga buen dia", "nos vemos",
+        "gracias pero no", "gracias de todas formas"
+    ],
+    "NO_INTERESA": [
+        "no nos interesa", "no me interesa", "no compramos",
+        "no necesitamos", "no estoy interesado", "no estamos interesados",
+        "no gracias", "no por el momento", "ahorita no"
+    ],
+    "CONFIRMACION": [
+        "está bien", "esta bien", "perfecto", "de acuerdo",
+        "sí claro", "si claro", "adelante", "ok perfecto"
+    ]
+}
+
 # FIX 548: BRUCE1874 - Validar idioma de transcripciones ElevenLabs
 def es_texto_valido_espanol(texto):
     """
@@ -9007,6 +9033,31 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
             }
             if "segunda_parte_saludo" in audio_cache:
                 print(f" FIX 314: Audio segunda_parte_saludo YA está en cache")
+
+    # FIX 608B: Detectar patrones adicionales en interim (ElevenLabs)
+    if not is_final and call_sid not in respuesta_precargada:
+        palabras_608b = texto.split()
+        es_parcial_largo = len(palabras_608b) >= 15
+
+        if es_parcial_largo:
+            patron_detectado_608b = None
+            tipo_608b = None
+
+            for tipo, patrones in PATRONES_RAPIDOS_608B.items():
+                if any(patron in texto_lower for patron in patrones):
+                    patron_detectado_608b = True
+                    tipo_608b = tipo
+                    break
+
+            if patron_detectado_608b:
+                print(f" FIX 608B: Patrón {tipo_608b} detectado en INTERIM ElevenLabs ({len(palabras_608b)} palabras)")
+                print(f"    Texto: '{texto[:80]}...'")
+                respuesta_precargada[call_sid] = {
+                    "audio_listo": False,
+                    "tipo": tipo_608b,
+                    "timestamp": time.time(),
+                    "texto_interim": texto
+                }
 
     # FIX 540.1: Guardar transcripciones de ElevenLabs (con inicialización DENTRO del lock)
     with elevenlabs_transcripciones_lock:
@@ -9177,6 +9228,39 @@ def on_deepgram_transcript(call_sid, texto, is_final):
             else:
                 print(f" FIX 314: Audio segunda_parte_saludo NO está en cache - generando...")
                 # El audio se generará cuando se procese la respuesta
+
+    # FIX 608B: Detectar patrones adicionales en interim (PARCIALES largos) para adelantar decisión
+    # Solo si PARCIAL tiene >15 palabras (suficiente contexto) y no hemos pre-cargado ya
+    if not is_final and call_sid not in respuesta_precargada:
+        palabras_608b = texto.split()
+        es_parcial_largo = len(palabras_608b) >= 15  # Suficiente contexto para detectar patrón
+
+        if es_parcial_largo:
+            patron_detectado_608b = None
+            tipo_608b = None
+
+            # Detectar patrones obvios
+            for tipo, patrones in PATRONES_RAPIDOS_608B.items():
+                if any(patron in texto_lower for patron in patrones):
+                    patron_detectado_608b = True
+                    tipo_608b = tipo
+                    break
+
+            if patron_detectado_608b:
+                print(f" FIX 608B: Patrón {tipo_608b} detectado en INTERIM largo ({len(palabras_608b)} palabras)")
+                print(f"    Texto: '{texto[:80]}...'")
+                print(f"    Pre-procesando respuesta en background...")
+
+                # Marcar que detectamos patron para no repetir
+                respuesta_precargada[call_sid] = {
+                    "audio_listo": False,  # Se generará en background
+                    "tipo": tipo_608b,
+                    "timestamp": time.time(),
+                    "texto_interim": texto
+                }
+
+                # TODO: Aquí podríamos iniciar thread de pre-procesamiento
+                # Por ahora solo marcamos para que cuando llegue el FINAL ya sepamos qué patron es
 
     # FIX 490: Proteger acceso concurrente a transcripciones con lock
     with deepgram_transcripciones_lock:
