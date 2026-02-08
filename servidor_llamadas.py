@@ -7921,15 +7921,26 @@ class LogCapture:
 
         # Capturar en buffer
         if text and text.strip():  # Solo capturar si no es vacío
+            text_stripped = text.strip()
+
+            # FIX 609: EVITAR DUPLICACIÓN - No capturar si ya viene de log_evento()
+            # Patrón de log_evento: [YYYY-MM-DD HH:MM:SS] [TIPO] mensaje
+            import re
+            patron_log_evento = r'^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \['
+
+            if re.match(patron_log_evento, text_stripped):
+                # Ya fue agregado por log_evento() - NO duplicar
+                return
+
             with log_lock:
                 # Agregar timestamp si no lo tiene
-                if not text.startswith('['):
+                if not text_stripped.startswith('['):
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    text = f"[{timestamp}] {text.strip()}"
+                    text_formatted = f"[{timestamp}] {text_stripped}"
                 else:
-                    text = text.strip()
+                    text_formatted = text_stripped
 
-                log_buffer.append(text)
+                log_buffer.append(text_formatted)
 
     def flush(self):
         self.original_stdout.flush()
