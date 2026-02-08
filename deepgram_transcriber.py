@@ -89,10 +89,11 @@ class DeepgramTranscriber:
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
             print(f" FIX 611: DeepgramClient creado OK - CallSid: {self.call_sid}")
 
-            # FIX 607A: Configuración ULTRA-OPTIMIZADA para llamadas telefónicas
+            # FIX 612: Configuración optimizada para llamadas telefónicas
+            # Cambio: nova-2-phonecall → nova-2 (phonecall no disponible en plan actual)
             options = LiveOptions(
-                model="nova-2-phonecall",
-                language="es-419",
+                model="nova-2",
+                language="es",
                 encoding="mulaw",
                 sample_rate=8000,
                 channels=1,
