@@ -3564,46 +3564,47 @@ Responde SOLO con una letra: A, B, C, D o E"""
         agente.respuestas_vacias_consecutivas += 1
         print(f" Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
-        # FIX 610: DIAGNÓSTICO DETALLADO - Por qué la transcripción está vacía
-        print(f"\n FIX 610: === DIAGNÓSTICO TRANSCRIPCIÓN VACÍA ===")
-        print(f"   CallSid: {call_sid}")
-        print(f"   Timeouts Deepgram previos: {getattr(agente, 'timeouts_deepgram', 0)}")
-        print(f"   Respuestas vacías consecutivas: {agente.respuestas_vacias_consecutivas}")
+        # FIX 610.1: DIAGNÓSTICO DETALLADO - Por qué la transcripción está vacía
+        # Usar log_evento() para que sea visible en historial-llamadas
+        bruce_id = agente.lead_data.get("bruce_id", "N/A")
+
+        log_evento(f"=== DIAGNÓSTICO TRANSCRIPCIÓN VACÍA ===", "DIAGNÓSTICO")
+        log_evento(f"{bruce_id} - Timeouts Deepgram previos: {getattr(agente, 'timeouts_deepgram', 0)}", "DIAGNÓSTICO")
+        log_evento(f"{bruce_id} - Respuestas vacías consecutivas: {agente.respuestas_vacias_consecutivas}", "DIAGNÓSTICO")
 
         # Estado de Deepgram
         with deepgram_transcripciones_lock:
             dg_transcripciones = deepgram_transcripciones.get(call_sid, [])
             dg_ultima = deepgram_ultima_final.get(call_sid, {})
-            print(f"   Deepgram - Transcripciones en buffer: {len(dg_transcripciones)}")
+            log_evento(f"{bruce_id} - Deepgram buffer: {len(dg_transcripciones)} transcripciones", "DIAGNÓSTICO")
             if dg_transcripciones:
-                print(f"   Deepgram - Últimas 3: {dg_transcripciones[-3:]}")
+                log_evento(f"{bruce_id} - Deepgram últimas 3: {dg_transcripciones[-3:]}", "DIAGNÓSTICO")
             if dg_ultima:
-                print(f"   Deepgram - Última FINAL: es_final={dg_ultima.get('es_final')}, "
-                      f"timestamp={datetime.fromtimestamp(dg_ultima.get('timestamp', 0)).strftime('%H:%M:%S') if dg_ultima.get('timestamp') else 'N/A'}")
+                dg_timestamp = datetime.fromtimestamp(dg_ultima.get('timestamp', 0)).strftime('%H:%M:%S') if dg_ultima.get('timestamp') else 'N/A'
+                log_evento(f"{bruce_id} - Deepgram última FINAL: is_final={dg_ultima.get('es_final')}, timestamp={dg_timestamp}", "DIAGNÓSTICO")
 
         # Estado de ElevenLabs
         if ELEVENLABS_STT_AVAILABLE:
             with elevenlabs_transcripciones_lock:
                 el_transcripciones = elevenlabs_transcripciones.get(call_sid, [])
                 el_ultima = elevenlabs_ultima_final.get(call_sid, {})
-                print(f"   ElevenLabs - Transcripciones en buffer: {len(el_transcripciones)}")
+                log_evento(f"{bruce_id} - ElevenLabs buffer: {len(el_transcripciones)} transcripciones", "DIAGNÓSTICO")
                 if el_transcripciones:
-                    print(f"   ElevenLabs - Últimas 3: {el_transcripciones[-3:]}")
+                    log_evento(f"{bruce_id} - ElevenLabs últimas 3: {el_transcripciones[-3:]}", "DIAGNÓSTICO")
                 if el_ultima:
                     el_texto = el_ultima.get('texto', '')
-                    print(f"   ElevenLabs - Última transcripción: '{el_texto}' (len={len(el_texto)})")
+                    log_evento(f"{bruce_id} - ElevenLabs última: '{el_texto}' (len={len(el_texto)})", "DIAGNÓSTICO")
 
         # Información de transcriber Deepgram
         transcriber = obtener_transcriber(call_sid)
         if transcriber:
             stats = transcriber.get_stats()
-            print(f"   Deepgram Transcriber - Audio chunks: {stats.get('audio_chunks', 0)}, "
-                  f"Transcripts: {stats.get('transcripts', 0)}, "
-                  f"Finals: {stats.get('final_transcripts', 0)}")
+            log_evento(f"{bruce_id} - Deepgram Transcriber: audio_chunks={stats.get('audio_chunks', 0)}, "
+                      f"transcripts={stats.get('transcripts', 0)}, finals={stats.get('final_transcripts', 0)}", "DIAGNÓSTICO")
         else:
-            print(f"   Deepgram Transcriber - NO ENCONTRADO (puede ser problema)")
+            log_evento(f"{bruce_id} - Deepgram Transcriber: NO ENCONTRADO (problema crítico)", "DIAGNÓSTICO")
 
-        print(f" FIX 610: === FIN DIAGNÓSTICO ===\n")
+        log_evento(f"=== FIN DIAGNÓSTICO ===", "DIAGNÓSTICO")
 
         # FIX 145: Si es el PRIMER mensaje y está vacío, NO pedir repetición
         # Cliente normal necesita 2-3s para procesar "Hola, buen dia"
