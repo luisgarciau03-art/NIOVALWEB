@@ -67,67 +67,76 @@ class DeepgramTranscriber:
         # FIX 501: Timestamp del último chunk de audio para medir latencia real
         self.last_audio_chunk_time = None
 
+        # FIX 611: Logging de creación
+        print(f" FIX 611: DeepgramTranscriber CREADO para CallSid: {self.call_sid}")
+
     async def connect(self):
         """Establece conexión con Deepgram"""
+        # FIX 611: Logging detallado de inicio de conexión
+        print(f" FIX 611: [CONECTANDO] CallSid: {self.call_sid}")
+
         if not DEEPGRAM_AVAILABLE:
-            print(f" FIX 212: Deepgram SDK no disponible")
+            print(f" FIX 611: [ERROR] Deepgram SDK no disponible - CallSid: {self.call_sid}")
             return False
 
         if not DEEPGRAM_API_KEY:
-            print(f" FIX 212: DEEPGRAM_API_KEY no configurada")
+            print(f" FIX 611: [ERROR] DEEPGRAM_API_KEY no configurada - CallSid: {self.call_sid}")
             return False
 
         try:
+            # FIX 611: Logging de creación de cliente
+            print(f" FIX 611: Creando DeepgramClient - CallSid: {self.call_sid}")
             self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
+            print(f" FIX 611: DeepgramClient creado OK - CallSid: {self.call_sid}")
 
             # FIX 607A: Configuración ULTRA-OPTIMIZADA para llamadas telefónicas
-            # Deepgram ahora es transcriptor PRINCIPAL (ElevenLabs solo fallback con filtros)
-            # Objetivo: <200ms latencia total (120ms modelo + 100ms endpointing = 220ms)
             options = LiveOptions(
-                model="nova-2-phonecall",  # FIX 607A: Optimizado para llamadas (-30% latencia vs nova-2)
-                language="es-419",  # Español Latinoamérica
-                encoding="mulaw",  # Formato de audio de Twilio
-                sample_rate=8000,  # Frecuencia de Twilio
+                model="nova-2-phonecall",
+                language="es-419",
+                encoding="mulaw",
+                sample_rate=8000,
                 channels=1,
-                punctuate=True,  # Agregar puntuación
-                interim_results=True,  # Resultados parciales para baja latencia
-                # FIX 607A: Endpointing ultra-agresivo para velocidad máxima
-                endpointing=100,  # Reducido de 150ms a 100ms (-50ms ahorro)
-                smart_format=False,  # FIX 607A: Deshabilitado para eliminar overhead de procesamiento (-20ms)
-                # FIX 501: Procesar audio inmediatamente sin buffering
+                punctuate=True,
+                interim_results=True,
+                endpointing=100,
+                smart_format=False,
                 no_delay=True,
-                # FIX 222: REMOVIDOS parámetros que pueden causar HTTP 400:
-                # - utterance_end_ms (puede no estar soportado)
-                # - vad_events (puede no estar soportado)
-                # - filler_words (puede no estar soportado para es-419)
-                # - numerals (puede no estar soportado para es-419)
             )
 
-            # Crear conexión de streaming
+            # FIX 611: Logging de creación de conexión live
+            print(f" FIX 611: Creando conexión live.v(1) - CallSid: {self.call_sid}")
             self.dg_connection = self.deepgram_client.listen.live.v("1")
+            print(f" FIX 611: Conexión live creada OK - CallSid: {self.call_sid}")
 
             # Configurar handlers
+            print(f" FIX 611: Configurando handlers (Open/Transcript/Error/Close) - CallSid: {self.call_sid}")
             self.dg_connection.on(LiveTranscriptionEvents.Open, self._on_open)
             self.dg_connection.on(LiveTranscriptionEvents.Transcript, self._on_transcript)
             self.dg_connection.on(LiveTranscriptionEvents.Error, self._on_error)
             self.dg_connection.on(LiveTranscriptionEvents.Close, self._on_close)
+            print(f" FIX 611: Handlers configurados OK - CallSid: {self.call_sid}")
 
-            # FIX 222: Iniciar conexión con mejor manejo de errores
-            print(f" FIX 222: Iniciando conexión Deepgram...")
-            print(f"   Opciones: model={options.model}, language={options.language}, encoding={options.encoding}")
+            # FIX 611: Iniciar conexión con logging detallado
+            print(f" FIX 611: Llamando dg_connection.start() - CallSid: {self.call_sid}")
+            print(f" FIX 611: Opciones: model={options.model}, language={options.language}, encoding={options.encoding}")
 
             result = self.dg_connection.start(options)
+
+            # FIX 611: Logging de resultado
+            print(f" FIX 611: dg_connection.start() retornó: {result} (type: {type(result)}) - CallSid: {self.call_sid}")
+
             if result:
                 self.is_connected = True
-                print(f" FIX 212: Deepgram conectado para CallSid: {self.call_sid}")
+                print(f" FIX 611: [CONECTADO] WebSocket Deepgram ACTIVO - CallSid: {self.call_sid}")
                 return True
             else:
-                print(f" FIX 222: Deepgram.start() retornó False")
+                print(f" FIX 611: [ERROR] dg_connection.start() retornó False - CallSid: {self.call_sid}")
                 return False
 
         except Exception as e:
             import traceback
-            print(f" FIX 222: Error conectando a Deepgram: {type(e).__name__}: {e}")
+            print(f" FIX 611: [EXCEPCIÓN] Error conectando a Deepgram - CallSid: {self.call_sid}")
+            print(f" FIX 611: Tipo: {type(e).__name__}, Mensaje: {e}")
             traceback.print_exc()
             return False
 
@@ -224,17 +233,27 @@ class DeepgramTranscriber:
         Args:
             audio_data: bytes de audio (mulaw 8kHz)
         """
+        # FIX 611: Logging detallado de estado antes de enviar
         if not self.is_connected or not self.dg_connection:
+            # FIX 611: Loguear SOLO la primera vez que falla (evitar spam)
+            if self.audio_chunks_received == 0:
+                print(f" FIX 611: [ERROR] NO PUEDO ENVIAR AUDIO - CallSid: {self.call_sid}")
+                print(f" FIX 611:   is_connected={self.is_connected}, dg_connection={'EXISTS' if self.dg_connection else 'NULL'}")
             return False
 
         try:
             self.dg_connection.send(audio_data)
             self.audio_chunks_received += 1
+
+            # FIX 611: Loguear primeros 3 chunks para confirmar que audio fluye
+            if self.audio_chunks_received <= 3:
+                print(f" FIX 611: [AUDIO ENVIADO] Chunk #{self.audio_chunks_received}, size={len(audio_data)} bytes - CallSid: {self.call_sid}")
+
             # FIX 501: Registrar timestamp para medir latencia real
             self.last_audio_chunk_time = datetime.now()
             return True
         except Exception as e:
-            print(f" FIX 212: Error enviando audio: {e}")
+            print(f" FIX 611: [EXCEPCIÓN] Error enviando audio chunk #{self.audio_chunks_received} - CallSid: {self.call_sid}: {e}")
             return False
 
     def send_audio_base64(self, audio_base64):

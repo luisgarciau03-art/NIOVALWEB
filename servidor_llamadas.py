@@ -3599,8 +3599,12 @@ Responde SOLO con una letra: A, B, C, D o E"""
         transcriber = obtener_transcriber(call_sid)
         if transcriber:
             stats = transcriber.get_stats()
+            # FIX 611: Agregar estado de conexión
+            is_connected = transcriber.is_connected
+            has_connection = transcriber.dg_connection is not None
             log_evento(f"{bruce_id} - Deepgram Transcriber: audio_chunks={stats.get('audio_chunks', 0)}, "
                       f"transcripts={stats.get('transcripts', 0)}, finals={stats.get('final_transcripts', 0)}", "DIAGNÓSTICO")
+            log_evento(f"{bruce_id} - Deepgram Estado: is_connected={is_connected}, has_connection={has_connection}", "DIAGNÓSTICO")
         else:
             log_evento(f"{bruce_id} - Deepgram Transcriber: NO ENCONTRADO (problema crítico)", "DIAGNÓSTICO")
 
@@ -9449,20 +9453,30 @@ if FLASK_SOCK_AVAILABLE and sock:
 
                     # Crear Deepgram como fallback (o primario si ElevenLabs no está disponible)
                     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
+                        print(f" FIX 611: Llamando crear_transcriber() para Deepgram - CallSid: {call_sid}")
                         transcriber_deepgram = crear_transcriber(call_sid, on_deepgram_transcript)
+
                         if transcriber_deepgram:
+                            print(f" FIX 611: Transcriber Deepgram CREADO OK - CallSid: {call_sid}")
+                            print(f" FIX 611: Iniciando conexión asíncrona a Deepgram...")
+
                             # Conectar a Deepgram (sync wrapper para async)
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             connected = loop.run_until_complete(transcriber_deepgram.connect())
+
                             if connected:
                                 if usando_elevenlabs:
-                                    print(f" FIX 540: Deepgram conectado como FALLBACK para {call_sid}")
+                                    print(f" FIX 611: [OK] Deepgram conectado como FALLBACK - CallSid: {call_sid}")
                                 else:
-                                    print(f" FIX 212: Deepgram conectado como PRIMARIO para {call_sid}")
+                                    print(f" FIX 611: [OK] Deepgram conectado como PRIMARIO - CallSid: {call_sid}")
                             else:
-                                print(f" FIX 212: Error conectando Deepgram para {call_sid}")
+                                print(f" FIX 611: [ERROR] Deepgram NO pudo conectar - CallSid: {call_sid}")
                                 transcriber_deepgram = None
+                        else:
+                            print(f" FIX 611: [ERROR] crear_transcriber() retornó None - CallSid: {call_sid}")
+                    else:
+                        print(f" FIX 611: [SKIP] Deepgram no disponible - DEEPGRAM_AVAILABLE={DEEPGRAM_AVAILABLE}, USE_DEEPGRAM={USE_DEEPGRAM}")
 
                     # Resumen del sistema activo
                     if usando_elevenlabs and transcriber_deepgram:
