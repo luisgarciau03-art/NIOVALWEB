@@ -3564,6 +3564,47 @@ Responde SOLO con una letra: A, B, C, D o E"""
         agente.respuestas_vacias_consecutivas += 1
         print(f" Respuesta vacía #{agente.respuestas_vacias_consecutivas}")
 
+        # FIX 610: DIAGNÓSTICO DETALLADO - Por qué la transcripción está vacía
+        print(f"\n FIX 610: === DIAGNÓSTICO TRANSCRIPCIÓN VACÍA ===")
+        print(f"   CallSid: {call_sid}")
+        print(f"   Timeouts Deepgram previos: {getattr(agente, 'timeouts_deepgram', 0)}")
+        print(f"   Respuestas vacías consecutivas: {agente.respuestas_vacias_consecutivas}")
+
+        # Estado de Deepgram
+        with deepgram_transcripciones_lock:
+            dg_transcripciones = deepgram_transcripciones.get(call_sid, [])
+            dg_ultima = deepgram_ultima_final.get(call_sid, {})
+            print(f"   Deepgram - Transcripciones en buffer: {len(dg_transcripciones)}")
+            if dg_transcripciones:
+                print(f"   Deepgram - Últimas 3: {dg_transcripciones[-3:]}")
+            if dg_ultima:
+                print(f"   Deepgram - Última FINAL: es_final={dg_ultima.get('es_final')}, "
+                      f"timestamp={datetime.fromtimestamp(dg_ultima.get('timestamp', 0)).strftime('%H:%M:%S') if dg_ultima.get('timestamp') else 'N/A'}")
+
+        # Estado de ElevenLabs
+        if ELEVENLABS_STT_AVAILABLE:
+            with elevenlabs_transcripciones_lock:
+                el_transcripciones = elevenlabs_transcripciones.get(call_sid, [])
+                el_ultima = elevenlabs_ultima_final.get(call_sid, {})
+                print(f"   ElevenLabs - Transcripciones en buffer: {len(el_transcripciones)}")
+                if el_transcripciones:
+                    print(f"   ElevenLabs - Últimas 3: {el_transcripciones[-3:]}")
+                if el_ultima:
+                    el_texto = el_ultima.get('texto', '')
+                    print(f"   ElevenLabs - Última transcripción: '{el_texto}' (len={len(el_texto)})")
+
+        # Información de transcriber Deepgram
+        transcriber = obtener_transcriber(call_sid)
+        if transcriber:
+            stats = transcriber.get_stats()
+            print(f"   Deepgram Transcriber - Audio chunks: {stats.get('audio_chunks', 0)}, "
+                  f"Transcripts: {stats.get('transcripts', 0)}, "
+                  f"Finals: {stats.get('final_transcripts', 0)}")
+        else:
+            print(f"   Deepgram Transcriber - NO ENCONTRADO (puede ser problema)")
+
+        print(f" FIX 610: === FIN DIAGNÓSTICO ===\n")
+
         # FIX 145: Si es el PRIMER mensaje y está vacío, NO pedir repetición
         # Cliente normal necesita 2-3s para procesar "Hola, buen dia"
         # Contar mensajes de usuario para detectar si es primera respuesta

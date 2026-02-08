@@ -142,6 +142,8 @@ class DeepgramTranscriber:
             result = kwargs.get('result') or (args[1] if len(args) > 1 else None)
 
             if not result:
+                # FIX 610: Loguear cuando NO hay resultado
+                print(f" FIX 610: [DEEPGRAM] Callback sin resultado (CallSid: {self.call_sid})")
                 return
 
             # Extraer transcripción
@@ -149,45 +151,61 @@ class DeepgramTranscriber:
             alternatives = channel.alternatives
 
             if not alternatives:
+                # FIX 610: Loguear cuando NO hay alternativas
+                print(f" FIX 610: [DEEPGRAM] Sin alternativas (CallSid: {self.call_sid})")
                 return
 
             transcript = alternatives[0].transcript
             is_final = result.is_final
             speech_final = result.speech_final
-
-            if not transcript:
-                return
-
-            self.transcripts_received += 1
+            confidence = alternatives[0].confidence if hasattr(alternatives[0], 'confidence') else None
 
             # FIX 501: Calcular latencia REAL desde el último chunk de audio
-            # Antes: medía desde start_time (engañoso, podía mostrar 44s)
-            # Ahora: mide desde el último audio enviado (latencia real de Deepgram)
             if self.last_audio_chunk_time:
                 latency_ms = (datetime.now() - self.last_audio_chunk_time).total_seconds() * 1000
             else:
                 latency_ms = (datetime.now() - self.start_time).total_seconds() * 1000
 
+            # FIX 610: LOGUEAR INCLUSO SI TRANSCRIPCIÓN ESTÁ VACÍA
+            if not transcript or len(transcript.strip()) == 0:
+                print(f" FIX 610: [DEEPGRAM VACÍO] is_final={is_final}, speech_final={speech_final}, "
+                      f"confidence={confidence:.2f if confidence else 'N/A'}, latencia={latency_ms:.0f}ms, "
+                      f"audio_chunks={self.audio_chunks_received}")
+                # FIX 610: Seguir procesando para registrar el evento
+                # NO hacer return aquí - queremos ver estos eventos vacíos
+
+            self.transcripts_received += 1
+
             if is_final:
                 self.final_transcripts.append(transcript)
                 self.transcript_buffer = ""  # Limpiar buffer al recibir final
-                print(f" FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms)")
 
-                # Llamar callback con transcripción final
+                # FIX 610: Logging mejorado para FINAL
+                if transcript and len(transcript.strip()) > 0:
+                    print(f" FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms, confidence={confidence:.2f if confidence else 'N/A'})")
+                else:
+                    print(f" FIX 610: [FINAL VACÍO] latencia={latency_ms:.0f}ms, audio_chunks={self.audio_chunks_received}")
+
+                # Llamar callback con transcripción final (incluso si está vacía)
                 if self.on_transcript_callback:
                     self.on_transcript_callback(self.call_sid, transcript, True)
             else:
                 self.transcript_buffer = transcript
-                # FIX 218: Solo loguear parciales largos para reducir spam
-                if len(transcript) > 10:
-                    print(f" FIX 212: [PARCIAL] '{transcript}'")
+
+                # FIX 610: Logging mejorado para PARCIAL
+                if transcript and len(transcript) > 10:
+                    print(f" FIX 212: [PARCIAL] '{transcript}' (latencia: {latency_ms:.0f}ms)")
+                elif transcript and len(transcript) > 0:
+                    print(f" FIX 610: [PARCIAL CORTO] '{transcript}' ({len(transcript)} chars, latencia: {latency_ms:.0f}ms)")
 
                 # FIX 218: Llamar callback con transcripción parcial para tener datos más rápido
                 if self.on_transcript_callback and len(transcript) > 5:
                     self.on_transcript_callback(self.call_sid, transcript, False)
 
         except Exception as e:
-            print(f" FIX 212: Error procesando transcripción: {e}")
+            import traceback
+            print(f" FIX 610: Error procesando transcripción: {e}")
+            traceback.print_exc()
 
     def _on_error(self, *args, **kwargs):
         """Callback cuando hay error"""
