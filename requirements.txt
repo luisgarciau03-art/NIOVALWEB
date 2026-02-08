@@ -1,8 +1,9 @@
 # REQUIREMENTS - NIOVAL Sistema de Llamadas
-# FIX 212: Actualizado 2026-01-14
+# FIX 613: Actualizado 2026-02-08
 
-# CRITICO: Deepgram primero para asegurar instalación
+# CRITICO: STT Systems
 deepgram-sdk==3.7.0
+azure-cognitiveservices-speech>=1.36.0  # FIX 613: Azure Speech Services (STT primario)
 
 # Core AI
 openai>=1.12.0

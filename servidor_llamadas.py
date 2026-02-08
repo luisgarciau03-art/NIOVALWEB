@@ -40,7 +40,29 @@ if FLASK_SOCK_AVAILABLE:
     sock = Sock(app)
     print(" FIX 212: Flask-Sock inicializado para WebSocket")
 
-# FIX 212: Importar módulo de Deepgram
+# FIX 613: Importar módulo de Azure Speech Services (STT primario)
+AZURE_SPEECH_KEY = os.getenv("AZURE_SPEECH_KEY")
+AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION", "eastus")
+USE_AZURE = os.getenv("USE_AZURE_STT", "true").lower() == "true"
+
+try:
+    from azure_transcriber import (
+        AzureTranscriber,
+        crear_transcriber as crear_transcriber_azure,
+        obtener_transcriber as obtener_transcriber_azure,
+        eliminar_transcriber as eliminar_transcriber_azure,
+        verificar_configuracion as verificar_azure
+    )
+    AZURE_AVAILABLE = verificar_azure() if AZURE_SPEECH_KEY else False
+    if AZURE_AVAILABLE:
+        print("🎤 FIX 613: Azure Speech configurado como STT PRIMARIO (120-200ms, 95-97% precisión es-MX)")
+    else:
+        print("❌ FIX 613: Azure Speech no configurado - usando Deepgram como primario")
+except ImportError as e:
+    AZURE_AVAILABLE = False
+    print(f"❌ FIX 613: Módulo azure_transcriber no disponible: {e}")
+
+# FIX 212: Importar módulo de Deepgram (STT fallback)
 deepgram_transcriber = None
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 USE_DEEPGRAM = os.getenv("USE_DEEPGRAM", "true").lower() == "true"
@@ -48,51 +70,26 @@ USE_DEEPGRAM = os.getenv("USE_DEEPGRAM", "true").lower() == "true"
 try:
     from deepgram_transcriber import (
         DeepgramTranscriber,
-        crear_transcriber,
-        obtener_transcriber,
-        eliminar_transcriber,
+        crear_transcriber as crear_transcriber_deepgram,
+        obtener_transcriber as obtener_transcriber_deepgram,
+        eliminar_transcriber as eliminar_transcriber_deepgram,
         verificar_configuracion as verificar_deepgram
     )
     DEEPGRAM_AVAILABLE = verificar_deepgram() if DEEPGRAM_API_KEY else False
     if DEEPGRAM_AVAILABLE:
-        print(" FIX 212: Deepgram configurado y listo")
+        print("🔄 FIX 613: Deepgram configurado como STT FALLBACK")
     else:
-        print(" FIX 212: Deepgram no configurado - usando Whisper como fallback")
+        print("⚠️ FIX 613: Deepgram no configurado - sin sistema de fallback STT")
 except ImportError as e:
     DEEPGRAM_AVAILABLE = False
-    print(f" FIX 212: Módulo deepgram_transcriber no disponible: {e}")
+    print(f"❌ FIX 212: Módulo deepgram_transcriber no disponible: {e}")
 
-# FIX 540: Importar módulo de ElevenLabs Scribe (STT primario, Deepgram como fallback)
-USE_ELEVENLABS_STT = os.getenv("USE_ELEVENLABS_STT", "true").lower() == "true"
-ELEVENLABS_STT_AVAILABLE = False
-elevenlabs_transcriber_module = None
+# FIX 613: Almacenamiento de transcripciones de Azure Speech (STT primario)
+azure_transcripciones = {}  # call_sid -> [transcripciones]
+azure_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es_final": bool}
+azure_ultima_parcial = {}  # call_sid -> {"timestamp": float, "texto": str}
 
-try:
-    import elevenlabs_transcriber as elevenlabs_transcriber_module
-    from elevenlabs_transcriber import (
-        ElevenLabsTranscriber,
-        crear_transcriber as crear_transcriber_elevenlabs,
-        obtener_transcriber as obtener_transcriber_elevenlabs,
-        eliminar_transcriber as eliminar_transcriber_elevenlabs,
-        verificar_configuracion as verificar_elevenlabs_stt,
-        ELEVENLABS_STT_AVAILABLE as EL_STT_AVAIL
-    )
-    ELEVENLABS_STT_AVAILABLE = EL_STT_AVAIL and USE_ELEVENLABS_STT
-    if ELEVENLABS_STT_AVAILABLE:
-        print(" FIX 607: Deepgram configurado como STT PRIMARIO")
-        print("    ElevenLabs Scribe activo como COMPLEMENTO (con filtro de idioma FIX 607B)")
-    else:
-        print(" FIX 607: ElevenLabs Scribe no disponible - usando solo Deepgram")
-except ImportError as e:
-    ELEVENLABS_STT_AVAILABLE = False
-    print(f" FIX 540: Módulo elevenlabs_transcriber no disponible: {e}")
-
-# FIX 540: Almacenamiento de transcripciones de ElevenLabs
-elevenlabs_transcripciones = {}  # call_sid -> [transcripciones]
-elevenlabs_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es_final": bool}
-elevenlabs_transcripciones_lock = threading.Lock()
-
-# Almacenamiento de transcripciones pendientes de Deepgram
+# Almacenamiento de transcripciones pendientes de Deepgram (STT fallback)
 deepgram_transcripciones = {}  # call_sid -> transcripción
 # FIX 451: Tracking de transcripciones FINAL vs PARCIAL
 deepgram_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es_final": bool}
@@ -107,7 +104,9 @@ bruce_audio_enviado_timestamp = {}  # call_sid -> timestamp cuando se envió el 
 deepgram_ultima_parcial = {}  # call_sid -> {"timestamp": float, "texto": str}
 
 # FIX 490: Locks para prevenir race conditions en acceso concurrente a diccionarios compartidos
-# Los threads de Deepgram, GPT, y cleanup acceden a estos diccionarios simultáneamente
+# Los threads de Azure, Deepgram, GPT, y cleanup acceden a estos diccionarios simultáneamente
+azure_transcripciones_lock = threading.Lock()
+azure_ultima_final_lock = threading.Lock()
 deepgram_transcripciones_lock = threading.Lock()
 deepgram_ultima_final_lock = threading.Lock()
 conversaciones_activas_lock = threading.Lock()
@@ -3446,17 +3445,17 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     # FIX 566: Reducir wait non-email de 1.5s a 1.0s
                     timeout_espera = 2.5 if esta_deletreando_email else 1.0
 
-                    # FIX 566: Check si ElevenLabs ya tiene transcripción final antes de esperar
-                    if ELEVENLABS_STT_AVAILABLE:
+                    # FIX 613: Check si Azure ya tiene transcripción final antes de esperar
+                    if AZURE_AVAILABLE:
                         import time as time_566
-                        with elevenlabs_transcripciones_lock:
-                            ultima_el_566 = elevenlabs_ultima_final.get(call_sid, {})
-                            if ultima_el_566.get("es_final") and (time_566.time() - ultima_el_566.get("timestamp", 0)) < 3.0:
-                                el_texto_566 = ultima_el_566.get("texto", "").strip()
-                                if el_texto_566 and len(el_texto_566) > len(speech_result):
-                                    print(f" FIX 566: ElevenLabs tiene FINAL: '{el_texto_566}'")
-                                    print(f"   Usando ElevenLabs en lugar de esperar {timeout_espera}s")
-                                    speech_result = el_texto_566
+                        with azure_transcripciones_lock:
+                            ultima_az_566 = azure_ultima_final.get(call_sid, {})
+                            if ultima_az_566.get("es_final") and (time_566.time() - ultima_az_566.get("timestamp", 0)) < 3.0:
+                                az_texto_566 = ultima_az_566.get("texto", "").strip()
+                                if az_texto_566 and len(az_texto_566) > len(speech_result):
+                                    print(f"✅ FIX 613/566: Azure tiene FINAL: '{az_texto_566}'")
+                                    print(f"   Usando Azure en lugar de esperar {timeout_espera}s")
+                                    speech_result = az_texto_566
                                     frase_parece_incompleta = False  # No esperar
 
                     response.record(
@@ -3583,20 +3582,29 @@ Responde SOLO con una letra: A, B, C, D o E"""
                 dg_timestamp = datetime.fromtimestamp(dg_ultima.get('timestamp', 0)).strftime('%H:%M:%S') if dg_ultima.get('timestamp') else 'N/A'
                 log_evento(f"{bruce_id} - Deepgram última FINAL: is_final={dg_ultima.get('es_final')}, timestamp={dg_timestamp}", "DIAGNÓSTICO")
 
-        # Estado de ElevenLabs
-        if ELEVENLABS_STT_AVAILABLE:
-            with elevenlabs_transcripciones_lock:
-                el_transcripciones = elevenlabs_transcripciones.get(call_sid, [])
-                el_ultima = elevenlabs_ultima_final.get(call_sid, {})
-                log_evento(f"{bruce_id} - ElevenLabs buffer: {len(el_transcripciones)} transcripciones", "DIAGNÓSTICO")
-                if el_transcripciones:
-                    log_evento(f"{bruce_id} - ElevenLabs últimas 3: {el_transcripciones[-3:]}", "DIAGNÓSTICO")
-                if el_ultima:
-                    el_texto = el_ultima.get('texto', '')
-                    log_evento(f"{bruce_id} - ElevenLabs última: '{el_texto}' (len={len(el_texto)})", "DIAGNÓSTICO")
+        # FIX 613: Estado de Azure Speech (STT primario)
+        if AZURE_AVAILABLE:
+            with azure_transcripciones_lock:
+                az_transcripciones = azure_transcripciones.get(call_sid, [])
+                az_ultima = azure_ultima_final.get(call_sid, {})
+                log_evento(f"{bruce_id} - Azure buffer: {len(az_transcripciones)} transcripciones", "DIAGNÓSTICO")
+                if az_transcripciones:
+                    log_evento(f"{bruce_id} - Azure últimas 3: {az_transcripciones[-3:]}", "DIAGNÓSTICO")
+                if az_ultima:
+                    az_texto = az_ultima.get('texto', '')
+                    log_evento(f"{bruce_id} - Azure última: '{az_texto}' (len={len(az_texto)})", "DIAGNÓSTICO")
 
-        # Información de transcriber Deepgram
-        transcriber = obtener_transcriber(call_sid)
+        # FIX 613: Información de transcriber Azure
+        transcriber_az = obtener_transcriber_azure(call_sid)
+        if transcriber_az:
+            stats_az = transcriber_az.get_stats()
+            is_connected_az = transcriber_az.is_connected
+            log_evento(f"{bruce_id} - Azure Transcriber: audio_chunks={stats_az.get('audio_chunks', 0)}, "
+                      f"transcripts={stats_az.get('transcripts', 0)}, finals={stats_az.get('final_transcripts', 0)}", "DIAGNÓSTICO")
+            log_evento(f"{bruce_id} - Azure Estado: is_connected={is_connected_az}", "DIAGNÓSTICO")
+
+        # Información de transcriber Deepgram (fallback)
+        transcriber = obtener_transcriber_deepgram(call_sid)
         if transcriber:
             stats = transcriber.get_stats()
             # FIX 611: Agregar estado de conexión
@@ -3617,25 +3625,25 @@ Responde SOLO con una letra: A, B, C, D o E"""
         es_primer_mensaje = len(mensajes_usuario) == 0
 
         if es_primer_mensaje:
-            # FIX 564: ANTES de declarar timeout, verificar si ElevenLabs tiene transcripción
+            # FIX 613: ANTES de declarar timeout, verificar si Azure tiene transcripción
             import time as time_564
-            elevenlabs_texto_564 = None
-            if ELEVENLABS_STT_AVAILABLE:
-                with elevenlabs_transcripciones_lock:
-                    if call_sid in elevenlabs_transcripciones and elevenlabs_transcripciones[call_sid]:
-                        ultima_el = elevenlabs_ultima_final.get(call_sid, {})
-                        if ultima_el and (time_564.time() - ultima_el.get("timestamp", 0)) < 5.0:
-                            elevenlabs_texto_564 = ultima_el.get("texto", "").strip()
-                            if elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2:
-                                print(f" FIX 564: ElevenLabs TIENE transcripción válida: '{elevenlabs_texto_564}'")
-                                print(f"   Usando ElevenLabs en lugar de declarar timeout Deepgram")
+            azure_texto_564 = None
+            if AZURE_AVAILABLE:
+                with azure_transcripciones_lock:
+                    if call_sid in azure_transcripciones and azure_transcripciones[call_sid]:
+                        ultima_az = azure_ultima_final.get(call_sid, {})
+                        if ultima_az and (time_564.time() - ultima_az.get("timestamp", 0)) < 5.0:
+                            azure_texto_564 = ultima_az.get("texto", "").strip()
+                            if azure_texto_564 and len(azure_texto_564) > 2:
+                                print(f"✅ FIX 613/564: Azure TIENE transcripción válida: '{azure_texto_564}'")
+                                print(f"   Usando Azure en lugar de declarar timeout")
 
-            if elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2:
-                # FIX 564: Usar transcripción de ElevenLabs - tratar como si Deepgram funcionara
-                speech_result = elevenlabs_texto_564
+            if azure_texto_564 and len(azure_texto_564) > 2:
+                # FIX 613: Usar transcripción de Azure - tratar como si Deepgram funcionara
+                speech_result = azure_texto_564
                 agente.respuestas_vacias_consecutivas = 0
                 if hasattr(agente, 'timeouts_deepgram') and agente.timeouts_deepgram > 0:
-                    print(f"    FIX 564: Reseteando timeouts_deepgram (era {agente.timeouts_deepgram})")
+                    print(f"    ✅ FIX 613/564: Reseteando timeouts_deepgram (era {agente.timeouts_deepgram})")
                     agente.timeouts_deepgram = 0
                 # Continuar con procesamiento normal (NO entrar al bloque de timeout)
             else:
@@ -9043,27 +9051,19 @@ def es_texto_valido_espanol(texto):
 
 
 # FIX 540: Callback para ElevenLabs Scribe (STT primario)
-def on_elevenlabs_transcript(call_sid, texto, is_final):
+def on_azure_transcript(call_sid, texto, is_final):
     """
-    FIX 540: Callback cuando ElevenLabs Scribe transcribe algo
-    Funciona igual que on_deepgram_transcript pero con mejor precisión (~5% WER)
-    FIX 540.1: Corregido race condition y duplicación de transcripciones
-    FIX 548: Validar idioma para rechazar transcripciones corruptas
+    FIX 613: Callback cuando Azure Speech transcribe algo
+    Azure es STT primario con mejor latencia (120-200ms) y precisión (95-97% es-MX)
     """
     if not texto or not texto.strip():
         return
 
     texto = texto.strip()
-
-    # FIX 548: Validar que el texto sea español/latino
-    if not es_texto_valido_espanol(texto):
-        print(f" FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): '{texto[:80]}'")
-        return  # NO procesar esta transcripción
-
     texto_lower = texto.lower()
     import time
 
-    # FIX 244: Tracking de habla activa (compartido con Deepgram)
+    # FIX 244: Tracking de habla activa
     if call_sid not in cliente_hablando_activo:
         cliente_hablando_activo[call_sid] = {
             "inicio": time.time(),
@@ -9082,16 +9082,16 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
         es_corto = len(palabras) <= 4
 
         if es_saludo and es_corto:
-            print(f" FIX 540/314: Saludo detectado en INTERIM (ElevenLabs): '{texto}' - Pre-cargando respuesta...")
+            print(f"🎤 FIX 613/314: Saludo detectado en INTERIM (Azure): '{texto}' - Pre-cargando respuesta...")
             respuesta_precargada[call_sid] = {
                 "audio_listo": True,
                 "tipo": "segunda_parte_saludo",
                 "timestamp": time.time()
             }
             if "segunda_parte_saludo" in audio_cache:
-                print(f" FIX 314: Audio segunda_parte_saludo YA está en cache")
+                print(f"✅ FIX 314: Audio segunda_parte_saludo YA está en cache")
 
-    # FIX 608B: Detectar patrones adicionales en interim (ElevenLabs)
+    # FIX 608B: Detectar patrones adicionales en interim
     if not is_final and call_sid not in respuesta_precargada:
         palabras_608b = texto.split()
         es_parcial_largo = len(palabras_608b) >= 15
@@ -9107,7 +9107,7 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
                     break
 
             if patron_detectado_608b:
-                print(f" FIX 608B: Patrón {tipo_608b} detectado en INTERIM ElevenLabs ({len(palabras_608b)} palabras)")
+                print(f"⚡ FIX 608B: Patrón {tipo_608b} detectado en INTERIM Azure ({len(palabras_608b)} palabras)")
                 print(f"    Texto: '{texto[:80]}...'")
                 respuesta_precargada[call_sid] = {
                     "audio_listo": False,
@@ -9116,42 +9116,42 @@ def on_elevenlabs_transcript(call_sid, texto, is_final):
                     "texto_interim": texto
                 }
 
-    # FIX 540.1: Guardar transcripciones de ElevenLabs (con inicialización DENTRO del lock)
-    with elevenlabs_transcripciones_lock:
+    # FIX 613: Guardar transcripciones de Azure
+    with azure_transcripciones_lock:
         # Inicializar DENTRO del lock para evitar race condition
-        if call_sid not in elevenlabs_transcripciones:
-            elevenlabs_transcripciones[call_sid] = []
+        if call_sid not in azure_transcripciones:
+            azure_transcripciones[call_sid] = []
 
         if is_final:
-            print(f" FIX 540: [FINAL ElevenLabs] '{texto}'")
-            elevenlabs_transcripciones[call_sid].append(texto)
-            elevenlabs_ultima_final[call_sid] = {
+            print(f"✅ FIX 613: [FINAL Azure] '{texto}'")
+            azure_transcripciones[call_sid].append(texto)
+            azure_ultima_final[call_sid] = {
                 "timestamp": time.time(),
                 "texto": texto,
                 "es_final": True
             }
         else:
             if len(texto) > 10:
-                print(f" FIX 540: [PARCIAL ElevenLabs] '{texto}'")
+                print(f"⏳ FIX 613: [PARCIAL Azure] '{texto}'")
 
-            # FIX 540.1: Aplicar misma lógica que FIX 538 - PARCIAL no reemplaza FINAL
+            # Aplicar misma lógica que FIX 538 - PARCIAL no reemplaza FINAL
             ultima_fue_final = False
-            ultima_info_el = elevenlabs_ultima_final.get(call_sid, {})
-            if ultima_info_el.get("es_final") and (time.time() - ultima_info_el.get("timestamp", 0)) < 1.0:
+            ultima_info_az = azure_ultima_final.get(call_sid, {})
+            if ultima_info_az.get("es_final") and (time.time() - ultima_info_az.get("timestamp", 0)) < 1.0:
                 ultima_fue_final = True
 
-            if elevenlabs_transcripciones[call_sid]:
+            if azure_transcripciones[call_sid]:
                 if ultima_fue_final:
                     # La última fue FINAL - agregar PARCIAL como nueva entrada
-                    elevenlabs_transcripciones[call_sid].append(texto)
-                    print(f"    FIX 540.1: PARCIAL agregada (última era FINAL)")
+                    azure_transcripciones[call_sid].append(texto)
+                    print(f"    ➕ FIX 613: PARCIAL agregada (última era FINAL)")
                 else:
                     # Agregar parcial solo si es más larga que la última
-                    ultima = elevenlabs_transcripciones[call_sid][-1]
+                    ultima = azure_transcripciones[call_sid][-1]
                     if len(texto) > len(ultima):
-                        elevenlabs_transcripciones[call_sid][-1] = texto
+                        azure_transcripciones[call_sid][-1] = texto
             else:
-                elevenlabs_transcripciones[call_sid].append(texto)
+                azure_transcripciones[call_sid].append(texto)
 
     # FIX 588: BRUCE1965 - Solo copiar FINALs de ElevenLabs a deepgram_transcripciones
     # Problema: PARCIALs de ElevenLabs crecen con texto corrupto más largo que sobrescribe
@@ -9326,20 +9326,25 @@ def on_deepgram_transcript(call_sid, texto, is_final):
             deepgram_transcripciones[call_sid] = []
 
         if is_final:
-            # FIX 540.2: Verificar si ElevenLabs ya agregó esta transcripción (evita duplicados)
+            # FIX 613: Verificar si Azure ya agregó esta transcripción (evita duplicados)
+            # Deepgram es fallback, solo se usa si Azure falla
             texto_norm = texto.lower().strip()
             ya_existe = False
-            ultimas_3 = deepgram_transcripciones[call_sid][-3:] if deepgram_transcripciones[call_sid] else []
-            for t in ultimas_3:
-                if t and t.lower().strip() == texto_norm:
-                    ya_existe = True
-                    break
+
+            # Verificar en transcripciones de Azure (el primario)
+            with azure_transcripciones_lock:
+                azure_trans = azure_transcripciones.get(call_sid, [])
+                ultimas_3_azure = azure_trans[-3:] if azure_trans else []
+                for t in ultimas_3_azure:
+                    if t and t.lower().strip() == texto_norm:
+                        ya_existe = True
+                        break
 
             if ya_existe:
-                print(f" FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '{texto}'")
+                print(f"⚠️ FIX 613: Transcripción Deepgram ya existe (de Azure), ignorando: '{texto}'")
             else:
                 # Transcripción final - agregar al array
-                print(f" FIX 212: Transcripción FINAL Deepgram para {call_sid}: '{texto}'")
+                print(f"🔄 FIX 613: Transcripción FINAL Deepgram (fallback) para {call_sid}: '{texto}'")
                 deepgram_transcripciones[call_sid].append(texto)
                 # FIX 451: Marcar que recibimos transcripción FINAL
                 with deepgram_ultima_final_lock:
@@ -9349,7 +9354,7 @@ def on_deepgram_transcript(call_sid, texto, is_final):
                         "timestamp": time.time(),
                         "texto": texto,
                         "es_final": True,
-                        "fuente": "deepgram"  # FIX 540.2: Marcar fuente
+                        "fuente": "deepgram"  # FIX 613: Marcar fuente
                     }
         else:
             # FIX 218: Transcripción parcial - reemplazar última entrada parcial
@@ -9403,16 +9408,16 @@ if FLASK_SOCK_AVAILABLE and sock:
     @sock.route('/media-stream')
     def media_stream(ws):
         """
-        FIX 212/540: WebSocket endpoint para recibir MediaStream de Twilio
-        y enviarlo a ElevenLabs Scribe (primario) + Deepgram (fallback)
+        FIX 613: WebSocket endpoint para recibir MediaStream de Twilio
+        y enviarlo a Azure Speech (primario) + Deepgram (fallback)
         """
-        print(f"\n FIX 212: Nueva conexión WebSocket /media-stream")
+        print(f"\n🎙️ FIX 613: Nueva conexión WebSocket /media-stream")
 
         call_sid = None
-        transcriber_deepgram = None  # FIX 540: Renombrado para claridad
-        transcriber_elevenlabs = None  # FIX 540: Transcriber de ElevenLabs
+        transcriber_azure = None  # FIX 613: Transcriber de Azure Speech (primario)
+        transcriber_deepgram = None  # FIX 613: Transcriber de Deepgram (fallback)
         stream_sid = None
-        usando_elevenlabs = False  # FIX 540: Flag para saber cuál está activo
+        usando_azure = False  # FIX 613: Flag para saber si Azure está activo
 
         try:
             while True:
@@ -9437,28 +9442,34 @@ if FLASK_SOCK_AVAILABLE and sock:
                     print(f"   StreamSid: {stream_sid}")
                     print(f"   CallSid: {call_sid}")
 
-                    # FIX 540: SISTEMA DUAL - ElevenLabs primario, Deepgram fallback
-                    # Intentar ElevenLabs Scribe primero
-                    if ELEVENLABS_STT_AVAILABLE:
-                        print(f" FIX 540: Intentando ElevenLabs Scribe (primario)...")
-                        transcriber_elevenlabs = crear_transcriber_elevenlabs(call_sid, on_elevenlabs_transcript)
-                        if transcriber_elevenlabs:
-                            connected = transcriber_elevenlabs.connect()
-                            if connected:
-                                print(f" FIX 540: ElevenLabs Scribe conectado para {call_sid}")
-                                usando_elevenlabs = True
-                            else:
-                                print(f" FIX 540: Error conectando ElevenLabs - usando Deepgram fallback")
-                                transcriber_elevenlabs = None
+                    # FIX 613: SISTEMA DUAL - Azure primario, Deepgram fallback
+                    # Intentar Azure Speech primero
+                    if AZURE_AVAILABLE and USE_AZURE:
+                        print(f"🎤 FIX 613: Intentando Azure Speech (primario)...")
+                        transcriber_azure = crear_transcriber_azure(call_sid, on_azure_transcript)
+                        if transcriber_azure:
+                            # Conectar a Azure (sync wrapper para async)
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            connected = loop.run_until_complete(transcriber_azure.connect())
 
-                    # Crear Deepgram como fallback (o primario si ElevenLabs no está disponible)
+                            if connected:
+                                print(f"✅ FIX 613: Azure Speech conectado para {call_sid}")
+                                usando_azure = True
+                            else:
+                                print(f"❌ FIX 613: Error conectando Azure - usando Deepgram fallback")
+                                transcriber_azure = None
+                        else:
+                            print(f"❌ FIX 613: crear_transcriber_azure() retornó None")
+
+                    # Crear Deepgram como fallback (o primario si Azure no está disponible)
                     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
-                        print(f" FIX 611: Llamando crear_transcriber() para Deepgram - CallSid: {call_sid}")
-                        transcriber_deepgram = crear_transcriber(call_sid, on_deepgram_transcript)
+                        print(f"🔄 FIX 613: Llamando crear_transcriber_deepgram() - CallSid: {call_sid}")
+                        transcriber_deepgram = crear_transcriber_deepgram(call_sid, on_deepgram_transcript)
 
                         if transcriber_deepgram:
-                            print(f" FIX 611: Transcriber Deepgram CREADO OK - CallSid: {call_sid}")
-                            print(f" FIX 611: Iniciando conexión asíncrona a Deepgram...")
+                            print(f"✅ FIX 613: Transcriber Deepgram CREADO OK - CallSid: {call_sid}")
+                            print(f"🔗 FIX 613: Iniciando conexión asíncrona a Deepgram...")
 
                             # Conectar a Deepgram (sync wrapper para async)
                             loop = asyncio.new_event_loop()
@@ -9466,27 +9477,27 @@ if FLASK_SOCK_AVAILABLE and sock:
                             connected = loop.run_until_complete(transcriber_deepgram.connect())
 
                             if connected:
-                                if usando_elevenlabs:
-                                    print(f" FIX 611: [OK] Deepgram conectado como FALLBACK - CallSid: {call_sid}")
+                                if usando_azure:
+                                    print(f"🔄 FIX 613: [OK] Deepgram conectado como FALLBACK - CallSid: {call_sid}")
                                 else:
-                                    print(f" FIX 611: [OK] Deepgram conectado como PRIMARIO - CallSid: {call_sid}")
+                                    print(f"⚠️ FIX 613: [OK] Deepgram conectado como PRIMARIO (Azure no disponible) - CallSid: {call_sid}")
                             else:
-                                print(f" FIX 611: [ERROR] Deepgram NO pudo conectar - CallSid: {call_sid}")
+                                print(f"❌ FIX 613: [ERROR] Deepgram NO pudo conectar - CallSid: {call_sid}")
                                 transcriber_deepgram = None
                         else:
-                            print(f" FIX 611: [ERROR] crear_transcriber() retornó None - CallSid: {call_sid}")
+                            print(f"❌ FIX 613: [ERROR] crear_transcriber_deepgram() retornó None - CallSid: {call_sid}")
                     else:
-                        print(f" FIX 611: [SKIP] Deepgram no disponible - DEEPGRAM_AVAILABLE={DEEPGRAM_AVAILABLE}, USE_DEEPGRAM={USE_DEEPGRAM}")
+                        print(f"⚠️ FIX 613: [SKIP] Deepgram no disponible - DEEPGRAM_AVAILABLE={DEEPGRAM_AVAILABLE}, USE_DEEPGRAM={USE_DEEPGRAM}")
 
                     # Resumen del sistema activo
-                    if usando_elevenlabs and transcriber_deepgram:
-                        print(f" FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)")
-                    elif usando_elevenlabs:
-                        print(f" FIX 540: Solo ElevenLabs activo")
+                    if usando_azure and transcriber_deepgram:
+                        print(f"✅ FIX 613: SISTEMA DUAL ACTIVO - Azure (primario 120-200ms) + Deepgram (fallback)")
+                    elif usando_azure:
+                        print(f"✅ FIX 613: Solo Azure activo (120-200ms latencia, 95-97% precisión es-MX)")
                     elif transcriber_deepgram:
-                        print(f" FIX 540: Solo Deepgram activo")
+                        print(f"⚠️ FIX 613: Solo Deepgram activo (Azure no disponible)")
                     else:
-                        print(f" FIX 540: ADVERTENCIA - Sin transcriber activo!")
+                        print(f"❌ FIX 613: ADVERTENCIA - Sin transcriber activo!")
 
                 elif event == 'media':
                     # Audio chunk recibido de Twilio
@@ -9494,27 +9505,27 @@ if FLASK_SOCK_AVAILABLE and sock:
                     payload = media_data.get('payload')  # Audio en base64
 
                     if payload:
-                        # FIX 540: Enviar a ElevenLabs si está activo
-                        if transcriber_elevenlabs and transcriber_elevenlabs.is_connected:
-                            transcriber_elevenlabs.send_audio_base64(payload)
-                        elif transcriber_elevenlabs and not transcriber_elevenlabs.is_connected:
-                            # ElevenLabs se desconectó - marcar para usar Deepgram
-                            print(f" FIX 540: ElevenLabs desconectado - switching a Deepgram")
-                            usando_elevenlabs = False
+                        # FIX 613: Enviar a Azure si está activo
+                        if transcriber_azure and transcriber_azure.is_connected:
+                            transcriber_azure.send_audio_base64(payload)
+                        elif transcriber_azure and not transcriber_azure.is_connected:
+                            # Azure se desconectó - marcar para usar Deepgram
+                            print(f"❌ FIX 613: Azure desconectado - switching a Deepgram")
+                            usando_azure = False
 
-                        # FIX 540: Enviar también a Deepgram (como backup o primario)
+                        # FIX 613: Enviar también a Deepgram (como backup o primario)
                         if transcriber_deepgram:
                             # FIX 536: Verificar conexión y reconectar si es necesario
                             if not transcriber_deepgram.is_connected:
-                                print(f" FIX 536: Deepgram desconectado - intentando reconectar")
+                                print(f"🔄 FIX 536: Deepgram desconectado - intentando reconectar")
                                 try:
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     reconnected = loop.run_until_complete(transcriber_deepgram.reconnect())
                                     if not reconnected:
-                                        print(f" FIX 536: Reconexión fallida - continuando sin Deepgram")
+                                        print(f"❌ FIX 536: Reconexión fallida - continuando sin Deepgram")
                                 except Exception as recon_error:
-                                    print(f" FIX 536: Error en reconexión: {recon_error}")
+                                    print(f"❌ FIX 536: Error en reconexión: {recon_error}")
 
                             # Enviar audio si está conectado
                             if transcriber_deepgram.is_connected:
@@ -9536,38 +9547,44 @@ if FLASK_SOCK_AVAILABLE and sock:
                 traceback.print_exc()
 
         finally:
-            # FIX 540: Limpiar recursos de ElevenLabs
-            if transcriber_elevenlabs:
+            # FIX 613: Limpiar recursos de Azure Speech
+            if transcriber_azure:
                 try:
-                    transcriber_elevenlabs.close()
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(transcriber_azure.close())
+                    print(f"✅ FIX 613: Azure transcriber cerrado OK")
                 except Exception as e:
-                    print(f" Error cerrando ElevenLabs transcriber: {e}")
+                    print(f"❌ FIX 613: Error cerrando Azure transcriber: {e}")
 
                 if call_sid:
-                    eliminar_transcriber_elevenlabs(call_sid)
-                    # FIX 540.2: Limpiar diccionarios locales de ElevenLabs (evita memory leak)
-                    with elevenlabs_transcripciones_lock:
-                        if call_sid in elevenlabs_transcripciones:
-                            del elevenlabs_transcripciones[call_sid]
-                        if call_sid in elevenlabs_ultima_final:
-                            del elevenlabs_ultima_final[call_sid]
+                    eliminar_transcriber_azure(call_sid)
+                    # Limpiar diccionarios locales de Azure (evita memory leak)
+                    with azure_transcripciones_lock:
+                        if call_sid in azure_transcripciones:
+                            del azure_transcripciones[call_sid]
+                        if call_sid in azure_ultima_final:
+                            del azure_ultima_final[call_sid]
+                        if call_sid in azure_ultima_parcial:
+                            del azure_ultima_parcial[call_sid]
 
-            # Limpiar recursos de Deepgram
+            # FIX 613: Limpiar recursos de Deepgram
             if transcriber_deepgram:
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(transcriber_deepgram.close())
+                    print(f"✅ FIX 613: Deepgram transcriber cerrado OK")
                 except Exception as e:
-                    print(f" Error cerrando Deepgram transcriber: {e}")
+                    print(f"❌ FIX 613: Error cerrando Deepgram transcriber: {e}")
 
                 if call_sid:
-                    eliminar_transcriber(call_sid)
+                    eliminar_transcriber_deepgram(call_sid)
                     # FIX 314: Limpiar respuesta pre-cargada
                     if call_sid in respuesta_precargada:
                         del respuesta_precargada[call_sid]
 
-            print(f" FIX 212: WebSocket cerrado - CallSid: {call_sid}")
+            print(f"🔴 FIX 613: WebSocket cerrado - CallSid: {call_sid}")
 
 
 if __name__ == "__main__":
