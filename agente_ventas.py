@@ -1342,17 +1342,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         texto_lower = texto_cliente.lower().strip()
 
-        # TIPO 1: Indicadores directos de confusión
-        # FIX 616A: BRUCE2031 - Agregar "no escuché bien" y "me puedes repetir"
-        # PROBLEMA: "no escuché" contiene substring "no es" que activaba CORRECCION incorrectamente
-        # SOLUCION: Estos patrones se evalúan ANTES de CORRECCION (prioridad más alta)
-        indicadores_confusion = [
-            'no entendí', 'no entendi', '¿cómo?', '¿como?', 'como dice',
-            'no le escucho', 'no escucho bien', 'no se le escucha',
-            'no entiendo', '¿qué dice?', '¿que dice?', 'qué dice',
-            'no le entiendo', 'no te entiendo', 'perdón', 'perdon',
-            'no me quedó claro', 'no me quedo claro',
-            # FIX 616A: BRUCE2031 - Cliente pide que le repitan (NO es corrección)
+        # FIX 618B: BRUCE2033 - Separar PEDIR_REPETIR de CONFUSION
+        # PEDIR_REPETIR: Cliente NO ESCUCHÓ a Bruce (audio) → repetir literalmente
+        # CONFUSION: Cliente no ENTENDIÓ a Bruce (concepto) → re-explicar
+        # Problema: Antes ambos generaban "me expliqué mal..." → loop porque cliente
+        #   quería que REPITIERA, no que explicara diferente
+        indicadores_pedir_repetir = [
             'no escuché bien', 'no escuche bien', 'no te escuché',
             'no te escuche', 'no le escuché', 'no le escuche',
             'no escuché', 'no escuche',
@@ -1361,6 +1356,22 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'no alcancé a escuchar', 'no alcance a escuchar',
             'no oí bien', 'no oi bien', 'no oí', 'no oi',
             'no te oigo', 'no le oigo', 'no se oye',
+            'repítelo', 'repitelo', 'me lo repites', 'me lo puede repetir',
+            'otra vez por favor', 'una vez más', 'una vez mas',
+        ]
+
+        if any(ind in texto_lower for ind in indicadores_pedir_repetir):
+            print(f"\n FIX 618B: PEDIR_REPETIR - Cliente no escuchó a Bruce")
+            print(f"   Cliente dijo: '{texto_cliente}'")
+            return (True, "PEDIR_REPETIR", texto_cliente)
+
+        # TIPO 1: Indicadores directos de confusión (conceptual)
+        indicadores_confusion = [
+            'no entendí', 'no entendi', '¿cómo?', '¿como?', 'como dice',
+            'no le escucho', 'no escucho bien', 'no se le escucha',
+            'no entiendo', '¿qué dice?', '¿que dice?', 'qué dice',
+            'no le entiendo', 'no te entiendo', 'perdón', 'perdon',
+            'no me quedó claro', 'no me quedo claro',
         ]
 
         if any(ind in texto_lower for ind in indicadores_confusion):
@@ -1468,6 +1479,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             )
 
         # RECUPERACIÓN SEGÚN TIPO DE ERROR
+
+        # FIX 618B: PEDIR_REPETIR → Repetir LITERALMENTE el último mensaje de Bruce
+        if tipo_error == "PEDIR_REPETIR":
+            print(f"   FIX 618B: Cliente pide repetir - buscando último mensaje de Bruce")
+            ultimos_bruce_rep = [
+                msg['content'] for msg in self.conversation_history
+                if msg['role'] == 'assistant'
+            ]
+            if ultimos_bruce_rep:
+                ultimo_msg = ultimos_bruce_rep[-1]
+                print(f"   FIX 618B: Repitiendo: '{ultimo_msg[:60]}...'")
+                return ultimo_msg
+            # Si no hay mensaje previo, hacer presentación
+            return "Me comunico de la marca NIOVAL, vendemos productos para ferreterías. ¿Se encontrará el encargado de compras?"
 
         if tipo_error == "CONFUSION":
             # Cliente no entendió → Repetir MÁS CLARO y MÁS CORTO
