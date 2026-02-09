@@ -7399,13 +7399,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 }
 
         # 5. WHATSAPP DETECTADO (regex, no necesita GPT)
+        # FIX 617D: Convertir números escritos a dígitos antes del regex
+        # Problema análogo a FIX 617B: si STT transcribe "tres tres uno..." como palabras,
+        # el regex \d{10} no matchea. Aplicar convertir_numeros_escritos_a_digitos primero.
+        texto_numeros_617 = convertir_numeros_escritos_a_digitos(texto_cliente)
         whatsapp_regex = r'\b\d{10}\b|\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b'
-        match_whatsapp = re.search(whatsapp_regex, texto_cliente)
+        match_whatsapp = re.search(whatsapp_regex, texto_numeros_617)
+        if not match_whatsapp:
+            # También intentar con texto original (por si ya tiene dígitos)
+            match_whatsapp = re.search(whatsapp_regex, texto_cliente)
         if match_whatsapp:
-            numero = match_whatsapp.group()
+            numero = re.sub(r'[^\d]', '', match_whatsapp.group())[:10]
             return {
                 "tipo": "WHATSAPP_DETECTADO",
-                "respuesta": "Perfecto, ya lo tengo. Le envío el catálogo en 2 horas. Muchas gracias.",
+                "respuesta": f"Perfecto, ya lo tengo. Le envío el catálogo en las próximas horas. Muchas gracias.",
                 "accion": "GUARDAR_WHATSAPP",
                 "dato": numero
             }
@@ -7458,8 +7465,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 521: BRUCE1744 - Confirmación INSTANTÁNEA de números dictados
         # Problema: GPT tardó 10+ segundos cuando cliente dictó número
         # Solución: Si hay 7+ dígitos (número parcial/completo), confirmar SIN GPT
+        # FIX 617D: Usar texto_numeros_617 (ya convertido arriba) para contar dígitos
         # ================================================================
-        digitos_en_texto = re.findall(r'\d', texto_cliente)
+        digitos_en_texto = re.findall(r'\d', texto_numeros_617)
         num_digitos = len(digitos_en_texto)
 
         if num_digitos >= 7:
