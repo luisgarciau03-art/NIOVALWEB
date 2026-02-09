@@ -1343,12 +1343,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         texto_lower = texto_cliente.lower().strip()
 
         # TIPO 1: Indicadores directos de confusión
+        # FIX 616A: BRUCE2031 - Agregar "no escuché bien" y "me puedes repetir"
+        # PROBLEMA: "no escuché" contiene substring "no es" que activaba CORRECCION incorrectamente
+        # SOLUCION: Estos patrones se evalúan ANTES de CORRECCION (prioridad más alta)
         indicadores_confusion = [
             'no entendí', 'no entendi', '¿cómo?', '¿como?', 'como dice',
             'no le escucho', 'no escucho bien', 'no se le escucha',
             'no entiendo', '¿qué dice?', '¿que dice?', 'qué dice',
             'no le entiendo', 'no te entiendo', 'perdón', 'perdon',
-            'no me quedó claro', 'no me quedo claro'
+            'no me quedó claro', 'no me quedo claro',
+            # FIX 616A: BRUCE2031 - Cliente pide que le repitan (NO es corrección)
+            'no escuché bien', 'no escuche bien', 'no te escuché',
+            'no te escuche', 'no le escuché', 'no le escuche',
+            'no escuché', 'no escuche',
+            'me puedes repetir', 'me puede repetir', 'puedes repetir',
+            'puede repetir', 'repite por favor', 'repíteme', 'repiteme',
+            'no alcancé a escuchar', 'no alcance a escuchar',
+            'no oí bien', 'no oi bien', 'no oí', 'no oi',
+            'no te oigo', 'no le oigo', 'no se oye',
         ]
 
         if any(ind in texto_lower for ind in indicadores_confusion):
@@ -1404,8 +1416,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return (True, "NO_TIENE_DATO", texto_cliente)
 
         # TIPO 3: Cliente corrige a Bruce
+        # FIX 616A: BRUCE2031 - Hacer patrones más específicos
+        # PROBLEMA: 'no es' es substring de 'no escuché', 'no estoy', 'no espera', etc.
+        # SOLUCION: Usar 'no es ' (con espacio) o patrones más largos
         indicadores_correccion = [
-            'no, es', 'no es', 'no, le dije', 'le dije', 'dije que',
+            'no, es', 'no es lo que', 'no es eso', 'no es así', 'no es asi',
+            'no, le dije', 'le dije', 'dije que',
             'pero le dije', 'le comenté que', 'le comente que',
             'no, eso no', 'eso no es'
         ]

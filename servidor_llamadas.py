@@ -3349,6 +3349,22 @@ Responde SOLO con una letra: A, B, C, D o E"""
             cliente_ofrece_correo = any(frase in frase_limpia for frase in frases_oferta_correo)
             cliente_ofrece_whatsapp = any(frase in frase_limpia for frase in frases_oferta_whatsapp)
 
+            # FIX 616B: BRUCE2031 - Si el correo YA está en el texto, NO pedir de nuevo
+            # PROBLEMA: Cliente dijo "por correo, el correo es luis...arroba gmail punto com"
+            #   FIX 500 detectó "por correo" y respondió "dígame el correo" IGNORANDO que ya lo dijo
+            # SOLUCIÓN: Verificar si hay indicadores de email completo en el texto
+            if cliente_ofrece_correo:
+                indicadores_email_ya_presente = [
+                    'arroba', '@', 'gmail', 'hotmail', 'outlook', 'yahoo',
+                    'punto com', 'punto mx', '.com', '.mx',
+                ]
+                email_ya_en_texto = any(ind in frase_limpia for ind in indicadores_email_ya_presente)
+                if email_ya_en_texto:
+                    print(f"\n FIX 616B: BRUCE2031 - Cliente YA dictó el correo junto con 'por correo'")
+                    print(f"   Texto: '{speech_result[:80]}...'")
+                    print(f"   NO activar FIX 500 - dejar que flujo normal procese el email")
+                    cliente_ofrece_correo = False  # Desactivar para que no entre al shortcut
+
             # FIX 500: Si cliente OFRECE correo/WhatsApp → Responder inmediatamente
             if cliente_ofrece_correo or cliente_ofrece_whatsapp:
                 tipo_oferta = "correo" if cliente_ofrece_correo else "WhatsApp"
@@ -5204,6 +5220,34 @@ def despedida_final():
             print(f" Error guardando llamada {call_sid}: {e}")
             import traceback
             traceback.print_exc()
+
+        # FIX 616C: BRUCE2031 - Registrar en historial ANTES de limpiar recursos
+        # PROBLEMA: limpiar_recursos_llamada() borra el agente de conversaciones_activas
+        #   Cuando status_callback llega después, el agente ya no existe y NO se registra
+        # SOLUCION: Registrar aquí, donde todavía tenemos acceso al agente
+        try:
+            call_duration_desp = getattr(agente, '_duracion_llamada', 0)
+            if not call_duration_desp:
+                # Estimar duración desde timestamps
+                import time
+                call_duration_desp = int(time.time() - getattr(agente, '_inicio_llamada', time.time()))
+            registrar_llamada(
+                bruce_id=agente.lead_data.get("bruce_id", "N/A"),
+                telefono=agente.lead_data.get("telefono", "N/A"),
+                negocio=agente.lead_data.get("nombre_negocio", "N/A"),
+                resultado=agente.lead_data.get("pregunta_7", agente.lead_data.get("estado_llamada", "N/A")),
+                duracion=call_duration_desp,
+                detalles={
+                    "estado": agente.lead_data.get("estado_llamada"),
+                    "whatsapp": bool(agente.lead_data.get("whatsapp")),
+                    "email": bool(agente.lead_data.get("email")),
+                    "recording_url": agente.lead_data.get("recording_url", "")
+                },
+                call_sid=call_sid
+            )
+            print(f"    FIX 616C: Llamada registrada en historial desde despedida_final")
+        except Exception as e:
+            print(f"    FIX 616C: Error registrando en historial: {e}")
 
         # FIX 489: Limpiar TODOS los recursos (prevenir memory leak)
         limpiar_recursos_llamada(call_sid)
