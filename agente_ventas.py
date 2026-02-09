@@ -7411,13 +7411,45 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # 6. CORREO DETECTADO (regex, no necesita GPT)
+        # FIX 617B: BRUCE2032 - Convertir "arroba"→"@", "punto com"→".com" antes del regex
+        # Problema: STT transcribe "arroba" como texto, no como "@" → regex no matchea
+        texto_email_617 = texto_cliente
+        texto_email_617 = re.sub(r'\b(arroba|aroba|a roba)\b', '@', texto_email_617, flags=re.IGNORECASE)
+        texto_email_617 = re.sub(r'\bpunto\s*com\b', '.com', texto_email_617, flags=re.IGNORECASE)
+        texto_email_617 = re.sub(r'\bpunto\s*mx\b', '.mx', texto_email_617, flags=re.IGNORECASE)
+        texto_email_617 = re.sub(r'\bpunto\s*net\b', '.net', texto_email_617, flags=re.IGNORECASE)
+        texto_email_617 = re.sub(r'\bpunto\s*org\b', '.org', texto_email_617, flags=re.IGNORECASE)
+        # Eliminar espacios alrededor de @ y . en contexto email
+        texto_email_617 = re.sub(r'\s*@\s*', '@', texto_email_617)
+        # Eliminar espacios entre partes del email (ej: "luis garcia @ gmail .com" → "luisgarcia@gmail.com")
+        # Solo si ya tiene @ (confirmamos que hay email)
+        if '@' in texto_email_617:
+            # Extraer la parte del texto que parece email (buscar palabras alrededor del @)
+            match_zona_email = re.search(r'(\S+(?:\s+\S+){0,4})\s*@\s*(\S+(?:\s+\S+){0,2})', texto_email_617)
+            if match_zona_email:
+                pre_at = match_zona_email.group(1).replace(' ', '').lower()
+                post_at = match_zona_email.group(2).replace(' ', '').lower()
+                email_reconstruido = f"{pre_at}@{post_at}"
+                # Limpiar puntos duplicados
+                email_reconstruido = re.sub(r'\.+', '.', email_reconstruido)
+                # Verificar que parece email válido
+                email_regex_check = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+                if re.match(email_regex_check, email_reconstruido):
+                    print(f"   FIX 617B: Email reconstruido de dictado: '{email_reconstruido}'")
+                    return {
+                        "tipo": "CORREO_DETECTADO",
+                        "respuesta": f"Perfecto, tengo anotado {email_reconstruido}. Le envío el catálogo en las próximas horas. Muchas gracias.",
+                        "accion": "GUARDAR_CORREO",
+                        "dato": email_reconstruido
+                    }
+
         email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         match_email = re.search(email_regex, texto_cliente)
         if match_email:
             correo = match_email.group()
             return {
                 "tipo": "CORREO_DETECTADO",
-                "respuesta": "Perfecto, ya lo tengo anotado. Le llega en las próximas horas. Gracias.",
+                "respuesta": f"Perfecto, tengo anotado {correo}. Le envío el catálogo en las próximas horas. Muchas gracias.",
                 "accion": "GUARDAR_CORREO",
                 "dato": correo
             }
@@ -7728,8 +7760,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             palabras_601 = texto_601.split()
             tipo_601 = patron_detectado.get('tipo', '')
             # Solo aplicar a textos largos, no a confirmaciones cortas
+            # FIX 617A: BRUCE2032 - CORREO_DETECTADO y WHATSAPP_DETECTADO son inmunes
+            # Problema: Cliente dicta email largo (>12 palabras + 3 cláusulas) → FIX 601 invalidaba
+            # el patrón CORREO_DETECTADO → GPT devolvía vacío → FIX 577 respondía con pitch inicial
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'RECHAZO_DEFINITIVO',
-                                    'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO'}
+                                    'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
+                                    'CORREO_DETECTADO', 'WHATSAPP_DETECTADO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1

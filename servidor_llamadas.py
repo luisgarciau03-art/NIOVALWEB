@@ -4375,8 +4375,14 @@ Responde SOLO con una letra: A, B, C, D o E"""
         fillers_577 = {'mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uh', 'pues', 'uhm'}
         palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
 
+        # FIX 617C: BRUCE2032 - NO generar fallback si estamos en modo DICTANDO
+        # Problema: Cliente dicta correo → procesar_respuesta retorna "" (esperar) →
+        #   FIX 577 generaba fallback con pitch inicial "me comunico de NIOVAL..."
+        # Solución: Respetar estados DICTANDO_CORREO/DICTANDO_NUMERO - no responder
         if (len(palabras_significativas_577) >= 2
             and estado_actual_577 != EC577.ESPERANDO_TRANSFERENCIA
+            and estado_actual_577 != EC577.DICTANDO_CORREO
+            and estado_actual_577 != EC577.DICTANDO_NUMERO
             and not tiene_digitos_577):
             print(f" FIX 577: GPT vacío pero cliente dijo '{speech_limpio_577[:50]}' ({len(palabras_significativas_577)} palabras)")
             print(f"   Estado: {estado_actual_577} - Generando fallback inmediato")
@@ -4385,7 +4391,32 @@ Responde SOLO con una letra: A, B, C, D o E"""
             # Bruce respondió "me puede repetir?" → incoherente
             # Solución: Si el texto contiene "ayudar/servir/ofrecer", responder con presentación
             speech_lower_597 = speech_limpio_577.lower()
-            if any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
+
+            # FIX 617C: BRUCE2032 - Detectar email en el texto ANTES de cualquier otro fallback
+            # Si cliente está dictando correo, NO resetear al pitch inicial
+            indicadores_email_617 = ['arroba', '@', 'gmail', 'hotmail', 'outlook', 'yahoo',
+                                     'punto com', '.com', 'correo es', 'el correo']
+            if any(ind in speech_lower_597 for ind in indicadores_email_617):
+                # Intentar extraer el email del texto
+                import re as re_617
+                texto_email_577 = speech_lower_597
+                texto_email_577 = re_617.sub(r'\b(arroba|aroba)\b', '@', texto_email_577)
+                texto_email_577 = re_617.sub(r'\bpunto\s*com\b', '.com', texto_email_577)
+                texto_email_577 = re_617.sub(r'\bpunto\s*mx\b', '.mx', texto_email_577)
+                texto_email_577 = re_617.sub(r'\s*@\s*', '@', texto_email_577)
+                match_email_577 = re_617.search(r'(\S+(?:\s+\S+){0,3})@(\S+(?:\s+\S+){0,1})', texto_email_577)
+                if match_email_577:
+                    pre = match_email_577.group(1).replace(' ', '')
+                    post = match_email_577.group(2).replace(' ', '')
+                    email_intento = f"{pre}@{post}"
+                    respuesta_fallback_577 = f"Perfecto, tengo anotado {email_intento}. ¿Es correcto?"
+                    # Guardar email en lead_data
+                    agente.lead_data["email"] = email_intento
+                    print(f"   FIX 617C: Email detectado en fallback: '{email_intento}'")
+                else:
+                    respuesta_fallback_577 = "Disculpe, ¿me puede deletrear el correo por favor?"
+                    print(f"   FIX 617C: Texto tiene indicadores de email pero no se pudo extraer")
+            elif any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
                 respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
                 print(f"   FIX 597: Fallback contextual - cliente ofrece ayuda, respondemos con presentación")
             elif any(p in speech_lower_597 for p in ['momento', 'espere', 'espera', 'ahorita', 'tantito']):
