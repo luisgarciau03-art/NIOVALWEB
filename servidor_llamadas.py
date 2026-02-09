@@ -3666,8 +3666,8 @@ Responde SOLO con una letra: A, B, C, D o E"""
                 # FIX 408: Lógica progresiva de timeouts - NO asumir "bueno" inmediatamente
                 pass  # Marcador - el bloque original sigue abajo
 
-            # FIX 408: Lógica progresiva de timeouts (solo si NO se usó ElevenLabs)
-            if not (elevenlabs_texto_564 and len(elevenlabs_texto_564) > 2):
+            # FIX 619: Corregido ref a elevenlabs_texto_564 (eliminado en FIX 613) → usar azure_texto_564
+            if not (azure_texto_564 and len(azure_texto_564) > 2):
 
                 # Incrementar contador de timeouts
                 agente.timeouts_deepgram += 1
