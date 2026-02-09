@@ -1,0 +1,413 @@
+   Cliente dijo: '. no sé si guste dejar alguna razón o algún número de sí, vecina sí, déjeme ver.'
+
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (10 palabras)
+📦 Caché AUTO: ¿le_gustaría_recibir_nuestro_catálogo_po... (0s delay)
+🔢 FIX 245 DEBUG: Cliente dio número con 0 dígitos
+   Dígitos extraídos: 
+   Mensaje completo: "no sé si guste dejar alguna razón o algún número de sí, vecina sí, déjeme ver...."
+
+🚫 FIX 394: 'Perfecto' inapropiado detectado
+   Cliente dijo: 'no sé si guste dejar alguna razón o algún número de sí, veci...'
+   Razón: Rechazo
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_33, type = <class 'str'>
+🤖 BRUCE DICE: "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+[2026-01-22 23:45:29] [BRUCE] BRUCE1308 DICE: "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | ¿Le gustaría recibir nuestro catálogo por WhatsApp...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #4)
+100.64.0.3 - - [22/Jan/2026 23:45:29] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [22/Jan/2026 23:45:29] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_33 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Es el 3 40.'
+📝 FIX 212: [PARCIAL] 'Es el 3 40.'
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE8391362b1de19b782f0fa6cd3a4de0d7'
+   Digits: timeout
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: 'Es el 3 40.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Es el 3 40."
+[2026-01-22 23:45:33] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "Es el 3 40."
+📝 FIX 212: [PARCIAL] 'Es el 3 40.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   CallStatus: in-progress
+   AnsweredBy: 
+📝 LOG registrado: CLIENT... | Es el 3 40....
+🔍 FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=5, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Es el 3 40.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Es el 3 40.'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo 'Es el 3 40.' después de la segunda parte. NO se repetirá la introducción.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   USER: Es el 3 40.
+   USER: Es el 3 40.
+📝 FIX 212: [PARCIAL] 'Es el 3 40. Por'
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'lguna razón o algún número de sí, vecina sí, déjeme ver. es el 3 40. es el 3 40.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 3 dígitos
+   Dígitos extraídos: 340
+   Mensaje completo: "es el 3 40...."
+
+📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto (3 dígitos)
+   Bruce iba a decir: "Perfecto, le envío el catálogo a este WhatsApp. Muchas graci..."
+   Respuesta corregida: "Disculpe, solo escuché 3 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (14 palabras)
+📦 Caché AUTO: disculpe,_solo_escuché_3_dígitos._¿me_pu... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_34, type = <class 'str'>
+🤖 BRUCE DICE: "Disculpe, solo escuché 3 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+[2026-01-22 23:45:35] [BRUCE] BRUCE1308 DICE: "Disculpe, solo escuché 3 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+100.64.0.2 - - [22/Jan/2026 23:45:35] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Es el 3 40. Por WhatsApp.'
+100.64.0.4 - - [22/Jan/2026 23:45:35] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_34 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Es el 3 40. Por WhatsApp.'
+📝 LOG registrado: BRUCE... | Disculpe, solo escuché 3 dígitos. ¿Me puede repeti...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #5)
+📝 FIX 212: [PARCIAL] 'Es el 3 40. Por WhatsApp.'
+📝 FIX 212: [FINAL] 'Es el 3 40.' (latencia: 32103ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA300ab8903bfa49be295710e3f4677ff5: 'Es el 3 40.'
+📝 FIX 212: [FINAL] 'Por WhatsApp.' (latencia: 32104ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA300ab8903bfa49be295710e3f4677ff5: 'Por WhatsApp.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE16171693b28966f01b45f2a610cfa942'
+   Digits: timeout
+⚠️ FIX 239/242/248: 3 transcripciones acumuladas
+   [0] 'Es el 3 40. Por WhatsApp.'
+   [1] 'Es el 3 40.'
+   [2] 'Por WhatsApp.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: 'Es el 3 40. Por WhatsApp.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: 'Es el 3 40. Por WhatsApp.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Es el 3 40. Por WhatsApp."
+[2026-01-22 23:45:41] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "Es el 3 40. Por WhatsApp."
+📝 LOG registrado: CLIENT... | Es el 3 40. Por WhatsApp....
+🔍 FIX 121 DEBUG: len(conversation_history)=13, mensajes_usuario=7, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Es el 3 40. Por WhatsApp.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Es el 3 40. Por WhatsApp.'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo 'Es el 3 40. Por WhatsApp.' después de la segunda parte. NO se repetirá la introducción.
+🔧 FIX 68: Historial limitado a últimos 12 mensajes
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   USER: Es el 3 40. Por WhatsApp.
+   USER: Es el 3 40. Por WhatsApp.
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'ver. es el 3 40. es el 3 40. es el 3 40. por whatsapp. es el 3 40. por whatsapp.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 3 dígitos
+   Dígitos extraídos: 340
+   Mensaje completo: "es el 3 40. por whatsapp...."
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (15 palabras)
+📦 Caché AUTO: entiendo,_pero_necesito_el_número_comple... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_35, type = <class 'str'>
+🤖 BRUCE DICE: "Entiendo, pero necesito el número completo de 10 dígitos para enviarle la información. ¿Podría proporcionármelo?"
+[2026-01-22 23:45:42] [BRUCE] BRUCE1308 DICE: "Entiendo, pero necesito el número completo de 10 dígitos para enviarle la información. ¿Podría proporcionármelo?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+100.64.0.5 - - [22/Jan/2026 23:45:42] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.2 - - [22/Jan/2026 23:45:42] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_35 HTTP/1.1" 200 -
+📝 LOG registrado: BRUCE... | Entiendo, pero necesito el número completo de 10 d...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #6)
+📝 FIX 212: [PARCIAL] '3 42, 109. 76,'
+📝 FIX 212: [PARCIAL] '3 42, 109. 76,'
+📝 FIX 212: [PARCIAL] '3 42, 109. 76,'
+📝 FIX 212: [PARCIAL] '3 42, 109. 76,'
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9e03dc1552952e894cd48d855fe2294a'
+   Digits: timeout
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: '3 42, 109. 76,'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+
+💬 CLIENTE DIJO: "3 42, 109. 76,"
+🔍 DEBUG - Parámetros Twilio (POST):
+[2026-01-22 23:45:48] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "3 42, 109. 76,"
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   CallStatus: in-progress
+   AnsweredBy: 
+📝 FIX 212: [PARCIAL] '3 42, 109. 76, 3 40 y'
+📝 LOG registrado: CLIENT... | 3 42, 109. 76,...
+📝 FIX 68: Últimos 2 mensajes en historial:
+🔍 FIX 121 DEBUG: len(conversation_history)=16, mensajes_usuario=9, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '3 42, 109. 76,' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: '3 42, 109. 76,'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo '3 42, 109. 76,' después de la segunda parte. NO se repetirá la introducción.
+🔧 FIX 68: Historial limitado a últimos 12 mensajes
+
+   USER: 3 42, 109. 76,
+   USER: 3 42, 109. 76,
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 's el 3 40. por whatsapp. es el 3 40. por whatsapp. 3 42, 109. 76, 3 42, 109. 76,'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 8 dígitos
+   Dígitos extraídos: 34210976
+   Mensaje completo: "3 42, 109. 76,..."
+
+📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto (8 dígitos)
+   Bruce iba a decir: "Perfecto, le envío el catálogo a este WhatsApp. Muchas graci..."
+   Respuesta corregida: "Disculpe, solo escuché 8 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (14 palabras)
+📦 Caché AUTO: disculpe,_solo_escuché_8_dígitos._¿me_pu... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_36, type = <class 'str'>
+🤖 BRUCE DICE: "Disculpe, solo escuché 8 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+[2026-01-22 23:45:49] [BRUCE] BRUCE1308 DICE: "Disculpe, solo escuché 8 dígitos. ¿Me puede repetir el número completo? Son 10 dígitos."
+📝 FIX 212: [PARCIAL] '3 42, 109. 76, 3 42, 109'
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Disculpe, solo escuché 8 dígitos. ¿Me puede repeti...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #7)
+100.64.0.7 - - [22/Jan/2026 23:45:50] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [22/Jan/2026 23:45:50] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_36 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] '3 42, 109. 76, 3 42, 109, 76, 0'
+📝 FIX 212: [FINAL] '3 42, 109. 76,' (latencia: 47186ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA300ab8903bfa49be295710e3f4677ff5: '3 42, 109. 76,'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE52966238acc3617d9ca0aea121f2de38'
+   Digits: timeout
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] '3 42, 109. 76, 3 42, 109, 76, 0'
+   [1] '3 42, 109, 76, 0 1.'
+   🧹 FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+   🔄 FIX 248: Concatenando 2 partes únicas: '3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: '3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1."
+[2026-01-22 23:45:55] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1."
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1. 3 40'
+📝 LOG registrado: CLIENT... | 3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1...
+🔍 FIX 121 DEBUG: len(conversation_history)=19, mensajes_usuario=11, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: '3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo '3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.' después de la segunda parte. NO se repetirá la introducción.
+🔧 FIX 68: Historial limitado a últimos 12 mensajes
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   USER: 3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.
+   USER: 3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.
+📝 FIX 212: [FINAL] '3 42, 109, 76, 0 1.' (latencia: 52165ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA300ab8903bfa49be295710e3f4677ff5: '3 42, 109, 76, 0 1.'
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: '9, 76, 0 3 42, 109, 76, 0 1. 3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 27 dígitos
+   Dígitos extraídos: 342109763421097603421097601
+   Mensaje completo: "3 42, 109. 76, 3 42, 109, 76, 0 3 42, 109, 76, 0 1...."
+
+📞 FIX 245/246: FILTRO ACTIVADO - Número incompleto (27 dígitos)
+   Bruce iba a decir: "Perfecto, le enviaré el catálogo a este WhatsApp. Muchas gra..."
+   Respuesta corregida: "Disculpe, me puede repetir el número completo? Creo que faltó un dígito."
+100.64.0.4 - - [22/Jan/2026 23:45:57] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_37 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] '3 42, 109 76,'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+📦 Caché AUTO: disculpe,_me_puede_repetir_el_número_com... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_37, type = <class 'str'>
+🤖 BRUCE DICE: "Disculpe, me puede repetir el número completo? Creo que faltó un dígito."
+[2026-01-22 23:45:57] [BRUCE] BRUCE1308 DICE: "Disculpe, me puede repetir el número completo? Creo que faltó un dígito."
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Disculpe, me puede repetir el número completo? Cre...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #8)
+100.64.0.4 - - [22/Jan/2026 23:45:57] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REf3d54229bdecff6d1ba677845d819be7'
+   Digits: timeout
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] '3 42, 109, 76, 0 1. 3 40'
+   [1] '3 42, 109, 76, 0 1.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: '3 42, 109, 76, 0 1. 3 40'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: '3 42, 109, 76, 0 1. 3 40'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "3 42, 109, 76, 0 1. 3 40"
+[2026-01-22 23:46:02] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "3 42, 109, 76, 0 1. 3 40"
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 LOG registrado: CLIENT... | 3 42, 109, 76, 0 1. 3 40...
+🔍 FIX 121 DEBUG: len(conversation_history)=22, mensajes_usuario=13, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '3 42, 109, 76, 0 1. 3 40' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: '3 42, 109, 76, 0 1. 3 40'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo '3 42, 109, 76, 0 1. 3 40' después de la segunda parte. NO se repetirá la introducción.
+🔧 FIX 68: Historial limitado a últimos 12 mensajes
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   USER: 3 42, 109, 76, 0 1. 3 40
+   USER: 3 42, 109, 76, 0 1. 3 40
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: '109, 76, 0 3 42, 109, 76, 0 1. 3 42, 109, 76, 0 1. 3 40 3 42, 109, 76, 0 1. 3 40'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 13 dígitos
+   Dígitos extraídos: 3421097601340
+   Mensaje completo: "3 42, 109, 76, 0 1. 3 40..."
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (15 palabras)
+📦 Caché AUTO: entiendo,_pero_necesito_el_número_comple... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_38, type = <class 'str'>
+🤖 BRUCE DICE: "Entiendo, pero necesito el número completo de 10 dígitos para enviarle la información. ¿Podría proporcionármelo?"
+[2026-01-22 23:46:03] [BRUCE] BRUCE1308 DICE: "Entiendo, pero necesito el número completo de 10 dígitos para enviarle la información. ¿Podría proporcionármelo?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Entiendo, pero necesito el número completo de 10 d...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #9)
+100.64.0.10 - - [22/Jan/2026 23:46:03] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [22/Jan/2026 23:46:03] "GET /audio/respuesta_CA300ab8903bfa49be295710e3f4677ff5_38 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [PARCIAL] '3 42, 109, 76, 0 1.'
+📝 FIX 212: [FINAL] '3 42, 109, 76, 0 1.' (latencia: 61963ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA300ab8903bfa49be295710e3f4677ff5: '3 42, 109, 76, 0 1.'
+   [1] '3 42, 109, 76, 0 1.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA300ab8903bfa49be295710e3f4677ff5
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   CallStatus: in-progress
+   ✅ FIX 248: Una sola transcripción única: '3 42, 109, 76, 0 1.'
+   AnsweredBy: 
+
+   SpeechResult: ''
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REfcb614406a816e2bc4f8c8cad211d9ff'
+   🟢 Deepgram: '3 42, 109, 76, 0 1.'
+   Digits: timeout
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] '3 42, 109, 76, 0 1.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "3 42, 109, 76, 0 1."
+[2026-01-22 23:46:09] [CLIENTE] BRUCE1308 - CLIENTE DIJO: "3 42, 109, 76, 0 1."
+📝 LOG registrado: CLIENT... | 3 42, 109, 76, 0 1....
+🔍 FIX 121 DEBUG: len(conversation_history)=25, mensajes_usuario=15, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '3 42, 109, 76, 0 1.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: '3 42, 109, 76, 0 1.'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo '3 42, 109, 76, 0 1.' después de la segunda parte. NO se repetirá la introducción.
+🔧 FIX 68: Historial limitado a últimos 12 mensajes
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   USER: 3 42, 109, 76, 0 1.
+   USER: 3 42, 109, 76, 0 1.
+⏳ GPT+Audio procesando - reproduciendo tono de pensando...
+💭 Bruce dice (voz Bruce): 'pensando_4' desde caché
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: ', 76, 0 1. 3 40 3 42, 109, 76, 0 1. 3 40 3 42, 109, 76, 0 1. 3 42, 109, 76, 0 1.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 10 dígitos
+   Dígitos extraídos: 3421097601
+   Mensaje completo: "3 42, 109, 76, 0 1...."
+
+✅ FIX 247: FILTRO ACTIVADO - Verificar número completo (10 dígitos)
+   Bruce iba a decir: "Perfecto, le envío el catálogo a este WhatsApp. Muchas graci..."
+   Respuesta corregida: "Perfecto, lo tengo anotado como 342-109-76-01, ¿es correcto?"
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (8 palabras)
+
+🔥 Frase frecuente detectada (1 usos): Perfecto, lo tengo anotado como 342-109-76-01, ¿es...
+   Generando caché automático con Multilingual v2...
+💾 Caché guardado en disco: perfecto,_lo_tengo_anotado_como_342-109-76-01,_¿es_correcto? → perfecto,_lo_tengo_anotado_como_342-109-76-01,_¿es_correcto?_e569b82ee0ce.mp3
+   ✅ Caché auto-generado: perfecto,_lo_tengo_anotado_como_342-109-76-01,_¿es_correcto?
+🎙️ FIX 197: Usando Multilingual v2 (8 palabras, acento mexicano)
+🎵 FIX 162A: Generando audio (intento 1/2)
+🎵 Primer chunk en 2.54s
+✅ Audio en 2.54s (69 chunks, eleven_multilingual_v2)
+🔍 FIX 102 DEBUG: result = respuesta_CA300ab8903bfa49be295710e3f4677ff5_39, type = <class 'str'>
+🤖 BRUCE DICE: "Perfecto, lo tengo anotado como 342-109-76-01, ¿es correcto?"
+[2026-01-22 23:46:14] [BRUCE] BRUCE1308 DICE: "Perfecto, lo tengo anotado como 342-109-76-01, ¿es correcto?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Perfecto, lo tengo anotado como 342-109-76-01, ¿es...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #10)
+100.64.0.9 - - [22/Jan/2026 23:46:15] "POST /procesar-respuesta HTTP/1.1" 200 -

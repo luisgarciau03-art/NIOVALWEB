@@ -1,0 +1,500 @@
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado generar más interés en los productos al hacer preguntas sobre las necesidades del cliente o al destacar beneficios específicos de los productos. Además, una presentación más entusiasta podría haber mejorado la conexión con el cliente.
+[EMOJI] Conclusión determinada: Correo (APROBADO)
+[EMOJI] Bruce se autoevaluó: 5/10
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Medio
+   Opinión de Bruce: Bruce podría haber intentado generar más conexión con el cliente al hacer preguntas sobre sus necesidades específicas. Además, ofrecer un seguimiento podría haber aumentado el interés del cliente.
+[EMOJI] Conclusión ya determinada: Correo (no recalcular)
+[EMOJI] Bruce se autoevaluó: 5/10
+
+ Guardando resultado en fila 4395...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: Correo
+  → Resultado: APROBADO
+  → Estado: Respondio
+  → Duración: 50
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+  → Opinión Bruce: Bruce podría haber intentado generar más interés e...
+  → Calificación Bruce: 5/10
+  → ID BRUCE: BRUCE1853
+ Resultado guardado exitosamente en fila 4395
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 2635
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: comprasrixa@hotmail.com
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+ Email registrado en fila 2635 (columna T): comprasrixa@hotmail.com
+[OK] Email actualizado en LISTA DE CONTACTOS
+
+============================================================
+============================================================
+
+ Llamada CAe5f499a462b50d51c50f58d823715af4 guardada correctamente
+
+ Guardando resultado en fila 4396...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: Correo
+  → Resultado: APROBADO
+  → Estado: Respondio
+  → Duración: 50
+  → Nivel de interés: Medio
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado generar más conexión ...
+  → Calificación Bruce: 5/10
+  → ID BRUCE: BRUCE1853
+ Resultado guardado exitosamente en fila 4396
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 2635
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: comprasrixa@hotmail.com
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+ Email registrado en fila 2635 (columna T): comprasrixa@hotmail.com
+[OK] Email actualizado en LISTA DE CONTACTOS
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+100.64.0.11 - - [03/Feb/2026 22:39:35] "GET /status-callback?Called=%2B525555227445&ToState=Df.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+03+Feb+2026+22:39:32+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAe5f499a462b50d51c50f58d823715af4&To=%2B525555227445&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Cuauhtemoc&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=49&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Cuauhtemoc&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Df.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAe5f499a462b50d51c50f58d823715af4
+   RecordingSid: RE4d6a69bbb37bc6edee0f1088adbd1fa1
+   Status: completed
+   Duración: 47 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4d6a69bbb37bc6edee0f1088adbd1fa1
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1853
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.9 - - [03/Feb/2026 22:39:36] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE4d6a69bbb37bc6edee0f1088adbd1fa1&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4d6a69bbb37bc6edee0f1088adbd1fa1&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAe5f499a462b50d51c50f58d823715af4&RecordingStartTime=Tue,+03+Feb+2026+22:38:44+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=47 HTTP/1.1" 200 -
+ Primera llamada marcada en fila 2635 (columna U) - Número: +525555227445
+ Primera llamada registrada en columna U con número: +525555227445
+ FIX 489: Limpiados 7 recursos de llamada CAe5f499a462b50d51c50f58d823715af4
+100.64.0.11 - - [03/Feb/2026 22:39:37] "POST /despedida-final HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +525555222323, Negocio: FERRETERIA LA LIBRA
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +525555222323
+ DEBUG 5: Llamada Twilio creada - SID: CAf882c6230d351b56ccc0a19b89aa90a8
+[2026-02-03 22:40:15] [LLAMADA] N/A - LLAMADA INICIADA a +525555222323 (FERRETERIA LA LIBRA)
+ Contacto completo guardado para Call SID CAf882c623... (fila 2636)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.3 - - [03/Feb/2026 22:40:15] "POST /iniciar-llamada HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 22:40:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [03/Feb/2026 22:40:37] "GET /info-cache HTTP/1.1" 200 -
+   Estado: no-answer
+   Duración: 0s
+100.64.0.3 - - [03/Feb/2026 22:41:11] "GET /status-callback?Called=%2B525555222323&ToState=Df.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+03+Feb+2026+22:41:10+%2B0000&CallbackSource=call-progress-events&SipResponseCode=487&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAf882c6230d351b56ccc0a19b89aa90a8&To=%2B525555222323&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Cuauhtemoc&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Cuauhtemoc&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Df.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+[2026-02-03 22:41:10] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+    Buzón detectado por CallStatus: no-answer (no-answer)
+ Intento de buzón #1 registrado para fila 2636
+    Intento de buzón #1 registrado
+    FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)
+ STATUS CALLBACK - Llamada CAf882c623...
+100.64.0.7 - - [03/Feb/2026 22:42:49] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 22:42:59] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 22:44:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 22:44:32] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 22:46:06] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 22:46:06] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 22:47:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 22:47:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 22:49:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 22:49:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 22:50:24] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 22:50:24] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 22:52:47] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 22:52:47] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 22:54:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 22:54:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 22:55:43] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [03/Feb/2026 22:55:43] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 22:57:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 22:57:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 22:59:00] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [03/Feb/2026 22:59:00] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:00:22] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:00:24] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:02:56] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:02:56] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:04:18] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:04:29] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [03/Feb/2026 23:05:55] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:05:55] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:07:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:07:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:08:51] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:08:51] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:10:13] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:10:13] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:12:46] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [03/Feb/2026 23:12:46] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 23:14:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:14:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:15:43] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:15:44] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:17:17] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [03/Feb/2026 23:17:17] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:18:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:18:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:20:23] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:20:23] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:22:45] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 23:22:45] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:24:07] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:24:08] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:25:41] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:25:41] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:27:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:27:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:28:42] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:28:44] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:30:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [03/Feb/2026 23:30:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:33:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:33:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:34:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:34:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 23:35:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [03/Feb/2026 23:35:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:37:21] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 23:37:21] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [03/Feb/2026 23:38:53] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:38:53] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [03/Feb/2026 23:40:14] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:40:14] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:42:19] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:42:22] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:43:37] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [03/Feb/2026 23:43:37] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:44:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [03/Feb/2026 23:44:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:46:05] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:46:05] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:47:18] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [03/Feb/2026 23:47:18] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:48:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:48:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:49:45] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [03/Feb/2026 23:49:45] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:50:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:50:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:53:11] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:53:11] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:54:24] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [03/Feb/2026 23:54:24] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:55:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [03/Feb/2026 23:55:27] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:57:29] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:57:29] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [03/Feb/2026 23:58:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [03/Feb/2026 23:58:32] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [03/Feb/2026 23:59:33] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [03/Feb/2026 23:59:34] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [04/Feb/2026 00:00:46] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [04/Feb/2026 00:00:46] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:02:48] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [04/Feb/2026 00:02:49] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:04:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [04/Feb/2026 00:04:02] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:05:15] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:05:15] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [04/Feb/2026 00:07:17] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:07:17] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [04/Feb/2026 00:08:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:08:31] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:09:44] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:09:44] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [04/Feb/2026 00:10:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:10:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:12:12] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [04/Feb/2026 00:12:12] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:13:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 00:13:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:14:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [04/Feb/2026 00:14:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:15:42] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:15:42] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:17:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [04/Feb/2026 00:17:58] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 00:19:12] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:19:12] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:20:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:20:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:22:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 00:22:39] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [04/Feb/2026 00:23:41] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:23:42] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:24:55] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [04/Feb/2026 00:24:55] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:25:57] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [04/Feb/2026 00:25:57] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:28:10] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:28:10] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:30:08] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:30:08] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:31:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [04/Feb/2026 00:31:20] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [04/Feb/2026 00:32:33] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.3 - - [04/Feb/2026 00:32:34] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:33:48] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 00:33:48] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [04/Feb/2026 00:34:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [04/Feb/2026 00:34:50] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 00:36:03] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.2 - - [04/Feb/2026 00:36:03] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.4 - - [04/Feb/2026 00:37:16] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 00:37:16] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [04/Feb/2026 00:38:29] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:57:47] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.7 - - [04/Feb/2026 00:57:48] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526623531804, Negocio: Ferretería y Pintura El Tuercas
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526623531804
+ DEBUG 5: Llamada Twilio creada - SID: CAcfda9bae853549387edb6921cc1bbdc7
+[2026-02-04 06:08:50] [LLAMADA] N/A - LLAMADA INICIADA a +526623531804 (Ferretería y Pintura El Tuercas)
+ Contacto completo guardado para Call SID CAcfda9bae... (fila 2605)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.5 - - [04/Feb/2026 06:08:50] "POST /iniciar-llamada HTTP/1.1" 200 -
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.10 - - [04/Feb/2026 06:09:05] "GET /webhook-voz?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CAcfda9bae853549387edb6921cc1bbdc7&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+    Número anterior: +524777187874
+    Número actual: +526623531804
+
+   - Contexto: Reprog: Próximos días | Cliente solicitó ser llamado después. Después de las 4 d...
+ NÚMERO CAMBIÓ - Cargando historial previo para contexto...
+ ID BRUCE generado: BRUCE1854
+ Historial cargado:
+ LOG registrado: BRUCE... | Hola, buen dia...
+   - Referencia: Primera llamada: 2026-02-03 17:20...
+   - Intentos buzón: 1
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+100.64.0.2 - - [04/Feb/2026 06:09:06] "GET /audio/inicial_CAcfda9bae853549387edb6921cc1bbdc7 HTTP/1.1" 200 -
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   StreamSid: MZ2d3c675c9de776f2d806b000225803ed
+   CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+ FIX 212: Deepgram conectado para CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+ FIX 212: Deepgram conectado para CAcfda9bae853549387edb6921cc1bbdc7
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REc0fff9c0e062415ec82c9aefb1b166e9'
+   Digits: timeout
+ FIX 212: [PARCIAL] 'Hola, buen día.'
+ FIX 314: Saludo detectado en INTERIM: 'Hola, buen día.' - Pre-cargando respuesta...
+ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+ FIX 212: [PARCIAL] 'Hola, buen día.'
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'hola, buen día.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'Hola, buen día. ¿Qué tal?' (latencia: 14ms)
+ FIX 212: Transcripción FINAL Deepgram para CAcfda9bae853549387edb6921cc1bbdc7: 'Hola, buen día. ¿Qué tal?'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Hola, buen día.'
+   [1] 'Hola, buen día. ¿Qué tal?'
+    FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+    FIX 248: Una sola transcripción única: 'Hola, buen día. ¿Qué tal?'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.1s)
+   🟢 Deepgram: 'Hola, buen día. ¿Qué tal?'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Hola, buen día. ¿Qué tal?"
+[2026-02-04 06:09:11] [CLIENTE] BRUCE1854 - CLIENTE DIJO: "Hola, buen día. ¿Qué tal?"
+ FIX 214: Grabación fragmento completed - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REc0fff9c0e062415ec82c9aefb1b166e9
+100.64.0.11 - - [04/Feb/2026 06:09:11] "POST /grabacion-status HTTP/1.1" 200 -
+ LOG registrado: CLIENT... | Hola, buen día. ¿Qué tal?...
+    FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+ BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-02-04 06:09:11] [BRUCE] BRUCE1854 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+ FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+ FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+ LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+100.64.0.2 - - [04/Feb/2026 06:09:12] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 06:09:12] "GET /audio/segunda_parte_saludo_CAcfda9bae853549387edb6921cc1bbdc7 HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE41eefcae2d4b066b1340bff05e408d66'
+   Digits: timeout
+ FIX 212: [PARCIAL] 'En el 6 por'
+ FIX 212: [PARCIAL] 'En el 6 por'
+    FIX 532: PARCIAL corta (4 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'en el 6 por'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'No está disponible, pero podemos'
+ FIX 212: [PARCIAL] 'No está disponible, pero podemos'
+ FIX 212: [PARCIAL] 'No está disponible, pero podemos'
+ FIX 212: [PARCIAL] 'No está disponible, pero podemos'
+ FIX 212: [PARCIAL] 'No está disponible, pero puede marcar más tarde si quiere'
+ FIX 212: [PARCIAL] 'No está disponible, pero puede marcar más tarde si quiere'
+ FIX 212: [FINAL] 'No está disponible, pero puede marcar más tarde si quiere.' (latencia: 3ms)
+ FIX 212: Transcripción FINAL Deepgram para CAcfda9bae853549387edb6921cc1bbdc7: 'No está disponible, pero puede marcar más tarde si quiere.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'No está disponible, pero puede marcar más tarde si quiere'
+   [1] 'No está disponible, pero puede marcar más tarde si quiere.'
+    FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+    FIX 248: Una sola transcripción única: 'No está disponible, pero puede marcar más tarde si quiere'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 3.3s)
+   🟢 Deepgram: 'No está disponible, pero puede marcar más tarde si quiere'
+ FIX 105: Buzón detectado por contenido del SpeechResult
+   Mensaje: 'No está disponible, pero puede marcar más tarde si quiere...'
+ Marcando como BUZON
+ Estado actualizado: Buzón detectado por análisis de contenido
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 19 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber mejorado la llamada al ofrecer un enfoque más personalizado y directo, preguntando si el cliente tiene alguna necesidad específica antes de hablar de los productos. Esto podría haber aumentado el interés del cliente.
+[EMOJI] FIX 177: Conclusión temporal 'BUZON' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 4397...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: BUZON
+  → Resultado: NEGADO
+  → Estado: Buzon
+  → Duración: 19
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mejorado la llamada al ofrecer ...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1854
+ Resultado guardado exitosamente en fila 4397
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 2605
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.2 - - [04/Feb/2026 06:09:27] "POST /procesar-respuesta HTTP/1.1" 200 -
+ FIX 212: MediaStream detenido - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+ FIX 212: Conexión Deepgram cerrada - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+
+ STATUS CALLBACK - Llamada CAcfda9bae...
+   Estado: completed
+   Duración: 30s
+[2026-02-04 06:09:34] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 30s
+    FIX 207: Llamada registrada en dashboard
+100.64.0.6 - - [04/Feb/2026 06:09:34] "GET /status-callback?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Wed,+04+Feb+2026+06:09:34+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAcfda9bae853549387edb6921cc1bbdc7&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=30&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+ FIX 212: WebSocket cerrado - CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+100.64.0.9 - - [04/Feb/2026 06:09:34] "GET /media-stream HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAcfda9bae853549387edb6921cc1bbdc7
+   RecordingSid: REeb8d01a77d36bd160c61f1700007168d
+   Status: completed
+   Duración: 27 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REeb8d01a77d36bd160c61f1700007168d
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1854
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.8 - - [04/Feb/2026 06:09:38] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=REeb8d01a77d36bd160c61f1700007168d&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REeb8d01a77d36bd160c61f1700007168d&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAcfda9bae853549387edb6921cc1bbdc7&RecordingStartTime=Wed,+04+Feb+2026+06:09:07+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=27 HTTP/1.1" 200 -
+100.64.0.8 - - [04/Feb/2026 06:10:15] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 06:10:40] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.10 - - [04/Feb/2026 06:10:40] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+100.64.0.2 - - [04/Feb/2026 06:11:16] "GET /info-cache HTTP/1.1" 200 -

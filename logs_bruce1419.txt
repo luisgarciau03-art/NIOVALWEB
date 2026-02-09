@@ -1,0 +1,2527 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/11c3e0a8-6ee1-4e8a-a0bb-3fa9a4646625/vol_l0g5e90oxfl2oi40
+Starting Container
+   API Key: 2a3f666dd2...1848
+🚀 Modo: OpenAI Directo (Producción)
+✅ FIX 212: Flask-Sock inicializado para WebSocket
+✅ FIX 212: deepgram-sdk importado correctamente
+
+🎙️ FIX 212: Inicializando módulo Deepgram...
+✅ FIX 212: Deepgram configurado correctamente
+✅ FIX 212: Deepgram configurado correctamente
+   API Key: 2a3f666dd2...1848
+✅ FIX 212: Deepgram configurado y listo
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: TABLERO DE NIOVAL Yahir 
+   Hoja encontrada: Bruce
+✅ Conectado a: Bruce
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: Respuestas de formulario 1
+✅ Conectado a spreadsheet de resultados: Respuestas de formulario 1
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+============================================================
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: LOGS
+✅ Conectado a hoja LOGS para registro de conversaciones
+   ✅ TWILIO_ACCOUNT_SID encontrado: ACddf2b7fa...c9dc
+✅ FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer
+📊 FIX 272: 680 calificaciones cargadas
+   ✅ TWILIO_AUTH_TOKEN encontrado: d43c8501...2480
+[2026-01-24 17:13:20] [SISTEMA] Servidor iniciando...
+   ✅ TWILIO_PHONE_NUMBER: +523321014486
+
+📞 FIX 272.2: 500 llamadas en historial cargadas
+============================================================
+📋 FIX 272.9: 5000 logs cargados
+🚀 SERVIDOR DE LLAMADAS NIOVAL
+============================================================
+📊 Último ID BRUCE: BRUCE1417
+
+🚀 SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)
+✅ Google Sheets Managers inicializados
+✅ WhatsApp Validator inicializado
+🔍 FIX 173: Verificando credenciales de Twilio...
+
+📞 Endpoints disponibles:
+  POST /iniciar-llamada            - Inicia una llamada individual
+  POST /llamadas-masivas           - Inicia múltiples llamadas
+  GET  /status/<call_sid>          - Estado de una llamada
+  GET  /stats                      - Ver estadísticas de caché
+  POST /generate-cache             - Generar audios manualmente
+  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente
+  WS   /media-stream               - FIX 212: WebSocket para Deepgram
+
+🌐 URLs de acceso:
+  📊 Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats
+  🔍 Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia
+
+✅ FIX 79: Despedida cálida activa (deja puerta abierta)
+✅ FIX 81: Debug de detección de Truper activo
+✅ FIX 212: Deepgram ACTIVO - Transcripción en tiempo real
+   WebSocket: /media-stream
+
+  📦 Cargado desde disco: de_nada,_que_tenga_un_excelente_día._si
+  📦 Cargado desde disco: gracias_por_proporcionarme_el_número._me_comunicaré_con
+  📦 Cargado desde disco: perfecto,_por_favor,_compárteme_su_contacto_para_poder
+  📦 Cargado desde disco: perfecto,_¿me_podrías_proporcionar_su_contacto,_por_favor?
+  📦 Cargado desde disco: gracias_por_proporcionarme_el_número._¿me_podrías_decir
+  📦 Cargado desde disco: claro,_estoy_listo_para_anotar._¿cuál_es_el
+  📦 Cargado desde disco: gracias_por_la_información._la_anotaré._¿te_gustaría
+  📦 Cargado desde disco: perfecto,_por_favor,_¿me_puedes_proporcionar_su_contacto?
+  📦 Cargado desde disco: a_ti,_que_tengas_un_excelente_día._¡hasta
+  📦 Cargado desde disco: gracias_por_el_contacto._me_pondré_en_comunicación
+  📦 Cargado desde disco: perfecto,_le_agradecería_mucho_que_me_compartiera_su
+  📦 Cargado desde disco: entiendo,_¿podría_ayudarme_a_comunicarlo_cuando_tenga_la
+  📦 Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_darme_un
+  📦 Cargado desde disco: claro,_estaría_muy_agradecido._¿cuál_es_el_contacto
+⚠️  Asegúrate de configurar Twilio en .env
+============================================================
+
+🔄 Cargando caché desde disco...
+  📦 Cargado desde disco: timeout
+  📦 Cargado desde disco: error
+  📦 Cargado desde disco: pensando
+  📦 Cargado desde disco: saludo_inicial
+  📦 Cargado desde disco: despedida_1
+  📦 Cargado desde disco: despedida_2
+  📦 Cargado desde disco: hola,_qué_tal,_muy_buenas_tardes._me_comunico
+  📦 Cargado desde disco: perfecto,_¿con_quién_tengo_el_gusto_de_hablar?
+  📦 Cargado desde disco: muy_buenas_tardes._agradezco_tu_ayuda,_pero_preferiría
+  📦 Cargado desde disco: no_hay_problema._si_surge_alguna_duda_o
+  📦 Cargado desde disco: claro,_estaré_disponible_cuando_me_necesites._¡hasta_luego!
+  📦 Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_puedo
+  📦 Cargado desde disco: perfecto,_muchas_gracias._intentaré_comunicarme_con_el_encargado
+  📦 Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_podré
+  📦 Cargado desde disco: muchas_gracias_por_el_contacto._me_aseguraré_de
+  📦 Cargado desde disco: así_es,_todo_en_orden._agradezco_mucho_su
+  📦 Cargado desde disco: entiendo,_¿me_podría_proporcionar_el_contacto_del_encargado
+  📦 Cargado desde disco: claro,_por_favor._estoy_listo_para_anotar.
+  📦 Cargado desde disco: perfecto,_he_anotado_el_número._muchas_gracias_por
+  📦 Cargado desde disco: gracias_a_usted,_que_tenga_un_excelente_día.
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_indicarme_un
+  📦 Cargado desde disco: claro,_le_agradecería_mucho_si_me_pudiera_pasar
+  📦 Cargado desde disco: sí,_tengo_donde_anotar._por_favor,_compártame_el
+  📦 Cargado desde disco: muchas_gracias_por_el_número._me_aseguraré_de
+  📦 Cargado desde disco: gracias_a_usted._que_tenga_un_excelente_día,
+  📦 Cargado desde disco: claro,_sería_de_gran_ayuda._por_favor,_¿me
+  📦 Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podrías_repetirme_el
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿me_podría_comunicar
+  📦 Cargado desde disco: claro,_me_encantaría_tener_su_número_para_poder
+  📦 Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podría_repetirme_el
+  📦 Cargado desde disco: gracias_por_la_información._sin_embargo,_parece_que
+  📦 Cargado desde disco: si_tienes_alguna_pregunta_o_necesitas_información_sobre
+  📦 Cargado desde disco: claro,_por_favor._mi_número_es_seis_seis
+  📦 Cargado desde disco: entiendo,_muchas_gracias_por_tu_tiempo._si_en
+  📦 Cargado desde disco: sí,_por_favor._sería_muy_útil_para_poder
+  📦 Cargado desde disco: entiendo._como_ya_habíamos_hablado_antes,_me_gustaría
+  📦 Cargado desde disco: gracias_por_el_número._¿podrías_proporcionarme_el_resto
+  📦 Cargado desde disco: perfecto,_muchas_gracias._me_comunicaré_con_él._si
+  📦 Cargado desde disco: perfecto,_tomaré_en_cuenta_esa_indicación._muchas_gracias
+  📦 Cargado desde disco: gracias_por_el_contacto._sin_embargo,_parece_que
+  📦 Cargado desde disco: parece_que_aún_no_tengo_el_número_completo.
+  📦 Cargado desde disco: parece_que_el_número_todavía_no_es_claro.
+  📦 Cargado desde disco: gracias,_pero_el_número_que_me_proporcionó_parece
+  📦 Cargado desde disco: perfecto,_gracias_por_la_información._¿me_puede_confirmar
+  📦 Cargado desde disco: entiendo,_gracias_por_decírmelo._¿me_podría_comunicar_con
+  📦 Cargado desde disco: claro,_me_comunicaré_al_número_que_me_proporcionó.
+  📦 Cargado desde disco: entiendo._si_me_proporciona_un_correo_electrónico,_puedo
+  📦 Cargado desde disco: parece_que_aún_no_tengo_el_número_correcto.
+  📦 Cargado desde disco: gracias_por_tu_ayuda._sin_embargo,_parece_que
+  📦 Cargado desde disco: parece_que_aún_no_es_el_número_correcto,
+  📦 Cargado desde disco: hola,_muy_buenas_tardes._mi_nombre_es_bruce
+  📦 Cargado desde disco: perfecto,_el_número_es_66_23_53_41
+  📦 Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo,_tengo_dos_opciones:
+  📦 Cargado desde disco: excelente,_muchas_gracias_por_confirmar._¿hay_algún_otro
+  📦 Cargado desde disco: entiendo,_muchas_gracias_por_su_tiempo._si_en
+  📦 Cargado desde disco: perfecto,_¿con_quién_tengo_el_gusto?
+  📦 Cargado desde disco: excelente,_luis._contamos_con_una_amplia_gama_de
+  📦 Cargado desde disco: claro,_(name)._puedo_enviarle_un_catálogo_con_nuestra
+  📦 Cargado desde disco: perfecto,_(name)._necesito_que_me_confirme_el_número
+  📦 Cargado desde disco: entiendo._¿podría_indicarme_un_horario_en_el_que
+  📦 Cargado desde disco: claro,_le_agradecería_mucho._¿cuál_es_el_contacto
+  📦 Cargado desde disco: sí,_tengo_donde_anotar._estoy_listo_para_recibir
+  📦 Cargado desde disco: perfecto,_ya_lo_anoté._¿hay_algo_más_en
+  📦 Cargado desde disco: muy_bien,_muchas_gracias_por_tu_tiempo._si
+  📦 Cargado desde disco: entiendo,_gracias_por_su_respuesta._¿podría_indicarme_si
+  📦 Cargado desde disco: claro,_me_gustaría_tener_el_contacto._por_favor,
+  📦 Cargado desde disco: perfecto,_estoy_listo_para_anotarlo._¿cuál_es_el
+  📦 Cargado desde disco: claro,_el_número_es_seis_seis_dos_tres,
+  📦 Cargado desde disco: perfecto,_muchas_gracias._¿me_podría_indicar_si_me
+  📦 Cargado desde disco: excelente,_gracias_por_la_información._¿con_quién_tengo
+  📦 Cargado desde disco: mucho_gusto,_(name)._estoy_aquí_para_ofrecerle_nuestras
+  📦 Cargado desde disco: entiendo,_(name)._¿podrías_comunicarme_con_rodrigo,_por_favor?
+  📦 Cargado desde disco: perfecto,_gracias_por_la_información._voy_a_comunicarme
+  📦 Cargado desde disco: sí,_me_pasó_un_nuevo_número_de_contacto.
+  📦 Cargado desde disco: claro,_le_agradecería_mucho_si_me_pudiera_proporcionar
+  📦 Cargado desde disco: sí,_tengo_donde_anotar._por_favor,_compárteme_el
+  📦 Cargado desde disco: claro,_el_número_es_seis_seis,_dos_tres,
+  📦 Cargado desde disco: excelente,_muchas_gracias_por_la_confirmación._¿hay_algo
+  📦 Cargado desde disco: de_nada,_que_tengas_un_excelente_día._¡hasta
+  📦 Cargado desde disco: parece_que_no_hay_respuesta._si_desea,_puede
+  📦 Cargado desde disco: entendido,_gracias_por_su_tiempo._si_necesita_algo
+  📦 Cargado desde disco: si_necesita_algo_más_o_tiene_alguna_pregunta,
+  📦 Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo_más_adelante,_tengo
+  📦 Cargado desde disco: entiendo_que_pueda_estar_ocupado._si_necesita_contactarme
+  📦 Cargado desde disco: parece_que_no_hay_respuesta_en_este_momento.
+  📦 Cargado desde disco: claro,_le_agradecería_mucho_que_me_pasara_su
+  📦 Cargado desde disco: entiendo,_parece_que_no_hay_respuesta._para_continuar,
+  📦 Cargado desde disco: parece_que_aún_no_hay_respuesta._si_desea,
+  📦 Cargado desde disco: la_marca_es_nioval._nos_especializamos_en_ofrecer
+  📦 Cargado desde disco: perfecto,_gracias_por_confirmarlo._procederé_a_enviarle_el
+  📦 Cargado desde disco: parece_que_no_hay_actividad_en_este_momento.
+  📦 Cargado desde disco: entiendo_que_no_hay_respuesta_en_este_momento.
+  📦 Cargado desde disco: hablamos_desde_guadalajara,_jalisco._somos_distribuidores_especializados_en
+  📦 Cargado desde disco: parece_que_no_hay_respuesta._si_necesita_ayuda
+  📦 Cargado desde disco: perfecto,_por_favor_compártame_su_número_de_contacto.
+  📦 Cargado desde disco: muchas_gracias_por_la_confirmación._ahora,_para_continuar,
+  📦 Cargado desde disco: entendido,_llamaré_por_la_mañana._si_necesita_algo
+  📦 Cargado desde disco: mi_nombre_es_bruce_w,_le_llamo_de
+  📦 Cargado desde disco: entiendo,_si_no_está_disponible,_tengo_dos_opciones:
+  📦 Cargado desde disco: parece_que_no_hay_respuesta._si_necesita_más
+  📦 Cargado desde disco: muy_buenas_tardes._mi_nombre_es_bruce_w,
+  📦 Cargado desde disco: muchas_gracias,_luis._soy_bruce_w_de_nioval.
+  📦 Cargado desde disco: perfecto,_¿me_lo_podría_comunicar_por_favor?
+  📦 Cargado desde disco: ¡muchas_gracias!_estoy_aquí_esperando.
+  📦 Cargado desde disco: excelente._actualmente_tenemos_una_promoción_para_el_primer
+  📦 Cargado desde disco: si_necesitas_algo_específico_o_tienes_alguna_pregunta
+  📦 Cargado desde disco: claro,_ofrecemos_una_amplia_gama_de_productos_de
+  📦 Cargado desde disco: perfecto,_¿me_podrías_proporcionar_tu_número_de_whatsapp
+  📦 Cargado desde disco: sí,_tengo_donde_anotar._por_favor,_indícame_el
+  📦 Cargado desde disco: entendido,_te_enviaré_el_catálogo_al_mismo_número.
+  📦 Cargado desde disco: está_bien,_si_necesitas_algo_más_en_el
+  📦 Cargado desde disco: claro,_por_favor,_compártame_su_contacto._estoy_aquí
+  📦 Cargado desde disco: perfecto,_el_número_es_sesenta_y_seis,_veintitrés,
+  📦 Cargado desde disco: muchas_gracias._¿cómo_puedo_ayudarle_hoy_con_nuestros
+  📦 Cargado desde disco: claro,_(name)._uno_de_nuestros_productos_estrella_es
+  📦 Cargado desde disco: me_gustaría_comentarte_sobre_la_cinta_para_goteras,
+  📦 Cargado desde disco: perfecto,_voy_a_enviar_un_catálogo_de_la
+  📦 Cargado desde disco: entendido,_voy_a_enviar_el_catálogo_al_mismo
+  📦 Cargado desde disco: claro,_comprendo._si_necesitas_información_sobre_algún_producto
+  📦 Cargado desde disco: perfecto,_si_necesitas_algo_más_o_tienes_alguna
+  📦 Cargado desde disco: con_gusto,_estoy_listo_para_enviar_el_catálogo.
+  📦 Cargado desde disco: ¿hay_algo_más_en_lo_que_pueda_ayudarte
+  📦 Cargado desde disco: perfecto,_estoy_listo.
+  📦 Cargado desde disco: muchas_gracias._estaré_en_contacto_con_él._¿hay
+  📦 Cargado desde disco: entiendo,_muchas_gracias_por_su_tiempo._si_necesita
+  📦 Cargado desde disco: muchas_gracias._¿me_podría_decir_su_nombre_para
+  📦 Cargado desde disco: excelente,_muchas_gracias_luis._déjeme_comentarle_que_estamos
+  📦 Cargado desde disco: perfecto,_muchas_gracias._estaré_al_pendiente_de_la
+  📦 Cargado desde disco: entendido._si_necesitas_algo_más_en_el_futuro,
+  📦 Cargado desde disco: claro,_aquí_estaré.
+  📦 Cargado desde disco: muy_buenas_tardes,_mi_nombre_es_bruce_w,
+  📦 Cargado desde disco: mucho_gusto,_(name)._estoy_aquí_para_platicarle_sobre
+  📦 Cargado desde disco: le_llamo_para_ofrecerle_información_sobre_nuestros_productos
+  📦 Cargado desde disco: ¿bueno?_muy_buenas_tardes,_¿con_quién_tengo_el
+  📦 Cargado desde disco: muy_buenas_tardes,_luis._mi_nombre_es_bruce
+  📦 Cargado desde disco: me_refiero_al_encargado_de_compras_o_a
+  📦 Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_de
+  📦 Cargado desde disco: sí,_adelante_por_favor.
+  📦 Cargado desde disco: perfecto,_el_número_es_66_23_53_55
+  📦 Cargado desde disco: gracias_por_la_información._solo_para_confirmar,_¿podría
+  📦 Cargado desde disco: entiendo,_pero_necesito_el_número_completo_de_diez
+  📦 Cargado desde disco: perfecto,_eso_ayuda_mucho._¿actualmente_trabajan_con_varios
+  📦 Cargado desde disco: entendido._una_última_pregunta:_¿sabe_si_actualmente_tienen
+  📦 Cargado desde disco: perfecto,_aprecio_mucho_toda_la_información._me_comunicaré
+  📦 Cargado desde disco: perfecto,_¿me_podría_indicar_el_horario_en_el
+  📦 Cargado desde disco: gracias_por_la_información._¿me_podría_comentar_qué
+  📦 Cargado desde disco: hola_luis,_muy_buenas_tardes._soy_bruce_w
+  📦 Cargado desde disco: ¡perfecto!_gracias_por_el_contacto._si_necesita_información
+  📦 Cargado desde disco: le_hablo_de_nioval,_somos_distribuidores_especializados_en
+  📦 Cargado desde disco: perfecto,_(name)._como_le_había_comentado_la_vez
+  📦 Cargado desde disco: entiendo,_(name)._además,_¿podría_decirme_aproximadamente_qué_tamaño
+  📦 Cargado desde disco: excelente,_muchas_gracias._¿me_podría_decir_su_nombre
+  📦 Cargado desde disco: perfecto,_muchas_gracias_carlos._déjeme_comentarle_que_estamos
+  📦 Cargado desde disco: entendido,_eso_ayuda_mucho._¿actualmente_trabajan_con_varios
+  📦 Cargado desde disco: mucho_gusto,_(name)._soy_bruce_w_de_nioval.
+  📦 Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w
+  📦 Cargado desde disco: me_alegra_escuchar_eso._estoy_aquí_para_hablar
+  📦 Cargado desde disco: perfecto,_(name)._¿actualmente_trabajan_con_varios_proveedores_o
+  📦 Cargado desde disco: entiendo_que_la_situación_puede_ser_complicada._estoy
+  📦 Cargado desde disco: gracias,_(name)._para_poder_ayudarles_mejor,_¿me_podrías
+  📦 Cargado desde disco: hola,_(name)._como_le_había_comentado_la_vez
+  📦 Cargado desde disco: parece_que_se_ha_cortado_la_llamada._si
+  📦 Cargado desde disco: hola,_qué_tal,_muy_buenas_tardes._mi_nombre
+  📦 Cargado desde disco: perfecto,_entonces_el_número_completo_es_seis,_seis,
+  📦 Cargado desde disco: excelente,_muchas_gracias_carlos._déjeme_comentarle_que_estamos
+  📦 Cargado desde disco: no_hay_problema,_carlos._aprecio_mucho_toda_la
+  📦 Cargado desde disco: ajá,_déjeme_ver..._ofrecemos_una_amplia_gama_de
+  📦 Cargado desde disco: perfecto,_(name)._por_favor,_¿me_podrías_proporcionar_tu
+  📦 Cargado desde disco: gracias,_(name)._enviaré_la_cotización_a_tu_correo
+  📦 Cargado desde disco: claro,_¿me_podría_indicar_un_horario_en_el
+  📦 Cargado desde disco: entiendo._para_facilitar_el_contacto,_¿me_podría_proporcionar
+  📦 Cargado desde disco: comprendo._agradezco_su_respuesta._¿hay_algún_otro_dato
+  📦 Cargado desde disco: entiendo_perfectamente._agradezco_su_tiempo._si_en_algún
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿actualmente_trabajan_con
+  📦 Cargado desde disco: perfecto,_(name)._una_última_pregunta:_¿sabe_si_actualmente
+  📦 Cargado desde disco: claro,_vendemos_varios_productos_de_ferretería._algunos_ejemplos
+  📦 Cargado desde disco: perfecto,_puedo_enviarle_nuestro_catálogo_por_whatsapp_para
+  📦 Cargado desde disco: perfecto,_estoy_listo._¿me_podría_decir_su_nombre
+  📦 Cargado desde disco: así_es,_manejamos_precios_competitivos_y_promociones_atractivas.
+  📦 Cargado desde disco: perfecto,_para_poder_enviarle_la_cotización,_¿me_podría
+  📦 Cargado desde disco: excelente_elección._le_enviaré_una_cotización_con_los
+  📦 Cargado desde disco: entiendo,_gracias_por_la_aclaración._enviaré_la_cotización
+  📦 Cargado desde disco: entiendo,_gracias._para_poder_prepararle_una_mejor_propuesta
+  📦 Cargado desde disco: perfecto,_necesito_que_me_proporciones_tu_número_de
+  📦 Cargado desde disco: gracias._sin_embargo,_el_número_que_me_proporcionas
+  📦 Cargado desde disco: perfecto,_pero_necesito_saber_su_nombre_para_mencionarlo
+  📦 Cargado desde disco: claro,_con_gusto_le_enviaré_información_sobre_griferías.
+  📦 Cargado desde disco: claro,_(name)._puedo_enviarte_el_catálogo_por_correo.
+  📦 Cargado desde disco: entiendo,_(name)._agradezco_la_información._¿podría_decirme_aproximadamente
+  📦 Cargado desde disco: perfecto,_(name)._aprecio_su_tiempo_y_la_información.
+  📦 Cargado desde disco: entiendo,_(name)._entonces,_para_conocer_mejor_sus_necesidades,
+  📦 Cargado desde disco: entiendo,_gracias_por_su_tiempo._que_tenga_un
+  📦 Cargado desde disco: nosotros_manejamos_una_variedad_de_productos_de_ferretería,
+  📦 Cargado desde disco: excelente._le_enviaré_el_mensaje_ahora_mismo._si
+  📦 Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w_de
+  📦 Cargado desde disco: perfecto,_(name)._enviaré_el_catálogo_y_la_presentación
+  📦 Cargado desde disco: claro,_(name)._espero_su_comunicación._si_necesitan_algo
+  📦 Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_hablar_con
+  📦 Cargado desde disco: el_mínimo_de_compra_con_nosotros_es_de
+  📦 Cargado desde disco: gracias_por_la_información._¿además_de_griferías,_qué
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_de_griferías._y
+  📦 Cargado desde disco: ¿con_quién_tengo_el_gusto?
+  📦 Cargado desde disco: disculpe,_no_alcancé_a_captar_el_correo_completo.
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_con_todos_nuestros
+  📦 Cargado desde disco: entendido,_le_enviaré_el_catálogo_de_inmediato._estoy
+  📦 Cargado desde disco: el_motivo_de_mi_llamada_es_muy_breve:
+  📦 Cargado desde disco: perfecto,_(name)._disculpe,_no_alcancé_a_captar_el
+  📦 Cargado desde disco: perfecto,_(name)._te_enviaré_nuestro_catálogo_digital_completo
+  📦 Cargado desde disco: entiendo,_(name)._enviaré_el_catálogo_al_correo_yahir
+  📦 Cargado desde disco: perfecto,_(name)._enviaré_el_catálogo_a_tu_correo
+  📦 Cargado desde disco: gracias_a_ti,_pero._que_tengas_un_excelente
+  📦 Cargado desde disco: perfecto,_mi_nombre_es_bruce_w._le_llamo
+  📦 Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_sobre
+  📦 Cargado desde disco: ¡perfecto!_muchas_gracias._estoy_listo_para_hablar_con
+  📦 Cargado desde disco: muy_buenas_tardes,_¿con_quién_tengo_el_gusto?
+  📦 Cargado desde disco: somos_de_guadalajara._envíamos_a_toda_la_república.
+  📦 Cargado desde disco: entiendo,_(name)._para_prepararme_mejor_para_la_cita,
+  📦 Cargado desde disco: gracias,_(name)._déjame_comentarte_que_estamos_muy_interesados
+  📦 Cargado desde disco: entiendo,_(name)._en_nioval_ofrecemos_una_variedad_de
+  📦 Cargado desde disco: perfecto,_gracias_por_la_información._¿y_actualmente_trabajan
+  📦 Cargado desde disco: entendido,_gracias_por_la_información._una_última_pregunta:
+  📦 Cargado desde disco: claro,_puedo_enviarle_un_catálogo_con_nuestra_variedad
+  📦 Cargado desde disco: perfecto,_por_favor_proporcióneme_su_número_de_whatsapp
+  📦 Cargado desde disco: [el_cliente_colgó_la_llamada]
+  📦 Cargado desde disco: disculpa,_no_alcancé_a_captar_el_correo_completo.
+  📦 Cargado desde disco: mucho_gusto,_(name)._le_llamo_de_nioval,_somos
+  📦 Cargado desde disco: perfecto,_muchas_gracias._estoy_en_espera.
+  📦 Cargado desde disco: hola,_¿bueno?_muy_buenas_tardes._¿con_quién_tengo
+  📦 Cargado desde disco: entiendo,_muchas_gracias._estoy_en_espera.
+  📦 Cargado desde disco: perfecto,_(name)._le_llamo_de_nioval,_somos_distribuidores
+  📦 Cargado desde disco: entiendo,_(name)._estoy_contactándolo_para_ofrecerle_una_propuesta
+  📦 Cargado desde disco: gracias,_(name)._¿y_qué_tamaño_de_negocio_tienen?
+  📦 Cargado desde disco: perfecto,_gracias_por_la_información._¿en_qué_horario
+  📦 Cargado desde disco: claro,_con_gusto_te_enviaré_el_catálogo._disculpa,
+  📦 Cargado desde disco: entendido,_gracias_por_la_información._¿actualmente_trabajan_con
+  📦 Cargado desde disco: disculpe,_solo_alcancé_a_captar_332101._¿me_podría
+  📦 Cargado desde disco: perfecto,_gracias._una_última_pregunta:_¿saben_si_actualmente
+  📦 Cargado desde disco: claro,_con_gusto_te_enviaré_el_catálogo._¿te
+  📦 Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w.
+  📦 Cargado desde disco: gracias,_(name)._una_última_pregunta:_¿sabes_si_actualmente
+  📦 Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w,_le
+  📦 Cargado desde disco: perfecto,_aprecio_mucho_toda_la_información._le_enviaré
+  📦 Cargado desde disco: de_nada,_estoy_para_servirle._que_tenga_un
+  📦 Cargado desde disco: entiendo,_(name)._aprecio_la_información._¿en_qué_horario
+  📦 Cargado desde disco: claro,_ahorita._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: excelente,_ahorita._en_las_próximas_2_horas_le
+  📦 Cargado desde disco: perfecto,_ahorita._envío_el_catálogo_y_la_información
+  📦 Cargado desde disco: entiendo,_(name)._aprecio_la_aclaración._para_poder_contactarlos,
+  📦 Cargado desde disco: entiendo,_(name)._si_no_es_posible_enviar_la
+  📦 Cargado desde disco: ofrecemos_productos_de_ferretería_como_cinta_para_goteras
+  📦 Cargado desde disco: ¿hay_algo_más_en_lo_que_pueda_ayudarle?
+  📦 Cargado desde disco: claro,_con_gusto_le_envío_el_catálogo._por
+  📦 Cargado desde disco: entiendo,_lo_enviaré_por_correo._solo_necesito_su
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_por_whatsapp._¿me
+  📦 Cargado desde disco: gracias_por_el_número._en_un_momento_le
+  📦 Cargado desde disco: de_nada,_es_un_placer_ayudarle._que_tenga
+  📦 Cargado desde disco: le_llamo_de_nioval,_somos_distribuidores_especializados_en
+  📦 Cargado desde disco: estamos_ofreciendo_productos_de_ferretería_que_podrían_ser
+  📦 Cargado desde disco: mucho_gusto,_(name)._estoy_llamando_de_nioval,_somos
+  📦 Cargado desde disco: perfecto,_muchas_gracias._¿actualmente_trabajan_con_varios_proveedores
+  📦 Cargado desde disco: entiendo,_(name)._en_nioval_manejamos_una_variedad_de
+  📦 Cargado desde disco: perfecto,_estoy_listo_para_enviarte_el_catálogo._por
+  📦 Cargado desde disco: claro,_por_favor_confírmame_el_número_de_whatsapp
+  📦 Cargado desde disco: excelente,_muchas_gracias._¿con_quién_tengo_el_gusto?
+  📦 Cargado desde disco: perfecto,_(name)._déjame_comentarte_que_estamos_muy_interesados
+  📦 Cargado desde disco: entiendo,_gracias_por_la_aclaración._me_gustaría_enviarle
+  📦 Cargado desde disco: disculpe,_solo_alcancé_a_captar_parte_del_número.
+  📦 Cargado desde disco: excelente,_mira._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: entiendo,_(name)._si_necesita_algo_más,_aquí_estaré.
+  📦 Cargado desde disco: tiene_razón,_discúlpeme._agradezco_su_tiempo_y_quedo
+  📦 Cargado desde disco: entendido,_estaré_a_la_espera.
+  📦 Cargado desde disco: si_necesita_algo_más_en_el_futuro,_no
+  📦 Cargado desde disco: así_es,_manejamos_una_amplia_gama_de_productos
+  📦 Cargado desde disco: entiendo,_gracias._también_me_gustaría_saber_si_actualmente
+  📦 Cargado desde disco: me_gustaría_enviarle_nuestro_catálogo_digital_completo_con
+  📦 Cargado desde disco: disculpe_las_molestias,_parece_que_hay_un_error
+  📦 Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_la_transferencia.
+  📦 Cargado desde disco: perfecto,_muchas_gracias._¿me_podría_decir_su_nombre
+  📦 Cargado desde disco: 
+  📦 Cargado desde disco: perfecto,_gracias_por_la_aclaración._una_última_pregunta:
+  📦 Cargado desde disco: entiendo,_gracias_por_su_respuesta._mi_número_es
+  📦 Cargado desde disco: tiene_razón,_discúlpeme._mi_número_es_seis_seis
+  📦 Cargado desde disco: claro,_tómese_su_tiempo._estoy_aquí_para_ayudarle.
+  📦 Cargado desde disco: perfecto,_el_número_es_seis_seis_dos,_cuatro
+  📦 Cargado desde disco: así_es,_siempre_hay_que_agradecer._si_en
+  📦 Cargado desde disco: excelente,_jair._déjame_comentarte_que_estamos_muy_interesados
+  📦 Cargado desde disco: ¿puedo_preguntarte_si_tienen_alguna_necesidad_inmediata_de
+  📦 Cargado desde disco: entiendo,_eso_suena_interesante._en_nioval_contamos_con
+  📦 Cargado desde disco: claro,_podemos_platicar_sobre_los_diferentes_tipos_de
+  📦 Cargado desde disco: sí,_tenemos_griferías_de_acero_inoxidable._son_muy
+  📦 Cargado desde disco: ¿te_gustaría_que_te_envíe_un_catálogo_por
+  📦 Cargado desde disco: si_tienes_alguna_pregunta_adicional_o_necesitas_más
+  📦 Cargado desde disco: a_ti_por_tu_tiempo._si_necesitas_algo
+  📦 Cargado desde disco: entiendo,_gracias._¿podrías_compartir_qué_tipo_de_productos
+  📦 Cargado desde disco: gracias_por_la_información,_juan._en_nioval_manejamos
+  📦 Cargado desde disco: claro,_tal._¿cuál_es_su_pregunta?
+  📦 Cargado desde disco: manejamos_varias_calidades_en_griferías,_desde_opciones_económicas
+  📦 Cargado desde disco: las_griferías_más_económicas_suelen_tener_cuerpos_de
+  📦 Cargado desde disco: perfecto,_tal._en_las_próximas_2_horas_le
+  📦 Cargado desde disco: muchas_gracias_por_su_tiempo,_tal._que_tenga
+  📦 Cargado desde disco: nosotros_manejamos_una_amplia_variedad_de_productos_de
+  📦 Cargado desde disco: claro,_(name)._aprecio_su_claridad_y_respeto_su
+  📦 Cargado desde disco: gracias,_(name)._aprecio_su_tiempo._estaré_disponible_para
+  📦 Cargado desde disco: entiendo_perfectamente._perfecto,_estoy_listo._¿me_podría_proporcionar
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿podrías_decirme_en
+  📦 Cargado desde disco: excelente,_muchas_gracias,_jair._déjame_comentarte_que_estamos
+  📦 Cargado desde disco: perfecto,_agendaré_la_llamada_para_mañana_a_partir
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._solo_una_última
+  📦 Cargado desde disco: gracias._¿me_podrías_confirmar_el_número_completo,_por
+  📦 Cargado desde disco: perfecto,_gracias._enviaré_el_catálogo_por_whatsapp_al
+  📦 Cargado desde disco: claro,_estaré_enviando_el_catálogo_en_un_momento.
+  📦 Cargado desde disco: claro,_tómese_su_tiempo._estoy_aquí_esperando.
+  📦 Cargado desde disco: ¿hola?_¿con_quién_tengo_el_gusto?
+  📦 Cargado desde disco: me_alegra_escuchar_eso._como_le_mencioné,_me
+  📦 Cargado desde disco: entiendo,_(name)._eso_ayuda_mucho._¿podría_decirme_aproximadamente
+  📦 Cargado desde disco: comprendo,_mira._es_un_proceso_importante_para_seleccionar
+  📦 Cargado desde disco: entiendo,_(name)._aprecio_la_aclaración._si_en_algún
+  📦 Cargado desde disco: entendido._me_comunicaré_con_el_encargado_en_el
+  📦 Cargado desde disco: sí,_así_es._somos_distribuidores_de_productos_de
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._¿podrías_decirme_aproximadamente
+  📦 Cargado desde disco: solo_para_preparar_una_mejor_propuesta_que_se
+  📦 Cargado desde disco: perfecto,_eso_ayuda_mucho._para_poder_contactar_al
+  📦 Cargado desde disco: ¡que_tenga_un_excelente_día!
+  📦 Cargado desde disco: en_nioval_ofrecemos_una_amplia_variedad_de_productos
+  📦 Cargado desde disco: actualmente_no_tenemos_distribuidores_en_sonora,_lo_que
+  📦 Cargado desde disco: realizamos_envíos_a_toda_la_república_desde_guadalajara.
+  📦 Cargado desde disco: entiendo,_gracias_por_la_aclaración._para_ofrecerles_una
+  📦 Cargado desde disco: ofrecemos_una_amplia_variedad_de_productos_de_ferretería,
+  📦 Cargado desde disco: entendido._me_parece_excelente_que_podamos_agendar_un
+  📦 Cargado desde disco: excelente,_muchas_gracias._para_preparar_una_mejor_propuesta
+  📦 Cargado desde disco: entiendo._¿actualmente_trabajan_con_varios_proveedores_o_tienen
+  📦 Cargado desde disco: entiendo,_gracias._déjame_comentarte_que_estamos_muy_interesados
+  📦 Cargado desde disco: mucho_gusto,_(name)._estoy_aquí_para_ofrecerle_una
+  📦 Cargado desde disco: perfecto,_estoy_listo_para_enviarle_nuestro_catálogo._¿me
+  📦 Cargado desde disco: excelente,_muchas_gracias._le_enviaré_el_catálogo_a
+  📦 Cargado desde disco: perfecto,_eso_me_ayuda_mucho._me_comunicaré_con
+  📦 Cargado desde disco: entiendo,_gracias_por_la_aclaración._sí,_manejamos_chapas
+  📦 Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_recibirlo.
+  📦 Cargado desde disco: mucho_gusto,_(name)._le_comento_que_somos_distribuidores
+  📦 Cargado desde disco: lamentablemente,_no_contamos_con_productos_específicos_de_chiapas.
+  📦 Cargado desde disco: entiendo,_(name)._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: perfecto,_le_enviaré_un_catálogo_con_nuestras_chapas
+  📦 Cargado desde disco: gracias,_(name)._en_las_próximas_2_horas_le
+  📦 Cargado desde disco: excelente,_muchas_gracias._para_prepararle_una_mejor_propuesta,
+  📦 Cargado desde disco: muchas_gracias_por_su_tiempo,_jair._que_tenga
+  📦 Cargado desde disco: perfecto,_tomaré_nota_sobre_las_chapas._¿actualmente_trabajan
+  📦 Cargado desde disco: mucho_gusto,_(name)._estoy_aquí_para_ofrecerle_nuestros
+  📦 Cargado desde disco: entendido._¿sabe_si_actualmente_tienen_alguna_necesidad_inmediata
+  📦 Cargado desde disco: manejamos_una_variedad_de_productos_de_ferretería,_incluyendo
+  📦 Cargado desde disco: entiendo,_pero_actualmente_no_contamos_con_productos_específicos
+  📦 Cargado desde disco: entendido,_le_agradezco_la_información._una_última_pregunta:
+  📦 Cargado desde disco: nuestros_productos_son_de_marcas_nacionales_y_distribuimos
+  📦 Cargado desde disco: claro,_le_enviaré_el_catálogo_a_su_número
+  📦 Cargado desde disco: nuestra_fábrica_principal_está_ubicada_en_guadalajara._esto
+  📦 Cargado desde disco: como_le_había_comentado_la_vez_pasada,_me
+  📦 Cargado desde disco: competimos_con_marcas_reconocidas_en_el_mercado,_ofreciendo
+  📦 Cargado desde disco: perfecto,_muchas_gracias._¿me_lo_podría_comunicar_por
+  📦 Cargado desde disco: compitamos_con_marcas_como_dura_y_lamosa_en
+  📦 Cargado desde disco: claro,_estoy_listo._espero_su_transferencia.
+  📦 Cargado desde disco: entendemos_la_importancia_de_la_calidad._nuestros_envíos
+  📦 Cargado desde disco: perfecto,_(name)._me_comunico_de_nioval_sobre_una
+  📦 Cargado desde disco: claro,_con_gusto_le_enviaré_nuestro_catálogo._¿le
+  📦 Cargado desde disco: manejamos_una_amplia_variedad_de_productos_de_ferretería,
+  📦 Cargado desde disco: perfecto,_lo_enviaré_a_este_número_de_inmediato.
+  📦 Cargado desde disco: entiendo,_eso_es_muy_común._nuestros_precios_son
+  📦 Cargado desde disco: perfecto,_(name)._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: excelente,_entonces._en_las_próximas_dos_horas_le
+  📦 Cargado desde disco: claro,_ofrecemos_precios_competitivos_y_productos_de_buena
+  📦 Cargado desde disco: claro,_comprendo_que_la_calidad_es_fundamental._ofrecemos
+  📦 Cargado desde disco: mi_nombre_es_bruce_w._muchas_gracias_por
+  📦 Cargado desde disco: perfecto._por_favor,_proporcióneme_su_dirección_completa_para
+  📦 Cargado desde disco: entiendo,_(name)._entonces,_¿actualmente_trabajan_con_varios_proveedores
+  📦 Cargado desde disco: claro,_le_enviaré_el_catálogo_por_whatsapp._¿me
+  📦 Cargado desde disco: manejamos_una_variedad_de_productos_de_ferretería,_entre
+  📦 Cargado desde disco: entiendo,_(name)._además_de_la_cinta_para_goteras
+  📦 Cargado desde disco: perfecto,_(name)._le_enviaré_nuestro_catálogo_digital_completo
+  📦 Cargado desde disco: excelente,_bueno._voy_a_enviarlo_a_este_número
+  📦 Cargado desde disco: de_nada,_bueno._estoy_aquí_para_ayudar._¡que
+  📦 Cargado desde disco: excelente,_muchas_gracias._¿podrías_comunicarme_con_él,_por
+  📦 Cargado desde disco: perfecto,_estaré_en_espera._gracias.
+  📦 Cargado desde disco: claro,_manejamos_una_variedad_de_productos_de_ferretería,
+  📦 Cargado desde disco: perfecto,_con_gusto_le_enviaré_nuestro_catálogo._para
+  📦 Cargado desde disco: entiendo,_muchas_gracias_por_la_información._una_última
+  📦 Cargado desde disco: perfecto,_(name)._¿qué_sigue_después_de_
+  📦 Cargado desde disco: excelente,_le_enviaré_el_catálogo_y_algunas_sugerencias
+  📦 Cargado desde disco: disculpe,_entonces._¿me_lo_podría_deletrear_letra_por
+  📦 Cargado desde disco: a_usted,_que_tenga_un_excelente_día._estaré
+  📦 Cargado desde disco: entiendo,_(name)._¿podría_continuar_con_el_resto_del
+  📦 Cargado desde disco: sí,_manejamos_herrajes_también._puedo_enviarle_un_catálogo
+  📦 Cargado desde disco: excelente,_herrajes._en_las_próximas_2_horas_le
+  📦 Cargado desde disco: le_llamo_para_presentarles_una_propuesta_comercial_de
+  📦 Cargado desde disco: perfecto,_¿con_quién_tengo_el_gusto?_le_comento
+  📦 Cargado desde disco: entiendo,_manejan_una_amplia_gama_de_productos._¿qué
+  📦 Cargado desde disco: gracias_por_la_información._¿actualmente_trabajan_con_varios
+  📦 Cargado desde disco: de_nada,_que._si_necesitas_algo_en_el
+  📦 Cargado desde disco: gracias,_[nombre]._déjeme_comentarle_que_estamos_muy_interesados
+  📦 Cargado desde disco: la_información_me_ayudará_a_preparar_una_propuesta
+  📦 Cargado desde disco: disculpe,_jair._no_alcancé_a_captar_el_correo
+  📦 Cargado desde disco: disculpe,_entonces._por_favor,_deletréelo_letra_por_letra
+  📦 Cargado desde disco: entendido,_entonces._¿cuál_es_la_siguiente_letra?
+  📦 Cargado desde disco: gracias,_(name)._¿podría_darme_más_letras_del_correo?
+  📦 Cargado desde disco: perfecto,_(name)._el_correo_que_me_proporcionó_es:
+  📦 Cargado desde disco: ¿podría_confirmarme_si_el_correo_es_correcto?
+  📦 Cargado desde disco: excelente,_entonces._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: disculpe,_tiene_razón._le_enviaré_el_catálogo_al
+  📦 Cargado desde disco: de_nada,_entonces._estoy_aquí_para_ayudar._¡que
+  📦 Cargado desde disco: excelente,_gracias._le_enviaré_el_catálogo_a_ese
+  📦 Cargado desde disco: claro,_entiendo_perfectamente._le_enviaré_toda_la_información
+  📦 Cargado desde disco: entiendo,_tardes._el_motivo_de_mi_llamada_es
+  📦 Cargado desde disco: gracias_por_la_información,_tardes._solo_para_confirmar,
+  📦 Cargado desde disco: perfecto,_tardes._agradezco_su_ayuda._me_gustaría_enviarle
+  📦 Cargado desde disco: entiendo,_tardes._¿podría_indicarme_su_correo_electrónico_para
+  📦 Cargado desde disco: está_bien,_tardes._quedo_pendiente_para_contactar_a
+  📦 Cargado desde disco: adiós,_tardes._que_tenga_un_excelente_día.
+  📦 Cargado desde disco: perfecto,_gracias_por_la_información._ofrecemos_una_variedad
+  📦 Cargado desde disco: hola,_qué_tal,_muy_buen_día._me_comunico
+  📦 Cargado desde disco: el_número_que_tengo_es_27_06_11
+  📦 Cargado desde disco: perfecto,_el_número_es_33_27_06_11
+  📦 Cargado desde disco: pensando_3
+  📦 Cargado desde disco: hola,_qué_tal,_muy_buen_día._mi_nombre
+  📦 Cargado desde disco: pensando_4
+  📦 Cargado desde disco: ¿bueno?_muy_buen_día,_¿con_quién_tengo_el
+  📦 Cargado desde disco: ¿hola?_muy_buen_día,_¿con_quién_tengo_el
+  📦 Cargado desde disco: pensando_5
+  📦 Cargado desde disco: entiendo_perfectamente._disculpe,_no_alcancé_a_captar_el
+  📦 Cargado desde disco: pensando_6
+  📦 Cargado desde disco: muy_buen_día._mi_nombre_es_bruce_w,
+  📦 Cargado desde disco: excelente,_muchas_gracias._para_poder_prepararle_una_mejor
+  📦 Cargado desde disco: pensando_7
+  📦 Cargado desde disco: entiendo_perfectamente._¿actualmente_trabajan_con_varios_proveedores_o
+  📦 Cargado desde disco: pensando_8
+  📦 Cargado desde disco: perfecto,_gracias._mi_nombre_es_bruce_w,_le
+  📦 Cargado desde disco: entiendo,_pero_para_poder_ayudarle_mejor,_¿me_puede
+  📦 Cargado desde disco: ofrecemos_una_amplia_gama_de_productos_de_ferretería,
+  📦 Cargado desde disco: perfecto,_¿me_podría_proporcionar_su_nombre_para_poder
+  📦 Cargado desde disco: pensando_1
+  📦 Cargado desde disco: pensando_2
+  📦 Cargado desde disco: manejamos_la_marca_nioval,_que_es_nuestra_marca
+  📦 Cargado desde disco: estamos_ubicados_en_guadalajara,_jalisco,_pero_hacemos_envíos
+  📦 Cargado desde disco: distribuimos_productos_de_ferretería:_cinta_para_goteras,_griferías,
+  📦 Cargado desde disco: respuesta_cache_de_donde_habla
+  📦 Cargado desde disco: respuesta_cache_visitar_fabrica
+  📦 Cargado desde disco: respuesta_cache_que_vende
+  📦 Cargado desde disco: respuesta_cache_que_marcas
+  📦 Cargado desde disco: respuesta_cache_quien_habla
+  📦 Cargado desde disco: respuesta_cache_fabrican_mexico
+  📦 Cargado desde disco: respuesta_cache_que_necesita
+  📦 Cargado desde disco: respuesta_cache_que_productos
+  📦 Cargado desde disco: entiendo,_(name)._¿actualmente_trabajan_con_varios_proveedores_o
+  📦 Cargado desde disco: respuesta_cache_linea_credito
+  📦 Cargado desde disco: respuesta_cache_selladores_silicones
+  📦 Cargado desde disco: despedida_objecion
+  📦 Cargado desde disco: respuesta_cache_chapas
+  📦 Cargado desde disco: saludo_inicial_encargado
+  📦 Cargado desde disco: perfecto,_¿me_podría_comunicar_con_el_encargado_de
+  📦 Cargado desde disco: entendido._¿me_puede_dar_su_número_directo_o
+  📦 Cargado desde disco: disculpa,_no_te_escuché_bien,_¿me_puedes_repetir?
+  📦 Cargado desde disco: perfecto,_excelente._por_favor,_adelante_con_el_correo.
+  📦 Cargado desde disco: hola,_muy_buen_día._mi_nombre_es_bruce
+  📦 Cargado desde disco: perfecto,_anotado:_luis_garcía_u_de_uva_03@gmail.com.
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval,_mas_queda
+  📦 Cargado desde disco: muy_buen_día._le_llamo_de_nioval_sobre
+  📦 Cargado desde disco: hola,_buen_dia
+  📦 Cargado desde disco: perfecto,_(name)._me_comunico_de_la_marca_nioval
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval,_más_que
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval,_quería_brindar
+  📦 Cargado desde disco: confirmacion_presencia
+  📦 Cargado desde disco: segunda_parte_saludo
+  📦 Cargado desde disco: entendido._¿me_podría_proporcionar_un_número_de_whatsapp
+  📦 Cargado desde disco: perfecto,_ya_lo_tengo_anotado._le_llegará_el
+  📦 Cargado desde disco: perfecto,_adelante_por_favor.
+  📦 Cargado desde disco: perfecto,_estoy_listo_para_anotarlo._¿cuál_es_su
+  📦 Cargado desde disco: perfecto,_excelente._por_favor,_repítame_el_correo.
+  📦 Cargado desde disco: tiene_razón,_discúlpeme._deje_verifico_el_número_que
+  📦 Cargado desde disco: perfecto,_(name)._me_comunico_de_la_marca_nioval,
+  📦 Cargado desde disco: perfecto,_¿me_podría_proporcionar_su_número_de_whatsapp
+  📦 Cargado desde disco: dejeme_ver
+  📦 Cargado desde disco: perfecto._¿le_gustaría_recibir_el_catálogo_por_whatsapp
+  📦 Cargado desde disco: un_momento
+  📦 Cargado desde disco: lo_reviso
+  📦 Cargado desde disco: despedida_simple
+  📦 Cargado desde disco: dejeme_ver_con_calma
+  📦 Cargado desde disco: un_momento_lo_reviso
+  📦 Cargado desde disco: permitame_verificar
+  📦 Cargado desde disco: dejeme_consultarlo
+  📦 Cargado desde disco: un_segundito_verifico
+  📦 Cargado desde disco: dejeme_checar
+  📦 Cargado desde disco: reviso_toda_informacion
+  📦 Cargado desde disco: verifico_detalles
+  📦 Cargado desde disco: consulto_con_cuidado
+  📦 Cargado desde disco: veo_todos_detalles
+  📦 Cargado desde disco: claro,_tómese_su_tiempo._estoy_aquí_para_ayudarle
+  📦 Cargado desde disco: hola,_buen_día._me_comunico_de_la_marca
+  📦 Cargado desde disco: claro,_espero.
+  📦 Cargado desde disco: claro_espero
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval_para_ofrecerle
+  📦 Cargado desde disco: entiendo_perfecto._por_si_en_el_futuro_necesitan
+  📦 Cargado desde disco: ¿se_encuentra_el_encargado_o_encargada_de_compras?
+  📦 Cargado desde disco: entendido._¿me_podría_proporcionar_el_correo_para_enviarle
+  📦 Cargado desde disco: respuesta_cache_presencia_aqui
+  📦 Cargado desde disco: respuesta_cache_presencia_escucho
+  📦 Cargado desde disco: respuesta_cache_presencia_ayudo
+  📦 Cargado desde disco: respuesta_cache_presencia_digame
+  📦 Cargado desde disco: entiendo,_¿prefiere_recibir_el_catálogo_por_whatsapp_o
+  📦 Cargado desde disco: entiendo,_si_no_está_interesado_en_el_catálogo,
+  📦 Cargado desde disco: ¡claro!_manejamos_productos_de_ferretería_como_grifería,_herramientas
+  📦 Cargado desde disco: entendido,_enviaré_el_catálogo_a_este_número._le
+  📦 Cargado desde disco: ¡sí!_manejamos_productos_de_ferretería_en_varias_categorías,
+  📦 Cargado desde disco: perfecto,_¿me_podría_comunicar_su_número_de_whatsapp
+  📦 Cargado desde disco: perfecto,_lo_enviaré_al_mismo_número._recibirá_el
+  📦 Cargado desde disco: ¿está_disponible_el_encargado_o_encargada_de_compras?
+  📦 Cargado desde disco: ofrecemos_una_variedad_de_productos_de_ferretería,_como
+  📦 Cargado desde disco: ¡sí!_manejamos_grifería,_herramientas_y_cintas._por_ejemplo,
+  📦 Cargado desde disco: manejamos_griferías,_herramientas_y_cintas._por_ejemplo,_tenemos
+  📦 Cargado desde disco: manejamos_varias_cintas,_incluyendo_la_cinta_para_goteras,
+  📦 Cargado desde disco: manejamos_cintas_como_la_cinta_para_goteras,_cintas
+  📦 Cargado desde disco: manejamos_productos_de_ferretería,_como_griferías,_herramientas_y
+  📦 Cargado desde disco: claro,_¿me_podría_proporcionar_su_número_de_whatsapp
+  📦 Cargado desde disco: perfecto,_¿me_podría_confirmar_el_número?
+  📦 Cargado desde disco: excelente,_le_enviaré_el_catálogo_por_whatsapp_a
+  📦 Cargado desde disco: parece_que_hay_un_malentendido._me_comunico_de
+  📦 Cargado desde disco: ¿me_podría_proporcionar_su_número_de_whatsapp_o
+  📦 Cargado desde disco: disculpe,_tuve_un_problema_técnico._¿podría_repetir_lo
+  📦 Cargado desde disco: entiendo,_es_importante_respetar_esos_tiempos._el_motivo
+  📦 Cargado desde disco: entiendo_que_está_ocupado._¿le_gustaría_que_le
+  📦 Cargado desde disco: ¿bueno?_buenos_días._me_comunico_de_la_marca
+  📦 Cargado desde disco: perfecto,_¿me_puede_proporcionar_su_número_de_whatsapp
+  📦 Cargado desde disco: claro,_puedo_enviarle_el_catálogo_completo_por_correo.
+  📦 Cargado desde disco: ¡gracias!_me_alegra_comunicarme_contigo._soy_bruce_w
+  📦 Cargado desde disco: entiendo,_¿me_podría_comunicar_con_el_encargado_de
+  📦 Cargado desde disco: entiendo._si_prefiere,_puedo_enviarle_información_por_correo
+  📦 Cargado desde disco: entiendo_que_estás_ocupado._¿te_gustaría_que_te
+  📦 Cargado desde disco: entiendo,_pero_me_gustaría_enfocarme_en_nuestros_productos
+  📦 Cargado desde disco: ¡sí!_manejamos_una_amplia_variedad_de_productos_de
+  📦 Cargado desde disco: entiendo,_gracias_por_la_información._me_comunico_de
+  📦 Cargado desde disco: ¿le_gustaría_recibir_el_catálogo_completo_por_whatsapp?
+  📦 Cargado desde disco: ¿bueno?_buenas_tardes._me_comunico_de_la_marca
+  📦 Cargado desde disco: manejamos_productos_de_ferretería_como_griferías,_herramientas,_cintas
+  📦 Cargado desde disco: entiendo_que_no_tiene_tiempo._¿le_gustaría_que
+  📦 Cargado desde disco: entendido._¿le_gustaría_recibir_el_catálogo_por_whatsapp
+  📦 Cargado desde disco: sí,_por_favor,_deletréelo.
+  📦 Cargado desde disco: entiendo_que_está_mencionando_instalaciones_eléctricas._me_gustaría
+  📦 Cargado desde disco: entiendo_que_está_ocupado._¿le_gustaría_recibir_el
+  📦 Cargado desde disco: entendido._si_necesita_información_en_el_futuro,_no
+  📦 Cargado desde disco: ¿le_gustaría_que_le_envíe_el_catálogo_por
+  📦 Cargado desde disco: sí,_aquí_estoy._¿me_podría_comunicar_con_el
+  📦 Cargado desde disco: claro,_por_favor_proporcione_su_número_de_whatsapp
+  📦 Cargado desde disco: entiendo,_¿me_podría_proporcionar_el_correo_electrónico_para
+  📦 Cargado desde disco: perfecto,_¿me_podría_confirmar_el_correo_completo?
+  📦 Cargado desde disco: me_comunico_para_ofrecerle_información_sobre_nuestros_productos
+  📦 Cargado desde disco: entendido._¿me_podría_proporcionar_el_correo_electrónico_para
+  📦 Cargado desde disco: perfecto._ofrecemos_una_variedad_de_productos_de_ferretería,
+  📦 Cargado desde disco: ¿cuál_es_su_número_de_whatsapp_para_enviarle
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_a_este_número.
+  📦 Cargado desde disco: entiendo,_pero_me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: comprendo,_no_hay_problema._¿tiene_un_correo_electrónico
+  📦 Cargado desde disco: perfecto,_tengo_anotado_el_correo._enviaré_el_catálogo
+  📦 Cargado desde disco: ¡de_nada!_estoy_aquí_para_ayudar._si_tiene
+  📦 Cargado desde disco: claro,_le_dejo_mi_contacto_por_si_cambia
+  📦 Cargado desde disco: perfecto,_entiendo._me_gustaría_enviarle_nuestro_catálogo_digital
+  📦 Cargado desde disco: entiendo._de_todos_modos,_me_gustaría_enviarle_nuestro
+  📦 Cargado desde disco: ¡hasta_luego!_que_tenga_un_excelente_día.
+  📦 Cargado desde disco: ¿está_disponible_el_encargado_de_compras?
+  📦 Cargado desde disco: manejamos_un_catálogo_de_productos_de_ferretería,_incluyendo
+  📦 Cargado desde disco: ¿me_podría_confirmar_si_está_el_encargado_de
+  📦 Cargado desde disco: solo_quería_ofrecerle_información_sobre_nuestros_productos_de
+  📦 Cargado desde disco: claro,_pero_necesito_saber_si_prefiere_recibir_el
+  📦 Cargado desde disco: gracias_por_su_tiempo._que_tenga_un_excelente
+  📦 Cargado desde disco: perfecto,_enviaré_el_catálogo_a_este_número._gracias
+  📦 Cargado desde disco: entiendo,_le_puedo_enviar_información_por_whatsapp._¿cuál
+  📦 Cargado desde disco: ¡sí!_grifería_es_nuestra_categoría_principal_con_34
+  📦 Cargado desde disco: perfecto._¿me_podría_proporcionar_su_número_de_whatsapp
+  📦 Cargado desde disco: perfecto,_lo_enviaré_a_este_número._le_llegará
+  📦 Cargado desde disco: entendido,_pero_necesito_su_número_de_whatsapp_para
+  📦 Cargado desde disco: ¿podría_darme_el_número_completo,_por_favor?
+  📦 Cargado desde disco: ¿le_gustaría_que_le_envíe_información_sobre_nuestros
+  📦 Cargado desde disco: entendido._si_me_proporciona_el_número_de_whatsapp,
+  📦 Cargado desde disco: entendido._¿me_podría_proporcionar_el_número_de_whatsapp
+  📦 Cargado desde disco: ¿me_podría_proporcionar_el_número_de_whatsapp_para
+  📦 Cargado desde disco: entendido._¿le_gustaría_recibir_información_sobre_nuestros_productos
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval,_especializada_en
+  📦 Cargado desde disco: sí,_por_favor._puede_proporcionarme_el_correo_o
+  📦 Cargado desde disco: sí,_por_favor,_adelante_con_el_deletreo_del
+  📦 Cargado desde disco: ajá,_déjeme_ver..._entiendo_que_está_ocupado._¿le
+  📦 Cargado desde disco: entiendo._estoy_buscando_hablar_con_el_encargado_de
+  📦 Cargado desde disco: excelente._¿cuál_es_su_número_de_whatsapp_para
+  📦 Cargado desde disco: entiendo_que_prefiere_por_whatsapp._¿cuál_es_su
+  📦 Cargado desde disco: parece_que_está_ocupado._¿le_gustaría_que_le
+  📦 Cargado desde disco: entiendo_que_están_enfocados_en_otra_área._¿le
+  📦 Cargado desde disco: perfecto._¿le_gustaría_recibir_nuestro_catálogo_por_whatsapp
+  📦 Cargado desde disco: entiendo._¿hay_un_mejor_momento_para_llamar_y
+  📦 Cargado desde disco: disculpe_la_insistencia._¿hay_algún_momento_más_conveniente
+  📦 Cargado desde disco: entiendo._¿podría_confirmarme_si_está_el_encargado_o
+  📦 Cargado desde disco: entiendo._¿le_gustaría_que_le_envíe_el_catálogo
+  📦 Cargado desde disco: entiendo,_¿hay_un_mejor_momento_para_llamar_y
+  📦 Cargado desde disco: entiendo_que_puede_estar_ocupado._si_prefiere,_puedo
+  📦 Cargado desde disco: entiendo_la_confusión._me_comunico_de_nioval_para
+  📦 Cargado desde disco: entiendo._me_comunico_de_la_marca_nioval_para
+  📦 Cargado desde disco: entendido,_gracias_por_su_tiempo._que_tenga_un
+  📦 Cargado desde disco: entiendo_que_están_en_un_proceso_de_cierre.
+  📦 Cargado desde disco: entiendo._en_nioval_manejamos_productos_de_ferretería,_como
+  📦 Cargado desde disco: entendido._¿le_gustaría_recibir_el_catálogo_de_nuestros
+  📦 Cargado desde disco: ¿le_gustaría_recibir_nuestro_catálogo_por_whatsapp_o
+  📦 Cargado desde disco: respuesta_cache_encargado_si
+  📦 Cargado desde disco: respuesta_cache_encargado_no
+  📦 Cargado desde disco: respuesta_cache_whatsapp_si
+  📦 Cargado desde disco: respuesta_cache_correo_si
+  📦 Cargado desde disco: respuesta_cache_no_interesa
+  📦 Cargado desde disco: respuesta_cache_ocupado
+  📦 Cargado desde disco: entiendo._en_nioval_manejamos_productos_de_ferretería_que
+  📦 Cargado desde disco: entiendo._me_comunico_de_la_marca_nioval,_más
+  📦 Cargado desde disco: perfecto,_muchas_gracias._que_tenga_un_excelente_día.
+  📦 Cargado desde disco: entendido._le_enviaré_nuestro_catálogo_a_ventas_arroba
+  📦 Cargado desde disco: gracias_por_su_tiempo._si_necesita_algo_más
+  📦 Cargado desde disco: hola,_soy_representante_de_la_marca_nioval._quisiera
+  📦 Cargado desde disco: entiendo_que_están_ocupados_con_la_nueva_sucursal.
+  📦 Cargado desde disco: claro,_¿me_podría_proporcionar_un_número_de_whatsapp
+  📦 Cargado desde disco: perfecto._enviaré_el_catálogo_al_whatsapp_de_abigail.
+  📦 Cargado desde disco: entiendo._enviaré_el_catálogo_al_whatsapp_de_abigail
+  📦 Cargado desde disco: entiendo._aunque_no_manejamos_cobre_directamente,_sí_ofrecemos
+  📦 Cargado desde disco: perfecto,_ya_tengo_el_número_anotado._enviaré_el
+  📦 Cargado desde disco: ¡hasta_luego!_si_necesita_algo_más,_no_dude
+  📦 Cargado desde disco: entiendo_que_están_ocupados._¿le_gustaría_que_le
+  📦 Cargado desde disco: perfecto,_¿me_podría_proporcionar_su_correo_electrónico_para
+  📦 Cargado desde disco: claro,_tengo_donde_anotar._¿cuál_es_su_número
+  📦 Cargado desde disco: gracias._enviaré_el_catálogo_a_ese_número_de
+  📦 Cargado desde disco: de_nada._que_tenga_un_excelente_día._¡hasta
+  📦 Cargado desde disco: sí,_le_escucho._¿me_podría_proporcionar_un_número
+  📦 Cargado desde disco: gracias_por_compartir_el_correo._le_enviaré_el
+  📦 Cargado desde disco: entendido._¿me_puede_proporcionar_su_correo_electrónico_para
+  📦 Cargado desde disco: claro,_¿cuál_es_su_correo_electrónico?
+  📦 Cargado desde disco: perfecto,_he_anotado_su_correo._le_enviaré_el
+  📦 Cargado desde disco: disculpa_la_repetición._me_gustaría_saber_si_sería
+  📦 Cargado desde disco: gracias_a_usted._si_necesita_algo_más_en
+  📦 Cargado desde disco: perfecto._¿me_podría_proporcionar_un_número_de_whatsapp
+  📦 Cargado desde disco: ajá,_déjeme_ver..._perfecto,_gracias._enviaré_el_catálogo
+  📦 Cargado desde disco: gracias_por_la_información._enviaré_el_catálogo_a
+  📦 Cargado desde disco: entendido._enviaré_el_catálogo_únicamente_al_correo_que
+  📦 Cargado desde disco: claro,_¿puedo_tomar_nota_de_lo_que_necesite?
+  📦 Cargado desde disco: perfecto,_ya_lo_tengo_anotado._¿me_gustaría_enviarle
+  📦 Cargado desde disco: entiendo,_le_enviaré_el_catálogo_completo_a_su
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_en_el_transcurso
+  📦 Cargado desde disco: perfecto,_tengo_realizadosporlacomunidaddeamara.org._¿cuál_es_la_primera_parte
+  📦 Cargado desde disco: parece_que_hay_un_malentendido._¿me_podría_confirmar
+  📦 Cargado desde disco: entiendo_que_hay_confusión._me_comunico_de_nioval,
+  📦 Cargado desde disco: ¿podría_confirmarme_si_hay_alguien_disponible_para_hablar
+  📦 Cargado desde disco: entendido._por_favor,_adelante_con_el_correo.
+  📦 Cargado desde disco: perfecto._¿cuál_es_el_correo_electrónico_donde_puedo
+  📦 Cargado desde disco: perfecto._entonces,_el_correo_es_almacén_de_ernesto.
+  📦 Cargado desde disco: hola,_buenos_días._estoy_llamando_para_ver_si
+  📦 Cargado desde disco: entiendo,_¿me_podría_proporcionar_el_correo_electrónico_completo
+  📦 Cargado desde disco: está_bien,_respeto_su_decisión._si_en_el
+  📦 Cargado desde disco: ajá,_déjeme_ver..._¿bueno?_buenos_días._me_comunico
+  📦 Cargado desde disco: entiendo._perfecto,_¿le_gustaría_recibir_nuestro_catálogo_por
+  📦 Cargado desde disco: comprendo._entonces,_¿hay_un_mejor_momento_para_llamar
+  📦 Cargado desde disco: ajá,_déjeme_ver..._entendido._perfecto,_le_enviaré_el
+  📦 Cargado desde disco: entendido,_muchas_gracias._le_enviaré_el_catálogo_al
+  📦 Cargado desde disco: entendido,_le_enviaré_la_información_por_whatsapp._¿me
+  📦 Cargado desde disco: entiendo,_enviaré_la_información_por_whatsapp_y_también
+  📦 Cargado desde disco: sí,_le_escucho._¿se_encuentra_el_encargado_o
+  📦 Cargado desde disco: ¡hola!_muy_buen_día,_¿con_quién_tengo_el
+  📦 Cargado desde disco: disculpe,_¿me_decía_algo?_estoy_aquí_para_ayudarle.
+  📦 Cargado desde disco: ¿me_podría_comunicar_con_el_encargado_de_compras,
+  📦 Cargado desde disco: sí,_¿me_escucha?_le_llamo_de_la_marca
+  📦 Cargado desde disco: claro,_con_gusto_espero.
+  📦 Cargado desde disco: por_supuesto,_tómese_su_tiempo._si_prefiere,_puedo
+  📦 Cargado desde disco: entiendo,_perfecto._¿le_gustaría_recibir_nuestro_catálogo_por
+  📦 Cargado desde disco: entiendo._¿le_gustaría_que_le_envíe_nuestro_catálogo
+  📦 Cargado desde disco: comprendo,_parece_que_está_ocupado._¿quiere_que_le
+  📦 Cargado desde disco: entiendo._¿está_buscando_alguna_opción_específica_de_ese
+  📦 Cargado desde disco: comprendo._¿le_gustaría_que_le_enviara_el_catálogo
+  📦 Cargado desde disco: entiendo,_parece_que_usted_es_el_encargado._¿le
+  📦 Cargado desde disco: entiendo._¿le_gustaría_recibir_nuestro_catálogo_de_productos
+  📦 Cargado desde disco: entiendo,_parece_que_hay_una_confusión._¿desea_que
+  📦 Cargado desde disco: ¿me_escucha?_estoy_aquí_para_ayudarle.
+  📦 Cargado desde disco: perdón,_no_logré_escucharte,_¿me_lo_repites_por
+  📦 Cargado desde disco: ¿prefiere_que_le_envíe_el_catálogo_por_whatsapp
+  📦 Cargado desde disco: perfecto._¿le_gustaría_que_le_enviara_el_catálogo
+  📦 Cargado desde disco: entiendo._¿podría_aclarar_qué_aspecto_del_convenio_no
+  📦 Cargado desde disco: entiendo._si_necesita_información_en_el_futuro,_no
+  📦 Cargado desde disco: perfecto,_dígame_el_número_y_lo_anoto_para
+  📦 Cargado desde disco: parece_que_el_número_está_incompleto._¿podría_confirmarme
+  📦 Cargado desde disco: entiendo,_no_hay_problema._si_lo_prefiere,_puedo
+  📦 Cargado desde disco: gracias_por_su_correo._le_enviaré_el_catálogo
+  📦 Cargado desde disco: le_enviaré_el_catálogo_completo_por_correo_a
+  📦 Cargado desde disco: de_nada._si_necesita_algo_más_en_el
+  📦 Cargado desde disco: entiendo._como_le_había_comentado_la_vez_pasada,
+  📦 Cargado desde disco: comprendo._si_le_interesa,_puedo_enviarle_el_catálogo
+  📦 Cargado desde disco: claro,_me_comunico_de_la_marca_nioval._¿le
+  📦 Cargado desde disco: me_comunico_de_nioval,_distribuidores_de_productos_de
+  📦 Cargado desde disco: actualmente_no_manejamos_máquinas,_pero_ofrecemos_una_variedad
+  📦 Cargado desde disco: ¿cuál_es_su_whatsapp_para_enviarle_el_catálogo?
+  📦 Cargado desde disco: entiendo._¿prefiere_que_le_envíe_el_catálogo_por
+  📦 Cargado desde disco: perfecto,_muchas_gracias._¿me_podría_proporcionar_un_número
+  📦 Cargado desde disco: perfecto,_ya_lo_tengo_registrado._le_llegará_el
+  📦 Cargado desde disco: sí,_buen_día._soy_bruce_de_la_marca
+  📦 Cargado desde disco: entiendo,_no_se_preocupe._¿le_gustaría_que_le
+  📦 Cargado desde disco: perfecto._mi_nombre_es_bruce_w,_soy_asesor
+  📦 Cargado desde disco: ¿le_gustaría_recibir_el_catálogo_de_nuestros_productos
+  📦 Cargado desde disco: ¿me_podría_compartir_su_número_de_whatsapp_para
+  📦 Cargado desde disco: ¿me_puede_proporcionar_su_número_de_whatsapp?
+  📦 Cargado desde disco: perfecto,_le_enviaré_el_catálogo_a_ese_número.
+  📦 Cargado desde disco: entiendo,_ya_tengo_su_número._le_enviaré_el
+  📦 Cargado desde disco: está_bien._enviaré_el_catálogo_a_su_whatsapp.
+  📦 Cargado desde disco: entendido._¿le_gustaría_recibir_nuestro_catálogo_por_whatsapp
+  📦 Cargado desde disco: entiendo,_no_hay_problema._mientras_espero,_¿le_gustaría
+  📦 Cargado desde disco: entiendo,_parece_que_están_ocupados._si_lo_prefieren,
+  📦 Cargado desde disco: de_nada._si_en_el_futuro_necesita_algo,
+  📦 Cargado desde disco: perfecto._¿cuál_es_su_número_de_whatsapp_para
+  📦 Cargado desde disco: entendido._¿me_puede_proporcionar_su_número_de_whatsapp
+  📦 Cargado desde disco: perfecto,_lo_tengo_anotado_como_614-104-27-17,_¿es_correcto?
+  📦 Cargado desde disco: entiendo._¿le_gustaría_recibir_nuestro_catálogo_por_whatsapp
+  📦 Cargado desde disco: entiendo,_pero_necesito_el_número_completo_de_10
+  📦 Cargado desde disco: claro,_puedo_enviarle_el_catálogo_por_correo._¿cuál
+  📦 Cargado desde disco: entiendo._¿podría_proporcionarme_su_correo_electrónico_para_enviarle
+  📦 Cargado desde disco: claro,_por_favor_dígame_su_correo_electrónico_y
+  📦 Cargado desde disco: disculpe,_parece_que_hubo_un_problema_de_comunicación.
+  📦 Cargado desde disco: respuesta_cache_cliente_pide_whatsapp
+  📦 Cargado desde disco: claro,_estaré_pendiente._si_necesita_información_sobre_nuestros
+  📦 Cargado desde disco: me_comunico_de_la_marca_nioval._quería_brindar
+  📦 Cargado desde disco: qué_tal,_le_llamo_de_la_marca_nioval
+  📦 Cargado desde disco: entiendo,_parece_que_hubo_un_malentendido._¿hay_algo
+  📦 Cargado desde disco: entiendo,_no_hay_problema._puede_enviarme_un_whatsapp
+  📦 Cargado desde disco: claro,_por_favor_compártame_el_número_para_enviarle
+  📦 Cargado desde disco: le_agradezco_su_paciencia._¿le_gustaría_saber_más
+  📦 Cargado desde disco: claro._manejamos_productos_de_ferretería:_grifería,_cintas,_herramientas.
+  📦 Cargado desde disco: sí,_aquí_sigo._¿me_puede_escuchar_bien?
+  📦 Cargado desde disco: perfecto,_gracias_por_confirmarlo._¿le_gustaría_que_le
+  📦 Cargado desde disco: mis_disculpas_por_la_confusión._si_necesita_más
+  📦 Cargado desde disco: entiendo,_pero_para_avanzar,_¿me_podría_indicar_si
+  📦 Cargado desde disco: entendido,_espero_su_información.
+  📦 Cargado desde disco: perfecto,_lo_tengo_anotado_como_221-442-61-55,_¿es_correcto?
+  ⏭️ Omitido: pensando_3 (ya existe en cache)
+  ⏭️ Omitido: pensando_4 (ya existe en cache)
+  ⏭️ Omitido: pensando_5 (ya existe en cache)
+  ⏭️ Omitido: pensando_6 (ya existe en cache)
+  ⏭️ Omitido: respuesta_cache_presencia_escucho (ya existe en cache)
+  ⏭️ Omitido: respuesta_cache_presencia_ayudo (ya existe en cache)
+  ⏭️ Omitido: respuesta_cache_que_necesita (ya existe en cache)
+  ⏭️ Omitido: respuesta_cache_que_productos (ya existe en cache)
+  ⏭️ Omitido: respuesta_cache_linea_credito (ya existe en cache)
+✅ FIX 270: Telegram Bot 1 notificado
+Railway rate limit of 500 logs/sec reached for replica, update your application to reduce the logging rate. Messages dropped: 330
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524929243364, Negocio: El Triangulo Surtidor
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524929243364
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA3ce6b969c82360a7e58a76ce982bf3a5
+[2026-01-24 17:18:31] [LLAMADA] N/A - LLAMADA INICIADA a +524929243364 (El Triangulo Surtidor)
+📋 Contacto completo guardado para Call SID CA3ce6b969... (fila 1770)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.2 - - [24/Jan/2026 17:18:31] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CA3ce6b969...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-24 17:19:26] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)
+📞 Intento de buzón #2 registrado para fila 1770
+   📞 Intento de buzón #2 registrado
+   💾 Segundo intento de buzón - guardando en Respuestas de formulario 1...
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 0 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no logró captar la atención del cliente, lo que sugiere que la presentación del producto o servicio no fue convincente. Bruce podría haber hecho preguntas más abiertas para entender mejor las necesidades del cliente y adaptar su enfoque.
+📝 FIX 177: Conclusión temporal 'BUZON' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3594...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: BUZON
+  → Resultado: NEGADO
+  → Estado: Buzon
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: La llamada no logró captar la atención del cliente...
+  → Calificación Bruce: 3/10
+✅ Resultado guardado exitosamente en fila 3594
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1770
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Buzón guardado en Respuestas de formulario 1
+100.64.0.3 - - [24/Jan/2026 17:19:30] "GET /status-callback?Called=%2B524929243364&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:19:26+%2B0000&CallbackSource=call-progress-events&SipResponseCode=487&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA3ce6b969c82360a7e58a76ce982bf3a5&To=%2B524929243364&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524929250093, Negocio: FERRETERIA Y CALENTADORES SOLARES DE ZACATECAS
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524929250093
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA3049be4964876508af09c4afbea927e8
+[2026-01-24 17:19:59] [LLAMADA] N/A - LLAMADA INICIADA a +524929250093 (FERRETERIA Y CALENTADORES SOLARES DE ZACATECAS)
+📋 Contacto completo guardado para Call SID CA3049be49... (fila 1777)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.3 - - [24/Jan/2026 17:19:59] "POST /iniciar-llamada HTTP/1.1" 200 -
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1777
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: BUZON
+  → Resultado: NEGADO
+  → Estado: Buzon
+  → Nivel de interés: Bajo
+
+  → Estado de ánimo: Negativo
+📞 STATUS CALLBACK - Llamada CA3049be49...
+  → Opinión Bruce: La llamada no logró captar la atención del cliente...
+   Estado: no-answer
+  → Calificación Bruce: 3/10
+✅ Resultado guardado exitosamente en fila 3595
+   Duración: 0s
+[2026-01-24 17:20:54] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+✅ Resultados guardados en 'Respuestas de formulario 1'
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)
+
+📞 Intento de buzón #2 registrado para fila 1777
+============================================================
+   📞 Intento de buzón #2 registrado
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+   💾 Segundo intento de buzón - guardando en Respuestas de formulario 1...
+
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 0 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no logró captar la atención del cliente, ya que terminó en buzon. Bruce podría haber hecho preguntas más abiertas para involucrar al cliente y entender mejor sus necesidades.
+📝 FIX 177: Conclusión temporal 'BUZON' - recalculando con datos capturados...
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Buzón guardado en Respuestas de formulario 1
+100.64.0.4 - - [24/Jan/2026 17:20:57] "GET /status-callback?Called=%2B524929250093&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:20:54+%2B0000&CallbackSource=call-progress-events&SipResponseCode=487&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA3049be4964876508af09c4afbea927e8&To=%2B524929250093&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3595...
+  → Pregunta 3: No (Bruce)
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524922685858, Negocio: Deposito Ferretero de Zacatecas
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524922685858
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA2280b2c0290fb1a0e86cad19448c94be
+[2026-01-24 17:21:27] [LLAMADA] N/A - LLAMADA INICIADA a +524922685858 (Deposito Ferretero de Zacatecas)
+📋 Contacto completo guardado para Call SID CA2280b2c0... (fila 1779)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.5 - - [24/Jan/2026 17:21:27] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CA2280b2c0...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-24 17:21:36] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)
+📞 Intento de buzón #1 registrado para fila 1779
+   📞 Intento de buzón #1 registrado
+   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)
+100.64.0.6 - - [24/Jan/2026 17:21:36] "GET /status-callback?Called=%2B524922685858&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:21:36+%2B0000&CallbackSource=call-progress-events&SipResponseCode=480&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA2280b2c0290fb1a0e86cad19448c94be&To=%2B524922685858&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524922878868, Negocio: Ferretería Mi Maistro
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524922878868
+🔍 DEBUG 5: Llamada Twilio creada - SID: CAa32d5ab6584625a9eca7d2fca18d02e7
+[2026-01-24 17:22:08] [LLAMADA] N/A - LLAMADA INICIADA a +524922878868 (Ferretería Mi Maistro)
+📋 Contacto completo guardado para Call SID CAa32d5ab6... (fila 1780)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.7 - - [24/Jan/2026 17:22:08] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CAa32d5ab6...
+   Estado: failed
+   Duración: 0s
+[2026-01-24 17:22:09] [LLAMADA] LLAMADA TERMINADA - Estado: failed, Duración: 0s
+   ⚠️ Llamada fallida - Estado: failed
+   📋 Fila 1780: Ferretería Mi Maistro - +524922878868
+   ⚠️ SIP Response Code: 404
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 0 segundos
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada se vio afectada por un fallo técnico, lo que impidió establecer una conexión efectiva con el cliente. Bruce debería haber verificado la calidad de la conexión antes de iniciar la conversación para evitar frustraciones.
+📝 Conclusión ya determinada: FALLO TECNICO (no recalcular)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3596...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Fallo Tecnico
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: La llamada se vio afectada por un fallo técnico, l...
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+  → Calificación Bruce: 3/10
+✅ Resultado guardado exitosamente en fila 3596
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1780
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Llamada fallida guardada: Fallo Tecnico
+100.64.0.8 - - [24/Jan/2026 17:22:12] "GET /status-callback?Called=%2B524922878868&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:22:09+%2B0000&CallbackSource=call-progress-events&SipResponseCode=404&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAa32d5ab6584625a9eca7d2fca18d02e7&To=%2B524922878868&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=failed&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&ErrorCode=13224&FromZip=&ErrorMessage=invalid+phone+number+&FromState=Jal. HTTP/1.1" 200 -
+📋 Contacto completo guardado para Call SID CA6c307cd0... (fila 1781)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.9 - - [24/Jan/2026 17:22:42] "POST /iniciar-llamada HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524921033981, Negocio: L p
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524921033981
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA6c307cd0566bd184de031f8da98b741d
+[2026-01-24 17:22:42] [LLAMADA] N/A - LLAMADA INICIADA a +524921033981 (L p)
+🆔 ID BRUCE generado: BRUCE1418
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.10 - - [24/Jan/2026 17:23:01] "GET /webhook-voz?Called=%2B524921033981&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA6c307cd0566bd184de031f8da98b741d&To=%2B524921033981&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZ8b0e953d8e2aac4aaa9a7a7e06fb7ee5
+   CallSid: CA6c307cd0566bd184de031f8da98b741d
+🔄 FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+100.64.0.10 - - [24/Jan/2026 17:23:02] "GET /audio/inicial_CA6c307cd0566bd184de031f8da98b741d HTTP/1.1" 200 -
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA6c307cd0566bd184de031f8da98b741d
+✅ FIX 212: Deepgram conectado para CallSid: CA6c307cd0566bd184de031f8da98b741d
+✅ FIX 212: Deepgram conectado para CA6c307cd0566bd184de031f8da98b741d
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6c307cd0566bd184de031f8da98b741d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE046c4de0ab5b4f540634c5cf639f284a'
+   Digits: timeout
+📝 FIX 212: [PARCIAL] '9 2 1 0'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+📝 FIX 212: [PARCIAL] '9 2 1 0 3'
+📝 LOG registrado: CLIENT... | 9 2 1 0 3...
+   🚨 FIX 244: Habló rápido (1.4s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: '9 2 1 0 3'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+📼 FIX 214: Grabación fragmento completed - CallSid: CA6c307cd0566bd184de031f8da98b741d
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE046c4de0ab5b4f540634c5cf639f284a
+100.64.0.7 - - [24/Jan/2026 17:23:06] "POST /grabacion-status HTTP/1.1" 200 -
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.2s)
+   🟢 Deepgram: '9 2 1 0 3'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "9 2 1 0 3"
+[2026-01-24 17:23:06] [CLIENTE] BRUCE1418 - CLIENTE DIJO: "9 2 1 0 3"
+   CallSid: CA6c307cd0566bd184de031f8da98b741d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE7286f354badde02023176e8a72868220'
+   Digits: timeout
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+   Tiempo hablando: 1.4s
+   Palabras dichas: 5 (historial: 5)
+   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s...
+100.64.0.6 - - [24/Jan/2026 17:23:07] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+🔍 DEBUG - Parámetros Twilio (POST):
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+📝 LOG registrado: CLIENT... | 9 2 1 0 3 3 9 8 1...
+[2026-01-24 17:23:09] [CLIENTE] BRUCE1418 - CLIENTE DIJO: "9 2 1 0 3 3 9 8 1"
+
+🔄 FIX 244: Concatenando transcripciones parciales
+
+💬 CLIENTE DIJO: "9 2 1 0 3 3 9 8 1"
+   [0] '9 2 1 0 3'
+   ✅ FIX 244: Frase completa: '9 2 1 0 3 9 2 1 0 3 3 9 8 1'
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🔍 FIX 81 DEBUG: Verificando objeciones en: '9 2 1 0 3 9 2 1 0 3 3 9 8 1'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Hola, buen dia
+   USER: 9 2 1 0 3 9 2 1 0 3 3 9 8 1
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.2s)
+   🟢 Deepgram: '9 2 1 0 3 3 9 8 1'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+⏳ GPT+Audio procesando - reproduciendo tono de pensando...
+💭 Bruce dice (voz Bruce): 'pensando_6' desde caché
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1. Por favor,'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1. Por favor,'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1. Por favor, deja tu mensaje'
+📝 FIX 212: [PARCIAL] '9 2 1 0 3 3 9 8 1. Por favor, deja tu mensaje'
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (28 palabras)
+📦 Caché AUTO: ¿bueno?_buenos_días._me_comunico_de_la_m... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA6c307cd0566bd184de031f8da98b741d_1, type = <class 'str'>
+🤖 BRUCE DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-24 17:23:12] [BRUCE] BRUCE1418 DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 FIX 212: [FINAL] '9 2 1 0 3 3 9 8 1. Por favor,' (latencia: 9866ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA6c307cd0566bd184de031f8da98b741d: '9 2 1 0 3 3 9 8 1. Por favor,'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del'
+📝 LOG registrado: BRUCE... | ¿Bueno? Buenos días. Me comunico de la marca NIOVA...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['9 2 1 0 3 3 9 8 1. Por favor, deja tu mensaje', '9 2 1 0 3 3 9 8 1. Por favor,']
+100.64.0.5 - - [24/Jan/2026 17:23:12] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.5 - - [24/Jan/2026 17:23:12] "GET /audio_cache/pensando_6 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono.'
+100.64.0.9 - - [24/Jan/2026 17:23:13] "GET /audio/respuesta_CA6c307cd0566bd184de031f8da98b741d_1 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono. Si necesita volver'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono. Si necesita volver'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono. Si necesita volver a grabar,'
+📝 FIX 212: [PARCIAL] 'deja tu mensaje después del tono. Si necesita volver a grabar,'
+📝 FIX 212: [FINAL] 'deja tu mensaje después del tono. Si necesita volver a grabar,' (latencia: 13098ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA6c307cd0566bd184de031f8da98b741d: 'deja tu mensaje después del tono. Si necesita volver a grabar,'
+📝 FIX 212: [PARCIAL] 'marca el signo'
+🚀 FIX 314: Saludo detectado en INTERIM: 'marca el signo' - Pre-cargando respuesta...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+📝 FIX 212: [PARCIAL] 'marca el signo'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y después'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y después'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y espera instrucciones.'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y espera instrucciones.'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y espera instrucciones.'
+📝 FIX 212: [PARCIAL] 'marca el signo de número y espera instrucciones.'
+📝 FIX 212: [FINAL] 'marca el signo de número y espera instrucciones.' (latencia: 15940ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA6c307cd0566bd184de031f8da98b741d: 'marca el signo de número y espera instrucciones.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6c307cd0566bd184de031f8da98b741d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe96f28eaca5e1bfac86fe6b07029b55c'
+   Digits: timeout
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Por favor,'
+✅ FIX 451: Transcripción FINAL recibida
+   Esperando más transcripciones...
+📝 FIX 212: [PARCIAL] 'Por favor,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 4.9s)
+   Mensaje: 'deja tu mensaje después del tono. Si necesita volver a grabar, marca el signo de número y espera ins...'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+   🟢 Deepgram: 'deja tu mensaje después del tono. Si necesita volver a grabar, marca el signo de número y espera instrucciones.'
+📞 FIX 105: Buzón detectado por contenido del SpeechResult
+⚠️ FIX 239/242/248: 3 transcripciones acumuladas
+   [0] 'deja tu mensaje después del tono. Si necesita volver a grabar,'
+   [1] 'deja tu mensaje después del tono. Si necesita volver a grabar,'
+   [2] 'marca el signo de número y espera instrucciones.'
+   🧹 FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+   🔄 FIX 248: Concatenando 2 partes únicas: 'deja tu mensaje después del tono. Si necesita volver a grabar, marca el signo de número y espera instrucciones.'
+💬 Marcando como BUZON
+📝 Estado actualizado: Buzón detectado por análisis de contenido
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 28 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono. Si necesitas volver'
+📝 FIX 212: [PARCIAL] 'Por favor, deja tu mensaje después del tono. Si necesitas volver'
+📝 FIX 212: [FINAL] 'Por favor, deja tu mensaje después del tono.' (latencia: 29121ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA6c307cd0566bd184de031f8da98b741d: 'Por favor, deja tu mensaje después del tono.'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar,'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar,'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar,'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar,'
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la llamada con una introducción más clara y amigable, además de verificar si el cliente estaba disponible para hablar antes de ofrecer información. Esto podría haber mejorado la receptividad del cliente.
+📝 FIX 177: Conclusión temporal 'BUZON' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3597...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: BUZON
+  → Resultado: NEGADO
+  → Estado: Buzon
+  → Duración: 28
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber comenzado la llamada con una in...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1418
+✅ Resultado guardado exitosamente en fila 3597
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1781
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.2 - - [24/Jan/2026 17:23:32] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar, marca el signo'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar, marca el signo'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar, marca el signo de número y espere'
+📝 FIX 212: [PARCIAL] 'Si necesitas volver a grabar, marca el signo de número y espere'
+📝 FIX 212: [FINAL] 'Si necesitas volver a grabar, marca el signo de número y espera' (latencia: 32222ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA6c307cd0566bd184de031f8da98b741d: 'Si necesitas volver a grabar, marca el signo de número y espera'
+⏹️ FIX 212: MediaStream detenido - CallSid: CA6c307cd0566bd184de031f8da98b741d
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA6c307cd0566bd184de031f8da98b741d
+
+📞 STATUS CALLBACK - Llamada CA6c307cd0...
+   Estado: completed
+   Duración: 38s
+[2026-01-24 17:23:38] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 38s
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.7 - - [24/Jan/2026 17:23:38] "GET /status-callback?Called=%2B524921033981&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:23:38+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA6c307cd0566bd184de031f8da98b741d&To=%2B524921033981&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=38&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA6c307cd0566bd184de031f8da98b741d
+🔌 FIX 212: WebSocket cerrado - CallSid: CA6c307cd0566bd184de031f8da98b741d
+100.64.0.7 - - [24/Jan/2026 17:23:39] "GET /media-stream HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA6c307cd0566bd184de031f8da98b741d
+   RecordingSid: RE7bac7fcf82f47b083b5c9d72188ea286
+   Status: completed
+   Duración: 36 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE7bac7fcf82f47b083b5c9d72188ea286
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1418
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.5 - - [24/Jan/2026 17:23:43] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE7bac7fcf82f47b083b5c9d72188ea286&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE7bac7fcf82f47b083b5c9d72188ea286&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA6c307cd0566bd184de031f8da98b741d&RecordingStartTime=Sat,+24+Jan+2026+17:23:02+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=36 HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524921561415, Negocio: FERRETERA LA SOLUCIÓN
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524921561415
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA932ea7009d881d64c72dfd336688ca34
+[2026-01-24 17:24:10] [LLAMADA] N/A - LLAMADA INICIADA a +524921561415 (FERRETERA LA SOLUCIÓN)
+📋 Contacto completo guardado para Call SID CA932ea700... (fila 1782)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.3 - - [24/Jan/2026 17:24:10] "POST /iniciar-llamada HTTP/1.1" 200 -
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.6 - - [24/Jan/2026 17:24:21] "GET /webhook-voz?Called=%2B524921561415&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA932ea7009d881d64c72dfd336688ca34&To=%2B524921561415&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.2 - - [24/Jan/2026 17:24:22] "GET /audio/inicial_CA932ea7009d881d64c72dfd336688ca34 HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZc1d9a7d6dd30080c6be4c8f236571aeb
+🆔 ID BRUCE generado: BRUCE1419
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+   CallSid: CA932ea7009d881d64c72dfd336688ca34
+
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA932ea7009d881d64c72dfd336688ca34
+   CallStatus: in-progress
+✅ FIX 212: Deepgram conectado para CallSid: CA932ea7009d881d64c72dfd336688ca34
+✅ FIX 212: Deepgram conectado para CA932ea7009d881d64c72dfd336688ca34
+🔍 DEBUG - Parámetros Twilio (POST):
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0a73feeb4767de3fd20d07b81e9651e3'
+   Digits: timeout
+   CallSid: CA932ea7009d881d64c72dfd336688ca34
+🔄 FIX 222: Iniciando conexión Deepgram...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+🚀 FIX 314: Saludo detectado en INTERIM: 'Buenos días.' - Pre-cargando respuesta...
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.8s)
+   🟢 Deepgram: 'Buenos días.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Buenos días."
+[2026-01-24 17:24:26] [CLIENTE] BRUCE1419 - CLIENTE DIJO: "Buenos días."
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+📝 LOG registrado: CLIENT... | Buenos días....
+   🚨 FIX 244: Habló rápido (1.4s) - probablemente sigue hablando
+   ✅ FIX 441: 'Buenos días.' es saludo simple - NO esperar continuación
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+✅ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+🤖 BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-24 17:24:26] [BRUCE] BRUCE1419 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+📦 FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+📼 FIX 214: Grabación fragmento completed - CallSid: CA932ea7009d881d64c72dfd336688ca34
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0a73feeb4767de3fd20d07b81e9651e3
+100.64.0.10 - - [24/Jan/2026 17:24:26] "POST /grabacion-status HTTP/1.1" 200 -
+📝 FIX 212: [FINAL] 'Buenos días.' (latencia: 4232ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA932ea7009d881d64c72dfd336688ca34: 'Buenos días.'
+📝 LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Buenos días.', 'Buenos días.']
+100.64.0.3 - - [24/Jan/2026 17:24:26] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [24/Jan/2026 17:24:26] "GET /audio/segunda_parte_saludo_CA932ea7009d881d64c72dfd336688ca34 HTTP/1.1" 200 -
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA932ea7009d881d64c72dfd336688ca34
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REadc1b64cc8471cf102808eb3303e7065'
+   Digits: timeout
+📝 FIX 212: [FINAL] 'No.' (latencia: 15938ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA932ea7009d881d64c72dfd336688ca34: 'No.'
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+
+⚠️ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'No.'
+   ✅ FIX 469: Usando transcripción única: 'No.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "No."
+[2026-01-24 17:24:40] [CLIENTE] BRUCE1419 - CLIENTE DIJO: "No."
+📝 LOG registrado: CLIENT... | No....
+   🚨 FIX 244/250: Frase termina en 'no' (continuación esperada)
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'No.'
+   Tiempo hablando: 14.9s
+   Palabras dichas: 1 (historial: 2)
+   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s...
+100.64.0.8 - - [24/Jan/2026 17:24:41] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA932ea7009d881d64c72dfd336688ca34
+   CallStatus: in-progress
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE629e33df597c88bdc236b85d3e5076ff'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: '¿Bueno?'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "¿Bueno?"
+[2026-01-24 17:24:43] [CLIENTE] BRUCE1419 - CLIENTE DIJO: "¿Bueno?"
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+📝 LOG registrado: CLIENT... | ¿Bueno?...
+
+🔄 FIX 244: Concatenando transcripciones parciales
+   [0] 'No.'
+   ✅ FIX 244: Frase completa: 'No. ¿Bueno?'
+🔍 FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'No. ¿Bueno?' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'No. ¿Bueno?'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Se activó la segunda parte del saludo. No se repetirá.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Me comunico de la marca nioval, más que nada quería brindar ...
+   USER: No. ¿Bueno?
+📝 FIX 212: [PARCIAL] '¿Bueno?'
+📝 FIX 212: [FINAL] '¿Bueno?' (latencia: 23041ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA932ea7009d881d64c72dfd336688ca34: '¿Bueno?'
+⏳ GPT+Audio procesando - reproduciendo tono de pensando...
+💭 Bruce dice (voz Bruce): 'pensando_6' desde caché
+
+🚨 FIX 298/301: CRÍTICO - Bruce despedida prematura
+   Mensajes de Bruce: 2 (< 4)
+   Tiene contacto: False
+   Último cliente: 'no. ¿bueno?'
+   Bruce iba a decir: '¿Bueno? Muy buen día. Me comunico de la marca nioval para of...'
+   ✅ FIX 459: Bruce YA preguntó por encargado - NO volver a preguntar
+   FIX 459: Usando respuesta original de GPT
+   Respuesta corregida: "¿Bueno? Muy buen día. Me comunico de la marca nioval para ofrecerle nuestro catálogo. ¿Le gustaría recibirlo por WhatsApp?"
+
+⏭️  FIX 447: Cliente solo ha dicho saludos - NO aplicar FIX 263
+
+🚨 FIX 228/236/240: FILTRO ACTIVADO - Bruce intentó repetir saludo/presentación
+   Patrón detectado: 'me\s+comunico\s+de\s+(la\s+)?marca\s+nioval'
+   Respuesta original: "¿Bueno? Muy buen día. Me comunico de la marca nioval para ofrecerle nuestro catá..."
+   FIX 440/445: Bruce ya preguntó por encargado - reformulando sin '¿Me escucha?'
+   Respuesta corregida: "Sí, le llamo de la marca NIOVAL. ¿Se encuentra el encargado de compras?"
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎯 FIX 97: Audio cacheado detectado: pregunta_encargado
+📦 Caché AUTO: sí,_le_llamo_de_la_marca_nioval._¿se... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA932ea7009d881d64c72dfd336688ca34_4, type = <class 'str'>
+🤖 BRUCE DICE: "Sí, le llamo de la marca NIOVAL. ¿Se encuentra el encargado de compras?"
+[2026-01-24 17:24:45] [BRUCE] BRUCE1419 DICE: "Sí, le llamo de la marca NIOVAL. ¿Se encuentra el encargado de compras?"
+📦 FIX 97: Audio desde caché: pregunta_encargado (generado en paralelo)
+📝 LOG registrado: BRUCE... | Sí, le llamo de la marca NIOVAL. ¿Se encuentra el ...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #3)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['¿Bueno?', '¿Bueno?']
+100.64.0.8 - - [24/Jan/2026 17:24:45] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [24/Jan/2026 17:24:45] "GET /audio_cache/pensando_6 HTTP/1.1" 200 -
+⏹️ FIX 212: MediaStream detenido - CallSid: CA932ea7009d881d64c72dfd336688ca34
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA932ea7009d881d64c72dfd336688ca34
+
+📞 STATUS CALLBACK - Llamada CA932ea700...
+   Estado: completed
+   Duración: 26s
+[2026-01-24 17:24:46] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 26s
+   💬 Cliente colgó - detectado por status callback (6 mensajes)
+   📝 Clasificado como 'Colgó' (sin datos capturados)
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 26 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber mejorado la llamada al ofrecer información más atractiva sobre los productos desde el inicio, en lugar de centrarse en preguntar por el encargado de compras. Esto podría haber generado más interés por parte del cliente.
+📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+📝 Guardando resultado en fila 3598...
+  → Columna J: No apto
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA932ea7009d881d64c72dfd336688ca34
+🔌 FIX 212: WebSocket cerrado - CallSid: CA932ea7009d881d64c72dfd336688ca34
+100.64.0.3 - - [24/Jan/2026 17:24:46] "GET /media-stream HTTP/1.1" 200 -
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Neutral
+
+============================================================
+  → Nivel de interés: Bajo
+  → Opinión Bruce: Bruce podría haber mejorado la llamada al ofrecer ...
+  → Calificación Bruce: 3/10
+  → Estado de ánimo: Neutral
+  → ID BRUCE: BRUCE1419
+  → Resultado: NEGADO
+  → Estado: Colgo
+✅ Resultado guardado exitosamente en fila 3598
+  → Duración: 26
+✅ Resultados guardados en 'Respuestas de formulario 1'
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1782
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Llamada guardada desde status callback
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.8 - - [24/Jan/2026 17:24:49] "GET /status-callback?Called=%2B524921561415&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:24:46+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA932ea7009d881d64c72dfd336688ca34&To=%2B524921561415&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=26&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA932ea7009d881d64c72dfd336688ca34
+   RecordingSid: RE10ad92f381faba5565933731c681930d
+   Status: completed
+   Duración: 24 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE10ad92f381faba5565933731c681930d
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1419
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.5 - - [24/Jan/2026 17:24:50] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE10ad92f381faba5565933731c681930d&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE10ad92f381faba5565933731c681930d&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA932ea7009d881d64c72dfd336688ca34&RecordingStartTime=Sat,+24+Jan+2026+17:24:22+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=24 HTTP/1.1" 200 -
+🔍 DEBUG 4: Iniciando llamada Twilio a +524929231723
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA4913f43cbb269d3abc33cdef90525a32
+[2026-01-24 17:25:19] [LLAMADA] N/A - LLAMADA INICIADA a +524929231723 (ARTIZAC Ferretería y Tlapalería)
+📋 Contacto completo guardado para Call SID CA4913f43c... (fila 1783)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.4 - - [24/Jan/2026 17:25:19] "POST /iniciar-llamada HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524929231723, Negocio: ARTIZAC Ferretería y Tlapalería
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🆔 ID BRUCE generado: BRUCE1420
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.7 - - [24/Jan/2026 17:25:36] "GET /webhook-voz?Called=%2B524929231723&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA4913f43cbb269d3abc33cdef90525a32&To=%2B524929231723&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Guadalupe&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Guadalupe&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.2 - - [24/Jan/2026 17:25:37] "GET /audio/inicial_CA4913f43cbb269d3abc33cdef90525a32 HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZ12420f6c5b7f725b53baa23f12c51859
+   SpeechResult: ''
+🔍 DEBUG - Parámetros Twilio (POST):
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REbd6de2a76340b8a09b156d966b443fdb'
+   Digits: timeout
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   CallStatus: in-progress
+   AnsweredBy: 
+✅ FIX 212: Deepgram conectado para CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   CallSid: CA4913f43cbb269d3abc33cdef90525a32
+✅ FIX 212: Deepgram conectado para CA4913f43cbb269d3abc33cdef90525a32
+🔄 FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+
+📼 FIX 214: Grabación fragmento completed - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REbd6de2a76340b8a09b156d966b443fdb
+100.64.0.6 - - [24/Jan/2026 17:25:41] "POST /grabacion-status HTTP/1.1" 200 -
+📝 FIX 212: [FINAL] '¿Sí?' (latencia: 5034ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA4913f43cbb269d3abc33cdef90525a32: '¿Sí?'
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+
+⚠️ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] '¿Sí?'
+   ✅ FIX 469: Usando transcripción única: '¿Sí?'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "¿Sí?"
+[2026-01-24 17:25:44] [CLIENTE] BRUCE1420 - CLIENTE DIJO: "¿Sí?"
+📝 LOG registrado: CLIENT... | ¿Sí?...
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚀 FIX 121: Saludo simple detectado en primera respuesta: '¿Sí?'
+100.64.0.2 - - [24/Jan/2026 17:25:45] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.7 - - [24/Jan/2026 17:25:45] "GET /audio/segunda_parte_saludo_CA4913f43cbb269d3abc33cdef90525a32 HTTP/1.1" 200 -
+   Usando CACHE de segunda_parte_saludo para respuesta instantánea (0s GPT)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🤖 BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-24 17:25:45] [BRUCE] BRUCE1420 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+📦 FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+📝 LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+✅ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0146cf7dbf7fdd72f366588091880151'
+   Digits: timeout
+⏹️ FIX 212: MediaStream detenido - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   CallStatus: completed
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0146cf7dbf7fdd72f366588091880151'
+   Digits: timeout
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+🔌 FIX 212: WebSocket cerrado - CallSid: CA4913f43cbb269d3abc33cdef90525a32
+100.64.0.5 - - [24/Jan/2026 17:25:56] "GET /media-stream HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CA4913f43c...
+   Estado: completed
+   Duración: 20s
+[2026-01-24 17:25:57] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 20s
+   💬 Cliente colgó - detectado por status callback (4 mensajes)
+   📝 Clasificado como 'Colgó' (sin datos capturados)
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 21 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la conversación con una introducción más amigable y atractiva para captar mejor la atención del cliente. Además, debería haber intentado obtener información de contacto antes de finalizar la llamada.
+📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: ""
+[2026-01-24 17:25:59] [CLIENTE] BRUCE1420 - CLIENTE DIJO: ""
+⚠️ Respuesta vacía #1
+🎙️ Bruce pedirá que le repitan (intento #1)
+🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+   Mensaje: 'Disculpa, no te escuché bien, ¿me puedes repetir?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #1
+📦 Caché AUTO: disculpa,_no_te_escuché_bien,_¿me_puedes... (0s delay)
+✅ Bruce pidió que le repitan
+
+📝 Guardando resultado en fila 3599...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → ID BRUCE: BRUCE1420✅ Bruce pidió que le repitan (Record)
+100.64.0.5 - - [24/Jan/2026 17:25:59] "POST /procesar-respuesta HTTP/1.1" 200 -
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+✅ Resultado guardado exitosamente en fila 3599
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Nivel de interés: Bajo
+  → Estado: Colgo
+  → Duración: 21
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber comenzado la conversación con u...
+  → Calificación Bruce: 3/10
+   Fila: 1783
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Llamada guardada desde status callback
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.11 - - [24/Jan/2026 17:25:59] "GET /status-callback?Called=%2B524929231723&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:25:57+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA4913f43cbb269d3abc33cdef90525a32&To=%2B524929231723&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Guadalupe&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=20&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Guadalupe&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA4913f43cbb269d3abc33cdef90525a32
+   RecordingSid: RE27477dee05b389634a3d676e0de88d47
+   Status: completed
+   Duración: 18 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE27477dee05b389634a3d676e0de88d47
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1420
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.11 - - [24/Jan/2026 17:26:00] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE27477dee05b389634a3d676e0de88d47&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE27477dee05b389634a3d676e0de88d47&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA4913f43cbb269d3abc33cdef90525a32&RecordingStartTime=Sat,+24+Jan+2026+17:25:38+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=18 HTTP/1.1" 200 -
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+📞 Llamada YA terminada - Estado: completed
+💬 Cliente colgó o llamada desconectada
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 25 segundos
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la llamada con una introducción más atractiva y específica sobre los beneficios de los productos. Además, preguntar directamente si el cliente tiene un momento para hablar podría haber mejorado la receptividad.
+📝 FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3600...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 25
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber comenzado la llamada con una in...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1420
+✅ Resultado guardado exitosamente en fila 3600
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1783
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.8 - - [24/Jan/2026 17:26:03] "POST /procesar-respuesta HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524929233939, Negocio: Ferretería BAUTISTA
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524929233939
+🔍 DEBUG 5: Llamada Twilio creada - SID: CAd30072ab919c450db15c8ca54fd91620
+[2026-01-24 17:26:28] [LLAMADA] N/A - LLAMADA INICIADA a +524929233939 (Ferretería BAUTISTA)
+📋 Contacto completo guardado para Call SID CAd30072ab... (fila 1784)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.9 - - [24/Jan/2026 17:26:28] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CAd30072ab...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-24 17:27:07] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)
+📞 Intento de buzón #1 registrado para fila 1784
+   📞 Intento de buzón #1 registrado
+   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)
+100.64.0.7 - - [24/Jan/2026 17:27:07] "GET /status-callback?Called=%2B524929233939&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:27:07+%2B0000&CallbackSource=call-progress-events&SipResponseCode=480&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAd30072ab919c450db15c8ca54fd91620&To=%2B524929233939&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Guadalupe&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Guadalupe&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524921304826, Negocio: Ferreteria Maestro Ferretero
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524921304826
+🔍 DEBUG 5: Llamada Twilio creada - SID: CAa9abacc60bf16702d92edabfb8f7e7fc
+[2026-01-24 17:27:40] [LLAMADA] N/A - LLAMADA INICIADA a +524921304826 (Ferreteria Maestro Ferretero)
+📋 Contacto completo guardado para Call SID CAa9abacc6... (fila 1785)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.8 - - [24/Jan/2026 17:27:40] "POST /iniciar-llamada HTTP/1.1" 200 -
+   CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+🔄 FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   CallStatus: in-progress
+✅ FIX 212: Deepgram conectado para CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   AnsweredBy: 
+✅ FIX 212: Deepgram conectado para CAa9abacc60bf16702d92edabfb8f7e7fc
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE63275d91593d66532ac34603876592cd'
+
+   Digits: timeout
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+🆔 ID BRUCE generado: BRUCE1421
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.6 - - [24/Jan/2026 17:28:08] "GET /webhook-voz?Called=%2B524921304826&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CAa9abacc60bf16702d92edabfb8f7e7fc&To=%2B524921304826&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+100.64.0.11 - - [24/Jan/2026 17:28:09] "GET /audio/inicial_CAa9abacc60bf16702d92edabfb8f7e7fc HTTP/1.1" 200 -
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZ8e52c40ac976e1eda7c47f112a6162b5
+📼 FIX 214: Grabación fragmento completed - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE63275d91593d66532ac34603876592cd
+100.64.0.8 - - [24/Jan/2026 17:28:13] "POST /grabacion-status HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Lo sentimos,'
+📝 FIX 212: [PARCIAL] 'Lo sentimos,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+
+⚠️ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Lo sentimos,'
+   ✅ FIX 469: Usando transcripción única: 'Lo sentimos,'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Lo sentimos,"
+[2026-01-24 17:28:16] [CLIENTE] BRUCE1421 - CLIENTE DIJO: "Lo sentimos,"
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no sé'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no sé'
+📝 LOG registrado: CLIENT... | Lo sentimos,...
+   🚨 FIX 244: Frase corta (2 palabras) después de hablar
+   🚨 FIX 244: Habló rápido (1.2s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'Lo sentimos,'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por'
+   Tiempo hablando: 1.2s
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por'
+   Palabras dichas: 2 (historial: 5)
+
+   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s...
+🔍 DEBUG - Parámetros Twilio (POST):
+100.64.0.8 - - [24/Jan/2026 17:28:17] "POST /procesar-respuesta HTTP/1.1" 200 -
+   CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE75443555412b8269c348f02bfe256341'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Lo sentimos, pero no se escuchó nada. Por favor, grabe su"
+[2026-01-24 17:28:19] [CLIENTE] BRUCE1421 - CLIENTE DIJO: "Lo sentimos, pero no se escuchó nada. Por favor, grabe su"
+📝 LOG registrado: CLIENT... | Lo sentimos, pero no se escuchó nada. Por favor, g...
+
+🔄 FIX 244: Concatenando transcripciones parciales
+   [0] 'Lo sentimos,'
+   ✅ FIX 244: Frase completa: 'Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Hola, buen dia
+   USER: Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor...
+⏳ GPT+Audio procesando - reproduciendo tono de pensando...
+💭 Bruce dice (voz Bruce): 'pensando_4' desde caché
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje después de'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje después de'
+📝 FIX 212: [FINAL] 'Lo sentimos, pero no se escuchó nada, porque' (latencia: 10350ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAa9abacc60bf16702d92edabfb8f7e7fc: 'Lo sentimos, pero no se escuchó nada, porque'
+📝 FIX 212: [PARCIAL] 'favor, grabe su mensaje después del'
+📝 FIX 212: [PARCIAL] 'favor, grabe su mensaje después del'
+📝 FIX 212: [FINAL] 'favor, grabe su mensaje después del tono.' (latencia: 11154ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAa9abacc60bf16702d92edabfb8f7e7fc: 'favor, grabe su mensaje después del tono.'
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (28 palabras)
+📦 Caché AUTO: ¿bueno?_buenos_días._me_comunico_de_la_m... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CAa9abacc60bf16702d92edabfb8f7e7fc_9, type = <class 'str'>
+🤖 BRUCE DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información sobre nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-24 17:28:20] [BRUCE] BRUCE1421 DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información sobre nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | ¿Bueno? Buenos días. Me comunico de la marca NIOVA...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+🧹 FIX 455: Limpiando 3 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje después de', 'Lo sentimos, pero no se escuchó nada, porque', 'favor, grabe su mensaje después del tono.']
+100.64.0.10 - - [24/Jan/2026 17:28:21] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [24/Jan/2026 17:28:21] "GET /audio_cache/pensando_4 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Al terminar, presione'
+🚀 FIX 314: Saludo detectado en INTERIM: 'Al terminar, presione' - Pre-cargando respuesta...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+📝 FIX 212: [PARCIAL] 'Al terminar, presione'
+100.64.0.12 - - [24/Jan/2026 17:28:22] "GET /audio/respuesta_CAa9abacc60bf16702d92edabfb8f7e7fc_9 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Al terminar, presione el símbolo'
+📝 FIX 212: [PARCIAL] 'Al terminar, presione el símbolo'
+📝 FIX 212: [FINAL] 'Al terminar, presione el símbolo de número.' (latencia: 14059ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAa9abacc60bf16702d92edabfb8f7e7fc: 'Al terminar, presione el símbolo de número.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REcda3e6a90adeb2f7f3fc60a7bfd65576'
+   Digits: timeout
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+
+⚠️ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Al terminar, presione el símbolo'
+   [1] 'Al terminar, presione el símbolo de número.'
+   ✅ FIX 469: Concatenando 1 partes: 'Al terminar, presione el símbolo de número.'
+📞 FIX 109: Operadora/IVR detectada por contenido del SpeechResult
+   Mensaje: 'Al terminar, presione el símbolo de número....'
+💬 Marcando como OPERADORA
+📝 Estado actualizado: Operadora/IVR detectada
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 29 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la llamada de una manera más clara y asegurarse de que la conexión de audio fuera buena antes de continuar. Además, debería haber intentado obtener información de contacto del cliente para futuras comunicaciones.
+📝 FIX 177: Conclusión temporal 'OPERADORA' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📊 Análisis de la llamada:
+
+📝 Guardando resultado en fila 3601...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Operadora
+  → Duración: 29
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber comenzado la llamada de una man...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1421
+✅ Resultado guardado exitosamente en fila 3601
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1785
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.7 - - [24/Jan/2026 17:28:39] "POST /procesar-respuesta HTTP/1.1" 200 -
+   Estado: completed
+   Duración: 38s
+[2026-01-24 17:28:45] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 38s
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+⏹️ FIX 212: MediaStream detenido - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   📊 FIX 207: Llamada registrada en dashboard
+
+100.64.0.10 - - [24/Jan/2026 17:28:45] "GET /status-callback?Called=%2B524921304826&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:28:45+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAa9abacc60bf16702d92edabfb8f7e7fc&To=%2B524921304826&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=38&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+📞 STATUS CALLBACK - Llamada CAa9abacc6...
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+🔌 FIX 212: WebSocket cerrado - CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+100.64.0.8 - - [24/Jan/2026 17:28:46] "GET /media-stream HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAa9abacc60bf16702d92edabfb8f7e7fc
+   RecordingSid: REaa11077bd10320c833ff743fd5fb6bbe
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REaa11077bd10320c833ff743fd5fb6bbe
+   Duración: 37 segundos
+   Status: completed
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1421
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.12 - - [24/Jan/2026 17:28:50] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=REaa11077bd10320c833ff743fd5fb6bbe&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REaa11077bd10320c833ff743fd5fb6bbe&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAa9abacc60bf16702d92edabfb8f7e7fc&RecordingStartTime=Sat,+24+Jan+2026+17:28:10+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=37 HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524921424927, Negocio: MAXI-FERRETERA "DEL COBRE"
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524921424927
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA288ab76f6f4836b4a85a2f5868e21f55
+[2026-01-24 17:29:29] [LLAMADA] N/A - LLAMADA INICIADA a +524921424927 (MAXI-FERRETERA "DEL COBRE")
+📋 Contacto completo guardado para Call SID CA288ab76f... (fila 1786)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.10 - - [24/Jan/2026 17:29:29] "POST /iniciar-llamada HTTP/1.1" 200 -
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.7 - - [24/Jan/2026 17:29:40] "GET /webhook-voz?Called=%2B524921424927&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA288ab76f6f4836b4a85a2f5868e21f55&To=%2B524921424927&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZf98f8ad897bdff37bf2a50763cabc54f
+   CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+🔄 FIX 222: Iniciando conexión Deepgram...
+🆔 ID BRUCE generado: BRUCE1422
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+100.64.0.8 - - [24/Jan/2026 17:29:41] "GET /audio/inicial_CA288ab76f6f4836b4a85a2f5868e21f55 HTTP/1.1" 200 -
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+✅ FIX 212: Deepgram conectado para CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+✅ FIX 212: Deepgram conectado para CA288ab76f6f4836b4a85a2f5868e21f55
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE8bfcfbfe9726b954fb16e52794ff5873'
+   Digits: timeout
+📼 FIX 214: Grabación fragmento completed - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE8bfcfbfe9726b954fb16e52794ff5873
+100.64.0.9 - - [24/Jan/2026 17:29:45] "POST /grabacion-status HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Lo sentimos,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+
+📝 FIX 212: [PARCIAL] 'Lo sentimos,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó'
+   Transcripción parcial: 'Lo sentimos,'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó'
+   Tiempo hablando: 1.0s
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor,'
+   Palabras dichas: 2 (historial: 2)
+
+   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s...
+💬 CLIENTE DIJO: "Lo sentimos,"
+100.64.0.6 - - [24/Jan/2026 17:29:49] "POST /procesar-respuesta HTTP/1.1" 200 -
+[2026-01-24 17:29:48] [CLIENTE] BRUCE1422 - CLIENTE DIJO: "Lo sentimos,"
+📝 LOG registrado: CLIENT... | Lo sentimos,...
+   🚨 FIX 244: Habló rápido (1.0s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+⚠️ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Lo sentimos,'
+   ✅ FIX 469: Usando transcripción única: 'Lo sentimos,'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor,'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0e2f74839a696689d2d16bade4f56390'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje'
+📝 FIX 212: [PARCIAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje'
+   ✅ FIX 465: Nueva transcripción más larga recibida
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje"
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+📝 LOG registrado: CLIENT... | Lo sentimos, pero no se escuchó nada. Por favor, g...
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.6s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+
+   🟢 Deepgram: 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje'
+🔄 FIX 244: Concatenando transcripciones parciales
+   [0] 'Lo sentimos,'
+   ✅ FIX 244: Frase completa: 'Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje'
+[2026-01-24 17:29:51] [CLIENTE] BRUCE1422 - CLIENTE DIJO: "Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje"
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor, grabe su mensaje'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Hola, buen dia
+   USER: Lo sentimos, Lo sentimos, pero no se escuchó nada. Por favor...
+📝 FIX 212: [FINAL] 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su' (latencia: 10483ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA288ab76f6f4836b4a85a2f5868e21f55: 'Lo sentimos, pero no se escuchó nada. Por favor, grabe su'
+⏳ GPT+Audio procesando - reproduciendo tono de pensando...
+💭 Bruce dice (voz Bruce): 'pensando_5' desde caché
+📝 FIX 212: [FINAL] 'mensaje después del tono.' (latencia: 11141ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA288ab76f6f4836b4a85a2f5868e21f55: 'mensaje después del tono.'
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (28 palabras)
+📦 Caché AUTO: ¿bueno?_buenos_días._me_comunico_de_la_m... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CA288ab76f6f4836b4a85a2f5868e21f55_11, type = <class 'str'>
+🤖 BRUCE DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información sobre nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-24 17:29:53] [BRUCE] BRUCE1422 DICE: "¿Bueno? Buenos días. Me comunico de la marca NIOVAL, más que nada quería brindar información sobre nuestros productos de ferretería. ¿Se encontrará el encargado o encargada de compras?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | ¿Bueno? Buenos días. Me comunico de la marca NIOVA...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Lo sentimos, pero no se escuchó nada. Por favor, grabe su', 'mensaje después del tono.']
+100.64.0.8 - - [24/Jan/2026 17:29:53] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Al terminar, presione'
+🚀 FIX 314: Saludo detectado en INTERIM: 'Al terminar, presione' - Pre-cargando respuesta...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+📝 FIX 212: [PARCIAL] 'Al terminar, presione'
+100.64.0.9 - - [24/Jan/2026 17:29:53] "GET /audio_cache/pensando_5 HTTP/1.1" 200 -
+100.64.0.2 - - [24/Jan/2026 17:29:54] "GET /audio/respuesta_CA288ab76f6f4836b4a85a2f5868e21f55_11 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Al terminar, presione el símbolo'
+📝 FIX 212: [PARCIAL] 'Al terminar, presione el símbolo'
+📝 FIX 212: [FINAL] 'Al terminar, presione el símbolo de número.' (latencia: 13923ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA288ab76f6f4836b4a85a2f5868e21f55: 'Al terminar, presione el símbolo de número.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE90ee82101623553abae25099cb3230e5'
+   Digits: timeout
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+💬 Marcando como OPERADORA
+📝 Estado actualizado: Operadora/IVR detectada
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+✅ FIX 451: Transcripción FINAL recibida
+
+⚠️ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Al terminar, presione el símbolo'
+⏱️ Duración de la llamada: 29 segundos
+   [1] 'Al terminar, presione el símbolo de número.'
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+   ✅ FIX 469: Concatenando 1 partes: 'Al terminar, presione el símbolo de número.'
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📞 FIX 109: Operadora/IVR detectada por contenido del SpeechResult
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+   Mensaje: 'Al terminar, presione el símbolo de número....'
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la llamada de manera más clara y asegurarse de que la conexión fuera adecuada antes de continuar. Además, sería útil tener un guion que incluya preguntas para captar información del cliente desde el inicio.
+📝 FIX 177: Conclusión temporal 'OPERADORA' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3602...
+  → Pregunta 3: No (Bruce)
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber comenzado la llamada de manera ...
+  → Pregunta 4: No (Bruce)
+  → Resultado: NEGADO
+  → Estado: Operadora
+  → Pregunta 5: No (Bruce)
+  → Duración: 29
+  → Pregunta 6: No (Bruce)
+============================================================
+  → Calificación Bruce: 3/10
+
+
+  → ID BRUCE: BRUCE1422
+============================================================
+📝 Verificando actualización en LISTA DE CONTACTOS...
+  → Columna J: No apto
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+✅ Resultado guardado exitosamente en fila 3602
+✅ Resultados guardados en 'Respuestas de formulario 1'
+   Fila: 1786
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.9 - - [24/Jan/2026 17:30:11] "POST /procesar-respuesta HTTP/1.1" 200 -
+⏹️ FIX 212: MediaStream detenido - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+
+📞 STATUS CALLBACK - Llamada CA288ab76f...
+   Estado: completed
+   Duración: 38s
+[2026-01-24 17:30:18] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 38s
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.3 - - [24/Jan/2026 17:30:18] "GET /status-callback?Called=%2B524921424927&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:30:18+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA288ab76f6f4836b4a85a2f5868e21f55&To=%2B524921424927&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=38&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+🔌 FIX 212: WebSocket cerrado - CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+100.64.0.11 - - [24/Jan/2026 17:30:18] "GET /media-stream HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA288ab76f6f4836b4a85a2f5868e21f55
+   RecordingSid: RE4345933e90c724d79a40e86001e7583f
+   ✅ FIX 272: Grabación asociada a BRUCE1422
+   ✅ FIX 272: Historial actualizado con URL de grabación
+   Status: completed
+100.64.0.7 - - [24/Jan/2026 17:30:22] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE4345933e90c724d79a40e86001e7583f&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4345933e90c724d79a40e86001e7583f&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA288ab76f6f4836b4a85a2f5868e21f55&RecordingStartTime=Sat,+24+Jan+2026+17:29:42+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=37 HTTP/1.1" 200 -
+   Duración: 37 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4345933e90c724d79a40e86001e7583f
+   ✅ URL guardada en lead_data del agente
+✅ FIX 272: 6 calificaciones guardadas
+100.64.0.11 - - [24/Jan/2026 17:49:38] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:49:39] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:49:42] "GET /escuchar-grabacion/RE7bac7fcf82f47b083b5c9d72188ea286 HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:49:43] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+100.64.0.11 - - [24/Jan/2026 17:49:47] "GET /escuchar-grabacion/RE10ad92f381faba5565933731c681930d HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:50:36] "GET /escuchar-grabacion/RE27477dee05b389634a3d676e0de88d47 HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:51:00] "GET /escuchar-grabacion/REaa11077bd10320c833ff743fd5fb6bbe HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:51:10] "GET /escuchar-grabacion/RE4345933e90c724d79a40e86001e7583f HTTP/1.1" 200 -
+✅ FIX 272: 5 calificaciones guardadas
+100.64.0.11 - - [24/Jan/2026 17:51:27] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+100.64.0.11 - - [24/Jan/2026 17:51:28] "GET /historial-llamadas HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +524922685858, Negocio: Deposito Ferretero de Zacatecas
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +524922685858
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA3ea974af31e52d51bf42835f0b8897e0
+[2026-01-24 17:51:47] [LLAMADA] N/A - LLAMADA INICIADA a +524922685858 (Deposito Ferretero de Zacatecas)
+📋 Contacto completo guardado para Call SID CA3ea974af... (fila 1779)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.12 - - [24/Jan/2026 17:51:47] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CA3ea974af...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-24 17:51:56] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)
+📞 Intento de buzón #2 registrado para fila 1779
+   📞 Intento de buzón #2 registrado
+   💾 Segundo intento de buzón - guardando en Respuestas de formulario 1...
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 0 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+  → Nivel de interés: Bajo
+📝 Guardando resultado en fila 3603...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Resultado: NEGADO
+  → Columna J: BUZON
+  → Estado: Buzon
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no logró captar la atención del cliente, ya que el resultado fue un buzón. Bruce podría haber hecho preguntas más abiertas para fomentar la conversación y obtener más información sobre las necesidades del cliente.
+📝 FIX 177: Conclusión temporal 'BUZON' - recalculando con datos capturados...
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: La llamada no logró captar la atención del cliente...
+  → Calificación Bruce: 3/10
+✅ Resultado guardado exitosamente en fila 3603
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1779
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Buzón guardado en Respuestas de formulario 1
+100.64.0.4 - - [24/Jan/2026 17:51:59] "GET /status-callback?Called=%2B524922685858&ToState=Zac.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+17:51:56+%2B0000&CallbackSource=call-progress-events&SipResponseCode=480&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA3ea974af31e52d51bf42835f0b8897e0&To=%2B524922685858&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zacatecas&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zacatecas&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Zac.&FromZip=&FromState=Jal. HTTP/1.1" 200 -

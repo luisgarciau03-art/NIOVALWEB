@@ -1,0 +1,2000 @@
+ FIX 540: ElevenLabs Scribe conectado para CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+🟢 FIX 212: MediaStream conectado
+ FIX 212: Deepgram conectado para CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: Deepgram conectado como FALLBACK para CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 212: MediaStream iniciado
+ FIX 540: Intentando ElevenLabs Scribe (primario)...
+
+ FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+   StreamSid: MZ60551430753855007905434601e2725d
+100.64.0.4 - - [06/Feb/2026 19:23:55] "GET /audio/inicial_CA0825da3f3c0b87b6ce40731951b8447b HTTP/1.1" 200 -
+   CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+ FIX 212: [PARCIAL] 'Sucursal Perinor,'
+ FIX 212: [PARCIAL] 'Sucursal Perinor,'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte, para venta'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte, para venta'
+ FIX 540: [PARCIAL] 'Cursal Perinorte para adent' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursal Perinorte para adent'
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte. Para ventas marque 1. Para'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte. Para ventas marque 1. Para'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte. Para ventas, marque'
+ FIX 212: [PARCIAL] 'Sucursal Perinorte. Para ventas, marque'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para' (latencia: 10ms)
+ FIX 212: [FINAL] 'Sucursal Perinorte. Para ventas, marque 1. Para entregas,' (latencia: 17ms)
+ FIX 212: Transcripción FINAL Deepgram para CA0825da3f3c0b87b6ce40731951b8447b: 'Sucursal Perinorte. Para ventas, marque 1. Para entregas,'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque'
+ FIX 212: [PARCIAL] 'marque 2.'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Re' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Re'
+ FIX 212: [PARCIAL] 'marque 2. Recursos'
+ FIX 212: [PARCIAL] 'marque 2. Recursos'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos humanos' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos humanos'
+ FIX 212: [PARCIAL] 'marque 2. Recursos humanos.'
+ FIX 212: [PARCIAL] 'marque 2. Recursos humanos.'
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 212: [FINAL] 'marque 2. Recursos humanos. 3.' (latencia: 6ms)
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 16ms)
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: Transcripción FINAL Deepgram para CA0825da3f3c0b87b6ce40731951b8447b: 'marque 2. Recursos humanos. 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE84eb2ea5ac200b0944a992d663f70c89'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+
+   [2] 'marque 2. Recursos humanos.'
+ FIX 214: Grabación fragmento completed - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 469: Timeout pero hay 4 transcripciones acumuladas
+   [3] 'marque 2. Recursos humanos. 3.'
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE84eb2ea5ac200b0944a992d663f70c89
+   [0] 'Sucursal Perinorte. Para ventas marque 1. Para'
+100.64.0.6 - - [06/Feb/2026 19:24:07] "POST /grabacion-status HTTP/1.1" 200 -
+   [1] 'Sucursal Perinorte. Para ventas, marque 1. Para entregas,'
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 5ms)
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+    FIX 469: Concatenando 3 partes: 'Sucursal Perinorte. Para ventas marque 1. Para Sucursal Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos humanos. 3.'
+ FIX 109: Operadora/IVR detectada por contenido del SpeechResult
+   Mensaje: 'Sucursal Perinorte. Para ventas marque 1. Para Sucursal Perinorte. Para ventas, marque 1. Para entre...'
+ Marcando como OPERADORA
+ Estado actualizado: Operadora/IVR detectada
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 15 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 156ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no parece haber generado un interés significativo por parte del cliente, ya que no se capturaron datos de contacto. Bruce podría haber hecho preguntas más específicas para entender mejor las necesidades del cliente.
+[EMOJI] FIX 177: Conclusión temporal 'OPERADORA' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+
+ Guardando resultado en fila 4612...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Operadora
+  → Duración: 15
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: La llamada no parece haber generado un interés sig...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1974
+ Resultado guardado exitosamente en fila 4612
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 16
+   WhatsApp capturado: 
+============================================================
+
+100.64.0.5 - - [06/Feb/2026 19:24:11] "POST /procesar-respuesta HTTP/1.1" 200 -
+   Referencia capturada: 
+   Email capturado: 
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 0ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 11ms)
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 14ms)
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: [PARCIAL ElevenLabs] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.'
+ FIX 540: [PARCIAL] 'Cursál Perinorte. Para ventas, marque 1. Para entregas, marque 2. Recursos Humanos, 3.' (latencia: 5ms)
+ FIX 212: MediaStream detenido - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+   Duración: 25s
+[2026-02-06 19:24:18] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 25s
+    FIX 207: Llamada registrada en dashboard
+100.64.0.7 - - [06/Feb/2026 19:24:18] "GET /status-callback?Called=%2B526622147105&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+06+Feb+2026+19:24:18+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA0825da3f3c0b87b6ce40731951b8447b&To=%2B526622147105&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=25&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+ FIX 212: WebSocket cerrado - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+
+ STATUS CALLBACK - Llamada CA0825da3f...
+100.64.0.4 - - [06/Feb/2026 19:24:18] "GET /media-stream HTTP/1.1" 200 -
+   Estado: completed
+100.64.0.8 - - [06/Feb/2026 19:24:22] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE51b461213b84ed2ceeafb9a2c694aced&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE51b461213b84ed2ceeafb9a2c694aced&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA0825da3f3c0b87b6ce40731951b8447b&RecordingStartTime=Fri,+06+Feb+2026+19:23:56+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=23 HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE51b461213b84ed2ceeafb9a2c694aced
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1974
+    FIX 272: Historial actualizado con URL de grabación
+   CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+   RecordingSid: RE51b461213b84ed2ceeafb9a2c694aced
+   Status: completed
+   Duración: 23 segundos
+ FIX 540: Conexión ElevenLabs cerrada - CallSid: CA0825da3f3c0b87b6ce40731951b8447b
+   Status: None, Mensaje: None
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526624377883, Negocio: SICSON FERRETERAS
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526624377883
+ DEBUG 5: Llamada Twilio creada - SID: CA9a3934d8d08596cf5cf3aed317515898
+[2026-02-06 19:24:51] [LLAMADA] N/A - LLAMADA INICIADA a +526624377883 (SICSON FERRETERAS)
+ Contacto completo guardado para Call SID CA9a3934d8... (fila 17)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.7 - - [06/Feb/2026 19:24:51] "POST /iniciar-llamada HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1975
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.7 - - [06/Feb/2026 19:25:11] "GET /webhook-voz?Called=%2B526624377883&ToState=Son.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA9a3934d8d08596cf5cf3aed317515898&To=%2B526624377883&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.2 - - [06/Feb/2026 19:25:12] "GET /audio/inicial_CA9a3934d8d08596cf5cf3aed317515898 HTTP/1.1" 200 -
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   StreamSid: MZ2062e4575525921018f978cecfb21338
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: Intentando ElevenLabs Scribe (primario)...
+ FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: ElevenLabs Scribe conectado para CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: ElevenLabs Scribe conectado para CA9a3934d8d08596cf5cf3aed317515898
+ FIX 212: Deepgram conectado para CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 222: Iniciando conexión Deepgram...
+ FIX 540: Deepgram conectado como FALLBACK para CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+ FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: Sesión iniciada - modelo: unknown
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REfaf7822c428a1b088d8e207885303c11'
+   Digits: timeout
+ FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'ਨਾ ਸੀ ਤ'
+ FIX 212: [PARCIAL] 'Sí. Pero. ¿Por qué cuál'
+ FIX 212: [PARCIAL] 'Sí. Pero. ¿Por qué cuál'
+    FIX 532: PARCIAL corta (5 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'sí. pero. ¿por qué cuál'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Sí. Pero. ¿Por qué cuál'
+    FIX 469: Usando transcripción única: 'Sí. Pero. ¿Por qué cuál'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Sí. Pero. ¿Por qué cuál"
+[2026-02-06 19:25:25] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Sí. Pero. ¿Por qué cuál"
+ FIX 214: Grabación fragmento completed - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REfaf7822c428a1b088d8e207885303c11
+100.64.0.9 - - [06/Feb/2026 19:25:24] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+ FIX 121: Saludo simple detectado en primera respuesta: 'Sí. Pero. ¿Por qué cuál'
+   Usando CACHE de segunda_parte_saludo para respuesta instantánea (0s GPT)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 540: [PARCIAL] '¿No? Sí pero ¿por qué cuelga la' (latencia: 17ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí pero ¿por qué cuelga la'
+ FIX 212: [FINAL] 'Sí.' (latencia: 12ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'Sí.'
+ FIX 212: [PARCIAL] '¿Por qué cuelga?'
+ FIX 212: [PARCIAL] '¿Por qué cuelga?'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ LOG registrado: CLIENT... | Sí. Pero. ¿Por qué cuál...
+    FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente
+ FIX 212: [FINAL] '¿Pero por qué cuelga? Le' (latencia: 16ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Pero por qué cuelga? Le'
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+ BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+ FIX 212: [PARCIAL] '¿Pero por qué cuelga? Le'
+ FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+ FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+ FIX 212: [PARCIAL] '¿Pero por qué cuelga? Le'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 212: [PARCIAL] '¿Pero por qué cuelga? Le'
+ FIX 212: [PARCIAL] '¿Pero por qué cuelga? Le'
+    FIX 538: PARCIAL agregada (última era FINAL)
+[2026-02-06 19:25:25] [BRUCE] BRUCE1975 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+ LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+ FIX 455: Limpiando 4 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Sí.', '¿Por qué cuelga?', '¿Pero por qué cuelga? Le', '¿Pero por qué cuelga? Le']
+100.64.0.4 - - [06/Feb/2026 19:25:26] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.8 - - [06/Feb/2026 19:25:26] "GET /audio/segunda_parte_saludo_CA9a3934d8d08596cf5cf3aed317515898 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] '¿Pero por qué cuelga la...?' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Pero por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...?' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...?'
+ FIX 212: [FINAL] 'Ajá.' (latencia: 21ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'Ajá.'
+ FIX 540: [PARCIAL] 'Sí. Pero por qué cuelga la... Ajá.' (latencia: 0ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Sí. Pero por qué cuelga la... Ajá.'
+ FIX 212: [PARCIAL] '¿No le va a estar'
+ FIX 212: [PARCIAL] '¿No le va a estar'
+    FIX 538: PARCIAL agregada (última era FINAL)
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REcdd7fd59ac89427373992a3eb888304f'
+   Digits: timeout
+    FIX 532: PARCIAL corta (5 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '¿no le va a estar'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no.' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió.' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga? Ajá. No, no, no está. Ahorita salió.' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga? Ajá. No, no, no está. Ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió.' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió.'
+
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Ajá.'
+   [1] 'No, no está, ahorita salió.'
+    FIX 546: Preservando transcripción con palabra crítica: 'No, no está, ahorita salió.'
+    FIX 469: Concatenando 2 partes: 'Ajá. No, no está, ahorita salió.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Ajá. No, no está, ahorita salió."
+[2026-02-06 19:25:38] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Ajá. No, no está, ahorita salió."
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 212: [PARCIAL] 'No, no está, ahorita salió.'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está.' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está.'
+ LOG registrado: CLIENT... | Ajá. No, no está, ahorita salió....
+ FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_3, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-02-06 19:25:38] [BRUCE] BRUCE1975 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 212: [FINAL] 'No, no está, ahorita salió.' (latencia: 8ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No, no está, ahorita salió.'
+ FIX 212: [PARCIAL] 'Está. ¿Lo'
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+ FIX 214: Usando Record + Deepgram (mensaje #3)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['No, no está, ahorita salió.']
+100.64.0.9 - - [06/Feb/2026 19:25:39] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.10 - - [06/Feb/2026 19:25:39] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_3 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está... No quiere marcar a mayo' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está... No quiere marcar a mayo'
+ FIX 212: [PARCIAL] 'Está, no quiero marcar a Mayoreo.'
+ FIX 212: [PARCIAL] 'Está, no quiero marcar a Mayoreo.'
+ FIX 212: [PARCIAL] 'Está. ¿No quiere marcar a Mayoreo?'
+ FIX 212: [PARCIAL] 'Está. ¿No quiere marcar a Mayoreo?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está... ¿no quiere marcar a Mayoreo?' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. Está... ¿no quiere marcar a Mayoreo?'
+ FIX 212: [PARCIAL] 'Está. ¿No quiere marcar a Mayoreo?'
+ FIX 212: [PARCIAL] 'Está. ¿No quiere marcar a Mayoreo?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?'
+ FIX 212: [FINAL] 'Está. ¿No quiere marcar a Mayoreo?' (latencia: 10ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'Está. ¿No quiere marcar a Mayoreo?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está. Ahorita salió. ¿No quiere marcar a Mayoreo?'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está, ¿no quiere marcar a Mayoreo? Vea' (latencia: 17ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está, ¿no quiere marcar a Mayoreo? Vea'
+ FIX 212: [PARCIAL] 'Vea, permítame'
+ FIX 212: [PARCIAL] 'Vea, permítame'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9d5c46f8db07b21bc38692db9635dad1'
+   Digits: timeout
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'está. ¿no quiere marcar a mayoreo?'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a mayoreo? Vea, permítame tantito.' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a mayoreo? Vea, permítame tantito.'
+ FIX 212: [FINAL] 'Vea, permítame tantito.' (latencia: 23ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'Vea, permítame tantito.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Está. ¿No quiere marcar a Mayoreo?'
+   [1] 'Vea, permítame tantito.'
+    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+    FIX 248: Concatenando 2 partes únicas: 'Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito.'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: 'Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito."
+[2026-02-06 19:25:46] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito."
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a mayoreo? Vea, permítame tantito.' (latencia: 12ms)
+ FIX 121 DEBUG: len(conversation_history)=6, mensajes_usuario=2, es_primera_respuesta=False
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[EMOJI] FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA
+
+[EMOJI] FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA
+   Cliente dijo: "Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito."
+   → Respondiendo 'Claro, espero.' SIN llamar GPT
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (2 palabras)
+ Caché AUTO: claro,_espero.... (0s delay)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a mayoreo? Vea, permítame tantito.'
+ LOG registrado: CLIENT... | Está. ¿No quiere marcar a Mayoreo? Vea, permítame ...
+
+ FIX 518: BRUCE1736 - Cliente indica OTRO NÚMERO, no transferencia
+   Frase: 'Está. ¿No quiere marcar a Mayoreo? Vea, permítame tantito.'
+   → NO activar modo espera, procesar como información de contacto
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_4, type = <class 'str'>
+ BRUCE DICE: "Claro, espero."
+[2026-02-06 19:25:46] [BRUCE] BRUCE1975 DICE: "Claro, espero."
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ah' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ah'
+ LOG registrado: BRUCE... | Claro, espero....
+ FIX 214: Usando Record + Deepgram (mensaje #4)
+100.64.0.2 - - [06/Feb/2026 19:25:47] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [06/Feb/2026 19:25:47] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_4 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Ahí vine.'
+ FIX 212: [PARCIAL] 'Ahí vine.'
+ FIX 540: [PARCIAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.'
+ FIX 212: [PARCIAL] 'Ahí vine.'
+ FIX 540: [FINAL] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.' (latencia: 0ms, idioma: unknown)
+ FIX 540: [FINAL ElevenLabs] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.'
+    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2a8631c9f5b60dfbc677d0a8fb3cd09a'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'Ahí vine.'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Ahí vine.'
+   Esperando más transcripciones...
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (2 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'ahí vine.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'Ahí vine.' (latencia: 7ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'Ahí vine.'
+ FIX 314: Saludo detectado en INTERIM: '¿Bueno?' - Pre-cargando respuesta...
+ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+ FIX 212: [PARCIAL] '¿Bueno?'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+
+ FIX 469: Timeout pero hay 3 transcripciones acumuladas
+   [0] 'Ahí vine.'
+   [1] '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+ LOG registrado: CLIENT... | Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá...
+
+ FIX 520: CLIENTE VOLVIÓ después de espera - 'Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?'
+   [2] '¿Bueno? ¿Bueno?'
+    FIX 546: Preservando transcripción con palabra crítica: '¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene.'
+    FIX 469: Concatenando 3 partes: 'Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?"
+[2026-02-06 19:25:52] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?"
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno?' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno?'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+   Estado anterior: ESPERANDO_TRANSFERENCIA
+   → Saliendo del modo espera, procesando normalmente
+
+ FIX 518: BRUCE1736 - Cliente indica OTRO NÚMERO, no transferencia
+   Frase: 'Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?'
+   → NO activar modo espera, procesar como información de contacto
+ FIX 121 DEBUG: len(conversation_history)=8, mensajes_usuario=3, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Ahí vine. ¿No? Sí. Pero ¿por qué cuelga la...? Ajá. No, no, no está, ahorita salió. Está... ¿no quiere marcar a Mayoreo? Vea, permítame tantito. Ahí viene. ¿Bueno? ¿Bueno?' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 520: Ya pidió WhatsApp + cliente no puede - Ofrecer contacto de Bruce
+[EMOJI] FIX 491: PATRÓN DETECTADO (OFRECER_CONTACTO_BRUCE) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (18 palabras)
+ Caché AUTO: entiendo,_no_se_preocupe._¿me_permite_de... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_5, type = <class 'str'>
+ BRUCE DICE: "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?"
+[2026-02-06 19:25:53] [BRUCE] BRUCE1975 DICE: "Entiendo, no se preocupe. ¿Me permite dejarle mi número para que el encargado nos contacte cuando tenga oportunidad?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Bueno?'
+ LOG registrado: BRUCE... | Entiendo, no se preocupe. ¿Me permite dejarle mi n...
+ FIX 214: Usando Record + Deepgram (mensaje #5)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['¿Bueno? ¿Bueno?']
+100.64.0.7 - - [06/Feb/2026 19:25:53] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [06/Feb/2026 19:25:54] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_5 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La c' (latencia: 18ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La c'
+ FIX 212: [FINAL] '¿Bueno? ¿Bueno?' (latencia: 19ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: '¿Bueno? ¿Bueno?'
+ FIX 212: [PARCIAL] '¿Ya colgó?'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 212: [FINAL] '¿Ya colgó?' (latencia: 12ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Ya colgó?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó?' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? ¿' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? ¿'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó?' (latencia: 0ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? ¿' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? ¿'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó?' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó?' (latencia: 0ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó?'
+ FIX 451: Transcripción FINAL recibida
+
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2a7c8cd7f850ef6507d99c94e1ff7225'
+ FIX 451: Transcripción FINAL recibida
+   Digits: timeout
+   Esperando más transcripciones...
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   AnsweredBy: 
+   Esperando más transcripciones...
+   SpeechResult: ''
+ FIX 451: Transcripción FINAL recibida
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó?' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó?'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+   Esperando más transcripciones...
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+ FIX 451: Transcripción FINAL recibida
+   Esperando más transcripciones...
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no.' (latencia: 7ms)
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no.'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. ¿Qué teníamos' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. ¿Qué teníamos'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Ya colgó?'
+   Esperando más transcripciones...
+
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] '¿Bueno? ¿Bueno?'
+   [1] '¿Ya colgó?'
+    FIX 469: Concatenando 2 partes: '¿Bueno? ¿Bueno? ¿Ya colgó?'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "¿Bueno? ¿Bueno? ¿Ya colgó?"
+[2026-02-06 19:26:03] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "¿Bueno? ¿Bueno? ¿Ya colgó?"
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Que tengas buena tarde, nos vemos ahí' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Que tengas buena tarde, nos vemos ahí'
+ LOG registrado: CLIENT... | ¿Bueno? ¿Bueno? ¿Ya colgó?...
+ FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=4, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '¿Bueno? ¿Bueno? ¿Ya colgó?' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+   FIX 520: Cliente ACEPTA recibir contacto - preguntar si tiene dónde anotar
+[EMOJI] FIX 491: PATRÓN DETECTADO (CLIENTE_ACEPTA_CONTACTO_BRUCE) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (4 palabras)
+ Caché AUTO: perfecto._¿tiene_dónde_anotar?... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_6, type = <class 'str'>
+ BRUCE DICE: "Perfecto. ¿Tiene dónde anotar?"
+[2026-02-06 19:26:04] [BRUCE] BRUCE1975 DICE: "Perfecto. ¿Tiene dónde anotar?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 212: [PARCIAL] 'No, ahí nada.'
+ FIX 212: [PARCIAL] 'No, ahí nada.'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Que tengas buena tarde, señor.' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Que tengas buena tarde, señor.'
+ LOG registrado: BRUCE... | Perfecto. ¿Tiene dónde anotar?...
+ FIX 214: Usando Record + Deepgram (mensaje #6)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['No, ahí nada.']
+100.64.0.8 - - [06/Feb/2026 19:26:04] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.5 - - [06/Feb/2026 19:26:04] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_6 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REf4da47ac0109a84b36ee1d391f913006'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'Bueno, bueno, bueno,'
+ FIX 212: [PARCIAL] 'Bueno, bueno, bueno,'
+ FIX 212: [PARCIAL] 'Bueno, bueno, bueno.'
+ FIX 212: [PARCIAL] 'Bueno, bueno, bueno.'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.'
+ FIX 212: [FINAL] 'Bueno, bueno, bueno.' (latencia: 7ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'Bueno, bueno, bueno.'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.' (latencia: 3ms)
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahí está. Bueno, bueno, bueno.'
+ FIX 451: Transcripción FINAL recibida
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 477: Saludo corto detectado 'bueno, bueno, bueno.' - reduciendo espera a 0.3s
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Transcripción FINAL recibida
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+ FIX 212: [PARCIAL] '¿Bueno?'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: '¿Bueno?'
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+   Esperando más transcripciones...
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno.' (latencia: 22ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno.'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+
+ FIX 511: PARCIAL disponible por 1.8s sin FINAL - usando como fallback
+   PARCIAL: 'bueno, bueno, bueno.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] '¿Bueno? ¿Quién habla, perdón?'
+ FIX 212: [PARCIAL] '¿Bueno? ¿Quién habla, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?'
+ FIX 212: [FINAL] '¿Bueno? ¿Quién habla, perdón?' (latencia: 11ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Bueno? ¿Quién habla, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?'
+
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Bueno, bueno, bueno,'
+   [1] '¿Bueno? ¿Quién habla, perdón?'
+    FIX 469: Concatenando 2 partes: 'Bueno, bueno, bueno, ¿Bueno? ¿Quién habla, perdón?'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Bueno, bueno, bueno, ¿Bueno? ¿Quién habla, perdón?"
+[2026-02-06 19:26:10] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Bueno, bueno, bueno, ¿Bueno? ¿Quién habla, perdón?"
+ LOG registrado: CLIENT... | Bueno, bueno, bueno, ¿Bueno? ¿Quién habla, perdón?...
+ FIX 121 DEBUG: len(conversation_history)=12, mensajes_usuario=5, es_primera_respuesta=False
+ Caché AUTO: el_número_es_6_6_2_4_1... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_7, type = <class 'str'>
+ BRUCE DICE: "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada."
+[2026-02-06 19:26:11] [BRUCE] BRUCE1975 DICE: "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada."
+   Usando GPT con instrucción de nexo en lugar de caché
+   FIX 520: Respuesta ambigua - asumir que sí tiene y dar número
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+[EMOJI] FIX 491: PATRÓN DETECTADO (DAR_CONTACTO_BRUCE) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+   Respuesta será instantánea (0s delay)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (31 palabras)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Bueno, bueno, bueno, ¿Bueno? ¿Quién habla, perdón?' mientras Bruce hablaba segunda parte
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿'
+ LOG registrado: BRUCE... | El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIO...
+ FIX 214: Usando Record + Deepgram (mensaje #7)
+100.64.0.2 - - [06/Feb/2026 19:26:11] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.2 - - [06/Feb/2026 19:26:12] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_7 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?' (latencia: 0ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿Bueno?' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿Bueno?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿Bueno?' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿Bueno?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? ¿'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero...' (latencia: 19ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero...'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9d1d6087d0a189c7547382c6658600de'
+   Digits: timeout
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero...' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero...'
+ FIX 212: [PARCIAL] 'Pero ¿Con quién hablo, perdón?'
+ FIX 212: [PARCIAL] 'Pero ¿Con quién hablo, perdón?'
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 532: PARCIAL corta (5 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'pero ¿con quién hablo, perdón?'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón?' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón?'
+ FIX 212: [PARCIAL] 'Pero ¿Con quién hablo, perdón?'
+ FIX 212: [PARCIAL] 'Pero ¿Con quién hablo, perdón?'
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero ¿con quién hablo, perdón?' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero ¿con quién hablo, perdón?'
+ FIX 212: [FINAL] 'Pero ¿Con quién hablo, perdón?' (latencia: 9ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'Pero ¿Con quién hablo, perdón?'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Pero ¿Con quién hablo, perdón?'
+    FIX 469: Usando transcripción única: 'Pero ¿Con quién hablo, perdón?'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Pero ¿Con quién hablo, perdón?"
+[2026-02-06 19:26:24] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "Pero ¿Con quién hablo, perdón?"
+ FIX 540: [PARCIAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero ¿con quién hablo, perdón?' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero ¿con quién hablo, perdón?'
+ LOG registrado: CLIENT... | Pero ¿Con quién hablo, perdón?...
+ FIX 121 DEBUG: len(conversation_history)=14, mensajes_usuario=6, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ Caché AUTO: mi_nombre_es_bruce,_me_comunico_de_la... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_8, type = <class 'str'>
+ BRUCE DICE: "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me comunica con el encargado de compras?"
+[2026-02-06 19:26:25] [BRUCE] BRUCE1975 DICE: "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Me comunica con el encargado de compras?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | Mi nombre es Bruce, me comunico de la marca NIOVAL...
+ FIX 214: Usando Record + Deepgram (mensaje #8)
+100.64.0.2 - - [06/Feb/2026 19:26:25] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.5 - - [06/Feb/2026 19:26:25] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_8 HTTP/1.1" 200 -
+ FIX 540: [FINAL] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No,' (latencia: 13ms, idioma: unknown)
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Pero ¿Con quién hablo, perdón?' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[EMOJI] FIX 491: PATRÓN DETECTADO (PREGUNTA_IDENTIDAD) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (22 palabras)
+ FIX 540: [FINAL ElevenLabs] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No,'
+    FIX 588: FINAL ElevenLabs copiada a deepgram_transcripciones (baja latencia)
+ FIX 540: [PARCIAL] 'no. ¡Rápido!' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. ¡Rápido!'
+ FIX 540: [PARCIAL] 'no. ¡Rápido!' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. ¡Rápido!'
+ FIX 540: [PARCIAL] 'no. ¡Rápido!' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. ¡Rápido!'
+ FIX 540: [PARCIAL] 'no. ¡Rápido!' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. ¡Rápido!'
+ FIX 540: [PARCIAL] 'no. ¡Rápido! ¡No, no, no!' (latencia: 4ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. ¡Rápido! ¡No, no, no!'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE30fdf3fd45e52092604c7a7ffcd7e5b3'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'No, no te'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'No, no te'
+   Esperando más transcripciones...
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 465: Frase termina en COMA - cliente sigue hablando
+ FIX 540: [PARCIAL] 'no. No, eh, no tenemos, eh' (latencia: 18ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, eh, no tenemos, eh'
+ FIX 212: [PARCIAL] 'No no tenemos, este,'
+ FIX 212: [PARCIAL] 'No no tenemos, este,'
+ FIX 540: [PARCIAL] 'no. No, no tenemos, este, nosotros no surte' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos, este, nosotros no surte'
+ FIX 212: [PARCIAL] 'No no tenemos, este, a nosotros nos urge'
+ FIX 212: [PARCIAL] 'No no tenemos, este, a nosotros nos urge'
+ FIX 212: [FINAL] 'No, no tenemos, este, a nosotros nos urge' (latencia: 15ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'No, no tenemos, este, a nosotros nos urge'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No,'
+   [1] 'No, no tenemos, este, a nosotros nos urge'
+    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+    FIX 248: Concatenando 2 partes únicas: '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No, No, no tenemos, este, a nosotros nos urge'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.8s)
+   🟢 Deepgram: '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No, No, no tenemos, este, a nosotros nos urge'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No, No, no tenemos, este, a nosotros nos urge"
+[2026-02-06 19:26:37] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No, No, no tenemos, este, a nosotros nos urge"
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros no surte un' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros no surte un'
+ LOG registrado: CLIENT... | ¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, ...
+ FIX 121 DEBUG: len(conversation_history)=16, mensajes_usuario=7, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_LLEGA_MAS_TARDE) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (9 palabras)
+ Caché AUTO: entendido._¿a_qué_hora_me_recomienda_lla... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_9, type = <class 'str'>
+ BRUCE DICE: "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?"
+[2026-02-06 19:26:37] [BRUCE] BRUCE1975 DICE: "Entendido. ¿A qué hora me recomienda llamar para encontrarlo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 212: [PARCIAL] 'un mayoreo que'
+ FIX 212: [PARCIAL] 'un mayoreo que'
+ LOG registrado: BRUCE... | Entendido. ¿A qué hora me recomienda llamar para e...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '¿Bueno? ¿Bueno? ¿La colgó? No, ahorita no. Bueno, bueno, bueno. Bueno. ¿Quién habla, perdón? Pero... ¿con quién hablo, perdón? No, No, no tenemos, este, a nosotros nos urge' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 518: Cliente indica callback genérico - Preguntar horario (1ra vez)
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca'
+ FIX 214: Usando Record + Deepgram (mensaje #9)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['un mayoreo que']
+100.64.0.3 - - [06/Feb/2026 19:26:38] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [06/Feb/2026 19:26:38] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_9 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santul.' (latencia: 13ms)
+ FIX 212: [PARCIAL] 'No no no'
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+ FIX 212: [PARCIAL] 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+ FIX 212: [FINAL] 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.' (latencia: 3ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull.' (latencia: 0ms)
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no.' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no.'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE1d20b1e3937fe0758a8518a3ad01aa7e'
+   Digits: timeout
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'un mayoreo que tenemos nosotros mismos, de la marca cantul.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'No no no no ocupamos'
+ FIX 212: [PARCIAL] 'No no no no ocupamos'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos--' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos--'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor.' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor.'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+    FIX 469: Usando transcripción única: 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "un mayoreo que tenemos nosotros mismos, de la marca Cantul."
+[2026-02-06 19:26:46] [CLIENTE] BRUCE1975 - CLIENTE DIJO: "un mayoreo que tenemos nosotros mismos, de la marca Cantul."
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor, no ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No no no no ocupamos proveedor, no ocupamos proveedor.'
+ FIX 212: [FINAL] 'No no no no ocupamos proveedor.' (latencia: 24ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'No no no no ocupamos proveedor.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor' FIX 212: [PARCIAL] 'No ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No ocupamos proveedor.'
+
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 212: [PARCIAL] 'No ocupamos proveedor.'
+ FIX 212: [PARCIAL] 'No ocupamos proveedor.'
+    FIX 538: PARCIAL agregada (última era FINAL)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.' mientras Bruce hablaba segunda parte
+ FIX 212: [FINAL] 'No ocupamos proveedor.' (latencia: 12ms)
+   Usando GPT con instrucción de nexo en lugar de caché
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No ocupamos proveedor.'
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+ LOG registrado: CLIENT... | un mayoreo que tenemos nosotros mismos, de la marc...
+ FIX 121 DEBUG: len(conversation_history)=18, mensajes_usuario=8, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'un mayoreo que tenemos nosotros mismos, de la marca Cantul.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+[WRENCH] FIX 68: Historial limitado a últimos 12 mensajes
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Entendido. ¿A qué hora me recomienda llamar para encontrarlo...
+   USER: un mayoreo que tenemos nosotros mismos, de la marca Cantul.
+[EMOJI]  FIX 491: max_tokens dinámico = 150 (basado en complejidad)
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_5' desde caché
+   FIX 519: Patrón guardado 'mayoreo tenemos nosotros mismo...' (count=1, cat=OTRO)
+
+[EMOJI]  FIX 412: Cliente preguntó pero Bruce YA se presentó antes - NO sobrescribiendo
+   Cliente preguntó: "¿bueno? ¿bueno? ¿la colgó? no, ahorita no. bueno, bueno, bue..."
+   Respuesta actual: 'Entiendo. ¿Le gustaría que le envíe el catálogo de NIOVAL para que lo revise cua'
+   Bruce iba a decir: "Entiendo. ¿Le gustaría que le envíe el catálogo de NIOVAL pa..."
+[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente
+
+   Respuesta corregida: "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (25 palabras)
+[EMOJI] FIX 327/342: FILTRO ACTIVADO - Cliente pregunta QUIÉN HABLA pero Bruce no dice nombre
+ Caché AUTO: mi_nombre_es_bruce,_me_comunico_de_parte... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA9a3934d8d08596cf5cf3aed317515898_10, type = <class 'str'>
+ BRUCE DICE: "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+[2026-02-06 19:26:48] [BRUCE] BRUCE1975 DICE: "Mi nombre es Bruce, me comunico de parte de la marca NIOVAL para ofrecer información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 0ms)
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 24ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ FIX 214: Usando Record + Deepgram (mensaje #10)
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 20ms)
+ FIX 455: Limpiando 4 transcripciones acumuladas ANTES de enviar audio
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ LOG registrado: BRUCE... | Mi nombre es Bruce, me comunico de parte de la mar...
+100.64.0.4 - - [06/Feb/2026 19:26:49] "GET /audio_cache/pensando_5 HTTP/1.1" 200 -
+   Contenido descartado: ['No no no no ocupamos proveedor, no ocupamos proveedor.', 'No no no no ocupamos proveedor.', 'No ocupamos proveedor.', 'No ocupamos proveedor.']
+100.64.0.4 - - [06/Feb/2026 19:26:49] "GET /audio/respuesta_CA9a3934d8d08596cf5cf3aed317515898_10 HTTP/1.1" 200 -
+100.64.0.6 - - [06/Feb/2026 19:26:49] "POST /procesar-respuesta HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor. ¿Y' (latencia: 19ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor. ¿Y'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor. Distribuimos--'
+ FIX 212: MediaStream detenido - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.' (latencia: 5ms)
+ FIX 540: [PARCIAL ElevenLabs] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor.'
+ FIX 540: [PARCIAL] 'no. No, no tenemos-- nosotros nos surte un mayoreo que tenemos nosotros mismos de la marca Santull. No, no ocupamos proveedor. No ocupamos proveedor. Distribuimos--' (latencia: 0ms)
+ FIX 540: Conexión ElevenLabs cerrada - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+   Status: None, Mensaje: None
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+
+ STATUS CALLBACK - Llamada CA9a3934d8...
+   Estado: completed
+   Duración: 104s
+[2026-02-06 19:26:54] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 104s
+    Cliente colgó - detectado por status callback (20 mensajes)
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 104 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    1/1 (100.0%)
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 212: [FINAL] 'Distribuimos productos' (latencia: 120ms)
+ FIX 212: Transcripción FINAL Deepgram para CA9a3934d8d08596cf5cf3aed317515898: 'Distribuimos productos'
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+ FIX 212: WebSocket cerrado - CallSid: CA9a3934d8d08596cf5cf3aed317515898
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 4613...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 104
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+100.64.0.3 - - [06/Feb/2026 19:26:55] "GET /media-stream HTTP/1.1" 200 -
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce debería haber sido más claro y directo al inicio de la llamada para captar mejor la atención del cliente. Además, podría haber intentado establecer un mejor rapport antes de solicitar información de contacto.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+============================================================
+
+    Llamada guardada desde status callback
+ Resultado guardado exitosamente en fila 4613
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 17
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+  → Opinión Bruce: Bruce debería haber sido más claro y directo al in...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1975
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA9a3934d8d08596cf5cf3aed317515898
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1975
+   RecordingSid: RE9b72b6cf4923c3cc60e30870f7887589
+   Status: completed
+   Duración: 102 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9b72b6cf4923c3cc60e30870f7887589
+    FIX 207: Llamada registrada en dashboard
+ FIX 543: Llamada terminó sin contacto - revisando 1 transcripciones pendientes
+   Texto completo: 'Distribuimos productos...'
+ FIX 543: No se encontró contacto en transcripciones pendientes
+100.64.0.3 - - [06/Feb/2026 19:26:57] "GET /status-callback?Called=%2B526624377883&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+06+Feb+2026+19:26:54+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA9a3934d8d08596cf5cf3aed317515898&To=%2B526624377883&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=2&From=%2B523321014486&CallDuration=104&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.7 - - [06/Feb/2026 19:26:59] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE9b72b6cf4923c3cc60e30870f7887589&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9b72b6cf4923c3cc60e30870f7887589&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA9a3934d8d08596cf5cf3aed317515898&RecordingStartTime=Fri,+06+Feb+2026+19:25:13+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=102 HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:02] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:04] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:05] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:07] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:07] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:08] "GET /stats HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:09] "GET /diagnostico-persistencia HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:12] "GET /diagnostico-persistencia HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:15] "GET /diagnostico-persistencia HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:18] "GET /diagnostico-persistencia HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:19] "GET /stats HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526622565702, Negocio: FERREVARIOS
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526622565702
+ DEBUG 5: Llamada Twilio creada - SID: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+[2026-02-06 19:27:26] [LLAMADA] N/A - LLAMADA INICIADA a +526622565702 (FERREVARIOS)
+ Contacto completo guardado para Call SID CAc3cb5f0f... (fila 19)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.5 - - [06/Feb/2026 19:27:26] "POST /iniciar-llamada HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1976
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.9 - - [06/Feb/2026 19:27:47] "GET /webhook-voz?Called=%2B526622565702&ToState=Son.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CAc3cb5f0fabf5d2a0b1b1b267c32f0064&To=%2B526622565702&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.3 - - [06/Feb/2026 19:27:48] "GET /audio/inicial_CAc3cb5f0fabf5d2a0b1b1b267c32f0064 HTTP/1.1" 200 -
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   StreamSid: MZ7d52f3ca776e5c0329423ca973322aa5
+   CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Intentando ElevenLabs Scribe (primario)...
+ FIX 540: Conectando a ElevenLabs Scribe para CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Sesión iniciada - modelo: unknown
+ FIX 540: ElevenLabs Scribe conectado para CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: ElevenLabs Scribe conectado para CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 212: Deepgram conectado para CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Deepgram conectado como FALLBACK para CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+ FIX 314: Saludo detectado en INTERIM: 'Bueno,' - Pre-cargando respuesta...
+ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+ FIX 212: [PARCIAL] 'Bueno,'
+ FIX 212: [FINAL] 'Bueno.' (latencia: 5ms)
+ FIX 212: Transcripción FINAL Deepgram para CAc3cb5f0fabf5d2a0b1b1b267c32f0064: 'Bueno.'
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Bueno,'
+ DEBUG - Parámetros Twilio (POST):
+   Digits: timeout
+   [1] 'Bueno.'
+   CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+    FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   CallStatus: in-progress
+    FIX 248: Una sola transcripción única: 'Bueno,'
+   AnsweredBy: 
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+
+   SpeechResult: ''
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe054f5c72905f30542f16f221e5cd6db'
+
+   🟢 Deepgram: 'Bueno,'
+ CLIENTE DIJO: "Bueno,"
+ FIX 451: Transcripción FINAL recibida
+[2026-02-06 19:27:58] [CLIENTE] BRUCE1976 - CLIENTE DIJO: "Bueno,"
+ FIX 525: Respuesta de PRESENCIA 'bueno.' - procesando INMEDIATO sin espera
+ FIX 456: No hay PARCIALES nuevas después de 0.0s - cliente terminó de hablar
+ FIX 212: [PARCIAL] 'Sí, no sé'
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+    FIX 244: Frase corta (1 palabras) después de hablar
+    FIX 441: 'Bueno,' es saludo simple - NO esperar continuación
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+   Respuesta será instantánea (0s delay)
+ BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-02-06 19:27:58] [BRUCE] BRUCE1976 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+ FIX 540: [PARCIAL] 'Bueno no se encuentra' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra'
+ LOG registrado: CLIENT... | Bueno,...
+ FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+ FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+ LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Sí, no sé']
+100.64.0.2 - - [06/Feb/2026 19:27:59] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:27:59] "GET /audio/segunda_parte_saludo_CAc3cb5f0fabf5d2a0b1b1b267c32f0064 HTTP/1.1" 200 -
+ FIX 212: [FINAL] 'Que no se encuentra ahorita.' (latencia: 19ms)
+ FIX 212: Transcripción FINAL Deepgram para CAc3cb5f0fabf5d2a0b1b1b267c32f0064: 'Que no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno. En los encuentros ahorita.' (latencia: 2ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno. En los encuentros ahorita.'
+ FIX 214: Grabación fragmento completed - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe054f5c72905f30542f16f221e5cd6db
+100.64.0.9 - - [06/Feb/2026 19:28:00] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita.' (latencia: 4ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita.' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita.' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+100.64.0.11 - - [06/Feb/2026 19:28:04] "GET /historial-llamadas HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+100.64.0.11 - - [06/Feb/2026 19:28:04] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 0ms)
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+100.64.0.10 - - [06/Feb/2026 19:28:07] "GET /historial-llamadas HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REd8bab3b9d19582b61ba2fcd85fcb0b35'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita'
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL corta (5 palabras) sin conectores - parece COMPLETA
+ FIX 451: Transcripción FINAL recibida
+ FIX 540: [PARCIAL] 'Bueno no se encuentra ahorita no no se' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno no se encuentra ahorita no no se'
+ FIX 451: Transcripción FINAL recibida
+100.64.0.10 - - [06/Feb/2026 19:28:09] "GET /escuchar-grabacion/RE9b72b6cf4923c3cc60e30870f7887589 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'No no se encuentra'
+ FIX 212: [PARCIAL] 'No no se encuentra'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'No no se encuentra'
+   Esperando más transcripciones...
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'que no se encuentra ahorita.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'No, no se encuentra ahorita.' (latencia: 13ms)
+ FIX 212: Transcripción FINAL Deepgram para CAc3cb5f0fabf5d2a0b1b1b267c32f0064: 'No, no se encuentra ahorita.'
+ FIX 451: Transcripción FINAL recibida
+    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+    FIX 248: Concatenando 2 partes únicas: 'Que no se encuentra ahorita. No, no se encuentra ahorita.'
+
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 25ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.4s)
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+   🟢 Deepgram: 'Que no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Que no se encuentra ahorita.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+   [1] 'No, no se encuentra ahorita.'
+
+ CLIENTE DIJO: "Que no se encuentra ahorita. No, no se encuentra ahorita."
+[2026-02-06 19:28:10] [CLIENTE] BRUCE1976 - CLIENTE DIJO: "Que no se encuentra ahorita. No, no se encuentra ahorita."
+ LOG registrado: CLIENT... | Que no se encuentra ahorita. No, no se encuentra a...
+ FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Que no se encuentra ahorita. No, no se encuentra ahorita.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CAc3cb5f0fabf5d2a0b1b1b267c32f0064_13, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-02-06 19:28:10] [BRUCE] BRUCE1976 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+ FIX 214: Usando Record + Deepgram (mensaje #3)
+100.64.0.5 - - [06/Feb/2026 19:28:11] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [06/Feb/2026 19:28:11] "GET /audio/respuesta_CAc3cb5f0fabf5d2a0b1b1b267c32f0064_13 HTTP/1.1" 200 -
+100.64.0.10 - - [06/Feb/2026 19:28:11] "GET /escuchar-grabacion/RE9b72b6cf4923c3cc60e30870f7887589 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 16ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 540: [PARCIAL] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.' (latencia: 1ms)
+ FIX 540: [PARCIAL ElevenLabs] 'Bueno, no se encuentra ahorita. No, no se encuentra ahorita.'
+ FIX 212: MediaStream detenido - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Conexión ElevenLabs cerrada - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+   Status: None, Mensaje: None
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+ FIX 212: Conexión Deepgram cerrada - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+
+ STATUS CALLBACK - Llamada CAc3cb5f0f...
+   Estado: completed
+   Duración: 28s
+[2026-02-06 19:28:15] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 28s
+    Cliente colgó - detectado por status callback (6 mensajes)
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 28 segundos
+
+============================================================
+ FIX 212: WebSocket cerrado - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+100.64.0.9 - - [06/Feb/2026 19:28:15] "GET /media-stream HTTP/1.1" 200 -
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado establecer una conexión más personal o preguntar sobre el interés general en los productos antes de solicitar información de contacto. Esto podría haber aumentado el interés del cliente.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 4614...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 28
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 19
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado establecer una conexi...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1976
+ Resultado guardado exitosamente en fila 4614
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+100.64.0.8 - - [06/Feb/2026 19:28:17] "GET /status-callback?Called=%2B526622565702&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+06+Feb+2026+19:28:15+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAc3cb5f0fabf5d2a0b1b1b267c32f0064&To=%2B526622565702&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=28&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAc3cb5f0fabf5d2a0b1b1b267c32f0064
+   RecordingSid: RE47c26634fabb6a2da0beac510c8cdf73
+   Status: completed
+   Duración: 27 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE47c26634fabb6a2da0beac510c8cdf73
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1976
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.12 - - [06/Feb/2026 19:28:19] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE47c26634fabb6a2da0beac510c8cdf73&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE47c26634fabb6a2da0beac510c8cdf73&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAc3cb5f0fabf5d2a0b1b1b267c32f0064&RecordingStartTime=Fri,+06+Feb+2026+19:27:49+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=27 HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526622603888, Negocio: Herrajes del Pacífico
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526622603888
+ DEBUG 5: Llamada Twilio creada - SID: CA6ea48abf5c2c272dab1876a956d5e822
+[2026-02-06 19:28:58] [LLAMADA] N/A - LLAMADA INICIADA a +526622603888 (Herrajes del Pacífico)
+ Contacto completo guardado para Call SID CA6ea48abf... (fila 20)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.12 - - [06/Feb/2026 19:28:58] "POST /iniciar-llamada HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1977
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.11 - - [06/Feb/2026 19:29:11] "GET /webhook-voz?Called=%2B526622603888&ToState=Son.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&To=%2B526622603888&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   StreamSid: MZ71311f0955afcf2d0447a7f66e9b7c62
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Intentando ElevenLabs Scribe (primario)...
+ FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+100.64.0.4 - - [06/Feb/2026 19:29:12] "GET /audio/inicial_CA6ea48abf5c2c272dab1876a956d5e822 HTTP/1.1" 200 -
+ FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Sesión iniciada - modelo: unknown
+ FIX 540: ElevenLabs Scribe conectado para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: ElevenLabs Scribe conectado para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: Deepgram conectado para CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Deepgram conectado como FALLBACK para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3f9f605eb4948ab93af6be0f37268b30'
+   Digits: timeout
+ FIX 212: [PARCIAL] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL 'no se encuentra' es respuesta común COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'no se encuentra.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'No se encuentra.'
+    FIX 469: Usando transcripción única: 'No se encuentra.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "No se encuentra."
+[2026-02-06 19:29:25] [CLIENTE] BRUCE1977 - CLIENTE DIJO: "No se encuentra."
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+ FIX 214: Grabación fragmento completed - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3f9f605eb4948ab93af6be0f37268b30
+100.64.0.5 - - [06/Feb/2026 19:29:24] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 212: [FINAL] 'No se encuentra.' (latencia: 18ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No se encuentra.'
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 18ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ LOG registrado: CLIENT... | No se encuentra....
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[EMOJI] FIX 339/417/425: Estado → ENCARGADO_NO_ESTA
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'No se encuentra.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+[EMOJI] FIX 216: Detectada NEGACIÓN - NO es transferencia
+   Respuesta cliente: 'No se encuentra.'
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Hola, buen dia
+   USER: No se encuentra.
+[EMOJI]  FIX 491: max_tokens dinámico = 100 (basado en complejidad)
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_2' desde caché
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+   FIX 519: Patrón guardado 'encuentra....' (count=1, cat=PIDE_CONTACTO)
+   FIX 583: Frase corta (3 palabras) - ignorando detección de repetición
+
+[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'no se encuentra.'
+
+[EMOJI] FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo
+   Cliente dijo: "no se encuentra...."
+   Bruce iba a ofrecer catálogo: "Entiendo que no está disponible. ¿Le gustaría que le envíe e..."
+   Respuesta corregida: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (11 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_núm... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA6ea48abf5c2c272dab1876a956d5e822_15, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[2026-02-06 19:29:26] [BRUCE] BRUCE1977 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el número direct...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+100.64.0.4 - - [06/Feb/2026 19:29:27] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.8 - - [06/Feb/2026 19:29:27] "GET /audio_cache/pensando_2 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ FIX 314: Saludo detectado en INTERIM: '¿Bueno?' - Pre-cargando respuesta...
+ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+ FIX 212: [PARCIAL] '¿Bueno?'
+ FIX 212: [FINAL] '¿Bueno?' (latencia: 23ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Bueno?'
+100.64.0.9 - - [06/Feb/2026 19:29:28] "GET /audio/respuesta_CA6ea48abf5c2c272dab1876a956d5e822_15 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 17ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 25ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 22ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4121be0012d0a75160dc76d846d3b39d'
+   Digits: timeout
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Bueno? No, no lo' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Bueno? No, no lo'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 212: [PARCIAL] 'No, no lo puedo' FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+
+ FIX 212: [PARCIAL] 'No, no lo puedo'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+    FIX 532: PARCIAL corta (4 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'no, no lo puedo'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'No, no lo podemos pasar.'
+    FIX 469: Usando transcripción única: 'No, no lo podemos pasar.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "No, no lo podemos pasar."
+[2026-02-06 19:29:37] [CLIENTE] BRUCE1977 - CLIENTE DIJO: "No, no lo podemos pasar."
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ LOG registrado: CLIENT... | No, no lo podemos pasar....
+ FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Usando GPT con instrucción de nexo en lugar de caché
+   Cliente dijo: 'No, no lo podemos pasar.' mientras Bruce hablaba segunda parte
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'No, no lo podemos pasar.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Entiendo. ¿Me podría proporcionar el número directo del enca...
+   USER: No, no lo podemos pasar.
+[EMOJI]  FIX 491: max_tokens dinámico = 100 (basado en complejidad)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_1' desde caché
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 23ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 19ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 522: GPT timeout después de 5s (reducido de 10s)
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [FINAL] 'No, no lo podemos pasar.' (latencia: 23ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 1ms)
+100.64.0.3 - - [06/Feb/2026 19:29:42] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:29:42] "GET /audio_cache/pensando_1 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: MediaStream detenido - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   Status: None, Mensaje: None
+
+ STATUS CALLBACK - Llamada CA6ea48abf...
+   Estado: completed
+   Duración: 33s
+[2026-02-06 19:29:43] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 33s
+    Cliente colgó - detectado por status callback (5 mensajes)
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 32 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+[EMOJI] FIX 311: FILTRO ACTIVADO - Cliente niega número del encargado, ofrecer catálogo
+   Bruce pidió número del encargado y cliente dijo: "no se encuentra. no, no lo podemos pasar."
+   Respuesta corregida: "Entiendo, no hay problema. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo para que lo revise el encargado cuando regrese?"
+[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (23 palabras)
+ Caché AUTO: entiendo,_no_hay_problema._¿le_gustaría_... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA6ea48abf5c2c272dab1876a956d5e822_16, type = <class 'str'>
+
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: WebSocket cerrado - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+100.64.0.11 - - [06/Feb/2026 19:29:44] "GET /media-stream HTTP/1.1" 200 -
+[EMOJI] FIX 163: GPT tardó 7.1s - agregando frase de relleno: 'Déjeme ver eso con calma...'
+   FIX 519: Patrón guardado 'no, podemos pasar....' (count=1, cat=PIDE_CONTACTO)
+
+[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'no se encuentra. no, no lo podemos pasar.'
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado establecer una conexión más personal o preguntar por el mejor momento para volver a llamar. Esto podría haber aumentado las posibilidades de obtener información de contacto o una futura conversación.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 4615...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 32
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber intentado establecer una conexi...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1977
+ Resultado guardado exitosamente en fila 4615
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 20
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+ FIX 543: Llamada terminó sin contacto - revisando 1 transcripciones pendientes
+   Texto completo: 'No, no lo podemos pasar....'
+ FIX 543: No se encontró contacto en transcripciones pendientes
+100.64.0.7 - - [06/Feb/2026 19:29:46] "GET /status-callback?Called=%2B526622603888&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+06+Feb+2026+19:29:43+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&To=%2B526622603888&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=33&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   RecordingSid: RE23a46d8b0d061ce8a92f960ab53ccfaf
+   Status: completed
+   Duración: 30 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23a46d8b0d061ce8a92f960ab53ccfaf
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1977
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.3 - - [06/Feb/2026 19:29:47] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE23a46d8b0d061ce8a92f960ab53ccfaf&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23a46d8b0d061ce8a92f960ab53ccfaf&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&RecordingStartTime=Fri,+06+Feb+2026+19:29:13+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=30 HTTP/1.1" 200 -
+100.64.0.7 - - [06/Feb/2026 19:34:03] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.7 - - [06/Feb/2026 19:34:06] "GET /escuchar-grabacion/RE23a46d8b0d061ce8a92f960ab53ccfaf HTTP/1.1" 200 -
+100.64.0.2 - - [06/Feb/2026 19:35:17] "GET /info-cache HTTP/1.1" 200 -

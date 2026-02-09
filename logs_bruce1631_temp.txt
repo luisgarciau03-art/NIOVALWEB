@@ -1,0 +1,8 @@
+error: unexpected argument '--raw' found
+
+  tip: to pass '--raw' as a value, use '-- --raw'
+
+Usage: railway.exe logs [OPTIONS] [DEPLOYMENT_ID]
+
+For more information, try '--help'.
+

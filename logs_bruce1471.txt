@@ -1,0 +1,14 @@
+ ID BRUCE generado: BRUCE1471
+[2026-01-25 15:25:09] [CLIENTE] BRUCE1471 - CLIENTE DIJO: "¿Qué pasa ¿Qué tal?"
+[2026-01-25 15:25:10] [BRUCE] BRUCE1471 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-25 15:25:21] [CLIENTE] BRUCE1471 - CLIENTE DIJO: "No, no está, llega a las 3 de la tarde."
+[2026-01-25 15:25:22] [BRUCE] BRUCE1471 DICE: "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-25 15:25:29] [CLIENTE] BRUCE1471 - CLIENTE DIJO: "No, no está, llega a las 3 de la tarde."
+[2026-01-25 15:25:30] [BRUCE] BRUCE1471 DICE: "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-25 15:25:38] [CLIENTE] BRUCE1471 - CLIENTE DIJO: "No, yo a la No, llega a las 3 de la tarde."
+[2026-01-25 15:25:38] [BRUCE] BRUCE1471 DICE: "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-25 15:25:48] [CLIENTE] BRUCE1471 - CLIENTE DIJO: "No, llega el No, llega a las 6 de la tarde."
+[2026-01-25 15:25:49] [BRUCE] BRUCE1471 DICE: "Perfecto. ¿Se encontrará el encargado o encargada de compras?"
+[2026-01-25 15:25:59] [CLIENTE] BRUCE1471 - CLIENTE DIJO: ""
+  → ID BRUCE: BRUCE1471
+  → ID BRUCE: BRUCE1471

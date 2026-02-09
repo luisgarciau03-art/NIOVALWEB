@@ -1,0 +1,101 @@
+====================================================================================================
+ANÁLISIS DE REDUNDANCIAS EN system_prompt.txt
+Total de líneas: 1666
+====================================================================================================
+
+
+### 1. ANÁLISIS DE FIX NUMBERS ###
+
+FIX mencionados múltiples veces: 6
+  FIX 43: 6 menciones en líneas [176, 177, 178, 179, 185]...
+  FIX 172: 4 menciones en líneas [404, 409, 413, 434]
+  FIX 46: 3 menciones en líneas [9, 289, 780]
+  FIX 171: 3 menciones en líneas [623, 659, 677]
+  FIX 98: 2 menciones en líneas [67, 357]
+  FIX 101: 2 menciones en líneas [330, 350]
+
+
+### 2. ANÁLISIS DE FRASES REPETITIVAS ###
+
+Frases repetidas textualmente (>30 chars): 6
+  [6x] Líneas [1046, 1088, 1121, 1153, 1176, 1210]: **CÓMO PREGUNTAR (opciones sutiles):**...
+  [4x] Líneas [248, 969, 975, 981]: Bruce: "¿Cuál es su correo electrónico?"...
+  [3x] Líneas [252, 972, 978]: Bruce: "Perfecto, ya lo tengo anotado."...
+  [3x] Líneas [409, 413, 434]: 🚨 FIX 172: NO pidas el nombre (genera delays de audio)...
+  [3x] Líneas [532, 545, 549]: → Termina oferta de pedidos, CONTINÚA con FASE 4 (WhatsApp)...
+  [3x] Líneas [1116, 1149, 1206]: **CONTEXTO A MENCIONAR ANTES DE PREGUNTAR:**...
+
+
+### 3. ANÁLISIS DE SECCIONES SIMILARES ###
+
+Secciones de ejemplos encontradas: 26
+
+
+### 4. ANÁLISIS DE REGLAS PROHIBIDAS (❌ NUNCA) ###
+
+Total de reglas PROHIBIDAS: 36
+
+Reglas prohibidas agrupadas por similitud:
+
+
+### 5. ANÁLISIS DE DESPEDIDAS Y RESPUESTAS TIPO ###
+
+Líneas con despedidas/saludos: 21
+
+
+### 6. ANÁLISIS DE OBJECIONES ###
+
+Total de objeciones definidas: 24
+
+
+### 7. ESTIMACIÓN DE TOKENS ###
+
+Total de caracteres: 86,156
+Tokens estimados (aprox): 21,539
+Objetivo de reducción (45%): ~9,692 tokens a eliminar
+Objetivo final: ~11,846 tokens
+
+
+====================================================================================================
+### RECOMENDACIONES DE COMPACTACIÓN ###
+====================================================================================================
+
+OPORTUNIDADES PRINCIPALES:
+
+1. CONSOLIDAR FIX DUPLICADOS
+   - Varios FIX se mencionan múltiples veces en diferentes secciones
+   - Crear una sección única de "REGLAS CRÍTICAS DE FIX" al inicio
+   - Referenciar en contexto con formato compacto: (ver FIX 223)
+
+2. COMPACTAR EJEMPLOS CORRECTO/INCORRECTO
+   - Muchos ejemplos se pueden reducir a formato tabla
+   - Usar bullets en lugar de diálogos completos
+   - Mantener solo ejemplos únicos, eliminar variaciones redundantes
+
+3. CONSOLIDAR REGLAS PROHIBIDAS (❌ NUNCA)
+   - Agrupar todas las prohibiciones similares en una sola línea
+   - Ejemplo: En lugar de 5 líneas de "❌ NO digas X", usar: "❌ NO digas: X, Y, Z"
+
+4. COMPACTAR OBJECIONES
+   - Convertir formato largo a tabla de 2 columnas: Objeción | Respuesta
+   - Eliminar ejemplos repetitivos de manejo
+
+5. ELIMINAR ENCABEZADOS Y SEPARADORES DECORATIVOS
+   - Usar ## en lugar de líneas de ===
+   - Reducir emojis y decoraciones visuales
+
+6. CONSOLIDAR DESPEDIDAS
+   - Una sola sección con variaciones, no repetir en cada escenario
+
+7. COMPACTAR PRONUNCIACIÓN
+   - Usar lista compacta en lugar de múltiples ejemplos
+
+IMPACTO ESTIMADO:
+- Reducción esperada: 40-50% (12k-16k tokens eliminados)
+- Tokens objetivo final: ~16k-20k tokens
+- Conservar: 100% del contenido funcional único
+
+
+====================================================================================================
+FIN DEL ANÁLISIS
+====================================================================================================

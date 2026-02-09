@@ -1,0 +1,756 @@
+=== BRUCE1895 ===
+04_02PT16.txt: ID BRUCE generado: BRUCE1895
+04_02PT16.txt- LOG registrado: BRUCE... | Hola, buen dia...
+04_02PT16.txt- FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+04_02PT16.txt- FIX 212: Iniciando MediaStream para Deepgram
+04_02PT16.txt-   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+04_02PT16.txt-    FIX 271: Grabación asíncrona de llamada completa iniciada
+04_02PT16.txt-    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+04_02PT16.txt-100.64.0.3 - - [04/Feb/2026 19:22:30] "GET /webhook-voz?Called=%2B525557677833&ToState=Df.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA712b3a2fc6963eff9b8089e1e3cf3484&To=%2B525557677833&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Gustavo+A.+Madero&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Gustavo+A.+Madero&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Df.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+04_02PT16.txt-
+04_02PT16.txt- FIX 212: Nueva conexión WebSocket /media-stream
+04_02PT16.txt-100.64.0.12 - - [04/Feb/2026 19:22:31] "GET /audio/inicial_CA712b3a2fc6963eff9b8089e1e3cf3484 HTTP/1.1" 200 -
+04_02PT16.txt-🟢 FIX 212: MediaStream conectado
+04_02PT16.txt- FIX 212: MediaStream iniciado
+04_02PT16.txt-   StreamSid: MZb80356752c20a14b9fa85eca2d942e53
+04_02PT16.txt-   CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: Intentando ElevenLabs Scribe (primario)...
+04_02PT16.txt- FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: Sesión iniciada - modelo: unknown
+04_02PT16.txt- FIX 540: ElevenLabs Scribe conectado para CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: ElevenLabs Scribe conectado para CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 222: Iniciando conexión Deepgram...
+04_02PT16.txt-   Opciones: model=nova-2, language=es-419, encoding=mulaw
+04_02PT16.txt-🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 212: Deepgram conectado para CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: Deepgram conectado como FALLBACK para CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+04_02PT16.txt-
+04_02PT16.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT16.txt-   CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt-   CallStatus: in-progress
+04_02PT16.txt-   AnsweredBy: 
+04_02PT16.txt-   SpeechResult: ''
+04_02PT16.txt- FIX 212: [FINAL] 'Buenas tardes.' (latencia: 13ms)
+04_02PT16.txt- FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'Buenas tardes.'
+04_02PT16.txt-    FIX 532: PARCIAL 'buenas tardes' es respuesta común COMPLETA
+04_02PT16.txt-    FIX 532: PARCIAL corta (2 palabras) sin conectores - parece COMPLETA
+04_02PT16.txt- FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'buenas tardes.'
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE1d42f559c12e1e5cae5640b8213e27ae'
+04_02PT16.txt-   Digits: timeout
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोना सर'
+04_02PT16.txt- FIX 212: [PARCIAL] 'Buenas tardes.'
+04_02PT16.txt- FIX 314: Saludo detectado en INTERIM: 'Buenas tardes.' - Pre-cargando respuesta...
+04_02PT16.txt- FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+04_02PT16.txt- FIX 212: [PARCIAL] 'Buenas tardes.'
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार'
+04_02PT16.txt- FIX 540: [PARCIAL] 'बोनाकार असा' (latencia: 18ms)
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार असा'
+04_02PT16.txt- FIX 214: Grabación fragmento completed - CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt-   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE1d42f559c12e1e5cae5640b8213e27ae
+04_02PT16.txt-100.64.0.6 - - [04/Feb/2026 19:22:35] "POST /grabacion-status HTTP/1.1" 200 -
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार'
+04_02PT16.txt-
+04_02PT16.txt- FIX 469: Timeout pero hay 1 transcripciones acumuladas
+04_02PT16.txt-   [0] 'Buenas tardes.'
+04_02PT16.txt-    FIX 469: Usando transcripción única: 'Buenas tardes.'
+04_02PT16.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT16.txt-
+04_02PT16.txt- CLIENTE DIJO: "Buenas tardes."
+04_02PT16.txt:[2026-02-04 19:22:36] [CLIENTE] BRUCE1895 - CLIENTE DIJO: "Buenas tardes."
+04_02PT16.txt- LOG registrado: CLIENT... | Buenas tardes....
+04_02PT16.txt- FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+04_02PT16.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT16.txt-   Respuesta será instantánea (0s delay)
+04_02PT16.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT16.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT16.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+04_02PT16.txt- FIX 121: Respuesta instantánea desde caché completada en 0.000s
+04_02PT16.txt- BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT16.txt:[2026-02-04 19:22:37] [BRUCE] BRUCE1895 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT16.txt- FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+04_02PT16.txt- FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोना सर'
+04_02PT16.txt- LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोना सर'
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार'
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोना सर'
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोना सर'
+04_02PT16.txt- FIX 212: [PARCIAL] 'No, pues'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Bună seara! Nu pot' (latencia: 6ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Bună seara! Nu pot'
+04_02PT16.txt-
+04_02PT16.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT16.txt-   CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt-   CallStatus: in-progress
+04_02PT16.txt-   AnsweredBy: 
+04_02PT16.txt-100.64.0.3 - - [04/Feb/2026 19:22:37] "GET /audio/segunda_parte_saludo_CA712b3a2fc6963eff9b8089e1e3cf3484 HTTP/1.1" 200 -
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार'
+04_02PT16.txt- FIX 548: Transcripción ElevenLabs CORRUPTA ignorada (idioma inválido): 'बोनाकार'
+04_02PT16.txt- FIX 214: Usando Record + Deepgram (mensaje #2)
+04_02PT16.txt-100.64.0.8 - - [04/Feb/2026 19:22:37] "POST /procesar-respuesta HTTP/1.1" 200 -
+04_02PT16.txt-   SpeechResult: ''
+04_02PT16.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE6a62b8e9c406ac8f940e6bb0e7d641a6'
+04_02PT16.txt-   Digits: timeout
+04_02PT16.txt-    FIX 532: PARCIAL corta (4 palabras) sin conectores - parece COMPLETA
+04_02PT16.txt- FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'bună seara! nu pot'
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt- FIX 212: [PARCIAL] 'No, por el momento no se encuentra'
+04_02PT16.txt- FIX 212: [PARCIAL] 'No, por el momento no se encuentra'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra' (latencia: 12ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes' (latencia: 13ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes'
+04_02PT16.txt- FIX 212: [FINAL] 'No, por el momento no se encuentra' (latencia: 20ms)
+04_02PT16.txt- FIX 212: Transcripción FINAL Deepgram para CA712b3a2fc6963eff9b8089e1e3cf3484: 'No, por el momento no se encuentra'
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme'
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt-    FIX 538: PARCIAL agregada (última era FINAL)
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra joven, si gusta dejarme alguna información' (latencia: 20ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra joven, si gusta dejarme alguna información'
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información,'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información,'
+04_02PT16.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'joven. Si gusta dejarme alguna información,'
+04_02PT16.txt-   Esperando más transcripciones...
+04_02PT16.txt-
+04_02PT16.txt- FIX 469: Timeout pero hay 3 transcripciones acumuladas
+04_02PT16.txt-   [0] 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes'
+04_02PT16.txt-   [1] 'No, por el momento no se encuentra'
+04_02PT16.txt-   [2] 'joven. Si gusta dejarme alguna información,'
+04_02PT16.txt-    FIX 546: Preservando transcripción con palabra crítica: 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes'
+04_02PT16.txt- CLIENTE DIJO: "Buenas tardes. No, por el momento no se encuentra joven, si ustedes No, por el momento no se encuentra joven. Si gusta dejarme alguna información,"
+04_02PT16.txt:[2026-02-04 19:22:49] [CLIENTE] BRUCE1895 - CLIENTE DIJO: "Buenas tardes. No, por el momento no se encuentra joven, si ustedes No, por el momento no se encuentra joven. Si gusta dejarme alguna información,"
+04_02PT16.txt- LOG registrado: CLIENT... | Buenas tardes. No, por el momento no se encuentra ...
+04_02PT16.txt- FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+04_02PT16.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT16.txt-   Respuesta será instantánea (0s delay)
+04_02PT16.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT16.txt-    FIX 546: Preservando transcripción con palabra crítica: 'No, por el momento no se encuentra'
+04_02PT16.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT16.txt-    FIX 546: Preservando transcripción con palabra crítica: 'joven. Si gusta dejarme alguna información,'
+04_02PT16.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+04_02PT16.txt-    FIX 469: Concatenando 3 partes: 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes No, por el momento no se encuentra joven. Si gusta dejarme alguna información,'
+04_02PT16.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT16.txt-
+04_02PT16.txt- FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+04_02PT16.txt-   Cliente dijo: 'Buenas tardes. No, por el momento no se encuentra joven, si ustedes No, por el momento no se encuentra joven. Si gusta dejarme alguna información,' mientras Bruce hablaba segunda parte
+04_02PT16.txt-   Usando GPT con instrucción de nexo en lugar de caché
+04_02PT16.txt-[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+04_02PT16.txt-   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+04_02PT16.txt-[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+04_02PT16.txt- FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+04_02PT16.txt- Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+04_02PT16.txt- FIX 102 DEBUG: result = respuesta_CA712b3a2fc6963eff9b8089e1e3cf3484_29, type = <class 'str'>
+04_02PT16.txt- BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+04_02PT16.txt:[2026-02-04 19:22:50] [BRUCE] BRUCE1895 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+04_02PT16.txt- FIX 97: Audio ElevenLabs (generado en paralelo)
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra joven. Si gusta dejarme alguna información se los agrad' (latencia: 22ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra joven. Si gusta dejarme alguna información se los agrad'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información, se lo agradeceré.'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información, se lo agradeceré.'
+04_02PT16.txt- LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+04_02PT16.txt- FIX 214: Usando Record + Deepgram (mensaje #3)
+04_02PT16.txt- FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+04_02PT16.txt-   Contenido descartado: ['Buenas tardes. No, por el momento no se encuentra joven. Si gusta dejarme alguna información se los agrad']
+04_02PT16.txt-100.64.0.5 - - [04/Feb/2026 19:22:50] "POST /procesar-respuesta HTTP/1.1" 200 -
+04_02PT16.txt-100.64.0.7 - - [04/Feb/2026 19:22:50] "GET /audio/respuesta_CA712b3a2fc6963eff9b8089e1e3cf3484_29 HTTP/1.1" 200 -
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra joven. Si gusta dejarme alguna información se lo agradecería enviándome' (latencia: 6ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra joven. Si gusta dejarme alguna información se lo agradecería enviándome'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo'
+04_02PT16.txt- FIX 212: [PARCIAL] 'joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo'
+04_02PT16.txt- FIX 212: [FINAL] 'joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un' (latencia: 16ms)
+04_02PT16.txt- FIX 212: Transcripción FINAL Deepgram para CA712b3a2fc6963eff9b8089e1e3cf3484: 'joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un correo.' (latencia: 15ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un correo.'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--' (latencia: 19ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--' (latencia: 9ms)
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--' (latencia: 16ms)
+04_02PT16.txt-   SpeechResult: ''
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un-- No--'
+04_02PT16.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REf0a50916965dee9cb355849613f1953f'
+04_02PT16.txt-
+04_02PT16.txt-   CallSid: CA712b3a2fc6963eff9b8089e1e3cf3484
+04_02PT16.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT16.txt-   CallStatus: in-progress
+04_02PT16.txt-   AnsweredBy: 
+04_02PT16.txt- FIX 540: [PARCIAL ElevenLabs] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un--'
+04_02PT16.txt- FIX 540: [PARCIAL] 'Buenas tardes. No, por el momento no se encuentra, joven. Si gusta dejarme alguna información, se lo agradecería enviándomelo a un-- No--' (latencia: 3ms)
+04_02PT16.txt-   Digits: timeout
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 451: Transcripción FINAL recibida
+04_02PT16.txt- FIX 212: [PARCIAL] '¿No tienes correo'
+04_02PT16.txt- FIX 212: [PARCIAL] '¿No tienes correo'
+
+=== BRUCE1893 ===
+04_02PT16.txt: ID BRUCE generado: BRUCE1893
+04_02PT16.txt- LOG registrado: BRUCE... | Hola, buen dia...
+04_02PT16.txt- FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+04_02PT16.txt- FIX 212: Iniciando MediaStream para Deepgram
+04_02PT16.txt-   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+04_02PT16.txt-    FIX 271: Grabación asíncrona de llamada completa iniciada
+04_02PT16.txt-    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+04_02PT16.txt-100.64.0.3 - - [04/Feb/2026 19:17:59] "GET /webhook-voz?Called=%2B525557141986&ToState=Mex.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CAa8f7a09fb318eac92eeb2ecf7d5997e9&To=%2B525557141986&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Tlalnepantla+De+Baz&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Tlalnepantla+De+Baz&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Mex.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+04_02PT16.txt-
+04_02PT16.txt- FIX 212: Nueva conexión WebSocket /media-stream
+04_02PT16.txt-🟢 FIX 212: MediaStream conectado
+04_02PT16.txt- FIX 212: MediaStream iniciado
+04_02PT16.txt-   StreamSid: MZf341392c9562bc8b2c9a8f75380603f5
+04_02PT16.txt-   CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 540: Intentando ElevenLabs Scribe (primario)...
+04_02PT16.txt- FIX 540: Conectando a ElevenLabs Scribe para CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt-100.64.0.9 - - [04/Feb/2026 19:18:01] "GET /audio/inicial_CAa8f7a09fb318eac92eeb2ecf7d5997e9 HTTP/1.1" 200 -
+04_02PT16.txt- FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 540: Sesión iniciada - modelo: unknown
+04_02PT16.txt- FIX 540: ElevenLabs Scribe conectado para CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 540: ElevenLabs Scribe conectado para CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 222: Iniciando conexión Deepgram...
+04_02PT16.txt-   Opciones: model=nova-2, language=es-419, encoding=mulaw
+04_02PT16.txt-🟢 FIX 212: Conexión Deepgram abierta - CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 212: Deepgram conectado para CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 540: Deepgram conectado como FALLBACK para CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt- FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+04_02PT16.txt-
+04_02PT16.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT16.txt-   CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt-   CallStatus: in-progress
+04_02PT16.txt-   AnsweredBy: 
+04_02PT16.txt-   SpeechResult: ''
+04_02PT16.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0e826348ceec47b122d54e1623caa16e'
+04_02PT16.txt-   Digits: timeout
+04_02PT16.txt- FIX 314: Saludo detectado en INTERIM: '¿Bueno?' - Pre-cargando respuesta...
+04_02PT16.txt- FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+04_02PT16.txt- FIX 212: [PARCIAL] '¿Bueno?'
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt- FIX 214: Grabación fragmento completed - CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt-   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0e826348ceec47b122d54e1623caa16e
+04_02PT16.txt-100.64.0.11 - - [04/Feb/2026 19:18:05] "POST /grabacion-status HTTP/1.1" 200 -
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt- FIX 212: [PARCIAL] '¿Bueno?'
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-100.64.0.4 - - [04/Feb/2026 19:18:05] "GET /info-cache HTTP/1.1" 200 -
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt-
+04_02PT16.txt- FIX 511: PARCIAL disponible por 1.8s sin FINAL - usando como fallback
+04_02PT16.txt-   PARCIAL: '¿bueno?'
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-
+04_02PT16.txt- FIX 469: Timeout pero hay 1 transcripciones acumuladas
+04_02PT16.txt-   [0] '¿Bueno?'
+04_02PT16.txt-    FIX 469: Usando transcripción única: '¿Bueno?'
+04_02PT16.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT16.txt-
+04_02PT16.txt- CLIENTE DIJO: "¿Bueno?"
+04_02PT16.txt:[2026-02-04 19:18:06] [CLIENTE] BRUCE1893 - CLIENTE DIJO: "¿Bueno?"
+04_02PT16.txt- FIX 212: [FINAL] '¿Bueno?' (latencia: 15ms)
+04_02PT16.txt- FIX 212: Transcripción FINAL Deepgram para CAa8f7a09fb318eac92eeb2ecf7d5997e9: '¿Bueno?'
+04_02PT16.txt- LOG registrado: CLIENT... | ¿Bueno?...
+04_02PT16.txt- FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+04_02PT16.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT16.txt-   Respuesta será instantánea (0s delay)
+04_02PT16.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT16.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT16.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+04_02PT16.txt- FIX 121: Respuesta instantánea desde caché completada en 0.000s
+04_02PT16.txt- BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT16.txt:[2026-02-04 19:18:06] [BRUCE] BRUCE1893 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT16.txt- FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+04_02PT16.txt- FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+04_02PT16.txt- LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+04_02PT16.txt- FIX 214: Usando Record + Deepgram (mensaje #2)
+04_02PT16.txt- FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+04_02PT16.txt-   Contenido descartado: ['¿Bueno?']
+04_02PT16.txt-100.64.0.7 - - [04/Feb/2026 19:18:07] "POST /procesar-respuesta HTTP/1.1" 200 -
+04_02PT16.txt-100.64.0.10 - - [04/Feb/2026 19:18:07] "GET /audio/segunda_parte_saludo_CAa8f7a09fb318eac92eeb2ecf7d5997e9 HTTP/1.1" 200 -
+04_02PT16.txt-
+04_02PT16.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT16.txt-   CallSid: CAa8f7a09fb318eac92eeb2ecf7d5997e9
+04_02PT16.txt-   CallStatus: in-progress
+04_02PT16.txt-   AnsweredBy: 
+04_02PT16.txt-   SpeechResult: ''
+04_02PT16.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE929122ff59506abf8aa0b2ebeb5db1bd'
+04_02PT16.txt-   Digits: timeout
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT16.txt-    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+04_02PT16.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+
+=== BRUCE1889 ===
+04_02PT15.txt: ID BRUCE generado: BRUCE1889
+04_02PT15.txt- LOG registrado: BRUCE... | Hola, buen dia...
+04_02PT15.txt- FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+04_02PT15.txt- FIX 212: Iniciando MediaStream para Deepgram
+04_02PT15.txt-   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+04_02PT15.txt-    FIX 271: Grabación asíncrona de llamada completa iniciada
+04_02PT15.txt-    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+04_02PT15.txt-100.64.0.3 - - [04/Feb/2026 19:12:03] "GET /webhook-voz?Called=%2B525557693950&ToState=Mex.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA9050ecb88cbd6e78b09360db281bd98d&To=%2B525557693950&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Tlalnepantla+De+Baz&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Tlalnepantla+De+Baz&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Mex.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+04_02PT15.txt-
+04_02PT15.txt- FIX 212: Nueva conexión WebSocket /media-stream
+04_02PT15.txt-🟢 FIX 212: MediaStream conectado
+04_02PT15.txt- FIX 212: MediaStream iniciado
+04_02PT15.txt-   StreamSid: MZ29ead04ff09b27513ba6e71066f997e6
+04_02PT15.txt-   CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 540: Intentando ElevenLabs Scribe (primario)...
+04_02PT15.txt- FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt-100.64.0.2 - - [04/Feb/2026 19:12:04] "GET /audio/inicial_CA9050ecb88cbd6e78b09360db281bd98d HTTP/1.1" 200 -
+04_02PT15.txt- FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 540: Sesión iniciada - modelo: unknown
+04_02PT15.txt- FIX 540: ElevenLabs Scribe conectado para CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 540: ElevenLabs Scribe conectado para CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 222: Iniciando conexión Deepgram...
+04_02PT15.txt-   Opciones: model=nova-2, language=es-419, encoding=mulaw
+04_02PT15.txt-🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 212: Deepgram conectado para CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 540: Deepgram conectado como FALLBACK para CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt- FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+04_02PT15.txt-
+04_02PT15.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT15.txt-   CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt-   CallStatus: in-progress
+04_02PT15.txt-   AnsweredBy: 
+04_02PT15.txt-   SpeechResult: ''
+04_02PT15.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2f0bb1cb95d58a19e0a1ec2fd49acabc'
+04_02PT15.txt-   Digits: timeout
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas' (latencia: 2ms)
+04_02PT15.txt- FIX 540/314: Saludo detectado en INTERIM (ElevenLabs): '¿Qué tal? Buenas' - Pre-cargando respuesta...
+04_02PT15.txt- FIX 314: Audio segunda_parte_saludo YA está en cache
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas'
+04_02PT15.txt-    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+04_02PT15.txt- FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '¿qué tal? buenas'
+04_02PT15.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT15.txt- FIX 212: [PARCIAL] '¿Qué tal? Buenas tardes.'
+04_02PT15.txt- FIX 212: [PARCIAL] '¿Qué tal? Buenas tardes.'
+04_02PT15.txt- FIX 212: [FINAL] '¿Qué tal? Buenas tardes.' (latencia: 9ms)
+04_02PT15.txt- FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Qué tal? Buenas tardes.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes.' (latencia: 7ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes.' (latencia: 14ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes.'
+04_02PT15.txt- FIX 214: Grabación fragmento completed - CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt-   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2f0bb1cb95d58a19e0a1ec2fd49acabc
+04_02PT15.txt-100.64.0.11 - - [04/Feb/2026 19:12:08] "POST /grabacion-status HTTP/1.1" 200 -
+04_02PT15.txt- FIX 212: [FINAL] 'Dígame.' (latencia: 20ms)
+04_02PT15.txt- FIX 212: Transcripción FINAL Deepgram para CA9050ecb88cbd6e78b09360db281bd98d: 'Dígame.'
+04_02PT15.txt- FIX 451: Transcripción FINAL recibida
+04_02PT15.txt- FIX 525: Respuesta de PRESENCIA 'dígame.' - procesando INMEDIATO sin espera
+04_02PT15.txt- FIX 456: No hay PARCIALES nuevas después de 0.0s - cliente terminó de hablar
+04_02PT15.txt- FIX 239/242/248: 2 transcripciones acumuladas
+04_02PT15.txt-   [0] '¿Qué tal? Buenas tardes.'
+04_02PT15.txt-   [1] 'Dígame.'
+04_02PT15.txt-    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+04_02PT15.txt-    FIX 248: Concatenando 2 partes únicas: '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt-
+04_02PT15.txt- FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.8s)
+04_02PT15.txt-   🟢 Deepgram: '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT15.txt-
+04_02PT15.txt- CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame."
+04_02PT15.txt:[2026-02-04 19:12:09] [CLIENTE] BRUCE1889 - CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame."
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 5ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- LOG registrado: CLIENT... | ¿Qué tal? Buenas tardes. Dígame....
+04_02PT15.txt- FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+04_02PT15.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT15.txt-   Respuesta será instantánea (0s delay)
+04_02PT15.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT15.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT15.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+04_02PT15.txt- FIX 121: Respuesta instantánea desde caché completada en 0.000s
+04_02PT15.txt- BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 11ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 16ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 4ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 8ms)
+04_02PT15.txt:[2026-02-04 19:12:10] [BRUCE] BRUCE1889 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+04_02PT15.txt- FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+04_02PT15.txt- FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+04_02PT15.txt- LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+04_02PT15.txt- FIX 214: Usando Record + Deepgram (mensaje #2)
+04_02PT15.txt- FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+04_02PT15.txt-   Contenido descartado: ['¿Qué tal? Buenas tardes. Dígame.']
+04_02PT15.txt-100.64.0.12 - - [04/Feb/2026 19:12:10] "POST /procesar-respuesta HTTP/1.1" 200 -
+04_02PT15.txt-100.64.0.3 - - [04/Feb/2026 19:12:10] "GET /audio/segunda_parte_saludo_CA9050ecb88cbd6e78b09360db281bd98d HTTP/1.1" 200 -
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 11ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt-100.64.0.7 - - [04/Feb/2026 19:12:14] "GET /info-cache HTTP/1.1" 200 -
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 1ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 8ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 16ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 20ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt-
+04_02PT15.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT15.txt-   CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt-   CallStatus: in-progress
+04_02PT15.txt-   AnsweredBy: 
+04_02PT15.txt-   SpeechResult: ''
+04_02PT15.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9423696fb993ee95b246fe71bc213ed5'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame.' (latencia: 14ms)
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo le doy el' (latencia: 22ms)
+04_02PT15.txt-   Digits: timeout
+04_02PT15.txt-    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo le doy el'
+04_02PT15.txt-    FIX 532: PARCIAL corta (5 palabras) sin conectores - parece COMPLETA
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '¿qué tal? buenas tardes. dígame.'
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame.'
+04_02PT15.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.' (latencia: 7ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo te doy el correo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Muy bien, yo te doy el correo.'
+04_02PT15.txt- FIX 212: [FINAL] 'Muy bien, yo le doy el correo.' (latencia: 24ms)
+04_02PT15.txt- FIX 212: Transcripción FINAL Deepgram para CA9050ecb88cbd6e78b09360db281bd98d: 'Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 451: Transcripción FINAL recibida
+04_02PT15.txt- FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+04_02PT15.txt- FIX 239/242/248: 2 transcripciones acumuladas
+04_02PT15.txt-   [0] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.'
+04_02PT15.txt-   [1] 'Muy bien, yo le doy el correo.'
+04_02PT15.txt-    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+04_02PT15.txt-    FIX 248: Concatenando 2 partes únicas: '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo le doy el correo.'
+04_02PT15.txt-
+04_02PT15.txt- FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 2.5s)
+04_02PT15.txt-   🟢 Deepgram: '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo le doy el correo.'
+04_02PT15.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT15.txt-
+04_02PT15.txt- CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo le doy el correo."
+04_02PT15.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+04_02PT15.txt- FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+04_02PT15.txt-   Cliente dijo: '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo le doy el correo.' mientras Bruce hablaba segunda parte
+04_02PT15.txt-   Usando GPT con instrucción de nexo en lugar de caché
+04_02PT15.txt- FIX 547: Cliente está DANDO número - '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo l...'
+04_02PT15.txt-    Activando modo captura, DESACTIVANDO oferta de contacto Bruce
+04_02PT15.txt-[OK] FIX 496: Cliente OFRECE dar CORREO: '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te'
+04_02PT15.txt:[2026-02-04 19:12:21] [CLIENTE] BRUCE1889 - CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo. Muy bien, yo le doy el correo."
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.' (latencia: 9ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.'
+04_02PT15.txt- LOG registrado: CLIENT... | ¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te...
+04_02PT15.txt- FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+04_02PT15.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT15.txt-   Respuesta será instantánea (0s delay)
+04_02PT15.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT15.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Y en esta nota' (latencia: 1ms)
+04_02PT15.txt-[EMOJI] FIX 491: PATRÓN DETECTADO (CLIENTE_OFRECE_CORREO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+04_02PT15.txt- FIX 98: Generando audio con ElevenLabs VOZ BRUCE (6 palabras)
+04_02PT15.txt- Caché AUTO: sí,_por_favor,_dígame_el_correo.... (0s delay)
+04_02PT15.txt- FIX 102 DEBUG: result = respuesta_CA9050ecb88cbd6e78b09360db281bd98d_8, type = <class 'str'>
+04_02PT15.txt- BRUCE DICE: "Sí, por favor, dígame el correo."
+04_02PT15.txt:[2026-02-04 19:12:22] [BRUCE] BRUCE1889 DICE: "Sí, por favor, dígame el correo."
+04_02PT15.txt- FIX 97: Audio ElevenLabs (generado en paralelo)
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotar'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotar'
+04_02PT15.txt- LOG registrado: BRUCE... | Sí, por favor, dígame el correo....
+04_02PT15.txt- FIX 214: Usando Record + Deepgram (mensaje #3)
+04_02PT15.txt- FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+04_02PT15.txt-   Contenido descartado: ['¿Qué tal? Buenas tardes. Dígame. Muy bien, y yo te doy el correo.']
+04_02PT15.txt-100.64.0.2 - - [04/Feb/2026 19:12:23] "POST /procesar-respuesta HTTP/1.1" 200 -
+04_02PT15.txt-100.64.0.5 - - [04/Feb/2026 19:12:23] "GET /audio/respuesta_CA9050ecb88cbd6e78b09360db281bd98d_8 HTTP/1.1" 200 -
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Y en esta nota'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotarlo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotarlo.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.' (latencia: 11ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotarlo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Si gusta anotarlo.'
+04_02PT15.txt- FIX 212: [FINAL] 'Si gusta anotarlo.' (latencia: 20ms)
+04_02PT15.txt- FIX 212: Transcripción FINAL Deepgram para CA9050ecb88cbd6e78b09360db281bd98d: 'Si gusta anotarlo.'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.' (latencia: 7ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.'
+04_02PT15.txt-
+04_02PT15.txt- DEBUG - Parámetros Twilio (POST):
+04_02PT15.txt-   CallSid: CA9050ecb88cbd6e78b09360db281bd98d
+04_02PT15.txt-   CallStatus: in-progress
+04_02PT15.txt-   AnsweredBy: 
+04_02PT15.txt-   SpeechResult: ''
+04_02PT15.txt-   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REdc71fae5114a702e77f2d9b2cb10bb4e'
+04_02PT15.txt-   Digits: timeout
+04_02PT15.txt- FIX 451: Transcripción FINAL recibida
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.' (latencia: 20ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.'
+04_02PT15.txt- FIX 451: Transcripción FINAL recibida
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es'
+04_02PT15.txt- FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Sí, es'
+04_02PT15.txt-   Esperando más transcripciones...
+04_02PT15.txt-    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+04_02PT15.txt- FIX 532: Usando PARCIAL completa INMEDIATAMENTE: '¿qué tal? buenas tardes. dígame. muy bien, yo te doy el correo. si me gusta, no tardo.'
+04_02PT15.txt- FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, anótalo. Si es, eh' (latencia: 4ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, anótalo. Si es, eh'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, espérame tantito.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, espérame tantito.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, espérame tantito.'
+04_02PT15.txt-
+04_02PT15.txt- FIX 469: Timeout pero hay 2 transcripciones acumuladas
+04_02PT15.txt-   [0] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.'
+04_02PT15.txt-   [1] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt-    FIX 546: Preservando transcripción con palabra crítica: '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, permítame'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, permítame'
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.' (latencia: 16ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt- FIX 212: [PARCIAL] 'Sí, es, espérame tantito.'
+04_02PT15.txt-    FIX 546: Preservando transcripción con palabra crítica: '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt-    FIX 469: Concatenando 2 partes: '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo. ¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt- FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+04_02PT15.txt-
+04_02PT15.txt- CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo. ¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito."
+04_02PT15.txt:[2026-02-04 19:12:28] [CLIENTE] BRUCE1889 - CLIENTE DIJO: "¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si me gusta, no tardo. ¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito."
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.' (latencia: 13ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt- FIX 212: [FINAL] 'Sí, es, espérame tantito.' (latencia: 10ms)
+04_02PT15.txt- FIX 212: Transcripción FINAL Deepgram para CA9050ecb88cbd6e78b09360db281bd98d: 'Sí, es, espérame tantito.'
+04_02PT15.txt- LOG registrado: CLIENT... | ¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te d...
+04_02PT15.txt-
+04_02PT15.txt- FIX 519: Frase larga (199 chars) - Analizando intención con GPT...
+04_02PT15.txt- FIX 540: [PARCIAL] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.' (latencia: 11ms)
+04_02PT15.txt- FIX 540: [PARCIAL ElevenLabs] '¿Qué tal? Buenas tardes. Dígame. Muy bien, yo te doy el correo. Si gusta, no tardó. Si es, eh, espérame tantito.'
+04_02PT15.txt-   GPT analizó intención: E
+04_02PT15.txt-   FIX 519: GPT determinó que NO es transferencia (E)
+04_02PT15.txt-   → Otra intención
+04_02PT15.txt- FIX 121 DEBUG: len(conversation_history)=6, mensajes_usuario=2, es_primera_respuesta=False
+04_02PT15.txt- FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+04_02PT15.txt-   Respuesta será instantánea (0s delay)
+04_02PT15.txt- FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+04_02PT15.txt-   Razón: Cache causaba loops y respuestas sin contexto
+04_02PT15.txt- FIX 121: INICIANDO respuesta desde caché de segunda parte...
+

@@ -1,0 +1,39 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/4d52c4b2-99e1-4c3c-9604-3aa0038ae31f/vol_l0g5e90oxfl2oi40
+Starting Container
+ Conectado a: Bruce
+   Usando credenciales desde variable de entorno
+    Deepgram será usado como FALLBACK
+   Usando credenciales desde variable de entorno
+[MODO] OpenAI Directo (Produccion)
+   Autenticado correctamente con Google Sheets
+ FIX 212: Flask-Sock inicializado para WebSocket
+   Spreadsheet abierto: TABLERO DE NIOVAL
+ FIX 212: deepgram-sdk importado correctamente
+
+   Hoja encontrada: Bruce
+ FIX 212: Inicializando módulo Deepgram...
+ FIX 212: Deepgram configurado correctamente
+   API Key: 2a3f666dd2...1848
+ FIX 212: Deepgram configurado correctamente
+   API Key: 2a3f666dd2...1848
+ FIX 212: Deepgram configurado y listo
+ FIX 540: ElevenLabs Scribe configurado y listo
+   API Key: sk_f425418...3093
+
+ FIX 540: Inicializando módulo ElevenLabs Scribe...
+ FIX 540: ElevenLabs Scribe configurado como STT PRIMARIO
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: Bruce FORMS
+ Conectado a spreadsheet de resultados: Bruce FORMS
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: LOGS
+Stopping Container
+Stopping Container

@@ -1,0 +1,500 @@
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Buenas tardes. ¿De dónde habla, disculpe?' mientras Bruce hablaba segunda parte
+ FIX 214: Usando Record + Deepgram (mensaje #3)
+100.64.0.3 - - [27/Jan/2026 21:46:48] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.10 - - [27/Jan/2026 21:46:48] "GET /audio/respuesta_CAe9c0c9609567fb8383c02b2023f035c2_43 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] '¿Bueno?'
+ FIX 212: [FINAL] '¿Bueno?' (latencia: 10ms)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CAe9c0c9609567fb8383c02b2023f035c2_43, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-01-27 21:46:48] [BRUCE] BRUCE1528 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 212: Transcripción FINAL Deepgram para CAe9c0c9609567fb8383c02b2023f035c2: '¿Bueno?'
+
+ DEBUG - Parámetros Twilio (POST):
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [FINAL] 'No lo tengo, jefe.' (latencia: 8ms)
+   CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: Transcripción FINAL Deepgram para CAe9c0c9609567fb8383c02b2023f035c2: 'No lo tengo, jefe.'
+   CallStatus: in-progress
+ FIX 451: Transcripción FINAL recibida
+   AnsweredBy: 
+ FIX 451: Transcripción FINAL recibida
+   SpeechResult: ''
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe60bef9823641a41c6ec4578b9315b61'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'No tengo'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'No tengo'
+   Esperando más transcripciones...
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+
+ FIX 469: Timeout pero hay 3 transcripciones acumuladas
+   [0] '¿Bueno?'
+   [1] '¿Bueno?'
+   [2] 'No lo tengo, jefe.'
+    FIX 469: Concatenando 2 partes: '¿Bueno? No lo tengo, jefe.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "¿Bueno? No lo tengo, jefe."
+[2026-01-27 21:46:59] [CLIENTE] BRUCE1528 - CLIENTE DIJO: "¿Bueno? No lo tengo, jefe."
+ LOG registrado: CLIENT... | ¿Bueno? No lo tengo, jefe....
+ FIX 121 DEBUG: len(conversation_history)=6, mensajes_usuario=2, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: '¿Bueno? No lo tengo, jefe.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 497: Detectado sinónimo 'jefe' + ausencia
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CAe9c0c9609567fb8383c02b2023f035c2_44, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-01-27 21:46:59] [BRUCE] BRUCE1528 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ FIX 212: [PARCIAL] 'No tengo el WhatsApp encargado,'
+ FIX 212: [PARCIAL] 'No tengo el WhatsApp encargado,'
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+ FIX 214: Usando Record + Deepgram (mensaje #4)
+ FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['No tengo el WhatsApp encargado,']
+100.64.0.2 - - [27/Jan/2026 21:47:00] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [27/Jan/2026 21:47:00] "GET /audio/respuesta_CAe9c0c9609567fb8383c02b2023f035c2_44 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'No tengo el WhatsApp encargado, y ya sale'
+ FIX 212: [PARCIAL] 'No tengo el WhatsApp encargado, y ya sale'
+ FIX 212: [FINAL] 'No tengo el WhatsApp encargado, y ya salió.' (latencia: 2ms)
+ FIX 212: Transcripción FINAL Deepgram para CAe9c0c9609567fb8383c02b2023f035c2: 'No tengo el WhatsApp encargado, y ya salió.'
+ FIX 272: 1 calificaciones guardadas
+100.64.0.2 - - [27/Jan/2026 21:47:03] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+100.64.0.2 - - [27/Jan/2026 21:47:04] "GET /historial-llamadas HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Ya le dije que no lo tengo,'
+ FIX 212: [PARCIAL] 'Ya le dije que no lo tengo,'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE47fcdfde346b29e82b576d69d6507b3e'
+   Digits: timeout
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 212: [PARCIAL] 'Ya le dije que no lo tengo, ya le dije que no'
+ FIX 212: [PARCIAL] 'Ya le dije que no lo tengo, ya le dije que no'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 3 transcripciones acumuladas
+
+   [0] 'No tengo el WhatsApp encargado, y ya sale'
+   [1] 'Ya le dije que no lo tengo, ya le dije que no'
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.6s)
+   [2] 'Ya le dije que no lo tengo, ya le dije que no lo tengo.'
+   🟢 Deepgram: 'No tengo el WhatsApp encargado, y ya sale Ya le dije que no lo tengo, ya le dije que no lo tengo.'
+    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+    FIX 248: Concatenando 2 partes únicas: 'No tengo el WhatsApp encargado, y ya sale Ya le dije que no lo tengo, ya le dije que no lo tengo.'
+ FIX 212: [FINAL] 'Ya le dije que no lo tengo, ya le dije que no lo tengo.' (latencia: 20ms)
+ FIX 212: Transcripción FINAL Deepgram para CAe9c0c9609567fb8383c02b2023f035c2: 'Ya le dije que no lo tengo, ya le dije que no lo tengo.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "No tengo el WhatsApp encargado, y ya sale Ya le dije que no lo tengo, ya le dije que no lo tengo."
+[2026-01-27 21:47:07] [CLIENTE] BRUCE1528 - CLIENTE DIJO: "No tengo el WhatsApp encargado, y ya sale Ya le dije que no lo tengo, ya le dije que no lo tengo."
+100.64.0.2 - - [27/Jan/2026 21:47:07] "GET /escuchar-grabacion/RE3c590146c5560d6b01497d29820e11ed HTTP/1.1" 200 -
+100.64.0.2 - - [27/Jan/2026 21:47:07] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+ LOG registrado: CLIENT... | No tengo el WhatsApp encargado, y ya sale Ya le di...
+ FIX 121 DEBUG: len(conversation_history)=8, mensajes_usuario=3, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'No tengo el WhatsApp encargado, y ya sale Ya le dije que no lo tengo, ya le dije que no lo tengo.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[OK] FIX 497: Detectado sinónimo 'encargado' + ausencia
+[OK] FIX 493: Cliente dice encargado NO ESTÁ + Bruce ya preguntó 1 vez(ces)
+   FIX 493: Cliente dice NO ESTÁ sin horario - Pedir WhatsApp
+[EMOJI] FIX 491: PATRÓN DETECTADO (ENCARGADO_NO_ESTA_SIN_HORARIO) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (12 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_wha... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CAe9c0c9609567fb8383c02b2023f035c2_45, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-01-27 21:47:07] [BRUCE] BRUCE1528 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el WhatsApp del ...
+ FIX 214: Usando Record + Deepgram (mensaje #5)
+100.64.0.6 - - [27/Jan/2026 21:47:08] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [27/Jan/2026 21:47:08] "GET /audio/respuesta_CAe9c0c9609567fb8383c02b2023f035c2_45 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Le dije que'
+ FIX 212: [PARCIAL] 'Le dije que'
+ FIX 212: [PARCIAL] 'Le dije que no lo tengo.'
+ FIX 212: [PARCIAL] 'Le dije que no lo tengo.'
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REabdd985de96d96b72bb2aab8bf1e3467'
+   Digits: timeout
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 212: [PARCIAL] 'Le dije que no lo tengo.'
+ FIX 212: [PARCIAL] 'Le dije que no lo tengo.'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REabdd985de96d96b72bb2aab8bf1e3467'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'Le dije que no lo tengo.' (latencia: 13ms)
+ FIX 212: Transcripción FINAL Deepgram para CAe9c0c9609567fb8383c02b2023f035c2: 'Le dije que no lo tengo.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: MediaStream detenido - CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+ FIX 212: Conexión Deepgram cerrada - CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+   CallStatus: completed
+   AnsweredBy: 
+   SpeechResult: ''
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+    FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.8s)
+    FIX 248: Una sola transcripción única: 'Le dije que no lo tengo.'
+   🟢 Deepgram: 'Le dije que no lo tengo.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+
+ CLIENTE DIJO: "Le dije que no lo tengo."
+[2026-01-27 21:47:14] [CLIENTE] BRUCE1528 - CLIENTE DIJO: "Le dije que no lo tengo."
+ LOG registrado: CLIENT... | Le dije que no lo tengo....
+ FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=4, es_primera_respuesta=False
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Le dije que no lo tengo.'
+   [1] 'Le dije que no lo tengo.'
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Le dije que no lo tengo.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'Le dije que no lo tengo.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Entiendo. ¿Me podría proporcionar el WhatsApp del encargado ...
+   USER: Le dije que no lo tengo.
+[EMOJI]  FIX 491: max_tokens dinámico = 100 (basado en complejidad)
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+ FIX 212: WebSocket cerrado - CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+100.64.0.12 - - [27/Jan/2026 21:47:14] "GET /media-stream HTTP/1.1" 200 -
+
+ STATUS CALLBACK - Llamada CAe9c0c960...
+   Estado: completed
+   Duración: 44s
+[2026-01-27 21:47:15] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 44s
+    Cliente colgó - detectado por status callback (11 mensajes)
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 45 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_4' desde caché
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce debería haber variado su enfoque y no insistir repetidamente en la misma pregunta. Esto pudo haber generado frustración en el cliente, lo que llevó a un cierre abrupto de la llamada.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3796...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 45
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce debería haber variado su enfoque y no insist...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1528
+ Resultado guardado exitosamente en fila 3796
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1966
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+100.64.0.12 - - [27/Jan/2026 21:47:17] "GET /status-callback?Called=%2B528444173363&ToState=Coah.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+27+Jan+2026+21:47:15+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAe9c0c9609567fb8383c02b2023f035c2&To=%2B528444173363&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Saltillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=44&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Saltillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Coah.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+[EMOJI] FIX 163: GPT tardó 3.4s - agregando frase de relleno: 'Ajá, déjeme ver...'
+
+[WRENCH] FIX 481: CORRECCIÓN DETECTADA - Cliente corrigiendo a Bruce
+   Cliente dijo: 'Le dije que no lo tengo.'
+   [WRENCH] FIX 481: Generando respuesta de recuperación (CORRECCIÓN - Intento 1/3)
+
+[WRENCH] FIX 481: RECUPERACIÓN DE ERROR ACTIVADA
+   Tipo error: CORRECCION
+   Respuesta original GPT: 'Ajá, déjeme ver... Entiendo que no tiene el número. ¿Le gustaría que le envíe el'
+   Respuesta recuperación: 'Disculpe, tiene razón. ¿Me confirma el WhatsApp del encargado para enviarle el c'
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (13 palabras)
+ Caché AUTO: disculpe,_tiene_razón._¿me_confirma_el_w... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CAe9c0c9609567fb8383c02b2023f035c2_46, type = <class 'str'>
+ BRUCE DICE: "Disculpe, tiene razón. ¿Me confirma el WhatsApp del encargado para enviarle el catálogo?"
+[2026-01-27 21:47:18] [BRUCE] BRUCE1528 DICE: "Disculpe, tiene razón. ¿Me confirma el WhatsApp del encargado para enviarle el catálogo?"
+  Respuestas vacías bloqueadas: 0
+============================================================
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+ FIX 75: Estado 'Colgo' detectado - Terminando llamada después de despedida
+   Razón: Nulo
+CALIDAD:
+ Caché manual: despedida_objecion (0s delay)
+ FIX 76: Usando voz Bruce (ElevenLabs) para despedida de objeción
+  Preguntas respondidas:    0/0 (0.0%)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+  Transcripciones correctas: 0/0 (0.0%)
+[EMOJI] Duración de la llamada: 48 segundos
+
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  1
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAe9c0c9609567fb8383c02b2023f035c2
+   RecordingSid: RE23b9e13a3b4b0c47906a74d93c8d0f1e
+   Status: completed
+   Duración: 42 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23b9e13a3b4b0c47906a74d93c8d0f1e
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1528
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.10 - - [27/Jan/2026 21:47:18] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE23b9e13a3b4b0c47906a74d93c8d0f1e&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23b9e13a3b4b0c47906a74d93c8d0f1e&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAe9c0c9609567fb8383c02b2023f035c2&RecordingStartTime=Tue,+27+Jan+2026+21:46:32+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=42 HTTP/1.1" 200 -
+
+
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ Llamada YA terminada - Estado: completed
+ Cliente colgó o llamada desconectada
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 49 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  1
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+
+   Opinión de Bruce: Bruce debería haber variado su enfoque después de que el cliente indicó que no tenía la información solicitada. Repetir la misma pregunta no fue efectivo y generó frustración en el cliente.
+[EMOJI] FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3797...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 49
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.7 - - [27/Jan/2026 21:47:20] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+[EMOJI] Análisis de la llamada:
+  → Opinión Bruce: Bruce debería haber variado su enfoque después de ...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1528
+ Resultado guardado exitosamente en fila 3797
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1966
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce debería haber variado su enfoque y no insistir en la misma pregunta, ya que esto generó frustración en el cliente. Sería útil escuchar más y adaptarse a las respuestas del cliente para mejorar la interacción.
+[EMOJI] FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3798...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 49
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce debería haber variado su enfoque y no insist...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1528
+ Resultado guardado exitosamente en fila 3798
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1966
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.4 - - [27/Jan/2026 21:47:21] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.2 - - [27/Jan/2026 21:47:25] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+ FIX 272: 1 calificaciones guardadas
+100.64.0.2 - - [27/Jan/2026 21:47:26] "GET /historial-llamadas HTTP/1.1" 200 -

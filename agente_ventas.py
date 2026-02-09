@@ -2879,6 +2879,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     r'(?:m[aá]s\s+)?tarde',  # "más tarde"
                     r'(?:en\s+)?(?:un\s+)?rato',  # "en un rato"
                     r'(?:no\s+)?(?:tod[ao])?v[ií]a\s+no',  # "todavía no"
+                    # FIX 614: BRUCE2029 - Detectar "NO + verbo modal + esperar"
+                    # Caso: "No necesitaría esperar que vuelva" → NO es solicitud de espera
+                    r'no\s+(?:necesit|pod|deber|quier|puedes?|puede)[a-záéíóúüñ]*\s+esperar',  # "no necesitaría esperar"
+                    r'no\s+(?:necesit|pod|deber|quier)[a-záéíóúüñ]*\s+que\s+.*esperar',  # "no necesitaría que esperar"
                 ]
 
                 tiene_negacion = any(re.search(p, ultimo_cliente) for p in patrones_negacion)
@@ -2906,13 +2910,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # FIX 389: Si estado es BUSCANDO_ENCARGADO (persona nueva), NO activar espera
                 es_persona_nueva_estado = (self.estado_conversacion == EstadoConversacion.BUSCANDO_ENCARGADO)
 
-                if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion and not es_persona_nueva_estado:
+                # FIX 614: BRUCE2029 - NO activar si cliente hace PREGUNTA
+                # Caso: "¿Necesitas esperar que vuelva?" → NO es solicitud de espera
+                es_pregunta = '¿' in ultimo_cliente or ultimo_cliente.strip().endswith('?')
+
+                # FIX 614: BRUCE2029 - NO activar si Bruce ya dijo "Claro, espero" (anti-loop)
+                # Caso: Bruce dijo "Claro, espero" dos veces seguidas
+                ultimos_bruce_614 = [
+                    msg['content'].lower() for msg in self.conversation_history[-4:]
+                    if msg['role'] == 'assistant'
+                ]
+                bruce_ya_dijo_espero_614 = any('claro, espero' in msg or 'claro espero' in msg for msg in ultimos_bruce_614[-2:])
+
+                if (cliente_pide_espera or cliente_pide_espera_contexto) and not tiene_negacion and not es_persona_nueva_estado and not es_pregunta and not bruce_ya_dijo_espero_614:
                     print(f"\n[EMOJI] FIX 235/237/249/337: FILTRO ACTIVADO - Cliente pide esperar: '{ultimo_cliente}'")
                     respuesta = "Claro, espero."
                     filtro_aplicado = True
                     print(f"   Respuesta: \"{respuesta}\"")
                 elif cliente_pide_espera and tiene_negacion:
                     print(f"\n[EMOJI] FIX 249: NO activar espera - Cliente dice 'ahorita' pero con negación: '{ultimo_cliente}'")
+                elif cliente_pide_espera and es_pregunta:
+                    print(f"\n[EMOJI] FIX 614.1: NO activar espera - Cliente hace PREGUNTA: '{ultimo_cliente}'")
+                elif cliente_pide_espera and bruce_ya_dijo_espero_614:
+                    print(f"\n[EMOJI] FIX 614.2: NO activar espera - Bruce YA dijo 'Claro, espero' - evitar loop")
 
         # ============================================================
         # FILTRO 5B (FIX 287/289): Persona nueva después de transferencia

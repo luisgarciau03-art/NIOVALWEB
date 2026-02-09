@@ -1,0 +1,500 @@
+{"timestamp":"2026-01-23T18:25:05.733299829Z","message":"","level":"info"}
+{"timestamp":"2026-01-23T18:25:05.733304522Z","level":"info","message":"📊 Análisis de la llamada:"}
+{"level":"info","timestamp":"2026-01-23T18:25:05.733313624Z","message":"   Estado de ánimo: Negativo"}
+{"timestamp":"2026-01-23T18:25:05.733318753Z","message":"   Nivel de interés: Bajo","level":"info"}
+{"message":"   Opinión de Bruce: Bruce podría haber mejorado la llamada al ser más directo y captar mejor la atención del cliente. Además, debería haber intentado establecer una conexión más personal antes de presentar la información sobre los productos.","timestamp":"2026-01-23T18:25:05.733324671Z","level":"info"}
+{"message":"📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...","timestamp":"2026-01-23T18:25:05.733328779Z","level":"info"}
+{"message":"📝 Conclusión determinada: Nulo (NEGADO)","level":"info","timestamp":"2026-01-23T18:25:05.733334302Z"}
+{"timestamp":"2026-01-23T18:25:05.733338857Z","level":"info","message":"⭐ Bruce se autoevaluó: 3/10"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:25:05.733343494Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:05.733350611Z","message":"📝 Guardando resultado en fila 3465..."}
+{"message":"  → Pregunta 3: No (Bruce)","level":"info","timestamp":"2026-01-23T18:25:05.733357700Z"}
+{"level":"info","message":"  → Pregunta 4: No (Bruce)","timestamp":"2026-01-23T18:25:05.733363730Z"}
+{"timestamp":"2026-01-23T18:25:05.733369699Z","message":"  → Pregunta 5: No (Bruce)","level":"info"}
+{"timestamp":"2026-01-23T18:25:05.733375935Z","level":"info","message":"  → Pregunta 6: No (Bruce)"}
+{"message":"  → Columna J: No apto","timestamp":"2026-01-23T18:25:05.733381711Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:05.733388423Z","message":"  → Resultado: NEGADO"}
+{"message":"  → Estado: Colgo","timestamp":"2026-01-23T18:25:05.733394050Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:05.733399740Z","level":"info","message":"  → Duración: 23"}
+{"level":"info","message":"  → Nivel de interés: Bajo","timestamp":"2026-01-23T18:25:05.733404446Z"}
+{"message":"  → Estado de ánimo: Negativo","level":"info","timestamp":"2026-01-23T18:25:05.733410206Z"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:25:07.046511277Z"}
+{"message":"============================================================","level":"info","timestamp":"2026-01-23T18:25:07.046524163Z"}
+{"level":"info","message":"✅ GUARDADO COMPLETO - Todos los datos procesados","timestamp":"2026-01-23T18:25:07.046533501Z"}
+{"message":"✅ Resultados guardados en 'Respuestas de formulario 1'","timestamp":"2026-01-23T18:25:07.046620971Z","level":"info"}
+{"message":"  → Calificación Bruce: 3/10","timestamp":"2026-01-23T18:25:07.046629895Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:07.046634060Z","message":""}
+{"timestamp":"2026-01-23T18:25:07.046644294Z","message":"============================================================","level":"info"}
+{"message":"  → ID BRUCE: BRUCE1362","level":"info","timestamp":"2026-01-23T18:25:07.046649767Z"}
+{"message":"📋 ACTUALIZACIONES EN LISTA DE CONTACTOS","timestamp":"2026-01-23T18:25:07.046655049Z","level":"info"}
+{"message":"✅ Resultado guardado exitosamente en fila 3465","level":"info","timestamp":"2026-01-23T18:25:07.046661155Z"}
+{"message":"============================================================","timestamp":"2026-01-23T18:25:07.046672554Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:07.046681253Z","level":"info","message":""}
+{"message":"📝 Verificando actualización en LISTA DE CONTACTOS...","timestamp":"2026-01-23T18:25:07.046689980Z","level":"info"}
+{"level":"info","message":"   Fila: 1677","timestamp":"2026-01-23T18:25:07.046701335Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:07.046708605Z","message":"   WhatsApp capturado: "}
+{"timestamp":"2026-01-23T18:25:07.046715548Z","message":"   Referencia capturada: ","level":"info"}
+{"message":"   Email capturado: ","level":"info","timestamp":"2026-01-23T18:25:07.046723905Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:07.046731180Z","message":"⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E"}
+{"message":"  → Opinión Bruce: Bruce podría haber mejorado la llamada al ser más ...","level":"info","timestamp":"2026-01-23T18:25:07.046769531Z"}
+{"message":"   Status: completed","level":"info","timestamp":"2026-01-23T18:25:08.367052750Z"}
+{"message":"✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA58bca38a9973071d0cb880d89f5f9c76","timestamp":"2026-01-23T18:25:08.367056798Z","level":"info"}
+{"message":"   Duración: 22 segundos","timestamp":"2026-01-23T18:25:08.367068432Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:08.367072456Z","level":"info","message":"🔌 FIX 212: WebSocket cerrado - CallSid: CA58bca38a9973071d0cb880d89f5f9c76"}
+{"message":"100.64.0.6 - - [23/Jan/2026 18:25:07] \"GET /media-stream HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:08.367095952Z","level":"error"}
+{"timestamp":"2026-01-23T18:25:08.367106014Z","message":"","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:08.367120452Z","message":"🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA"}
+{"level":"info","message":"   📊 FIX 207: Llamada registrada en dashboard","timestamp":"2026-01-23T18:25:08.367132233Z"}
+{"timestamp":"2026-01-23T18:25:08.367133994Z","level":"info","message":"   CallSid: CA58bca38a9973071d0cb880d89f5f9c76"}
+{"level":"info","timestamp":"2026-01-23T18:25:08.367138920Z","message":"   ✅ Llamada guardada desde status callback"}
+{"timestamp":"2026-01-23T18:25:08.367146404Z","level":"info","message":"   RecordingSid: RE2a4d3e470106728aff5ff4003ed08234"}
+{"level":"error","message":"100.64.0.10 - - [23/Jan/2026 18:25:05] \"GET /status-callback?Called=%2B527773851314&ToState=Mor.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+23+Jan+2026+18:25:03+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA58bca38a9973071d0cb880d89f5f9c76&To=%2B527773851314&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Temixco&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=23&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Temixco&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Mor.&FromZip=&FromState=Jal. HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:08.367152573Z"}
+{"timestamp":"2026-01-23T18:25:08.367166721Z","message":"============================================================","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:08.367177912Z","message":""}
+{"message":"   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2a4d3e470106728aff5ff4003ed08234","timestamp":"2026-01-23T18:25:09.703293102Z","level":"info"}
+{"message":"   ✅ URL guardada en lead_data del agente","level":"info","timestamp":"2026-01-23T18:25:09.703299146Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:09.703307298Z","message":"   ✅ FIX 272: Grabación asociada a BRUCE1362"}
+{"message":"   ✅ FIX 272: Historial actualizado con URL de grabación","timestamp":"2026-01-23T18:25:09.703319457Z","level":"info"}
+{"level":"error","message":"100.64.0.8 - - [23/Jan/2026 18:25:07] \"GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE2a4d3e470106728aff5ff4003ed08234&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE2a4d3e470106728aff5ff4003ed08234&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA58bca38a9973071d0cb880d89f5f9c76&RecordingStartTime=Fri,+23+Jan+2026+18:24:42+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=22 HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:09.703324718Z"}
+{"level":"info","message":"🔍 DEBUG 2: JSON parseado correctamente","timestamp":"2026-01-23T18:25:39.869735939Z"}
+{"message":"🔍 DEBUG 3: Datos extraídos - Tel: +527772430434, Negocio: FERRETERIA CASA RODRIGUEZ","level":"info","timestamp":"2026-01-23T18:25:39.869743240Z"}
+{"message":"🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada","timestamp":"2026-01-23T18:25:39.869749321Z","level":"info"}
+{"message":"🔍 DEBUG 4: Iniciando llamada Twilio a +527772430434","level":"info","timestamp":"2026-01-23T18:25:39.869755551Z"}
+{"timestamp":"2026-01-23T18:25:39.869761781Z","level":"info","message":"🔍 DEBUG 5: Llamada Twilio creada - SID: CA97b5c133402172a27da03a96f891d4c7"}
+{"timestamp":"2026-01-23T18:25:39.869771047Z","level":"info","message":"[2026-01-23 18:25:36] [LLAMADA] N/A - LLAMADA INICIADA a +527772430434 (FERRETERIA CASA RODRIGUEZ)"}
+{"level":"info","timestamp":"2026-01-23T18:25:39.869777435Z","message":"📋 Contacto completo guardado para Call SID CA97b5c133... (fila 1678)"}
+{"level":"info","message":"🔍 DEBUG 6: Retornando respuesta exitosa","timestamp":"2026-01-23T18:25:39.869783213Z"}
+{"timestamp":"2026-01-23T18:25:39.869788686Z","level":"error","message":"100.64.0.11 - - [23/Jan/2026 18:25:36] \"POST /iniciar-llamada HTTP/1.1\" 200 -"}
+{"message":"🆔 ID BRUCE generado: BRUCE1363","timestamp":"2026-01-23T18:25:46.420356955Z","level":"info"}
+{"message":"📝 LOG registrado: BRUCE... | Hola, buen dia...","level":"info","timestamp":"2026-01-23T18:25:47.382653034Z"}
+{"timestamp":"2026-01-23T18:25:47.382662269Z","message":"📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)","level":"info"}
+{"timestamp":"2026-01-23T18:25:47.382669561Z","level":"info","message":"🎙️ FIX 212: Iniciando MediaStream para Deepgram"}
+{"timestamp":"2026-01-23T18:25:47.382677450Z","message":"   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream","level":"info"}
+{"message":"   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada","timestamp":"2026-01-23T18:25:47.382685373Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:47.382693506Z","level":"info","message":"   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)"}
+{"message":"100.64.0.10 - - [23/Jan/2026 18:25:46] \"GET /webhook-voz?Called=%2B527772430434&ToState=Mor.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA97b5c133402172a27da03a96f891d4c7&To=%2B527772430434&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Cuernavaca&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Cuernavaca&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Mor.&FromZip=&FromState=Jal. HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:47.382703007Z","level":"error"}
+{"level":"info","message":"🔄 FIX 222: Iniciando conexión Deepgram...","timestamp":"2026-01-23T18:25:48.341966694Z"}
+{"timestamp":"2026-01-23T18:25:48.341979874Z","level":"info","message":"   Opciones: model=nova-2, language=es-419, encoding=mulaw"}
+{"message":"🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:25:48.341988649Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:48.341998155Z","message":"✅ FIX 212: Deepgram conectado para CallSid: CA97b5c133402172a27da03a96f891d4c7"}
+{"message":"✅ FIX 212: Deepgram conectado para CA97b5c133402172a27da03a96f891d4c7","level":"info","timestamp":"2026-01-23T18:25:48.342006371Z"}
+{"timestamp":"2026-01-23T18:25:48.342040300Z","level":"error","message":"100.64.0.5 - - [23/Jan/2026 18:25:47] \"GET /audio/inicial_CA97b5c133402172a27da03a96f891d4c7 HTTP/1.1\" 200 -"}
+{"message":"","timestamp":"2026-01-23T18:25:48.342062534Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:48.342079869Z","level":"info","message":"🔌 FIX 212: Nueva conexión WebSocket /media-stream"}
+{"timestamp":"2026-01-23T18:25:48.342090056Z","level":"info","message":"🟢 FIX 212: MediaStream conectado"}
+{"timestamp":"2026-01-23T18:25:48.342107594Z","level":"info","message":"▶️ FIX 212: MediaStream iniciado"}
+{"timestamp":"2026-01-23T18:25:48.342118177Z","level":"info","message":"   StreamSid: MZebceb2334da74b530db67b4d4050e7ce"}
+{"timestamp":"2026-01-23T18:25:48.342136064Z","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7","level":"info"}
+{"timestamp":"2026-01-23T18:25:50.723418463Z","level":"info","message":""}
+{"timestamp":"2026-01-23T18:25:50.723425414Z","level":"info","message":"🔍 DEBUG - Parámetros Twilio (POST):"}
+{"message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7","level":"info","timestamp":"2026-01-23T18:25:50.723433144Z"}
+{"timestamp":"2026-01-23T18:25:50.723445576Z","message":"   CallStatus: in-progress","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:50.723453341Z","message":"   AnsweredBy: "}
+{"timestamp":"2026-01-23T18:25:50.723455129Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:50.723468172Z","message":"   SpeechResult: ''"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, diga.'","level":"info","timestamp":"2026-01-23T18:25:50.723480782Z"}
+{"timestamp":"2026-01-23T18:25:50.723481165Z","level":"info","message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE54e761c4214253e359e878147a420ec6'"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)","timestamp":"2026-01-23T18:25:50.723484462Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:50.723492904Z","message":"   Digits: timeout","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)","timestamp":"2026-01-23T18:25:50.723501350Z","level":"info"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)","timestamp":"2026-01-23T18:25:50.723508322Z"}
+{"timestamp":"2026-01-23T18:25:50.723512963Z","level":"info","message":"🚀 FIX 314: Saludo detectado en INTERIM: 'Sí, diga.' - Pre-cargando respuesta..."}
+{"message":"✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea","level":"info","timestamp":"2026-01-23T18:25:50.723523053Z"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, diga.'","timestamp":"2026-01-23T18:25:50.723532006Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:50.723539810Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)","timestamp":"2026-01-23T18:25:50.723548021Z"}
+{"timestamp":"2026-01-23T18:25:52.776423669Z","level":"info","message":"   ✅ FIX 248: Una sola transcripción única: 'Sí, diga.'"}
+{"timestamp":"2026-01-23T18:25:52.776443249Z","message":"","level":"info"}
+{"timestamp":"2026-01-23T18:25:52.776456163Z","message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.2s)","level":"info"}
+{"timestamp":"2026-01-23T18:25:52.776466179Z","level":"info","message":"   🟢 Deepgram: 'Sí, diga.'"}
+{"message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción","level":"info","timestamp":"2026-01-23T18:25:52.776480186Z"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)","level":"info","timestamp":"2026-01-23T18:25:52.776882061Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:52.776889634Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)"}
+{"timestamp":"2026-01-23T18:25:52.776897677Z","level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)","timestamp":"2026-01-23T18:25:52.776906599Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:52.776915841Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)"}
+{"message":"📝 FIX 212: [FINAL] 'Sí, diga.' (latencia: 3199ms)","timestamp":"2026-01-23T18:25:52.776926907Z","level":"info"}
+{"message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: 'Sí, diga.'","timestamp":"2026-01-23T18:25:52.776934923Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)","timestamp":"2026-01-23T18:25:52.776942884Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:52.776950589Z","level":"info","message":"✅ FIX 451: Transcripción FINAL recibida"}
+{"level":"info","message":"⚠️ FIX 239/242/248: 2 transcripciones acumuladas","timestamp":"2026-01-23T18:25:52.776963330Z"}
+{"timestamp":"2026-01-23T18:25:52.776972620Z","level":"info","message":"   [0] 'Sí, diga.'"}
+{"message":"   [1] 'Sí, diga.'","timestamp":"2026-01-23T18:25:52.776979331Z","level":"info"}
+{"message":"   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas","level":"info","timestamp":"2026-01-23T18:25:52.776985238Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:54.121004014Z","message":"   Transcripción parcial: 'Sí, diga.'"}
+{"level":"info","message":"   Tiempo hablando: 1.0s","timestamp":"2026-01-23T18:25:54.121018226Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:54.121060892Z","message":""}
+{"timestamp":"2026-01-23T18:25:54.121075466Z","level":"info","message":"💬 CLIENTE DIJO: \"Sí, diga.\""}
+{"timestamp":"2026-01-23T18:25:54.121083732Z","message":"[2026-01-23 18:25:50] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"Sí, diga.\"","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:54.121095291Z","message":"📝 LOG registrado: CLIENT... | Sí, diga...."}
+{"level":"info","timestamp":"2026-01-23T18:25:54.121103669Z","message":"   🚨 FIX 244: Habló rápido (1.0s) - probablemente sigue hablando"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:25:54.121116105Z"}
+{"timestamp":"2026-01-23T18:25:54.121124583Z","message":"⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine","level":"info"}
+{"message":"   Palabras dichas: 2 (historial: 2)","timestamp":"2026-01-23T18:25:54.121899448Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:54.121912306Z","level":"info","message":"   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s..."}
+{"level":"error","message":"100.64.0.9 - - [23/Jan/2026 18:25:51] \"POST /procesar-respuesta HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:54.121920951Z"}
+{"level":"info","timestamp":"2026-01-23T18:25:54.121928443Z","message":"📼 FIX 214: Grabación fragmento completed - CallSid: CA97b5c133402172a27da03a96f891d4c7"}
+{"timestamp":"2026-01-23T18:25:54.121937095Z","level":"info","message":"   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE54e761c4214253e359e878147a420ec6"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:25:51] \"POST /grabacion-status HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:54.121945128Z","level":"error"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:25:54.121960801Z"}
+{"message":"🔍 DEBUG - Parámetros Twilio (POST):","level":"info","timestamp":"2026-01-23T18:25:54.121968817Z"}
+{"level":"info","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:25:54.121976323Z"}
+{"message":"   CallStatus: in-progress","level":"info","timestamp":"2026-01-23T18:25:54.121983069Z"}
+{"timestamp":"2026-01-23T18:25:54.121989280Z","level":"info","message":"   AnsweredBy: "}
+{"message":"📝 FIX 212: [PARCIAL] '¿Bueno?'","timestamp":"2026-01-23T18:25:55.435904426Z","level":"info"}
+{"message":"⚠️ FIX 239/242/248: 2 transcripciones acumuladas","timestamp":"2026-01-23T18:25:55.435908620Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:55.435925159Z","message":"   [0] '¿Bueno?'","level":"info"}
+{"level":"info","message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: '¿Bueno?'","timestamp":"2026-01-23T18:25:55.435938648Z"}
+{"level":"info","message":"   [1] '¿Bueno?'","timestamp":"2026-01-23T18:25:55.435944216Z"}
+{"message":"   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas","timestamp":"2026-01-23T18:25:55.435956907Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)","timestamp":"2026-01-23T18:25:55.435960247Z","level":"info"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)","timestamp":"2026-01-23T18:25:55.435966388Z"}
+{"level":"info","message":"✅ FIX 451: Transcripción FINAL recibida","timestamp":"2026-01-23T18:25:55.435978770Z"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)","timestamp":"2026-01-23T18:25:55.435983929Z"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)","timestamp":"2026-01-23T18:25:55.435994152Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)","timestamp":"2026-01-23T18:25:55.436002780Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)","timestamp":"2026-01-23T18:25:55.436020706Z","level":"info"}
+{"message":"📝 FIX 212: [FINAL] '¿Bueno?' (latencia: 5974ms)","level":"info","timestamp":"2026-01-23T18:25:55.436029457Z"}
+{"timestamp":"2026-01-23T18:25:55.436160006Z","level":"info","message":"   SpeechResult: ''"}
+{"message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE010b672ec4e90aa01c9efdadfcb472ad'","level":"info","timestamp":"2026-01-23T18:25:55.436169761Z"}
+{"message":"   Digits: timeout","level":"info","timestamp":"2026-01-23T18:25:55.436178313Z"}
+{"message":"   ✅ FIX 248: Una sola transcripción única: '¿Bueno?'","level":"info","timestamp":"2026-01-23T18:25:56.809262301Z"}
+{"message":"","timestamp":"2026-01-23T18:25:56.809270222Z","level":"info"}
+{"message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.3s)","level":"info","timestamp":"2026-01-23T18:25:56.809278341Z"}
+{"message":"   🟢 Deepgram: '¿Bueno?'","timestamp":"2026-01-23T18:25:56.809284126Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:25:56.809289413Z","message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción"}
+{"level":"info","timestamp":"2026-01-23T18:25:56.809295585Z","message":""}
+{"message":"💬 CLIENTE DIJO: \"¿Bueno?\"","timestamp":"2026-01-23T18:25:56.809300598Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:56.809306590Z","level":"info","message":"[2026-01-23 18:25:53] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"¿Bueno?\""}
+{"message":"📝 LOG registrado: CLIENT... | ¿Bueno?...","timestamp":"2026-01-23T18:25:56.809311771Z","level":"info"}
+{"timestamp":"2026-01-23T18:25:56.809317803Z","level":"info","message":""}
+{"message":"🔄 FIX 244: Concatenando transcripciones parciales","level":"info","timestamp":"2026-01-23T18:25:56.809324721Z"}
+{"timestamp":"2026-01-23T18:25:56.809331203Z","message":"   [0] 'Sí, diga.'","level":"info"}
+{"message":"   ✅ FIX 244: Frase completa: 'Sí, diga. ¿Bueno?'","timestamp":"2026-01-23T18:25:56.809337867Z","level":"info"}
+{"level":"info","message":"🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True","timestamp":"2026-01-23T18:25:56.809344066Z"}
+{"timestamp":"2026-01-23T18:25:56.809350504Z","level":"info","message":"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada"}
+{"message":"   Respuesta será instantánea (0s delay)","timestamp":"2026-01-23T18:25:56.809359225Z","level":"info"}
+{"message":"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo","level":"info","timestamp":"2026-01-23T18:25:56.809367957Z"}
+{"message":"   Razón: Cache causaba loops y respuestas sin contexto","timestamp":"2026-01-23T18:25:56.809374629Z","level":"info"}
+{"message":"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...","level":"info","timestamp":"2026-01-23T18:25:56.809382100Z"}
+{"timestamp":"2026-01-23T18:25:56.809388536Z","level":"info","message":"✅ FIX 121: Respuesta instantánea desde caché completada en 0.000s"}
+{"timestamp":"2026-01-23T18:25:58.153799375Z","message":"🤖 BRUCE DICE: \"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?\"","level":"info"}
+{"timestamp":"2026-01-23T18:25:58.153810804Z","message":"[2026-01-23 18:25:53] [BRUCE] BRUCE1363 DICE: \"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?\"","level":"info"}
+{"timestamp":"2026-01-23T18:25:58.153820745Z","message":"📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)","level":"info"}
+{"message":"📦 FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)","level":"info","timestamp":"2026-01-23T18:25:58.153830196Z"}
+{"timestamp":"2026-01-23T18:25:58.153839311Z","level":"info","message":"📝 LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí..."}
+{"message":"🎯 FIX 214: Usando Record + Deepgram (mensaje #2)","timestamp":"2026-01-23T18:25:58.153849799Z","level":"info"}
+{"level":"error","message":"100.64.0.12 - - [23/Jan/2026 18:25:54] \"POST /procesar-respuesta HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:58.153858315Z"}
+{"message":"100.64.0.12 - - [23/Jan/2026 18:25:54] \"GET /audio/segunda_parte_saludo_CA97b5c133402172a27da03a96f891d4c7 HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:25:58.153868356Z","level":"error"}
+{"timestamp":"2026-01-23T18:26:03.745067899Z","level":"info","message":""}
+{"timestamp":"2026-01-23T18:26:03.745075210Z","message":"🔍 DEBUG - Parámetros Twilio (POST):","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:03.745083020Z","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7"}
+{"message":"   CallStatus: in-progress","timestamp":"2026-01-23T18:26:03.745089756Z","level":"info"}
+{"level":"info","message":"   AnsweredBy: ","timestamp":"2026-01-23T18:26:03.745096557Z"}
+{"timestamp":"2026-01-23T18:26:03.745103329Z","message":"   SpeechResult: ''","level":"info"}
+{"level":"info","message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REdb8a374e0d21fcc208845abbd503dec8'","timestamp":"2026-01-23T18:26:03.745110039Z"}
+{"message":"   Digits: timeout","level":"info","timestamp":"2026-01-23T18:26:03.745116350Z"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:04.946473786Z","level":"info"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:04.953724455Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)","timestamp":"2026-01-23T18:26:04.953738334Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:04.953745454Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)","timestamp":"2026-01-23T18:26:04.953752417Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)","timestamp":"2026-01-23T18:26:04.953758981Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:04.953766221Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)","timestamp":"2026-01-23T18:26:04.953772689Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:04.953780208Z","level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)","timestamp":"2026-01-23T18:26:04.953786634Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:04.953793316Z","level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)"}
+{"level":"info","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:04.953799242Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:04.953805240Z","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)","level":"info","timestamp":"2026-01-23T18:26:04.953811087Z"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)","timestamp":"2026-01-23T18:26:04.953816977Z"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)","timestamp":"2026-01-23T18:26:04.953823535Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:06.007951376Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)"}
+{"timestamp":"2026-01-23T18:26:06.007958739Z","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","level":"info"}
+{"level":"info","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:06.007964932Z"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)","timestamp":"2026-01-23T18:26:06.007970304Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:06.007975992Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","level":"info","timestamp":"2026-01-23T18:26:06.007981930Z"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:06.007988044Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:06.007994440Z","level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)","timestamp":"2026-01-23T18:26:06.008001165Z","level":"info"}
+{"message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)","timestamp":"2026-01-23T18:26:06.008006833Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:06.008014135Z","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)"}
+{"level":"info","message":"⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)","timestamp":"2026-01-23T18:26:06.008021552Z"}
+{"timestamp":"2026-01-23T18:26:06.008029674Z","message":"⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL","level":"info"}
+{"message":"","level":"info","timestamp":"2026-01-23T18:26:06.008036461Z"}
+{"level":"info","message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.9s)","timestamp":"2026-01-23T18:26:06.008043472Z"}
+{"level":"info","message":"   🟢 Deepgram: 'Sí, permítame.'","timestamp":"2026-01-23T18:26:06.008050125Z"}
+{"message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción","level":"info","timestamp":"2026-01-23T18:26:06.008056464Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:06.008063261Z","message":""}
+{"level":"info","timestamp":"2026-01-23T18:26:07.054105884Z","message":"💬 CLIENTE DIJO: \"Sí, permítame.\""}
+{"level":"info","message":"[2026-01-23 18:26:05] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"Sí, permítame.\"","timestamp":"2026-01-23T18:26:07.054110439Z"}
+{"message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:07.054115391Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:07.054121062Z","level":"info","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'"}
+{"message":"📝 LOG registrado: CLIENT... | Sí, permítame....","timestamp":"2026-01-23T18:26:07.054127080Z","level":"info"}
+{"message":"   🚨 FIX 244: Habló rápido (1.4s) - probablemente sigue hablando","timestamp":"2026-01-23T18:26:07.054132806Z","level":"info"}
+{"message":"","timestamp":"2026-01-23T18:26:07.054141193Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:07.054148072Z","message":"⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine"}
+{"message":"   Transcripción parcial: 'Sí, permítame.'","level":"info","timestamp":"2026-01-23T18:26:07.054154420Z"}
+{"level":"info","message":"   Tiempo hablando: 1.4s","timestamp":"2026-01-23T18:26:07.054160408Z"}
+{"level":"info","message":"   Palabras dichas: 2 (historial: 2)","timestamp":"2026-01-23T18:26:07.054168431Z"}
+{"timestamp":"2026-01-23T18:26:07.054174970Z","level":"info","message":"   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s..."}
+{"message":"100.64.0.9 - - [23/Jan/2026 18:26:05] \"POST /procesar-respuesta HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:07.054181058Z","level":"error"}
+{"level":"info","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:07.054187197Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:07.054194618Z","message":"📝 FIX 212: [PARCIAL] 'Sí, permítame.'"}
+{"level":"info","timestamp":"2026-01-23T18:26:07.054200776Z","message":"📝 FIX 212: [FINAL] 'Sí, permítame.' (latencia: 18410ms)"}
+{"timestamp":"2026-01-23T18:26:07.054207666Z","level":"info","message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: 'Sí, permítame.'"}
+{"message":"","timestamp":"2026-01-23T18:26:07.054214650Z","level":"info"}
+{"message":"🔍 DEBUG - Parámetros Twilio (POST):","timestamp":"2026-01-23T18:26:07.054221163Z","level":"info"}
+{"message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:26:07.054227851Z","level":"info"}
+{"message":"   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas","timestamp":"2026-01-23T18:26:08.209232430Z","level":"info"}
+{"message":"   AnsweredBy: ","timestamp":"2026-01-23T18:26:08.209237404Z","level":"info"}
+{"level":"info","message":"   ✅ FIX 248: Una sola transcripción única: 'Sí, permítame.'","timestamp":"2026-01-23T18:26:08.209246436Z"}
+{"level":"info","message":"   CallStatus: in-progress","timestamp":"2026-01-23T18:26:08.209255091Z"}
+{"message":"","level":"info","timestamp":"2026-01-23T18:26:08.209258199Z"}
+{"message":"   SpeechResult: ''","timestamp":"2026-01-23T18:26:08.209262243Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209270495Z","level":"info","message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)"}
+{"level":"info","message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE7996bc2c873c99eaab0f9255a935709f'","timestamp":"2026-01-23T18:26:08.209273685Z"}
+{"timestamp":"2026-01-23T18:26:08.209274068Z","level":"info","message":"✅ FIX 451: Transcripción FINAL recibida"}
+{"message":"⚠️ FIX 239/242/248: 2 transcripciones acumuladas","timestamp":"2026-01-23T18:26:08.209285074Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209285456Z","level":"info","message":"   Digits: timeout"}
+{"message":"   🟢 Deepgram: 'Sí, permítame.'","timestamp":"2026-01-23T18:26:08.209290638Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209298409Z","message":"   [0] 'Sí, permítame.'","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209306137Z","level":"info","message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción"}
+{"timestamp":"2026-01-23T18:26:08.209308247Z","level":"info","message":"   [1] 'Sí, permítame.'"}
+{"timestamp":"2026-01-23T18:26:08.209317222Z","message":"","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209330988Z","message":"💬 CLIENTE DIJO: \"Sí, permítame.\"","level":"info"}
+{"message":"[2026-01-23 18:26:06] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"Sí, permítame.\"","timestamp":"2026-01-23T18:26:08.209529271Z","level":"info"}
+{"message":"📝 LOG registrado: CLIENT... | Sí, permítame....","timestamp":"2026-01-23T18:26:08.209540284Z","level":"info"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:26:08.209549801Z"}
+{"message":"🔄 FIX 244: Concatenando transcripciones parciales","timestamp":"2026-01-23T18:26:08.209594199Z","level":"info"}
+{"message":"   [0] 'Sí, permítame.'","timestamp":"2026-01-23T18:26:08.209605469Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:08.209613844Z","message":"   ✅ FIX 244: Frase completa: 'Sí, permítame. Sí, permítame.'","level":"info"}
+{"message":"🔍 FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False","timestamp":"2026-01-23T18:26:09.691642946Z","level":"info"}
+{"level":"info","message":"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (2 palabras)","timestamp":"2026-01-23T18:26:09.691646035Z"}
+{"message":"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada","timestamp":"2026-01-23T18:26:09.691653360Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:09.691661148Z","message":"📦 Caché AUTO: claro,_espero.... (0s delay)","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:09.691664111Z","message":"   Respuesta será instantánea (0s delay)"}
+{"message":"🔍 FIX 102 DEBUG: result = respuesta_CA97b5c133402172a27da03a96f891d4c7_21, type = <class 'str'>","timestamp":"2026-01-23T18:26:09.691672014Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:09.691676745Z","level":"info","message":"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo"}
+{"message":"   Razón: Cache causaba loops y respuestas sin contexto","timestamp":"2026-01-23T18:26:09.691685426Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:09.691693932Z","message":"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte..."}
+{"message":"⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché","timestamp":"2026-01-23T18:26:09.691702588Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:09.691710909Z","message":"   Cliente dijo: 'Sí, permítame. Sí, permítame.' mientras Bruce hablaba segunda parte"}
+{"timestamp":"2026-01-23T18:26:09.691718962Z","level":"info","message":"   Usando GPT con instrucción de nexo en lugar de caché"}
+{"timestamp":"2026-01-23T18:26:09.691727910Z","level":"info","message":"📊 FIX 339/399/405/411/417: Estado → ESPERANDO_TRANSFERENCIA"}
+{"timestamp":"2026-01-23T18:26:09.691736622Z","level":"info","message":""}
+{"timestamp":"2026-01-23T18:26:09.691748760Z","message":"⏳ FIX 389/415: Cliente pidiendo esperar/transferir - Estado: ESPERANDO_TRANSFERENCIA","level":"info"}
+{"message":"   Cliente dijo: \"Sí, permítame. Sí, permítame.\"","level":"info","timestamp":"2026-01-23T18:26:09.691758725Z"}
+{"message":"   → Respondiendo 'Claro, espero.' SIN llamar GPT","level":"info","timestamp":"2026-01-23T18:26:09.691812190Z"}
+{"level":"info","message":"[2026-01-23 18:26:06] [BRUCE] BRUCE1363 DICE: \"Claro, espero.\"","timestamp":"2026-01-23T18:26:10.951450409Z"}
+{"level":"info","message":"🤖 BRUCE DICE: \"Claro, espero.\"","timestamp":"2026-01-23T18:26:10.951786817Z"}
+{"message":"🎵 FIX 97: Audio ElevenLabs (generado en paralelo)","timestamp":"2026-01-23T18:26:10.982909813Z","level":"info"}
+{"level":"info","message":"📝 LOG registrado: BRUCE... | Claro, espero....","timestamp":"2026-01-23T18:26:10.982930386Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:10.982940909Z","message":"🎯 FIX 214: Usando Record + Deepgram (mensaje #3)"}
+{"timestamp":"2026-01-23T18:26:10.982949526Z","level":"error","message":"100.64.0.8 - - [23/Jan/2026 18:26:07] \"POST /procesar-respuesta HTTP/1.1\" 200 -"}
+{"timestamp":"2026-01-23T18:26:10.982957181Z","message":"100.64.0.11 - - [23/Jan/2026 18:26:07] \"GET /audio/respuesta_CA97b5c133402172a27da03a96f891d4c7_21 HTTP/1.1\" 200 -","level":"error"}
+{"message":"📝 FIX 212: [FINAL] '¿Bueno?' (latencia: 19801ms)","timestamp":"2026-01-23T18:26:10.982965100Z","level":"info"}
+{"level":"info","message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: '¿Bueno?'","timestamp":"2026-01-23T18:26:10.982973068Z"}
+{"timestamp":"2026-01-23T18:26:10.982980390Z","message":"","level":"info"}
+{"message":"🔍 DEBUG - Parámetros Twilio (POST):","timestamp":"2026-01-23T18:26:10.982986808Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:10.982994975Z","level":"info","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7"}
+{"message":"   CallStatus: in-progress","timestamp":"2026-01-23T18:26:10.983001314Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:10.983009157Z","message":"   AnsweredBy: ","level":"info"}
+{"message":"   SpeechResult: ''","timestamp":"2026-01-23T18:26:10.983016394Z","level":"info"}
+{"message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REcdee92e5f94fd74793ed3fd38f676959'","timestamp":"2026-01-23T18:26:10.983023027Z","level":"info"}
+{"message":"   Digits: timeout","level":"info","timestamp":"2026-01-23T18:26:10.983029312Z"}
+{"message":"✅ FIX 451: Transcripción FINAL recibida","level":"info","timestamp":"2026-01-23T18:26:12.136966002Z"}
+{"message":"","timestamp":"2026-01-23T18:26:12.136976177Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:12.136984137Z","level":"info","message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)"}
+{"message":"   🟢 Deepgram: '¿Bueno?'","level":"info","timestamp":"2026-01-23T18:26:12.136992861Z"}
+{"timestamp":"2026-01-23T18:26:12.137000982Z","level":"info","message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción"}
+{"timestamp":"2026-01-23T18:26:12.137008041Z","message":"","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:12.137016578Z","message":"💬 CLIENTE DIJO: \"¿Bueno?\""}
+{"message":"[2026-01-23 18:26:09] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"¿Bueno?\"","timestamp":"2026-01-23T18:26:12.137023965Z","level":"info"}
+{"message":"📝 LOG registrado: CLIENT... | ¿Bueno?...","timestamp":"2026-01-23T18:26:12.137032263Z","level":"info"}
+{"message":"🔍 FIX 121 DEBUG: len(conversation_history)=7, mensajes_usuario=3, es_primera_respuesta=False","level":"info","timestamp":"2026-01-23T18:26:12.137039438Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:12.137046829Z","message":"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada"}
+{"message":"   Respuesta será instantánea (0s delay)","timestamp":"2026-01-23T18:26:12.137054365Z","level":"info"}
+{"message":"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo","timestamp":"2026-01-23T18:26:12.137061862Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:12.137070439Z","level":"info","message":"   Razón: Cache causaba loops y respuestas sin contexto"}
+{"timestamp":"2026-01-23T18:26:12.137078063Z","message":"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:12.137090906Z","message":"⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché"}
+{"level":"info","timestamp":"2026-01-23T18:26:12.137098174Z","message":"   Cliente dijo: '¿Bueno?' mientras Bruce hablaba segunda parte"}
+{"timestamp":"2026-01-23T18:26:12.137105320Z","message":"   Usando GPT con instrucción de nexo en lugar de caché","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:13.445903691Z","message":"📊 FIX 389/396: Persona nueva después de transferencia - RE-PRESENTANDO"}
+{"message":"   Cliente dijo: '¿Bueno?' - Bruce se presenta nuevamente","timestamp":"2026-01-23T18:26:13.445910591Z","level":"info"}
+{"message":"🔍 FIX 81 DEBUG: Verificando objeciones en: '¿Bueno?'","timestamp":"2026-01-23T18:26:13.445919777Z","level":"info"}
+{"message":"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.","level":"info","timestamp":"2026-01-23T18:26:13.445927509Z"}
+{"timestamp":"2026-01-23T18:26:13.445938295Z","level":"info","message":"✅ FIX 201: Se activó la segunda parte del saludo. No se repetirá."}
+{"level":"info","timestamp":"2026-01-23T18:26:13.445947127Z","message":""}
+{"timestamp":"2026-01-23T18:26:13.445954922Z","level":"info","message":"📝 FIX 68: Últimos 2 mensajes en historial:"}
+{"message":"   USER: ¿Bueno?","timestamp":"2026-01-23T18:26:13.445963077Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:13.445972471Z","message":"   USER: ¿Bueno?"}
+{"timestamp":"2026-01-23T18:26:13.445979277Z","message":"","level":"info"}
+{"timestamp":"2026-01-23T18:26:13.445986296Z","message":"⏭️  FIX 389: Saltando FIX 384 - Persona nueva después de transferencia","level":"info"}
+{"message":"   Dejando que FILTRO 5B (FIX 289) maneje la re-presentación","timestamp":"2026-01-23T18:26:13.445999371Z","level":"info"}
+{"message":"","timestamp":"2026-01-23T18:26:13.446006533Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:13.446013196Z","level":"info","message":"👋 FIX 289: PERSONA NUEVA detectada después de transferencia"}
+{"message":"   Cliente dice: '¿bueno?'","timestamp":"2026-01-23T18:26:13.446020836Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:13.446027282Z","message":"   Bruce iba a decir: '¿Se encuentra el encargado o encargada de compras?...'"}
+{"message":"   Respuesta corregida: \"Sí, buen día. Soy Bruce de la marca NIOVAL, productos de ferretería. ¿Usted es el encargado de compras?\"","timestamp":"2026-01-23T18:26:13.446033446Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:13.446042772Z","message":"✅ FIX 226-394: Filtro post-GPT aplicado exitosamente","level":"info"}
+{"message":"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (18 palabras)","timestamp":"2026-01-23T18:26:13.446050287Z","level":"info"}
+{"message":"[2026-01-23 18:26:10] [BRUCE] BRUCE1363 DICE: \"Sí, buen día. Soy Bruce de la marca NIOVAL, productos de ferretería. ¿Usted es el encargado de compras?\"","timestamp":"2026-01-23T18:26:15.122189211Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:15.122195406Z","message":"🎵 FIX 97: Audio ElevenLabs (generado en paralelo)","level":"info"}
+{"message":"📝 LOG registrado: BRUCE... | Sí, buen día. Soy Bruce de la marca NIOVAL, produc...","timestamp":"2026-01-23T18:26:15.122201189Z","level":"info"}
+{"message":"🎯 FIX 214: Usando Record + Deepgram (mensaje #4)","level":"info","timestamp":"2026-01-23T18:26:15.122207109Z"}
+{"message":"📦 Caché AUTO: sí,_buen_día._soy_bruce_de_la_marca... (0s delay)","timestamp":"2026-01-23T18:26:15.122213524Z","level":"info"}
+{"message":"100.64.0.2 - - [23/Jan/2026 18:26:11] \"POST /procesar-respuesta HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:15.122213547Z","level":"error"}
+{"level":"info","timestamp":"2026-01-23T18:26:15.122222519Z","message":"🔍 FIX 102 DEBUG: result = respuesta_CA97b5c133402172a27da03a96f891d4c7_22, type = <class 'str'>"}
+{"timestamp":"2026-01-23T18:26:15.122225286Z","level":"info","message":"📝 FIX 212: [PARCIAL] '¿Bueno?'"}
+{"level":"info","message":"🤖 BRUCE DICE: \"Sí, buen día. Soy Bruce de la marca NIOVAL, productos de ferretería. ¿Usted es el encargado de compras?\"","timestamp":"2026-01-23T18:26:15.122231820Z"}
+{"timestamp":"2026-01-23T18:26:15.122233310Z","level":"error","message":"100.64.0.8 - - [23/Jan/2026 18:26:11] \"GET /audio/respuesta_CA97b5c133402172a27da03a96f891d4c7_22 HTTP/1.1\" 200 -"}
+{"timestamp":"2026-01-23T18:26:15.122243266Z","level":"info","message":"📝 FIX 212: [FINAL] '¿Bueno?' (latencia: 23925ms)"}
+{"message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: '¿Bueno?'","timestamp":"2026-01-23T18:26:15.122252058Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:18.311238141Z","level":"info","message":"✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311251324Z","message":""}
+{"message":"💬 CLIENTE DIJO: \"¿Bueno?\"","timestamp":"2026-01-23T18:26:18.311259391Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311266015Z","message":"[2026-01-23 18:26:17] [CLIENTE] BRUCE1363 - CLIENTE DIJO: \"¿Bueno?\""}
+{"message":"📝 FIX 212: [PARCIAL] 'Ahorita no, que'","timestamp":"2026-01-23T18:26:18.311273538Z","level":"info"}
+{"message":"📝 FIX 212: [PARCIAL] 'Ahorita no, que'","level":"info","timestamp":"2026-01-23T18:26:18.311281627Z"}
+{"timestamp":"2026-01-23T18:26:18.311289397Z","message":"📝 LOG registrado: CLIENT... | ¿Bueno?...","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311394429Z","message":""}
+{"message":"🔍 DEBUG - Parámetros Twilio (POST):","level":"info","timestamp":"2026-01-23T18:26:18.311399661Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311404311Z","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7"}
+{"message":"   CallStatus: in-progress","level":"info","timestamp":"2026-01-23T18:26:18.311408804Z"}
+{"timestamp":"2026-01-23T18:26:18.311412880Z","message":"   AnsweredBy: ","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311417003Z","message":"   SpeechResult: ''"}
+{"message":"   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE9a8c008182e987046ce710acfec12022'","level":"info","timestamp":"2026-01-23T18:26:18.311422625Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:18.311428412Z","message":"   Digits: timeout"}
+{"message":"✅ FIX 451: Transcripción FINAL recibida","level":"info","timestamp":"2026-01-23T18:26:18.311432430Z"}
+{"message":"⚠️ FIX 239/242/248: 2 transcripciones acumuladas","timestamp":"2026-01-23T18:26:18.311436525Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:18.311440804Z","message":"   [0] '¿Bueno?'","level":"info"}
+{"timestamp":"2026-01-23T18:26:18.311445579Z","level":"info","message":"   [1] '¿Bueno?'"}
+{"message":"   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas","timestamp":"2026-01-23T18:26:18.311450096Z","level":"info"}
+{"level":"info","message":"   ✅ FIX 248: Una sola transcripción única: '¿Bueno?'","timestamp":"2026-01-23T18:26:18.311456871Z"}
+{"timestamp":"2026-01-23T18:26:18.311461107Z","message":"","level":"info"}
+{"level":"info","message":"🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)","timestamp":"2026-01-23T18:26:18.311466156Z"}
+{"level":"info","message":"   🟢 Deepgram: '¿Bueno?'","timestamp":"2026-01-23T18:26:18.311470872Z"}
+{"timestamp":"2026-01-23T18:26:19.234995988Z","message":"🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.235008711Z","message":"   Respuesta será instantánea (0s delay)","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.235009262Z","message":"✅ FIX 201: Cliente dijo '¿Bueno?' después de la segunda parte. NO se repetirá la introducción.","level":"info"}
+{"message":"   USER: ¿Bueno?","timestamp":"2026-01-23T18:26:19.235013474Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.235018373Z","message":"🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo","level":"info"}
+{"level":"info","message":"   Cliente dijo: '¿Bueno?' mientras Bruce hablaba segunda parte","timestamp":"2026-01-23T18:26:19.235019293Z"}
+{"message":"","level":"info","timestamp":"2026-01-23T18:26:19.235024292Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:19.235028175Z","message":"   USER: ¿Bueno?"}
+{"level":"info","message":"   Razón: Cache causaba loops y respuestas sin contexto","timestamp":"2026-01-23T18:26:19.235028265Z"}
+{"level":"info","message":"   Usando GPT con instrucción de nexo en lugar de caché","timestamp":"2026-01-23T18:26:19.235038215Z"}
+{"message":"📝 FIX 68: Últimos 2 mensajes en historial:","level":"info","timestamp":"2026-01-23T18:26:19.235038602Z"}
+{"message":"🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...","level":"info","timestamp":"2026-01-23T18:26:19.235041527Z"}
+{"message":"📝 FIX 212: [PARCIAL] 'Ahorita no, jefe, muchas gracias.'","timestamp":"2026-01-23T18:26:19.235042474Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.235051471Z","message":"🔍 FIX 81 DEBUG: Verificando objeciones en: '¿Bueno?'","level":"info"}
+{"message":"⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché","timestamp":"2026-01-23T18:26:19.235051854Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.235078978Z","message":"✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.","level":"info"}
+{"level":"info","message":"🔍 FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=5, es_primera_respuesta=False","timestamp":"2026-01-23T18:26:19.235270345Z"}
+{"timestamp":"2026-01-23T18:26:19.243300979Z","message":"📝 FIX 212: [PARCIAL] 'Ahorita no, jefe, muchas gracias.'","level":"info"}
+{"message":"","level":"info","timestamp":"2026-01-23T18:26:19.243309138Z"}
+{"message":"📞 FIX 297/351: Cliente sigue diciendo '¿bueno?' pero Bruce YA se presentó","timestamp":"2026-01-23T18:26:19.243316057Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:19.243322190Z","message":"   Usando frase diferente para evitar repetición"}
+{"message":"   Respuesta corregida: \"Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?\"","timestamp":"2026-01-23T18:26:19.243328248Z","level":"info"}
+{"level":"info","message":"✅ FIX 226-394: Filtro post-GPT aplicado exitosamente","timestamp":"2026-01-23T18:26:19.243334400Z"}
+{"message":"🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (15 palabras)","level":"info","timestamp":"2026-01-23T18:26:19.243342361Z"}
+{"message":"📦 Caché AUTO: le_llamo_de_la_marca_nioval,_productos_d... (0s delay)","timestamp":"2026-01-23T18:26:19.243349154Z","level":"info"}
+{"message":"🔍 FIX 102 DEBUG: result = respuesta_CA97b5c133402172a27da03a96f891d4c7_23, type = <class 'str'>","timestamp":"2026-01-23T18:26:19.243355512Z","level":"info"}
+{"level":"info","message":"🤖 BRUCE DICE: \"Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?\"","timestamp":"2026-01-23T18:26:19.243363084Z"}
+{"timestamp":"2026-01-23T18:26:19.243370039Z","message":"[2026-01-23 18:26:18] [BRUCE] BRUCE1363 DICE: \"Le llamo de la marca NIOVAL, productos de ferretería. ¿Se encontrará el encargado de compras?\"","level":"info"}
+{"level":"info","message":"🎵 FIX 97: Audio ElevenLabs (generado en paralelo)","timestamp":"2026-01-23T18:26:19.243376588Z"}
+{"level":"info","message":"📝 FIX 212: [PARCIAL] 'Ahorita no, jefe, muchas gracias.'","timestamp":"2026-01-23T18:26:19.243382984Z"}
+{"timestamp":"2026-01-23T18:26:19.243389139Z","level":"info","message":"📝 FIX 212: [PARCIAL] 'Ahorita no, jefe, muchas gracias.'"}
+{"timestamp":"2026-01-23T18:26:19.300930266Z","level":"info","message":"📝 FIX 212: Transcripción FINAL Deepgram para CA97b5c133402172a27da03a96f891d4c7: 'Ahorita no, jefe, muchas gracias.'"}
+{"timestamp":"2026-01-23T18:26:19.301008863Z","level":"info","message":"📝 FIX 212: [FINAL] 'Ahorita no, jefe, muchas gracias.' (latencia: 31713ms)"}
+{"timestamp":"2026-01-23T18:26:19.301017855Z","level":"info","message":"📝 LOG registrado: BRUCE... | Le llamo de la marca NIOVAL, productos de ferreter..."}
+{"message":"🎯 FIX 214: Usando Record + Deepgram (mensaje #5)","timestamp":"2026-01-23T18:26:19.301026900Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:19.301036797Z","level":"error","message":"100.64.0.10 - - [23/Jan/2026 18:26:19] \"POST /procesar-respuesta HTTP/1.1\" 200 -"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:26:19] \"GET /audio/respuesta_CA97b5c133402172a27da03a96f891d4c7_23 HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:20.112480444Z","level":"error"}
+{"timestamp":"2026-01-23T18:26:23.355839513Z","message":"⏹️ FIX 212: MediaStream detenido - CallSid: CA97b5c133402172a27da03a96f891d4c7","level":"info"}
+{"timestamp":"2026-01-23T18:26:23.355844217Z","message":"   Estado: completed","level":"info"}
+{"level":"info","message":"🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:26:23.355849910Z"}
+{"level":"info","timestamp":"2026-01-23T18:26:23.355854440Z","message":"   Duración: 37s"}
+{"level":"info","message":"","timestamp":"2026-01-23T18:26:23.355860296Z"}
+{"timestamp":"2026-01-23T18:26:23.355862376Z","level":"info","message":"[2026-01-23 18:26:23] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 37s"}
+{"timestamp":"2026-01-23T18:26:23.355870495Z","level":"info","message":"   💬 Cliente colgó - detectado por status callback (13 mensajes)"}
+{"level":"info","message":"📞 STATUS CALLBACK - Llamada CA97b5c133...","timestamp":"2026-01-23T18:26:23.355873843Z"}
+{"timestamp":"2026-01-23T18:26:23.355876899Z","level":"info","message":"   📝 Clasificado como 'Colgó' (sin datos capturados)"}
+{"timestamp":"2026-01-23T18:26:23.355881780Z","message":"📊 Guardando resultados en 'Respuestas de formulario 1'...","level":"info"}
+{"timestamp":"2026-01-23T18:26:23.355886142Z","level":"info","message":"⏱️ Duración de la llamada: 37 segundos"}
+{"timestamp":"2026-01-23T18:26:23.355895054Z","level":"info","message":"📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp"}
+{"message":"📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial","level":"info","timestamp":"2026-01-23T18:26:23.355900348Z"}
+{"message":"📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra","timestamp":"2026-01-23T18:26:23.355905303Z","level":"info"}
+{"message":"📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha","timestamp":"2026-01-23T18:26:23.355911048Z","level":"info"}
+{"message":"✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:26:24.434890317Z","level":"info"}
+{"message":"🔌 FIX 212: WebSocket cerrado - CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:26:24.434898061Z","level":"info"}
+{"message":"100.64.0.12 - - [23/Jan/2026 18:26:23] \"GET /media-stream HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:24.434904548Z","level":"error"}
+{"timestamp":"2026-01-23T18:26:25.445039080Z","level":"info","message":""}
+{"timestamp":"2026-01-23T18:26:25.445046201Z","message":"📊 Análisis de la llamada:","level":"info"}
+{"timestamp":"2026-01-23T18:26:25.445052824Z","level":"info","message":"   Estado de ánimo: Negativo"}
+{"message":"   Nivel de interés: Bajo","timestamp":"2026-01-23T18:26:25.445059701Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:25.445068414Z","level":"info","message":"   Opinión de Bruce: Bruce podría haber mejorado la llamada al presentarse de manera más clara y concisa, evitando repeticiones innecesarias. Además, debería haber intentado captar la atención del cliente de forma más efectiva para mantener la conversación activa."}
+{"message":"📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...","level":"info","timestamp":"2026-01-23T18:26:25.445076360Z"}
+{"message":"📝 Conclusión determinada: Nulo (NEGADO)","timestamp":"2026-01-23T18:26:25.445083092Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:25.445090077Z","message":"⭐ Bruce se autoevaluó: 3/10"}
+{"timestamp":"2026-01-23T18:26:26.405694793Z","level":"info","message":""}
+{"message":"============================================================","timestamp":"2026-01-23T18:26:26.405701485Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:26.405708403Z","message":"✅ GUARDADO COMPLETO - Todos los datos procesados","level":"info"}
+{"level":"info","message":"============================================================","timestamp":"2026-01-23T18:26:26.405714404Z"}
+{"timestamp":"2026-01-23T18:26:26.405725889Z","message":"","level":"info"}
+{"timestamp":"2026-01-23T18:26:26.405727771Z","message":"   WhatsApp capturado: ","level":"info"}
+{"level":"info","message":"   Referencia capturada: ","timestamp":"2026-01-23T18:26:26.405735628Z"}
+{"timestamp":"2026-01-23T18:26:26.405737831Z","level":"info","message":"📝 Verificando actualización en LISTA DE CONTACTOS..."}
+{"message":"   Email capturado: ","level":"info","timestamp":"2026-01-23T18:26:26.405743906Z"}
+{"timestamp":"2026-01-23T18:26:26.405748146Z","level":"info","message":"   Fila: 1678"}
+{"message":"⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E","timestamp":"2026-01-23T18:26:26.405752636Z","level":"info"}
+{"message":"","timestamp":"2026-01-23T18:26:26.405845471Z","level":"info"}
+{"level":"info","message":"   ✅ Llamada guardada desde status callback","timestamp":"2026-01-23T18:26:26.405856235Z"}
+{"message":"   📊 FIX 207: Llamada registrada en dashboard","timestamp":"2026-01-23T18:26:26.405864069Z","level":"info"}
+{"message":"100.64.0.7 - - [23/Jan/2026 18:26:25] \"GET /status-callback?Called=%2B527772430434&ToState=Mor.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+23+Jan+2026+18:26:23+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA97b5c133402172a27da03a96f891d4c7&To=%2B527772430434&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Cuernavaca&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=37&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Cuernavaca&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Mor.&FromZip=&FromState=Jal. HTTP/1.1\" 200 -","level":"error","timestamp":"2026-01-23T18:26:26.405873355Z"}
+{"timestamp":"2026-01-23T18:26:26.406238466Z","level":"info","message":""}
+{"level":"info","timestamp":"2026-01-23T18:26:26.406247837Z","message":"📝 Guardando resultado en fila 3466..."}
+{"message":"  → Pregunta 3: No (Bruce)","timestamp":"2026-01-23T18:26:26.406254727Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:26.406261962Z","level":"info","message":"  → Pregunta 4: No (Bruce)"}
+{"message":"  → Pregunta 5: No (Bruce)","level":"info","timestamp":"2026-01-23T18:26:26.406268846Z"}
+{"message":"  → Pregunta 6: No (Bruce)","timestamp":"2026-01-23T18:26:26.406276066Z","level":"info"}
+{"message":"  → Columna J: No apto","timestamp":"2026-01-23T18:26:26.406292024Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:26.406300361Z","message":"  → Resultado: NEGADO","level":"info"}
+{"level":"info","message":"  → Estado: Colgo","timestamp":"2026-01-23T18:26:26.406308052Z"}
+{"timestamp":"2026-01-23T18:26:26.406315095Z","level":"info","message":"  → Duración: 37"}
+{"message":"  → Nivel de interés: Bajo","timestamp":"2026-01-23T18:26:26.406323089Z","level":"info"}
+{"message":"  → Estado de ánimo: Negativo","level":"info","timestamp":"2026-01-23T18:26:26.406332144Z"}
+{"message":"  → Opinión Bruce: Bruce podría haber mejorado la llamada al presenta...","timestamp":"2026-01-23T18:26:26.406343347Z","level":"info"}
+{"message":"  → Calificación Bruce: 3/10","timestamp":"2026-01-23T18:26:26.406350376Z","level":"info"}
+{"message":"  → ID BRUCE: BRUCE1363","level":"info","timestamp":"2026-01-23T18:26:26.406364501Z"}
+{"message":"✅ Resultado guardado exitosamente en fila 3466","timestamp":"2026-01-23T18:26:26.406372746Z","level":"info"}
+{"message":"✅ Resultados guardados en 'Respuestas de formulario 1'","timestamp":"2026-01-23T18:26:26.406379760Z","level":"info"}
+{"message":"","timestamp":"2026-01-23T18:26:26.406387198Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:26.406394389Z","level":"info","message":"============================================================"}
+{"timestamp":"2026-01-23T18:26:26.406402393Z","level":"info","message":"📋 ACTUALIZACIONES EN LISTA DE CONTACTOS"}
+{"level":"info","timestamp":"2026-01-23T18:26:26.406409478Z","message":"============================================================"}
+{"message":"   RecordingSid: RE5f1447469c3caef5b8d207dc79a64211","timestamp":"2026-01-23T18:26:28.620829982Z","level":"info"}
+{"timestamp":"2026-01-23T18:26:28.620840252Z","level":"info","message":"   Status: completed"}
+{"message":"   Duración: 36 segundos","timestamp":"2026-01-23T18:26:28.620865426Z","level":"info"}
+{"level":"info","timestamp":"2026-01-23T18:26:28.620871734Z","message":"   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5f1447469c3caef5b8d207dc79a64211"}
+{"timestamp":"2026-01-23T18:26:28.620956344Z","level":"info","message":""}
+{"message":"🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA","timestamp":"2026-01-23T18:26:28.620962969Z","level":"info"}
+{"level":"info","message":"   CallSid: CA97b5c133402172a27da03a96f891d4c7","timestamp":"2026-01-23T18:26:28.620971401Z"}
+{"message":"   ✅ URL guardada en lead_data del agente","timestamp":"2026-01-23T18:26:28.620991991Z","level":"info"}
+{"level":"info","message":"   ✅ FIX 272: Grabación asociada a BRUCE1363","timestamp":"2026-01-23T18:26:28.621001864Z"}
+{"level":"info","message":"   ✅ FIX 272: Historial actualizado con URL de grabación","timestamp":"2026-01-23T18:26:28.621010260Z"}
+{"message":"100.64.0.10 - - [23/Jan/2026 18:26:27] \"GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE5f1447469c3caef5b8d207dc79a64211&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5f1447469c3caef5b8d207dc79a64211&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA97b5c133402172a27da03a96f891d4c7&RecordingStartTime=Fri,+23+Jan+2026+18:25:48+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=36 HTTP/1.1\" 200 -","level":"error","timestamp":"2026-01-23T18:26:28.621017254Z"}
+{"level":"error","message":"100.64.0.4 - - [23/Jan/2026 18:26:49] \"GET /historial-llamadas HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:59.490956941Z"}
+{"level":"error","message":"100.64.0.4 - - [23/Jan/2026 18:26:52] \"GET /escuchar-grabacion/RE0eb4c52108edd4d5418334dd895fc7d2 HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:26:59.490965984Z"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:26:52] \"\u001b[33mGET /favicon.ico HTTP/1.1\u001b[0m\" 404 -","timestamp":"2026-01-23T18:26:59.490973717Z","level":"error"}
+{"timestamp":"2026-01-23T18:27:03.227291844Z","level":"error","message":"100.64.0.4 - - [23/Jan/2026 18:27:02] \"GET /escuchar-grabacion/RE340ae1f6c357ef38412da69bd65f18c9 HTTP/1.1\" 200 -"}
+{"message":"✅ FIX 272: 2 calificaciones guardadas","level":"info","timestamp":"2026-01-23T18:27:09.848675845Z"}
+{"timestamp":"2026-01-23T18:27:09.848683275Z","level":"error","message":"100.64.0.4 - - [23/Jan/2026 18:27:09] \"POST /historial-llamadas/guardar HTTP/1.1\" 200 -"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:27:10] \"GET /historial-llamadas HTTP/1.1\" 200 -","level":"error","timestamp":"2026-01-23T18:27:11.666483788Z"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:27:12] \"GET /escuchar-grabacion/RE2a4d3e470106728aff5ff4003ed08234 HTTP/1.1\" 200 -","level":"error","timestamp":"2026-01-23T18:27:13.442803360Z"}
+{"message":"100.64.0.4 - - [23/Jan/2026 18:27:12] \"\u001b[33mGET /favicon.ico HTTP/1.1\u001b[0m\" 404 -","level":"error","timestamp":"2026-01-23T18:27:13.442809099Z"}
+{"level":"error","message":"100.64.0.4 - - [23/Jan/2026 18:27:35] \"GET /escuchar-grabacion/RE5f1447469c3caef5b8d207dc79a64211 HTTP/1.1\" 200 -","timestamp":"2026-01-23T18:27:45.925995969Z"}

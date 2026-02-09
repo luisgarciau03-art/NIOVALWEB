@@ -1,0 +1,38 @@
+[2026-02-08 20:23:11] ID BRUCE generado: BRUCE2025
+[2026-02-08 20:23:16] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:16] [DIAGNÓSTICO] BRUCE2025 - Timeouts Deepgram previos: 1
+[2026-02-08 20:23:16] [DIAGNÓSTICO] BRUCE2025 - Respuestas vacías consecutivas: 1
+[2026-02-08 20:23:16] [DIAGNÓSTICO] BRUCE2025 - Deepgram buffer: 0 transcripciones
+[2026-02-08 20:23:16] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs buffer: 0 transcripciones
+[2026-02-08 20:23:16] [DIAGNÓSTICO] BRUCE2025 - Deepgram Transcriber: audio_chunks=0, transcripts=0, finals=0
+[2026-02-08 20:23:16] [BRUCE] BRUCE2025 DICE: "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?" (FIX 408: timeout #2)
+[2026-02-08 20:23:26] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:30] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:30] [DIAGNÓSTICO] BRUCE2025 - Timeouts Deepgram previos: 4
+[2026-02-08 20:23:30] [DIAGNÓSTICO] BRUCE2025 - Respuestas vacías consecutivas: 1
+[2026-02-08 20:23:30] [DIAGNÓSTICO] BRUCE2025 - Deepgram buffer: 0 transcripciones
+[2026-02-08 20:23:30] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs buffer: 0 transcripciones
+[2026-02-08 20:23:30] [DIAGNÓSTICO] BRUCE2025 - Deepgram Transcriber: audio_chunks=0, transcripts=0, finals=0
+[2026-02-08 20:23:34] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:34] [DIAGNÓSTICO] BRUCE2025 - Timeouts Deepgram previos: 5
+[2026-02-08 20:23:34] [DIAGNÓSTICO] BRUCE2025 - Respuestas vacías consecutivas: 2
+[2026-02-08 20:23:34] [DIAGNÓSTICO] BRUCE2025 - Deepgram buffer: 0 transcripciones
+[2026-02-08 20:23:34] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs buffer: 0 transcripciones
+[2026-02-08 20:23:34] [DIAGNÓSTICO] BRUCE2025 - Deepgram Transcriber: audio_chunks=0, transcripts=0, finals=0
+[2026-02-08 20:23:39] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:43] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - Timeouts Deepgram previos: 7
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - Respuestas vacías consecutivas: 3
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - Deepgram buffer: 0 transcripciones
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs buffer: 1 transcripciones
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs últimas 3: ['¿Qué tal, Wendy? ¿Dime? ¿Me escuchas? ¿Hola? Sí, ¿qué tal? ¿Dime? ¿Hola? ¿Hola? ¿Hola? ¿Cómo estás? ¿']
+[2026-02-08 20:23:43] [DIAGNÓSTICO] BRUCE2025 - Deepgram Transcriber: audio_chunks=0, transcripts=0, finals=0
+[2026-02-08 20:23:45] → ID BRUCE: BRUCE2025
+[2026-02-08 20:23:46] [CLIENTE] BRUCE2025 - CLIENTE DIJO: ""
+[2026-02-08 20:23:46] [DIAGNÓSTICO] BRUCE2025 - Timeouts Deepgram previos: 8
+[2026-02-08 20:23:46] [DIAGNÓSTICO] BRUCE2025 - Respuestas vacías consecutivas: 4
+[2026-02-08 20:23:46] [DIAGNÓSTICO] BRUCE2025 - Deepgram buffer: 0 transcripciones
+[2026-02-08 20:23:46] [DIAGNÓSTICO] BRUCE2025 - ElevenLabs buffer: 0 transcripciones
+[2026-02-08 20:23:46] [DIAGNÓSTICO] BRUCE2025 - Deepgram Transcriber: audio_chunks=0, transcripts=0, finals=0
+[2026-02-08 20:23:47] → ID BRUCE: BRUCE2025
+[2026-02-08 20:23:49] FIX 272: Grabación asociada a BRUCE2025

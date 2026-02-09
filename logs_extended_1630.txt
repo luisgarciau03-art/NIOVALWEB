@@ -1,0 +1,298 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/7b071944-85fa-4774-ad54-71e073575729/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/7b071944-85fa-4774-ad54-71e073575729/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/7b071944-85fa-4774-ad54-71e073575729/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/7b071944-85fa-4774-ad54-71e073575729/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/7b071944-85fa-4774-ad54-71e073575729/vol_l0g5e90oxfl2oi40
+ Último ID BRUCE: BRUCE1623
+ Google Sheets Managers inicializados
+ WhatsApp Validator inicializado
+ FIX 173: Verificando credenciales de Twilio...
+    TWILIO_ACCOUNT_SID encontrado: ACddf2b7fa...c9dc
+    TWILIO_AUTH_TOKEN encontrado: d43c8501...2480
+    TWILIO_PHONE_NUMBER: +523321014486
+ FIX 272.2: 500 llamadas en historial cargadas
+ FIX 272.9: 5000 logs cargados
+ FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer
+ FIX 272: 876 calificaciones cargadas
+[2026-01-28 17:43:03] [SISTEMA] Servidor iniciando...
+
+============================================================
+ SERVIDOR DE LLAMADAS NIOVAL
+============================================================
+
+ SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)
+============================================================
+
+ Endpoints disponibles:
+  POST /iniciar-llamada            - Inicia una llamada individual
+  POST /llamadas-masivas           - Inicia múltiples llamadas
+  GET  /status/<call_sid>          - Estado de una llamada
+  GET  /stats                      - Ver estadísticas de caché
+  POST /generate-cache             - Generar audios manualmente
+  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente
+  WS   /media-stream               - FIX 212: WebSocket para Deepgram
+
+ URLs de acceso:
+   Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats
+   Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia
+
+ FIX 79: Despedida cálida activa (deja puerta abierta)
+ FIX 81: Debug de detección de Truper activo
+ FIX 212: Deepgram ACTIVO - Transcripción en tiempo real
+   WebSocket: /media-stream
+
+  Asegúrate de configurar Twilio en .env
+============================================================
+
+ Cargando caché desde disco...
+   Cargado desde disco: timeout
+   Cargado desde disco: error
+   Cargado desde disco: perfecto,_¿con_quién_tengo_el_gusto_de_hablar?
+   Cargado desde disco: muy_buenas_tardes._agradezco_tu_ayuda,_pero_preferiría
+   Cargado desde disco: no_hay_problema._si_surge_alguna_duda_o
+   Cargado desde disco: claro,_estaré_disponible_cuando_me_necesites._¡hasta_luego!
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_puedo
+   Cargado desde disco: saludo_inicial
+   Cargado desde disco: despedida_1
+   Cargado desde disco: despedida_2
+   Cargado desde disco: hola,_qué_tal,_muy_buenas_tardes._me_comunico
+   Cargado desde disco: pensando
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_darme_un
+   Cargado desde disco: perfecto,_muchas_gracias._intentaré_comunicarme_con_el_encargado
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_podré
+   Cargado desde disco: entiendo,_¿podría_ayudarme_a_comunicarlo_cuando_tenga_la
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?
+   Cargado desde disco: perfecto,_le_agradecería_mucho_que_me_compartiera_su
+   Cargado desde disco: perfecto,_por_favor,_¿me_puedes_proporcionar_su_contacto?
+   Cargado desde disco: muchas_gracias_por_el_contacto._me_aseguraré_de
+   Cargado desde disco: claro,_estaría_muy_agradecido._¿cuál_es_el_contacto
+   Cargado desde disco: perfecto,_por_favor,_compárteme_su_contacto_para_poder
+   Cargado desde disco: gracias_por_el_contacto._me_pondré_en_comunicación
+   Cargado desde disco: gracias_por_proporcionarme_el_número._me_comunicaré_con
+   Cargado desde disco: de_nada,_que_tenga_un_excelente_día._si
+   Cargado desde disco: gracias_por_proporcionarme_el_número._¿me_podrías_decir
+   Cargado desde disco: perfecto,_¿me_podrías_proporcionar_su_contacto,_por_favor?
+   Cargado desde disco: a_ti,_que_tengas_un_excelente_día._¡hasta
+   Cargado desde disco: claro,_estoy_listo_para_anotar._¿cuál_es_el
+   Cargado desde disco: gracias_por_la_información._la_anotaré._¿te_gustaría
+   Cargado desde disco: así_es,_todo_en_orden._agradezco_mucho_su
+   Cargado desde disco: entiendo,_¿me_podría_proporcionar_el_contacto_del_encargado
+   Cargado desde disco: claro,_por_favor._estoy_listo_para_anotar.
+   Cargado desde disco: perfecto,_he_anotado_el_número._muchas_gracias_por
+   Cargado desde disco: gracias_a_usted,_que_tenga_un_excelente_día.
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_indicarme_un
+   Cargado desde disco: claro,_le_agradecería_mucho_si_me_pudiera_pasar
+   Cargado desde disco: sí,_tengo_donde_anotar._por_favor,_compártame_el
+   Cargado desde disco: muchas_gracias_por_el_número._me_aseguraré_de
+   Cargado desde disco: gracias_a_usted._que_tenga_un_excelente_día,
+   Cargado desde disco: claro,_sería_de_gran_ayuda._por_favor,_¿me
+   Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podrías_repetirme_el
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿me_podría_comunicar
+   Cargado desde disco: claro,_me_encantaría_tener_su_número_para_poder
+   Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podría_repetirme_el
+   Cargado desde disco: gracias_por_la_información._sin_embargo,_parece_que
+   Cargado desde disco: parece_que_aún_no_tengo_el_número_completo.
+   Cargado desde disco: gracias,_pero_el_número_que_me_proporcionó_parece
+   Cargado desde disco: perfecto,_gracias_por_la_información._¿me_puede_confirmar
+   Cargado desde disco: entiendo,_gracias_por_decírmelo._¿me_podría_comunicar_con
+   Cargado desde disco: claro,_me_comunicaré_al_número_que_me_proporcionó.
+   Cargado desde disco: entiendo._si_me_proporciona_un_correo_electrónico,_puedo
+   Cargado desde disco: claro,_por_favor._mi_número_es_seis_seis
+   Cargado desde disco: sí,_por_favor._sería_muy_útil_para_poder
+   Cargado desde disco: gracias_por_el_número._¿podrías_proporcionarme_el_resto
+   Cargado desde disco: perfecto,_muchas_gracias._me_comunicaré_con_él._si
+   Cargado desde disco: si_tienes_alguna_pregunta_o_necesitas_información_sobre
+   Cargado desde disco: entiendo,_muchas_gracias_por_tu_tiempo._si_en
+   Cargado desde disco: entiendo._como_ya_habíamos_hablado_antes,_me_gustaría
+   Cargado desde disco: perfecto,_tomaré_en_cuenta_esa_indicación._muchas_gracias
+   Cargado desde disco: gracias_por_el_contacto._sin_embargo,_parece_que
+   Cargado desde disco: parece_que_el_número_todavía_no_es_claro.
+   Cargado desde disco: parece_que_aún_no_tengo_el_número_correcto.
+   Cargado desde disco: gracias_por_tu_ayuda._sin_embargo,_parece_que
+   Cargado desde disco: parece_que_aún_no_es_el_número_correcto,
+   Cargado desde disco: hola,_muy_buenas_tardes._mi_nombre_es_bruce
+   Cargado desde disco: perfecto,_el_número_es_66_23_53_41
+   Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo,_tengo_dos_opciones:
+   Cargado desde disco: excelente,_muchas_gracias_por_confirmar._¿hay_algún_otro
+   Cargado desde disco: muchas_gracias_por_la_confirmación._ahora,_para_continuar,
+   Cargado desde disco: entendido,_llamaré_por_la_mañana._si_necesita_algo
+   Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo_más_adelante,_tengo
+   Cargado desde disco: claro,_le_agradecería_mucho_que_me_pasara_su
+   Cargado desde disco: entiendo,_parece_que_no_hay_respuesta._para_continuar,
+   Cargado desde disco: perfecto,_gracias_por_confirmarlo._procederé_a_enviarle_el
+   Cargado desde disco: entendido,_gracias_por_su_tiempo._si_necesita_algo
+   Cargado desde disco: si_necesita_algo_más_o_tiene_alguna_pregunta,
+   Cargado desde disco: entiendo_que_pueda_estar_ocupado._si_necesita_contactarme
+   Cargado desde disco: parece_que_no_hay_respuesta_en_este_momento.
+   Cargado desde disco: parece_que_aún_no_hay_respuesta._si_desea,
+   Cargado desde disco: parece_que_no_hay_actividad_en_este_momento.
+   Cargado desde disco: hablamos_desde_guadalajara,_jalisco._somos_distribuidores_especializados_en
+   Cargado desde disco: la_marca_es_nioval._nos_especializamos_en_ofrecer
+   Cargado desde disco: entiendo_que_no_hay_respuesta_en_este_momento.
+   Cargado desde disco: parece_que_no_hay_respuesta._si_necesita_ayuda
+   Cargado desde disco: mi_nombre_es_bruce_w,_le_llamo_de
+   Cargado desde disco: muchas_gracias._¿cómo_puedo_ayudarle_hoy_con_nuestros
+   Cargado desde disco: perfecto,_muchas_gracias._estaré_al_pendiente_de_la
+   Cargado desde disco: entendido._si_necesitas_algo_más_en_el_futuro,
+   Cargado desde disco: claro,_aquí_estaré.
+   Cargado desde disco: muy_buenas_tardes,_mi_nombre_es_bruce_w,
+   Cargado desde disco: mucho_gusto,_(name)._estoy_aquí_para_platicarle_sobre
+   Cargado desde disco: claro,_(name)._uno_de_nuestros_productos_estrella_es
+   Cargado desde disco: me_gustaría_comentarte_sobre_la_cinta_para_goteras,
+   Cargado desde disco: perfecto,_voy_a_enviar_un_catálogo_de_la
+   Cargado desde disco: entendido,_voy_a_enviar_el_catálogo_al_mismo
+   Cargado desde disco: claro,_comprendo._si_necesitas_información_sobre_algún_producto
+   Cargado desde disco: perfecto,_si_necesitas_algo_más_o_tienes_alguna
+   Cargado desde disco: con_gusto,_estoy_listo_para_enviar_el_catálogo.
+   Cargado desde disco: ¿hay_algo_más_en_lo_que_pueda_ayudarte
+   Cargado desde disco: perfecto,_estoy_listo.
+   Cargado desde disco: muchas_gracias._estaré_en_contacto_con_él._¿hay
+   Cargado desde disco: entiendo,_muchas_gracias_por_su_tiempo._si_necesita
+   Cargado desde disco: muchas_gracias._¿me_podría_decir_su_nombre_para
+   Cargado desde disco: excelente,_muchas_gracias_luis._déjeme_comentarle_que_estamos
+   Cargado desde disco: perfecto,_eso_ayuda_mucho._¿actualmente_trabajan_con_varios
+   Cargado desde disco: entendido._una_última_pregunta:_¿sabe_si_actualmente_tienen
+   Cargado desde disco: perfecto,_aprecio_mucho_toda_la_información._me_comunicaré
+   Cargado desde disco: perfecto,_¿me_podría_indicar_el_horario_en_el
+   Cargado desde disco: gracias_por_la_información._¿me_podría_comentar_qué
+   Cargado desde disco: hola_luis,_muy_buenas_tardes._soy_bruce_w
+   Cargado desde disco: ¡perfecto!_gracias_por_el_contacto._si_necesita_información
+   Cargado desde disco: le_hablo_de_nioval,_somos_distribuidores_especializados_en
+   Cargado desde disco: le_llamo_para_ofrecerle_información_sobre_nuestros_productos
+   Cargado desde disco: ¿bueno?_muy_buenas_tardes,_¿con_quién_tengo_el
+   Cargado desde disco: muy_buenas_tardes,_luis._mi_nombre_es_bruce
+   Cargado desde disco: entiendo,_pero_necesito_el_número_completo_de_diez
+   Cargado desde disco: mucho_gusto,_(name)._soy_bruce_w_de_nioval.
+   Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w
+   Cargado desde disco: perfecto,_entonces_el_número_completo_es_seis,_seis,
+   Cargado desde disco: me_alegra_escuchar_eso._estoy_aquí_para_hablar
+   Cargado desde disco: excelente,_muchas_gracias_carlos._déjeme_comentarle_que_estamos
+   Cargado desde disco: no_hay_problema,_carlos._aprecio_mucho_toda_la
+   Cargado desde disco: excelente,_muchas_gracias._¿me_podría_decir_su_nombre
+   Cargado desde disco: perfecto,_muchas_gracias_carlos._déjeme_comentarle_que_estamos
+   Cargado desde disco: entendido,_eso_ayuda_mucho._¿actualmente_trabajan_con_varios
+   Cargado desde disco: me_refiero_al_encargado_de_compras_o_a
+   Cargado desde disco: perfecto,_el_número_es_66_23_53_55
+   Cargado desde disco: gracias_por_la_información._solo_para_confirmar,_¿podría
+   Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_de
+   Cargado desde disco: sí,_adelante_por_favor.
+   Cargado desde disco: perfecto,_(name)._una_última_pregunta:_¿sabe_si_actualmente
+   Cargado desde disco: claro,_vendemos_varios_productos_de_ferretería._algunos_ejemplos
+   Cargado desde disco: perfecto,_puedo_enviarle_nuestro_catálogo_por_whatsapp_para
+   Cargado desde disco: perfecto,_estoy_listo._¿me_podría_decir_su_nombre
+   Cargado desde disco: así_es,_manejamos_precios_competitivos_y_promociones_atractivas.
+   Cargado desde disco: perfecto,_para_poder_enviarle_la_cotización,_¿me_podría
+   Cargado desde disco: excelente_elección._le_enviaré_una_cotización_con_los
+   Cargado desde disco: entiendo,_gracias_por_la_aclaración._enviaré_la_cotización
+   Cargado desde disco: excelente._le_enviaré_el_mensaje_ahora_mismo._si
+   Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w_de
+   Cargado desde disco: perfecto,_(name)._enviaré_el_catálogo_y_la_presentación
+   Cargado desde disco: claro,_(name)._espero_su_comunicación._si_necesitan_algo
+   Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_hablar_con
+   Cargado desde disco: el_mínimo_de_compra_con_nosotros_es_de
+   Cargado desde disco: perfecto,_necesito_que_me_proporciones_tu_número_de
+   Cargado desde disco: gracias._sin_embargo,_el_número_que_me_proporcionas
+   Cargado desde disco: perfecto,_pero_necesito_saber_su_nombre_para_mencionarlo
+   Cargado desde disco: claro,_con_gusto_le_enviaré_información_sobre_griferías.
+   Cargado desde disco: claro,_(name)._puedo_enviarte_el_catálogo_por_correo.
+   Cargado desde disco: entiendo,_(name)._agradezco_la_información._¿podría_decirme_aproximadamente
+   Cargado desde disco: perfecto,_(name)._aprecio_su_tiempo_y_la_información.
+   Cargado desde disco: entiendo,_(name)._entonces,_para_conocer_mejor_sus_necesidades,
+   Cargado desde disco: entiendo,_gracias_por_su_tiempo._que_tenga_un
+   Cargado desde disco: nosotros_manejamos_una_variedad_de_productos_de_ferretería,
+   Cargado desde disco: entiendo,_gracias._para_poder_prepararle_una_mejor_propuesta
+   Cargado desde disco: gracias_por_la_información._¿además_de_griferías,_qué
+   Cargado desde disco: perfecto,_le_enviaré_el_catálogo_de_griferías._y
+   Cargado desde disco: ¿con_quién_tengo_el_gusto?
+   Cargado desde disco: disculpe,_no_alcancé_a_captar_el_correo_completo.
+   Cargado desde disco: perfecto,_mi_nombre_es_bruce_w._le_llamo
+   Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_sobre
+   Cargado desde disco: ¡perfecto!_muchas_gracias._estoy_listo_para_hablar_con
+   Cargado desde disco: muy_buenas_tardes,_¿con_quién_tengo_el_gusto?
+   Cargado desde disco: somos_de_guadalajara._envíamos_a_toda_la_república.
+   Cargado desde disco: entiendo,_(name)._para_prepararme_mejor_para_la_cita,
+   Cargado desde disco: gracias,_(name)._déjame_comentarte_que_estamos_muy_interesados
+   Cargado desde disco: entiendo,_(name)._en_nioval_ofrecemos_una_variedad_de
+   Cargado desde disco: perfecto,_gracias_por_la_información._¿y_actualmente_trabajan
+   Cargado desde disco: entendido,_gracias_por_la_información._una_última_pregunta:
+   Cargado desde disco: perfecto,_le_enviaré_el_catálogo_con_todos_nuestros
+   Cargado desde disco: entendido,_le_enviaré_el_catálogo_de_inmediato._estoy
+   Cargado desde disco: el_motivo_de_mi_llamada_es_muy_breve:
+   Cargado desde disco: perfecto,_(name)._disculpe,_no_alcancé_a_captar_el
+   Cargado desde disco: perfecto,_(name)._te_enviaré_nuestro_catálogo_digital_completo
+   Cargado desde disco: entiendo,_(name)._enviaré_el_catálogo_al_correo_yahir
+   Cargado desde disco: perfecto,_(name)._enviaré_el_catálogo_a_tu_correo
+   Cargado desde disco: gracias_a_ti,_pero._que_tengas_un_excelente
+   Cargado desde disco: claro,_con_gusto_te_enviaré_el_catálogo._¿te
+   Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w.
+   Cargado desde disco: gracias,_(name)._una_última_pregunta:_¿sabes_si_actualmente
+   Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w,_le
+   Cargado desde disco: perfecto,_aprecio_mucho_toda_la_información._le_enviaré
+   Cargado desde disco: de_nada,_estoy_para_servirle._que_tenga_un
+   Cargado desde disco: entiendo,_(name)._aprecio_la_información._¿en_qué_horario
+   Cargado desde disco: claro,_ahorita._me_gustaría_enviarle_nuestro_catálogo_digital
+   Cargado desde disco: excelente,_ahorita._en_las_próximas_2_horas_le
+   Cargado desde disco: perfecto,_ahorita._envío_el_catálogo_y_la_información
+   Cargado desde disco: entiendo,_(name)._aprecio_la_aclaración._para_poder_contactarlos,
+   Cargado desde disco: entiendo,_(name)._si_no_es_posible_enviar_la
+   Cargado desde disco: ofrecemos_productos_de_ferretería_como_cinta_para_goteras
+   Cargado desde disco: ¿hay_algo_más_en_lo_que_pueda_ayudarle?
+   Cargado desde disco: claro,_con_gusto_le_envío_el_catálogo._por
+   Cargado desde disco: entiendo,_gracias_por_la_aclaración._me_gustaría_enviarle
+   Cargado desde disco: disculpe,_solo_alcancé_a_captar_parte_del_número.
+   Cargado desde disco: entiendo,_(name)._si_necesita_algo_más,_aquí_estaré.
+   Cargado desde disco: entendido,_estaré_a_la_espera.
+   Cargado desde disco: así_es,_manejamos_una_amplia_gama_de_productos
+   Cargado desde disco: entiendo,_gracias._también_me_gustaría_saber_si_actualmente
+   Cargado desde disco: me_gustaría_enviarle_nuestro_catálogo_digital_completo_con
+   Cargado desde disco: disculpe_las_molestias,_parece_que_hay_un_error
+   Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_la_transferencia.
+   Cargado desde disco: perfecto,_muchas_gracias._¿me_podría_decir_su_nombre
+   Cargado desde disco: 
+   Cargado desde disco: perfecto,_gracias_por_la_aclaración._una_última_pregunta:
+   Cargado desde disco: entiendo,_gracias_por_su_respuesta._mi_número_es
+   Cargado desde disco: tiene_razón,_discúlpeme._mi_número_es_seis_seis
+   Cargado desde disco: claro,_tómese_su_tiempo._estoy_aquí_para_ayudarle.
+   Cargado desde disco: claro,_estaré_enviando_el_catálogo_en_un_momento.
+   Cargado desde disco: claro,_tómese_su_tiempo._estoy_aquí_esperando.
+   Cargado desde disco: ¿hola?_¿con_quién_tengo_el_gusto?
+   Cargado desde disco: me_alegra_escuchar_eso._como_le_mencioné,_me
+   Cargado desde disco: gracias_por_la_información,_juan._en_nioval_manejamos
+   Cargado desde disco: claro,_tal._¿cuál_es_su_pregunta?
+   Cargado desde disco: manejamos_varias_calidades_en_griferías,_desde_opciones_económicas
+   Cargado desde disco: las_griferías_más_económicas_suelen_tener_cuerpos_de
+   Cargado desde disco: perfecto,_tal._en_las_próximas_2_horas_le
+   Cargado desde disco: muchas_gracias_por_su_tiempo,_tal._que_tenga
+   Cargado desde disco: nosotros_manejamos_una_amplia_variedad_de_productos_de
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podrías_decirme_en
+   Cargado desde disco: perfecto,_agendaré_la_llamada_para_mañana_a_partir
+   Cargado desde disco: gracias._¿me_podrías_confirmar_el_número_completo,_por
+   Cargado desde disco: perfecto,_gracias._enviaré_el_catálogo_por_whatsapp_al
+   Cargado desde disco: entiendo,_(name)._eso_ayuda_mucho._¿podría_decirme_aproximadamente
+   Cargado desde disco: perfecto,_eso_ayuda_mucho._para_poder_contactar_al
+   Cargado desde disco: ¡que_tenga_un_excelente_día!
+   Cargado desde disco: claro,_(name)._aprecio_su_claridad_y_respeto_su
+   Cargado desde disco: gracias,_(name)._aprecio_su_tiempo._estaré_disponible_para
+   Cargado desde disco: entiendo_perfectamente._perfecto,_estoy_listo._¿me_podría_proporcionar
+   Cargado desde disco: excelente,_muchas_gracias,_jair._déjame_comentarte_que_estamos
+   Cargado desde disco: entiendo,_gracias_por_la_información._solo_una_última
+   Cargado desde disco: comprendo,_mira._es_un_proceso_importante_para_seleccionar
+   Cargado desde disco: entendido._me_comunicaré_con_el_encargado_en_el
+   Cargado desde disco: entiendo,_(name)._aprecio_la_aclaración._si_en_algún
+   Cargado desde disco: sí,_así_es._somos_distribuidores_de_productos_de
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podrías_decirme_aproximadamente
+   Cargado desde disco: realizamos_envíos_a_toda_la_república_desde_guadalajara.
+   Cargado desde disco: solo_para_preparar_una_mejor_propuesta_que_se
+   Cargado desde disco: en_nioval_ofrecemos_una_amplia_variedad_de_productos
+   Cargado desde disco: actualmente_no_tenemos_distribuidores_en_sonora,_lo_que
+   Cargado desde disco: disculpe,_entonces._¿me_lo_podría_deletrear_letra_por
+   Cargado desde disco: entiendo,_(name)._¿podría_continuar_con_el_resto_del
+   Cargado desde disco: perfecto,_(name)._el_correo_que_me_proporcionó_es:
+   Cargado desde disco: ¿podría_confirmarme_si_el_correo_es_correcto?
+   Cargado desde disco: excelente,_entonces._me_gustaría_enviarle_nuestro_catálogo_digital
+   Cargado desde disco: disculpe,_tiene_razón._le_enviaré_el_catálogo_al
+   Cargado desde disco: de_nada,_entonces._estoy_aquí_para_ayudar._¡que
+   Cargado desde disco: excelente,_gracias._le_enviaré_el_catálogo_a_ese
+   Cargado desde disco: claro,_entiendo_perfectamente._le_enviaré_toda_la_información
+   Cargado desde disco: entiendo,_tardes._el_motivo_de_mi_llamada_es
+   Cargado desde disco: perfecto,_tardes._agradezco_su_ayuda._me_gustaría_enviarle

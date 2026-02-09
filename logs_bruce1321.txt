@@ -1,0 +1,346 @@
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA357ffa31885d572ef040eb88dc90955e
+   RecordingSid: RE3e29f1634994a6fc9b05b494f0cae083
+   Status: completed
+   Duración: 24 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3e29f1634994a6fc9b05b494f0cae083
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1320
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.2 - - [23/Jan/2026 14:43:38] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE3e29f1634994a6fc9b05b494f0cae083&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3e29f1634994a6fc9b05b494f0cae083&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA357ffa31885d572ef040eb88dc90955e&RecordingStartTime=Fri,+23+Jan+2026+14:43:10+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=24 HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +523222253930, Negocio: Ferretería Beto's
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +523222253930
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA1dfb4c3153e239ca37be4963efcaa884
+[2026-01-23 14:49:51] [LLAMADA] N/A - LLAMADA INICIADA a +523222253930 (Ferretería Beto's)
+📋 Contacto completo guardado para Call SID CA1dfb4c31... (fila 1604)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.9 - - [23/Jan/2026 14:49:51] "POST /iniciar-llamada HTTP/1.1" 200 -
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+▶️ FIX 212: MediaStream iniciado
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+   StreamSid: MZ049d03c233f7acbb71e32f3a89f6df2b
+100.64.0.9 - - [23/Jan/2026 14:50:05] "GET /webhook-voz?Called=%2B523222253930&ToState=Jal.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA1dfb4c3153e239ca37be4963efcaa884&To=%2B523222253930&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Tomatlan&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Tomatlan&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Jal.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+🆔 ID BRUCE generado: BRUCE1321
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+🔄 FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+100.64.0.9 - - [23/Jan/2026 14:50:06] "GET /audio/inicial_CA1dfb4c3153e239ca37be4963efcaa884 HTTP/1.1" 200 -
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+✅ FIX 212: Deepgram conectado para CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+✅ FIX 212: Deepgram conectado para CA1dfb4c3153e239ca37be4963efcaa884
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe3629f9c161ac695ae762ad6fac14c5e'
+   Digits: timeout
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+🚀 FIX 314: Saludo detectado en INTERIM: 'Buenos días.' - Pre-cargando respuesta...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.1s)
+   🟢 Deepgram: 'Buenos días.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Buenos días."
+[2026-01-23 14:50:08] [CLIENTE] BRUCE1321 - CLIENTE DIJO: "Buenos días."
+📝 LOG registrado: CLIENT... | Buenos días....
+   🚨 FIX 244: Habló rápido (0.4s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'Buenos días.'
+   Tiempo hablando: 0.4s
+   Palabras dichas: 2 (historial: 2)
+   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...
+100.64.0.5 - - [23/Jan/2026 14:50:09] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Buenos días.'
+📝 FIX 212: [FINAL] 'Buenos días.' (latencia: 3534ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA1dfb4c3153e239ca37be4963efcaa884: 'Buenos días.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REef4251977ea03cadb568f421eb9564e1'
+   Digits: timeout
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Buenos días.'
+   [1] 'Buenos días.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: 'Buenos días.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: 'Buenos días.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Buenos días."
+[2026-01-23 14:50:10] [CLIENTE] BRUCE1321 - CLIENTE DIJO: "Buenos días."
+📝 LOG registrado: CLIENT... | Buenos días....
+   🚨 FIX 244: Habló rápido (1.9s) - probablemente sigue hablando
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+
+   CallStatus: in-progress
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   AnsweredBy: 
+   Transcripción parcial: 'Buenos días.'
+   SpeechResult: ''
+   Tiempo hablando: 1.9s
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE56dd323503791ae5b4fdc5c9d2d7e95c'
+   Palabras dichas: 2 (historial: 2)
+   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...
+100.64.0.8 - - [23/Jan/2026 14:50:10] "POST /procesar-respuesta HTTP/1.1" 200 -
+📼 FIX 214: Grabación fragmento completed - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REe3629f9c161ac695ae762ad6fac14c5e
+100.64.0.2 - - [23/Jan/2026 14:50:10] "POST /grabacion-status HTTP/1.1" 200 -
+📝 FIX 212: [FINAL] 'Dígame.' (latencia: 4633ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA1dfb4c3153e239ca37be4963efcaa884: 'Dígame.'
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+   Digits: timeout
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: 'Dígame.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Dígame."
+[2026-01-23 14:50:11] [CLIENTE] BRUCE1321 - CLIENTE DIJO: "Dígame."
+📝 LOG registrado: CLIENT... | Dígame....
+
+🔄 FIX 244: Concatenando transcripciones parciales
+   [0] 'Buenos días.'
+   [1] 'Buenos días.'
+   ✅ FIX 244: Frase completa: 'Buenos días. Buenos días. Dígame.'
+🔍 FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+✅ FIX 121: Respuesta instantánea desde caché completada en 0.000s
+🤖 BRUCE DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-23 14:50:11] [BRUCE] BRUCE1321 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+📦 FIX 119: Audio de segunda_parte_saludo desde caché (0s delay, sin espera)
+📦 FIX 97: Audio desde caché: segunda_parte_saludo (generado en paralelo)
+📝 LOG registrado: BRUCE... | Me comunico de la marca nioval, más que nada querí...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #2)
+100.64.0.4 - - [23/Jan/2026 14:50:12] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.8 - - [23/Jan/2026 14:50:12] "GET /audio/segunda_parte_saludo_CA1dfb4c3153e239ca37be4963efcaa884 HTTP/1.1" 200 -
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4a55f29d0d47ae0db42bc2863ccad5a3'
+   Digits: timeout
+💬 CLIENTE DIJO: "No se encuentra, oiga, todavía no llega"
+[2026-01-23 14:50:22] [CLIENTE] BRUCE1321 - CLIENTE DIJO: "No se encuentra, oiga, todavía no llega"
+📝 FIX 212: [PARCIAL] 'No se encuentra, oiga, todavía no llega'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: 'No se encuentra, oiga, todavía no llega'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+📝 LOG registrado: CLIENT... | No se encuentra, oiga, todavía no llega...
+   🚨 FIX 244: Habló rápido (0.4s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'No se encuentra, oiga, todavía no llega'
+   Tiempo hablando: 0.4s
+   Palabras dichas: 7 (historial: 7)
+   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...
+100.64.0.8 - - [23/Jan/2026 14:50:22] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'No se encuentra, oiga, todavía no llega.'
+📝 FIX 212: [PARCIAL] 'No se encuentra, oiga, todavía no llega.'
+📝 FIX 212: [FINAL] 'No se encuentra, oiga, todavía no llega.' (latencia: 16684ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA1dfb4c3153e239ca37be4963efcaa884: 'No se encuentra, oiga, todavía no llega.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE852f9e76645cd566d514ada48e72cd7d'
+   Digits: timeout
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'No se encuentra, oiga, todavía no llega.'
+   [1] 'No se encuentra, oiga, todavía no llega.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: 'No se encuentra, oiga, todavía no llega.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.0s)
+   🟢 Deepgram: 'No se encuentra, oiga, todavía no llega.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "No se encuentra, oiga, todavía no llega."
+[2026-01-23 14:50:23] [CLIENTE] BRUCE1321 - CLIENTE DIJO: "No se encuentra, oiga, todavía no llega."
+   Palabras dichas: 7 (historial: 7)
+   ✅ FIX 244/395: Esperando continuación con timeout de 2.5s...
+100.64.0.7 - - [23/Jan/2026 14:50:23] "POST /procesar-respuesta HTTP/1.1" 200 -
+📝 LOG registrado: CLIENT... | No se encuentra, oiga, todavía no llega....
+   🚨 FIX 244: Habló rápido (1.8s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'No se encuentra, oiga, todavía no llega.'
+   Tiempo hablando: 1.8s
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REc19f7f728dfa2d31d2f115b6e51329bc'
+   Digits: timeout
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: ""
+[2026-01-23 14:50:30] [CLIENTE] BRUCE1321 - CLIENTE DIJO: ""
+⚠️ Respuesta vacía #1
+🎙️ Bruce pedirá que le repitan (intento #1)
+🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+   Mensaje: 'Disculpa, no te escuché bien, ¿me puedes repetir?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #1
+📦 Caché AUTO: disculpa,_no_te_escuché_bien,_¿me_puedes... (0s delay)
+✅ Bruce pidió que le repitan
+✅ Bruce pidió que le repitan (Record)
+100.64.0.8 - - [23/Jan/2026 14:50:30] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [23/Jan/2026 14:50:30] "GET /audio/repeticion_CA1dfb4c3153e239ca37be4963efcaa884_1 HTTP/1.1" 200 -
+📝 FIX 212: Transcripción FINAL Deepgram para CA1dfb4c3153e239ca37be4963efcaa884: 'Disculpa, no te escuché'
+⏹️ FIX 212: MediaStream detenido - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+
+📞 STATUS CALLBACK - Llamada CA1dfb4c31...
+   Estado: completed
+   Duración: 27s
+[2026-01-23 14:50:31] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 27s
+   💬 Cliente colgó - detectado por status callback (4 mensajes)
+   📝 Clasificado como 'Colgó' (sin datos capturados)
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 27 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+📝 FIX 212: [PARCIAL] 'Disculpa, no te escuché'
+📝 FIX 212: [FINAL] 'Disculpa, no te escuché' (latencia: 25281ms)
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+🔌 FIX 212: WebSocket cerrado - CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+100.64.0.3 - - [23/Jan/2026 14:50:32] "GET /media-stream HTTP/1.1" 200 -
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber comenzado la conversación con una introducción más atractiva y centrada en los beneficios de los productos. Además, preguntar directamente por el encargado de compras podría haber sido más efectivo después de establecer una conexión inicial.
+📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3409...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 27
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber comenzado la conversación con u...
+  → Calificación Bruce: 3/10
+   ✅ Llamada guardada desde status callback
+  → ID BRUCE: BRUCE1321
+   📊 FIX 207: Llamada registrada en dashboard
+✅ Resultado guardado exitosamente en fila 3409
+✅ Resultados guardados en 'Respuestas de formulario 1'
+100.64.0.5 - - [23/Jan/2026 14:50:34] "GET /status-callback?Called=%2B523222253930&ToState=Jal.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+23+Jan+2026+14:50:31+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA1dfb4c3153e239ca37be4963efcaa884&To=%2B523222253930&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Tomatlan&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=27&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Tomatlan&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Jal.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1604
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA1dfb4c3153e239ca37be4963efcaa884
+   RecordingSid: REde40548b2dcf186333cb41f372bb0918
+   Status: completed
+   Duración: 25 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REde40548b2dcf186333cb41f372bb0918
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1321
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.8 - - [23/Jan/2026 14:50:36] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=REde40548b2dcf186333cb41f372bb0918&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REde40548b2dcf186333cb41f372bb0918&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA1dfb4c3153e239ca37be4963efcaa884&RecordingStartTime=Fri,+23+Jan+2026+14:50:06+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=25 HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +523224060690, Negocio: Ferremateriales el pillo
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +523224060690
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA844a9634244eb20c919296dce589dace
+[2026-01-23 14:51:04] [LLAMADA] N/A - LLAMADA INICIADA a +523224060690 (Ferremateriales el pillo)
+📋 Contacto completo guardado para Call SID CA844a9634... (fila 1607)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.8 - - [23/Jan/2026 14:51:04] "POST /iniciar-llamada HTTP/1.1" 200 -
+🆔 ID BRUCE generado: BRUCE1322
+📝 LOG registrado: BRUCE... | Hola, buen dia...
+📦 FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+🎙️ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+   🎬 FIX 271: Grabación asíncrona de llamada completa iniciada
+   🎯 FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.6 - - [23/Jan/2026 14:51:24] "GET /webhook-voz?Called=%2B523224060690&ToState=Jal.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA844a9634244eb20c919296dce589dace&To=%2B523224060690&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Tomatlan&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Tomatlan&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Jal.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🔌 FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+▶️ FIX 212: MediaStream iniciado
+   StreamSid: MZ9ab183945ce1729ae28b7d35c4486b2a
+   CallSid: CA844a9634244eb20c919296dce589dace
+🔄 FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+100.64.0.11 - - [23/Jan/2026 14:51:25] "GET /audio/inicial_CA844a9634244eb20c919296dce589dace HTTP/1.1" 200 -
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA844a9634244eb20c919296dce589dace
+✅ FIX 212: Deepgram conectado para CallSid: CA844a9634244eb20c919296dce589dace
+✅ FIX 212: Deepgram conectado para CA844a9634244eb20c919296dce589dace
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA844a9634244eb20c919296dce589dace
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE49286ed1cd541eb2dc59b9e13c254e2c'
+   Digits: timeout
+📝 FIX 212: [PARCIAL] 'Hola, buenos'
+🚀 FIX 314: Saludo detectado en INTERIM: 'Hola, buenos' - Pre-cargando respuesta...
+✅ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 0.2s)
+   🟢 Deepgram: 'Hola, buenos'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Hola, buenos"
+[2026-01-23 14:51:27] [CLIENTE] BRUCE1322 - CLIENTE DIJO: "Hola, buenos"
+📝 LOG registrado: CLIENT... | Hola, buenos...

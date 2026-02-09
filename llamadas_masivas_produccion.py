@@ -23,6 +23,37 @@ load_dotenv()
 # URL del servidor en Railway
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://nioval-webhook-server-production.up.railway.app")
 
+# Configuración de Telegram para notificaciones
+TELEGRAM_BOTS = [
+    {
+        "token": "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE",
+        "chat_id": "7314842427",
+        "nombre": "Bot 1"
+    },
+    {
+        "token": "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI",
+        "chat_id": "5838212022",
+        "nombre": "Bot 2"
+    }
+]
+
+
+def notificar_telegram(mensaje: str):
+    """Envía notificación a Telegram cuando terminen las llamadas"""
+    for bot in TELEGRAM_BOTS:
+        try:
+            url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
+            data = {
+                "chat_id": bot['chat_id'],
+                "text": mensaje,
+                "parse_mode": "HTML"
+            }
+            response = requests.post(url, data=data, timeout=10)
+            if response.status_code == 200:
+                print(f" Notificación enviada a {bot['nombre']}")
+        except Exception as e:
+            print(f" Error notificando a {bot['nombre']}: {e}")
+
 # Credenciales Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
@@ -55,9 +86,15 @@ class SistemaLlamadasMasivas:
             delay_entre_llamadas: Segundos de espera DESPUÉS de que termine una llamada (default: 10)
             pedir_confirmacion: Si False, omite mensaje de confirmación (default: True)
         """
+        from datetime import datetime
+
         print("\n" + "=" * 60)
         print(f" INICIANDO LLAMADAS MASIVAS EN PRODUCCIÓN")
         print("=" * 60 + "\n")
+
+        # Registrar hora de inicio
+        hora_inicio = datetime.now()
+        print(f" Hora de inicio: {hora_inicio.strftime('%H:%M:%S')}\n")
 
         # Obtener contactos pendientes (sin valor en columna F)
         print(" Obteniendo contactos pendientes de Google Sheets...")
@@ -88,7 +125,8 @@ class SistemaLlamadasMasivas:
         resultados = {
             'exitosas': 0,
             'fallidas': 0,
-            'total': len(contactos)
+            'total': len(contactos),
+            'contactos_fallidos': []  # Lista de contactos que fallaron
         }
 
         for i, contacto in enumerate(contactos, 1):
@@ -123,6 +161,11 @@ class SistemaLlamadasMasivas:
                     print("  No se pudo verificar finalización de llamada")
             else:
                 resultados['fallidas'] += 1
+                resultados['contactos_fallidos'].append({
+                    'nombre': nombre,
+                    'telefono': telefono,
+                    'fila': fila
+                })
                 print(" Error al iniciar llamada")
 
             # Mostrar resumen parcial
@@ -133,6 +176,12 @@ class SistemaLlamadasMasivas:
                 print(f"\n  Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
                 time.sleep(delay_entre_llamadas)
 
+        # Calcular tiempos
+        hora_fin = datetime.now()
+        duracion_total = hora_fin - hora_inicio
+        minutos = int(duracion_total.total_seconds() // 60)
+        segundos = int(duracion_total.total_seconds() % 60)
+
         # Resumen final
         print("\n" + "=" * 60)
         print(" RESUMEN DE LLAMADAS")
@@ -140,8 +189,37 @@ class SistemaLlamadasMasivas:
         print(f"Total: {resultados['total']}")
         print(f" Exitosas: {resultados['exitosas']}")
         print(f" Fallidas: {resultados['fallidas']}")
-        print(f" Tasa de éxito: {round(resultados['exitosas']/resultados['total']*100, 1)}%")
+        tasa_exito = round(resultados['exitosas']/resultados['total']*100, 1)
+        print(f" Tasa de éxito: {tasa_exito}%")
+        print(f" Inicio: {hora_inicio.strftime('%H:%M:%S')}")
+        print(f" Fin: {hora_fin.strftime('%H:%M:%S')}")
+        print(f" Duración: {minutos}m {segundos}s")
         print("=" * 60 + "\n")
+
+        # Notificar por Telegram
+        mensaje_telegram = f"""<b>LLAMADAS MASIVAS COMPLETADAS</b>
+
+<b>Resumen:</b>
+Total: {resultados['total']}
+Exitosas: {resultados['exitosas']}
+Fallidas: {resultados['fallidas']}
+Tasa de éxito: {tasa_exito}%
+
+<b>Tiempos:</b>
+Inicio: {hora_inicio.strftime('%H:%M:%S')}
+Fin: {hora_fin.strftime('%H:%M:%S')}
+Duración total: {minutos}m {segundos}s"""
+
+        # Agregar lista de fallidos si hay
+        if resultados['contactos_fallidos']:
+            mensaje_telegram += "\n\n<b>Contactos fallidos:</b>"
+            for cf in resultados['contactos_fallidos'][:10]:  # Máximo 10 para no saturar
+                mensaje_telegram += f"\n- {cf['nombre']} ({cf['telefono']})"
+            if len(resultados['contactos_fallidos']) > 10:
+                mensaje_telegram += f"\n... y {len(resultados['contactos_fallidos']) - 10} más"
+
+        print(" Enviando notificación a Telegram...")
+        notificar_telegram(mensaje_telegram)
 
     def _iniciar_llamada_railway(self, contacto: dict) -> str:
         """
@@ -310,8 +388,10 @@ def main():
             print("3. Ejecutar 2 llamadas (delay: 30s)")
             print("4. Ejecutar 5 llamadas (delay: 30s)")
             print("5. Ejecutar 10 llamadas (delay: 30s)")
-            print("6. Ejecutar 50 llamadas (delay: 30s)")
-            print("7. Ejecutar cantidad personalizada")
+            print("6. Ejecutar 25 llamadas (delay: 30s)")
+            print("7. Ejecutar 50 llamadas (delay: 30s)")
+            print("8. Ejecutar cantidad personalizada")
+            print("9. Iniciar monitor de logs (segundo plano)")
             print("0. Salir")
 
             opcion = input("\nSelecciona una opción: ").strip()
@@ -332,17 +412,47 @@ def main():
                 sistema.ejecutar_llamadas(cantidad=10, delay_entre_llamadas=30)
 
             elif opcion == "6":
-                confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
-                if confirmar == 's':
-                    sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=30)
+                # Iniciar monitor de logs automáticamente para 25+ llamadas
+                import subprocess
+                script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                print(f"\n Iniciando monitor de logs automáticamente...")
+                subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                sistema.ejecutar_llamadas(cantidad=25, delay_entre_llamadas=30)
 
             elif opcion == "7":
+                confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
+                if confirmar == 's':
+                    # Iniciar monitor de logs automáticamente para 50 llamadas
+                    import subprocess
+                    script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                    print(f"\n Iniciando monitor de logs automáticamente...")
+                    subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                    sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=30)
+
+            elif opcion == "8":
                 try:
                     cantidad = int(input("¿Cuántas llamadas? "))
                     delay = int(input("¿Delay entre llamadas (segundos)? [default: 30]: ") or "30")
+                    # Iniciar monitor de logs automáticamente si son 20+ llamadas
+                    if cantidad >= 20:
+                        import subprocess
+                        script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                        print(f"\n Iniciando monitor de logs automáticamente...")
+                        subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
                     sistema.ejecutar_llamadas(cantidad=cantidad, delay_entre_llamadas=delay)
                 except ValueError:
                     print(" Valores inválidos")
+
+            elif opcion == "9":
+                import subprocess
+                script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                print(f"\n Iniciando monitor de logs en segundo plano...")
+                subprocess.Popen(
+                    [sys.executable, script_path],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE
+                )
+                print(" Monitor iniciado en nueva ventana")
+                print(" Los logs se descargarán automáticamente cada 5000 líneas o nuevo deploy")
 
             elif opcion == "0":
                 print("\n Hasta pronto!")

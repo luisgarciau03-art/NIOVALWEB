@@ -1,0 +1,18 @@
+[2026-01-25 16:22:05] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "¿Qué tal? Buen día."
+[2026-01-25 16:22:05] [BRUCE] BRUCE1473 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-25 16:22:18] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "Salió a comer llega más tarde."
+[2026-01-25 16:22:18] [BRUCE] BRUCE1473 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+[2026-01-25 16:22:27] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "No, tendrías que esperar que llegue No, tendrías que esperar a que llegue él."
+[2026-01-25 16:22:27] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "No, tendrías que esperar que llegue No, tendrías que esperar a que llegue él."
+[2026-01-25 16:22:27] [BRUCE] BRUCE1473 DICE: "Claro, espero." (FIX 470: modo espera)
+[2026-01-25 16:22:32] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "¿O quieres que te pase correo? ¿Te paso correo?"
+[2026-01-25 16:22:33] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "¿O quieres que te pase correo? ¿Te paso correo?"
+[2026-01-25 16:22:33] [BRUCE] BRUCE1473 DICE: "Claro, espero." (FIX 470: modo espera)
+[2026-01-25 16:22:40] [CLIENTE] BRUCE1473 - CLIENTE DIJO: ""
+[2026-01-25 16:22:45] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "Hola, hola. ¿Hola?"
+[2026-01-25 16:22:46] [BRUCE] BRUCE1473 - IVR/CONTESTADORA DETECTADA - COLGANDO
+  → ID BRUCE: BRUCE1473
+    FIX 272: Grabación asociada a BRUCE1473
+[2026-01-25 16:22:54] [CLIENTE] BRUCE1473 - CLIENTE DIJO: "¿Quieres que te pase correo?"
+[2026-01-25 16:22:55] [BRUCE] BRUCE1473 - IVR/CONTESTADORA DETECTADA - COLGANDO
+  → ID BRUCE: BRUCE1473
