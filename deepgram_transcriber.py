@@ -178,8 +178,9 @@ class DeepgramTranscriber:
 
             # FIX 610: LOGUEAR INCLUSO SI TRANSCRIPCIÓN ESTÁ VACÍA
             if not transcript or len(transcript.strip()) == 0:
+                conf_str = f"{confidence:.2f}" if confidence else "N/A"
                 print(f" FIX 610: [DEEPGRAM VACÍO] is_final={is_final}, speech_final={speech_final}, "
-                      f"confidence={confidence:.2f if confidence else 'N/A'}, latencia={latency_ms:.0f}ms, "
+                      f"confidence={conf_str}, latencia={latency_ms:.0f}ms, "
                       f"audio_chunks={self.audio_chunks_received}")
                 # FIX 610: Seguir procesando para registrar el evento
                 # NO hacer return aquí - queremos ver estos eventos vacíos
@@ -192,7 +193,8 @@ class DeepgramTranscriber:
 
                 # FIX 610: Logging mejorado para FINAL
                 if transcript and len(transcript.strip()) > 0:
-                    print(f" FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms, confidence={confidence:.2f if confidence else 'N/A'})")
+                    conf_str_final = f"{confidence:.2f}" if confidence else "N/A"
+                    print(f" FIX 212: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms, confidence={conf_str_final})")
                 else:
                     print(f" FIX 610: [FINAL VACÍO] latencia={latency_ms:.0f}ms, audio_chunks={self.audio_chunks_received}")
 

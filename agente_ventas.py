@@ -2042,6 +2042,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         filtro_aplicado = False
 
         # ============================================================
+        # FIX 615B: BRUCE2030 - NO repetir números de teléfono en voz
+        # GPT a veces repite el número completo (ej: "+526623531804")
+        # El TTS lo lee con acento extranjero y suena mal
+        # SOLUCIÓN: Eliminar números de teléfono de la respuesta
+        # ============================================================
+        patron_tel_615 = r'\+?\d{2}[\s-]?\d{10}|\+?\d{12,13}|\b\d{10}\b'
+        numeros_encontrados = re.findall(patron_tel_615, respuesta)
+        if numeros_encontrados:
+            print(f"[OK] FIX 615B: BRUCE2030 - Eliminando {len(numeros_encontrados)} número(s) de teléfono de respuesta")
+            for num in numeros_encontrados:
+                print(f"   Eliminando: '{num}'")
+                respuesta = respuesta.replace(num, '')
+            # Limpiar frases que quedan rotas tras eliminar el número
+            respuesta = re.sub(r'(?:tengo\s+)?(?:su|el|al)\s+número\s*\.?\s*', '', respuesta, flags=re.IGNORECASE)
+            respuesta = re.sub(r'por\s+[Ww]hats[Aa]pp\s+al\s*\.?\s*', 'por WhatsApp. ', respuesta)
+            respuesta = re.sub(r'[Ss]í,?\s*\.?\s*(?=Perfecto)', '', respuesta)
+            # Limpiar espacios dobles y puntuación extra
+            respuesta = re.sub(r'\s{2,}', ' ', respuesta).strip()
+            respuesta = re.sub(r'\.\s*\.', '.', respuesta)
+            respuesta = re.sub(r',\s*\.', '.', respuesta)
+            respuesta = re.sub(r'^\s*[,.]?\s*', '', respuesta)
+            if respuesta:
+                respuesta_lower = respuesta.lower()
+                print(f"   Respuesta limpia: '{respuesta[:100]}'")
+
+        # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
         # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
         # Solución: Contar preguntas y BLOQUEAR repeticiones
@@ -8632,6 +8658,21 @@ Ejemplo correcto:
 
         # FIX 229: Verificar si cliente va a dar información
         cliente_da_info = any(info in respuesta_lower for info in patrones_dar_info)
+
+        # FIX 615: BRUCE2030 - "te lo paso" + número = NO es transferencia
+        # Si el texto contiene "número", "teléfono", o dígitos, cliente está DANDO un número
+        # NO activar modo transferencia aunque diga "te lo paso"
+        import re as re_615
+        cliente_dictando_numero_615 = any(p in respuesta_lower for p in [
+            'número es', 'numero es', 'el número', 'el numero',
+            'teléfono es', 'telefono es', 'mi teléfono', 'mi telefono',
+            'mi número', 'mi numero', 'mi cel', 'mi celular',
+        ])
+        tiene_digitos_secuencia_615 = bool(re_615.search(r'\d{3,}', respuesta_lower))
+        if cliente_dictando_numero_615 or tiene_digitos_secuencia_615:
+            cliente_da_info = True  # Forzar como "dando información"
+            print(f"[OK] FIX 615: BRUCE2030 - Cliente DICTANDO NÚMERO - NO es transferencia")
+            print(f"   Detectado: numero={cliente_dictando_numero_615}, digitos={tiene_digitos_secuencia_615}")
 
         # FIX 216: Primero verificar si hay negación
         hay_negacion = any(neg in respuesta_lower for neg in patrones_negacion)
