@@ -4414,7 +4414,7 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     agente.lead_data["email"] = email_intento
                     print(f"   FIX 617C: Email detectado en fallback: '{email_intento}'")
                 else:
-                    respuesta_fallback_577 = "Disculpe, ¿me puede deletrear el correo por favor?"
+                    respuesta_fallback_577 = "Disculpe, ¿me puede repetir el correo por favor?"
                     print(f"   FIX 617C: Texto tiene indicadores de email pero no se pudo extraer")
             elif any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
                 respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
