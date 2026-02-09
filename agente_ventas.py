@@ -4142,7 +4142,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         else:
                             numero_formateado = '-'.join([numero_str[i:i+2] for i in range(0, len(numero_str), 2)])
 
-                        respuesta = f"Perfecto, lo tengo anotado como {numero_formateado}, ¿es correcto?"
+                        # FIX 618: NO repetir número en voz (FIX 615B + user request)
+                        respuesta = "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias."
                         filtro_aplicado = True
                         print(f"   Respuesta corregida: \"{respuesta}\"")
 
@@ -7445,7 +7446,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   FIX 617B: Email reconstruido de dictado: '{email_reconstruido}'")
                     return {
                         "tipo": "CORREO_DETECTADO",
-                        "respuesta": f"Perfecto, tengo anotado {email_reconstruido}. Le envío el catálogo en las próximas horas. Muchas gracias.",
+                        "respuesta": "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias.",
                         "accion": "GUARDAR_CORREO",
                         "dato": email_reconstruido
                     }
@@ -7456,7 +7457,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             correo = match_email.group()
             return {
                 "tipo": "CORREO_DETECTADO",
-                "respuesta": f"Perfecto, tengo anotado {correo}. Le envío el catálogo en las próximas horas. Muchas gracias.",
+                "respuesta": "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias.",
                 "accion": "GUARDAR_CORREO",
                 "dato": correo
             }
@@ -7483,7 +7484,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
                 return {
                     "tipo": "NUMERO_COMPLETO_DICTADO",
-                    "respuesta": f"Perfecto, tengo anotado {numero_formateado}. Le envío el catálogo en breve. Muchas gracias por su tiempo.",
+                    "respuesta": "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias por su tiempo.",
                     "accion": "GUARDAR_WHATSAPP",
                     "dato": numero_final
                 }

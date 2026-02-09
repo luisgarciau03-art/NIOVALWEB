@@ -4409,13 +4409,15 @@ Responde SOLO con una letra: A, B, C, D o E"""
                     pre = match_email_577.group(1).replace(' ', '')
                     post = match_email_577.group(2).replace(' ', '')
                     email_intento = f"{pre}@{post}"
-                    respuesta_fallback_577 = f"Perfecto, tengo anotado {email_intento}. ¿Es correcto?"
+                    # FIX 618: NO repetir email en voz (suena mal si STT lo garbled)
+                    respuesta_fallback_577 = "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias."
                     # Guardar email en lead_data
                     agente.lead_data["email"] = email_intento
-                    print(f"   FIX 617C: Email detectado en fallback: '{email_intento}'")
+                    print(f"   FIX 617C: Email detectado en fallback: '{email_intento}' (NO se repite en voz)")
                 else:
-                    respuesta_fallback_577 = "Disculpe, ¿me puede repetir el correo por favor?"
-                    print(f"   FIX 617C: Texto tiene indicadores de email pero no se pudo extraer")
+                    # FIX 618: NO pedir repetir (crea loop) - aceptar lo que se pueda
+                    respuesta_fallback_577 = "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias."
+                    print(f"   FIX 618: Texto tiene indicadores de email - aceptar sin repetir")
             elif any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
                 respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
                 print(f"   FIX 597: Fallback contextual - cliente ofrece ayuda, respondemos con presentación")
