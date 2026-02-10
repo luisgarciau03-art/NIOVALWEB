@@ -1,0 +1,59 @@
+name: Bruce W - Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-html
+          pip install openai elevenlabs google-auth google-auth-oauthlib gspread twilio azure-cognitiveservices-speech deepgram-sdk requests pytz
+
+      - name: Run tests
+        id: tests
+        env:
+          OPENAI_API_KEY: test-dummy-key
+          ELEVENLABS_API_KEY: test-dummy-key
+          ELEVENLABS_VOICE_ID: test-dummy-voice
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ${{ github.workspace }}
+          python -m pytest tests/ -v --tb=short 2>&1 | tee test_output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Notify Telegram on failure
+        if: failure()
+        env:
+          TELEGRAM_TOKEN_1: "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE"
+          TELEGRAM_CHAT_1: "7314842427"
+          TELEGRAM_TOKEN_2: "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI"
+          TELEGRAM_CHAT_2: "5838212022"
+        run: |
+          FAILED=$(grep -c "FAILED" test_output.txt 2>/dev/null || echo "?")
+          PASSED=$(grep -oP '\d+ passed' test_output.txt 2>/dev/null || echo "? passed")
+
+          MSG="<b>TESTS FALLARON (GitHub Actions)</b>%0A"
+          MSG+="Branch: ${{ github.ref_name }}%0A"
+          MSG+="Commit: ${{ github.sha }}%0A"
+          MSG+="Passed: ${PASSED} | Failed: ${FAILED}%0A"
+          MSG+="%0ACommit msg: ${{ github.event.head_commit.message }}"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_1}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_1}" -d "text=${MSG}" -d "parse_mode=HTML" || true
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN_2}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_2}" -d "text=${MSG}" -d "parse_mode=HTML" || true
