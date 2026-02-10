@@ -12,4 +12,5 @@ markers = [
     "post_filter: Tests for _filtrar_respuesta_post_gpt",
     "invalidation: Tests for FIX 600/601/602 invalidation pipeline",
     "regression: Tests from real BRUCE production bug cases",
+    "bug_detector: Tests for bug_detector.py (technical bugs + content errors + GPT eval)",
 ]
