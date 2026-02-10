@@ -2542,7 +2542,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     EstadoConversacion.ENCARGADO_NO_ESTA
                 ]
 
-                if estado_critico:
+                # FIX 629C: BRUCE2063 - Si mensaje ACTUAL es despedida, NO aplicar FIX 384
+                # Problema: FIX 384 usa contexto_cliente (todos los mensajes) y detecta "no está"
+                # de turnos anteriores, pero el ACTUAL es "Hasta luego" → override con "¿catálogo?"
+                ultimo_msg_actual_629 = ""
+                for msg in reversed(self.conversation_history):
+                    if msg['role'] == 'user':
+                        ultimo_msg_actual_629 = msg['content'].lower().strip()
+                        break
+                frases_despedida_629c = ['hasta luego', 'adiós', 'adios', 'bye', 'nos vemos',
+                                         'buenas noches', 'que tenga buen', 'que le vaya bien']
+                msg_actual_es_despedida = any(f in ultimo_msg_actual_629 for f in frases_despedida_629c)
+
+                if msg_actual_es_despedida:
+                    print(f"\n   FIX 629C: Saltando FIX 384 - Mensaje ACTUAL es DESPEDIDA")
+                    print(f"   Cliente dijo: '{ultimo_msg_actual_629[:50]}'")
+                    print(f"   FIX 384 habría corregido basado en contexto viejo")
+                elif estado_critico:
                     print(f"\n[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: {self.estado_conversacion.value}")
                     print(f"   GPT debe manejar con contexto de estado")
                     print(f"   Cliente dijo: '{contexto_cliente[-80:] if len(contexto_cliente) > 80 else contexto_cliente}'")
@@ -3342,12 +3358,27 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     filtro_aplicado = True
                     print(f"   Respuesta corregida: \"{respuesta}\"")
                 elif cliente_dice_no_disponible and (bruce_insiste_contacto or bruce_dice_ocupado):
-                    print(f"\n[EMOJI] FIX 254/255/372/376: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
-                    print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
-                    print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
-                    respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
-                    filtro_aplicado = True
-                    print(f"   Respuesta corregida: \"{respuesta}\"")
+                    # FIX 629B: BRUCE2063 - No sobreescribir si cliente OFRECE contacto
+                    # "No está disponible, pero te puedo pasar su número" → GPT dijo "si me puede pasar"
+                    # FIX 254 veía "no disponible" + "me puede pasar" → override con "¿catálogo?"
+                    # Pero GPT estaba ACEPTANDO la oferta del cliente (correcto!)
+                    cliente_ofrece_dato_629 = any(p in ultimo_cliente for p in [
+                        'te puedo pasar', 'le puedo pasar', 'te paso su', 'le paso su',
+                        'te doy su', 'le doy su', 'quieres que te pase', 'quiere que le pase',
+                        'te puedo dar', 'le puedo dar', 'te paso el', 'le paso el',
+                        'te doy el', 'le doy el', 'puedo pasar su', 'puedo dar su',
+                    ])
+                    if cliente_ofrece_dato_629:
+                        print(f"\n   FIX 629B: Cliente OFRECE contacto - NO aplicar FIX 254/255")
+                        print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                        print(f"   GPT respondió correctamente: \"{respuesta[:60]}...\"")
+                    else:
+                        print(f"\n[EMOJI] FIX 254/255/372/376: FILTRO ACTIVADO - Cliente dijo NO DISPONIBLE pero Bruce insiste/malinterpreta")
+                        print(f"   Cliente dijo: \"{ultimo_cliente[:80]}...\"")
+                        print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
+                        respuesta = "Entiendo. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo electrónico?"
+                        filtro_aplicado = True
+                        print(f"   Respuesta corregida: \"{respuesta}\"")
 
         # ============================================================
         # FILTRO 13 (FIX 257): Cliente dice que ÉL ES el encargado
@@ -7471,8 +7502,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # 1. DESPEDIDAS (no necesita GPT)
-        despedidas = ["adiós", "hasta luego", "bye", "nos vemos", "gracias", "lo reviso", "lo checo"]
-        if any(d in texto_lower for d in despedidas) and len(texto_lower) < 30:
+        # FIX 629A: BRUCE2063 - "Hasta luego, oiga, Hasta luego indra." (38 chars) no matcheaba con < 30
+        # Separar despedidas fuertes (toleran más texto) de débiles (necesitan contexto corto)
+        despedidas_fuertes = ["adiós", "hasta luego", "bye", "nos vemos"]
+        despedidas_debiles = ["gracias", "lo reviso", "lo checo"]
+        es_despedida_fuerte = any(d in texto_lower for d in despedidas_fuertes) and len(texto_lower.split()) <= 10
+        es_despedida_debil = any(d in texto_lower for d in despedidas_debiles) and len(texto_lower) < 30
+        # Si catálogo ya prometido, cualquier despedida es válida (tolerancia máxima)
+        es_despedida_post_catalogo = self.catalogo_prometido and any(d in texto_lower for d in despedidas_fuertes + despedidas_debiles)
+        if es_despedida_fuerte or es_despedida_debil or es_despedida_post_catalogo:
             return {
                 "tipo": "DESPEDIDA_CLIENTE",
                 "respuesta": "Muchas gracias por su tiempo. Que tenga excelente día.",
@@ -8143,7 +8181,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 621C: OTRA_SUCURSAL inmune (cliente dice "es que no es en esta sucursal" → "es que" no cambia intención)
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (cliente dice "pero le doy un correo" → oferta es válida)
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
-            patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
+            # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
+            patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                      'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
                                      'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'}
@@ -8178,7 +8217,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 621C: OTRA_SUCURSAL inmune (texto largo con "es en la otra sucursal" no debe ir a GPT)
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (dictado largo no debe invalidar)
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
-            patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'RECHAZO_DEFINITIVO',
+            # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
+            patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
+                                    'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
                                     'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                                     'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
