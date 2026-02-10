@@ -7360,6 +7360,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # Extraer la última pregunta (después del último punto)
                     partes_621b = re.split(r'[.!]\s+', ultimo_bruce_621b)
                     ultima_pregunta_621b = partes_621b[-1].strip() if partes_621b else ultimo_bruce_621b.strip()
+                    # FIX 624: BRUCE2045 - Si la extracción es muy larga, buscar último ¿
+                    # Problema: Pitch "Me comunico..., ¿Se encontrará el encargado?" usa comas,
+                    # no puntos, entonces split por [.!] NO separa → 157 chars > 120 → fallaba
+                    if len(ultima_pregunta_621b) > 120:
+                        idx_pregunta_624 = ultimo_bruce_621b.rfind('¿')
+                        if idx_pregunta_624 >= 0:
+                            ultima_pregunta_621b = ultimo_bruce_621b[idx_pregunta_624:].strip()
+                            print(f"   FIX 624: Pregunta extraída con ¿: '{ultima_pregunta_621b[:80]}'")
                     # Asegurar que la pregunta no sea demasiado larga
                     if len(ultima_pregunta_621b) <= 120:
                         # Quitar ¿ inicial si existe para concatenar con "le preguntaba,"
@@ -7401,6 +7409,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 if ultimo_bruce_535b and ultimo_bruce_535b.strip().endswith('?'):
                     partes_535b = re.split(r'[.!]\s+', ultimo_bruce_535b)
                     ultima_pregunta_535b = partes_535b[-1].strip() if partes_535b else ultimo_bruce_535b.strip()
+                    # FIX 624: BRUCE2045 - Si es muy larga, buscar último ¿
+                    if len(ultima_pregunta_535b) > 120:
+                        idx_624 = ultimo_bruce_535b.rfind('¿')
+                        if idx_624 >= 0:
+                            ultima_pregunta_535b = ultimo_bruce_535b[idx_624:].strip()
+                            print(f"   FIX 624: Pregunta extraída con ¿: '{ultima_pregunta_535b[:80]}'")
                     if len(ultima_pregunta_535b) <= 120:
                         pregunta_limpia_535b = ultima_pregunta_535b.lstrip('¿').strip()
                         pregunta_limpia_535b = pregunta_limpia_535b[0].lower() + pregunta_limpia_535b[1:] if pregunta_limpia_535b else pregunta_limpia_535b
