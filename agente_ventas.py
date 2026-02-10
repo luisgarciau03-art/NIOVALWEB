@@ -8251,13 +8251,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (dictado largo no debe invalidar)
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
+            # FIX 634: CLIENTE_DICTANDO_NUMERO/NUMERO_PARCIAL inmunes (buzón de voz prepende texto largo)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
                                     'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                                     'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                                    'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'}
+                                    'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
+                                    'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
+                                    'NUMERO_PARCIAL_CON_VERIFICACION'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1

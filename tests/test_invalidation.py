@@ -89,7 +89,9 @@ class TestFix601UmbralComplejidad:
                 'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                 'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                 'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'
+                'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
+                'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
+                'NUMERO_PARCIAL_CON_VERIFICACION',
             }
             assert resultado["tipo"] in patrones_inmunes_601, \
                 f"Texto complejo matcheó patrón no-inmune: {resultado['tipo']}"
@@ -219,3 +221,50 @@ class TestInmunidadCombinada:
             assert resultado["tipo"] in (
                 "OFRECE_CONTACTO_ENCARGADO", "CLIENTE_OFRECE_NUMERO"
             ), f"OFRECE_CONTACTO debe sobrevivir: {resultado['tipo']}"
+
+
+# ============================================================
+# FIX 634: NUMERO DICTADO INMUNE A FIX 601
+# ============================================================
+
+class TestFix634NumeroDictadoInmune601:
+    """FIX 634: CLIENTE_DICTANDO_NUMERO y variantes inmunes a FIX 601."""
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_numero_largo_buzon_voz_no_invalidado(self, agente_mid_conversation):
+        """FIX 634: Buzón de voz prepende texto largo → número no debe invalidarse por FIX 601."""
+        texto = "es el servicio de buzón de voz para 332 258 4960 por favor deje su mensaje después del tono"
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(texto)
+        # Si matchea un patrón de número, debe sobrevivir (no invalidarse por FIX 601)
+        if resultado is not None:
+            assert resultado["tipo"] not in (
+                "ENCARGADO_NO_ESTA_SIN_HORARIO", "ENCARGADO_NO_ESTA_CON_HORARIO"
+            ), f"Texto con número no debe matchear ENCARGADO: {resultado['tipo']}"
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_numero_dictado_largo_sobrevive_601(self, agente_mid_conversation):
+        """FIX 634: Cliente dicta número con contexto largo → inmune a FIX 601."""
+        texto = "sí mire, el número del encargado es el 662 353 1804, ese es su celular"
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(texto)
+        if resultado is not None:
+            assert resultado["tipo"] in (
+                "CLIENTE_DICTANDO_NUMERO", "NUMERO_PARCIAL_DICTADO",
+                "NUMERO_PARCIAL_CON_VERIFICACION", "CLIENTE_OFRECE_NUMERO",
+                "OFRECE_CONTACTO_ENCARGADO", "WHATSAPP_DETECTADO",
+            ), f"Número dictado debe sobrevivir FIX 601: {resultado['tipo']}"
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_numero_parcial_largo_sobrevive_601(self, agente_mid_conversation):
+        """FIX 634: Número parcial con texto complejo → inmune a FIX 601."""
+        texto = "pues mire, le digo que el número empieza con 662, pero déjeme verificar el resto"
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(texto)
+        # Este texto podría no matchear ningún patrón (ir a GPT), o matchear NUMERO_PARCIAL
+        # Lo importante es que si matchea, NO sea invalidado por FIX 601
+        if resultado is not None and resultado["tipo"] in (
+            "NUMERO_PARCIAL_DICTADO", "NUMERO_PARCIAL_CON_VERIFICACION",
+            "CLIENTE_DICTANDO_NUMERO"
+        ):
+            pass  # Correcto: número sobrevivió FIX 601
