@@ -7371,6 +7371,28 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "accion": "ESPERAR_NUMERO"
                 }
 
+        # FIX 628: BRUCE2062 - Patrones auto-suficientes (no necesitan contact word)
+        # Problema: "¿Quieres que te pase su" se truncó sin "teléfono" → no matcheó
+        # porque contexto_contacto_621 requería "teléfono/número/correo" que fue cortado
+        # Solución: Patrones que terminan en posesivo "su" ya implican oferta de contacto
+        # "te paso su" / "quieres que te pase su" → solo puede ser teléfono/número/correo
+        patrones_ofrece_autosuficientes_628 = [
+            'quieres que te pase su', 'quiere que le pase su',
+            'quieres que te dé su', 'quiere que le dé su',
+            'quieres que te de su', 'quiere que le de su',
+            'te paso su', 'le paso su', 'te doy su', 'le doy su',
+            'te puedo pasar su', 'le puedo pasar su',
+            'te puedo dar su', 'le puedo dar su',
+        ]
+        if any(p in texto_lower for p in patrones_ofrece_autosuficientes_628):
+            print(f"   FIX 628: BRUCE2062 - Oferta contacto auto-suficiente (sin contact word): '{texto_cliente[:60]}'")
+            self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+            return {
+                "tipo": "CLIENTE_OFRECE_NUMERO",
+                "respuesta": "Sí, claro, dígame el número por favor.",
+                "accion": "ESPERAR_NUMERO"
+            }
+
         # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL
         # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
         # Cliente está pidiendo que Bruce le dé SU número de contacto
