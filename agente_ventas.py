@@ -1314,6 +1314,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             else:
                 return "NIOVAL. ¿Le gustaría recibir el catálogo por WhatsApp?"
 
+        # FIX 626C: BRUCE2060 - Si cliente repite OFERTA de contacto, ACEPTAR
+        # Problema: Cliente decía "te paso su teléfono" 3 veces y Bruce respondía
+        # "Disculpe, no escuché bien" en loop porque FIX 480 detectaba repetición
+        # pero no reconocía que era una OFERTA de datos que debía aceptar
+        patrones_ofrece_626c = ['te paso', 'le paso', 'te doy', 'le doy', 'puedo pasar', 'puedo dar']
+        patrones_dato_626c = ['teléfono', 'telefono', 'número', 'numero', 'cel', 'whatsapp', 'correo']
+        if any(p in pregunta_lower for p in patrones_ofrece_626c) and any(t in pregunta_lower for t in patrones_dato_626c):
+            print(f"   FIX 626C: Cliente repite OFERTA de contacto → aceptar número")
+            return "Sí, por favor, dígame el número."
+
         # Respuesta genérica si no se identificó la pregunta
         if veces == 2:
             return "Disculpe, no escuché bien. ¿Me puede repetir su pregunta?"
@@ -4582,7 +4592,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'te paso mi teléfono', 'le paso mi teléfono',
                 'te paso mi telefono', 'le paso mi telefono',
                 'yo te puedo apoyar', 'yo le puedo apoyar',
-                'dime yo te puedo', 'dime yo te ayudo'
+                'dime yo te puedo', 'dime yo te ayudo',
+                # FIX 626B: BRUCE2060 - "te paso su teléfono" = ofrece dato del ENCARGADO
+                'te paso su teléfono', 'le paso su teléfono',
+                'te paso su telefono', 'le paso su telefono',
+                'te paso su número', 'le paso su número',
+                'te paso su numero', 'le paso su numero',
+                'te doy su teléfono', 'le doy su teléfono',
+                'te doy su telefono', 'le doy su telefono',
+                'te doy su número', 'le doy su número',
+                'te doy su numero', 'le doy su numero',
+                'te paso el teléfono', 'le paso el teléfono',
+                'te paso el telefono', 'le paso el telefono',
+                'te paso el número', 'le paso el número',
+                'te paso el numero', 'le paso el numero',
+                'te doy el teléfono', 'le doy el teléfono',
+                'te doy el telefono', 'le doy el telefono',
+                'te doy el número', 'le doy el número',
+                'te doy el numero', 'le doy el numero',
             ])
 
             if cliente_ofrece_dato:
@@ -6337,6 +6364,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "accion": "CAPTURAR_TELEFONO_CLIENTE"
                     }
 
+                # FIX 626B: BRUCE2060 - "te paso su teléfono" = OFRECE contacto del ENCARGADO
+                # Similar a FIX 625A pero para "su" (encargado) en vez de "mi" (cliente)
+                # Problema: Cliente decía "si quieres te paso su teléfono" y Bruce respondía
+                # "Claro, espero" (transfer) o "Disculpe, no escuché bien" (loop)
+                palabras_ofrece_tel_encargado_626 = [
+                    'te paso su teléfono', 'le paso su teléfono',
+                    'te paso su telefono', 'le paso su telefono',
+                    'te paso su número', 'le paso su número',
+                    'te paso su numero', 'le paso su numero',
+                    'te paso su cel', 'le paso su cel',
+                    'te doy su teléfono', 'le doy su teléfono',
+                    'te doy su telefono', 'le doy su telefono',
+                    'te doy su número', 'le doy su número',
+                    'te doy su numero', 'le doy su numero',
+                    'te doy su cel', 'le doy su cel',
+                    'te paso el teléfono', 'le paso el teléfono',
+                    'te paso el telefono', 'le paso el telefono',
+                    'te paso el número', 'le paso el número',
+                    'te paso el numero', 'le paso el numero',
+                    'te doy el teléfono', 'le doy el teléfono',
+                    'te doy el telefono', 'le doy el telefono',
+                    'te doy el número', 'le doy el número',
+                    'te doy el numero', 'le doy el numero',
+                    '¿te paso su', '¿le paso su',
+                ]
+                if any(p in texto_lower for p in palabras_ofrece_tel_encargado_626):
+                    print(f"   FIX 626B: BRUCE2060 - Cliente ofrece teléfono/número del ENCARGADO")
+                    print(f"     Texto: '{texto_lower[:80]}'")
+                    self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                    return {
+                        "tipo": "OFRECE_CONTACTO_ENCARGADO",
+                        "respuesta": "Sí, por favor, dígame el número.",
+                        "accion": "CAPTURAR_TELEFONO_ENCARGADO"
+                    }
+
                 if tiene_horario_especifico:
                     # FIX 594 BRUCE1987: Si cliente OFRECE correo/whatsapp, priorizar captura
                     # Problema: "Llega hasta el lunes, te doy el correo mejor" → Bruce decía "le llamo entonces"
@@ -8015,9 +8077,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Patrones que SÍ sobreviven al "pero" (despedida, confirmaciones negativas)
             # FIX 621C: OTRA_SUCURSAL inmune (cliente dice "es que no es en esta sucursal" → "es que" no cambia intención)
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (cliente dice "pero le doy un correo" → oferta es válida)
+            # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
-                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO'}
+                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
+                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -8048,11 +8112,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # el patrón CORREO_DETECTADO → GPT devolvía vacío → FIX 577 respondía con pitch inicial
             # FIX 621C: OTRA_SUCURSAL inmune (texto largo con "es en la otra sucursal" no debe ir a GPT)
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (dictado largo no debe invalidar)
+            # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
                                     'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                                     'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
-                                    'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO'}
+                                    'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
+                                    'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1

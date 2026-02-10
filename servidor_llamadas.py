@@ -2939,6 +2939,36 @@ def procesar_respuesta():
                     print(f"   → NO activar modo espera, dejar que agente capture el número")
                     cliente_pidio_espera = False
 
+            # FIX 626A: BRUCE2060 - "te paso su teléfono" = OFRECE DATO, no transferencia
+            # Problema: "si quieres te paso su teléfono" matchea 'te paso' en frases_espera_cliente
+            # pero el cliente está OFRECIENDO el número del encargado, NO transfiriendo la llamada
+            # Causa raíz: Bruce respondía "Claro, espero" cuando debía aceptar el número
+            if cliente_pidio_espera:
+                patrones_ofrece_dato_626 = [
+                    'te paso su teléfono', 'le paso su teléfono',
+                    'te paso su telefono', 'le paso su telefono',
+                    'te paso su número', 'le paso su número',
+                    'te paso su numero', 'le paso su numero',
+                    'te paso su cel', 'le paso su cel',
+                    'te paso el teléfono', 'le paso el teléfono',
+                    'te paso el telefono', 'le paso el telefono',
+                    'te paso el número', 'le paso el número',
+                    'te paso el numero', 'le paso el numero',
+                    'te doy su teléfono', 'le doy su teléfono',
+                    'te doy su telefono', 'le doy su telefono',
+                    'te doy su número', 'le doy su número',
+                    'te doy su numero', 'le doy su numero',
+                    'te doy el teléfono', 'le doy el teléfono',
+                    'te doy el telefono', 'le doy el telefono',
+                    'te doy el número', 'le doy el número',
+                    'te doy el numero', 'le doy el numero',
+                ]
+                if any(p in frase_limpia for p in patrones_ofrece_dato_626):
+                    print(f"\n FIX 626A: BRUCE2060 - Cliente OFRECE teléfono/número, NO transferencia")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → NO activar modo espera, procesar como oferta de datos")
+                    cliente_pidio_espera = False
+
             # FIX 501: BRUCE1721 - Validar contexto NEGATIVO antes de activar modo espera
             # Problema: Cliente dijo "permítame un momentito, pero no. No lo tenemos permitido."
             # El FIX 470 detectó "permítame" pero ignoró la negación posterior
