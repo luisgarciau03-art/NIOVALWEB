@@ -7341,6 +7341,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'le mando un', 'le mando el', 'le mando mi',
             'aquí le va', 'aqui le va', 'ahí le va', 'ahi le va',
             'tome nota', 'apunte', 'anote',
+            # FIX 627: BRUCE2061 - "te paso su número" no estaba en la lista
+            # Causaba que FIX 510 (PIDE_CONTACTO_NIOVAL) ganara por "su número"
+            # y Bruce diera SU WhatsApp en vez de aceptar el número ofrecido
+            'te paso su', 'le paso su', 'te doy su', 'le doy su',
+            'te paso el', 'le paso el', 'te doy el', 'le doy el',
+            'te puedo pasar', 'le puedo pasar', 'te puedo dar', 'le puedo dar',
+            'quieres que te pase', 'quiere que le pase',
+            'quieres que te dé', 'quiere que le dé',
+            'quieres que te de', 'quiere que le de',
         ]
         contexto_contacto_621 = any(w in texto_lower for w in [
             'correo', 'email', 'mail', 'número', 'numero', 'teléfono', 'telefono', 'cel', 'whatsapp'
