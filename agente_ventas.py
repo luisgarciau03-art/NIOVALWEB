@@ -8886,6 +8886,7 @@ Ejemplo correcto:
 
         # FIX 229: Patrones que indican que el cliente va a DAR INFORMACIÓN (NO transferencia)
         # "Le paso el correo" = cliente va a dar correo, NO pasar al encargado
+        # FIX 622A: BRUCE2041 - "le paso un teléfono" = dar número, NO transferir
         patrones_dar_info = [
             "paso el correo", "paso mi correo", "paso un correo",
             "doy el correo", "doy mi correo", "le doy el correo",
@@ -8894,6 +8895,11 @@ Ejemplo correcto:
             "te paso el whatsapp", "le paso el whatsapp", "paso mi whatsapp",
             "te lo paso por correo", "se lo paso por correo",
             "anota", "apunta", "toma nota",
+            # FIX 622A: BRUCE2041 - "paso un teléfono/número" = OFRECE dato
+            "paso un teléfono", "paso un telefono", "paso un número", "paso un numero",
+            "paso el teléfono", "paso el telefono",
+            "paso un cel", "paso un celular",
+            "le paso un", "te paso un",  # "le paso un [teléfono/número/correo]"
         ]
 
         # FIX 229: Verificar si cliente va a dar información
@@ -8946,6 +8952,16 @@ Ejemplo correcto:
             else:
                 for patron in patrones_transferencia_inmediata:
                     if patron in respuesta_lower:
+                        # FIX 622B: BRUCE2041 - Respetar anti-loop de FIX 508
+                        # Si ya dijo "Claro, espero" en los últimos 30s, NO repetir
+                        import time as time_622b
+                        ultimo_claro_ts = getattr(self, 'ultimo_claro_espero_timestamp', 0)
+                        tiempo_desde_622b = time_622b.time() - ultimo_claro_ts
+                        if ultimo_claro_ts > 0 and tiempo_desde_622b < 30:
+                            print(f"   FIX 622B: ANTI-LOOP en FIX 170 - Ya dijo 'Claro, espero' hace {tiempo_desde_622b:.1f}s")
+                            print(f"   → NO repetir, dejar que GPT procese")
+                            break  # Salir del loop de patrones, continuar con GPT
+
                         print(f"[EMOJI] FIX 170: Cliente va a PASAR al encargado AHORA")
                         print(f"   Patrón detectado: '{patron}'")
                         print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
@@ -8955,6 +8971,9 @@ Ejemplo correcto:
 
                         # Respuesta simple de espera
                         respuesta_espera = "Claro, espero."
+
+                        # FIX 622B: Actualizar timestamp para anti-loop
+                        self.ultimo_claro_espero_timestamp = time_622b.time()
 
                         self.conversation_history.append({
                             "role": "assistant",
