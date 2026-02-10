@@ -34,6 +34,15 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# FIX 630A: BRUCE2064 - ProxyFix para que request.url_root devuelva HTTPS detrás de Railway proxy
+# Sin esto, request.url_root devuelve http:// y Twilio puede rechazar URLs de audio
+try:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    print(" FIX 630A: ProxyFix activado (HTTPS URLs para Twilio)")
+except ImportError:
+    print(" FIX 630A: werkzeug.middleware.proxy_fix no disponible")
+
 # FIX 212: Inicializar WebSocket para Deepgram streaming
 sock = None
 if FLASK_SOCK_AVAILABLE:
@@ -1655,7 +1664,11 @@ def webhook_voz():
 
     print(f"    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)")
 
-    return Response(str(response), mimetype="text/xml")
+    # FIX 630C: Log TwiML del webhook-voz para diagnóstico
+    twiml_xml = str(response)
+    print(f" FIX 630C: webhook-voz TwiML ({len(twiml_xml)} bytes): {twiml_xml[:500]}")
+
+    return Response(twiml_xml, mimetype="text/xml")
 
 
 @app.route("/grabacion-status", methods=["POST"])
@@ -5159,6 +5172,8 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     else:
         audio_url = request.url_root + f"audio/{audio_id}"
         response.play(audio_url)
+        # FIX 630B: BRUCE2064 - Log audio URL para diagnóstico
+        print(f" FIX 630B: Audio URL: {audio_url}")
 
     # FIX 214/223: Record para capturar respuesta del cliente
     # FIX 223: max_length reducido para evitar delays
@@ -5171,7 +5186,11 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         trim="trim-silence"
     )
 
-    return Response(str(response), mimetype="text/xml")
+    # FIX 630C: BRUCE2064 - Log TwiML completo para diagnóstico de silencio
+    twiml_xml = str(response)
+    print(f" FIX 630C: TwiML enviado a Twilio ({len(twiml_xml)} bytes): {twiml_xml[:500]}")
+
+    return Response(twiml_xml, mimetype="text/xml")
 
 
 @app.route("/despedida-final", methods=["GET", "POST"])
