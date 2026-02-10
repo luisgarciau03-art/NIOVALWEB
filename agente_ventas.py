@@ -6113,6 +6113,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         """
         import re
         texto_lower = texto_cliente.lower().strip()
+        # FIX 631: Normalizar acentos para matching robusto
+        # STT (Deepgram fallback) puede enviar texto SIN acentos ("espereme" vs "espéreme")
+        # Esto asegura que patrones matcheen independientemente de si STT acentúa o no
+        # NOTA: ñ NO se toca - es letra fundamental del español, no acento
+        texto_lower = texto_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
 
         # FIX 579: Connector check universal - si texto termina en conector, cliente no terminó
         # No hacer fast-match, dejar que GPT espere frase completa
@@ -6229,7 +6234,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'encargado', 'encargada', 'responsable', 'gerente', 'gerenta',
             'administrador', 'administradora', 'director', 'directora',
             # Informales/Regionales
-            'jefe', 'jefa', 'patrón', 'patrona', 'dueño', 'dueña',
+            'jefe', 'jefa', 'patrón', 'patron', 'patrona', 'dueño', 'dueña',
             'el mero mero', 'la mera mera', 'el que manda', 'la que manda',
             'el de compras', 'la de compras', 'quien compra', 'el que compra',
             'quien decide', 'el que decide', 'la que decide',
@@ -6244,7 +6249,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 525 BRUCE1670: Incluir "no se encuentre" (error común de transcripción)
             'no está', 'no esta', 'no se encuentra', 'no se encuentre', 'no anda',
             # Salió/Fue (General)
-            'salió', 'salio', 'se fue', 'se salió', 'anda fuera',
+            'salió', 'salio', 'se fue', 'se salió', 'se salio', 'anda fuera',
             'fue a', 'anda en', 'está afuera', 'esta afuera',
             # Llegará después (CDMX, formal)
             'aún no llega', 'aun no llega', 'todavía no llega', 'todavia no llega',
@@ -6280,7 +6285,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             for sinonimo in sinonimos_encargado:
                 if sinonimo in texto_lower:
                     # Verificar si hay negación o ausencia cerca
-                    negaciones = ['no', 'salió', 'salio', 'fue', 'viene', 'llega', 'anda', 'todavía', 'aún']
+                    negaciones = ['no', 'salió', 'salio', 'fue', 'viene', 'llega', 'anda', 'todavía', 'todavia', 'aún', 'aun']
                     if any(neg in texto_lower for neg in negaciones):
                         encargado_no_esta = True
                         print(f"[OK] FIX 497: Detectado sinónimo '{sinonimo}' + ausencia")
@@ -6350,7 +6355,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 # FIX 518: Detectar si cliente dice que NO PUEDE dar info
                 cliente_no_puede = any(p in texto_lower for p in [
-                    'no puedo', 'no, no', 'no no', 'apenas', 'nada más',
+                    'no puedo', 'no, no', 'no no', 'apenas', 'nada más', 'nada mas',
                     'solo mostrador', 'en el mostrador', 'no están', 'no estan'
                 ])
 
@@ -6612,24 +6617,28 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         patrones_ofrece_recibir_info = [
             # Ofertas con "gustar"
             'si gusta dejarme', 'si gusta enviarme', 'si gusta mandarme',
-            'si gusta me lo envía', 'si gusta me lo manda',
+            'si gusta me lo envía', 'si gusta me lo envia', 'si gusta me lo manda',
             # Ofertas con "agradecería"
-            'se lo agradecería enviándomelo', 'se lo agradecería enviandome',
+            'se lo agradecería enviándomelo', 'se lo agradeceria enviandomelo',
+            'se lo agradecería enviandome', 'se lo agradeceria enviandome',
             'se lo agradecería mandándomelo', 'se lo agradeceria mandandome',
             'se lo agradecería si me lo envía', 'se lo agradeceria si me lo envia',
             # Ofertas con "puede"
             'puede enviarme', 'puede mandarme', 'puede dejarme',
             'pueden enviarme', 'pueden mandarme', 'pueden dejarme',
-            'podría enviarme', 'podría mandarme', 'podría dejarme',
+            'podría enviarme', 'podria enviarme', 'podría mandarme', 'podria mandarme', 'podría dejarme', 'podria dejarme',
             # Con canal específico
             'enviármelo a un correo', 'enviarmelo a un correo',
             'mandármelo a un correo', 'mandarmelo a un correo',
             'enviármelo por correo', 'enviarmelo por correo',
             'mandármelo por whatsapp', 'mandarmelo por whatsapp',
             # Solicitudes directas
-            'dejar información', 'dejarme información', 'déjame información',
-            'enviar información', 'enviarme información', 'envíame información',
-            'mandar información', 'mandarme información', 'mándame información'
+            'dejar información', 'dejar informacion', 'dejarme información', 'dejarme informacion',
+            'déjame información', 'dejame informacion',
+            'enviar información', 'enviar informacion', 'enviarme información', 'enviarme informacion',
+            'envíame información', 'enviame informacion',
+            'mandar información', 'mandar informacion', 'mandarme información', 'mandarme informacion',
+            'mándame información', 'mandame informacion'
         ]
 
         if any(p in texto_lower for p in patrones_ofrece_recibir_info):
@@ -6676,7 +6685,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'el correo sí', 'el correo si', 'correo sí', 'correo si',
             'a correo', 'que sea correo', 'que sea por correo',
             # Regional
-            'échalo al correo', 'echalo al correo', 'aviéntalo al correo',
+            'échalo al correo', 'echalo al correo', 'aviéntalo al correo', 'avientalo al correo',
             # Variaciones
             'mail', 'email', 'e-mail', 'al mail', 'por mail', 'al email'
         ]
@@ -6740,7 +6749,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Preguntas de ofrecimiento
             'te puedo pasar el correo', 'le puedo pasar el correo',
             'te puedo dar el correo', 'le puedo dar el correo',
-            'quiere el correo', 'quieres el correo', 'quiere que le dé el correo',
+            'quiere el correo', 'quieres el correo', 'quiere que le dé el correo', 'quiere que le de el correo',
             'quiere que le pase el correo', 'gusta el correo',
             # Acciones directas
             'te paso el correo', 'le paso el correo', 'le doy el correo', 'te doy el correo',
@@ -6785,7 +6794,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Preguntas de ofrecimiento - WhatsApp
             'te puedo pasar el whatsapp', 'le puedo pasar el whatsapp',
             'te puedo dar el whatsapp', 'le puedo dar el whatsapp',
-            'quiere el whatsapp', 'quieres el whatsapp', 'quiere que le dé el whatsapp',
+            'quiere el whatsapp', 'quieres el whatsapp', 'quiere que le dé el whatsapp', 'quiere que le de el whatsapp',
             'quiere que le pase el whatsapp', 'gusta el whatsapp',
             # Acciones directas - WhatsApp
             'te paso el whatsapp', 'le paso el whatsapp', 'le doy el whatsapp', 'te doy el whatsapp',
@@ -7504,7 +7513,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # 1. DESPEDIDAS (no necesita GPT)
         # FIX 629A: BRUCE2063 - "Hasta luego, oiga, Hasta luego indra." (38 chars) no matcheaba con < 30
         # Separar despedidas fuertes (toleran más texto) de débiles (necesitan contexto corto)
-        despedidas_fuertes = ["adiós", "hasta luego", "bye", "nos vemos"]
+        despedidas_fuertes = ["adiós", "adios", "hasta luego", "bye", "nos vemos"]
         despedidas_debiles = ["gracias", "lo reviso", "lo checo"]
         es_despedida_fuerte = any(d in texto_lower for d in despedidas_fuertes) and len(texto_lower.split()) <= 10
         es_despedida_debil = any(d in texto_lower for d in despedidas_debiles) and len(texto_lower) < 30
@@ -8074,6 +8083,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if patron_detectado:
             tipo_patron = patron_detectado.get('tipo', '')
             texto_validacion = respuesta_cliente.strip().lower()
+            # FIX 631: Normalizar acentos (consistente con texto_lower)
+            texto_validacion = texto_validacion.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
 
             # Tabla de contradicciones: {tipo_patron: [keywords que invalidan el patrón]}
             contradicciones_598 = {
@@ -8128,7 +8139,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ],
                 # FIX 599: Si patrón pide transferir pero CLIENTE ES el encargado → GPT
                 "TRANSFERENCIA": [
-                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'aquí estoy',
+                    'yo soy', 'soy yo', 'yo mero', 'conmigo', 'aquí estoy', 'aqui estoy',
                     'yo le atiendo', 'yo lo atiendo', 'yo le ayudo', 'yo lo ayudo',
                     'soy el encargado', 'soy la encargada', 'soy el dueño',
                     'soy la dueña', 'soy el responsable', 'soy la responsable'
@@ -8175,7 +8186,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # sustancial (>=3 palabras), invalidar patrón porque la intención real está DESPUÉS del "pero"
         if patron_detectado:
             texto_600 = respuesta_cliente.strip().lower()
-            conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada más que ', ' nomas que ',
+            # FIX 631: Normalizar acentos (consistente con texto_lower)
+            texto_600 = texto_600.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
+            conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada mas que ', ' nomas que ',
                                         ' la verdad ', ' es que ', ' lo que pasa es que ', ' lo que pasa ', ' la neta ']
             # Patrones que SÍ sobreviven al "pero" (despedida, confirmaciones negativas)
             # FIX 621C: OTRA_SUCURSAL inmune (cliente dice "es que no es en esta sucursal" → "es que" no cambia intención)

@@ -1,0 +1,15 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+]
+markers = [
+    "pattern_detector: Tests for _detectar_patron_simple_optimizado",
+    "post_filter: Tests for _filtrar_respuesta_post_gpt",
+    "invalidation: Tests for FIX 600/601/602 invalidation pipeline",
+    "regression: Tests from real BRUCE production bug cases",
+]

@@ -22,6 +22,13 @@ from openai import OpenAI  # FIX 60: Para Whisper API
 import requests  # FIX 60: Para descargar grabaciones de Twilio
 import re  # FIX 458: Para limpiar puntuación en detección de saludos
 
+# FIX 632: Bug Detector - detección automática de bugs en llamadas
+try:
+    from bug_detector import get_or_create_tracker, emit_event, analyze_and_cleanup, generar_bugs_html
+    BUG_DETECTOR_AVAILABLE = True
+except ImportError:
+    BUG_DETECTOR_AVAILABLE = False
+
 # FIX 212: Flask-Sock para WebSocket (Deepgram streaming)
 try:
     from flask_sock import Sock
@@ -1211,6 +1218,18 @@ def servir_audio(audio_id):
     if audio_id in audio_files:
         audio_data = audio_files[audio_id]
 
+        # FIX 632: Registrar que Twilio fetcheó el audio
+        try:
+            if BUG_DETECTOR_AVAILABLE:
+                # audio_id contiene call_sid (formato: "tipo_CALLSID" o "tipo_CALLSID_extra")
+                # Buscar call_sid en conversaciones_activas que sea substring de audio_id
+                for sid in list(conversaciones_activas.keys()):
+                    if sid in audio_id:
+                        emit_event(sid, "AUDIO_FETCH")
+                        break
+        except Exception:
+            pass
+
         # Si es bytes, envolver en BytesIO para send_file
         if isinstance(audio_data, bytes):
             return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
@@ -1530,6 +1549,14 @@ def webhook_voz():
     agente.lead_data["bruce_id"] = bruce_id  # FIX 272.3: Guardar también en lead_data
     conversaciones_activas[call_sid] = agente
 
+    # FIX 632: Registrar llamada en bug detector
+    try:
+        if BUG_DETECTOR_AVAILABLE:
+            telefono_bd = contacto_info.get('telefono', '') if contacto_info else ''
+            get_or_create_tracker(call_sid, bruce_id, telefono_bd)
+    except Exception:
+        pass
+
     # Mensaje inicial
     mensaje_inicial = agente.iniciar_conversacion()
 
@@ -1667,6 +1694,13 @@ def webhook_voz():
     # FIX 630C: Log TwiML del webhook-voz para diagnóstico
     twiml_xml = str(response)
     print(f" FIX 630C: webhook-voz TwiML ({len(twiml_xml)} bytes): {twiml_xml[:500]}")
+
+    # FIX 632: Registrar TwiML enviado
+    try:
+        if BUG_DETECTOR_AVAILABLE:
+            emit_event(call_sid, "TWIML_ENVIADO")
+    except Exception:
+        pass
 
     return Response(twiml_xml, mimetype="text/xml")
 
@@ -2621,6 +2655,13 @@ def procesar_respuesta():
     # FIX 208/284: Registrar en buffer de logs (sin duplicar prefijo BRUCE)
     bruce_id_cliente = agente.lead_data.get("bruce_id", "N/A") if agente else "N/A"
     log_evento(f"{bruce_id_cliente} - CLIENTE DIJO: \"{speech_result}\"", "CLIENTE")
+
+    # FIX 632: Registrar texto del cliente en bug detector
+    try:
+        if BUG_DETECTOR_AVAILABLE:
+            emit_event(call_sid, "CLIENTE_DICE", {"texto": speech_result})
+    except Exception:
+        pass
 
     # ============================================================================
     # FIX 507 BRUCE1721: Detectar TRANSCRIPCIONES CORRUPTAS de Deepgram
@@ -4399,6 +4440,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     debug_print(f" GPT tardó: {tiempo_gpt:.2f}s")
     print(f" BRUCE DICE: \"{respuesta_agente}\"")
 
+    # FIX 632: Registrar respuesta de Bruce en bug detector
+    try:
+        if BUG_DETECTOR_AVAILABLE and respuesta_agente:
+            emit_event(call_sid, "BRUCE_RESPONDE", {"texto": str(respuesta_agente)})
+    except Exception:
+        pass
+
     # FIX 304: Si respuesta es None (IVR detectado), colgar la llamada
     if respuesta_agente is None:
         print(f" FIX 304: respuesta_agente es None (IVR/contestadora detectada) - COLGANDO")
@@ -5190,6 +5238,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     twiml_xml = str(response)
     print(f" FIX 630C: TwiML enviado a Twilio ({len(twiml_xml)} bytes): {twiml_xml[:500]}")
 
+    # FIX 632: Registrar TwiML enviado en procesar-respuesta
+    try:
+        if BUG_DETECTOR_AVAILABLE:
+            emit_event(call_sid, "TWIML_ENVIADO")
+    except Exception:
+        pass
+
     return Response(twiml_xml, mimetype="text/xml")
 
 
@@ -5830,6 +5885,17 @@ def status_callback():
                             print(f"   Error guardando email rescatado: {e}")
                     else:
                         print(f" FIX 543: No se encontró contacto en transcripciones pendientes")
+
+    # FIX 632: Analizar bugs al terminar llamada
+    try:
+        if BUG_DETECTOR_AVAILABLE and call_status in ("completed", "busy", "no-answer", "failed", "canceled"):
+            telefono_bd = ""
+            if call_sid in conversaciones_activas:
+                ag = conversaciones_activas[call_sid]
+                telefono_bd = ag.lead_data.get("telefono", "")
+            analyze_and_cleanup(call_sid, telefono_bd)
+    except Exception:
+        pass
 
     return Response("OK", status=200)
 
@@ -8253,6 +8319,18 @@ def guardar_calificaciones(calificaciones):
 # Cargar calificaciones al iniciar
 calificaciones_llamadas = cargar_calificaciones()
 print(f" FIX 272: {len(calificaciones_llamadas)} calificaciones cargadas")
+
+
+@app.route("/bugs", methods=["GET"])
+def bugs_dashboard():
+    """FIX 632: Dashboard de bugs detectados automaticamente."""
+    try:
+        if BUG_DETECTOR_AVAILABLE:
+            return generar_bugs_html()
+        else:
+            return "<h1>Bug Detector no disponible</h1><p>Modulo bug_detector.py no encontrado.</p>", 503
+    except Exception as e:
+        return f"<h1>Error</h1><p>{e}</p>", 500
 
 
 @app.route("/historial-llamadas", methods=["GET"])

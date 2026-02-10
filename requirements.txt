@@ -48,6 +48,10 @@ pytz>=2023.3                # Zonas horarias
 # pydub>=0.25.1             # Procesamiento de audio
 # pyaudio>=0.2.13           # Audio I/O
 
+# ===== TESTING =====
+pytest>=7.4.0               # Framework de testing
+pytest-html>=4.1.0          # Reportes HTML de tests
+
 # ===== ADVANCED FEATURES (Opcional) =====
 # textblob>=0.17.0          # Análisis de sentimientos
 # nltk>=3.8                 # Procesamiento de lenguaje natural
