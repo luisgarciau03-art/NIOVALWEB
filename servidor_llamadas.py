@@ -3002,19 +3002,26 @@ def procesar_respuesta():
                     from openai import OpenAI
                     gpt_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+                    # FIX 626A: Prompt mejorado con categoría F (OFRECE_DATO)
+                    # Problema: "te paso su teléfono" se clasificaba como A (transfer)
+                    # pero el cliente OFRECE DICTAR el número, no transferir la llamada
                     prompt_intencion = f"""Analiza esta frase de un cliente en una llamada telefónica y determina su INTENCIÓN:
 
 Frase del cliente: "{speech_result}"
 
 El agente (Bruce) está preguntando por el encargado de compras. Determina qué quiere decir el cliente:
 
-A) TRANSFERENCIA - El cliente va a TRANSFERIR la llamada o pasar el teléfono a otra persona
+A) TRANSFERENCIA - El cliente va a TRANSFERIR la llamada físicamente (pasar el auricular a otra persona, poner en espera para conectar)
 B) OTRO_NUMERO - El cliente está dando información de OTRO NÚMERO donde llamar (extensión, terminación, otro teléfono)
 C) PREGUNTA - El cliente está haciendo una PREGUNTA (¿qué marca?, ¿de dónde?, etc.)
 D) RECHAZO - El cliente está RECHAZANDO o diciendo que no puede ayudar
 E) OTRO - Ninguna de las anteriores
+F) OFRECE_DATO - El cliente OFRECE DICTAR un teléfono, número, correo o WhatsApp (ej: "te paso su teléfono", "te doy el número", "anota el correo")
 
-Responde SOLO con una letra: A, B, C, D o E"""
+IMPORTANTE: Si el cliente dice "te paso su teléfono/número" está OFRECIENDO DICTAR un dato (F), NO transfiriendo la llamada (A).
+Transferencia (A) es cuando dice "ahorita se lo paso", "un momento", "déjeme ver si está" SIN mencionar teléfono/número/correo.
+
+Responde SOLO con una letra: A, B, C, D, E o F"""
 
                     response_gpt = gpt_client.chat.completions.create(
                         model="gpt-4o-mini",
@@ -3035,6 +3042,8 @@ Responde SOLO con una letra: A, B, C, D o E"""
                             print(f"   → Cliente hace PREGUNTA")
                         elif intencion == "D":
                             print(f"   → Cliente RECHAZA/no puede ayudar")
+                        elif intencion == "F":
+                            print(f"   → Cliente OFRECE DICTAR dato (teléfono/número/correo)")
                         else:
                             print(f"   → Otra intención")
                         cliente_pidio_espera = False

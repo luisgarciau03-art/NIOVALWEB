@@ -2331,14 +2331,48 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             necesita_recuperacion, tipo_error, contexto_error = self._detectar_error_necesita_recuperacion(ultimo_mensaje_cliente)
 
             if necesita_recuperacion:
-                # Bruce cometió error → Generar respuesta de recuperación
-                respuesta_recuperacion = self._generar_respuesta_recuperacion_error(tipo_error, contexto_error)
-                self.metrics.log_recuperacion_error()  # FIX 482: Métrica
-                print(f"\n[WRENCH] FIX 481: RECUPERACIÓN DE ERROR ACTIVADA")
-                print(f"   Tipo error: {tipo_error}")
-                print(f"   Respuesta original GPT: '{respuesta[:80]}'")
-                print(f"   Respuesta recuperación: '{respuesta_recuperacion[:80]}'")
-                return respuesta_recuperacion
+                # FIX 626A: BRUCE2060 - Si PREGUNTA_REPETIDA pero GPT ya tiene respuesta CORRECTA,
+                # NO sobreescribir. En BRUCE2060, GPT generó "Sí, dígame el número" (perfecto!)
+                # pero FIX 481 lo reemplazó con "Disculpe, no escuché bien" → loop infinito.
+                # Solución: verificar si GPT ya acepta/responde correctamente la repetición.
+                respuesta_lower_481 = respuesta.lower()
+                if tipo_error == "PREGUNTA_REPETIDA":
+                    # Palabras que indican que GPT YA respondió correctamente al cliente
+                    gpt_ya_responde_bien = any(kw in respuesta_lower_481 for kw in [
+                        'dígame el número', 'digame el numero', 'dígame su número', 'digame su numero',
+                        'dígame el teléfono', 'digame el telefono',
+                        'por favor, dígame', 'por favor, digame',
+                        'sí, por favor', 'si, por favor', 'sí por favor', 'si por favor',
+                        'adelante, dígame', 'adelante, digame',
+                        'claro, dígame', 'claro, digame',
+                        'anote', 'tome nota', 'dígame', 'digame',
+                    ])
+                    if gpt_ya_responde_bien:
+                        print(f"\n[OK] FIX 626A: GPT ya tiene respuesta CORRECTA para repetición")
+                        print(f"   Tipo: {tipo_error}")
+                        print(f"   GPT: '{respuesta[:80]}'")
+                        print(f"   → Usando GPT en vez de recuperación genérica")
+                        # Resetear intentos porque GPT respondió bien
+                        self.intentos_recuperacion = 0
+                        # No retornar aquí, dejar que pase al resto del post-filter
+                    else:
+                        # GPT no tiene buena respuesta → usar recuperación normal
+                        respuesta_recuperacion = self._generar_respuesta_recuperacion_error(tipo_error, contexto_error)
+                        self.metrics.log_recuperacion_error()  # FIX 482: Métrica
+                        print(f"\n[WRENCH] FIX 481: RECUPERACIÓN DE ERROR ACTIVADA")
+                        print(f"   Tipo error: {tipo_error}")
+                        print(f"   Respuesta original GPT: '{respuesta[:80]}'")
+                        print(f"   Respuesta recuperación: '{respuesta_recuperacion[:80]}'")
+                        return respuesta_recuperacion
+                else:
+                    # Para otros tipos de error (CONFUSION, FRUSTRACION, etc.) → recuperación normal
+                    respuesta_recuperacion = self._generar_respuesta_recuperacion_error(tipo_error, contexto_error)
+                    self.metrics.log_recuperacion_error()  # FIX 482: Métrica
+                    print(f"\n[WRENCH] FIX 481: RECUPERACIÓN DE ERROR ACTIVADA")
+                    print(f"   Tipo error: {tipo_error}")
+                    print(f"   Respuesta original GPT: '{respuesta[:80]}'")
+                    print(f"   Respuesta recuperación: '{respuesta_recuperacion[:80]}'")
+                    return respuesta_recuperacion
             else:
                 # No hay error → Resetear contador de recuperación
                 if self.intentos_recuperacion > 0:
