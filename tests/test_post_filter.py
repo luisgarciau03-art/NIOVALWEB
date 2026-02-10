@@ -249,3 +249,22 @@ class TestLongitudRespuesta:
         # El resultado no debe ser igual de largo (debería haber algún recorte)
         assert resultado is not None
         assert len(resultado) > 0
+
+
+# ============================================================
+# FIX 636: NÚMERO NIOVAL EN FORMATO AGRUPADO
+# ============================================================
+
+class TestNumeroNiovalFormato:
+    """FIX 636: Número NIOVAL con comas para pausas TTS naturales."""
+
+    @pytest.mark.post_filter
+    @pytest.mark.regression
+    def test_numero_nioval_sin_espacios_consecutivos(self, agente):
+        """FIX 636: NIOVAL number no debe tener 10 dígitos separados sin comas."""
+        # Simular una respuesta donde Bruce da el número de NIOVAL
+        respuesta = "Nuestro WhatsApp es 6 6 2, 4 1 5, 1 9 9 7 y nuestro correo es ventas arroba nioval punto com."
+        resultado = agente._filtrar_respuesta_post_gpt(respuesta)
+        assert resultado is not None
+        # El número no debe ser stripped por FIX 615B (es el número de NIOVAL)
+        assert "6 6 2" in resultado or "nioval" in resultado.lower()

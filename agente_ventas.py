@@ -1570,7 +1570,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return (
                 "Entiendo perfectamente, no se preocupe. "
-                "Si gusta le puedo dejar nuestro WhatsApp 6 6 2 4 1 5 1 9 9 7 "
+                "Si gusta le puedo dejar nuestro WhatsApp 6 6 2, 4 1 5, 1 9 9 7 "
                 "para cuando el encargado pueda comunicarse con nosotros."
             )
 
@@ -2303,7 +2303,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"\n[WARN] FIX 517 ANTI-LOOP: Bruce iba a ofrecer dejar número ({veces_ofrecio_dejar_numero+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             # DAR EL NÚMERO DIRECTAMENTE
-            respuesta = "Nuestro WhatsApp es 6 6 2 4 1 5 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos."
+            respuesta = "Nuestro WhatsApp es 6 6 2, 4 1 5, 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos."
             print(f"   Respuesta anti-loop: '{respuesta}' (dar número directo)")
             return respuesta
 
@@ -3763,7 +3763,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                         if cliente_quiere_dejar_mensaje:
                             # FIX 444: Cliente quiere dejar mensaje - dar contacto
-                            respuesta = "Claro, puede enviar la información al WhatsApp 6 6 2 4 1 5 1 9 9 7 o al correo ventas arroba nioval punto com."
+                            respuesta = "Claro, puede enviar la información al WhatsApp 6 6 2, 4 1 5, 1 9 9 7 o al correo ventas arroba nioval punto com."
                             print(f"   [EMOJI] FIX 444: Cliente quiere dejar MENSAJE - dando contacto")
                         elif cliente_hace_pregunta and not cliente_dando_info:
                             # FIX 464: BRUCE1390 - Detectar si cliente pregunta QUÉ VENDE
@@ -6205,7 +6205,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
                 return {
                     "tipo": "DAR_CONTACTO_BRUCE",
-                    "respuesta": "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
+                    "respuesta": "El número es 6 6 2, 4 1 5, 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
                     "accion": "CONTACTO_DADO"
                 }
             else:
@@ -6214,7 +6214,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.estado_conversacion = EstadoConversacion.CONTACTO_CAPTURADO
                 return {
                     "tipo": "DAR_CONTACTO_BRUCE",
-                    "respuesta": "El número es 6 6 2 4 1 5 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
+                    "respuesta": "El número es 6 6 2, 4 1 5, 1 9 9 7 y la marca es NIOVAL, se escribe N I O V A L. Quedamos atentos a su llamada.",
                     "accion": "CONTACTO_DADO"
                 }
 
@@ -6323,7 +6323,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   FIX 621C: Ya pidió teléfono sucursal - ofrecer catálogo directo")
                 return {
                     "tipo": "OTRA_SUCURSAL_INSISTENCIA",
-                    "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle el número de NIOVAL para que le pasen la información al encargado? Es el 6 6 2 4 1 5 1 9 9 7.",
+                    "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle el número de NIOVAL para que le pasen la información al encargado? Es el 6 6 2, 4 1 5, 1 9 9 7.",
                     "accion": "OFRECER_CONTACTO"
                 }
             return {
@@ -7506,7 +7506,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
                 "tipo": "PIDE_CONTACTO_NIOVAL",
-                "respuesta": "Claro, nuestro WhatsApp es 6 6 2 4 1 5 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos.",
+                "respuesta": "Claro, nuestro WhatsApp es 6 6 2, 4 1 5, 1 9 9 7 y nuestro correo es ventas arroba nioval punto com. Con gusto le atendemos.",
                 "accion": "DAR_CONTACTO"
             }
 
@@ -8172,9 +8172,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # También verificar: si el texto tiene 2+ cláusulas y la segunda tiene "?" → GPT
             # Ej: "No se encuentra. ¿De dónde habla?" → la pregunta es más importante que el estado
+            # FIX 635: Patrones de confirmación/dato inmunes a pregunta complementaria
+            # Ej: "sí es el mismo, ¿me puedes mandar?" → la pregunta NO contradice CONFIRMA_MISMO_NUMERO
+            patrones_inmunes_pregunta_598 = {
+                'CONFIRMA_MISMO_NUMERO', 'CONFIRMACION_SIMPLE', 'CLIENTE_DICE_SI',
+                'CLIENTE_ACEPTA_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
+                'CLIENTE_OFRECE_WHATSAPP', 'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
+                'DESPEDIDA_CLIENTE', 'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
+                'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
+                'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
+                'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
+            }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
-            if len(partes_texto) >= 2:
+            if len(partes_texto) >= 2 and tipo_patron not in patrones_inmunes_pregunta_598:
                 for parte in partes_texto[1:]:
                     if '?' in parte or parte.startswith('qué') or parte.startswith('que') or parte.startswith('cómo') or parte.startswith('como') or parte.startswith('cuál') or parte.startswith('cual') or parte.startswith('dónde') or parte.startswith('donde') or parte.startswith('quién') or parte.startswith('quien'):
                         tiene_pregunta_segunda_clausula = True

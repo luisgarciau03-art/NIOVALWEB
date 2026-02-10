@@ -268,3 +268,63 @@ class TestFix634NumeroDictadoInmune601:
             "CLIENTE_DICTANDO_NUMERO"
         ):
             pass  # Correcto: número sobrevivió FIX 601
+
+
+# ============================================================
+# FIX 635: CONFIRMA_MISMO_NUMERO INMUNE A PREGUNTA EN 2DA CLAUSULA
+# ============================================================
+
+class TestFix635ConfirmaPreguntaComplementaria:
+    """FIX 635: Pregunta complementaria NO invalida confirmaciones de dato."""
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_confirma_numero_con_pregunta_complementaria(self, agente_mid_conversation):
+        """FIX 635: 'sí es el mismo, ¿me puedes mandar?' → NO invalidar CONFIRMA_MISMO_NUMERO."""
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(
+            "sí es el mismo, ¿me puedes mandar este número?"
+        )
+        # Debe sobrevivir como confirmación/oferta, NO invalidarse por "?"
+        if resultado is not None:
+            assert resultado["tipo"] in (
+                "CONFIRMA_MISMO_NUMERO", "CONFIRMACION_SIMPLE", "CLIENTE_DICE_SI",
+                "CLIENTE_ACEPTA_WHATSAPP", "CLIENTE_OFRECE_WHATSAPP",
+            ), f"FIX 635: pregunta complementaria invalidó confirmación: {resultado['tipo']}"
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_confirma_numero_pregunta_envio(self, agente_mid_conversation):
+        """FIX 635: 'este número. ¿Me lo envías por WhatsApp?' → aceptar."""
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(
+            "este número. ¿Me lo envías por WhatsApp?"
+        )
+        if resultado is not None:
+            assert resultado["tipo"] not in (
+                "ENCARGADO_NO_ESTA_SIN_HORARIO", "ENCARGADO_NO_ESTA_CON_HORARIO",
+            ), f"Confirmación + pregunta no debe matchear ENCARGADO: {resultado['tipo']}"
+
+    @pytest.mark.invalidation
+    def test_encargado_con_pregunta_SI_invalida(self, agente):
+        """Pregunta en 2da cláusula SÍ invalida patrones NO inmunes."""
+        resultado = agente._detectar_patron_simple_optimizado(
+            "No se encuentra. ¿De dónde habla?"
+        )
+        # ENCARGADO no es inmune → "¿De dónde habla?" debería invalidar
+        if resultado is not None:
+            # Si sobrevive, solo puede ser porque matcheó otro patrón
+            assert resultado["tipo"] not in (
+                "ENCARGADO_NO_ESTA_SIN_HORARIO",
+            ), f"Pregunta en 2da cláusula debería invalidar ENCARGADO"
+
+    @pytest.mark.invalidation
+    @pytest.mark.regression
+    def test_despedida_con_pregunta_inmune(self, agente_mid_conversation):
+        """FIX 635: 'hasta luego. ¿Cómo te llamas?' → DESPEDIDA inmune a pregunta."""
+        resultado = agente_mid_conversation._detectar_patron_simple_optimizado(
+            "hasta luego. ¿Cómo te llamas?"
+        )
+        # DESPEDIDA es inmune a pregunta complementaria
+        if resultado is not None:
+            assert resultado["tipo"] in (
+                "DESPEDIDA_CLIENTE", "DESPEDIDA",
+            ), f"DESPEDIDA debe ser inmune a pregunta: {resultado['tipo']}"
