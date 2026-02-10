@@ -8064,6 +8064,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # PASO 1: Detectar patrones simples (0.05s - 100x más rápido)
         patron_detectado = self._detectar_patron_simple_optimizado(respuesta_cliente)
 
+        # FIX 633: Registrar match en pattern audit
+        if patron_detectado:
+            try:
+                from pattern_audit import track_pattern_match
+                track_pattern_match(patron_detectado.get('tipo', ''), respuesta_cliente[:80])
+            except Exception:
+                pass
+
         # FIX 570: Si texto termina en conector/coma, el cliente NO terminó de hablar
         # No usar fast-match, dejar que GPT procese con contexto completo
         if patron_detectado:
@@ -8178,6 +8186,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Texto cliente: '{texto_validacion[:80]}'")
                 print(f"   Respuesta que SE EVITÓ: '{patron_detectado['respuesta'][:60]}...'")
                 print(f"   → Derivando a GPT para respuesta contextual")
+                # FIX 633: Registrar invalidación por FIX 598
+                try:
+                    from pattern_audit import track_pattern_invalidation
+                    track_pattern_invalidation(tipo_patron, "598")
+                except Exception:
+                    pass
                 patron_detectado = None  # Invalidar patrón, GPT decidirá
 
         # FIX 600: SPLITTER ADVERSATIVO - "pero/sin embargo/aunque" cambia intención
@@ -8211,6 +8225,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             print(f"   Antes: '{texto_600.split(conj, 1)[0].strip()[:40]}'")
                             print(f"   Después: '{parte_despues[:40]}'")
                             print(f"   Patrón '{tipo_600}' INVALIDADO → GPT decidirá con contexto completo")
+                            # FIX 633: Registrar invalidación por FIX 600
+                            try:
+                                from pattern_audit import track_pattern_invalidation
+                                track_pattern_invalidation(tipo_600, "600")
+                            except Exception:
+                                pass
                             patron_detectado = None
                         break
 
@@ -8247,6 +8267,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   FIX 601: UMBRAL COMPLEJIDAD: {len(palabras_601)} palabras + {num_clausulas} cláusulas")
                     print(f"   Texto: '{texto_601[:60]}...'")
                     print(f"   Patrón '{tipo_601}' INVALIDADO → GPT maneja complejidad mejor")
+                    # FIX 633: Registrar invalidación por FIX 601
+                    try:
+                        from pattern_audit import track_pattern_invalidation
+                        track_pattern_invalidation(tipo_601, "601")
+                    except Exception:
+                        pass
                     patron_detectado = None
 
         # FIX 602: VALIDADOR DE CONTEXTO CONVERSACIONAL
@@ -8313,9 +8339,21 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         print(f"   Patrón '{tipo_602}' es INCOHERENTE con el contexto")
                         print(f"   Último Bruce: '{ultimo_bruce_602[:60]}'")
                         print(f"   → GPT dará respuesta contextual coherente")
+                        # FIX 633: Registrar invalidación por FIX 602
+                        try:
+                            from pattern_audit import track_pattern_invalidation
+                            track_pattern_invalidation(tipo_602, "602")
+                        except Exception:
+                            pass
                         patron_detectado = None
 
         if patron_detectado:
+            # FIX 633: Registrar que patrón sobrevivió todos los checks
+            try:
+                from pattern_audit import track_pattern_survived
+                track_pattern_survived(patron_detectado.get('tipo', ''))
+            except Exception:
+                pass
             print(f"[EMOJI] FIX 491: PATRÓN DETECTADO ({patron_detectado['tipo']}) - Latencia ~0.05s vs 3.5s GPT (reducción 98%)")
 
             # FIX 482: Métrica - Si es pregunta directa, registrarla como respondida

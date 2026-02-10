@@ -8333,6 +8333,18 @@ def bugs_dashboard():
         return f"<h1>Error</h1><p>{e}</p>", 500
 
 
+@app.route("/pattern-audit", methods=["GET"])
+def pattern_audit_dashboard():
+    """FIX 633: Dashboard de auditoría de patrones."""
+    try:
+        from pattern_audit import generar_audit_html
+        return generar_audit_html()
+    except ImportError:
+        return "<h1>Pattern Audit no disponible</h1><p>Modulo pattern_audit.py no encontrado.</p>", 503
+    except Exception as e:
+        return f"<h1>Error</h1><p>{e}</p>", 500
+
+
 @app.route("/historial-llamadas", methods=["GET"])
 def historial_llamadas_dashboard():
     """
