@@ -5083,7 +5083,8 @@ Responde SOLO con una letra: A, B, C, D o E"""
             if pide_numero_623c:
                 print(f"\n FIX 623C: Cliente YA dictó dígitos - NO preguntar por número")
                 print(f"   Bruce iba a decir: '{respuesta_agente[:80]}'")
-                print(f"   Dígitos ya dictados: {[str(t) for t in transcripciones_importantes if len(re_481.findall(r'\\d', str(t))) >= 3]}")
+                digitos_dictados_623c = [str(t) for t in transcripciones_importantes if len(re_481.findall(r'\d', str(t))) >= 3]
+                print(f"   Dígitos ya dictados: {digitos_dictados_623c}")
                 # Cambiar estado a DICTANDO_NUMERO
                 from agente_ventas import EstadoConversacion as EC623
                 agente_623c.estado_conversacion = EC623.DICTANDO_NUMERO
