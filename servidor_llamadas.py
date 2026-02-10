@@ -4375,6 +4375,20 @@ Responde SOLO con una letra: A, B, C, D o E"""
         fillers_577 = {'mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uh', 'pues', 'uhm'}
         palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
 
+        # FIX 620A: BRUCE2056/2057 - NO generar fallback si FIX 477 pausó INTENCIONALMENTE
+        # Problema: FIX 477 retorna "" para esperar que cliente termine, pero FIX 577
+        # interpretaba el "" como "GPT no entendió" y generaba "Disculpe, no le escuché bien"
+        # mientras el cliente seguía hablando → loop invasivo
+        pausa_intencional_620 = getattr(agente, 'pausa_intencional', False)
+        if pausa_intencional_620:
+            print(f" FIX 620A: Pausa INTENCIONAL detectada (FIX 477) - NO generar fallback 577")
+            print(f"   Cliente dijo: '{speech_limpio_577[:60]}' - esperando que termine")
+            agente.pausa_intencional = False  # Reset para próximo turno
+            # Generar respuesta silenciosa (solo escuchar más)
+            response = VoiceResponse()
+            response.record(action="/procesar-respuesta", method="POST", max_length=30, timeout=3, play_beep=False, trim="trim-silence")
+            return Response(str(response), mimetype="text/xml")
+
         # FIX 617C: BRUCE2032 - NO generar fallback si estamos en modo DICTANDO
         # Problema: Cliente dicta correo → procesar_respuesta retorna "" (esperar) →
         #   FIX 577 generaba fallback con pitch inicial "me comunico de NIOVAL..."
@@ -4435,8 +4449,16 @@ Responde SOLO con una letra: A, B, C, D o E"""
                 respuesta_fallback_577 = "Entiendo, le agradezco mucho su tiempo. Que tenga excelente día."
                 print(f"   FIX 606: Fallback - cliente rechaza, despedida cortés")
             elif len(palabras_significativas_577) >= 4:
-                respuesta_fallback_577 = "Disculpe, no le escuché bien. Le comento, me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
-                print(f"   FIX 606: Fallback largo ({len(palabras_significativas_577)} palabras) - re-presentamos")
+                # FIX 620C: BRUCE2056/2057 - Si conversación ya avanzó (>2 mensajes usuario),
+                # NO resetear al pitch inicial. El cliente ya sabe quién es Bruce.
+                # Problema: Cliente dio hora de callback → Bruce: "me comunico de NIOVAL..." = absurdo
+                mensajes_usuario_620 = sum(1 for m in agente.conversation_history if m['role'] == 'user')
+                if mensajes_usuario_620 >= 2:
+                    respuesta_fallback_577 = "Disculpe, no le escuché bien. ¿Me puede repetir eso último?"
+                    print(f"   FIX 620C: Fallback SIN reset pitch ({mensajes_usuario_620} turnos usuario, {len(palabras_significativas_577)} palabras)")
+                else:
+                    respuesta_fallback_577 = "Disculpe, no le escuché bien. Le comento, me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
+                    print(f"   FIX 606: Fallback largo ({len(palabras_significativas_577)} palabras) - re-presentamos")
             else:
                 respuesta_fallback_577 = "Disculpe, ¿me puede repetir eso último?"
             agente.conversation_history.append({"role": "assistant", "content": respuesta_fallback_577})

@@ -7631,6 +7631,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         Returns:
             Respuesta del agente
         """
+        # FIX 620A: Resetear flag de pausa intencional al inicio de cada turno
+        self.pausa_intencional = False
+
         # Agregar respuesta del cliente al historial
         self.conversation_history.append({
             "role": "user",
@@ -7892,6 +7895,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.lead_data["email"] = patron_detectado['dato']
                 print(f"   [EMAIL] Correo guardado: {patron_detectado['dato']}")
 
+            # FIX 620B: BRUCE2056 - Si patrón pregunta por HORA de callback, activar flag
+            # Problema: esperando_hora_callback solo se activaba en _filtrar_respuesta_post_gpt (GPT),
+            # pero patrones ENCARGADO_LLEGA_MAS_TARDE retornan sin pasar por GPT.
+            # Sin el flag, FIX 526 no prevenía que FIX 477 pausara al recibir "12 de la tarde"
+            tipo_patron_620 = patron_detectado.get('tipo', '')
+            respuesta_lower_620 = patron_detectado['respuesta'].lower()
+            if tipo_patron_620 in ('ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
+                                   'ENCARGADO_NO_ESTA_CON_HORARIO', 'SOLICITUD_CALLBACK'):
+                if any(f in respuesta_lower_620 for f in ['qué hora', 'que hora', 'cuándo', 'cuando',
+                                                          'a qué hora', 'a que hora']):
+                    self.esperando_hora_callback = True
+                    print(f"   FIX 620B: esperando_hora_callback=True (patrón {tipo_patron_620} pregunta hora)")
+
             # Agregar respuesta al historial
             self.conversation_history.append({
                 "role": "assistant",
@@ -7906,8 +7922,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Problema: None era interpretado por FIX 304 como IVR y colgaba
         if self._cliente_esta_dando_informacion(respuesta_cliente):
             self.metrics.log_interrupcion_detectada()  # FIX 482: Métrica
+            # FIX 620A: BRUCE2056/2057 - Señalizar pausa INTENCIONAL para que FIX 577 NO genere fallback
+            # Problema: FIX 477 retorna "" (esperar) pero FIX 577 lo interpretaba como "GPT no entendió"
+            # y generaba "Disculpe, no le escuché bien" mientras el cliente seguía hablando
+            self.pausa_intencional = True
             print(f"   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir")
             print(f"   → Bruce esperará a que cliente termine de dictar")
+            print(f"   FIX 620A: pausa_intencional=True (FIX 577 NO generará fallback)")
             print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
             return ""  # FIX 506b: "" = pausar, None = IVR real
 
