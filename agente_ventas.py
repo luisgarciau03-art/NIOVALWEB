@@ -6154,6 +6154,47 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         print(f"[OK] FIX 497: Detectado sinónimo '{sinonimo}' + ausencia")
                         break
 
+        # FIX 621C: BRUCE2048 - Detectar "otra sucursal" / "no es aquí" / "la matriz"
+        # Problema: Cliente dice "no es en esta sucursal, es en la otra" pero Bruce insiste por encargado
+        # Solución: Detectar redirección a otra sucursal y pedir teléfono de esa sucursal
+        patrones_otra_sucursal_621c = [
+            'otra sucursal', 'la otra sucursal', 'en la otra',
+            'no es en esta', 'no es esta sucursal', 'no es aquí', 'no es aqui',
+            'es en otra', 'en otra parte', 'en otro lado', 'en otro local',
+            'la matriz', 'en la matriz', 'la central', 'la principal',
+            'nos mandan de', 'mandan desde', 'piden desde', 'compran desde',
+            'aquí no hay encargado', 'aqui no hay encargado',
+            'aquí no tenemos', 'aqui no tenemos',
+            'aquí no se compra', 'aqui no se compra',
+            'aquí no manejamos', 'aqui no manejamos',
+            'no es esta tienda', 'no es aquí donde',
+        ]
+        es_otra_sucursal_621c = any(p in texto_lower for p in patrones_otra_sucursal_621c)
+        if es_otra_sucursal_621c:
+            print(f"   FIX 621C: BRUCE2048 - Cliente indica OTRA SUCURSAL: '{texto_cliente[:60]}'")
+            # Verificar si ya se pidió el teléfono de la otra sucursal
+            ultimas_bruce_621c = [
+                msg['content'].lower() for msg in self.conversation_history[-4:]
+                if msg['role'] == 'assistant'
+            ]
+            ya_pidio_tel_sucursal = any(
+                'teléfono de esa sucursal' in msg or 'telefono de esa sucursal' in msg
+                or 'número de la otra' in msg or 'numero de la otra' in msg
+                for msg in ultimas_bruce_621c
+            )
+            if ya_pidio_tel_sucursal:
+                print(f"   FIX 621C: Ya pidió teléfono sucursal - ofrecer catálogo directo")
+                return {
+                    "tipo": "OTRA_SUCURSAL_INSISTENCIA",
+                    "respuesta": "Entiendo, no se preocupe. ¿Me permite dejarle el número de NIOVAL para que le pasen la información al encargado? Es el 6 6 2 4 1 5 1 9 9 7.",
+                    "accion": "OFRECER_CONTACTO"
+                }
+            return {
+                "tipo": "OTRA_SUCURSAL",
+                "respuesta": "Entiendo, es en otra sucursal. ¿Me podría dar el teléfono de esa sucursal para comunicarme directamente con ellos?",
+                "accion": "PEDIR_TEL_SUCURSAL"
+            }
+
         if encargado_no_esta:
             # Verificar si Bruce ya preguntó por encargado (evitar loop)
             ultimas_bruce = [
@@ -7119,6 +7160,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "accion": "AGENDAR_CALLBACK"
                 }
 
+        # FIX 621A: BRUCE2051 - Pre-check: Cliente OFRECE su correo/número (NO pide contacto NIOVAL)
+        # Problema: "Le voy a dar un número de un correo" matcheaba "número de" en PIDE_CONTACTO_NIOVAL
+        # porque los patrones genéricos como "número de", "un número" son ambiguos
+        # Solución: Si cliente dice "le voy a dar/pasar", "yo le doy", etc. → es OFERTA del cliente
+        indicadores_cliente_ofrece_621 = [
+            'le voy a dar', 'te voy a dar', 'les voy a dar',
+            'le voy a pasar', 'te voy a pasar', 'les voy a pasar',
+            'le voy a mandar', 'te voy a mandar',
+            'yo le doy', 'yo te doy', 'yo le paso', 'yo te paso',
+            'le doy un', 'le doy el', 'le doy mi',
+            'le paso un', 'le paso el', 'le paso mi',
+            'le mando un', 'le mando el', 'le mando mi',
+            'aquí le va', 'aqui le va', 'ahí le va', 'ahi le va',
+            'tome nota', 'apunte', 'anote',
+        ]
+        contexto_contacto_621 = any(w in texto_lower for w in [
+            'correo', 'email', 'mail', 'número', 'numero', 'teléfono', 'telefono', 'cel', 'whatsapp'
+        ])
+        if any(p in texto_lower for p in indicadores_cliente_ofrece_621) and contexto_contacto_621:
+            print(f"   FIX 621A: BRUCE2051 - Cliente OFRECE su contacto: '{texto_cliente[:60]}'")
+            if any(w in texto_lower for w in ['correo', 'email', 'mail']):
+                self.estado_conversacion = EstadoConversacion.DICTANDO_CORREO
+                return {
+                    "tipo": "CLIENTE_OFRECE_CORREO",
+                    "respuesta": "Sí, claro, dígame su correo por favor.",
+                    "accion": "ESPERAR_CORREO"
+                }
+            else:
+                self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                return {
+                    "tipo": "CLIENTE_OFRECE_NUMERO",
+                    "respuesta": "Sí, claro, dígame el número por favor.",
+                    "accion": "ESPERAR_NUMERO"
+                }
+
         # FIX 510: BRUCE1540 - Cliente pide el contacto de NIOVAL
         # Caso: "Entonces, ¿Cómo se encuentra? Démelo." → Bruce NO dio el contacto
         # Cliente está pidiendo que Bruce le dé SU número de contacto
@@ -7256,6 +7332,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "accion": "AVANZAR_A_PRESENTACION"
                     }
 
+                # FIX 621B: BRUCE2049 - Si Bruce acabó de hacer una PREGUNTA y cliente dice "diga"/"bueno",
+                # NO responder "¿Me decía?" sino REPETIR la pregunta de Bruce
+                # Caso: Bruce: "¿Se encontrará el encargado?" → Cliente: "Diga." → Bruce: "¿Me decía?" (MAL)
+                # Correcto: Bruce: "Le preguntaba, ¿se encontrará el encargado de compras?"
+                ultimo_bruce_621b = None
+                for msg in reversed(self.conversation_history):
+                    if msg['role'] == 'assistant':
+                        ultimo_bruce_621b = msg.get('content', '')
+                        break
+                if ultimo_bruce_621b and ultimo_bruce_621b.strip().endswith('?'):
+                    # Extraer la última pregunta (después del último punto)
+                    partes_621b = re.split(r'[.!]\s+', ultimo_bruce_621b)
+                    ultima_pregunta_621b = partes_621b[-1].strip() if partes_621b else ultimo_bruce_621b.strip()
+                    # Asegurar que la pregunta no sea demasiado larga
+                    if len(ultima_pregunta_621b) <= 120:
+                        # Quitar ¿ inicial si existe para concatenar con "le preguntaba,"
+                        pregunta_limpia_621b = ultima_pregunta_621b.lstrip('¿').strip()
+                        pregunta_limpia_621b = pregunta_limpia_621b[0].lower() + pregunta_limpia_621b[1:] if pregunta_limpia_621b else pregunta_limpia_621b
+                        respuesta_621b = f"Sí, le preguntaba, ¿{pregunta_limpia_621b}"
+                        if not respuesta_621b.endswith('?'):
+                            respuesta_621b += '?'
+                        print(f"   FIX 621B: BRUCE2049 - Bruce hizo pregunta → repetir: '{respuesta_621b[:60]}'")
+                        return {
+                            "tipo": "VERIFICACION_CONEXION_REPETIR_PREGUNTA",
+                            "respuesta": respuesta_621b,
+                            "accion": "CONTINUAR_CONVERSACION"
+                        }
+
                 # Ya pasamos del inicio - cliente verifica que seguimos en línea
                 print(f"   FIX 527: Cliente verifica conexión ('{texto_lower}') - NO es saludo inicial")
                 return {
@@ -7273,6 +7377,27 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             historial_avanzado = len(self.conversation_history) >= 4
             if historial_avanzado:
                 print(f"   FIX 535b: BRUCE1821 - Historial tiene {len(self.conversation_history)} mensajes - NO es saludo inicial")
+                # FIX 621B: BRUCE2049 - Si Bruce hizo pregunta, repetirla en vez de "¿Me decía?"
+                ultimo_bruce_535b = None
+                for msg in reversed(self.conversation_history):
+                    if msg['role'] == 'assistant':
+                        ultimo_bruce_535b = msg.get('content', '')
+                        break
+                if ultimo_bruce_535b and ultimo_bruce_535b.strip().endswith('?'):
+                    partes_535b = re.split(r'[.!]\s+', ultimo_bruce_535b)
+                    ultima_pregunta_535b = partes_535b[-1].strip() if partes_535b else ultimo_bruce_535b.strip()
+                    if len(ultima_pregunta_535b) <= 120:
+                        pregunta_limpia_535b = ultima_pregunta_535b.lstrip('¿').strip()
+                        pregunta_limpia_535b = pregunta_limpia_535b[0].lower() + pregunta_limpia_535b[1:] if pregunta_limpia_535b else pregunta_limpia_535b
+                        respuesta_535b = f"Sí, le preguntaba, ¿{pregunta_limpia_535b}"
+                        if not respuesta_535b.endswith('?'):
+                            respuesta_535b += '?'
+                        print(f"   FIX 621B: Bruce hizo pregunta → repetir: '{respuesta_535b[:60]}'")
+                        return {
+                            "tipo": "VERIFICACION_CONEXION_REPETIR_PREGUNTA",
+                            "respuesta": respuesta_535b,
+                            "accion": "CONTINUAR_CONVERSACION"
+                        }
                 return {
                     "tipo": "VERIFICACION_CONEXION",
                     "respuesta": "Sí, aquí estoy. ¿Me decía?",
@@ -7771,7 +7896,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             conjunciones_adversativas = [' pero ', ' sin embargo ', ' aunque ', ' solo que ', ' nada más que ', ' nomas que ',
                                         ' la verdad ', ' es que ', ' lo que pasa es que ', ' lo que pasa ', ' la neta ']
             # Patrones que SÍ sobreviven al "pero" (despedida, confirmaciones negativas)
-            patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL'}
+            # FIX 621C: OTRA_SUCURSAL inmune (cliente dice "es que no es en esta sucursal" → "es que" no cambia intención)
+            # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (cliente dice "pero le doy un correo" → oferta es válida)
+            patrones_inmunes_pero = {'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
+                                     'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
+                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -7800,9 +7929,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 617A: BRUCE2032 - CORREO_DETECTADO y WHATSAPP_DETECTADO son inmunes
             # Problema: Cliente dicta email largo (>12 palabras + 3 cláusulas) → FIX 601 invalidaba
             # el patrón CORREO_DETECTADO → GPT devolvía vacío → FIX 577 respondía con pitch inicial
+            # FIX 621C: OTRA_SUCURSAL inmune (texto largo con "es en la otra sucursal" no debe ir a GPT)
+            # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (dictado largo no debe invalidar)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
-                                    'CORREO_DETECTADO', 'WHATSAPP_DETECTADO'}
+                                    'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
+                                    'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
+                                    'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
