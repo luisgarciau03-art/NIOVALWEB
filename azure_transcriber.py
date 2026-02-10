@@ -231,8 +231,9 @@ class AzureTranscriber:
                 print(f"✅ FIX 613: [FINAL] '{transcript}' (latencia: {latency_ms:.0f}ms, confidence={confidence})")
 
                 # Llamar callback con transcripción final
+                # FIX 625C: Pasar confidence al callback para filtrar transcripciones de baja confianza
                 if self.on_transcript_callback:
-                    self.on_transcript_callback(self.call_sid, transcript, True)
+                    self.on_transcript_callback(self.call_sid, transcript, True, confidence)
             else:
                 print(f"⚠️ FIX 613: [FINAL VACÍO] latencia={latency_ms:.0f}ms, audio_chunks={self.audio_chunks_received}")
 

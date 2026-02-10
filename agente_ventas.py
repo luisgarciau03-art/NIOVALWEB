@@ -4570,7 +4570,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'le puedo dar un correo', 'le puedo dar el correo',
                 'le puedo dar un numero', 'le puedo dar el numero',
                 'anote el correo', 'anote mi correo', 'apunte el correo',
-                'tome nota', 'le comparto'
+                'tome nota', 'le comparto',
+                # FIX 625B: BRUCE2058 - "te puedo pasar mi teléfono" = ofrece SU dato
+                'puedo pasar mi teléfono', 'puedo pasar mi telefono',
+                'puedo pasar el teléfono', 'puedo pasar el telefono',
+                'puedo pasar mi número', 'puedo pasar mi numero',
+                'puedo dar mi teléfono', 'puedo dar mi telefono',
+                'puedo dar mi número', 'puedo dar mi numero',
+                'te doy mi teléfono', 'le doy mi teléfono',
+                'te doy mi telefono', 'le doy mi telefono',
+                'te paso mi teléfono', 'le paso mi teléfono',
+                'te paso mi telefono', 'le paso mi telefono',
+                'yo te puedo apoyar', 'yo le puedo apoyar',
+                'dime yo te puedo', 'dime yo te ayudo'
             ])
 
             if cliente_ofrece_dato:
@@ -6280,6 +6292,37 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'más tarde', 'mas tarde', 'después', 'despues',
                     'al rato', 'en un rato', 'luego', 'ahorita no'
                 ]) and not tiene_horario_especifico  # FIX 555: Añadir verificación
+
+                # FIX 625A: BRUCE2058 - Detectar "te puedo pasar mi teléfono" ANTES de horario
+                # Problema: Cliente dice "No está, pero dime, te puedo pasar mi teléfono"
+                # Bruce pedía número del ENCARGADO en vez de aceptar teléfono del CLIENTE
+                palabras_ofrece_telefono_625 = [
+                    'te puedo pasar mi teléfono', 'le puedo pasar mi teléfono',
+                    'te puedo pasar mi telefono', 'le puedo pasar mi telefono',
+                    'te puedo pasar el teléfono', 'le puedo pasar el teléfono',
+                    'te puedo pasar el telefono', 'le puedo pasar el telefono',
+                    'puedo pasar mi teléfono', 'puedo pasar mi telefono',
+                    'puedo pasar mi número', 'puedo pasar mi numero',
+                    'puedo pasar mi celular', 'puedo pasar mi cel',
+                    'puedo dar mi teléfono', 'puedo dar mi telefono',
+                    'puedo dar mi número', 'puedo dar mi numero',
+                    'te doy mi teléfono', 'le doy mi teléfono',
+                    'te doy mi telefono', 'le doy mi telefono',
+                    'te paso mi teléfono', 'le paso mi teléfono',
+                    'te paso mi telefono', 'le paso mi telefono',
+                    'te doy mi cel', 'le doy mi cel',
+                    'yo te apoyo', 'yo te puedo apoyar', 'yo le puedo apoyar',
+                    'dime yo te puedo', 'dime yo te ayudo',
+                ]
+                if any(p in texto_lower for p in palabras_ofrece_telefono_625):
+                    print(f"   FIX 625A: BRUCE2058 - Cliente ofrece SU teléfono/contacto directo")
+                    print(f"     Texto: '{texto_lower[:80]}'")
+                    self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+                    return {
+                        "tipo": "CLIENTE_OFRECE_SU_CONTACTO",
+                        "respuesta": "Claro, dígame su número por favor.",
+                        "accion": "CAPTURAR_TELEFONO_CLIENTE"
+                    }
 
                 if tiene_horario_especifico:
                     # FIX 594 BRUCE1987: Si cliente OFRECE correo/whatsapp, priorizar captura

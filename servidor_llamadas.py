@@ -9201,10 +9201,11 @@ def es_texto_valido_espanol(texto):
 
 
 # FIX 540: Callback para ElevenLabs Scribe (STT primario)
-def on_azure_transcript(call_sid, texto, is_final):
+def on_azure_transcript(call_sid, texto, is_final, confidence="N/A"):
     """
     FIX 613: Callback cuando Azure Speech transcribe algo
     Azure es STT primario con mejor latencia (120-200ms) y precisión (95-97% es-MX)
+    FIX 625C: confidence parameter para filtrar transcripciones de baja confianza
     """
     if not texto or not texto.strip():
         return
@@ -9302,6 +9303,18 @@ def on_azure_transcript(call_sid, texto, is_final):
                         azure_transcripciones[call_sid][-1] = texto
             else:
                 azure_transcripciones[call_sid].append(texto)
+
+    # FIX 625C: BRUCE2058 - Filtrar transcripciones Azure con baja confianza
+    # Problema: Azure dio "Por jugar por Pelé." (confidence=0.47) que se copió al buffer
+    # y contaminó la transcripción final. Con confidence < 0.5, es probable basura de audio.
+    if is_final and confidence != "N/A":
+        try:
+            conf_val = float(confidence)
+            if conf_val < 0.5:
+                print(f"    FIX 625C: Azure FINAL DESCARTADA por baja confianza ({conf_val:.2f} < 0.5): '{texto[:60]}'")
+                return  # No copiar al buffer de Deepgram
+        except (ValueError, TypeError):
+            pass  # Si no se puede parsear, continuar normal
 
     # FIX 588: BRUCE1965 - Solo copiar FINALs de ElevenLabs a deepgram_transcripciones
     # Problema: PARCIALs de ElevenLabs crecen con texto corrupto más largo que sobrescribe
