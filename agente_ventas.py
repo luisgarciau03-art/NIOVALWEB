@@ -5418,6 +5418,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'whatsapp o correo', 'correo electrónico'
             ]) or '662 415' not in respuesta
 
+            # FIX 625A: BRUCE2059 - "te paso su teléfono" NO es pedir datos de Bruce
+            # Es el cliente ofreciendo PASAR el teléfono del encargado
+            cliente_ofrece_pasar_625a = any(p in contexto_cliente for p in [
+                'te paso su', 'le paso su', 'paso su teléfono', 'paso su telefono',
+                'paso su número', 'paso su numero', 'paso su cel',
+                'te puedo pasar', 'le puedo pasar', 'puedo pasar su',
+                'te doy su', 'le doy su', 'doy su teléfono', 'doy su telefono',
+                'doy su número', 'doy su numero',
+            ])
+            if cliente_ofrece_pasar_625a:
+                cliente_pide_datos_bruce = False
+                print(f"\n[OK] FIX 625A: BRUCE2059 - Cliente OFRECE pasar teléfono del encargado, NO pide datos de Bruce")
+
             if cliente_pide_datos_bruce and bruce_responde_mal_datos:
                 print(f"\n[EMOJI] FIX 355: FILTRO ACTIVADO - Cliente pide datos de Bruce")
                 print(f"   Cliente dijo: \"{contexto_cliente[:80]}...\"")
