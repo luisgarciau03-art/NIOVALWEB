@@ -5047,6 +5047,56 @@ Responde SOLO con una letra: A, B, C, D o E"""
     if transcripciones_importantes:
         print(f" FIX 481: Conservando {len(transcripciones_importantes)} transcripciones importantes")
 
+    # FIX 623A: BRUCE2041 - Almacenar dígitos preservados en el agente para el siguiente turno
+    # Problema: Cliente dictó "6621" mientras GPT procesaba, FIX 481 preservó los dígitos
+    # pero al ensamblar el número en el turno siguiente, esos dígitos se perdieron.
+    # Solución: Guardar los dígitos en el agente para que el pattern detector los use
+    if transcripciones_importantes and call_sid in conversaciones_activas:
+        agente_623 = conversaciones_activas[call_sid]
+        digitos_preservados_623 = []
+        for trans_623 in transcripciones_importantes:
+            trans_623_str = str(trans_623).strip().rstrip('.')
+            digitos_623 = re_481.findall(r'\d', trans_623_str)
+            if len(digitos_623) >= 3:
+                digitos_preservados_623.extend(digitos_623)
+        if digitos_preservados_623:
+            agente_623.digitos_preservados_previos = ''.join(digitos_preservados_623)
+            print(f" FIX 623A: Dígitos preservados para siguiente turno: '{agente_623.digitos_preservados_previos}'")
+
+    # FIX 623C: BRUCE2041 - Si cliente YA está dictando número, NO preguntar por él
+    # Problema: GPT generó "¿Cuál es el número?" pero cliente ya dijo "6621"
+    # Solución: Si hay dígitos preservados Y Bruce pide número → reemplazar con "Ajá..."
+    if transcripciones_importantes and call_sid in conversaciones_activas:
+        agente_623c = conversaciones_activas[call_sid]
+        tiene_digitos_623c = any(len(re_481.findall(r'\d', str(t))) >= 3 for t in transcripciones_importantes)
+        if tiene_digitos_623c and respuesta_agente:
+            respuesta_lower_623c = respuesta_agente.lower()
+            pide_numero_623c = any(p in respuesta_lower_623c for p in [
+                'cuál es el número', 'cual es el numero',
+                'me puede dar el número', 'me puede dar su número',
+                'número de teléfono', 'numero de telefono',
+                'me puede pasar el número', 'me puede pasar su número',
+                'su número de whatsapp', 'su número de celular',
+                'dígame el número', 'digame el numero',
+                'número que me va', 'numero que me va'
+            ])
+            if pide_numero_623c:
+                print(f"\n FIX 623C: Cliente YA dictó dígitos - NO preguntar por número")
+                print(f"   Bruce iba a decir: '{respuesta_agente[:80]}'")
+                print(f"   Dígitos ya dictados: {[str(t) for t in transcripciones_importantes if len(re_481.findall(r'\\d', str(t))) >= 3]}")
+                # Cambiar estado a DICTANDO_NUMERO
+                from agente_ventas import EstadoConversacion as EC623
+                agente_623c.estado_conversacion = EC623.DICTANDO_NUMERO
+                # Reemplazar respuesta con confirmación mínima
+                respuesta_agente = "Ajá, sí..."
+                respuesta_container["respuesta"] = respuesta_agente
+                # Regenerar audio con la nueva respuesta
+                audio_id_623c = f"respuesta_{call_sid}_{len(audio_files)}"
+                result_623c = generar_audio_elevenlabs(respuesta_agente, audio_id_623c)
+                if result_623c:
+                    audio_id = audio_id_623c
+                    print(f"   FIX 623C: Reemplazado con 'Ajá, sí...' (dejar que cliente continúe dictando)")
+
     # Limpiar el tracking de FINAL/PARCIAL si no hay transcripciones importantes
     if not transcripciones_importantes and call_sid in deepgram_ultima_final:
         deepgram_ultima_final[call_sid] = {}

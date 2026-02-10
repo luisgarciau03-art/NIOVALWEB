@@ -4077,6 +4077,21 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Dígitos extraídos: {''.join(digitos)}")
                     print(f"   Mensaje completo: \"{ultimo_cliente[:80]}...\"")
 
+                    # FIX 623B: Reconstruir número con dígitos preservados del turno anterior
+                    digitos_previos_623b = getattr(self, 'digitos_preservados_previos', '')
+                    if digitos_previos_623b and num_digitos >= 7:
+                        numero_actual_623b = ''.join(digitos)
+                        if numero_actual_623b.startswith(digitos_previos_623b):
+                            print(f"   FIX 623B (post-filter): Número actual YA incluye previos → usar actual")
+                        else:
+                            digitos_necesarios_623b = 10 - len(digitos_previos_623b)
+                            if 0 < digitos_necesarios_623b < num_digitos:
+                                candidato_623b = digitos_previos_623b + numero_actual_623b[:digitos_necesarios_623b]
+                                print(f"   FIX 623B (post-filter): Reconstruido: {digitos_previos_623b}+{numero_actual_623b[:digitos_necesarios_623b]}={candidato_623b}")
+                                digitos = list(candidato_623b)
+                                num_digitos = len(digitos)
+                        self.digitos_preservados_previos = ''
+
                     # Números telefónicos en México tienen 10 dígitos
                     # Números con lada internacional (52) tienen 12 dígitos
                     numero_completo = num_digitos == 10 or num_digitos == 12
@@ -7625,6 +7640,38 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Construir número para mostrar
             numero_capturado = ''.join(digitos_en_texto)
             print(f"[OK] FIX 521: NÚMERO DICTADO detectado ({num_digitos} dígitos): {numero_capturado}")
+
+            # FIX 623B: BRUCE2041 - Reconstruir número con dígitos del turno anterior
+            # Problema: Cliente dictó "6621" (turno anterior) + "201020 6620" (turno actual)
+            # FIX 469 concatenó SOLO el turno actual → "2010206620" (INCORRECTO)
+            # El número real era "6621201020" (6621 del turno anterior + 201020 continuación)
+            # Solución: Si hay dígitos preservados, intentar reconstruir el número correcto
+            digitos_previos_623 = getattr(self, 'digitos_preservados_previos', '')
+            if digitos_previos_623 and num_digitos >= 10:
+                print(f"   FIX 623B: Dígitos previos del turno anterior: '{digitos_previos_623}'")
+                # Caso 1: El número actual EMPIEZA con los dígitos previos
+                # → Cliente repitió desde el inicio → usar número actual (es completo)
+                if numero_capturado.startswith(digitos_previos_623):
+                    print(f"   FIX 623B: Número actual YA incluye dígitos previos (cliente repitió) → usar actual")
+                    # Limpiar dígitos previos
+                    self.digitos_preservados_previos = ''
+                else:
+                    # Caso 2: El número actual NO empieza con los dígitos previos
+                    # → Cliente CONTINUÓ desde donde quedó + posiblemente repitió inicio
+                    # Intentar: previos + primeros (10-len(previos)) dígitos del actual
+                    digitos_necesarios = 10 - len(digitos_previos_623)
+                    if 0 < digitos_necesarios < num_digitos:
+                        candidato_623 = digitos_previos_623 + numero_capturado[:digitos_necesarios]
+                        print(f"   FIX 623B: Número reconstruido: {digitos_previos_623} + {numero_capturado[:digitos_necesarios]} = {candidato_623}")
+                        numero_capturado = candidato_623
+                        print(f"   FIX 623B: Usando número reconstruido: {numero_capturado}")
+                    else:
+                        print(f"   FIX 623B: No se puede reconstruir (necesarios={digitos_necesarios}) → usar actual")
+                    # Limpiar dígitos previos
+                    self.digitos_preservados_previos = ''
+            elif digitos_previos_623:
+                # Hay dígitos previos pero no tenemos 10+ actuales - limpiar
+                self.digitos_preservados_previos = ''
 
             if num_digitos >= 10:
                 # Número completo (10+ dígitos) - confirmar
