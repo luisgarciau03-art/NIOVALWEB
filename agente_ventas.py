@@ -2142,6 +2142,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 filtro_aplicado = True
 
         # ============================================================
+        # FIX 653: BRUCE2093 - GPT_RESPUESTA_INCORRECTA
+        # "nioval" debe ser siempre "NIOVAL" (mayúsculas - es nombre de marca)
+        # ============================================================
+        if "nioval" in respuesta_lower:
+            # Reemplazar todas las variantes por NIOVAL mayúsculas
+            respuesta = re.sub(r'\bnioval\b', 'NIOVAL', respuesta, flags=re.IGNORECASE)
+            print(f"   FIX 653: Normalizado 'nioval' → 'NIOVAL'")
+            filtro_aplicado = True
+
+        # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
         # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
         # Solución: Contar preguntas y BLOQUEAR repeticiones
@@ -9588,6 +9598,11 @@ Ejemplo correcto:
 4. Si el cliente dice que NO ESTÁ AUTORIZADO, NO PUEDE, o NO LE PERMITEN dar información
    del encargado (teléfono directo, correo personal, datos de contacto), NO insistir.
    → Ofrecer enviar catálogo al teléfono general de la empresa o agendar callback.
+
+5. Si el cliente indica que el encargado NO ESTÁ, NO PUEDE atender, o NO ESTÁ DISPONIBLE,
+   SIEMPRE pedir un contacto alternativo (WhatsApp, correo electrónico, teléfono directo).
+   NO simplemente decir "lo llamo después" y terminar la llamada sin capturar ningún dato.
+   → Preguntar: "¿Me podría dar su WhatsApp para enviarle el catálogo?"
 
 Estas reglas tienen MÁXIMA PRIORIDAD. Verifica el historial antes de generar tu respuesta."""
                     }

@@ -4426,8 +4426,10 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
                 if not respuesta_container["completado"]:
                     # FIX 522: GPT tardó más de 5s - timeout (antes era 10.5s)
+                    # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO
+                    # Timeout GPT → mensaje profesional en lugar de "problemas técnicos"
                     print(f" FIX 522: GPT timeout después de 5s (reducido de 10.5s)")
-                    mensaje_error = "Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde."
+                    mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
                     # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
                     try:
                         if BUG_DETECTOR_AVAILABLE:
@@ -4471,8 +4473,10 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
         if not respuesta_container["completado"]:
             # FIX 522: GPT tardó más de 5 segundos total - timeout (antes 10s)
+            # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO
+            # Timeout GPT → mensaje profesional en lugar de "problemas técnicos"
             print(f" FIX 522: GPT timeout después de 5s (reducido de 10s)")
-            mensaje_error = "Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde."
+            mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
             # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
             try:
                 if BUG_DETECTOR_AVAILABLE:
