@@ -1,7 +1,7 @@
 """
 FIX 632/637: Bug Detector - Deteccion automatica de bugs y errores en llamadas.
 
-Modulo independiente que rastrea eventos por llamada y detecta 11 tipos de problemas:
+Modulo independiente que rastrea eventos por llamada y detecta 12 tipos de problemas:
 
 BUGS TECNICOS (FIX 632):
 1. BRUCE_MUDO: TwiML enviado pero audio nunca fetcheado por Twilio
@@ -17,6 +17,7 @@ ERRORES DE CONTENIDO (FIX 637 - rule-based):
 9. PITCH_REPETIDO: Bruce repitio el pitch de presentacion 2+ veces
 10. CATALOGO_REPETIDO: Bruce ofrecio catalogo 2+ veces
 11. DATO_SIN_RESPUESTA: Cliente dio dato (email/tel) pero Bruce no respondio (FIX 639D)
+12. CLIENTE_HABLA_ULTIMO: Cliente hablo al final pero Bruce nunca respondio (FIX 642A)
 
 EVALUACION GPT (FIX 637 - GPT-4o-mini post-llamada):
 12. GPT_EVAL_*: Problemas detectados por GPT al evaluar la conversacion completa
@@ -59,7 +60,8 @@ INFO = "INFO"
 MAX_BUGS_HISTORY = 200
 
 # GPT evaluation: minimo de turnos para justificar el costo
-GPT_EVAL_MIN_TURNOS = 3
+# FIX 642B: Bajado de 3 a 2 (BRUCE2070 tenia 2 turnos y GPT eval no corrio)
+GPT_EVAL_MIN_TURNOS = 2
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
 _CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")
@@ -202,6 +204,12 @@ class BugDetector:
             # FIX 639D: DATO_SIN_RESPUESTA - check independiente (no requiere 2+ respuestas)
             dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
             bugs.extend(dato_bugs)
+
+            # FIX 642A: CLIENTE_HABLA_ULTIMO - cliente hablo al final y Bruce nunca respondio
+            # Solo si DATO_SIN_RESPUESTA no lo cubrio ya (evitar doble reporte)
+            if not dato_bugs:
+                ultimo_bugs = ContentAnalyzer._check_cliente_habla_ultimo(tracker.conversacion)
+                bugs.extend(ultimo_bugs)
 
         except Exception:
             pass  # Nunca fallar
@@ -477,6 +485,63 @@ class ContentAnalyzer:
                     "detalle": f"Cliente dio {tipo_dato} pero Bruce NUNCA respondio: '{texto_dato[:60]}'",
                     "categoria": "contenido"
                 })
+
+        except Exception:
+            pass
+        return bugs
+
+    # Palabras que indican que el CLIENTE termino la llamada (no es bug de Bruce)
+    _DESPEDIDA_CLIENTE = re.compile(
+        r'\b(adi[oó]s|bye|hasta luego|nos vemos|que le vaya bien|gracias.{0,10}buen d[ií]a)\b',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_cliente_habla_ultimo(conv: list) -> list:
+        """FIX 642A: Detecta si el cliente fue el ultimo en hablar y Bruce nunca respondio.
+
+        Caso BRUCE2070: Cliente dijo 'Tendrias que marcar mas tarde, digame' y Bruce
+        quedo en silencio hasta que la llamada termino.
+
+        Excluye: despedidas del cliente (el colgo voluntariamente), mensajes vacios.
+        """
+        bugs = []
+        try:
+            if len(conv) < 2:
+                return bugs
+
+            # Buscar el ultimo mensaje real (no vacio) de la conversacion
+            ultimo_idx = len(conv) - 1
+            while ultimo_idx >= 0:
+                role, texto = conv[ultimo_idx]
+                if texto.strip():
+                    break
+                ultimo_idx -= 1
+
+            if ultimo_idx < 0:
+                return bugs
+
+            role, texto = conv[ultimo_idx]
+
+            # Solo nos interesa si el ultimo mensaje real es del cliente
+            if role != "cliente":
+                return bugs
+
+            # Excluir si el cliente se despidio (el termino la llamada, no es bug)
+            if ContentAnalyzer._DESPEDIDA_CLIENTE.search(texto):
+                return bugs
+
+            # Verificar que Bruce respondio al menos 1 vez antes (sino es BRUCE_MUDO)
+            bruce_respondio_alguna_vez = any(r == "bruce" and t.strip() for r, t in conv)
+            if not bruce_respondio_alguna_vez:
+                return bugs
+
+            bugs.append({
+                "tipo": "CLIENTE_HABLA_ULTIMO",
+                "severidad": ALTO,
+                "detalle": f"Cliente hablo al final pero Bruce NUNCA respondio: '{texto[:60]}'",
+                "categoria": "contenido"
+            })
 
         except Exception:
             pass

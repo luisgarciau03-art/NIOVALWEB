@@ -967,7 +967,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                            'anda en la comida', 'anda comiendo', 'salió a comer', 'salio a comer',
                            'fue a comer', 'están comiendo', 'estan comiendo',
                            # FIX 471: BRUCE1415 - "No tengo" = No hay encargado
-                           'no tengo', 'no tenemos', 'no contamos con', 'aquí no hay']
+                           'no tengo', 'no tenemos', 'no contamos con', 'aquí no hay',
+                           # FIX 642D: BRUCE2070 - "marcar más tarde" = encargado no disponible
+                           'marcar más tarde', 'marcar mas tarde', 'llamar más tarde', 'llamar mas tarde',
+                           'marque más tarde', 'marque mas tarde', 'llame más tarde', 'llame mas tarde',
+                           'marcar después', 'marcar despues', 'llamar después', 'llamar despues']
         if any(p in mensaje_lower for p in patrones_no_esta):
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
             print(f"[EMOJI] FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
@@ -3295,6 +3299,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     r'(?:sali[oó]|se\s+fue)',
                     r'llamar\s+(?:m[aá]s\s+)?tarde',  # FIX 255: "llamar más tarde"
                     r'llame\s+(?:m[aá]s\s+)?tarde',   # FIX 255: "llame más tarde"
+                    r'marcar\s+(?:m[aá]s\s+)?tarde',   # FIX 642D: BRUCE2070 "marcar más tarde"
+                    r'marque\s+(?:m[aá]s\s+)?tarde',   # FIX 642D: "marque más tarde"
                     # FIX 372: "viene hasta el viernes/lunes/martes/etc"
                     r'viene\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
                     r'llega\s+hasta\s+(?:el\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)',
@@ -6275,7 +6281,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'en este momento no', 'por el momento no',
             # Comida/Descanso
             'salió a comer', 'salio a comer', 'está comiendo', 'esta comiendo',
-            'fue a comer', 'anda comiendo', 'salió a desayunar', 'salio a desayunar'
+            'fue a comer', 'anda comiendo', 'salió a desayunar', 'salio a desayunar',
+            # FIX 642D: BRUCE2070 - "marcar más tarde" = encargado no disponible (callback)
+            'marcar más tarde', 'marcar mas tarde', 'llamar más tarde', 'llamar mas tarde',
+            'marque más tarde', 'marque mas tarde', 'llame más tarde', 'llame mas tarde',
+            'marcar después', 'marcar despues', 'llamar después', 'llamar despues',
         ]
 
         # Detectar si cliente menciona que el encargado NO ESTÁ
@@ -9845,7 +9855,11 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                 'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
                 'llega a las', 'llega más tarde', 'llega mas tarde',
                 'no hay nadie', 'no hay encargado', 'no tenemos encargado',
-                'ocupado', 'en una junta', 'no puede atender'
+                'ocupado', 'en una junta', 'no puede atender',
+                # FIX 642C: BRUCE2070 - "marcar más tarde" es callback (encargado no está)
+                'marcar más tarde', 'marcar mas tarde', 'llamar más tarde', 'llamar mas tarde',
+                'marque más tarde', 'marque mas tarde', 'llame más tarde', 'llame mas tarde',
+                'marcar después', 'marcar despues', 'llamar después', 'llamar despues',
             ]
             if any(p in respuesta_lower for p in patrones_no_esta_fallback):
                 print(f"[OK] FIX 493: Fallback detecta ENCARGADO_NO_ESTA - NO preguntar de nuevo")

@@ -557,6 +557,44 @@ class TestBruce2068Regression:
         assert "se encontrará" not in resultado.lower(), f"FIX 322 destruyó la respuesta: '{resultado[:80]}'"
 
 
+class TestBruce2070Regression:
+    """FIX 642: Regresion BRUCE2070 - Bruce mudo despues de 'marcar mas tarde, digame'."""
+
+    @pytest.fixture
+    def agente_pregunto_encargado(self, agente):
+        """Agente que ya pregunto por el encargado (contexto BRUCE2070)."""
+        agente.conversation_history = [
+            {"role": "assistant", "content": "Me comunico de la marca nioval, productos ferreteros. Se encontrara el encargado?"},
+            {"role": "user", "content": "No estas"},
+            {"role": "assistant", "content": "Me podria proporcionar el WhatsApp del encargado para enviarle el catalogo?"},
+        ]
+        agente.segunda_parte_saludo_dicha = True
+        return agente
+
+    @pytest.mark.regression
+    def test_marcar_mas_tarde_detectado(self, agente_pregunto_encargado):
+        """BRUCE2070: 'marcar mas tarde' debe detectarse como ENCARGADO_NO_ESTA (callback)."""
+        resultado = agente_pregunto_encargado._detectar_patron_simple_optimizado(
+            "Tendrías que marcar más tarde"
+        )
+        assert resultado is not None
+        # Debe ser algun tipo de patron, no caer a GPT
+        assert resultado["tipo"] in (
+            "ENCARGADO_NO_ESTA_CON_HORARIO", "ENCARGADO_NO_ESTA_SIN_HORARIO",
+            "ENCARGADO_NO_ESTA", "SOLICITA_CALLBACK",
+            "CLIENTE_PIDE_LLAMAR_DESPUES", "ENCARGADO_LLEGA_MAS_TARDE",
+        )
+
+    @pytest.mark.regression
+    def test_marcar_mas_tarde_con_digame(self, agente_pregunto_encargado):
+        """BRUCE2070: 'marcar mas tarde, digame' - el 'digame' no debe confundir."""
+        resultado = agente_pregunto_encargado._detectar_patron_simple_optimizado(
+            "Tendrías que marcar más tarde, dígame"
+        )
+        # Debe detectar algo (no quedar en None/GPT)
+        assert resultado is not None
+
+
 class TestPreguntaIdentidad:
     """Tests para cuando el cliente pregunta quién llama o de dónde."""
 

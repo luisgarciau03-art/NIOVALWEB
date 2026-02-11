@@ -282,11 +282,11 @@ class TestGPTEvalStructure:
 
     @pytest.mark.bug_detector
     def test_gpt_eval_no_ejecuta_con_pocos_turnos(self, tracker):
-        """Con <3 turnos de Bruce, GPT eval no se ejecuta."""
+        """Con <2 turnos de Bruce (FIX 642B), GPT eval no se ejecuta."""
         tracker.emit("BRUCE_RESPONDE", {"texto": "Hola"})
-        tracker.emit("BRUCE_RESPONDE", {"texto": "Adios"})
-        # _evaluar_con_gpt debe retornar [] con <3 turnos
+        # _evaluar_con_gpt debe retornar [] con <2 turnos
         from bug_detector import _evaluar_con_gpt, GPT_EVAL_MIN_TURNOS
+        assert GPT_EVAL_MIN_TURNOS == 2
         assert len(tracker.respuestas_bruce) < GPT_EVAL_MIN_TURNOS
         resultado = _evaluar_con_gpt(tracker)
         assert resultado == []
@@ -396,3 +396,67 @@ class TestDatoSinRespuesta:
         bugs = BugDetector.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
         assert "DATO_SIN_RESPUESTA" not in tipos
+
+
+# ============================================================
+# CLIENTE_HABLA_ULTIMO (FIX 642A)
+# ============================================================
+
+class TestClienteHablaUltimo:
+    """FIX 642A: Detectar cuando Bruce queda mudo al final de la conversacion."""
+
+    @pytest.mark.bug_detector
+    def test_bruce2070_marcar_mas_tarde(self, tracker):
+        """BRUCE2070: Cliente dijo 'marcar mas tarde, digame' y Bruce quedo mudo."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de la marca nioval, productos ferreteros. Se encontrara el encargado?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "No estas"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Me podria proporcionar el WhatsApp del encargado?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Tendrias que marcar mas tarde, digame"})
+        # Bruce NO responde - fin de llamada
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "CLIENTE_HABLA_ULTIMO" in tipos
+        bug = next(b for b in bugs if b["tipo"] == "CLIENTE_HABLA_ULTIMO")
+        assert bug["severidad"] == ALTO
+
+    @pytest.mark.bug_detector
+    def test_bruce_responde_al_final_ok(self, tracker):
+        """Conversacion normal donde Bruce responde al final → NO hay CLIENTE_HABLA_ULTIMO."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de nioval."})
+        tracker.emit("CLIENTE_DICE", {"texto": "No esta el encargado"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Entiendo, gracias por su tiempo."})
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
+
+    @pytest.mark.bug_detector
+    def test_cliente_se_despide_no_es_bug(self, tracker):
+        """Si el cliente se despidio (adios/hasta luego), Bruce mudo no es bug."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Gracias por su tiempo."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Hasta luego, gracias"})
+        # Bruce no responde, pero el cliente se despidio - no es bug
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
+
+    @pytest.mark.bug_detector
+    def test_mensaje_vacio_no_cuenta(self, tracker):
+        """Mensajes vacios (timeout Deepgram) no cuentan como 'cliente hablo ultimo'."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de nioval."})
+        tracker.emit("CLIENTE_DICE", {"texto": "No me interesa"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Entiendo, gracias."})
+        tracker.emit("CLIENTE_DICE", {"texto": ""})  # Timeout Deepgram
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
+
+    @pytest.mark.bug_detector
+    def test_dato_sin_respuesta_tiene_prioridad(self, tracker):
+        """Si DATO_SIN_RESPUESTA se detecta, CLIENTE_HABLA_ULTIMO no se duplica."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Digame el correo."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Es test arroba gmail punto com"})
+        # Bruce no responde - DATO_SIN_RESPUESTA cubre esto
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "DATO_SIN_RESPUESTA" in tipos
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
