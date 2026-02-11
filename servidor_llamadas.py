@@ -3224,10 +3224,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
             # 3. Si lleva menos de 2 segundos hablando y dijo más de 2 palabras
             # FIX 264: Pero NO si es una pregunta o termina en signo de interrogación
+            # FIX 644: BRUCE2071 - Flag para indicar que cliente SIGUE hablando (para que FIX 529 lo respete)
+            cliente_sigue_hablando = False
             termina_en_pregunta = speech_result.strip().endswith('?') or '¿' in speech_result
             if tiempo_hablando < 2.0 and palabras_nuevas >= 2 and not es_pregunta and not termina_en_pregunta:
                 # Probablemente sigue hablando - el timeout de 2s lo interrumpió
                 frase_parece_incompleta = True
+                cliente_sigue_hablando = True  # FIX 644: Marcar que cliente sigue hablando
                 print(f"    FIX 244: Habló rápido ({tiempo_hablando:.1f}s) - probablemente sigue hablando")
             elif tiempo_hablando < 2.0 and (es_pregunta or termina_en_pregunta):
                 print(f"    FIX 264: Habló rápido pero ES PREGUNTA - responder inmediatamente")
@@ -3322,6 +3325,7 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # FIX 529: BRUCE1802 - "sí dígame" y variantes con prefijos son respuestas de PRESENCIA
             # Cliente dice "este, sí, dígame" o "ajá, dígame" indicando que está listo para escuchar
             # El problema es que FIX 244 los marca como "incompletos" por hablar rápido
+            # FIX 644: BRUCE2071 - NO aplicar si FIX 244 detectó que cliente SIGUE hablando
             respuestas_presencia_completas = [
                 'dígame', 'digame', 'diga', 'mande',
                 'sí dígame', 'si digame', 'sí, dígame', 'si, digame',
@@ -3331,9 +3335,11 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # Verificar si la frase CONTIENE (no solo termina) en respuesta de presencia
             es_presencia_con_prefijo = any(resp in frase_limpia for resp in respuestas_presencia_completas)
 
-            if frase_parece_incompleta and es_presencia_con_prefijo:
+            if frase_parece_incompleta and es_presencia_con_prefijo and not cliente_sigue_hablando:
                 print(f"    FIX 529: BRUCE1802 - '{speech_result}' contiene respuesta de PRESENCIA - NO esperar")
                 frase_parece_incompleta = False  # Forzar respuesta inmediata
+            elif frase_parece_incompleta and es_presencia_con_prefijo and cliente_sigue_hablando:
+                print(f"    FIX 644: BRUCE2071 - '{speech_result}' contiene PRESENCIA PERO cliente sigue hablando - ESPERAR FINAL completo")
 
             # FIX 471: BRUCE1415 - "No tengo" es respuesta completa, NO esperar continuación
             # El cliente está diciendo que no hay encargado de compras

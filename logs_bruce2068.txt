@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title> Logs BRUCE2068</title>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 { color: #4CAF50; }
+                .nav { margin-bottom: 20px; }
+                .nav a { color: #4CAF50; margin-right: 20px; text-decoration: none; }
+                .nav a:hover { text-decoration: underline; }
+                .stats { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+                .log-container {
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .log-line {
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+                .log-line:hover { background: #21262d; }
+                .log-bruce { color: #58a6ff; }
+                .log-cliente { color: #f0883e; }
+                .log-llamada { color: #a371f7; }
+                .log-error { color: #f85149; }
+                .log-exito { color: #3fb950; }
+            </style>
+        </head>
+        <body>
+            <h1> Logs de BRUCE2068</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id=2068&formato=json" target="_blank"> JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> 32 |
+                <strong>BRUCE ID:</strong> 2068
+            </div>
+            <div class="log-container">
+        <div class="log-line log-error">[2026-02-11 00:12:52] ID BRUCE generado: BRUCE2068</div><div class="log-line log-cliente">[2026-02-11 00:12:57] [CLIENTE] BRUCE2068 - CLIENTE DIJO: "¿Qué tal, buen día?"</div><div class="log-line log-bruce">[2026-02-11 00:12:58] [BRUCE] BRUCE2068 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"</div><div class="log-line log-cliente">[2026-02-11 00:13:08] [CLIENTE] BRUCE2068 - CLIENTE DIJO: "No estoy No está disponible."</div><div class="log-line log-bruce">[2026-02-11 00:13:09] [BRUCE] BRUCE2068 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"</div><div class="log-line log-cliente">[2026-02-11 00:13:16] [CLIENTE] BRUCE2068 - CLIENTE DIJO: "Por correo, si quieres,"</div><div class="log-line log-bruce">[2026-02-11 00:13:17] [BRUCE] BRUCE2068 DICE: "Sí, por favor, dígame el correo." (FIX 500: respuesta a oferta)</div><div class="log-line log-cliente">[2026-02-11 00:13:29] [CLIENTE] BRUCE2068 - CLIENTE DIJO: "Por correo, si quieres. Ulloa cero tres arroba q de uva cero tres arroba Gmail punto com. Es Luis García U. De uva03@gmail.com."</div><div class="log-line log-cliente">[2026-02-11 00:13:34] [CLIENTE] BRUCE2068 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Timeouts Deepgram previos: 1</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Respuestas vacías consecutivas: 1</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Azure buffer: 6 transcripciones</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Azure últimas 3: ['por correo si quieres', 'es luis garcía u de uva cero 3 arroba gmail punto', 'Es Luis García U. De uva03@gmail.com.']</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Azure última: 'Es Luis García U. De uva03@gmail.com.' (len=37)</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Azure Transcriber: audio_chunks=1979, transcripts=10, finals=5</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Deepgram Transcriber: audio_chunks=1979, transcripts=46, finals=12</div><div class="log-line log-error">[2026-02-11 00:13:34] [DIAGNÓSTICO] BRUCE2068 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-cliente">[2026-02-11 00:13:38] [CLIENTE] BRUCE2068 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Timeouts Deepgram previos: 2</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Respuestas vacías consecutivas: 2</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Azure buffer: 6 transcripciones</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Azure últimas 3: ['por correo si quieres', 'es luis garcía u de uva cero 3 arroba gmail punto', 'Es Luis García U. De uva03@gmail.com.']</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Azure última: 'Es Luis García U. De uva03@gmail.com.' (len=37)</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Azure Transcriber: audio_chunks=2205, transcripts=11, finals=5</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Deepgram Transcriber: audio_chunks=2205, transcripts=55, finals=14</div><div class="log-line log-error">[2026-02-11 00:13:38] [DIAGNÓSTICO] BRUCE2068 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-cliente">[2026-02-11 00:13:43] [CLIENTE] BRUCE2068 - CLIENTE DIJO: "Luis García"</div><div class="log-line log-error">[2026-02-11 00:13:59] → ID BRUCE: BRUCE2068</div>
+            </div>
+        </body>
+        </html>
+        
