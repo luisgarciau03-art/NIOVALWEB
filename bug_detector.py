@@ -531,6 +531,15 @@ class ContentAnalyzer:
             if ContentAnalyzer._DESPEDIDA_CLIENTE.search(texto):
                 return bugs
 
+            # FIX 643B: BRUCE2071 - Excluir si Bruce dijo "problemas técnicos" antes
+            # (GPT timeout - error esperado, no bug de lógica)
+            bruce_dijo_error_tecnico = any(
+                r == "bruce" and ("problemas técnicos" in t.lower() or "problemas tecnicos" in t.lower())
+                for r, t in conv
+            )
+            if bruce_dijo_error_tecnico:
+                return bugs
+
             # Verificar que Bruce respondio al menos 1 vez antes (sino es BRUCE_MUDO)
             bruce_respondio_alguna_vez = any(r == "bruce" and t.strip() for r, t in conv)
             if not bruce_respondio_alguna_vez:

@@ -460,3 +460,33 @@ class TestClienteHablaUltimo:
         tipos = [b["tipo"] for b in bugs]
         assert "DATO_SIN_RESPUESTA" in tipos
         assert "CLIENTE_HABLA_ULTIMO" not in tipos
+
+    @pytest.mark.bug_detector
+    @pytest.mark.regression
+    def test_bruce2071_problemas_tecnicos_no_es_bug(self, tracker):
+        """FIX 643: BRUCE2071 - GPT timeout + 'problemas técnicos' NO es CLIENTE_HABLA_ULTIMO."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le gustaría que le envíe nuestro catálogo?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Sí, mande"})
+        # GPT timeout - Bruce dice "problemas técnicos" pero cliente habló último
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde."})
+        # Cliente cuelga (o timeout)
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        # NO debe detectar CLIENTE_HABLA_ULTIMO porque Bruce SÍ respondió (con mensaje de error)
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
+
+    @pytest.mark.bug_detector
+    @pytest.mark.regression
+    def test_bruce2071_sin_registro_problemas_tecnicos(self, tracker):
+        """FIX 643B: Si Bruce no registró 'problemas técnicos' pero lo dijo, también excluir."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le gustaría que le envíe nuestro catálogo?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Sí, mande"})
+        # Simulación: Bruce dijo "problemas técnicos" pero por timing no apareció como último mensaje
+        # Pero el mensaje SÍ está en el historial (antes del cliente)
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Lo siento, estoy teniendo problemas técnicos."})
+        tracker.emit("CLIENTE_DICE", {"texto": "¿Qué?"})
+        # Cliente habló último, pero Bruce había dicho "problemas técnicos" antes
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        # FIX 643B detecta que Bruce dijo "problemas técnicos" en algún momento
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos

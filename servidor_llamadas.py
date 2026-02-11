@@ -4394,7 +4394,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 if not respuesta_container["completado"]:
                     # FIX 522: GPT tardó más de 5s - timeout (antes era 10.5s)
                     print(f" FIX 522: GPT timeout después de 5s (reducido de 10.5s)")
-                    response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+                    mensaje_error = "Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde."
+                    # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
+                    try:
+                        if BUG_DETECTOR_AVAILABLE:
+                            emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
+                            print(f"    FIX 643A: Mensaje de timeout registrado en tracker")
+                    except Exception:
+                        pass
+                    response.say(mensaje_error, language="es-MX")
                     response.hangup()
                     return Response(str(response), mimetype="text/xml")
 
@@ -4431,7 +4439,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         if not respuesta_container["completado"]:
             # FIX 522: GPT tardó más de 5 segundos total - timeout (antes 10s)
             print(f" FIX 522: GPT timeout después de 5s (reducido de 10s)")
-            response.say("Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde.", language="es-MX")
+            mensaje_error = "Lo siento, estoy teniendo problemas técnicos. Le llamaré más tarde."
+            # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
+            try:
+                if BUG_DETECTOR_AVAILABLE:
+                    emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
+                    print(f"    FIX 643A: Mensaje de timeout registrado en tracker")
+            except Exception:
+                pass
+            response.say(mensaje_error, language="es-MX")
             response.hangup()
             return Response(str(response), mimetype="text/xml")
 
