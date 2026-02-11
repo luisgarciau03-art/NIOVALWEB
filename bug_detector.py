@@ -61,6 +61,12 @@ MAX_BUGS_HISTORY = 200
 # GPT evaluation: minimo de turnos para justificar el costo
 GPT_EVAL_MIN_TURNOS = 3
 
+# FIX 640: Persistencia en disco (sobrevive deploys Railway)
+_CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")
+_BUGS_FILE = os.path.join(_CACHE_DIR, "recent_bugs.json")
+_BUGS_SAVE_INTERVAL = 30  # Segundos minimo entre guardados
+_bugs_last_save = 0
+
 
 # ============================================================
 # TRACKER POR LLAMADA
@@ -590,6 +596,46 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
 _lock = threading.Lock()
 _active_trackers = {}     # call_sid -> CallEventTracker
 _recent_bugs = []         # Lista de bugs recientes
+_bugs_loaded = False      # FIX 640: Flag para lazy-load
+
+
+def _load_bugs():
+    """FIX 640: Carga bugs desde disco al iniciar."""
+    global _recent_bugs, _bugs_loaded
+    try:
+        if os.path.exists(_BUGS_FILE):
+            import json
+            with open(_BUGS_FILE, 'r', encoding='utf-8') as f:
+                loaded = json.load(f)
+            if isinstance(loaded, list):
+                _recent_bugs = loaded[-MAX_BUGS_HISTORY:]
+                print(f"[BUG_DETECTOR] Cargados {len(_recent_bugs)} bugs desde disco")
+        _bugs_loaded = True
+    except Exception as e:
+        print(f"[BUG_DETECTOR] Error cargando bugs: {e}")
+        _bugs_loaded = True
+
+
+def _save_bugs():
+    """FIX 640: Guarda bugs a disco. Maximo cada {_BUGS_SAVE_INTERVAL}s."""
+    global _bugs_last_save
+    try:
+        now = time.time()
+        if (now - _bugs_last_save) < _BUGS_SAVE_INTERVAL:
+            return
+        import json
+        os.makedirs(os.path.dirname(_BUGS_FILE) or '.', exist_ok=True)
+        with open(_BUGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(_recent_bugs, f, ensure_ascii=False)
+        _bugs_last_save = now
+    except Exception:
+        pass
+
+
+def _ensure_bugs_loaded():
+    """FIX 640: Lazy-load bugs desde disco."""
+    if not _bugs_loaded:
+        _load_bugs()
 
 
 def get_or_create_tracker(call_sid: str, bruce_id: str, telefono: str = "") -> CallEventTracker:
@@ -646,10 +692,13 @@ def analyze_and_cleanup(call_sid: str, telefono: str = ""):
         }
 
         if bugs:
+            _ensure_bugs_loaded()
             with _lock:
                 _recent_bugs.append(bug_entry)
                 while len(_recent_bugs) > MAX_BUGS_HISTORY:
                     _recent_bugs.pop(0)
+
+            _save_bugs()  # FIX 640: Persistir a disco
 
             # Enviar alerta Telegram en background
             threading.Thread(
@@ -695,6 +744,8 @@ def _gpt_eval_background(tracker: CallEventTracker, base_entry: dict):
             while len(_recent_bugs) > MAX_BUGS_HISTORY:
                 _recent_bugs.pop(0)
 
+        _save_bugs()  # FIX 640: Persistir a disco
+
         # Enviar alerta Telegram
         _enviar_alerta_telegram(gpt_entry)
 
@@ -709,6 +760,7 @@ def _gpt_eval_background(tracker: CallEventTracker, base_entry: dict):
 def get_recent_bugs(limit: int = 50) -> list:
     """Retorna bugs recientes (mas reciente primero)."""
     try:
+        _ensure_bugs_loaded()
         with _lock:
             return list(reversed(_recent_bugs[-limit:]))
     except Exception:
