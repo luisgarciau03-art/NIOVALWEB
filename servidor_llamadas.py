@@ -3023,6 +3023,33 @@ def procesar_respuesta():
                     print(f"   → NO activar modo espera, procesar como oferta de datos")
                     cliente_pidio_espera = False
 
+            # FIX 645: BRUCE2073 - "esperar a que regrese" es CALLBACK, NO transferencia
+            # Problema: Cliente dijo "tendrías que esperar a que regrese" → matcheó "esperar"
+            # → Bruce dijo "Claro, espero" → GPT perdió contexto → RE-SALUDÓ
+            # Causa raíz: "esperar" matchea frases_espera_cliente pero cliente NO está transfiriendo,
+            # está pidiendo CALLBACK (marcar más tarde cuando encargado regrese)
+            # Solución: Pre-check para distinguir CALLBACK de TRANSFERENCIA
+            if cliente_pidio_espera:
+                patrones_callback_645 = [
+                    'esperar a que regrese', 'esperar a que llegue', 'esperar a que venga',
+                    'esperar a que vuelva', 'esperar a que entre', 'esperar a que esté',
+                    'tendrías que esperar', 'tienes que esperar', 'tiene que esperar',
+                    'tendría que esperar', 'tendríamos que esperar',
+                    'habría que esperar', 'hay que esperar',
+                    'debe esperar', 'debes esperar', 'mejor esperar',
+                    'esperar hasta que', 'esperar cuando',
+                    # Combinaciones con "marcar/llamar"
+                    'marcar más tarde', 'llamar más tarde', 'marcar después', 'llamar después',
+                    'volver a marcar', 'volver a llamar', 'regresar la llamada'
+                ]
+                es_callback = any(p in frase_limpia for p in patrones_callback_645)
+
+                if es_callback:
+                    print(f"\n FIX 645: BRUCE2073 - Cliente solicita CALLBACK, NO transferencia")
+                    print(f"   Frase: '{speech_result}'")
+                    print(f"   → NO activar modo espera, GPT maneja como callback normal")
+                    cliente_pidio_espera = False
+
             # FIX 501: BRUCE1721 - Validar contexto NEGATIVO antes de activar modo espera
             # Problema: Cliente dijo "permítame un momentito, pero no. No lo tenemos permitido."
             # El FIX 470 detectó "permítame" pero ignoró la negación posterior
