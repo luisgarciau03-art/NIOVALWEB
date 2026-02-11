@@ -2225,6 +2225,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return respuesta
 
+        # ============================================================
+        # FIX 493B: BRUCE2118, BRUCE2128 - CATALOGO_REPETIDO
+        # Bruce ofrece catálogo 2+ veces en la misma conversación → loop
+        # Solución: Contar menciones de catálogo y BLOQUEAR si >=2
+        # ============================================================
+        patrones_catalogo_493b = [
+            'catálogo', 'catalogo', 'le envío el catálogo', 'le envio el catalogo',
+            'le mando el catálogo', 'le mando el catalogo', 'enviarle el catálogo',
+            'enviarle el catalogo', 'le gustaría recibir', 'le gustaria recibir',
+            'enviarle información', 'enviarle informacion'
+        ]
+        veces_ofrecio_catalogo = sum(
+            1 for msg in ultimas_bruce_antiloop
+            if any(p in msg for p in patrones_catalogo_493b)
+        )
+
+        # Si la respuesta actual ofrece catálogo
+        ofrece_catalogo_493b = any(p in respuesta_lower for p in patrones_catalogo_493b)
+
+        # Si ya ofreció 2+ veces, bloquear tercera oferta
+        if ofrece_catalogo_493b and veces_ofrecio_catalogo >= 2:
+            print(f"\n[WARN] FIX 493B ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            # Respuesta alternativa: agradecer y cerrar
+            respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."
+            print(f"   Respuesta anti-loop: '{respuesta}'")
+            return respuesta
+
         # FIX 494: INCOHERENCIA - Si ya tenemos WhatsApp capturado, NO pedir de nuevo
         whatsapp_ya_capturado = bool(self.lead_data.get("whatsapp"))
 
@@ -7584,12 +7612,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 648: BRUCE2112, BRUCE2111 - CLIENTE_HABLA_ULTIMO
         # Cliente da cierre natural pero Bruce NO responde → ghostea al cliente
         # "No hay ahorita" / "Habla a otra sucursal" → Bruce debe cerrar apropiadamente
+        # FIX 654: BRUCE2120 - Agregar patrones corteses mexicanos de rechazo
         patrones_cierre_natural = [
             "no hay ahorita", "no hay en esta hora", "no hay nadie",
             "tienes que hablar a", "tiene que llamar a", "contacta a",
             "habla a la sucursal", "marca a la sucursal", "llama a la sucursal",
             "no hay encargado", "no tenemos encargado",
-            "solo soy yo", "yo nada mas", "yo solo", "estoy solo", "estoy sola"
+            "solo soy yo", "yo nada mas", "yo solo", "estoy solo", "estoy sola",
+            # FIX 654: Patrones corteses mexicanos (rechazo implícito)
+            "no muchacho", "no muchachito", "no joven", "no jovencito",
+            "no gracias joven", "no gracias muchacho", "no gracias muchachito"
         ]
 
         if any(p in texto_lower for p in patrones_cierre_natural):
@@ -9584,12 +9616,15 @@ Ejemplo correcto:
    no está disponible), NO volver a preguntar "¿Se encuentra el encargado?".
    → Proceder a pedir WhatsApp/correo del encargado o agendar callback.
 
-2. Si el cliente ya proporcionó un dato (DIRECTA o INDIRECTAMENTE):
+2. Si el cliente ya proporcionó un dato (DIRECTA o INDIRECTAMENTE) O EXPLÍCITAMENTE DIJO QUE NO LO TIENE:
    - Directo: "Mi WhatsApp es 3312345678", "El correo es juan@gmail.com"
    - Indirecto: "Llame al 3312345678", "Puede marcar al...", "El número es...",
                 "Contacte al...", "Marquen a...", "Te paso el...", "Le doy el..."
-   NO volver a pedirlo. El dato YA está capturado.
-   → Agradecer y continuar con el siguiente paso.
+   - Negación Explícita (FIX 655): "No lo tengo", "No tengo ese dato", "No cuento con eso",
+                "No lo tengo joven", "La verdad no lo tengo"
+   NO volver a pedirlo. El dato YA está capturado O el cliente NO lo posee.
+   → Si negó dato, alternar con otro contacto (si pidió WhatsApp, ofrecer correo general del negocio)
+      o enviar catálogo al teléfono general donde contestó.
 
 3. Si el cliente dice "Dígame" como PRIMER mensaje o respuesta directa a tu saludo,
    significa "go ahead" / "adelante" (NO es confusión).

@@ -3028,6 +3028,7 @@ def procesar_respuesta():
             # → Bruce dijo "Claro, espero" → GPT perdió contexto → RE-SALUDÓ
             # Causa raíz: "esperar" matchea frases_espera_cliente pero cliente NO está transfiriendo,
             # está pidiendo CALLBACK (marcar más tarde cuando encargado regrese)
+            # FIX 657: BRUCE2129 - "mandar la información" también es CALLBACK
             # Solución: Pre-check para distinguir CALLBACK de TRANSFERENCIA
             if cliente_pidio_espera:
                 patrones_callback_645 = [
@@ -3040,7 +3041,12 @@ def procesar_respuesta():
                     'esperar hasta que', 'esperar cuando',
                     # Combinaciones con "marcar/llamar"
                     'marcar más tarde', 'llamar más tarde', 'marcar después', 'llamar después',
-                    'volver a marcar', 'volver a llamar', 'regresar la llamada'
+                    'volver a marcar', 'volver a llamar', 'regresar la llamada',
+                    # FIX 657: Patrones de "mandar/enviar información"
+                    'mandar la información', 'mandar la informacion', 'enviar la información',
+                    'enviar la informacion', 'mandar el correo', 'enviar el correo',
+                    'donde tiene que mandar', 'donde tiene que enviar', 'a donde manda',
+                    'tiene que mandar', 'tiene que enviar'
                 ]
                 es_callback = any(p in frase_limpia for p in patrones_callback_645)
 
