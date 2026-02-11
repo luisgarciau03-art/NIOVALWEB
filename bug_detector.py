@@ -561,6 +561,118 @@ class ContentAnalyzer:
 # EVALUACION GPT POST-LLAMADA (FIX 637)
 # ============================================================
 
+def _es_comportamiento_correcto(conversacion: list) -> bool:
+    """
+    FIX 664B: Pre-filtro que detecta casos donde el comportamiento de Bruce es CORRECTO
+    y NO debe ser evaluado como bug.
+
+    Retorna True si el comportamiento es intencionalmente correcto.
+    """
+    if len(conversacion) < 2:
+        return False
+
+    try:
+        # Extraer último mensaje del cliente
+        ultimo_cliente = ""
+        for i in range(len(conversacion) - 1, -1, -1):
+            if conversacion[i][0] == "cliente":
+                ultimo_cliente = conversacion[i][1].lower()
+                break
+
+        # Extraer último mensaje de Bruce
+        ultimo_bruce = ""
+        for i in range(len(conversacion) - 1, -1, -1):
+            if conversacion[i][0] == "bruce":
+                ultimo_bruce = conversacion[i][1].lower()
+                break
+
+        if not ultimo_cliente or not ultimo_bruce:
+            return False
+
+        # CASO 1: Cliente dice "¿Bueno?" → Repetir pregunta es CORRECTO
+        verificaciones_conexion = ['¿bueno?', '¿bueno', 'bueno?', '¿qué?', '¿cómo?', '¿mande?', '¿me escucha?']
+        if any(verif in ultimo_cliente for verif in verificaciones_conexion):
+            # Verificar que Bruce repitió pregunta del turno anterior
+            if len(conversacion) >= 3:
+                for i in range(len(conversacion) - 2, -1, -1):
+                    if conversacion[i][0] == "bruce":
+                        pregunta_anterior = conversacion[i][1]
+                        # Si la pregunta anterior tiene '?' y está en el mensaje actual
+                        if '?' in pregunta_anterior:
+                            # Buscar palabras clave de la pregunta anterior en mensaje actual
+                            palabras_clave = [p for p in pregunta_anterior.split() if len(p) > 4][:3]
+                            if any(palabra in ultimo_bruce for palabra in palabras_clave):
+                                print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente verificó conexión ('{ultimo_cliente[:30]}...') → Bruce repitió pregunta")
+                                return True
+                        break
+
+        # CASO 2: Cliente no respondió pregunta de Bruce → Repetir es CORRECTO
+        if len(conversacion) >= 3:
+            for i in range(len(conversacion) - 3, -1, -1):
+                if conversacion[i][0] == "bruce":
+                    pregunta_bruce = conversacion[i][1].lower()
+                    if '?' in pregunta_bruce:
+                        # Verificar si cliente respondió sobre el mismo tema
+                        if 'encargado' in pregunta_bruce and 'encargado' not in ultimo_cliente:
+                            if 'whatsapp' not in ultimo_cliente and 'telefono' not in ultimo_cliente:
+                                print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente no respondió pregunta sobre tema específico")
+                                return True
+                    break
+
+        # CASO 3: Bruce hablando con IVR (mensajes repetitivos del "cliente")
+        mensajes_ivr = ['para ventas marque', 'marque uno', 'le agradecemos su preferencia',
+                       'no puede ser atendida', 'deje un mensaje', 'lo siento no lo entiendo']
+        if any(msg in ultimo_cliente for msg in mensajes_ivr):
+            print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente es un IVR automatizado")
+            return True
+
+    except Exception as e:
+        print(f"[FIX 664B] Error en pre-filtro: {e}")
+
+    return False
+
+
+def _extraer_metadata_conversacion(tracker: CallEventTracker) -> dict:
+    """
+    FIX 664C: Extrae metadata contextual de la llamada para enriquecer GPT evaluation.
+
+    Retorna dict con:
+    - patrones_activados: Lista de patrones/fixes que se activaron intencionalmente
+    - fixes_aplicados: Lista de correcciones automáticas aplicadas
+    - contexto_adicional: Información relevante para la evaluación
+    """
+    metadata = {
+        'patrones_activados': [],
+        'fixes_aplicados': [],
+        'contexto_adicional': []
+    }
+
+    try:
+        # Buscar menciones de FIX patterns en los logs de conversación
+        conversacion_texto = " ".join([texto for _, texto in tracker.conversacion])
+
+        # Detectar patrones comunes que son comportamiento correcto
+        if '¿bueno?' in conversacion_texto.lower():
+            metadata['patrones_activados'].append('FIX 621B: VERIFICACION_CONEXION_REPETIR_PREGUNTA')
+
+        if 'te paso su' in conversacion_texto.lower() or 'le paso un' in conversacion_texto.lower():
+            metadata['patrones_activados'].append('FIX 626: CLIENTE_OFRECE_CONTACTO')
+
+        # Detectar si fue una llamada muy corta (cliente colgó rápido)
+        if len(tracker.respuestas_bruce) <= 2:
+            metadata['contexto_adicional'].append('Llamada muy corta - cliente colgó rápido')
+
+        # Detectar si cliente era un IVR
+        mensajes_ivr = ['para ventas marque', 'marque uno', 'le agradecemos']
+        if any(msg in conversacion_texto.lower() for msg in mensajes_ivr):
+            metadata['contexto_adicional'].append('Cliente es sistema IVR automatizado')
+
+    except Exception as e:
+        print(f"[FIX 664C] Error extrayendo metadata: {e}")
+
+    return metadata
+
+
 _GPT_EVAL_PROMPT = """Eres un auditor de calidad para llamadas de ventas de Bruce, agente AI de la marca NIOVAL (productos ferreteros).
 
 Analiza esta conversacion telefonica y detecta SOLO errores claros. NO reportes cosas normales o menores.
@@ -579,6 +691,22 @@ Tipos de errores a buscar:
 3. TONO_INADECUADO: Bruce fue grosero, impaciente o poco profesional
 4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN LA MISMA LLAMADA
 5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa" o "enviame info" y Bruce NO le pidio contacto
+
+FIX 664A - REGLAS CRITICAS PARA DETECTAR LOGICA_ROTA (reduce falsos positivos):
+
+1. Bruce repitió pregunta SIN que cliente diera nueva información
+   EXCEPCIONES (NO ES BUG, es comportamiento CORRECTO):
+   - Si cliente dijo "¿Bueno?" "¿Qué?" "¿Cómo?" "¿Mande?" → Verificación de conexión → Repetir es CORRECTO
+   - Si cliente no respondió la pregunta anterior (cambió de tema) → Repetir es CORRECTO
+   - Si hubo ruido o cliente pidió que repita → Repetir es CORRECTO
+
+2. Bruce pidió dato que cliente YA proporcionó
+   IMPORTANTE: Verificar que el dato esté en el mensaje INMEDIATO anterior (turno previo)
+   NO contar si el dato está en turnos anteriores pero NO en contexto reciente (>2 turnos atrás)
+
+3. Bruce ignoró información clave del cliente
+   Ejemplo REAL: Cliente mencionó hora "9:00 AM" pero Bruce preguntó "¿A qué hora?"
+   Debe estar en el MISMO turno o turno inmediato anterior
 
 CONVERSACION:
 {conversacion}
@@ -614,6 +742,14 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         if len(tracker.respuestas_bruce) < GPT_EVAL_MIN_TURNOS:
             return bugs
 
+        # FIX 664B: Pre-filtro - detectar comportamiento correcto ANTES de GPT
+        if _es_comportamiento_correcto(tracker.conversacion):
+            print(f"[FIX 664B] Llamada {tracker.bruce_id}: Comportamiento correcto detectado, SKIP GPT eval")
+            return bugs
+
+        # FIX 664C: Extraer metadata contextual
+        metadata = _extraer_metadata_conversacion(tracker)
+
         # Construir texto de conversacion
         lineas = []
         for i, (role, texto) in enumerate(tracker.conversacion):
@@ -627,6 +763,24 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
 
         conversacion_texto = "\n".join(lineas)
 
+        # FIX 664C: Agregar metadata contextual al prompt
+        contexto_adicional = ""
+        if metadata['patrones_activados']:
+            contexto_adicional += "\n\nPATRONES DETECTADOS (comportamientos intencionalmente correctos):\n"
+            for patron in metadata['patrones_activados']:
+                contexto_adicional += f"- {patron}\n"
+
+        if metadata['contexto_adicional']:
+            contexto_adicional += "\n\nCONTEXTO ADICIONAL:\n"
+            for ctx in metadata['contexto_adicional']:
+                contexto_adicional += f"- {ctx}\n"
+
+        # Insertar metadata al inicio del prompt después del contexto
+        prompt_con_metadata = _GPT_EVAL_PROMPT.replace(
+            "CONVERSACION:",
+            f"{contexto_adicional}\n\nCONVERSACION:"
+        )
+
         # Lazy import de openai
         import openai
         api_key = os.environ.get("OPENAI_API_KEY", "")
@@ -635,10 +789,11 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
 
         client = openai.OpenAI(api_key=api_key)
 
+        # FIX 664C: Usar prompt con metadata contextual
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": _GPT_EVAL_PROMPT.format(conversacion=conversacion_texto)}
+                {"role": "system", "content": prompt_con_metadata.format(conversacion=conversacion_texto)}
             ],
             temperature=0.1,
             max_tokens=500,

@@ -4884,10 +4884,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Día detectado: {dia_mencionado}")
                 print(f"   Bruce iba a decir: \"{respuesta[:60]}...\"")
 
-                if dia_mencionado:
-                    respuesta = f"Perfecto, le marco el {dia_mencionado}. ¿A qué hora le queda mejor?"
+                # FIX 665: BRUCE2161 - Detectar si cliente YA mencionó la hora en el mismo mensaje
+                # Problema: Cliente dijo "mañana a las 9:00 de la mañana" pero Bruce preguntó "¿A qué hora?"
+                patron_hora = r'\b(\d{1,2}):?(\d{2})?\s*(am|pm|de la mañana|de la manana|de la tarde|de la noche)?\b'
+                hora_match = re.search(patron_hora, contexto_cliente)
+
+                # También detectar horas escritas en palabras: "nueve", "diez", "once"
+                horas_palabras = ['ocho', 'nueve', 'diez', 'once', 'doce', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete']
+                menciona_hora_palabra = any(f" {hora} " in f" {contexto_cliente} " for hora in horas_palabras)
+
+                if hora_match or menciona_hora_palabra:
+                    hora_mencionada = hora_match.group(0) if hora_match else "la hora que mencionó"
+                    print(f"    [FIX 665] Cliente YA mencionó hora: {hora_mencionada}")
+                    print(f"    NO preguntar '¿A qué hora?' - Cliente ya dio la hora")
+
+                    # Responder sin preguntar la hora
+                    if dia_mencionado:
+                        respuesta = f"Perfecto, le marco el {dia_mencionado} a esa hora. Muchas gracias."
+                    else:
+                        respuesta = "Perfecto, le marco a esa hora. Muchas gracias."
                 else:
-                    respuesta = "Claro, ¿qué día y a qué hora le queda mejor para llamarle?"
+                    # Cliente NO mencionó hora → preguntar
+                    if dia_mencionado:
+                        respuesta = f"Perfecto, le marco el {dia_mencionado}. ¿A qué hora le queda mejor?"
+                    else:
+                        respuesta = "Claro, ¿qué día y a qué hora le queda mejor para llamarle?"
+
                 filtro_aplicado = True
                 print(f"   Respuesta corregida: \"{respuesta}\"")
 
