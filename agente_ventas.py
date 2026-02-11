@@ -2123,6 +2123,25 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Respuesta limpia: '{respuesta[:100]}'")
 
         # ============================================================
+        # FIX 650: BRUCE2112, BRUCE2106, BRUCE2100, BRUCE2094 - GPT_FUERA_DE_TEMA
+        # Bruce pregunta por encargado SIN dar pitch de productos primero
+        # Debe dar información de productos ANTES de pedir encargado en turno 1
+        # ============================================================
+        mensajes_bruce_650 = [msg for msg in self.conversation_history if msg['role'] == 'assistant']
+        turno_bruce_650 = len(mensajes_bruce_650)
+
+        if turno_bruce_650 == 1:  # Primer turno de Bruce (después del saludo automático)
+            tiene_encargado = any(p in respuesta_lower for p in ["encargado", "encargada", "compras"])
+            tiene_pitch = any(p in respuesta_lower for p in ["productos", "ferreteros", "distribuidor", "nioval", "marca"])
+
+            if tiene_encargado and not tiene_pitch:
+                # Agregar pitch mínimo antes de preguntar por encargado
+                pitch_minimo = "Le comento, me comunico de NIOVAL, somos distribuidores de productos ferreteros. "
+                respuesta = pitch_minimo + respuesta
+                print(f"   FIX 650: Agregado pitch mínimo en turno 1 antes de preguntar por encargado")
+                filtro_aplicado = True
+
+        # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
         # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
         # Solución: Contar preguntas y BLOQUEAR repeticiones
@@ -7552,6 +7571,31 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "TERMINAR_LLAMADA"
             }
 
+        # FIX 648: BRUCE2112, BRUCE2111 - CLIENTE_HABLA_ULTIMO
+        # Cliente da cierre natural pero Bruce NO responde → ghostea al cliente
+        # "No hay ahorita" / "Habla a otra sucursal" → Bruce debe cerrar apropiadamente
+        patrones_cierre_natural = [
+            "no hay ahorita", "no hay en esta hora", "no hay nadie",
+            "tienes que hablar a", "tiene que llamar a", "contacta a",
+            "habla a la sucursal", "marca a la sucursal", "llama a la sucursal",
+            "no hay encargado", "no tenemos encargado",
+            "solo soy yo", "yo nada mas", "yo solo", "estoy solo", "estoy sola"
+        ]
+
+        if any(p in texto_lower for p in patrones_cierre_natural):
+            print(f"   FIX 648: Detectado cierre natural del cliente")
+            if any(p in texto_lower for p in ["otra sucursal", "habla a", "tiene que llamar", "tienes que hablar"]):
+                return {
+                    "tipo": "DESPEDIDA_NATURAL_CLIENTE_DERIVACION",
+                    "respuesta": "Perfecto, voy a contactar a esa sucursal entonces. Muchas gracias por su ayuda, que tenga excelente día.",
+                    "accion": "TERMINAR_LLAMADA"
+                }
+            return {
+                "tipo": "DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE",
+                "respuesta": "Perfecto, entonces le marco más tarde cuando esté disponible. Muchas gracias, que tenga buen día.",
+                "accion": "TERMINAR_LLAMADA"
+            }
+
         # 2. CONFIRMACIONES SIMPLES (no necesita GPT)
         # FIX 522 BRUCE1659: Incluir "ándale" y variantes mexicanas
         if texto_lower in ["ok", "okay", "sale", "va", "sí", "si", "claro", "ajá", "aja",
@@ -8247,7 +8291,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (email dictado es naturalmente largo)
+            # FIX 648: Agregar DESPEDIDA_NATURAL_CLIENTE_* (cierre natural del cliente)
             patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
+                                     'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                      'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
                                      'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
@@ -8293,7 +8339,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 634: CLIENTE_DICTANDO_NUMERO/NUMERO_PARCIAL inmunes (buzón de voz prepende texto largo)
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (dictado de email largo + multi-clausula)
             # FIX 646D: EVITAR_LOOP_WHATSAPP y CLIENTE_ACEPTA_CORREO inmunes (audit mostró 0% survival)
+            # FIX 648: DESPEDIDA_NATURAL_CLIENTE_* inmunes (cierre natural del cliente)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
+                                    'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                     'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
                                     'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
@@ -9517,6 +9565,7 @@ Ejemplo correcto:
                     # FIX 646A: REGLAS ANTI-REPETICIÓN - Prevenir GPT_LOGICA_ROTA
                     # Análisis bugs 2026-02-11: 69% de bugs son GPT repitiendo preguntas ya respondidas
                     # FIX 647: BRUCE2098 - Cliente NO AUTORIZADO → no insistir
+                    # FIX 649: BRUCE2106, BRUCE2104 - Formas indirectas de proporcionar datos
                     reglas_anti_repeticion_646 = {
                         "role": "system",
                         "content": """[SISTEMA - FIX 646A/647] REGLAS CRÍTICAS ANTI-REPETICIÓN:
@@ -9525,7 +9574,10 @@ Ejemplo correcto:
    no está disponible), NO volver a preguntar "¿Se encuentra el encargado?".
    → Proceder a pedir WhatsApp/correo del encargado o agendar callback.
 
-2. Si el cliente ya proporcionó un dato (correo electrónico, número de teléfono, nombre, WhatsApp),
+2. Si el cliente ya proporcionó un dato (DIRECTA o INDIRECTAMENTE):
+   - Directo: "Mi WhatsApp es 3312345678", "El correo es juan@gmail.com"
+   - Indirecto: "Llame al 3312345678", "Puede marcar al...", "El número es...",
+                "Contacte al...", "Marquen a...", "Te paso el...", "Le doy el..."
    NO volver a pedirlo. El dato YA está capturado.
    → Agradecer y continuar con el siguiente paso.
 
