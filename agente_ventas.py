@@ -9516,9 +9516,10 @@ Ejemplo correcto:
 
                     # FIX 646A: REGLAS ANTI-REPETICIÓN - Prevenir GPT_LOGICA_ROTA
                     # Análisis bugs 2026-02-11: 69% de bugs son GPT repitiendo preguntas ya respondidas
+                    # FIX 647: BRUCE2098 - Cliente NO AUTORIZADO → no insistir
                     reglas_anti_repeticion_646 = {
                         "role": "system",
-                        "content": """[SISTEMA - FIX 646A] REGLAS CRÍTICAS ANTI-REPETICIÓN:
+                        "content": """[SISTEMA - FIX 646A/647] REGLAS CRÍTICAS ANTI-REPETICIÓN:
 
 1. Si el cliente ya indicó que el encargado NO ESTÁ (no se encuentra, salió, está de vacaciones,
    no está disponible), NO volver a preguntar "¿Se encuentra el encargado?".
@@ -9531,6 +9532,10 @@ Ejemplo correcto:
 3. Si el cliente dice "Dígame" como PRIMER mensaje o respuesta directa a tu saludo,
    significa "go ahead" / "adelante" (NO es confusión).
    → Continuar normalmente con tu pitch, NO repetir la pregunta.
+
+4. Si el cliente dice que NO ESTÁ AUTORIZADO, NO PUEDE, o NO LE PERMITEN dar información
+   del encargado (teléfono directo, correo personal, datos de contacto), NO insistir.
+   → Ofrecer enviar catálogo al teléfono general de la empresa o agendar callback.
 
 Estas reglas tienen MÁXIMA PRIORIDAD. Verifica el historial antes de generar tu respuesta."""
                     }
