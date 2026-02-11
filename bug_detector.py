@@ -491,12 +491,20 @@ _GPT_EVAL_PROMPT = """Eres un auditor de calidad para llamadas de ventas de Bruc
 
 Analiza esta conversacion telefonica y detecta SOLO errores claros. NO reportes cosas normales o menores.
 
+FLUJO NORMAL DE BRUCE (esto NO son errores):
+- Bruce se presenta, menciona NIOVAL y pregunta por el encargado de compras
+- Si el encargado no esta, Bruce pide WhatsApp del encargado para enviar catalogo
+- Si el cliente ofrece CORREO en vez de WhatsApp, Bruce acepta el correo. Esto es CORRECTO, no es "logica rota"
+- Si el cliente dice "digame", "si digame", "que necesita" = esta diciendo "adelante, lo escucho", NO es una pregunta
+- Bruce confirma los datos recibidos y se despide
+- Si Bruce obtiene un contacto (email, WhatsApp, telefono), la llamada fue EXITOSA
+
 Tipos de errores a buscar:
-1. RESPUESTA_INCORRECTA: Bruce dio informacion falsa o contradictoria
-2. FUERA_DE_TEMA: Bruce hablo de algo no relacionado con NIOVAL/ferreteria
+1. RESPUESTA_INCORRECTA: Bruce dio informacion FALSA sobre NIOVAL o sus productos
+2. FUERA_DE_TEMA: Bruce hablo de algo completamente ajeno a NIOVAL/ferreteria
 3. TONO_INADECUADO: Bruce fue grosero, impaciente o poco profesional
-4. LOGICA_ROTA: Bruce hizo algo que no tiene sentido en el flujo (ej: pedir dato que ya tiene)
-5. OPORTUNIDAD_PERDIDA: Cliente mostro interes claro y Bruce no lo aprovecho
+4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN LA MISMA LLAMADA
+5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa" o "enviame info" y Bruce NO le pidio contacto
 
 CONVERSACION:
 {conversacion}
@@ -507,9 +515,12 @@ Responde SOLO en este formato JSON (array vacio si no hay errores):
 ]
 
 IMPORTANTE:
-- Solo reporta errores CLAROS y EVIDENTES
-- Si la llamada fue corta (cliente colgo rapido), no reportes nada
-- Si Bruce se despidio correctamente tras rechazo, no es error
+- Solo reporta errores CLAROS y EVIDENTES, no interpretaciones subjetivas
+- Si la llamada fue corta (cliente colgo rapido), NO reportes nada
+- Si Bruce se despidio correctamente tras rechazo, NO es error
+- Si el cliente ofrecio correo en vez de WhatsApp y Bruce acepto, NO es error
+- Si Bruce obtuvo datos de contacto y se despidio, la llamada fue exitosa - NO busques errores menores
+- Adaptarse al medio de contacto que el cliente prefiera (correo vs WhatsApp vs telefono) es CORRECTO
 - Maximo 3 errores por llamada
 - Responde SOLO el JSON, sin texto adicional"""
 

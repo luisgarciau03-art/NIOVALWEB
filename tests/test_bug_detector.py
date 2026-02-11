@@ -299,6 +299,19 @@ class TestGPTEvalStructure:
         assert "RESPUESTA_INCORRECTA" in _GPT_EVAL_PROMPT
         assert "JSON" in _GPT_EVAL_PROMPT
 
+    @pytest.mark.bug_detector
+    def test_gpt_eval_prompt_anti_false_positives(self):
+        """FIX 641: Prompt debe tener guias anti-falsos positivos (BRUCE2069)."""
+        from bug_detector import _GPT_EVAL_PROMPT
+        # Debe explicar que aceptar correo en vez de WhatsApp es correcto
+        assert "correo" in _GPT_EVAL_PROMPT.lower() and "WhatsApp" in _GPT_EVAL_PROMPT
+        # Debe explicar el flujo normal
+        assert "FLUJO NORMAL" in _GPT_EVAL_PROMPT or "flujo normal" in _GPT_EVAL_PROMPT
+        # Debe mencionar que "digame" no es pregunta
+        assert "digame" in _GPT_EVAL_PROMPT.lower()
+        # Debe indicar que llamada exitosa no necesita errores menores
+        assert "exitosa" in _GPT_EVAL_PROMPT.lower()
+
 
 # ============================================================
 # BugDetector.analyze: INTEGRACION
