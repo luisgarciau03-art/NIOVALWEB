@@ -2126,16 +2126,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 650: BRUCE2112, BRUCE2106, BRUCE2100, BRUCE2094 - GPT_FUERA_DE_TEMA
         # Bruce pregunta por encargado SIN dar pitch de productos primero
         # Debe dar información de productos ANTES de pedir encargado en turno 1
+        # FIX 660: BRUCE2143 - Bruce pide contacto DIRECTO sin pitch ni encargado
         # ============================================================
         mensajes_bruce_650 = [msg for msg in self.conversation_history if msg['role'] == 'assistant']
         turno_bruce_650 = len(mensajes_bruce_650)
 
         if turno_bruce_650 == 1:  # Primer turno de Bruce (después del saludo automático)
             tiene_encargado = any(p in respuesta_lower for p in ["encargado", "encargada", "compras"])
+            pide_contacto = any(p in respuesta_lower for p in ["whatsapp", "correo", "teléfono", "telefono", "número", "numero", "contacto"])
             tiene_pitch = any(p in respuesta_lower for p in ["productos", "ferreteros", "distribuidor", "nioval", "marca"])
 
-            if tiene_encargado and not tiene_pitch:
-                # Agregar pitch mínimo antes de preguntar por encargado
+            # FIX 660: Bloquear si pide contacto SIN pitch (peor que pedir encargado sin pitch)
+            if pide_contacto and not tiene_pitch:
+                # Reemplazar completamente con pitch + pregunta por encargado
+                respuesta = "Me comunico de NIOVAL, somos distribuidores de productos ferreteros. ¿Se encontrará el encargado o encargada de compras?"
+                print(f"   FIX 660: Reemplazado petición directa de contacto con pitch + encargado (turno 1)")
+                filtro_aplicado = True
+            # FIX 650 original: Agregar pitch si pregunta por encargado sin pitch
+            elif tiene_encargado and not tiene_pitch:
                 pitch_minimo = "Le comento, me comunico de NIOVAL, somos distribuidores de productos ferreteros. "
                 respuesta = pitch_minimo + respuesta
                 print(f"   FIX 650: Agregado pitch mínimo en turno 1 antes de preguntar por encargado")
@@ -2229,22 +2237,36 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 493B: BRUCE2118, BRUCE2128 - CATALOGO_REPETIDO
         # Bruce ofrece catálogo 2+ veces en la misma conversación → loop
         # Solución: Contar menciones de catálogo y BLOQUEAR si >=2
+        # FIX 659: Debugging mejorado + detección más robusta
         # ============================================================
         patrones_catalogo_493b = [
             'catálogo', 'catalogo', 'le envío el catálogo', 'le envio el catalogo',
             'le mando el catálogo', 'le mando el catalogo', 'enviarle el catálogo',
             'enviarle el catalogo', 'le gustaría recibir', 'le gustaria recibir',
-            'enviarle información', 'enviarle informacion'
+            'enviarle información', 'enviarle informacion', 'enviarle el catálogo',
+            'para enviarle el catálogo', 'para enviarle el catalogo'
         ]
-        veces_ofrecio_catalogo = sum(
-            1 for msg in ultimas_bruce_antiloop
-            if any(p in msg for p in patrones_catalogo_493b)
-        )
+
+        # FIX 659: Contar ofertas en historial completo (no solo últimos 10)
+        mensajes_bruce = [
+            msg['content'].lower() for msg in self.conversation_history
+            if msg['role'] == 'assistant'
+        ]
+
+        veces_ofrecio_catalogo = 0
+        for msg in mensajes_bruce:
+            if any(p in msg for p in patrones_catalogo_493b):
+                veces_ofrecio_catalogo += 1
+                print(f"[DEBUG FIX 659] Catálogo encontrado en: {msg[:80]}...")
+
+        print(f"[DEBUG FIX 659] Total mensajes Bruce: {len(mensajes_bruce)}")
+        print(f"[DEBUG FIX 659] Veces ofreció catálogo: {veces_ofrecio_catalogo}")
 
         # Si la respuesta actual ofrece catálogo
         ofrece_catalogo_493b = any(p in respuesta_lower for p in patrones_catalogo_493b)
+        print(f"[DEBUG FIX 659] Respuesta actual ofrece catálogo: {ofrece_catalogo_493b}")
 
-        # Si ya ofreció 2+ veces, bloquear tercera oferta
+        # FIX 659: Bloquear si ya ofreció 2+ veces (>=2 previos + 1 actual = 3 total)
         if ofrece_catalogo_493b and veces_ofrecio_catalogo >= 2:
             print(f"\n[WARN] FIX 493B ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
@@ -8334,12 +8356,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (email dictado es naturalmente largo)
             # FIX 648: Agregar DESPEDIDA_NATURAL_CLIENTE_* (cierre natural del cliente)
+            # FIX 661: Pattern audit - Agregar patrones con 0% survival
             patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
                                      'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                      'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
                                      'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
-                                     'CLIENTE_DICTA_EMAIL_COMPLETO'}
+                                     'CLIENTE_DICTA_EMAIL_COMPLETO',
+                                     'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -8382,6 +8406,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (dictado de email largo + multi-clausula)
             # FIX 646D: EVITAR_LOOP_WHATSAPP y CLIENTE_ACEPTA_CORREO inmunes (audit mostró 0% survival)
             # FIX 648: DESPEDIDA_NATURAL_CLIENTE_* inmunes (cierre natural del cliente)
+            # FIX 661: Pattern audit - Agregar patrones con 0% survival
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                     'RECHAZO_DEFINITIVO',
@@ -8393,7 +8418,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
                                     'NUMERO_PARCIAL_CON_VERIFICACION',
                                     'CLIENTE_DICTA_EMAIL_COMPLETO',
-                                    'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO'}
+                                    'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
+                                    'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
@@ -9622,6 +9648,8 @@ Ejemplo correcto:
                 "Contacte al...", "Marquen a...", "Te paso el...", "Le doy el..."
    - Negación Explícita (FIX 655): "No lo tengo", "No tengo ese dato", "No cuento con eso",
                 "No lo tengo joven", "La verdad no lo tengo"
+   - Negación Explícita CORTA (FIX 658): "No", "No, gracias", "No, oiga", "No, joven",
+                "No, muchacho", "No por ahorita", "No, está bien", "No, no"
    NO volver a pedirlo. El dato YA está capturado O el cliente NO lo posee.
    → Si negó dato, alternar con otro contacto (si pidió WhatsApp, ofrecer correo general del negocio)
       o enviar catálogo al teléfono general donde contestó.
