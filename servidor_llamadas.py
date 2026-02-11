@@ -2244,14 +2244,46 @@ def procesar_respuesta():
                     deepgram_ultima_final[call_sid] = {}
             else:
                 print(f" FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
-                print(f"    Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
 
-                # FIX 534: Incrementar contador de timeouts para ajuste progresivo
-                if call_sid in conversaciones_activas:
-                    agente_timeout = conversaciones_activas[call_sid]
-                    if hasattr(agente_timeout, 'timeouts_deepgram'):
-                        agente_timeout.timeouts_deepgram += 1
-                        print(f"    FIX 534: Timeout Deepgram #{agente_timeout.timeouts_deepgram}")
+                # FIX 663: BRUCE2144 - Verificar Azure Speech como fallback ANTES de declarar timeout
+                azure_texto_663 = None
+                if AZURE_AVAILABLE:
+                    with azure_transcripciones_lock:
+                        if call_sid in azure_transcripciones and azure_transcripciones[call_sid]:
+                            transcripciones_azure = azure_transcripciones[call_sid]
+                            if transcripciones_azure:
+                                azure_texto_663 = ' '.join(transcripciones_azure).strip()
+                                if len(azure_texto_663) > 0:
+                                    print(f"✅ FIX 663: Azure tiene transcripción PRE-timeout: '{azure_texto_663}'")
+                                    print(f"   Usando Azure como fallback real (no solo logging)")
+
+                                    # Usar Azure como si fuera Deepgram
+                                    usar_deepgram = True
+                                    speech_original_twilio = speech_result
+                                    speech_result = azure_texto_663
+
+                                    # Limpiar buffer Azure
+                                    azure_transcripciones[call_sid] = []
+                                    if call_sid in azure_ultima_final:
+                                        azure_ultima_final[call_sid] = {}
+
+                if not azure_texto_663:
+                    # No hay fallback disponible - proceder con timeout normal
+                    print(f"    Whisper DESHABILITADO - esperando siguiente intento con Deepgram")
+
+                    # FIX 534: Incrementar contador de timeouts para ajuste progresivo
+                    if call_sid in conversaciones_activas:
+                        agente_timeout = conversaciones_activas[call_sid]
+                        if hasattr(agente_timeout, 'timeouts_deepgram'):
+                            agente_timeout.timeouts_deepgram += 1
+                            print(f"    FIX 534: Timeout Deepgram #{agente_timeout.timeouts_deepgram}")
+                else:
+                    # Azure funcionó como fallback - resetear contador de timeouts
+                    if call_sid in conversaciones_activas:
+                        agente_timeout = conversaciones_activas[call_sid]
+                        if hasattr(agente_timeout, 'timeouts_deepgram') and agente_timeout.timeouts_deepgram > 0:
+                            print(f"    FIX 663: Azure fallback exitoso - reseteando timeouts (era {agente_timeout.timeouts_deepgram})")
+                            agente_timeout.timeouts_deepgram = 0
 
     # FIX 401: WHISPER DESHABILITADO - Deepgram es el único sistema de transcripción
     # Whisper genera demasiadas transcripciones basura ("subtítulos de amara.org")
@@ -4400,7 +4432,7 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         elif es_primera_respuesta:
             timeout_espera = 0.3  # FIX 319: Primera respuesta sin cache = 0.3s (antes 0.8s)
         else:
-            timeout_espera = 1.5  # FIX 319: Normal 2s→1.5s - clientes impacientes
+            timeout_espera = 2.0  # FIX 662: 1.5s→2.0s para reducir timeouts STT (BRUCE2144)
 
         debug_print(f" FIX 183: Esperando {timeout_espera}s antes de señal auditiva (máx 2s)")
         gpt_thread.join(timeout=timeout_espera)
