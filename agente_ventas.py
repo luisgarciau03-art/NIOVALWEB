@@ -5264,8 +5264,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             ])
 
             # Verificar si realmente hay un correo/whatsapp capturado
-            tiene_correo = hasattr(self, 'ultimo_correo_capturado') and self.ultimo_correo_capturado
-            tiene_whatsapp = hasattr(self, 'ultimo_whatsapp_capturado') and self.ultimo_whatsapp_capturado
+            # FIX 639C: BRUCE2068 - Verificar lead_data ademas de atributos legacy
+            # Problema: ultimo_correo_capturado NUNCA se setea, pero lead_data["email"] SI (por FIX 505)
+            tiene_correo = (hasattr(self, 'ultimo_correo_capturado') and self.ultimo_correo_capturado) or bool(self.lead_data.get("email"))
+            tiene_whatsapp = (hasattr(self, 'ultimo_whatsapp_capturado') and self.ultimo_whatsapp_capturado) or bool(self.lead_data.get("whatsapp"))
 
             # FIX 356: Buscar en historial si cliente REALMENTE dio algún dato de contacto
             # No basta con que haya dígitos - debe ser en contexto de dar número
@@ -6570,38 +6572,50 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             # Extraer y guardar el email
             import re
-            texto_email = texto_lower
 
-            # FIX 505: Eliminar ayudas mnemotécnicas primero
-            # "u de uva" → "u", "b de burro" → "b", etc.
-            texto_email = re.sub(r'\b([a-z])\s+de\s+\w+\b', r'\1', texto_email)
-
-            # Eliminar palabras de contexto que no son parte del email
-            palabras_eliminar = [
-                'es', 'el', 'la', 'mi', 'su', 'correo', 'email', 'mail',
-                'entonces', 'pues', 'bueno', 'ok', 'este', 'seria', 'sería',
-                'luis', 'garcía', 'garcia', 'juan', 'pedro', 'maria', 'maría',
-            ]
-            for palabra in palabras_eliminar:
-                texto_email = re.sub(rf'\b{palabra}\b', '', texto_email)
-
-            # Convertir "arroba" → "@"
-            texto_email = re.sub(r'\b(arroba|aroba)\b', '@', texto_email)
-            # Convertir "punto com" → ".com"
-            texto_email = re.sub(r'\bpunto\s*', '.', texto_email)
-            # Quitar espacios
-            texto_email = re.sub(r'\s+', '', texto_email)
-
-            print(f"   Texto procesado: '{texto_email}'")
-
-            # Buscar patrón de email
-            match_email = re.search(r'[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}', texto_email)
-            if match_email:
-                email_extraido = match_email.group(0)
-                print(f"   Email extraído: {email_extraido}")
+            # FIX 639B: BRUCE2068 - Preferir email LITERAL (con "@" real) sobre procesado
+            # Problema: STT a veces incluye el email literal al final: "...Es Luis García U. De uva03@gmail.com."
+            # Si procesamos "arroba" → "@" primero, la regex matchea el email GARBLED en lugar del correcto
+            # Solución: Buscar email con "@" real en el texto ORIGINAL antes de procesar
+            match_literal = re.search(r'[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}', texto_lower)
+            if match_literal:
+                email_extraido = match_literal.group(0)
+                print(f"   FIX 639B: Email LITERAL encontrado: {email_extraido}")
                 self.lead_data["email"] = email_extraido
             else:
-                print(f"   [WARN] No se pudo extraer email del texto procesado")
+                # Fallback: Procesar texto (arroba → @, punto com → .com, etc.)
+                texto_email = texto_lower
+
+                # FIX 505: Eliminar ayudas mnemotécnicas primero
+                # "u de uva" → "u", "b de burro" → "b", etc.
+                texto_email = re.sub(r'\b([a-z])\s+de\s+\w+\b', r'\1', texto_email)
+
+                # Eliminar palabras de contexto que no son parte del email
+                palabras_eliminar = [
+                    'es', 'el', 'la', 'mi', 'su', 'correo', 'email', 'mail',
+                    'entonces', 'pues', 'bueno', 'ok', 'este', 'seria', 'sería',
+                    'luis', 'garcía', 'garcia', 'juan', 'pedro', 'maria', 'maría',
+                ]
+                for palabra in palabras_eliminar:
+                    texto_email = re.sub(rf'\b{palabra}\b', '', texto_email)
+
+                # Convertir "arroba" → "@"
+                texto_email = re.sub(r'\b(arroba|aroba)\b', '@', texto_email)
+                # Convertir "punto com" → ".com"
+                texto_email = re.sub(r'\bpunto\s*', '.', texto_email)
+                # Quitar espacios
+                texto_email = re.sub(r'\s+', '', texto_email)
+
+                print(f"   Texto procesado: '{texto_email}'")
+
+                # Buscar patrón de email
+                match_email = re.search(r'[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}', texto_email)
+                if match_email:
+                    email_extraido = match_email.group(0)
+                    print(f"   Email extraído: {email_extraido}")
+                    self.lead_data["email"] = email_extraido
+                else:
+                    print(f"   [WARN] No se pudo extraer email del texto procesado")
 
             return {
                 "tipo": "CLIENTE_DICTA_EMAIL_COMPLETO",
@@ -8220,10 +8234,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 621A: CLIENTE_OFRECE_CORREO/NUMERO inmune (cliente dice "pero le doy un correo" → oferta es válida)
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
+            # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (email dictado es naturalmente largo)
             patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                      'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO'}
+                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
+                                     'CLIENTE_DICTA_EMAIL_COMPLETO'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -8263,6 +8279,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 626B: OFRECE_CONTACTO_ENCARGADO y CLIENTE_OFRECE_SU_CONTACTO inmunes
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
             # FIX 634: CLIENTE_DICTANDO_NUMERO/NUMERO_PARCIAL inmunes (buzón de voz prepende texto largo)
+            # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (dictado de email largo + multi-clausula)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
@@ -8271,7 +8288,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
                                     'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
-                                    'NUMERO_PARCIAL_CON_VERIFICACION'}
+                                    'NUMERO_PARCIAL_CON_VERIFICACION',
+                                    'CLIENTE_DICTA_EMAIL_COMPLETO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1

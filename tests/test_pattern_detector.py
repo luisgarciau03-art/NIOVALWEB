@@ -509,6 +509,54 @@ class TestRegresoEspera:
 # PREGUNTA IDENTIDAD / UBICACIÓN
 # ============================================================
 
+class TestBruce2068Regression:
+    """FIX 639: Regresion BRUCE2068 - email no detectado, Bruce mudo."""
+
+    @pytest.mark.regression
+    def test_email_completo_con_literal_y_arroba(self, agente_pidiendo_correo):
+        """BRUCE2068: Texto con 'arroba' verbal Y email literal → CLIENTE_DICTA_EMAIL_COMPLETO."""
+        texto = "Por correo, si quieres. Ulloa cero tres arroba q de uva cero tres arroba Gmail punto com. Es Luis García U. De uva03@gmail.com."
+        resultado = agente_pidiendo_correo._detectar_patron_simple_optimizado(texto)
+        assert resultado is not None
+        assert resultado["tipo"] == "CLIENTE_DICTA_EMAIL_COMPLETO"
+
+    @pytest.mark.regression
+    def test_email_literal_preferido_sobre_procesado(self, agente_pidiendo_correo):
+        """FIX 639B: Si texto tiene email literal (con @), preferirlo sobre procesado."""
+        texto = "Ulloa cero tres arroba q de uva cero tres arroba Gmail punto com. Es Luis García U. De uva03@gmail.com."
+        agente_pidiendo_correo._detectar_patron_simple_optimizado(texto)
+        email = agente_pidiendo_correo.lead_data.get("email", "")
+        assert email == "uva03@gmail.com", f"Esperaba 'uva03@gmail.com' pero obtuve '{email}'"
+
+    @pytest.mark.regression
+    def test_email_solo_arroba_verbal(self, agente_pidiendo_correo):
+        """Email dictado solo con 'arroba' (sin literal) debe procesarse correctamente."""
+        texto = "es ventas arroba gmail punto com"
+        resultado = agente_pidiendo_correo._detectar_patron_simple_optimizado(texto)
+        assert resultado is not None
+        assert resultado["tipo"] == "CLIENTE_DICTA_EMAIL_COMPLETO"
+        email = agente_pidiendo_correo.lead_data.get("email", "")
+        assert "@" in email
+        assert "gmail" in email
+
+    @pytest.mark.regression
+    def test_fix_322_no_destruye_con_lead_data_email(self, agente):
+        """FIX 639C: Si lead_data tiene email, FIX 322 NO debe reemplazar la respuesta."""
+        # Contexto: Bruce pidio correo, cliente lo dio, lead_data ya tiene el email
+        agente.conversation_history = [
+            {"role": "assistant", "content": "Me comunico de la marca nioval, productos ferreteros. Se encontrara el encargado?"},
+            {"role": "user", "content": "No esta, pero le doy el correo"},
+            {"role": "assistant", "content": "Si, digame el correo por favor."},
+            {"role": "user", "content": "Es uva03 arroba gmail punto com"},
+        ]
+        agente.lead_data["email"] = "uva03@gmail.com"
+        agente.segunda_parte_saludo_dicha = True
+        respuesta = "Perfecto, ya lo tengo anotado. Le llegará el catálogo en las próximas horas."
+        resultado = agente._filtrar_respuesta_post_gpt(respuesta)
+        # No debe contener el pitch de presentación (FIX 322 reemplazaba con pitch)
+        assert "se encontrará" not in resultado.lower(), f"FIX 322 destruyó la respuesta: '{resultado[:80]}'"
+
+
 class TestPreguntaIdentidad:
     """Tests para cuando el cliente pregunta quién llama o de dónde."""
 

@@ -342,3 +342,44 @@ class TestBugDetectorIntegracion:
         for bug in bugs:
             assert "categoria" in bug
             assert bug["categoria"] in ("tecnico", "contenido", "gpt_eval")
+
+
+# ============================================================
+# DATO_SIN_RESPUESTA (FIX 639D)
+# ============================================================
+
+class TestDatoSinRespuesta:
+    """FIX 639D: Detectar cuando cliente da dato importante pero Bruce no responde."""
+
+    @pytest.mark.bug_detector
+    def test_email_sin_respuesta(self, tracker):
+        """BRUCE2068: Cliente dio email pero Bruce nunca respondio → DATO_SIN_RESPUESTA."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Si, por favor, digame el correo."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Es uva03 arroba gmail punto com"})
+        # Bruce NO responde despues - fin de la llamada
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "DATO_SIN_RESPUESTA" in tipos
+        bug = next(b for b in bugs if b["tipo"] == "DATO_SIN_RESPUESTA")
+        assert bug["severidad"] == CRITICO
+        assert "email" in bug["detalle"]
+
+    @pytest.mark.bug_detector
+    def test_telefono_sin_respuesta(self, tracker):
+        """Cliente dio telefono pero Bruce nunca respondio → DATO_SIN_RESPUESTA."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Cual es su numero de WhatsApp?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Es el 6621234567"})
+        # Bruce NO responde
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "DATO_SIN_RESPUESTA" in tipos
+
+    @pytest.mark.bug_detector
+    def test_dato_con_respuesta_ok(self, tracker):
+        """Cliente dio email Y Bruce respondio → NO hay DATO_SIN_RESPUESTA."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Si, digame el correo."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Es test arroba gmail punto com"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Perfecto, ya lo tengo anotado."})
+        bugs = BugDetector.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "DATO_SIN_RESPUESTA" not in tipos

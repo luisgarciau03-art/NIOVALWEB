@@ -16,9 +16,10 @@ ERRORES DE CONTENIDO (FIX 637 - rule-based):
 8. OFERTA_POST_DESPEDIDA: Bruce ofrecio catalogo despues de despedirse
 9. PITCH_REPETIDO: Bruce repitio el pitch de presentacion 2+ veces
 10. CATALOGO_REPETIDO: Bruce ofrecio catalogo 2+ veces
+11. DATO_SIN_RESPUESTA: Cliente dio dato (email/tel) pero Bruce no respondio (FIX 639D)
 
 EVALUACION GPT (FIX 637 - GPT-4o-mini post-llamada):
-11. GPT_EVAL_*: Problemas detectados por GPT al evaluar la conversacion completa
+12. GPT_EVAL_*: Problemas detectados por GPT al evaluar la conversacion completa
 
 Cada funcion publica esta envuelta en try/except - CERO impacto en path critico.
 """
@@ -192,6 +193,10 @@ class BugDetector:
             content_bugs = ContentAnalyzer.analyze(tracker)
             bugs.extend(content_bugs)
 
+            # FIX 639D: DATO_SIN_RESPUESTA - check independiente (no requiere 2+ respuestas)
+            dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
+            bugs.extend(dato_bugs)
+
         except Exception:
             pass  # Nunca fallar
 
@@ -274,6 +279,9 @@ class ContentAnalyzer:
 
             # --- 10. CATALOGO_REPETIDO ---
             bugs.extend(ContentAnalyzer._check_catalogo_repetido(respuestas))
+
+            # Note: DATO_SIN_RESPUESTA (FIX 639D) se ejecuta desde BugDetector.analyze()
+            # porque no requiere el minimo de 2 respuestas Bruce
 
         except Exception:
             pass  # Nunca fallar
@@ -414,6 +422,56 @@ class ContentAnalyzer:
                     "detalle": f"Oferta de catalogo repetida {count}x en la misma llamada",
                     "categoria": "contenido"
                 })
+        except Exception:
+            pass
+        return bugs
+
+    @staticmethod
+    def _check_dato_sin_respuesta(conv: list) -> list:
+        """FIX 639D: Detecta si cliente dio dato importante (email/telefono) pero Bruce no respondio.
+
+        Caso BRUCE2068: Cliente dicto email completo, Bruce nunca respondio.
+        Deteccion: Cliente dice algo con email/telefono, y la conversacion termina
+        sin que Bruce confirme haberlo recibido.
+        """
+        bugs = []
+        try:
+            if len(conv) < 2:
+                return bugs
+
+            # Buscar el ultimo mensaje del cliente que contiene datos
+            ultimo_dato_cliente_idx = -1
+            tipo_dato = None
+            for i, (role, texto) in enumerate(conv):
+                if role == "cliente" and texto.strip():
+                    texto_l = texto.lower()
+                    if ContentAnalyzer._CLIENTE_DIO_EMAIL.search(texto) or '@' in texto:
+                        ultimo_dato_cliente_idx = i
+                        tipo_dato = "email"
+                    elif ContentAnalyzer._CLIENTE_DIO_NUMERO.search(texto):
+                        ultimo_dato_cliente_idx = i
+                        tipo_dato = "telefono"
+
+            if ultimo_dato_cliente_idx < 0:
+                return bugs
+
+            # Verificar si Bruce respondio DESPUES de ese dato
+            bruce_respondio_despues = False
+            for i in range(ultimo_dato_cliente_idx + 1, len(conv)):
+                role, texto = conv[i]
+                if role == "bruce" and texto.strip():
+                    bruce_respondio_despues = True
+                    break
+
+            if not bruce_respondio_despues:
+                texto_dato = conv[ultimo_dato_cliente_idx][1]
+                bugs.append({
+                    "tipo": "DATO_SIN_RESPUESTA",
+                    "severidad": CRITICO,
+                    "detalle": f"Cliente dio {tipo_dato} pero Bruce NUNCA respondio: '{texto_dato[:60]}'",
+                    "categoria": "contenido"
+                })
+
         except Exception:
             pass
         return bugs
