@@ -7537,8 +7537,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # 1. DESPEDIDAS (no necesita GPT)
         # FIX 629A: BRUCE2063 - "Hasta luego, oiga, Hasta luego indra." (38 chars) no matcheaba con < 30
         # Separar despedidas fuertes (toleran más texto) de débiles (necesitan contexto corto)
-        despedidas_fuertes = ["adiós", "adios", "hasta luego", "bye", "nos vemos"]
-        despedidas_debiles = ["gracias", "lo reviso", "lo checo"]
+        despedidas_fuertes = ["adios", "hasta luego", "bye", "nos vemos"]
+        # FIX 646B: BRUCE2080 - "Ya todo" es expresión mexicana = despedida/fin conversación
+        # IMPORTANTE: Sin acentos porque FIX 631 normaliza texto_lower
+        despedidas_debiles = ["gracias", "lo reviso", "lo checo", "ya todo", "ya esta todo", "ya es todo"]
         es_despedida_fuerte = any(d in texto_lower for d in despedidas_fuertes) and len(texto_lower.split()) <= 10
         es_despedida_debil = any(d in texto_lower for d in despedidas_debiles) and len(texto_lower) < 30
         # Si catálogo ya prometido, cualquier despedida es válida (tolerancia máxima)
@@ -8290,6 +8292,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 629A: Agregar DESPEDIDA_CLIENTE (tipo real retornado por pattern detector)
             # FIX 634: CLIENTE_DICTANDO_NUMERO/NUMERO_PARCIAL inmunes (buzón de voz prepende texto largo)
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (dictado de email largo + multi-clausula)
+            # FIX 646D: EVITAR_LOOP_WHATSAPP y CLIENTE_ACEPTA_CORREO inmunes (audit mostró 0% survival)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'RECHAZO_DEFINITIVO',
                                     'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
@@ -8299,7 +8302,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
                                     'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
                                     'NUMERO_PARCIAL_CON_VERIFICACION',
-                                    'CLIENTE_DICTA_EMAIL_COMPLETO'}
+                                    'CLIENTE_DICTA_EMAIL_COMPLETO',
+                                    'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
@@ -9510,12 +9514,37 @@ Ejemplo correcto:
                     if intentos_gpt > 0:
                         print(f"   FIX 533: Reintento #{intentos_gpt} con timeout={timeout_actual}s, tokens={tokens_actual}")
 
+                    # FIX 646A: REGLAS ANTI-REPETICIÓN - Prevenir GPT_LOGICA_ROTA
+                    # Análisis bugs 2026-02-11: 69% de bugs son GPT repitiendo preguntas ya respondidas
+                    reglas_anti_repeticion_646 = {
+                        "role": "system",
+                        "content": """[SISTEMA - FIX 646A] REGLAS CRÍTICAS ANTI-REPETICIÓN:
+
+1. Si el cliente ya indicó que el encargado NO ESTÁ (no se encuentra, salió, está de vacaciones,
+   no está disponible), NO volver a preguntar "¿Se encuentra el encargado?".
+   → Proceder a pedir WhatsApp/correo del encargado o agendar callback.
+
+2. Si el cliente ya proporcionó un dato (correo electrónico, número de teléfono, nombre, WhatsApp),
+   NO volver a pedirlo. El dato YA está capturado.
+   → Agradecer y continuar con el siguiente paso.
+
+3. Si el cliente dice "Dígame" como PRIMER mensaje o respuesta directa a tu saludo,
+   significa "go ahead" / "adelante" (NO es confusión).
+   → Continuar normalmente con tu pitch, NO repetir la pregunta.
+
+Estas reglas tienen MÁXIMA PRIORIDAD. Verifica el historial antes de generar tu respuesta."""
+                    }
+
+                    # Construir mensajes con reglas anti-repetición
+                    mensajes_con_reglas = [
+                        {"role": "system", "content": prompt_optimizado},
+                        *mensajes_conversacion,
+                        reglas_anti_repeticion_646
+                    ]
+
                     response = openai_client.chat.completions.create(
                         model="gpt-4o-mini",
-                        messages=[
-                            {"role": "system", "content": prompt_optimizado},
-                            *mensajes_conversacion
-                        ],
+                        messages=mensajes_con_reglas,
                         temperature=0.7,
                         max_tokens=tokens_actual,  # FIX 491/533: Dinámico, reducido en retry
                         presence_penalty=0.6,

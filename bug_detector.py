@@ -596,7 +596,14 @@ IMPORTANTE:
 - Si Bruce obtuvo datos de contacto y se despidio, la llamada fue exitosa - NO busques errores menores
 - Adaptarse al medio de contacto que el cliente prefiera (correo vs WhatsApp vs telefono) es CORRECTO
 - Maximo 3 errores por llamada
-- Responde SOLO el JSON, sin texto adicional"""
+- Responde SOLO el JSON, sin texto adicional
+
+FIX 646E - CONTEO DE TURNOS:
+- Al indicar "turno N", cuenta SOLO los mensajes de Bruce (BRUCE: ...), NO los del cliente
+- Turno 1 de Bruce = primer mensaje que dice "BRUCE: ..."
+- Turno 2 de Bruce = segundo mensaje que dice "BRUCE: ..."
+- NO cuentes mensajes del CLIENTE como turnos de Bruce
+- Verifica que el mensaje en el turno reportado fue dicho por Bruce, NO por el cliente"""
 
 
 def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
