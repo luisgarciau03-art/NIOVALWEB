@@ -27,7 +27,10 @@ Cada funcion publica esta envuelta en try/except - CERO impacto en path critico.
 
 import os
 import re
+import sys
 import time
+import atexit
+import signal
 import threading
 import requests
 from datetime import datetime
@@ -64,9 +67,10 @@ MAX_BUGS_HISTORY = 200
 GPT_EVAL_MIN_TURNOS = 2
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
+# FIX 691: Robustez - save inmediato, atexit handler, fsync
 _CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")
 _BUGS_FILE = os.path.join(_CACHE_DIR, "recent_bugs.json")
-_BUGS_SAVE_INTERVAL = 30  # Segundos minimo entre guardados
+_BUGS_SAVE_INTERVAL = 5  # FIX 691: Reducido de 30s a 5s para minimizar perdida
 _bugs_last_save = 0
 
 
@@ -847,9 +851,10 @@ _bugs_loaded = False      # FIX 640: Flag para lazy-load
 
 
 def _load_bugs():
-    """FIX 640: Carga bugs desde disco al iniciar."""
+    """FIX 640+691: Carga bugs desde disco al iniciar."""
     global _recent_bugs, _bugs_loaded
     try:
+        print(f"[BUG_DETECTOR] FIX 691: Buscando bugs en {os.path.abspath(_BUGS_FILE)}")
         if os.path.exists(_BUGS_FILE):
             import json
             with open(_BUGS_FILE, 'r', encoding='utf-8') as f:
@@ -857,26 +862,60 @@ def _load_bugs():
             if isinstance(loaded, list):
                 _recent_bugs = loaded[-MAX_BUGS_HISTORY:]
                 print(f"[BUG_DETECTOR] Cargados {len(_recent_bugs)} bugs desde disco")
+            else:
+                print(f"[BUG_DETECTOR] Archivo bugs existe pero formato invalido: {type(loaded)}")
+        else:
+            print(f"[BUG_DETECTOR] No hay bugs previos en disco (archivo no existe)")
         _bugs_loaded = True
     except Exception as e:
         print(f"[BUG_DETECTOR] Error cargando bugs: {e}")
         _bugs_loaded = True
 
 
-def _save_bugs():
-    """FIX 640: Guarda bugs a disco. Maximo cada {_BUGS_SAVE_INTERVAL}s."""
+def _save_bugs(force=False):
+    """FIX 640+691: Guarda bugs a disco. force=True bypasses throttle (usado en shutdown)."""
     global _bugs_last_save
     try:
         now = time.time()
-        if (now - _bugs_last_save) < _BUGS_SAVE_INTERVAL:
+        if not force and (now - _bugs_last_save) < _BUGS_SAVE_INTERVAL:
             return
         import json
         os.makedirs(os.path.dirname(_BUGS_FILE) or '.', exist_ok=True)
         with open(_BUGS_FILE, 'w', encoding='utf-8') as f:
             json.dump(_recent_bugs, f, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())  # FIX 691: Garantizar escritura a disco
         _bugs_last_save = now
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[BUG_DETECTOR] Error guardando bugs a disco: {e}")
+
+
+def _flush_bugs_on_exit():
+    """FIX 691: Flush forzoso de bugs al cerrar proceso (deploy/SIGTERM)."""
+    try:
+        if _recent_bugs:
+            _save_bugs(force=True)
+            print(f"[BUG_DETECTOR] Flush de {len(_recent_bugs)} bugs a disco (shutdown)")
+    except Exception as e:
+        print(f"[BUG_DETECTOR] Error en flush de shutdown: {e}")
+
+
+# FIX 691: Registrar handlers para persistir bugs en shutdown
+atexit.register(_flush_bugs_on_exit)
+
+
+def _sigterm_handler(signum, frame):
+    """FIX 691: Handler SIGTERM - Railway envia SIGTERM antes de matar proceso."""
+    print("[BUG_DETECTOR] SIGTERM recibido, guardando bugs...")
+    _flush_bugs_on_exit()
+    sys.exit(0)
+
+
+try:
+    signal.signal(signal.SIGTERM, _sigterm_handler)
+except (OSError, ValueError):
+    # signal.signal puede fallar si no estamos en main thread
+    pass
 
 
 def _ensure_bugs_loaded():
@@ -945,7 +984,7 @@ def analyze_and_cleanup(call_sid: str, telefono: str = ""):
                 while len(_recent_bugs) > MAX_BUGS_HISTORY:
                     _recent_bugs.pop(0)
 
-            _save_bugs()  # FIX 640: Persistir a disco
+            _save_bugs(force=True)  # FIX 691: Persistir inmediatamente cada bug nuevo
 
             # Enviar alerta Telegram en background
             threading.Thread(
@@ -991,7 +1030,7 @@ def _gpt_eval_background(tracker: CallEventTracker, base_entry: dict):
             while len(_recent_bugs) > MAX_BUGS_HISTORY:
                 _recent_bugs.pop(0)
 
-        _save_bugs()  # FIX 640: Persistir a disco
+        _save_bugs(force=True)  # FIX 691: Persistir inmediatamente
 
         # Enviar alerta Telegram
         _enviar_alerta_telegram(gpt_entry)
