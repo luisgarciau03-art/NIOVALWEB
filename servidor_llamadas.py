@@ -8464,13 +8464,20 @@ def pattern_audit_dashboard():
 
 @app.route("/tracker", methods=["GET"])
 def tracker_bugs_deploys():
-    """Dashboard de tracking de bugs y deploys (HTML estático)."""
+    """Dashboard de tracking de bugs y deploys (dinámico con JSON persistente)."""
     try:
-        html_path = os.path.join(os.path.dirname(__file__), 'TRACKER_BUGS_DEPLOYS.html')
-        if os.path.exists(html_path):
-            return send_file(html_path)
-        else:
-            return "<h1>Tracker no disponible</h1><p>Archivo TRACKER_BUGS_DEPLOYS.html no encontrado.</p>", 404
+        from tracker_generator import generar_tracker_html
+        return generar_tracker_html()
+    except ImportError:
+        # Fallback a HTML estático si tracker_generator no está disponible
+        try:
+            html_path = os.path.join(os.path.dirname(__file__), 'TRACKER_BUGS_DEPLOYS.html')
+            if os.path.exists(html_path):
+                return send_file(html_path)
+            else:
+                return "<h1>Tracker no disponible</h1><p>tracker_generator.py y TRACKER_BUGS_DEPLOYS.html no encontrados.</p>", 404
+        except Exception as e:
+            return f"<h1>Error (fallback)</h1><p>{e}</p>", 500
     except Exception as e:
         return f"<h1>Error</h1><p>{e}</p>", 500
 
