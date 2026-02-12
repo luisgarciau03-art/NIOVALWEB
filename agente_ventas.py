@@ -2405,9 +2405,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         ofrece_catalogo_493b = any(p in respuesta_lower for p in patrones_catalogo_493b)
         print(f"[DEBUG FIX 659] Respuesta actual ofrece catálogo: {ofrece_catalogo_493b}")
 
-        # FIX 659: Bloquear si ya ofreció 2+ veces (>=2 previos + 1 actual = 3 total)
-        if ofrece_catalogo_493b and veces_ofrecio_catalogo >= 2:
-            print(f"\n[WARN] FIX 493B ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
+        # FIX 671: BRUCE2157, 2143, 2142, 2135, 2128, 2118 - Ajustar threshold para alinearse con bug detector
+        # Bug detector marca CATALOGO_REPETIDO si ofreció 2+ veces
+        # FIX 659 original bloqueaba en 3ra oferta (>=2 previos) → MISMATCH
+        # FIX 671: Bloquear en 2da oferta (>=1 previo + 1 actual = 2 total)
+        if ofrece_catalogo_493b and veces_ofrecio_catalogo >= 1:
+            print(f"\n[WARN] FIX 671 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             # Respuesta alternativa: agradecer y cerrar
             respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."

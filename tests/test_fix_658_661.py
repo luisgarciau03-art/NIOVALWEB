@@ -93,11 +93,12 @@ class TestFix659ContadorCatalogo:
         # Llamar al post-filter con 3ra oferta
         respuesta_test = "¿Me podría dar su teléfono para enviarle el catálogo?"
 
-        # El post-filter debe detectar 3ra oferta y bloquear
+        # FIX 671: Actualizado threshold de >= 2 a >= 1 (bloquea 2da oferta, no 3ra)
+        # El post-filter debe detectar 2da oferta y bloquear
         # (No podemos ejecutar directamente _filtrar_respuesta_post_gpt sin setup completo,
         #  pero podemos verificar que el código existe)
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
-        assert "veces_ofrecio_catalogo >= 2" in source
+        assert "veces_ofrecio_catalogo >= 1" in source
 
 
 class TestFix660PitchObligatorio:
