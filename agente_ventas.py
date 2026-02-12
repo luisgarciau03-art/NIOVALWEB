@@ -8502,10 +8502,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     '¿', 'que productos', 'qué productos', 'catálogo', 'catalogo',
                     'envíame', 'enviame', 'mándame', 'mandame'
                 ],
-                "OFRECER_CONTACTO_BRUCE": [
-                    'correo', 'mail', 'email', 'te doy', 'le doy',
-                    'te paso', 'le paso'
-                ],
+                # FIX 686A: OFRECER_CONTACTO_BRUCE eliminado de contradicciones_598
+                # Keywords como 'correo' invalidaban en contexto de negación ("no tengo correo")
+                # El pattern detector solo dispara este patrón cuando cliente rechazó todo → correcto
                 # FIX 599: SOLICITUD_CALLBACK contradice si cliente ofrece contacto directo
                 "SOLICITUD_CALLBACK": [
                     'correo', 'mail', 'email', 'whatsapp', 'te doy', 'le doy',
@@ -8550,6 +8549,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
                 'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                 'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
+                'OFRECER_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',  # FIX 686B: inmunidad pregunta 2da cláusula
             }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
@@ -8591,13 +8591,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 639A: BRUCE2068 - CLIENTE_DICTA_EMAIL_COMPLETO inmune (email dictado es naturalmente largo)
             # FIX 648: Agregar DESPEDIDA_NATURAL_CLIENTE_* (cierre natural del cliente)
             # FIX 661: Pattern audit - Agregar patrones con 0% survival
+            # FIX 687A: Agregar CLIENTE_ACEPTA_CORREO, EVITAR_LOOP_WHATSAPP, PEDIR_TELEFONO_FIJO (0% survival)
             patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
                                      'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                      'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
                                      'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
                                      'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
                                      'CLIENTE_DICTA_EMAIL_COMPLETO',
-                                     'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP'}
+                                     'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
+                                     'CLIENTE_ACEPTA_CORREO', 'EVITAR_LOOP_WHATSAPP',
+                                     'PEDIR_TELEFONO_FIJO'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -8641,6 +8644,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 646D: EVITAR_LOOP_WHATSAPP y CLIENTE_ACEPTA_CORREO inmunes (audit mostró 0% survival)
             # FIX 648: DESPEDIDA_NATURAL_CLIENTE_* inmunes (cierre natural del cliente)
             # FIX 661: Pattern audit - Agregar patrones con 0% survival
+            # FIX 687B: Agregar PEDIR_TELEFONO_FIJO (0% survival - no estaba en ninguna lista)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                     'RECHAZO_DEFINITIVO',
@@ -8653,7 +8657,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'NUMERO_PARCIAL_CON_VERIFICACION',
                                     'CLIENTE_DICTA_EMAIL_COMPLETO',
                                     'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
-                                    'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP'}
+                                    'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
+                                    'PEDIR_TELEFONO_FIJO'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
@@ -8701,29 +8706,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 # Patrones INCOHERENTES según contexto de Bruce
                 # Si Bruce pidió dato de contacto → respuestas de estado de encargado son incoherentes
+                # FIX 686C: OFRECER_CONTACTO_BRUCE eliminado de incoherencias (0% survival)
+                # Bruce ofrece su contacto como último recurso independiente del tema actual
                 incoherencias_por_contexto = {
                     'PIDIENDO_CORREO': [
                         'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
                         'ENCARGADO_LLEGA_MAS_TARDE', 'SOLICITUD_CALLBACK',
                         'PREGUNTA_IDENTIDAD', 'PREGUNTA_UBICACION',
-                        'OFRECER_CONTACTO_BRUCE', 'TRANSFERENCIA'
+                        'TRANSFERENCIA'
                     ],
                     'PIDIENDO_TELEFONO': [
                         'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
                         'ENCARGADO_LLEGA_MAS_TARDE', 'SOLICITUD_CALLBACK',
                         'PREGUNTA_IDENTIDAD', 'PREGUNTA_UBICACION',
-                        'OFRECER_CONTACTO_BRUCE', 'TRANSFERENCIA'
+                        'TRANSFERENCIA'
                     ],
                     'PIDIENDO_ENCARGADO': [
                         'CONFIRMACION_SIMPLE', 'DESPEDIDA',
-                        'OFRECER_CONTACTO_BRUCE'
                     ],
                     'OFRECIENDO_CATALOGO': [
                         'ENCARGADO_NO_ESTA_CON_HORARIO', 'ENCARGADO_NO_ESTA_SIN_HORARIO',
                         'SOLICITUD_CALLBACK', 'TRANSFERENCIA'
                     ],
                     'PREGUNTANDO_HORARIO': [
-                        'CONFIRMACION_SIMPLE', 'OFRECER_CONTACTO_BRUCE',
+                        'CONFIRMACION_SIMPLE',
                         'PREGUNTA_IDENTIDAD'
                     ],
                 }
