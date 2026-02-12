@@ -6619,6 +6619,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 621C: BRUCE2048 - Detectar "otra sucursal" / "no es aquí" / "la matriz"
         # Problema: Cliente dice "no es en esta sucursal, es en la otra" pero Bruce insiste por encargado
         # Solución: Detectar redirección a otra sucursal y pedir teléfono de esa sucursal
+        # FIX 688: BRUCE2200 - "comunicarse directamente con Cuba" = redirección a sede/matriz
         patrones_otra_sucursal_621c = [
             'otra sucursal', 'la otra sucursal', 'en la otra',
             'no es en esta', 'no es esta sucursal', 'no es aquí', 'no es aqui',
@@ -6630,6 +6631,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'aquí no se compra', 'aqui no se compra',
             'aquí no manejamos', 'aqui no manejamos',
             'no es esta tienda', 'no es aquí donde',
+            # FIX 688: Patrones de redirección a sede/matriz/ciudad
+            'comunicarse directamente', 'hablar directamente con',
+            'llamar directamente', 'directamente con ellos',
+            'directamente a la', 'la casa matriz', 'la sede',
+            'las oficinas centrales', 'la oficina central',
+            'corporativo', 'el corporativo',
         ]
         es_otra_sucursal_621c = any(p in texto_lower for p in patrones_otra_sucursal_621c)
         if es_otra_sucursal_621c:
@@ -7938,12 +7945,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 es_inicio_604 = len(mensajes_usuario_604) <= 1
 
                 if es_inicio_604:
-                    print(f"   FIX 604: '¿Bueno?' en primer turno → pitch directo en vez de '¿Me decía?'")
-                    return {
-                        "tipo": "VERIFICACION_CONEXION_INICIO",
-                        "respuesta": "Sí, le comento, me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?",
-                        "accion": "AVANZAR_A_PRESENTACION"
-                    }
+                    # FIX 689: BRUCE2193 - No repetir pitch completo si ya se presentó
+                    ya_presento_689 = any('nioval' in msg.get('content', '').lower()
+                                          for msg in self.conversation_history if msg['role'] == 'assistant')
+                    if ya_presento_689:
+                        print(f"   FIX 689: '¿Bueno?' pero ya presentó NIOVAL → NO repetir pitch, usar FIX 621B")
+                        # Fall through a FIX 621B (repetir pregunta) en vez de repetir pitch completo
+                        pass
+                    else:
+                        print(f"   FIX 604: '¿Bueno?' en primer turno → pitch directo en vez de '¿Me decía?'")
+                        return {
+                            "tipo": "VERIFICACION_CONEXION_INICIO",
+                            "respuesta": "Sí, le comento, me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?",
+                            "accion": "AVANZAR_A_PRESENTACION"
+                        }
 
                 # FIX 621B: BRUCE2049 - Si Bruce acabó de hacer una PREGUNTA y cliente dice "diga"/"bueno",
                 # NO responder "¿Me decía?" sino REPETIR la pregunta de Bruce
