@@ -135,7 +135,7 @@ T_SHORT = 1
 
 DOC_EXTS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip']
 
-TELEGRAM_TOKEN = "8467383503:AAFIJUXpPDKBc-zwDiIjjj_6pvely6O45gs"
+TELEGRAM_TOKEN = "8404009072:AAGZC4Lb46ELP9-8zrRDWJG61a5F5lHjmSw"
 TELEGRAM_CHAT_ID = "5838212022"
 
 def avisar_telegram(mensaje):
@@ -170,18 +170,33 @@ def clean_filename(filename):
     filename = filename.replace("  ", " ")
     return "".join([c for c in filename if c.isalnum() or c in " .-_"]).rstrip()
 
+def _is_cloud():
+    """Detecta si estamos en Railway o Render (entorno cloud)."""
+    return (os.environ.get('RAILWAY_ENVIRONMENT') is not None
+            or os.environ.get('RENDER', '') in ('true', 'True'))
+
 def authenticate():
-    # Si estamos en Render, usar solo Service Account
-    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+    # Si estamos en Railway/cloud, usar Service Account desde env var base64
+    if _is_cloud():
         import json
+        import base64
+        import tempfile
         from google.oauth2.service_account import Credentials as ServiceAccountCreds
-        secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'  # Usar el nombre exacto del archivo en Render
-        if not os.path.exists(secret_path):
-            raise Exception(f"No se encontró el archivo de Service Account en {secret_path}. Verifica el nombre en Secret Files de Render.")
-        with open(secret_path, 'r') as f:
-            info = json.load(f)
-        creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
-        return creds
+        # Intentar env var base64 (Railway)
+        b64 = os.environ.get('GOOGLE_SERVICE_ACCOUNT_B64')
+        if b64:
+            info = json.loads(base64.b64decode(b64))
+            creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+            print("[RAILWAY] Autenticado con Service Account desde env var base64")
+            return creds
+        # Fallback: archivo directo (Render legacy)
+        secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'
+        if os.path.exists(secret_path):
+            with open(secret_path, 'r') as f:
+                info = json.load(f)
+            creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+            return creds
+        raise Exception("No se encontro GOOGLE_SERVICE_ACCOUNT_B64 ni archivo de Service Account en cloud.")
     # Local: usar OAuth si no existe token
     creds = None
     if os.path.exists(TOKEN_FILE):
@@ -267,7 +282,7 @@ def extraer_datos_cotizacion():
             num_factura = num_factura_actual
         pdf_filename = f"{nombre_cliente} - {num_factura}.pdf"
         # Guardar en /tmp/ si estamos en Render, en cwd si es local
-        if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+        if _is_cloud():
             pdf_path = f"/tmp/{pdf_filename}"
         else:
             pdf_path = os.path.join(os.getcwd(), pdf_filename)
@@ -415,16 +430,24 @@ def upload_pdf_to_drive_oauth(pdf_path, pdf_filename, drive_folder_id=None, clie
     try:
         print(f"[LOG] Iniciando subida de PDF a Drive via OAuth: {pdf_path}, nombre: {pdf_filename}")
         creds = None
-        # Si estamos en Render, usar Service Account siempre
-        if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+        # Si estamos en Railway/cloud, usar Service Account
+        if _is_cloud():
             import json
+            import base64
             from google.oauth2.service_account import Credentials as ServiceAccountCreds
-            secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'
-            if not os.path.exists(secret_path):
-                raise Exception(f"No se encontró el archivo de Service Account en {secret_path}. Verifica el nombre en Secret Files de Render.")
-            with open(secret_path, 'r') as f:
-                info = json.load(f)
-            creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+            b64 = os.environ.get('GOOGLE_SERVICE_ACCOUNT_B64')
+            if b64:
+                info = json.loads(base64.b64decode(b64))
+                creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
+                print("[RAILWAY] upload_pdf_to_drive_oauth: Autenticado con env var base64")
+            else:
+                # Fallback archivo legacy
+                secret_path = '/etc/secrets/GOOGLE_SERVICE_ACCOUNT_JSON'
+                if not os.path.exists(secret_path):
+                    raise Exception("No se encontro GOOGLE_SERVICE_ACCOUNT_B64 ni archivo de Service Account.")
+                with open(secret_path, 'r') as f:
+                    info = json.load(f)
+                creds = ServiceAccountCreds.from_service_account_info(info, scopes=SCOPES)
         else:
             if os.path.exists(token_file):
                 print(f"[LOG] Usando token existente: {token_file}")
@@ -558,8 +581,8 @@ def obtener_numero_mensaje(sheet_ventas, sheet_contactos, sheet_mensajes):
 
 def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> Options:
     opts = Options()
-    print("[LOG] crear_opciones: RENDER=", os.environ.get('RENDER', None))
-    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+    print("[LOG] crear_opciones: CLOUD=", _is_cloud())
+    if _is_cloud():
         # Configuración headless para Render
         opts.add_argument('--headless')
         opts.add_argument('--no-sandbox')
@@ -590,8 +613,8 @@ def crear_opciones(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE
 
 
 def iniciar_driver(user_data_dir=CHROME_PROFILE_PATH, profile_dir=CHROME_PROFILE_DIR) -> webdriver.Chrome:
-    print("[LOG] iniciar_driver: RENDER=", os.environ.get('RENDER', None))
-    if os.environ.get('RENDER', None) == 'true' or os.environ.get('RENDER', None) == 'True':
+    print("[LOG] iniciar_driver: CLOUD=", _is_cloud())
+    if _is_cloud():
         chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
         print(f"[LOG] iniciar_driver: chromedriver_path={chromedriver_path}")
         svc = Service(chromedriver_path)

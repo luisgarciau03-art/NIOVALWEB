@@ -1,9 +1,41 @@
 from flask import Flask, render_template, request, jsonify, session
 import requests
 import os
+import json
+import base64
+import tempfile
+
+# --- RAILWAY: Inyectar service accounts desde env vars base64 ---
+def _setup_service_account_file(env_var, fallback_filename):
+    """Crea archivo temporal desde env var base64, o usa archivo local si existe."""
+    b64 = os.environ.get(env_var)
+    if b64:
+        try:
+            decoded = base64.b64decode(b64)
+            tmp = tempfile.NamedTemporaryFile(mode='wb', suffix='.json', delete=False)
+            tmp.write(decoded)
+            tmp.close()
+            print(f"[RAILWAY] {env_var} cargado desde env var -> {tmp.name}")
+            return tmp.name
+        except Exception as e:
+            print(f"[ERROR] No se pudo decodificar {env_var}: {e}")
+    if os.path.exists(fallback_filename):
+        print(f"[LOCAL] Usando archivo local: {fallback_filename}")
+        return fallback_filename
+    print(f"[WARN] No se encontro {env_var} ni {fallback_filename}")
+    return fallback_filename
+
+FIRESTORE_CREDS_PATH = _setup_service_account_file(
+    "FIRESTORE_SERVICE_ACCOUNT_B64",
+    "niovalclientes-firebase-adminsdk-fbsvc-30b99db631.json"
+)
+SHEETS_CREDS_PATH = _setup_service_account_file(
+    "SHEETS_SERVICE_ACCOUNT_B64",
+    "niovalclientes-a38cae49d183.json"
+)
 
 os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "niovalclientes-firebase-adminsdk-fbsvc-30b99db631.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = FIRESTORE_CREDS_PATH
 print("Ruta credencial Firestore utilizada:", os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 
@@ -12,11 +44,10 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 def get_productos_from_sheet():
-    creds_path = "niovalclientes-a38cae49d183.json"
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    credentials = Credentials.from_service_account_file(creds_path, scopes=scopes)
+    credentials = Credentials.from_service_account_file(SHEETS_CREDS_PATH, scopes=scopes)
     gc = gspread.authorize(credentials)
-    sheet_id = "1jnktXCAb0kjViqzoCbv1Y9xAD-PbNPJr2RhZrXhIeHE"
+    sheet_id = os.environ.get("PRODUCTOS_SHEET_ID", "1jnktXCAb0kjViqzoCbv1Y9xAD-PbNPJr2RhZrXhIeHE")
     worksheet = gc.open_by_key(sheet_id).worksheet('LP')  # Lee la hoja llamada 'LP'
     headers = [h for h in worksheet.row_values(1) if h]  # Solo encabezados no vacíos
     print("Encabezados de la hoja LP:", headers)
@@ -28,7 +59,7 @@ def get_productos_from_sheet():
     return productos_validos
 
 
-API_KEY = "AIzaSyAOVuqvMxNKVM6jYwwaVQnUhr_g0k8qrQw"
+API_KEY = os.environ.get("FIREBASE_API_KEY", "AIzaSyAOVuqvMxNKVM6jYwwaVQnUhr_g0k8qrQw")
 
 
 
@@ -40,7 +71,7 @@ def login_firebase(email, password, api_key):
 
 
 app = Flask(__name__)
-app.secret_key = "NIOVALWEB_SUPER_SECRET_KEY_2025"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "NIOVALWEB_SUPER_SECRET_KEY_2025")
 
 # Ruta para obtener productos desde Google Sheets
 @app.route("/productos")
