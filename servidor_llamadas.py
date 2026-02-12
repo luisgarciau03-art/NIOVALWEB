@@ -2628,6 +2628,9 @@ def procesar_respuesta():
         "marca uno", "marca dos", "marca tres",
         "marque 1", "marque 2", "marque 3",
         "marque uno", "marque dos", "marque tres",
+        # FIX 677: Patrones con acento (STT a veces devuelve marqué/marcó con tilde)
+        "marqué uno", "marqué dos", "marqué tres", "marqué 1", "marqué 2",
+        "marcó uno", "marcó dos", "marcó tres",
         "signo de número", "signo de numero",
         "para escuchar el mensaje",
         "para continuar con la grabación", "para continuar con la grabacion",
@@ -2637,11 +2640,24 @@ def procesar_respuesta():
         "espera instrucciones",
         "correo de voz",
         "atención al cliente", "atencion al cliente",
-        "línea de atención", "linea de atencion"
+        "línea de atención", "linea de atencion",
+        # FIX 677: BRUCE2157 - Patrones de IVR adicionales detectados
+        "agradecemos su preferencia", "le agradecemos su preferencia",
+        "bienvenidos a", "bienvenido a",  # Incluir plural
+        "vuelva a intentarlo", "intente de nuevo", "intente más tarde",
+        "no lo entiendo", "no le entiendo",  # IVR error de reconocimiento
+        "para ventas", "para administración", "para administracion",
+        "para soporte", "para servicio", "para facturación", "para facturacion",
+        "le agradecemos su llamada",
+        "fuera del horario", "nuestro horario",
+        "deje su mensaje después del tono", "deje su mensaje despues del tono"
     ]
 
     speech_lower = speech_result.lower() if speech_result else ""
-    es_operadora = any(keyword in speech_lower for keyword in keywords_operadora)
+    # FIX 677: También normalizar acentos para evitar fallos de detección (marqué vs marque)
+    import unicodedata as _ud_677
+    speech_sin_acentos = _ud_677.normalize('NFKD', speech_lower).encode('ascii', 'ignore').decode('ascii')
+    es_operadora = any(keyword in speech_lower or keyword in speech_sin_acentos for keyword in keywords_operadora)
 
     if es_operadora:
         print(f" FIX 109: Operadora/IVR detectada por contenido del SpeechResult")
@@ -4728,6 +4744,9 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # Solución: Si el texto contiene "ayudar/servir/ofrecer", responder con presentación
             speech_lower_597 = speech_limpio_577.lower()
 
+            # FIX 675: Detectar si Bruce YA se presentó (para no repetir pitch NIOVAL)
+            ya_presento_675 = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+
             # FIX 617C: BRUCE2032 - Detectar email en el texto ANTES de cualquier otro fallback
             # Si cliente está dictando correo, NO resetear al pitch inicial
             indicadores_email_617 = ['arroba', '@', 'gmail', 'hotmail', 'outlook', 'yahoo',
@@ -4755,15 +4774,23 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     respuesta_fallback_577 = "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias."
                     print(f"   FIX 618: Texto tiene indicadores de email - aceptar sin repetir")
             elif any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
-                respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
-                print(f"   FIX 597: Fallback contextual - cliente ofrece ayuda, respondemos con presentación")
+                if ya_presento_675:
+                    respuesta_fallback_577 = "Claro, le comento, quería enviarle el catálogo de productos al encargado de compras. ¿Me podría compartir un número de WhatsApp donde le pueda enviar la información?"
+                    print(f"   FIX 675: Cliente ofrece ayuda, SIN repetir pitch (ya se presentó)")
+                else:
+                    respuesta_fallback_577 = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encuentra el encargado de compras?"
+                    print(f"   FIX 597: Fallback contextual - cliente ofrece ayuda, respondemos con presentación")
             elif any(p in speech_lower_597 for p in ['momento', 'espere', 'espera', 'ahorita', 'tantito']):
                 respuesta_fallback_577 = "Claro, espero."
                 print(f"   FIX 597: Fallback contextual - cliente pide espera")
             # FIX 606 BRUCE2011: Más categorías de fallback cuando GPT devuelve vacío
             elif any(p in speech_lower_597 for p in ['material', 'recibido', 'producto', 'pedido', 'entrega', 'paquete']):
-                respuesta_fallback_577 = "Disculpe, nosotros somos de la marca NIOVAL, distribuidores de productos ferreteros. ¿Se encontrará el encargado de compras?"
-                print(f"   FIX 606: Fallback - cliente pregunta sobre material/pedido, re-presentamos")
+                if ya_presento_675:
+                    respuesta_fallback_577 = "Disculpe, nosotros somos distribuidores de productos ferreteros. ¿Se encontrará el encargado de compras?"
+                    print(f"   FIX 675: Fallback material SIN repetir marca (ya se presentó)")
+                else:
+                    respuesta_fallback_577 = "Disculpe, nosotros somos de la marca NIOVAL, distribuidores de productos ferreteros. ¿Se encontrará el encargado de compras?"
+                    print(f"   FIX 606: Fallback - cliente pregunta sobre material/pedido, re-presentamos")
             elif any(p in speech_lower_597 for p in ['quién', 'quien', 'qué empresa', 'que empresa', 'de dónde', 'de donde', 'qué marca', 'que marca']):
                 respuesta_fallback_577 = "Mi nombre es Bruce, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros como cintas, grifería y herramientas."
                 print(f"   FIX 606: Fallback - cliente pregunta identidad/empresa")
@@ -4771,13 +4798,11 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 respuesta_fallback_577 = "Entiendo, le agradezco mucho su tiempo. Que tenga excelente día."
                 print(f"   FIX 606: Fallback - cliente rechaza, despedida cortés")
             elif len(palabras_significativas_577) >= 4:
-                # FIX 620C: BRUCE2056/2057 - Si conversación ya avanzó (>2 mensajes usuario),
-                # NO resetear al pitch inicial. El cliente ya sabe quién es Bruce.
-                # Problema: Cliente dio hora de callback → Bruce: "me comunico de NIOVAL..." = absurdo
+                # FIX 620C/675: Si conversación ya avanzó o ya se presentó, NO repetir pitch
                 mensajes_usuario_620 = sum(1 for m in agente.conversation_history if m['role'] == 'user')
-                if mensajes_usuario_620 >= 2:
+                if mensajes_usuario_620 >= 2 or ya_presento_675:
                     respuesta_fallback_577 = "Disculpe, no le escuché bien. ¿Me puede repetir eso último?"
-                    print(f"   FIX 620C: Fallback SIN reset pitch ({mensajes_usuario_620} turnos usuario, {len(palabras_significativas_577)} palabras)")
+                    print(f"   FIX 675: Fallback SIN pitch ({mensajes_usuario_620} turnos, ya_presento={ya_presento_675})")
                 else:
                     respuesta_fallback_577 = "Disculpe, no le escuché bien. Le comento, me comunico de la marca NIOVAL para brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado de compras?"
                     print(f"   FIX 606: Fallback largo ({len(palabras_significativas_577)} palabras) - re-presentamos")
