@@ -1900,20 +1900,20 @@ def procesar_respuesta():
     # Con modelo optimizado (120ms) + endpointing 100ms = ~220ms respuesta esperada
     # Timeouts previos eran 3s/2s/1.5s - ahora 1.5s/1.2s/1.0s (50% reducción)
     if timeouts_previos >= 2:
-        # Después de 2+ timeouts, ser MUY agresivo - no desperdiciar tiempo
-        max_wait_deepgram = 1.0  # FIX 607C: Reducido de 1.5s a 1.0s
-        max_wait_parcial_fallback = 0.6  # FIX 607C: Reducido de 0.8s a 0.6s
-        print(f"   FIX 607C: Timeouts previos={timeouts_previos} - timeouts ULTRA-agresivos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        # FIX 683: Después de 2+ timeouts, usar timeout medio (antes 1.0s - demasiado agresivo)
+        max_wait_deepgram = 1.5  # FIX 683: Subido de 1.0s a 1.5s (dar más margen a clientes lentos)
+        max_wait_parcial_fallback = 0.8  # FIX 683: Subido de 0.6s a 0.8s
+        print(f"   FIX 683: Timeouts previos={timeouts_previos} - timeout medio ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     elif timeouts_previos == 1:
-        # Después de 1 timeout, ser agresivo
-        max_wait_deepgram = 1.2  # FIX 607C: Reducido de 2.0s a 1.2s
-        max_wait_parcial_fallback = 0.8  # FIX 607C: Reducido de 1.2s a 0.8s
-        print(f"   FIX 607C: Timeouts previos={timeouts_previos} - timeouts agresivos ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        # FIX 683: Después de 1 timeout, timeout estándar
+        max_wait_deepgram = 1.8  # FIX 683: Subido de 1.2s a 1.8s
+        max_wait_parcial_fallback = 1.0  # FIX 683: Subido de 0.8s a 1.0s
+        print(f"   FIX 683: Timeouts previos={timeouts_previos} - timeout estándar ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     else:
-        # Sin timeouts previos, usar valores optimizados para modelo phonecall
-        max_wait_deepgram = 1.5  # FIX 607C: Reducido de 3.0s a 1.5s (50% reducción)
-        max_wait_parcial_fallback = 1.0  # FIX 607C: Reducido de 1.8s a 1.0s
-        print(f"   FIX 607C: Primer turno - timeouts optimizados para phonecall model ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
+        # FIX 683: Sin timeouts previos, dar tiempo completo para Azure STT primario
+        max_wait_deepgram = 2.0  # FIX 683: Subido de 1.5s a 2.0s (Azure STT necesita ~200ms)
+        max_wait_parcial_fallback = 1.2  # FIX 683: Subido de 1.0s a 1.2s
+        print(f"   FIX 683: Primer turno - timeout completo Azure STT ({max_wait_deepgram}s/{max_wait_parcial_fallback}s)")
     wait_interval = 0.05  # FIX 219: Revisar cada 50ms (más frecuente)
     tiempo_esperado = 0
     parcial_disponible_desde = None  # FIX 511: Cuándo detectamos primera PARCIAL
@@ -4599,20 +4599,41 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
                 if not respuesta_container["completado"]:
                     # FIX 522: GPT tardó más de 5s - timeout (antes era 10.5s)
-                    # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO
-                    # Timeout GPT → mensaje profesional en lugar de "problemas técnicos"
-                    print(f" FIX 522: GPT timeout después de 5s (reducido de 10.5s)")
-                    mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
-                    # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
-                    try:
-                        if BUG_DETECTOR_AVAILABLE:
-                            emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
-                            print(f"    FIX 643A: Mensaje de timeout registrado en tracker")
-                    except Exception:
-                        pass
-                    response.say(mensaje_error, language="es-MX")
-                    response.hangup()
-                    return Response(str(response), mimetype="text/xml")
+                    # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO (mensaje profesional)
+                    # FIX 682: En vez de colgar inmediatamente, usar fallback contextual
+                    agente.gpt_timeouts_consecutivos += 1
+                    print(f" FIX 522+682: GPT timeout #{agente.gpt_timeouts_consecutivos} (5s)")
+
+                    if agente.gpt_timeouts_consecutivos >= 2:
+                        # 2do+ GPT timeout consecutivo → colgar profesionalmente
+                        print(f"    FIX 682: 2do GPT timeout - colgando profesionalmente")
+                        mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
+                        # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker
+                        try:
+                            if BUG_DETECTOR_AVAILABLE:
+                                emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
+                        except Exception:
+                            pass
+                        response.say(mensaje_error, language="es-MX")
+                        response.hangup()
+                        return Response(str(response), mimetype="text/xml")
+                    else:
+                        # 1er GPT timeout → fallback contextual y CONTINUAR
+                        print(f"    FIX 682: 1er GPT timeout - usando fallback contextual")
+                        ya_presento_682 = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                        ya_encargado_682 = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                        if not ya_presento_682:
+                            respuesta_container["respuesta"] = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
+                        elif not ya_encargado_682:
+                            respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"
+                        else:
+                            respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                        respuesta_container["completado"] = True
+                        try:
+                            if BUG_DETECTOR_AVAILABLE:
+                                emit_event(call_sid, "BRUCE_RESPONDE", {"texto": respuesta_container["respuesta"]})
+                        except Exception:
+                            pass
 
             # GPT terminó - continuar con respuesta normal
             print(f" FIX 133: GPT completado - continuando con respuesta")
@@ -4645,26 +4666,51 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         gpt_thread.join(timeout=3.0)
 
         if not respuesta_container["completado"]:
-            # FIX 522: GPT tardó más de 5 segundos total - timeout (antes 10s)
-            # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO
-            # Timeout GPT → mensaje profesional en lugar de "problemas técnicos"
-            print(f" FIX 522: GPT timeout después de 5s (reducido de 10s)")
-            mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
-            # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker para bug detector
-            try:
-                if BUG_DETECTOR_AVAILABLE:
-                    emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
-                    print(f"    FIX 643A: Mensaje de timeout registrado en tracker")
-            except Exception:
-                pass
-            response.say(mensaje_error, language="es-MX")
-            response.hangup()
-            return Response(str(response), mimetype="text/xml")
+            # FIX 522+682: GPT tardó más de 5 segundos total - timeout
+            # FIX 651: BRUCE2097, BRUCE2096 - GPT_TONO_INADECUADO (mensaje profesional)
+            agente.gpt_timeouts_consecutivos += 1
+            print(f" FIX 522+682: GPT timeout #{agente.gpt_timeouts_consecutivos} (5s, path normal)")
+
+            if agente.gpt_timeouts_consecutivos >= 2:
+                # 2do+ GPT timeout consecutivo → colgar profesionalmente
+                print(f"    FIX 682: 2do GPT timeout - colgando profesionalmente")
+                mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
+                # FIX 643A: Registrar mensaje de error en tracker
+                try:
+                    if BUG_DETECTOR_AVAILABLE:
+                        emit_event(call_sid, "BRUCE_RESPONDE", {"texto": mensaje_error})
+                except Exception:
+                    pass
+                response.say(mensaje_error, language="es-MX")
+                response.hangup()
+                return Response(str(response), mimetype="text/xml")
+            else:
+                # 1er GPT timeout → fallback contextual y CONTINUAR
+                print(f"    FIX 682: 1er GPT timeout - usando fallback contextual")
+                ya_presento_682b = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                ya_encargado_682b = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                if not ya_presento_682b:
+                    respuesta_container["respuesta"] = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
+                elif not ya_encargado_682b:
+                    respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"
+                else:
+                    respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                respuesta_container["completado"] = True
+                try:
+                    if BUG_DETECTOR_AVAILABLE:
+                        emit_event(call_sid, "BRUCE_RESPONDE", {"texto": respuesta_container["respuesta"]})
+                except Exception:
+                    pass
 
     respuesta_agente = respuesta_container["respuesta"]
     tiempo_gpt = time.time() - inicio
     debug_print(f" GPT tardó: {tiempo_gpt:.2f}s")
     print(f" BRUCE DICE: \"{respuesta_agente}\"")
+
+    # FIX 682: Resetear contador GPT timeouts si respuesta exitosa (no fue fallback de timeout)
+    if respuesta_agente and agente.gpt_timeouts_consecutivos > 0:
+        if 'problemas con la conexión' not in str(respuesta_agente):
+            agente.gpt_timeouts_consecutivos = 0
 
     # FIX 632: Registrar respuesta de Bruce en bug detector
     try:

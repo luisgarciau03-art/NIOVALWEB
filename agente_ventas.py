@@ -437,6 +437,7 @@ class AgenteVentas:
         self.segunda_parte_saludo_dicha = False  # FIX 201: Flag para evitar repetir segunda parte del saludo
         self.detector_ivr = DetectorIVR()  # FIX 202: Detector de sistemas IVR/contestadoras automáticas
         self.timeouts_deepgram = 0  # FIX 408: Contador de timeouts de Deepgram (máximo 2 pedidos de repetición)
+        self.gpt_timeouts_consecutivos = 0  # FIX 682: Contador de GPT timeouts consecutivos
 
         # FIX 481 (AUDITORIA W04): Sistema de recuperación de errores
         self.intentos_recuperacion = 0  # Contador de intentos de recuperación (max 3)
