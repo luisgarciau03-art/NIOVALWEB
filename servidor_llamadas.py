@@ -8462,6 +8462,19 @@ def pattern_audit_dashboard():
         return f"<h1>Error</h1><p>{e}</p>", 500
 
 
+@app.route("/tracker", methods=["GET"])
+def tracker_bugs_deploys():
+    """Dashboard de tracking de bugs y deploys (HTML estático)."""
+    try:
+        html_path = os.path.join(os.path.dirname(__file__), 'TRACKER_BUGS_DEPLOYS.html')
+        if os.path.exists(html_path):
+            return send_file(html_path)
+        else:
+            return "<h1>Tracker no disponible</h1><p>Archivo TRACKER_BUGS_DEPLOYS.html no encontrado.</p>", 404
+    except Exception as e:
+        return f"<h1>Error</h1><p>{e}</p>", 500
+
+
 @app.route("/historial-llamadas", methods=["GET"])
 def historial_llamadas_dashboard():
     """
