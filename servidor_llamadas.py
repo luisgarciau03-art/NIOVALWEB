@@ -3172,9 +3172,13 @@ def procesar_respuesta():
                     'habría que esperar', 'hay que esperar',
                     'debe esperar', 'debes esperar', 'mejor esperar',
                     'esperar hasta que', 'esperar cuando',
-                    # Combinaciones con "marcar/llamar"
+                    # Combinaciones con "marcar/llamar/hablar"
                     'marcar más tarde', 'llamar más tarde', 'marcar después', 'llamar después',
                     'volver a marcar', 'volver a llamar', 'regresar la llamada',
+                    # FIX 695: BRUCE2232 - "si gustas hablar luego" no se detectaba
+                    'hablar luego', 'hablar más tarde', 'hablar mas tarde',
+                    'hablar después', 'hablar despues',
+                    'si gusta hablar', 'si gustas hablar',
                     # FIX 657: Patrones de "mandar/enviar información"
                     'mandar la información', 'mandar la informacion', 'enviar la información',
                     'enviar la informacion', 'mandar el correo', 'enviar el correo',

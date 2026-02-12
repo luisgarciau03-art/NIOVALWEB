@@ -2029,7 +2029,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 392: Agregar variantes de "si gusta marcar más tarde"
             'si gusta marcar más tarde', 'si gusta marcar mas tarde',
             'si gustas marcar más tarde', 'si gustas marcar mas tarde',
-            'marque más tarde', 'marque mas tarde'
+            'marque más tarde', 'marque mas tarde',
+            # FIX 695: BRUCE2232 - "si gustas hablar luego" callback
+            'si gusta hablar', 'si gustas hablar', 'hablar luego',
+            'hablar más tarde', 'hablar mas tarde', 'hablar después', 'hablar despues'
         ])
 
         bruce_pide_whatsapp = any(frase in respuesta_lower for frase in [
@@ -5020,6 +5023,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # FIX 480: BRUCE1446 - "Si gusta marcar el día lunes"
                 'si gusta marcar', 'si gustas marcar', 'marcar el día', 'marcar el dia',
                 'si gusta marcar el', 'si gustas marcar el', 'si gusta llamar', 'si gustas llamar',
+                # FIX 695: "hablar" variantes
+                'si gusta hablar', 'si gustas hablar', 'hablar luego', 'hablar más tarde',
                 # FIX 480: "Se presenta hasta el lunes" = encargado estará el lunes
                 'se presenta hasta', 'se presenta el', 'estará hasta el', 'estara hasta el',
                 'está hasta el', 'esta hasta el', 'viene hasta el', 'llega hasta el',
@@ -6073,7 +6078,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'vuelva a llamar', 'vuelve a llamar',
                     'mejor en otro momento', 'en otro horario',
                     'si gustas marca', 'si gusta marcar',
-                    'si gustas llama', 'si gusta llamar'
+                    'si gustas llama', 'si gusta llamar',
+                    # FIX 695: "hablar" variantes
+                    'si gustas habla', 'si gusta hablar', 'hablar luego'
                 ])
 
                 # Detectar si Bruce pide WhatsApp en lugar de horario
@@ -6272,6 +6279,39 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if vuelve_a_ofrecer:
                 print(f"   FIX 522: Ya se prometió catálogo - evitando repetir oferta")
                 respuesta = "Perfecto, entonces le envío el catálogo. Muchas gracias por su tiempo, que tenga excelente día."
+
+        # ============================================================
+        # FIX 693: POST-FILTER PITCH REPETIDO SEMÁNTICO
+        # BRUCE2234, BRUCE2238: GPT reformula pitch en otras palabras
+        # FIX 679 (>=85% similar) no lo detecta si wording es diferente
+        # Si "nioval" ya fue mencionado por Bruce Y respuesta actual
+        # también tiene "nioval" + palabras de pitch → strip pitch, keep question
+        # ============================================================
+        palabras_pitch_693 = ['productos', 'ferretero', 'ferretería', 'ferreteria',
+                              'catálogo', 'catalogo', 'distribuidor', 'marca nioval',
+                              'línea', 'linea', 'brindar informacion', 'ofrecer informacion',
+                              'brindar información', 'ofrecer información']
+        ya_presento_693 = any('nioval' in m.get('content', '').lower()
+                              for m in self.conversation_history if m.get('role') == 'assistant')
+        if ya_presento_693 and 'nioval' in respuesta.lower():
+            tiene_pitch_693 = any(p in respuesta.lower() for p in palabras_pitch_693)
+            if tiene_pitch_693:
+                print(f"\n[FIX 693] PITCH REPETIDO SEMÁNTICO detectado (NIOVAL ya presentado)")
+                print(f"  Respuesta: '{respuesta[:80]}...'")
+                # Generar alternativa contextual sin repetir pitch
+                if self.encargado_disponible == False or (
+                    any('no esta' in m.get('content', '').lower() or 'no está' in m.get('content', '').lower() or 'no se encuentra' in m.get('content', '').lower()
+                        for m in self.conversation_history if m.get('role') == 'user')):
+                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
+                elif self.encargado_confirmado:
+                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
+                elif any('encargad' in m.get('content', '').lower()
+                         for m in self.conversation_history if m.get('role') == 'assistant'):
+                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle la información?"
+                else:
+                    respuesta = "¿Se encontrará el encargado o encargada de compras?"
+                print(f"  Override: '{respuesta}'")
+                self.metrics.log_filtro_post_gpt("FIX_693", "PITCH_REPETIDO_SEMANTICO")
 
         # ============================================================
         # FIX 679: DETECTOR HASH DE DUPLICADOS EXACTOS
@@ -7362,7 +7402,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "con quién hablo", "con quien hablo",
             # FIX 513: BRUCE1580 - "¿De qué empresa dice que habla?"
             "de qué empresa", "de que empresa", "qué empresa", "que empresa",
-            "de qué compañía", "de que compañia", "qué compañía", "que compañia"
+            "de qué compañía", "de que compañia", "qué compañía", "que compañia",
+            # FIX 694: BRUCE2238 - "¿Cuál es su nombre?" no se detectaba
+            "cuál es su nombre", "cual es su nombre", "cómo se llama", "como se llama",
+            "su nombre", "tu nombre", "nombre de usted"
         ]):
             # FIX 595 BRUCE1992: Distinguir "¿de dónde es?" (UBICACION) vs "¿quién habla?" (IDENTIDAD)
             # Problema: Cliente preguntó "De donde es?" queriendo saber la ciudad, no la empresa
@@ -7723,6 +7766,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "gusta marcar más tarde", "gusta marcar mas tarde",
             "gusta llamar después", "gusta llamar despues",
             "si gusta llamar", "si gusta marcar",
+            # FIX 695: "hablar" variantes
+            "si gusta hablar", "si gustas hablar", "hablar luego", "hablar más tarde",
             "si gusta llámele", "si gusta llamele",
             "le gustaría llamar", "le gustaria llamar",
             # FIX 517: Cliente dice que ÉL volverá a llamar (implica callback)
@@ -8764,6 +8809,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'CLIENTE_OFRECE_WHATSAPP',       # Cliente ofrece WhatsApp (siempre aceptar)
                     'PEDIR_TELEFONO_FIJO',           # Alternativa de contacto (siempre válido)
                     'PREGUNTA_MARCAS',               # Cliente pregunta sobre productos (siempre responder)
+                    'PREGUNTA_IDENTIDAD',            # FIX 694B: BRUCE2238 - "¿Cuál es su nombre?" (siempre responder)
                 }
 
                 if tipo_602 in patrones_inmunes_602:

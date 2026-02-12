@@ -69,6 +69,10 @@ def agente():
     a.ultimo_correo_capturado = ""
     a.ultimo_whatsapp_capturado = ""
     a.digitos_preservados_previos = ""
+    a.encargado_disponible = None
+    a.encargado_confirmado = False
+    a.datos_capturados = {}
+    a.datos_capturados_count = 0
     # Stubs para métodos internos que podrían ser llamados
     a._detectar_error_necesita_recuperacion = lambda *args, **kwargs: (False, None, None)
     a._generar_respuesta_recuperacion_error = lambda *args, **kwargs: "Disculpe, ¿me puede repetir?"
@@ -122,6 +126,10 @@ def agente_turno1():
     a.ultimo_correo_capturado = ""
     a.ultimo_whatsapp_capturado = ""
     a.digitos_preservados_previos = ""
+    a.encargado_disponible = None
+    a.encargado_confirmado = False
+    a.datos_capturados = {}
+    a.datos_capturados_count = 0
     a._detectar_error_necesita_recuperacion = lambda *args, **kwargs: (False, None, None)
     a._generar_respuesta_recuperacion_error = lambda *args, **kwargs: "Disculpe, ¿me puede repetir?"
     a._validar_sentido_comun = lambda resp, *args, **kwargs: (True, "")
