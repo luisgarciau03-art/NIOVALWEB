@@ -3993,8 +3993,9 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                             respuesta_timeout = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
                             print(f"    FIX 603: Segundo timeout en INICIO - usando pitch directo en vez de 'interferencia'")
                     else:
-                        respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
-                        print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
+                        # FIX 684: Eliminada mención de interferencia (CTN-002)
+                        respuesta_timeout = "¿Me escucha? ¿Sigue en la línea?"
+                        print(f"    FIX 408+684: Segundo timeout - verificación conexión sin excusa técnica")
 
                     # Agregar al historial
                     agente.conversation_history.append({
