@@ -2160,6 +2160,145 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             filtro_aplicado = True
 
         # ============================================================
+        # FIX 667A: BRUCE2171 - GPT_LOGICA_ROTA (Cliente negó tener dato específico)
+        # "solo tengo teléfono fijo y correo" → Bruce pide WhatsApp (INCORRECTO)
+        # FIX 646A regla #2 en system prompt NO funciona → mover a POST-FILTER
+        # ============================================================
+        ultimo_cliente_667 = self.conversation_history[-1]['content'].lower() if self.conversation_history else ""
+
+        # Detectar negaciones de datos específicos
+        negaciones_dato_667 = [
+            r'solo\s+(?:tengo|tiene|cuento|cuenta)\s+(telefono|correo|email|celular|numero)',
+            r'(?:solo|unicamente|nada\s+mas)\s+(telefono|correo|email|celular)',
+            r'no\s+(?:tengo|tiene|cuento|cuenta|manejo)\s+(whatsapp|telefono|correo|email)',
+            r'(?:tengo|tiene)\s+solo\s+(el\s+)?(telefono|correo|email)',
+            r'(?:sin|no\s+hay)\s+(whatsapp|telefono|correo)'
+        ]
+
+        dato_negado_667 = None
+        for patron in negaciones_dato_667:
+            match = re.search(patron, ultimo_cliente_667)
+            if match:
+                # Capturar qué dato fue negado
+                dato_negado_667 = match.group(1) if match.lastindex >= 1 else match.group(0)
+                break
+
+        if dato_negado_667:
+            # Detectar si Bruce pide el dato que cliente negó tener
+            # Normalizar dato negado
+            dato_map = {
+                'whatsapp': ['whatsapp', 'whats'],
+                'telefono': ['telefono', 'teléfono', 'número', 'numero', 'celular'],
+                'correo': ['correo', 'email', 'e-mail', 'correo electronico']
+            }
+
+            dato_negado_norm = dato_negado_667
+            for key, variants in dato_map.items():
+                if any(v in dato_negado_667 for v in variants):
+                    dato_negado_norm = key
+                    break
+
+            # Verificar si respuesta pide ese dato
+            pide_dato_negado = False
+            if dato_negado_norm == 'whatsapp' and 'whatsapp' in respuesta_lower:
+                pide_dato_negado = True
+            elif dato_negado_norm == 'telefono' and any(w in respuesta_lower for w in ['telefono', 'teléfono', 'número', 'numero', 'celular']):
+                pide_dato_negado = True
+            elif dato_negado_norm == 'correo' and any(w in respuesta_lower for w in ['correo', 'email']):
+                pide_dato_negado = True
+
+            if pide_dato_negado:
+                # OVERRIDE: Pedir el dato alternativo que cliente SÍ tiene
+                alternativas_667 = {
+                    'whatsapp': 'Perfecto. ¿Me podría proporcionar entonces el teléfono fijo o el correo electrónico?',
+                    'telefono': 'Entiendo. ¿Me podría proporcionar entonces el correo electrónico o WhatsApp?',
+                    'correo': 'De acuerdo. ¿Me podría proporcionar entonces el teléfono o WhatsApp?'
+                }
+                respuesta_original_667 = respuesta
+                respuesta = alternativas_667.get(dato_negado_norm, respuesta)
+                print(f"[OK] FIX 667A: BRUCE2171 - Cliente negó tener {dato_negado_norm.upper()}, override respuesta GPT")
+                print(f"   Respuesta original: '{respuesta_original_667[:80]}'")
+                print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                filtro_aplicado = True
+
+        # ============================================================
+        # FIX 667B: BRUCE2173 - GPT_LOGICA_ROTA (Bruce ignora información clave)
+        # "esa no es la sucursal correcta" → Bruce pide datos de esa sucursal (INCORRECTO)
+        # FIX 646A regla #3 en system prompt NO funciona → mover a POST-FILTER
+        # ============================================================
+        # Detectar cuando cliente indica que algo es INCORRECTO/EQUIVOCADO
+        indicadores_error_667b = [
+            r'(?:esa|esta)\s+no\s+(?:es|sera)\s+(?:la|esa)\s+(sucursal|ubicacion|direccion|lugar)',
+            r'no\s+(?:es|corresponde)\s+(?:aqui|aca|esta|la\s+correcta)',
+            r'se\s+equivoc[oó]',
+            r'(?:numero|telefono|dato)\s+(?:incorrecto|equivocado)',
+            r'no\s+(?:es|sera)\s+(?:el|la)\s+correcto'
+        ]
+
+        cliente_indico_error_667b = False
+        for patron in indicadores_error_667b:
+            if re.search(patron, ultimo_cliente_667):
+                cliente_indico_error_667b = True
+                break
+
+        if cliente_indico_error_667b:
+            # Si Bruce sigue pidiendo datos relacionados → OVERRIDE
+            pide_datos_sucursal = any(w in respuesta_lower for w in [
+                'telefono de', 'número de', 'datos de', 'contacto de',
+                'esa sucursal', 'esta sucursal', 'la sucursal'
+            ])
+
+            if pide_datos_sucursal:
+                respuesta_original_667b = respuesta
+                respuesta = "Entiendo, disculpe. ¿Me podría indicar entonces cuál es la sucursal o ubicación correcta?"
+                print(f"[OK] FIX 667B: BRUCE2173 - Cliente indicó error en ubicación, override respuesta GPT")
+                print(f"   Respuesta original: '{respuesta_original_667b[:80]}'")
+                print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                filtro_aplicado = True
+
+        # ============================================================
+        # FIX 668: BRUCE2163 - GPT_LOGICA_ROTA (Encargado no disponible, pide contacto)
+        # "encargada disponible mañana" → Bruce pide WhatsApp (INCORRECTO - debe preguntar hora)
+        # FIX 646A regla #1 en system prompt NO funciona → reforzar con POST-FILTER
+        # ============================================================
+        # Detectar "mañana" sin hora específica
+        indicadores_manana_668 = [
+            r'\bma[ñn]ana\b',
+            r'despues de las',
+            r'en\s+(?:la|por\s+la)\s+(?:tarde|ma[ñn]ana)',
+            r'regresa\s+(?:ma[ñn]ana|despues|mas\s+tarde)',
+            r'(?:hasta|a\s+partir\s+de)\s+ma[ñn]ana',
+            r'(?:vuelve|llega)\s+ma[ñn]ana'
+        ]
+
+        cliente_dijo_manana_668 = False
+        for patron in indicadores_manana_668:
+            if re.search(patron, ultimo_cliente_667):
+                cliente_dijo_manana_668 = True
+                break
+
+        # Verificar que NO mencionó hora específica (FIX 665 ya cubre ese caso)
+        patron_hora_668 = r'\b(\d{1,2}):?(\d{2})?\s*(am|pm|de la ma[ñn]ana|de la tarde|de la noche)?\b'
+        tiene_hora_668 = re.search(patron_hora_668, ultimo_cliente_667)
+        horas_palabras_668 = ['ocho', 'nueve', 'diez', 'once', 'doce', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete']
+        menciona_hora_palabra_668 = any(f" {hora} " in f" {ultimo_cliente_667} " for hora in horas_palabras_668)
+
+        if cliente_dijo_manana_668 and not tiene_hora_668 and not menciona_hora_palabra_668:
+            # Si Bruce pide contacto (WhatsApp/correo/teléfono) → OVERRIDE preguntar hora
+            pide_contacto_668 = any(w in respuesta_lower for w in [
+                'whatsapp', 'correo', 'email', 'telefono', 'teléfono', 'número', 'numero',
+                'contacto', 'celular', 'me podria proporcionar', 'me podria dar'
+            ])
+
+            if pide_contacto_668:
+                respuesta_original_668 = respuesta
+                respuesta = "Perfecto. ¿A qué hora mañana la puedo encontrar disponible?"
+                print(f"[OK] FIX 668: BRUCE2163 - Encargado disponible mañana sin hora, override para preguntar hora")
+                print(f"   Respuesta original: '{respuesta_original_668[:80]}'")
+                print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                filtro_aplicado = True
+
+        # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
         # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
         # Solución: Contar preguntas y BLOQUEAR repeticiones
