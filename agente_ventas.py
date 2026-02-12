@@ -1333,7 +1333,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if veces == 2:
             return "Disculpe, no escuché bien. ¿Me puede repetir su pregunta?"
         else:
-            return "Parece que tenemos problemas de conexión. ¿Prefiere que le llame en otro momento?"
+            # FIX 684: Eliminada mención "problemas de conexión" (CTN-002)
+            return "Disculpe, no le estoy escuchando bien. ¿Prefiere que le llame en otro momento?"
 
     def _detectar_error_necesita_recuperacion(self, texto_cliente: str) -> tuple:
         """
@@ -1488,7 +1489,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if self.intentos_recuperacion >= 3:
             print(f"\n[WARN] FIX 481: 3 INTENTOS DE RECUPERACIÓN FALLIDOS - Ofreciendo alternativa")
             return (
-                "Disculpe, parece que tenemos problemas de comunicación. "
+                # FIX 684: Eliminada mención "problemas de comunicación" (CTN-002)
+                "Disculpe, no le estoy escuchando bien. "
                 "¿Prefiere que le envíe el catálogo por WhatsApp y el encargado lo revisa con calma? "
                 "O si gusta puedo llamar en otro momento más conveniente."
             )
@@ -2510,8 +2512,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir repetición ({veces_pidio_repetir+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             # Problema de audio - ofrecer llamar después
-            respuesta = "Parece que tenemos problemas de conexión. ¿Le puedo llamar en otro momento?"
-            print(f"   Respuesta anti-loop: '{respuesta}' (problemas de conexión)")
+            # FIX 684: Eliminada mención "problemas de conexión" (CTN-002)
+            respuesta = "Disculpe, no le estoy escuchando bien. ¿Le puedo llamar en otro momento?"
+            print(f"   Respuesta anti-loop: '{respuesta}' (FIX 684 - sin mención técnica)")
             return respuesta
 
         # FIX 517 BRUCE1733: Anti-loop para "¿Me permite dejarle el número?"
@@ -6277,6 +6280,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
                         print(f"  Override: '{respuesta}'")
                         break
+
+        # ============================================================
+        # FIX 684: POST-FILTER ANTI-PROBLEMAS-TECNICOS (CTN-002)
+        # Si GPT genera respuesta que menciona problemas técnicos/conexión,
+        # reemplazar con versión sin excusa técnica
+        # ============================================================
+        respuesta_lower_684 = respuesta.lower()
+        patrones_tecnicos_684 = [
+            'problemas de conexión', 'problemas de conexion',
+            'problema con la línea', 'problema con la linea',
+            'problemas técnicos', 'problemas tecnicos',
+            'hay interferencia', 'problemas de comunicación',
+            'problemas de comunicacion', 'problemas de audio',
+            'problemas con el audio', 'fallas técnicas',
+            'fallas tecnicas', 'error técnico', 'error tecnico',
+        ]
+        if any(p in respuesta_lower_684 for p in patrones_tecnicos_684):
+            print(f"\n[FIX 684] CTN-002: GPT mencionó problemas técnicos")
+            print(f"  Bloqueado: '{respuesta[:80]}...'")
+            # Reemplazar con versión sin excusa técnica
+            if 'llamar' in respuesta_lower_684 or 'marco' in respuesta_lower_684 or 'llamo' in respuesta_lower_684:
+                respuesta = "Disculpe, no le estoy escuchando bien. ¿Prefiere que le llame en otro momento?"
+            elif 'whatsapp' in respuesta_lower_684 or 'catálogo' in respuesta_lower_684:
+                respuesta = "¿Le puedo enviar el catálogo por WhatsApp para que lo revise con calma?"
+            else:
+                respuesta = "Disculpe, no le escuché bien. ¿Me puede repetir?"
+            print(f"  Override FIX 684: '{respuesta}'")
 
         return respuesta
 

@@ -60,16 +60,16 @@ class TestFix682GPTTimeoutResilience:
         """Contador se resetea después de respuesta GPT exitosa."""
         gpt_timeouts = 1
         respuesta = "Le comento que manejamos productos ferreteros."
-        # Simular reset
-        if respuesta and 'problemas con la conexión' not in respuesta:
+        # Simular reset (FIX 684: nuevo mensaje sin "problemas de conexión")
+        if respuesta and 'no le estoy escuchando bien en este momento' not in respuesta:
             gpt_timeouts = 0
         assert gpt_timeouts == 0
 
-    def test_no_reset_si_problemas_conexion(self):
-        """No resetear si respuesta contiene 'problemas con la conexión'."""
+    def test_no_reset_si_mensaje_timeout(self):
+        """No resetear si respuesta es mensaje de GPT timeout (FIX 684)."""
         gpt_timeouts = 1
-        respuesta = "Disculpe, tengo problemas con la conexión en este momento."
-        if respuesta and 'problemas con la conexión' not in respuesta:
+        respuesta = "Disculpe, no le estoy escuchando bien en este momento."
+        if respuesta and 'no le estoy escuchando bien en este momento' not in respuesta:
             gpt_timeouts = 0
         assert gpt_timeouts == 1
 

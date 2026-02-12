@@ -2818,9 +2818,10 @@ def procesar_respuesta():
 
             # Pedir repetición
             response = VoiceResponse()
+            # FIX 684: Eliminadas excusas tecnicas de audio (CTN-002)
             mensajes_repetir = [
                 "Disculpe, no le escuché bien. ¿Me puede repetir?",
-                "Perdón, tuve problemas de audio. ¿Qué me decía?",
+                "Perdón, no le escuché bien. ¿Qué me decía?",
                 "Lo siento, no logré entenderle. ¿Me lo repite por favor?"
             ]
             import random
@@ -4606,8 +4607,9 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
                     if agente.gpt_timeouts_consecutivos >= 2:
                         # 2do+ GPT timeout consecutivo → colgar profesionalmente
+                        # FIX 684: Eliminada mención de "problemas de conexión" (CTN-002)
                         print(f"    FIX 682: 2do GPT timeout - colgando profesionalmente")
-                        mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
+                        mensaje_error = "Disculpe, no le estoy escuchando bien en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
                         # FIX 643A: BRUCE2071 - Registrar mensaje de error en tracker
                         try:
                             if BUG_DETECTOR_AVAILABLE:
@@ -4673,8 +4675,9 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
             if agente.gpt_timeouts_consecutivos >= 2:
                 # 2do+ GPT timeout consecutivo → colgar profesionalmente
+                # FIX 684: Eliminada mención de "problemas de conexión" (CTN-002)
                 print(f"    FIX 682: 2do GPT timeout - colgando profesionalmente")
-                mensaje_error = "Disculpe, tengo problemas con la conexión en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
+                mensaje_error = "Disculpe, no le estoy escuchando bien en este momento. ¿Le puedo enviar el catálogo por WhatsApp y lo contacto más tarde para darle mejor información?"
                 # FIX 643A: Registrar mensaje de error en tracker
                 try:
                     if BUG_DETECTOR_AVAILABLE:
@@ -4708,8 +4711,9 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     print(f" BRUCE DICE: \"{respuesta_agente}\"")
 
     # FIX 682: Resetear contador GPT timeouts si respuesta exitosa (no fue fallback de timeout)
+    # FIX 684: Actualizado para nuevo mensaje sin "problemas de conexión"
     if respuesta_agente and agente.gpt_timeouts_consecutivos > 0:
-        if 'problemas con la conexión' not in str(respuesta_agente):
+        if 'no le estoy escuchando bien en este momento' not in str(respuesta_agente):
             agente.gpt_timeouts_consecutivos = 0
 
     # FIX 632: Registrar respuesta de Bruce en bug detector

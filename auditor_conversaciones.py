@@ -410,16 +410,40 @@ def auditar_conversacion(bruce_id, conv):
         despedidas_naturales = ['gracias', 'hasta luego', 'bye', 'adiós', 'adios',
                                 'está bien', 'esta bien', 'ok', 'bueno', 'sale',
                                 'va', 'órale', 'orale', 'ándale', 'andale',
-                                'que le vaya bien', 'igualmente', 'cuídese', 'cuidese']
+                                'que le vaya bien', 'igualmente', 'cuídese', 'cuidese',
+                                'buen día', 'buen dia', 'que tenga buen', 'con permiso',
+                                'provecho', 'suerte', 'bendiciones', 'cuídate', 'cuidate']
         es_despedida = any(d in ultimo_lower for d in despedidas_naturales)
         # FIX 681: Excluir si cliente rechazó (no necesita respuesta)
         rechazos_flu = ['no me interesa', 'no nos interesa', 'no gracias', 'no estamos interesados',
                         'no estoy interesado', 'no necesitamos', 'no ocupamos', 'ahorita no',
-                        'no por ahora', 'ya tenemos proveedor', 'no hace falta', 'no, gracias']
+                        'no por ahora', 'ya tenemos proveedor', 'no hace falta', 'no, gracias',
+                        'no ocupo nada', 'no requiero', 'no requerimos', 'estamos completos',
+                        'ya estamos surtidos', 'no estoy interesada']
         es_rechazo = any(r in ultimo_lower for r in rechazos_flu)
-        # FIX 681: Excluir si hubo problemas técnicos (GPT/STT timeout previo)
-        bruce_dijo_problemas = any('problema' in t and 'técnico' in t for t in textos_bruce)
-        if len(ultimo_cliente) > 3 and not es_despedida and not es_rechazo and not bruce_dijo_problemas:
+        # FIX 685: Excluir si hubo problemas técnicos/conexión (cualquier variante)
+        bruce_dijo_problemas = any(
+            ('problema' in t and ('técnico' in t or 'tecnico' in t or 'conexión' in t or 'conexion' in t
+             or 'comunicación' in t or 'comunicacion' in t or 'audio' in t))
+            or 'no le estoy escuchando bien' in t
+            or 'no le escuché bien' in t or 'no le escuche bien' in t
+            for t in textos_bruce
+        )
+        # FIX 685: Excluir si último mensaje del cliente es timeout/buzón/IVR
+        es_timeout_cliente = any(p in ultimo_lower for p in [
+            '[timeout', 'timeout', 'deje su mensaje', 'dejar un breve mensaje',
+            'favor de dejar', 'buzón', 'buzon', 'deje un mensaje',
+        ])
+        # FIX 685: Excluir si Bruce dijo despedida antes del último msg cliente
+        bruce_se_despidio = False
+        if len(mensajes) >= 2 and mensajes[-2]['rol'] == 'bruce':
+            penultimo_bruce = mensajes[-2]['texto'].lower()
+            bruce_se_despidio = any(d in penultimo_bruce for d in [
+                'que tenga buen', 'que tenga excelente', 'hasta luego', 'buen día',
+                'le marco', 'le llamamos', 'le llamo', 'lo contacto más tarde',
+            ])
+        if (len(ultimo_cliente) > 3 and not es_despedida and not es_rechazo
+                and not bruce_dijo_problemas and not es_timeout_cliente and not bruce_se_despidio):
             bugs.append({
                 'categoria': 'FLU',
                 'codigo': 'FLU-001',

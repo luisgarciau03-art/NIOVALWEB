@@ -23,8 +23,8 @@ class TestFix651GPTTonoInadecuado:
         # NO debe tener mensaje viejo
         assert "problemas técnicos. Le llamaré más tarde" not in source
 
-        # DEBE tener mensaje profesional
-        assert "problemas con la conexión" in source
+        # DEBE tener mensaje profesional (FIX 684: sin mención de "problemas de conexión")
+        assert "no le estoy escuchando bien" in source
         assert "enviar el catálogo por WhatsApp" in source
         assert "contacto más tarde" in source
 
