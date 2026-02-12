@@ -3977,8 +3977,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     es_inicio_llamada_603 = len(mensajes_usuario_603) <= 1
 
                     if es_inicio_llamada_603:
-                        respuesta_timeout = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
-                        print(f"    FIX 603: Segundo timeout en INICIO - usando pitch directo en vez de 'interferencia'")
+                        # FIX 678: Verificar si ya se presentó ANTES de repetir pitch
+                        ya_presento_678 = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                        if ya_presento_678:
+                            respuesta_timeout = "¿Se encontrará el encargado o encargada de compras?"
+                            print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
+                        else:
+                            respuesta_timeout = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
+                            print(f"    FIX 603: Segundo timeout en INICIO - usando pitch directo en vez de 'interferencia'")
                     else:
                         respuesta_timeout = "¿Me escucha? Parece que hay interferencia"
                         print(f"    FIX 408: Segundo timeout - pidiendo repetición directa")
@@ -4007,7 +4013,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 else:
                     # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
                     print(f"    FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
-                    segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+                    # FIX 678: Verificar si ya se presentó ANTES de repetir pitch
+                    ya_presento_678b = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                    if ya_presento_678b:
+                        segunda_parte = "¿Se encontrará el encargado o encargada de compras?"
+                        print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
+                    else:
+                        segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
                     # Agregar al historial como si hubiera respondido
                     agente.conversation_history.append({
@@ -4329,8 +4341,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # No continuar con caché - dejar que GPT procese con detección de interrupción
         else:
             # Primera vez que cliente responde - usar caché normal
-            # Texto de la segunda parte del saludo (pre-generado en cache)
-            respuesta_desde_cache = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+            # FIX 678: Verificar si ya se presentó (puede pasar si FIX 603/408 ya envió pitch)
+            ya_presento_678c = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+            if ya_presento_678c:
+                respuesta_desde_cache = "¿Se encontrará el encargado o encargada de compras?"
+                print(f"    FIX 678: Ya se presentó antes - solo pregunta encargado (sin repetir pitch)")
+            else:
+                respuesta_desde_cache = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
             # Agregar la respuesta del cliente al historial
             agente.conversation_history.append({

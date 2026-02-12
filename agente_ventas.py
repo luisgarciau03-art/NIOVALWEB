@@ -6242,6 +6242,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   FIX 522: Ya se prometió catálogo - evitando repetir oferta")
                 respuesta = "Perfecto, entonces le envío el catálogo. Muchas gracias por su tiempo, que tenga excelente día."
 
+        # ============================================================
+        # FIX 679: DETECTOR HASH DE DUPLICADOS EXACTOS
+        # Si Bruce ya dijo algo muy similar (>=85% similar), generar alternativa
+        # ============================================================
+        import re as re_679
+        import unicodedata as ud_679
+        respuesta_norm_679 = ud_679.normalize('NFKD', respuesta.lower()).encode('ascii', 'ignore').decode('ascii')
+        respuesta_norm_679 = re_679.sub(r'[^\w\s]', '', respuesta_norm_679).strip()
+        # Solo verificar si respuesta tiene contenido sustancial (>25 chars normalizados)
+        if len(respuesta_norm_679) > 25:
+            respuestas_previas_679 = [m.get('content', '') for m in self.conversation_history if m.get('role') == 'assistant']
+            for prev in respuestas_previas_679:
+                prev_norm = ud_679.normalize('NFKD', prev.lower()).encode('ascii', 'ignore').decode('ascii')
+                prev_norm = re_679.sub(r'[^\w\s]', '', prev_norm).strip()
+                if len(prev_norm) > 25:
+                    from difflib import SequenceMatcher as SM_679
+                    ratio_679 = SM_679(None, respuesta_norm_679, prev_norm).ratio()
+                    if ratio_679 >= 0.85:
+                        print(f"\n[FIX 679] DUPLICADO DETECTADO ({ratio_679:.0%} similar)")
+                        print(f"  Previo: '{prev[:60]}...'")
+                        print(f"  Actual: '{respuesta[:60]}...'")
+                        # Generar alternativa contextual
+                        if 'encargado' in respuesta.lower():
+                            respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
+                        elif 'nioval' in respuesta.lower():
+                            respuesta = "¿Se encontrará el encargado o encargada de compras?"
+                        elif 'whatsapp' in respuesta.lower():
+                            respuesta = "¿Prefiere que le envíe la información por correo electrónico?"
+                        elif 'catálogo' in respuesta.lower() or 'catalogo' in respuesta.lower():
+                            respuesta = "Muchas gracias por su tiempo. Que tenga excelente día."
+                        else:
+                            respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
+                        print(f"  Override: '{respuesta}'")
+                        break
+
         return respuesta
 
     def iniciar_conversacion(self):
