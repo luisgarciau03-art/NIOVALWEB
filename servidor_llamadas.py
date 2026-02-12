@@ -6304,6 +6304,31 @@ def frases_sin_audio():
         return {"error": str(e)}, 500
 
 
+@app.route("/exportar-cache-frases", methods=["GET"])
+def exportar_cache_frases():
+    """
+    Exporta TODAS las frases que tienen audio en cache con su texto completo.
+    Usado por generar_cache_multivoz.py para replicar cache en otras voces.
+    GET /exportar-cache-frases
+    """
+    try:
+        frases_export = {}
+        # 1. Frases de frase_stats que tienen audio
+        for key, data in frase_stats.items():
+            if key in audio_cache:
+                frases_export[key] = data.get("texto", "")
+        # 2. Frases pre-generadas (no están en frase_stats)
+        for key in audio_cache:
+            if key not in frases_export:
+                frases_export[key] = key.replace("_", " ")
+        return jsonify({
+            "total": len(frases_export),
+            "frases": frases_export
+        })
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 @app.route("/reporte-cache", methods=["GET"])
 def reporte_cache_html():
     """

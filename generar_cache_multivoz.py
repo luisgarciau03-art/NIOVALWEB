@@ -5,9 +5,11 @@ Generador de Cache Multi-Voz para Bruce W Agent
 Genera audios pre-cacheados para múltiples voces SIN tocar el cache actual.
 
 Uso:
-    python generar_cache_multivoz.py diana_sanchez
-    python generar_cache_multivoz.py mauricio
-    python generar_cache_multivoz.py todas
+    python generar_cache_multivoz.py diana_sanchez          # Solo frases base (25)
+    python generar_cache_multivoz.py mauricio               # Solo frases base (25)
+    python generar_cache_multivoz.py todas                  # Ambas voces, frases base
+    python generar_cache_multivoz.py diana_sanchez --full   # COMPLETO desde Railway (1000+)
+    python generar_cache_multivoz.py todas --full           # COMPLETO ambas voces
 """
 
 import os
@@ -15,12 +17,13 @@ import sys
 import json
 import time
 import hashlib
-import tempfile
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
+
+RAILWAY_URL = "https://nioval-webhook-server-production.up.railway.app"
 
 # ============================================================================
 # CONFIGURACIÓN DE VOCES
@@ -45,18 +48,14 @@ VOCES = {
 }
 
 # ============================================================================
-# FRASES A GENERAR (mismas que pre_generar_audios_cache en servidor)
+# FRASES BASE (pre_generar_audios_cache del servidor)
 # ============================================================================
 
-def obtener_frases_a_generar():
-    """Retorna todas las frases que necesitan cache de audio."""
-
+def obtener_frases_base():
+    """Retorna las frases base hardcodeadas (25 aprox)."""
     frases_comunes = {
-        # Frases de sistema
         "error": "Lo siento, hubo un error. Le llamaremos más tarde.",
         "confirmacion_presencia": "Sí, estoy aquí.",
-
-        # Frases de "pensando"
         "pensando_1": "Déjeme ver...",
         "pensando_2": "Mmm, déjeme validarlo...",
         "pensando_3": "Un momento...",
@@ -65,17 +64,11 @@ def obtener_frases_a_generar():
         "pensando_6": "Déjeme checar...",
         "pensando_7": "Permítame un segundo...",
         "pensando_8": "Déjame verificar...",
-
-        # Saludos
         "saludo_inicial": "Hola, buen dia",
         "saludo_inicial_encargado": "Hola, buen dia",
-
-        # Despedidas
         "despedida_1": "Muchas gracias por su tiempo. Que tenga excelente tarde. Hasta pronto.",
         "despedida_2": "Perfecto. En las próximas dos horas le llega el catálogo completo por WhatsApp. Muchas gracias por su tiempo. Que tenga excelente tarde.",
         "despedida_objecion": "Perfecto, comprendo que ya trabajan con un proveedor fijo. Le agradezco mucho su tiempo y por la información. Si en el futuro necesitan comparar precios o buscan un proveedor adicional, con gusto pueden contactarnos. Que tenga excelente día.",
-
-        # Segunda parte del saludo
         "segunda_parte_saludo": "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?",
     }
 
@@ -91,16 +84,68 @@ def obtener_frases_a_generar():
     return frases_comunes
 
 
+def obtener_frases_completas_railway():
+    """Descarga TODAS las frases con audio desde Railway (1000+)."""
+    import requests
+
+    print(f"Descargando frases completas desde Railway...")
+    print(f"URL: {RAILWAY_URL}/exportar-cache-frases\n")
+
+    try:
+        resp = requests.get(f"{RAILWAY_URL}/exportar-cache-frases", timeout=60)
+        if resp.status_code != 200:
+            print(f"Error HTTP {resp.status_code}: {resp.text[:200]}")
+            return None
+
+        data = resp.json()
+        frases = data.get("frases", {})
+        total = data.get("total", 0)
+
+        print(f"Descargadas {total} frases desde Railway")
+
+        # Filtrar frases vacías o muy cortas
+        frases_validas = {}
+        for key, texto in frases.items():
+            if texto and len(texto.strip()) > 2:
+                frases_validas[key] = texto.strip()
+
+        print(f"Frases válidas: {len(frases_validas)}")
+
+        # Guardar backup local
+        backup_file = Path("frases_cache_railway_export.json")
+        with open(backup_file, 'w', encoding='utf-8') as f:
+            json.dump(frases_validas, f, indent=2, ensure_ascii=False)
+        print(f"Backup guardado en: {backup_file}\n")
+
+        return frases_validas
+
+    except Exception as e:
+        print(f"Error descargando frases: {e}")
+
+        # Intentar cargar backup local
+        backup_file = Path("frases_cache_railway_export.json")
+        if backup_file.exists():
+            print(f"Usando backup local: {backup_file}")
+            with open(backup_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+
+        return None
+
+
 def generar_nombre_archivo(key, texto):
     """Genera nombre de archivo normalizado igual que el servidor."""
-    # Hash de 12 chars del texto completo
     text_hash = hashlib.md5(texto.encode()).hexdigest()[:12]
-    # Normalizar key
     safe_key = key.replace(" ", "_").replace("/", "_")[:80]
     return f"{safe_key}_{text_hash}.mp3"
 
 
-def generar_cache_para_voz(nombre_voz):
+def estimar_creditos(frases):
+    """Estima caracteres necesarios para generar las frases."""
+    total_chars = sum(len(t) for t in frases.values())
+    return total_chars
+
+
+def generar_cache_para_voz(nombre_voz, modo_completo=False):
     """Genera todo el cache de audios para una voz específica."""
 
     if nombre_voz not in VOCES:
@@ -115,10 +160,23 @@ def generar_cache_para_voz(nombre_voz):
     voice_id = voz["voice_id"]
     cache_dir = Path(voz["cache_dir"])
 
+    # Obtener frases
+    if modo_completo:
+        print(f"MODO COMPLETO: Descargando todas las frases desde Railway...")
+        frases = obtener_frases_completas_railway()
+        if not frases:
+            print("No se pudieron obtener frases de Railway. Usando frases base.")
+            frases = obtener_frases_base()
+    else:
+        frases = obtener_frases_base()
+
     print(f"\n{'='*80}")
     print(f"GENERANDO CACHE PARA: {voz['nombre']}")
     print(f"Voice ID: {voice_id}")
     print(f"Directorio: {cache_dir}")
+    print(f"Total frases: {len(frases)}")
+    print(f"Caracteres: {estimar_creditos(frases):,}")
+    print(f"Modo: {'COMPLETO (Railway)' if modo_completo else 'BASE (25 frases)'}")
     print(f"{'='*80}\n")
 
     # Crear directorio
@@ -131,15 +189,26 @@ def generar_cache_para_voz(nombre_voz):
         shutil.copy2(src_cache, cache_dir / "respuestas_cache.json")
         print(f"Copiado respuestas_cache.json al directorio")
 
-    # Obtener frases
-    frases = obtener_frases_a_generar()
-
     # Cargar metadata existente (para no regenerar lo que ya existe)
     metadata_file = cache_dir / "metadata.json"
     metadata = {}
     if metadata_file.exists():
         with open(metadata_file, 'r', encoding='utf-8') as f:
             metadata = json.load(f)
+
+    # Contar cuántas ya existen
+    ya_existen = sum(1 for k in frases if k in metadata and (cache_dir / metadata[k]).exists())
+    por_generar = len(frases) - ya_existen
+    chars_por_generar = sum(len(t) for k, t in frases.items()
+                           if k not in metadata or not (cache_dir / metadata.get(k, "")).exists())
+
+    print(f"\nYa existen: {ya_existen} audios")
+    print(f"Por generar: {por_generar} audios")
+    print(f"Caracteres por generar: {chars_por_generar:,}")
+
+    if por_generar == 0:
+        print("Todos los audios ya existen. Nada que generar.")
+        return True
 
     # Inicializar ElevenLabs
     api_key = os.getenv("ELEVENLABS_API_KEY")
@@ -162,36 +231,41 @@ def generar_cache_para_voz(nombre_voz):
     try:
         user = client.user.get()
         chars_restantes = user.subscription.character_limit - user.subscription.character_count
-        chars_necesarios = sum(len(t) for t in frases.values())
-        print(f"Créditos disponibles: {chars_restantes:,} caracteres")
-        print(f"Caracteres necesarios: {chars_necesarios:,}")
-
-        if chars_necesarios > chars_restantes:
-            print(f"NO hay suficientes créditos! Faltan {chars_necesarios - chars_restantes:,}")
-            return False
-        print(f"OK - Suficientes créditos\n")
+        print(f"\nCreditos disponibles: {chars_restantes:,} caracteres")
+        print(f"Caracteres necesarios: {chars_por_generar:,}")
+        if chars_por_generar > chars_restantes:
+            print(f"ADVERTENCIA: Faltan {chars_por_generar - chars_restantes:,} caracteres!")
+            respuesta = input("Continuar de todos modos? (s/n): ").strip().lower()
+            if respuesta != 's':
+                return False
+        else:
+            print(f"OK - Suficientes creditos\n")
     except Exception as e:
-        print(f"No se pudo verificar créditos: {e}")
-        print("Continuando de todos modos...\n")
+        print(f"No se pudo verificar creditos: {e}")
+        print("Continuando...\n")
 
     # Generar audios
     generados = 0
     omitidos = 0
     errores = 0
     total = len(frases)
+    inicio_total = time.time()
 
     for idx, (key, texto) in enumerate(frases.items(), 1):
         filename = generar_nombre_archivo(key, texto)
-        filepath = cache_dir / filename
 
         # Verificar si ya existe
         if key in metadata and (cache_dir / metadata[key]).exists():
-            print(f"  [{idx}/{total}] Omitido (ya existe): {key}")
             omitidos += 1
+            if idx % 100 == 0:
+                print(f"  [{idx}/{total}] ... {omitidos} omitidos, {generados} generados")
             continue
 
+        filepath = cache_dir / filename
+
         try:
-            print(f"  [{idx}/{total}] Generando: {key} ({len(texto)} chars)")
+            if idx <= 5 or idx % 50 == 0 or idx == total:
+                print(f"  [{idx}/{total}] Generando: {key[:50]} ({len(texto)} chars)")
 
             audio_generator = client.text_to_speech.convert(
                 text=texto,
@@ -210,16 +284,28 @@ def generar_cache_para_voz(nombre_voz):
             metadata[key] = filename
             generados += 1
 
-            # Rate limiting
-            if idx % 10 == 0:
-                print(f"  ... Pausa de 1s (rate limit) ...")
+            # Rate limiting - pausa cada 10 audios
+            if generados % 10 == 0:
                 time.sleep(1)
 
-        except Exception as e:
-            print(f"  ERROR en {key}: {e}")
-            errores += 1
+            # Guardar metadata periódicamente (cada 50 audios)
+            if generados % 50 == 0:
+                with open(metadata_file, 'w', encoding='utf-8') as f:
+                    json.dump(metadata, f, indent=2, ensure_ascii=False)
+                elapsed = time.time() - inicio_total
+                rate = generados / elapsed * 60  # audios por minuto
+                remaining = (por_generar - generados) / rate if rate > 0 else 0
+                print(f"  >> Progreso: {generados}/{por_generar} ({rate:.0f}/min, ~{remaining:.0f}min restantes)")
 
-    # Guardar metadata
+        except Exception as e:
+            print(f"  ERROR en {key[:40]}: {e}")
+            errores += 1
+            if errores > 10:
+                print("Demasiados errores. Guardando progreso y saliendo.")
+                break
+            time.sleep(2)  # Pausa extra en error
+
+    # Guardar metadata final
     with open(metadata_file, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=2, ensure_ascii=False)
 
@@ -230,16 +316,19 @@ def generar_cache_para_voz(nombre_voz):
             "voice_id": voice_id,
             "nombre": voz["nombre"],
             "generado": datetime.now().isoformat(),
-            "total_audios": generados + omitidos,
+            "total_audios": len(metadata),
             "modelo": "eleven_multilingual_v2"
         }, f, indent=2, ensure_ascii=False)
+
+    elapsed = time.time() - inicio_total
 
     print(f"\n{'='*80}")
     print(f"RESULTADO PARA: {voz['nombre']}")
     print(f"  Generados: {generados}")
-    print(f"  Omitidos (ya existían): {omitidos}")
+    print(f"  Omitidos (ya existian): {omitidos}")
     print(f"  Errores: {errores}")
     print(f"  Total en cache: {len(metadata)} audios")
+    print(f"  Tiempo: {elapsed/60:.1f} minutos")
     print(f"  Directorio: {cache_dir}")
     print(f"{'='*80}\n")
 
@@ -253,9 +342,11 @@ def generar_cache_para_voz(nombre_voz):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Uso:")
-        print("  python generar_cache_multivoz.py diana_sanchez")
-        print("  python generar_cache_multivoz.py mauricio")
-        print("  python generar_cache_multivoz.py todas")
+        print("  python generar_cache_multivoz.py diana_sanchez          # Frases base (25)")
+        print("  python generar_cache_multivoz.py mauricio               # Frases base (25)")
+        print("  python generar_cache_multivoz.py todas                  # Ambas, base")
+        print("  python generar_cache_multivoz.py diana_sanchez --full   # COMPLETO (1000+)")
+        print("  python generar_cache_multivoz.py todas --full           # COMPLETO ambas")
         print("\nVoces disponibles:")
         for key, voz in VOCES.items():
             if key != "bruce_w":
@@ -263,13 +354,17 @@ if __name__ == "__main__":
         sys.exit(1)
 
     voz_arg = sys.argv[1].lower()
+    modo_completo = "--full" in sys.argv
+
+    if modo_completo:
+        print("\n*** MODO COMPLETO: Descargara 1000+ frases desde Railway ***\n")
 
     if voz_arg == "todas":
         for nombre in VOCES:
             if nombre != "bruce_w":
-                generar_cache_para_voz(nombre)
+                generar_cache_para_voz(nombre, modo_completo=modo_completo)
     elif voz_arg in VOCES:
-        generar_cache_para_voz(voz_arg)
+        generar_cache_para_voz(voz_arg, modo_completo=modo_completo)
     else:
         print(f"Voz '{voz_arg}' no reconocida.")
         print(f"Opciones: {', '.join(k for k in VOCES if k != 'bruce_w')}, todas")
