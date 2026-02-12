@@ -4623,9 +4623,18 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     else:
                         # 1er GPT timeout → fallback contextual y CONTINUAR
                         print(f"    FIX 682: 1er GPT timeout - usando fallback contextual")
+                        # FIX 690B: BRUCE2202 - Si cliente dijo "anotar/apuntar", responder "Sí, dígame"
+                        speech_lower_690 = speech_result.lower() if speech_result else ""
+                        cliente_listo_dictar_690 = any(p in speech_lower_690 for p in [
+                            'anotar', 'apuntar', 'lapiz', 'lápiz', 'papel', 'pluma',
+                            'donde escribir', 'con que escribir'
+                        ])
                         ya_presento_682 = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
                         ya_encargado_682 = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
-                        if not ya_presento_682:
+                        if cliente_listo_dictar_690:
+                            respuesta_container["respuesta"] = "Sí, claro, dígame el número por favor."
+                            print(f"    FIX 690B: Cliente listo para dictar ('{speech_lower_690[:50]}') → 'Sí, dígame'")
+                        elif not ya_presento_682:
                             respuesta_container["respuesta"] = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
                         elif not ya_encargado_682:
                             respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"
@@ -4691,9 +4700,18 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             else:
                 # 1er GPT timeout → fallback contextual y CONTINUAR
                 print(f"    FIX 682: 1er GPT timeout - usando fallback contextual")
+                # FIX 690B: BRUCE2202 - Si cliente dijo "anotar/apuntar", responder "Sí, dígame"
+                speech_lower_690b = speech_result.lower() if speech_result else ""
+                cliente_listo_dictar_690b = any(p in speech_lower_690b for p in [
+                    'anotar', 'apuntar', 'lapiz', 'lápiz', 'papel', 'pluma',
+                    'donde escribir', 'con que escribir'
+                ])
                 ya_presento_682b = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
                 ya_encargado_682b = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
-                if not ya_presento_682b:
+                if cliente_listo_dictar_690b:
+                    respuesta_container["respuesta"] = "Sí, claro, dígame el número por favor."
+                    print(f"    FIX 690B: Cliente listo para dictar ('{speech_lower_690b[:50]}') → 'Sí, dígame'")
+                elif not ya_presento_682b:
                     respuesta_container["respuesta"] = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
                 elif not ya_encargado_682b:
                     respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"

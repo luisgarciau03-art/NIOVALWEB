@@ -2302,6 +2302,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 filtro_aplicado = True
 
         # ============================================================
+        # FIX 690C: BRUCE2202 - Cliente listo para dictar ("tienes donde anotar")
+        # Si GPT responde con "me puede repetir" o genérico, override con "Sí, dígame"
+        # ============================================================
+        if not filtro_aplicado and self.conversation_history:
+            ultimo_cliente_690 = self.conversation_history[-1].get('content', '').lower() if self.conversation_history[-1].get('role') == 'user' else ''
+            keywords_dictar_690 = ['anotar', 'apuntar', 'donde escribir', 'con que escribir',
+                                   'tienes lapiz', 'tiene lapiz', 'tienes papel', 'tiene papel',
+                                   'tienes pluma', 'tiene pluma']
+            cliente_listo_690 = any(k in ultimo_cliente_690 for k in keywords_dictar_690)
+
+            if cliente_listo_690:
+                respuesta_generica_690 = any(p in respuesta_lower for p in [
+                    'me puede repetir', 'me podria repetir', 'no escuche', 'no le escuche',
+                    'disculpe', 'me decia'
+                ])
+                if respuesta_generica_690:
+                    respuesta_original_690 = respuesta
+                    respuesta = "Sí, claro, dígame el número por favor."
+                    respuesta_lower = respuesta.lower()
+                    print(f"[OK] FIX 690C: Cliente listo para dictar + respuesta genérica → override")
+                    print(f"   Cliente dijo: '{ultimo_cliente_690[:60]}'")
+                    print(f"   Respuesta original: '{respuesta_original_690[:60]}'")
+                    print(f"   Respuesta corregida: '{respuesta}'")
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
         # Problema BRUCE1471: Bruce preguntaba por encargado 5+ veces en loop
         # Solución: Contar preguntas y BLOQUEAR repeticiones
@@ -8162,11 +8188,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # FIX 523 BRUCE1661: Cliente ofrece dar correo/número
         # Caso: "¿Tiene para anotar un correo?" = cliente quiere DAR su correo
+        # FIX 690A: BRUCE2202 - "tienes con que anotar" / "tienes lapiz" / "tienes papel"
         if any(p in texto_lower for p in [
             "tiene para anotar", "tienes para anotar",
             "tiene donde anotar", "tienes donde anotar",
             "tiene dónde anotar", "tienes dónde anotar",
             "puede anotar", "puedes anotar",
+            # FIX 690A: Variantes adicionales de "¿tienes donde anotar?"
+            "tiene con que anotar", "tienes con que anotar",
+            "tiene con qué anotar", "tienes con qué anotar",
+            "tiene lapiz", "tienes lapiz", "tiene lápiz", "tienes lápiz",
+            "tiene papel", "tienes papel", "tiene pluma", "tienes pluma",
+            "tienes donde apuntar", "tiene donde apuntar",
+            "tienes para apuntar", "tiene para apuntar",
+            "puede apuntar", "puedes apuntar",
             "le doy un correo", "le doy mi correo", "le doy el correo",
             "le doy un número", "le doy mi número", "le doy el número",
             "le paso un correo", "le paso mi correo",
