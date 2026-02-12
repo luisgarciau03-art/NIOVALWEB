@@ -133,9 +133,17 @@ def obtener_frases_completas_railway():
 
 
 def generar_nombre_archivo(key, texto):
-    """Genera nombre de archivo normalizado igual que el servidor."""
+    """Genera nombre de archivo normalizado y seguro para Windows/Linux."""
+    import re
+    import unicodedata
     text_hash = hashlib.md5(texto.encode()).hexdigest()[:12]
-    safe_key = key.replace(" ", "_").replace("/", "_")[:80]
+    # Normalizar unicode (á→a, é→e, etc)
+    safe_key = unicodedata.normalize('NFKD', key).encode('ascii', 'ignore').decode('ascii')
+    # Reemplazar caracteres no válidos en filenames
+    safe_key = re.sub(r'[^\w\s\-.,]', '', safe_key)
+    safe_key = safe_key.replace(" ", "_").replace("/", "_")[:60]
+    if not safe_key:
+        safe_key = "audio"
     return f"{safe_key}_{text_hash}.mp3"
 
 
