@@ -402,7 +402,7 @@ def auditar_conversacion(bruce_id, conv):
 
     # ========== FLU: Flujo Conversacional ==========
 
-    # FLU-001: Cliente habló último (mejorado: excluir despedidas naturales)
+    # FLU-001: Cliente habló último (mejorado: excluir despedidas, rechazos, STT timeouts)
     if mensajes and mensajes[-1]['rol'] == 'cliente' and mensajes[-1]['texto'].strip():
         ultimo_cliente = mensajes[-1]['texto'].strip()
         ultimo_lower = ultimo_cliente.lower()
@@ -412,7 +412,14 @@ def auditar_conversacion(bruce_id, conv):
                                 'va', 'órale', 'orale', 'ándale', 'andale',
                                 'que le vaya bien', 'igualmente', 'cuídese', 'cuidese']
         es_despedida = any(d in ultimo_lower for d in despedidas_naturales)
-        if len(ultimo_cliente) > 3 and not es_despedida:
+        # FIX 681: Excluir si cliente rechazó (no necesita respuesta)
+        rechazos_flu = ['no me interesa', 'no nos interesa', 'no gracias', 'no estamos interesados',
+                        'no estoy interesado', 'no necesitamos', 'no ocupamos', 'ahorita no',
+                        'no por ahora', 'ya tenemos proveedor', 'no hace falta', 'no, gracias']
+        es_rechazo = any(r in ultimo_lower for r in rechazos_flu)
+        # FIX 681: Excluir si hubo problemas técnicos (GPT/STT timeout previo)
+        bruce_dijo_problemas = any('problema' in t and 'técnico' in t for t in textos_bruce)
+        if len(ultimo_cliente) > 3 and not es_despedida and not es_rechazo and not bruce_dijo_problemas:
             bugs.append({
                 'categoria': 'FLU',
                 'codigo': 'FLU-001',
@@ -483,11 +490,24 @@ def auditar_conversacion(bruce_id, conv):
         # También verificar si hay datos reales mencionados por Bruce (WhatsApp/email/teléfono)
         datos_reales = any('@' in t or 'whatsapp' in t and ('33' in t or '55' in t or '66' in t)
                           for t in textos_bruce)
-        # Verificar si cliente rechazó todo (no es bug de Bruce)
-        cliente_rechazo = any('no me interesa' in t or 'no nos interesa' in t or
-                              'no gracias' in t or 'ya tenemos proveedor' in t
-                              for t in textos_cliente)
-        if not capturo_algo and not datos_reales and not cliente_rechazo and conv['estado_final'] == 'completed':
+        # FIX 681: Verificar si cliente rechazó todo (no es bug de Bruce) - expandir patrones
+        cliente_rechazo = any(p in t for t in textos_cliente for p in [
+            'no me interesa', 'no nos interesa', 'no gracias', 'ya tenemos proveedor',
+            'no estamos interesados', 'no estoy interesado', 'no estoy interesada',
+            'no necesitamos', 'no ocupamos', 'no requiero', 'no requerimos',
+            'no, gracias', 'ahorita no', 'por el momento no', 'no por ahora',
+            'estamos completos', 'ya estamos surtidos', 'no hace falta',
+        ])
+        # FIX 681: Excluir si la llamada terminó por STT/GPT timeout (no es bug de Bruce)
+        tiene_timeouts_excesivos = sum(1 for m in mensajes if '[timeout' in m['texto'].lower()
+                                        or 'problema' in m['texto'].lower() and 'técnico' in m['texto'].lower()) >= 3
+        # FIX 681: Excluir si es buzón de voz
+        es_buzon = any('buzón' in t or 'buzon' in t or 'deje su mensaje' in t or
+                        'dejar un breve mensaje' in t or 'favor de dejar' in t
+                        for t in textos_cliente)
+        if (not capturo_algo and not datos_reales and not cliente_rechazo
+                and not tiene_timeouts_excesivos and not es_buzon
+                and conv['estado_final'] == 'completed'):
             bugs.append({
                 'categoria': 'CAL',
                 'codigo': 'CAL-001',

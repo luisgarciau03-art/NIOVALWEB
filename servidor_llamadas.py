@@ -3980,8 +3980,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                         # FIX 678: Verificar si ya se presentó ANTES de repetir pitch
                         ya_presento_678 = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
                         if ya_presento_678:
-                            respuesta_timeout = "¿Se encontrará el encargado o encargada de compras?"
-                            print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
+                            # FIX 680: Verificar si ya preguntó por encargado ANTES de repetir
+                            ya_pregunto_encargado_680 = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                            if ya_pregunto_encargado_680:
+                                respuesta_timeout = "¿Me escucha? ¿Sigue en la línea?"
+                                print(f"    FIX 680: Ya presentó Y ya preguntó encargado - solo verificar conexión")
+                            else:
+                                respuesta_timeout = "¿Se encontrará el encargado o encargada de compras?"
+                                print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
                         else:
                             respuesta_timeout = "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?"
                             print(f"    FIX 603: Segundo timeout en INICIO - usando pitch directo en vez de 'interferencia'")
@@ -4016,8 +4022,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     # FIX 678: Verificar si ya se presentó ANTES de repetir pitch
                     ya_presento_678b = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
                     if ya_presento_678b:
-                        segunda_parte = "¿Se encontrará el encargado o encargada de compras?"
-                        print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
+                        # FIX 680: Verificar si ya preguntó por encargado
+                        ya_pregunto_encargado_680b = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                        if ya_pregunto_encargado_680b:
+                            segunda_parte = "¿Me escucha? ¿Sigue en la línea?"
+                            print(f"    FIX 680: Ya presentó Y ya preguntó encargado - solo verificar conexión")
+                        else:
+                            segunda_parte = "¿Se encontrará el encargado o encargada de compras?"
+                            print(f"    FIX 678: Ya se presentó - solo pregunta encargado (sin repetir pitch)")
                     else:
                         segunda_parte = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
@@ -4344,8 +4356,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # FIX 678: Verificar si ya se presentó (puede pasar si FIX 603/408 ya envió pitch)
             ya_presento_678c = any('nioval' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
             if ya_presento_678c:
-                respuesta_desde_cache = "¿Se encontrará el encargado o encargada de compras?"
-                print(f"    FIX 678: Ya se presentó antes - solo pregunta encargado (sin repetir pitch)")
+                # FIX 680: Verificar si ya preguntó por encargado
+                ya_pregunto_encargado_680c = any('encargad' in m.get('content', '').lower() for m in agente.conversation_history if m['role'] == 'assistant')
+                if ya_pregunto_encargado_680c:
+                    respuesta_desde_cache = "¿Me escucha? ¿Sigue en la línea?"
+                    print(f"    FIX 680: Ya presentó Y ya preguntó encargado - solo verificar conexión")
+                else:
+                    respuesta_desde_cache = "¿Se encontrará el encargado o encargada de compras?"
+                    print(f"    FIX 678: Ya se presentó antes - solo pregunta encargado (sin repetir pitch)")
             else:
                 respuesta_desde_cache = "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
 
