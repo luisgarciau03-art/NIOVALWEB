@@ -64,7 +64,10 @@ MAX_BUGS_HISTORY = 200
 
 # GPT evaluation: minimo de turnos para justificar el costo
 # FIX 642B: Bajado de 3 a 2 (BRUCE2070 tenia 2 turnos y GPT eval no corrio)
-GPT_EVAL_MIN_TURNOS = 2
+# FIX 692B: Subido de 2 a 3 (BRUCE2214: 2 turnos/43s genera FP 66% del tiempo)
+GPT_EVAL_MIN_TURNOS = 3
+# FIX 692B: Duración mínima para GPT eval (llamadas ultra-cortas = FP)
+GPT_EVAL_MIN_DURACION_S = 45
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
 # FIX 691: Robustez - save inmediato, atexit handler, fsync
@@ -744,6 +747,12 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
     try:
         # Solo evaluar si hay suficientes turnos
         if len(tracker.respuestas_bruce) < GPT_EVAL_MIN_TURNOS:
+            return bugs
+
+        # FIX 692B: Skip GPT eval si llamada fue ultra-corta (< 45s = cliente colgó rápido)
+        duracion_llamada = int(time.time() - tracker.created_at)
+        if duracion_llamada < GPT_EVAL_MIN_DURACION_S:
+            print(f"[FIX 692B] Llamada {tracker.bruce_id}: Solo {duracion_llamada}s, SKIP GPT eval (min {GPT_EVAL_MIN_DURACION_S}s)")
             return bugs
 
         # FIX 664B: Pre-filtro - detectar comportamiento correcto ANTES de GPT

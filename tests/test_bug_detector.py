@@ -282,11 +282,11 @@ class TestGPTEvalStructure:
 
     @pytest.mark.bug_detector
     def test_gpt_eval_no_ejecuta_con_pocos_turnos(self, tracker):
-        """Con <2 turnos de Bruce (FIX 642B), GPT eval no se ejecuta."""
+        """Con <3 turnos de Bruce (FIX 692B), GPT eval no se ejecuta."""
         tracker.emit("BRUCE_RESPONDE", {"texto": "Hola"})
-        # _evaluar_con_gpt debe retornar [] con <2 turnos
+        # _evaluar_con_gpt debe retornar [] con <3 turnos
         from bug_detector import _evaluar_con_gpt, GPT_EVAL_MIN_TURNOS
-        assert GPT_EVAL_MIN_TURNOS == 2
+        assert GPT_EVAL_MIN_TURNOS == 3  # FIX 692B: subido de 2 a 3
         assert len(tracker.respuestas_bruce) < GPT_EVAL_MIN_TURNOS
         resultado = _evaluar_con_gpt(tracker)
         assert resultado == []

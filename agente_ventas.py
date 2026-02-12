@@ -1535,7 +1535,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 1 for msg in ultimos_bruce
                 if any(p in msg for p in patrones_encargado_rec)
             )
-            ya_pregunto_suficiente_rec = veces_pregunto_encargado_rec >= 2
+            ya_pregunto_suficiente_rec = veces_pregunto_encargado_rec >= 1  # FIX 692A: alineado con bug detector
 
             if ultimos_bruce:
                 ultimo_bruce = ultimos_bruce[-1]
@@ -2372,9 +2372,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Respuesta corregida: '{respuesta}'")
             return respuesta
 
-        # FIX 493: Si ya preguntamos 2+ veces, también bloquear
-        if pregunta_por_encargado and veces_pregunto_encargado >= 2:
-            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a preguntar por encargado ({veces_pregunto_encargado+1}a vez)")
+        # FIX 493+692A: Si ya preguntamos 1+ veces, bloquear 2da pregunta
+        # FIX 692A: Alineado con bug detector (marca PREGUNTA_REPETIDA con 2 total)
+        if pregunta_por_encargado and veces_pregunto_encargado >= 1:
+            print(f"\n[WARN] FIX 493+692A ANTI-LOOP: Bruce iba a preguntar por encargado ({veces_pregunto_encargado+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
 
             # Verificar si cliente dio horario en el contexto
@@ -8386,7 +8387,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             1 for msg in ultimas_bruce_cache
             if any(p in msg for p in patrones_encargado_cache)
         )
-        ya_pregunto_suficiente = veces_pregunto_encargado_cache >= 2
+        ya_pregunto_suficiente = veces_pregunto_encargado_cache >= 1  # FIX 692A: alineado con bug detector
 
         # CACHE DE RESPUESTAS MÁS FRECUENTES (basado en análisis de logs)
 
@@ -8754,6 +8755,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 elif any(kw in ultimo_bruce_602 for kw in ['horario', 'hora', 'cuándo', 'cuando', 'qué día', 'que dia']):
                     tema_bruce = 'PREGUNTANDO_HORARIO'
 
+                # FIX 692C: Patrones que SIEMPRE sobreviven FIX 602 (0% survival fix)
+                # Estos patrones son válidos en CUALQUIER contexto conversacional
+                patrones_inmunes_602 = {
+                    'OFRECER_CONTACTO_BRUCE',       # Bruce ofrece su contacto como último recurso
+                    'CLIENTE_ACEPTA_CORREO',         # Cliente acepta correo (siempre válido)
+                    'CLIENTE_OFRECE_SU_CONTACTO',    # Cliente ofrece su contacto (siempre aceptar)
+                    'CLIENTE_OFRECE_WHATSAPP',       # Cliente ofrece WhatsApp (siempre aceptar)
+                    'PEDIR_TELEFONO_FIJO',           # Alternativa de contacto (siempre válido)
+                    'PREGUNTA_MARCAS',               # Cliente pregunta sobre productos (siempre responder)
+                }
+
+                if tipo_602 in patrones_inmunes_602:
+                    print(f"   FIX 692C: Patrón '{tipo_602}' es INMUNE a FIX 602 (válido en cualquier contexto)")
+                    # No invalidar, dejar que sobreviva
+                else:
+                    pass  # Continuar con check de incoherencias normal
+
                 # Patrones INCOHERENTES según contexto de Bruce
                 # Si Bruce pidió dato de contacto → respuestas de estado de encargado son incoherentes
                 # FIX 686C: OFRECER_CONTACTO_BRUCE eliminado de incoherencias (0% survival)
@@ -8786,7 +8804,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 if tema_bruce:
                     patrones_incoherentes = incoherencias_por_contexto.get(tema_bruce, [])
-                    if tipo_602 in patrones_incoherentes:
+                    # FIX 692C: Skip invalidación si patrón es inmune a FIX 602
+                    if tipo_602 in patrones_incoherentes and tipo_602 not in patrones_inmunes_602:
                         print(f"   FIX 602: VALIDADOR CONTEXTO: Bruce estaba en '{tema_bruce}'")
                         print(f"   Patrón '{tipo_602}' es INCOHERENTE con el contexto")
                         print(f"   Último Bruce: '{ultimo_bruce_602[:60]}'")
@@ -10349,8 +10368,8 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                 1 for msg in ultimas_bruce_493
                 if any(p in msg for p in patrones_encargado_493)
             )
-            if veces_pregunto_encargado >= 2:
-                print(f"[WARN] FIX 493: Ya preguntamos por encargado {veces_pregunto_encargado} veces - EVITANDO LOOP")
+            if veces_pregunto_encargado >= 1:  # FIX 692A: alineado con bug detector
+                print(f"[WARN] FIX 493+692A: Ya preguntamos por encargado {veces_pregunto_encargado} veces - EVITANDO LOOP")
                 return "Entiendo. ¿Me puede proporcionar un WhatsApp para enviarle información?"
 
             # FIX 305: Fallback genérico (solo si no hay indicios de loop)
