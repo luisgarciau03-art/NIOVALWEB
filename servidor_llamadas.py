@@ -4664,6 +4664,53 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             response.record(action="/procesar-respuesta", method="POST", max_length=30, timeout=3, play_beep=False, trim="trim-silence")
             return Response(str(response), mimetype="text/xml")
 
+        # FIX 674: BRUCE2184 - Detectar PREGUNTAS DE CLARIFICACIÓN que rompen silencio
+        # Problema: Bruce pide "su número", estado → DICTANDO_NUMERO, cliente pregunta
+        # "número de quién?" → FIX 577 lo ignora porque está en DICTANDO_NUMERO → 80s de silencio
+        # Solución: Detectar preguntas directas y responder SIEMPRE, sin importar el estado
+        if speech_limpio_577:
+            speech_lower_674 = speech_limpio_577.lower()
+            preguntas_clarificacion_674 = [
+                'número de quién', 'numero de quien', 'de quién ocupa', 'de quien ocupa',
+                'número de quién ocupa', 'numero de quien ocupa',
+                'cuál número', 'cual numero', 'qué número', 'que numero',
+                'de quién es', 'de quien es', 'para quién', 'para quien',
+                'número de qué', 'numero de que', 'a quién', 'a quien',
+                'no entendí', 'no entendi', 'no le entendí', 'no le entendi',
+                'cómo dijo', 'como dijo', 'qué dijo', 'que dijo',
+                'perdón qué', 'perdon que', 'mande', 'repita',
+            ]
+            if any(pregunta in speech_lower_674 for pregunta in preguntas_clarificacion_674):
+                # El cliente está pidiendo aclaración - responder con contexto completo
+                mensajes_usuario_674 = sum(1 for m in agente.conversation_history if m['role'] == 'user')
+                if mensajes_usuario_674 >= 2:
+                    respuesta_674 = "Disculpe, me refiero al número de WhatsApp del encargado de compras para enviarle nuestro catálogo de productos ferreteros."
+                else:
+                    respuesta_674 = "Disculpe, le comento, soy asesor de la marca NIOVAL, distribuidores de productos ferreteros. Me gustaría enviarle el catálogo al encargado de compras por WhatsApp. ¿Me podría compartir un número donde le pueda enviar la información?"
+                print(f" FIX 674: PREGUNTA DE CLARIFICACIÓN detectada: '{speech_limpio_577[:60]}'")
+                print(f"   Estado: {estado_actual_577} - Rompiendo silencio con respuesta contextual")
+                agente.conversation_history.append({"role": "assistant", "content": respuesta_674})
+                # Resetear estado de dictado ya que el cliente NO está dictando, está preguntando
+                if estado_actual_577 in [EC577.DICTANDO_NUMERO, EC577.DICTANDO_CORREO]:
+                    agente.estado_conversacion = EC577.CONVERSACION_NORMAL
+                    print(f"   FIX 674: Estado reseteado de {estado_actual_577} → CONVERSACION_NORMAL")
+                # Resetear contadores de silencio
+                if hasattr(agente, 'silencios_durante_dictado'):
+                    agente.silencios_durante_dictado = 0
+                if hasattr(agente, 'digitos_acumulados'):
+                    agente.digitos_acumulados = []
+                    agente.digitos_acumulados_flag = False
+                response = VoiceResponse()
+                audio_id_674 = f"fix674_{call_sid}"
+                result_674 = generar_audio_elevenlabs(respuesta_674, audio_id_674)
+                if result_674:
+                    response.play(request.url_root + f"audio/{audio_id_674}")
+                else:
+                    response.say(respuesta_674, voice="alice", language="es-MX")
+                log_evento(f"{bruce_id} DICE: \"{respuesta_674}\" (FIX 674: respuesta a pregunta de clarificación)", "BRUCE")
+                response.record(action="/procesar-respuesta", method="POST", max_length=30, timeout=3, play_beep=False, trim="trim-silence")
+                return Response(str(response), mimetype="text/xml")
+
         # FIX 617C: BRUCE2032 - NO generar fallback si estamos en modo DICTANDO
         # Problema: Cliente dicta correo → procesar_respuesta retorna "" (esperar) →
         #   FIX 577 generaba fallback con pitch inicial "me comunico de NIOVAL..."
