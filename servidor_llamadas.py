@@ -1070,8 +1070,10 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
 
     # Generar audio completo
     print(f"    Generando: '{texto_final[:50]}...'")
+    # MULTI-VOZ: Usar voice_id de la llamada activa (no el global)
+    voice_id_actual = obtener_voice_id_llamada()
     audio_generator = elevenlabs_client.text_to_speech.convert(
-        voice_id=ELEVENLABS_VOICE_ID,
+        voice_id=voice_id_actual,
         text=texto_final,
         model_id="eleven_multilingual_v2",
         output_format="mp3_44100_128",
@@ -1086,6 +1088,24 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
 
     print(f"    Audio generado en {(time.time() - inicio):.2f}s")
     return temp_file.name
+
+
+def obtener_voice_id_llamada():
+    """
+    MULTI-VOZ: Obtiene el voice_id de la llamada activa (no el global).
+    Previene cambio de voz mid-call si alguien cambia la voz global.
+    Si no hay llamada activa, retorna el global ELEVENLABS_VOICE_ID.
+    """
+    try:
+        call_sid = request.form.get('CallSid') or request.args.get('CallSid')
+        if call_sid and call_sid in conversaciones_activas:
+            agente = conversaciones_activas[call_sid]
+            voice_id = getattr(agente, 'voice_id', None)
+            if voice_id:
+                return voice_id
+    except Exception:
+        pass  # Fuera de contexto de request (startup, etc.)
+    return ELEVENLABS_VOICE_ID
 
 
 def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
@@ -1177,8 +1197,10 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                 # FIX 608A: Optimización de latencia de streaming
                 # optimize_streaming_latency: 0-4, donde 4 es máxima velocidad (menos buffering)
                 # Reduce tiempo hasta primer chunk en ~300-500ms
+                # MULTI-VOZ: Usar voice_id de la llamada activa (no el global)
+                voice_id_actual = obtener_voice_id_llamada()
                 audio_generator = elevenlabs_client.text_to_speech.convert(
-                    voice_id=ELEVENLABS_VOICE_ID,
+                    voice_id=voice_id_actual,
                     text=texto_corregido,
                     model_id=modelo,
                     output_format="mp3_44100_128",
@@ -1580,6 +1602,9 @@ def webhook_voz():
     agente.call_sid = call_sid  # Guardar el Call SID de Twilio
     agente.bruce_id = bruce_id  # Guardar el ID BRUCE
     agente.lead_data["bruce_id"] = bruce_id  # FIX 272.3: Guardar también en lead_data
+    # MULTI-VOZ: Fijar voice_id y cache_dir al iniciar llamada (no cambia mid-call)
+    agente.voice_id = ELEVENLABS_VOICE_ID
+    agente.voice_cache_dir = CACHE_DIR
     conversaciones_activas[call_sid] = agente
 
     # FIX 632: Registrar llamada en bug detector
