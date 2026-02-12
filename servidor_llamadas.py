@@ -3025,6 +3025,32 @@ def procesar_respuesta():
                     print(f"   → NO activar modo espera, dejar que agente capture el número")
                     cliente_pidio_espera = False
 
+            # FIX 670: BRUCE2173 - Detectar números dictados en PALABRAS (no solo dígitos)
+            # Problema: Cliente dijo "Seis seis veintidós. Seis uno. Seis uno. Noventa y uno..."
+            #   FIX 512 solo detecta dígitos numéricos (0-9), no palabras
+            #   Cliente dictó 10 dígitos en palabras pero Bruce esperó más (nunca respondió)
+            # Solución: Contar números en palabras, si hay 10+ → número completo
+            if cliente_pidio_espera:
+                numeros_palabras_670 = {
+                    'cero': '0', 'uno': '1', 'dos': '2', 'tres': '3', 'cuatro': '4',
+                    'cinco': '5', 'seis': '6', 'siete': '7', 'ocho': '8', 'nueve': '9',
+                    'diez': '10', 'once': '11', 'doce': '12', 'trece': '13', 'catorce': '14',
+                    'quince': '15', 'dieciseis': '16', 'diecisiete': '17', 'dieciocho': '18',
+                    'diecinueve': '19', 'veinte': '20', 'veintiuno': '21', 'veintidos': '22',
+                    'veintitres': '23', 'veinticuatro': '24', 'veinticinco': '25', 'treinta': '30',
+                    'cuarenta': '40', 'cincuenta': '50', 'sesenta': '60', 'setenta': '70',
+                    'ochenta': '80', 'noventa': '90'
+                }
+
+                # Contar cuántos números en palabras hay en el texto
+                numeros_detectados_670 = sum(1 for palabra in numeros_palabras_670 if palabra in frase_limpia)
+
+                if numeros_detectados_670 >= 6:  # 6+ números = probablemente teléfono (10 dígitos)
+                    print(f"\n FIX 670: BRUCE2173 - Cliente dictando NÚMERO EN PALABRAS ({numeros_detectados_670} números)")
+                    print(f"   Frase: '{speech_result[:100]}...'")
+                    print(f"   → NO activar modo espera, dejar que agente capture el número completo")
+                    cliente_pidio_espera = False
+
             # FIX 626A: BRUCE2060 - "te paso su teléfono" = OFRECE DATO, no transferencia
             # Problema: "si quieres te paso su teléfono" matchea 'te paso' en frases_espera_cliente
             # pero el cliente está OFRECIENDO el número del encargado, NO transfiriendo la llamada
