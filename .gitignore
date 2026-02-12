@@ -6,6 +6,14 @@
 # Credenciales de Google
 *.json
 !render.yaml
+!audio_cache/respuestas_cache.json
+!audio_cache_diana_sanchez/respuestas_cache.json
+!audio_cache_diana_sanchez/metadata.json
+!audio_cache_diana_sanchez/voz_info.json
+!audio_cache_mauricio/respuestas_cache.json
+!audio_cache_mauricio/metadata.json
+!audio_cache_mauricio/voz_info.json
+!tracker_data.json
 
 # Python
 __pycache__/

@@ -3,7 +3,7 @@ Servidor Flask para manejar llamadas telefónicas con Twilio
 Integración: Twilio → GPT-4o → ElevenLabs → Cliente
 """
 
-from flask import Flask, request, Response, send_file
+from flask import Flask, request, Response, send_file, jsonify
 from twilio.twiml.voice_response import VoiceResponse, Gather, Play, Start, Stream
 from twilio.rest import Client
 import os
@@ -226,11 +226,44 @@ audio_cache = {}
 # Sistema de caché auto-adaptativo
 frase_stats = {}  # Contador de frecuencia de frases
 
+# ============================================================================
+# SISTEMA MULTI-VOZ: Configuración de voces disponibles
+# ============================================================================
+VOCES_DISPONIBLES = {
+    "bruce_w": {
+        "voice_id": "7uSWXMmzGnsyxZwYFfmK",
+        "nombre": "Bruce W - Masculina Original",
+        "cache_dir": "audio_cache"
+    },
+    "diana_sanchez": {
+        "voice_id": "FIhWHKTvfI9sX1beLEJ8",
+        "nombre": "Diana Sanchez - Femenina",
+        "cache_dir": "audio_cache_diana_sanchez"
+    },
+    "mauricio": {
+        "voice_id": "94zOad0g7T7K4oa7zhDq",
+        "nombre": "Mauricio - Masculina",
+        "cache_dir": "audio_cache_mauricio"
+    }
+}
+
+# Determinar voz activa desde env o default
+_voz_env = os.getenv("VOZ_ACTIVA", "bruce_w")
+VOZ_ACTIVA = _voz_env if _voz_env in VOCES_DISPONIBLES else "bruce_w"
+
 # Directorio de caché - detecta automáticamente si estamos en Railway
 # Railway monta el Volume en /app/audio_cache por defecto
 # En local usa ./audio_cache
-CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")  # Configurable por variable de entorno
+# Si hay voz activa diferente, usar su directorio
+CACHE_DIR = os.getenv("CACHE_DIR", VOCES_DISPONIBLES[VOZ_ACTIVA]["cache_dir"])
 FRECUENCIA_MIN_CACHE = 1  # FIX 193: Auto-generar caché después de 1 uso (reducir latencia)
+
+# Si la voz activa tiene voice_id diferente al env, actualizarlo
+if ELEVENLABS_VOICE_ID is None or VOZ_ACTIVA != "bruce_w":
+    ELEVENLABS_VOICE_ID = VOCES_DISPONIBLES[VOZ_ACTIVA]["voice_id"]
+print(f"    VOZ ACTIVA: {VOZ_ACTIVA} ({VOCES_DISPONIBLES[VOZ_ACTIVA]['nombre']})")
+print(f"    VOICE ID: {ELEVENLABS_VOICE_ID}")
+print(f"    CACHE DIR: {CACHE_DIR}")
 
 # FIX 272.10: Identificador único del deploy actual (fecha/hora de inicio del servidor)
 DEPLOY_ID = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -8480,6 +8513,175 @@ def tracker_bugs_deploys():
             return f"<h1>Error (fallback)</h1><p>{e}</p>", 500
     except Exception as e:
         return f"<h1>Error</h1><p>{e}</p>", 500
+
+
+# ============================================================================
+# SISTEMA MULTI-VOZ: Endpoints de gestión de voces
+# ============================================================================
+
+@app.route("/voces", methods=["GET"])
+def listar_voces():
+    """Lista todas las voces disponibles y cuál está activa."""
+    global VOZ_ACTIVA
+    voces_info = []
+    for key, voz in VOCES_DISPONIBLES.items():
+        cache_dir = voz["cache_dir"]
+        cache_existe = os.path.exists(cache_dir)
+        audios_en_cache = 0
+        if cache_existe:
+            audios_en_cache = len([f for f in os.listdir(cache_dir) if f.endswith('.mp3')])
+        voces_info.append({
+            "key": key,
+            "nombre": voz["nombre"],
+            "voice_id": voz["voice_id"],
+            "cache_dir": cache_dir,
+            "cache_existe": cache_existe,
+            "audios_en_cache": audios_en_cache,
+            "activa": key == VOZ_ACTIVA
+        })
+    return jsonify({
+        "voz_activa": VOZ_ACTIVA,
+        "voz_activa_nombre": VOCES_DISPONIBLES[VOZ_ACTIVA]["nombre"],
+        "voice_id_activo": ELEVENLABS_VOICE_ID,
+        "voces": voces_info
+    })
+
+
+@app.route("/cambiar-voz/<nombre_voz>", methods=["POST", "GET"])
+def cambiar_voz(nombre_voz):
+    """
+    Cambia la voz activa del agente en tiempo real.
+    Recarga el cache de audios del directorio correspondiente.
+
+    Uso: POST /cambiar-voz/diana_sanchez
+         POST /cambiar-voz/mauricio
+         POST /cambiar-voz/bruce_w
+    """
+    global VOZ_ACTIVA, ELEVENLABS_VOICE_ID, CACHE_DIR, audio_cache, cache_metadata
+
+    nombre_voz = nombre_voz.lower().strip()
+
+    if nombre_voz not in VOCES_DISPONIBLES:
+        return jsonify({
+            "success": False,
+            "error": f"Voz '{nombre_voz}' no encontrada",
+            "voces_disponibles": list(VOCES_DISPONIBLES.keys())
+        }), 404
+
+    voz_anterior = VOZ_ACTIVA
+    voz_config = VOCES_DISPONIBLES[nombre_voz]
+
+    # Verificar que el directorio de cache existe
+    if not os.path.exists(voz_config["cache_dir"]):
+        return jsonify({
+            "success": False,
+            "error": f"Cache de audio no encontrado para '{nombre_voz}'. "
+                     f"Directorio esperado: {voz_config['cache_dir']}. "
+                     f"Ejecuta: python generar_cache_multivoz.py {nombre_voz}"
+        }), 400
+
+    # Cambiar voz activa
+    VOZ_ACTIVA = nombre_voz
+    ELEVENLABS_VOICE_ID = voz_config["voice_id"]
+    CACHE_DIR = voz_config["cache_dir"]
+
+    # Limpiar cache en memoria y recargar desde el nuevo directorio
+    audio_cache.clear()
+    cache_metadata.clear()
+    print(f"\n[MULTI-VOZ] Cambiando voz: {voz_anterior} -> {nombre_voz}")
+    print(f"[MULTI-VOZ] Voice ID: {ELEVENLABS_VOICE_ID}")
+    print(f"[MULTI-VOZ] Cache Dir: {CACHE_DIR}")
+
+    # Recargar cache
+    cargar_cache_desde_disco()
+
+    # Regenerar frases comunes con la nueva voz si no están en cache
+    pre_generar_audios_cache()
+
+    audios_cargados = len(audio_cache)
+
+    print(f"[MULTI-VOZ] Voz cambiada exitosamente. {audios_cargados} audios en cache.\n")
+
+    return jsonify({
+        "success": True,
+        "voz_anterior": voz_anterior,
+        "voz_nueva": nombre_voz,
+        "nombre": voz_config["nombre"],
+        "voice_id": voz_config["voice_id"],
+        "cache_dir": CACHE_DIR,
+        "audios_en_cache": audios_cargados
+    })
+
+
+@app.route("/panel-voces", methods=["GET"])
+def panel_voces():
+    """Panel web visual para gestionar voces."""
+    global VOZ_ACTIVA
+
+    voces_html = ""
+    for key, voz in VOCES_DISPONIBLES.items():
+        cache_dir = voz["cache_dir"]
+        cache_existe = os.path.exists(cache_dir)
+        audios = len([f for f in os.listdir(cache_dir) if f.endswith('.mp3')]) if cache_existe else 0
+        es_activa = key == VOZ_ACTIVA
+
+        estado_badge = '<span style="background:#22c55e;color:white;padding:4px 12px;border-radius:12px;font-weight:bold;">ACTIVA</span>' if es_activa else ''
+        cache_badge = f'<span style="background:#3b82f6;color:white;padding:2px 8px;border-radius:8px;">{audios} audios</span>' if cache_existe else '<span style="background:#ef4444;color:white;padding:2px 8px;border-radius:8px;">Sin cache</span>'
+
+        btn_disabled = 'disabled style="opacity:0.5;cursor:not-allowed;"' if es_activa else f'onclick="cambiarVoz(\'{key}\')" style="cursor:pointer;"'
+
+        voces_html += f'''
+        <div style="background:{'#f0fdf4' if es_activa else '#f8fafc'};border:2px solid {'#22c55e' if es_activa else '#e2e8f0'};border-radius:12px;padding:20px;margin:10px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="margin:0;font-size:18px;">{voz["nombre"]} {estado_badge}</h3>
+                    <p style="color:#64748b;margin:5px 0;">Voice ID: <code>{voz["voice_id"]}</code></p>
+                    <p style="margin:5px 0;">Cache: {cache_badge} | Dir: <code>{cache_dir}</code></p>
+                </div>
+                <button {btn_disabled}
+                    style="background:{'#94a3b8' if es_activa else '#3b82f6'};color:white;border:none;padding:12px 24px;border-radius:8px;font-size:16px;font-weight:bold;">
+                    {'Activa' if es_activa else 'Activar'}
+                </button>
+            </div>
+        </div>'''
+
+    html = f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Panel de Voces - Bruce W</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f1f5f9; }}
+h1 {{ text-align: center; }}
+#status {{ text-align: center; padding: 10px; margin: 10px 0; border-radius: 8px; display: none; }}
+</style></head><body>
+<h1>Panel de Voces - Bruce W Agent</h1>
+<p style="text-align:center;color:#64748b;">Voz activa: <strong>{VOCES_DISPONIBLES[VOZ_ACTIVA]["nombre"]}</strong></p>
+<div id="status"></div>
+{voces_html}
+<script>
+async function cambiarVoz(nombre) {{
+    const status = document.getElementById('status');
+    status.style.display = 'block';
+    status.style.background = '#fef3c7';
+    status.textContent = 'Cambiando voz a ' + nombre + '... (recargando cache)';
+    try {{
+        const resp = await fetch('/cambiar-voz/' + nombre, {{ method: 'POST' }});
+        const data = await resp.json();
+        if (data.success) {{
+            status.style.background = '#dcfce7';
+            status.textContent = 'Voz cambiada a ' + data.nombre + ' (' + data.audios_en_cache + ' audios). Recargando...';
+            setTimeout(() => location.reload(), 1500);
+        }} else {{
+            status.style.background = '#fee2e2';
+            status.textContent = 'Error: ' + data.error;
+        }}
+    }} catch(e) {{
+        status.style.background = '#fee2e2';
+        status.textContent = 'Error de conexion: ' + e.message;
+    }}
+}}
+</script>
+</body></html>'''
+    return html
 
 
 @app.route("/historial-llamadas", methods=["GET"])
