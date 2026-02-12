@@ -2443,9 +2443,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Respuesta corregida: '{respuesta}'")
             return respuesta
 
-        # Si preguntó WhatsApp 3+ veces, ofrecer alternativa
-        if pregunta_whatsapp and veces_pregunto_whatsapp >= 3:
-            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir WhatsApp ({veces_pregunto_whatsapp+1}a vez)")
+        # FIX 672: BRUCE2143, 2142, 2128, 2114 - Alinear threshold con bug detector
+        # Bug detector marca PREGUNTA_REPETIDA si preguntó 2+ veces (>=2)
+        # FIX 493 original bloqueaba 3ra pregunta (>=3) → MISMATCH
+        # FIX 672: Bloquear en 2da pregunta (>=2 previos + 1 actual)
+        if pregunta_whatsapp and veces_pregunto_whatsapp >= 2:
+            print(f"\n[WARN] FIX 672 ANTI-LOOP: Bruce iba a pedir WhatsApp ({veces_pregunto_whatsapp+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             respuesta = "Entiendo. ¿Prefiere que le envíe la información por correo electrónico?"
             print(f"   Respuesta anti-loop: '{respuesta}'")
@@ -2482,12 +2485,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         )
 
         pregunta_catalogo = any(p in respuesta_lower for p in preguntas_catalogo)
-        if pregunta_catalogo and veces_pregunto_catalogo >= 3:
-            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_pregunto_catalogo+1}a vez)")
+        # FIX 672: BRUCE2138, 2143, 2142, 2128, 2114 - Alinear threshold (mismo que WhatsApp)
+        if pregunta_catalogo and veces_pregunto_catalogo >= 2:
+            print(f"\n[WARN] FIX 672 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_pregunto_catalogo+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
-            # Cliente ya rechazó 3 veces - despedirse profesionalmente
+            # Cliente ya rechazó 2 veces - despedirse profesionalmente
             respuesta = "Entiendo perfectamente. Le agradezco su tiempo. Que tenga excelente día."
-            print(f"   Respuesta anti-loop: '{respuesta}' (despedida después de 3 rechazos)")
+            print(f"   Respuesta anti-loop: '{respuesta}' (despedida después de 2 rechazos)")
             return respuesta
 
         # FIX 493: Detectar loop de "¿Me puede repetir?"
