@@ -6314,6 +6314,54 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.metrics.log_filtro_post_gpt("FIX_693", "PITCH_REPETIDO_SEMANTICO")
 
         # ============================================================
+        # FIX 697: GPT CONTEXT TRACKING (BRUCE2252)
+        # Detectar cuando cliente ya proporcionó información clave que GPT ignora
+        # Caso 1: "mismo número" → NO pedir WhatsApp/número del encargado de nuevo
+        # Caso 2: "no quiero dejar [dato]" → NO pedir ese dato
+        # ============================================================
+        ultimos_3_cliente = [m.get('content', '').lower() for m in self.conversation_history
+                             if m.get('role') == 'user'][-3:]
+        contexto_cliente_697 = ' '.join(ultimos_3_cliente)
+
+        # FIX 697A: Cliente dijo "mismo número" → NO pedir WhatsApp/número encargado
+        if any(frase in contexto_cliente_697 for frase in [
+            'mismo numero', 'mismo número', 'este mismo', 'es el mismo',
+            'ese mismo', 'es este', 'es ese'
+        ]):
+            pide_contacto_697a = any(frase in respuesta_lower for frase in [
+                'whatsapp del encargado', 'whatsapp de la encargada',
+                'numero del encargado', 'número del encargado',
+                'numero de la encargada', 'número de la encargada',
+                'numero directo', 'número directo', 'contacto del encargado'
+            ])
+            if pide_contacto_697a:
+                print(f"\n[FIX 697A] Cliente dijo 'mismo número' - NO pedir contacto encargado")
+                print(f"  Contexto: '{contexto_cliente_697[-80:]}'")
+                print(f"  Respuesta original: '{respuesta[:60]}...'")
+                # Override: ofrecer enviar catálogo al número actual
+                respuesta = "Perfecto, entonces le envío el catálogo a este número. ¿Me podría confirmar el nombre del encargado?"
+                print(f"  Override: '{respuesta}'")
+                self.metrics.log_filtro_post_gpt("FIX_697A", "MISMO_NUMERO_IGNORADO")
+
+        # FIX 697B: Cliente dijo "no quiero dejar [dato]" → NO pedir ese dato
+        if any(frase in contexto_cliente_697 for frase in [
+            'no quiero dejar', 'no te quiero dejar', 'no le quiero dejar',
+            'no puedo dar', 'no puedo dejar', 'no puedo proporcionar'
+        ]):
+            pide_dato_697b = any(frase in respuesta_lower for frase in [
+                'tiene donde anotar', 'tiene dónde anotar', 'anote', 'apunte',
+                'me da su', 'me podría dar', 'me proporcion'
+            ])
+            if pide_dato_697b:
+                print(f"\n[FIX 697B] Cliente rechazó dar dato - NO insistir")
+                print(f"  Contexto: '{contexto_cliente_697[-80:]}'")
+                print(f"  Respuesta original: '{respuesta[:60]}...'")
+                # Override: cerrar conversación amablemente
+                respuesta = "Entiendo, no se preocupe. Muchas gracias por su tiempo, que tenga excelente día."
+                print(f"  Override: '{respuesta}'")
+                self.metrics.log_filtro_post_gpt("FIX_697B", "RECHAZO_DATO_IGNORADO")
+
+        # ============================================================
         # FIX 679: DETECTOR HASH DE DUPLICADOS EXACTOS
         # Si Bruce ya dijo algo muy similar (>=85% similar), generar alternativa
         # ============================================================
@@ -8912,15 +8960,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Problema: None era interpretado por FIX 304 como IVR y colgaba
         if self._cliente_esta_dando_informacion(respuesta_cliente):
             self.metrics.log_interrupcion_detectada()  # FIX 482: Métrica
-            # FIX 620A: BRUCE2056/2057 - Señalizar pausa INTENCIONAL para que FIX 577 NO genere fallback
-            # Problema: FIX 477 retorna "" (esperar) pero FIX 577 lo interpretaba como "GPT no entendió"
-            # y generaba "Disculpe, no le escuché bien" mientras el cliente seguía hablando
+            # FIX 696: BRUCE2244/2251 - Acknowledgment corto en vez de silencio
+            # Problema: FIX 477/506b retornaban "" (vacío) → servidor no enviaba audio → cliente pensaba que se cayó la línea
+            # Ejemplos: BRUCE2244 "¿Bueno?" verificando conexión, BRUCE2251 "¿Bueno?" tras dar callback
+            # Solución: Retornar acknowledgment MUY corto (2 palabras) para señalar que Bruce está escuchando
+            # sin interrumpir al cliente mientras continúa dictando
             self.pausa_intencional = True
             print(f"   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir")
-            print(f"   → Bruce esperará a que cliente termine de dictar")
+            print(f"   → FIX 696: Generando acknowledgment corto en vez de silencio")
             print(f"   FIX 620A: pausa_intencional=True (FIX 577 NO generará fallback)")
-            print(f"   FIX 506b: Retornando '' (vacío) en lugar de None para evitar falso IVR")
-            return ""  # FIX 506b: "" = pausar, None = IVR real
+
+            # Agregar acknowledgment al historial
+            acknowledgment = "Ajá, sí."
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": acknowledgment
+            })
+
+            return acknowledgment  # FIX 696: Acknowledgment corto para señalar que Bruce escucha
 
         # PASO 2: Buscar en cache de respuestas frecuentes (0.3-0.6s - 83-91% más rápido)
         respuesta_cache = self._obtener_respuesta_cache(respuesta_cliente)

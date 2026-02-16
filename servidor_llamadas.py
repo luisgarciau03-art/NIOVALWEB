@@ -3183,7 +3183,12 @@ def procesar_respuesta():
                     'mandar la información', 'mandar la informacion', 'enviar la información',
                     'enviar la informacion', 'mandar el correo', 'enviar el correo',
                     'donde tiene que mandar', 'donde tiene que enviar', 'a donde manda',
-                    'tiene que mandar', 'tiene que enviar'
+                    'tiene que mandar', 'tiene que enviar',
+                    # FIX 698: BRUCE2246 - "mandarme información" con pronombre
+                    'mandarme información', 'mandarme informacion', 'enviarme información',
+                    'enviarme informacion', 'mandame información', 'mandame informacion',
+                    'enviame información', 'enviame informacion',
+                    'si gusta mandar', 'si gusta enviar', 'si gustas mandar', 'si gustas enviar'
                 ]
                 es_callback = any(p in frase_limpia for p in patrones_callback_645)
 
