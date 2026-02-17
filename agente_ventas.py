@@ -22,6 +22,30 @@ except ImportError:
     CACHE_PATRONES_DISPONIBLE = False
     print("   [WARN] FIX 519: cache_patrones_aprendidos no disponible")
 
+# FIX 699: Memory Layer - Capa de memoria conversacional
+try:
+    from memory_layer import ConversationMemory
+    MEMORY_LAYER_DISPONIBLE = True
+except ImportError:
+    MEMORY_LAYER_DISPONIBLE = False
+    print("   [WARN] FIX 699: memory_layer no disponible")
+
+# FIX 700: Speech Processor - Máquina de estados para speech
+try:
+    from speech_processor import SpeechStateMachine, SpeechState, SpeechAction
+    SPEECH_PROCESSOR_DISPONIBLE = True
+except ImportError:
+    SPEECH_PROCESSOR_DISPONIBLE = False
+    print("   [WARN] FIX 700: speech_processor no disponible")
+
+# FIX 701: Intent Classifier - Clasificador centralizado de intenciones
+try:
+    from intent_classifier import IntentClassifier, IntentCategory
+    INTENT_CLASSIFIER_DISPONIBLE = True
+except ImportError:
+    INTENT_CLASSIFIER_DISPONIBLE = False
+    print("   [WARN] FIX 701: intent_classifier no disponible")
+
 
 # [EMOJI]
 # FIX 482 (AUDITORIA W04): SISTEMA DE MÉTRICAS E INSTRUMENTACIÓN
@@ -519,6 +543,36 @@ class AgenteVentas:
 
         # Contador para alternar frases de relleno (hace la conversación más natural)
         self.indice_frase_relleno = 0
+
+        # FIX 699: Memory Layer - Capa de memoria conversacional
+        try:
+            if MEMORY_LAYER_DISPONIBLE:
+                self.memory = ConversationMemory()
+            else:
+                self.memory = None
+        except Exception as e_mem:
+            print(f"   [WARN] FIX 699: Error inicializando Memory Layer: {e_mem}")
+            self.memory = None
+
+        # FIX 700: Speech Processor - Máquina de estados para speech
+        try:
+            if SPEECH_PROCESSOR_DISPONIBLE:
+                self.speech = SpeechStateMachine()
+            else:
+                self.speech = None
+        except Exception as e_sp:
+            print(f"   [WARN] FIX 700: Error inicializando Speech Processor: {e_sp}")
+            self.speech = None
+
+        # FIX 701: Intent Classifier - Clasificador centralizado de intenciones
+        try:
+            if INTENT_CLASSIFIER_DISPONIBLE:
+                self.classifier = IntentClassifier()
+            else:
+                self.classifier = None
+        except Exception as e_ic:
+            print(f"   [WARN] FIX 701: Error inicializando Intent Classifier: {e_ic}")
+            self.classifier = None
 
     # [EMOJI]
     # FIX 491: SISTEMA DE CONTEXTO DINÁMICO
@@ -6281,6 +6335,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 respuesta = "Perfecto, entonces le envío el catálogo. Muchas gracias por su tiempo, que tenga excelente día."
 
         # ============================================================
+        # FIX 699: MEMORY LAYER VALIDATION
+        # Validar respuesta GPT contra hechos conocidos de la conversación
+        # Si contradice hechos → usar alternativa generada por Memory Layer
+        # ============================================================
+        try:
+            if self.memory:
+                ok_699, alternativa_699 = self.memory.validate_response(respuesta)
+                if not ok_699 and alternativa_699:
+                    print(f"\n[FIX 699] MEMORY LAYER: Respuesta contradice hechos conocidos")
+                    print(f"  Respuesta original: '{respuesta[:60]}...'")
+                    print(f"  Hechos: {self.memory.get_summary()}")
+                    print(f"  Override: '{alternativa_699[:60]}...'")
+                    respuesta = alternativa_699
+                    self.metrics.log_filtro_post_gpt("FIX_699", "MEMORY_LAYER_OVERRIDE")
+        except Exception as e_mem:
+            print(f"   [WARN] FIX 699: Memory validate_response error: {e_mem}")
+
+        # ============================================================
         # FIX 693: POST-FILTER PITCH REPETIDO SEMÁNTICO
         # BRUCE2234, BRUCE2238: GPT reformula pitch en otras palabras
         # FIX 679 (>=85% similar) no lo detecta si wording es diferente
@@ -6554,6 +6626,18 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Esto asegura que patrones matcheen independientemente de si STT acentúa o no
         # NOTA: ñ NO se toca - es letra fundamental del español, no acento
         texto_lower = texto_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
+
+        # FIX 701: Pre-clasificación con Intent Classifier (solo logging, no override)
+        try:
+            if self.classifier:
+                intent_result_701 = self.classifier.classify(texto_lower)
+                if intent_result_701:
+                    print(f"   [INTENT] FIX 701: {intent_result_701.category.value} "
+                          f"(conf={intent_result_701.confidence:.2f}, "
+                          f"pattern='{intent_result_701.pattern}', "
+                          f"method={intent_result_701.method})")
+        except Exception as e_ic:
+            print(f"   [WARN] FIX 701: Intent Classifier error: {e_ic}")
 
         # FIX 579: Connector check universal - si texto termina en conector, cliente no terminó
         # No hacer fast-match, dejar que GPT espere frase completa
@@ -8954,6 +9038,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
             return patron_detectado['respuesta']
 
+        # FIX 699: Memory Layer - Extraer hechos antes de procesar
+        try:
+            if self.memory:
+                self.memory.extract_facts(self.conversation_history)
+        except Exception as e_mem:
+            print(f"   [WARN] FIX 699: Memory extract_facts error: {e_mem}")
+
+        # FIX 700: Speech Processor - Analizar estado de speech
+        try:
+            if self.speech:
+                estado_speech_700, accion_speech_700 = self.speech.process_input(respuesta_cliente)
+                print(f"   [SPEECH] FIX 700: Estado={estado_speech_700.value}, Acción={accion_speech_700.value}")
+                # Sincronizar flag esperando_hora_callback con speech processor
+                if self.esperando_hora_callback:
+                    self.speech.set_waiting_for_hour(True)
+        except Exception as e_sp:
+            print(f"   [WARN] FIX 700: Speech process_input error: {e_sp}")
+
         # FIX 477 (AUDITORIA W04): Verificar si cliente está dando información PARCIAL
         # NO interrumpir cuando está dictando número o correo
         # FIX 506b: BRUCE1489/1495/1503 - Retornar "" en lugar de None para evitar falso IVR
@@ -10088,6 +10190,19 @@ Estas reglas tienen MÁXIMA PRIORIDAD. Verifica el historial antes de generar tu
                         *mensajes_conversacion,
                         reglas_anti_repeticion_646
                     ]
+
+                    # FIX 699: Inyectar hechos de Memory Layer en prompt GPT
+                    try:
+                        if self.memory:
+                            contexto_memoria_699 = self.memory.get_gpt_context()
+                            if contexto_memoria_699:
+                                mensajes_con_reglas.insert(-1, {
+                                    "role": "system",
+                                    "content": contexto_memoria_699
+                                })
+                                print(f"   [MEMORY] FIX 699: Inyectado contexto memoria ({len(contexto_memoria_699)} chars)")
+                    except Exception as e_mem:
+                        print(f"   [WARN] FIX 699: Memory GPT context error: {e_mem}")
 
                     response = openai_client.chat.completions.create(
                         model="gpt-4o-mini",

@@ -29,6 +29,20 @@ try:
 except ImportError:
     BUG_DETECTOR_AVAILABLE = False
 
+# FIX 700: Speech Processor - Máquina de estados para speech
+try:
+    from speech_processor import SpeechStateMachine, SpeechState, SpeechAction
+    SPEECH_PROCESSOR_DISPONIBLE = True
+except ImportError:
+    SPEECH_PROCESSOR_DISPONIBLE = False
+
+# FIX 701: Intent Classifier - Clasificador centralizado de intenciones
+try:
+    from intent_classifier import IntentClassifier, IntentCategory
+    INTENT_CLASSIFIER_DISPONIBLE = True
+except ImportError:
+    INTENT_CLASSIFIER_DISPONIBLE = False
+
 # FIX 212: Flask-Sock para WebSocket (Deepgram streaming)
 try:
     from flask_sock import Sock
@@ -3221,6 +3235,19 @@ def procesar_respuesta():
                     print(f"   → Cliente NO está transfiriendo, está rechazando/explicando")
                     cliente_pidio_espera = False  # Desactivar modo espera
 
+            # FIX 701: Intent Classifier - override adicional callback vs transfer
+            try:
+                if cliente_pidio_espera and INTENT_CLASSIFIER_DISPONIBLE:
+                    _classifier_701 = IntentClassifier()
+                    _intent_701 = _classifier_701.classify_callback_vs_transfer(speech_result)
+                    if _intent_701 and _intent_701.category == IntentCategory.CALLBACK and _intent_701.confidence >= 0.85:
+                        print(f"    [INTENT] FIX 701: Classifier detecta CALLBACK "
+                              f"(conf={_intent_701.confidence:.2f}, pattern='{_intent_701.pattern}')")
+                        print(f"    → Desactivando modo espera (transfer → callback)")
+                        cliente_pidio_espera = False
+            except Exception as e_ic:
+                print(f"    [WARN] FIX 701: Intent Classifier error: {e_ic}")
+
             # FIX 519: SENTIDO COMÚN con GPT - Analizar frases LARGAS/AMBIGUAS
             # Problema: BRUCE1736 - "marcó este número, pero con terminación 00, ahí le comunican"
             # Los patrones rígidos no pueden cubrir todas las variantes del lenguaje humano
@@ -3401,6 +3428,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             # FIX 264: Pero NO si es una pregunta o termina en signo de interrogación
             # FIX 644: BRUCE2071 - Flag para indicar que cliente SIGUE hablando (para que FIX 529 lo respete)
             cliente_sigue_hablando = False
+            # FIX 700: Speech Processor - Logging de estado centralizado
+            try:
+                speech_machine_700 = getattr(agente, 'speech', None)
+                if speech_machine_700 and SPEECH_PROCESSOR_DISPONIBLE:
+                    estado_sp_700, accion_sp_700 = speech_machine_700.process_input(speech_result)
+                    print(f"    [SPEECH] FIX 700: Estado={estado_sp_700.value}, Acción={accion_sp_700.value}, should_wait={speech_machine_700.should_wait()}")
+            except Exception as e_sp:
+                print(f"    [WARN] FIX 700: Speech Processor error en FIX 244: {e_sp}")
+
             termina_en_pregunta = speech_result.strip().endswith('?') or '¿' in speech_result
             if tiempo_hablando < 2.0 and palabras_nuevas >= 2 and not es_pregunta and not termina_en_pregunta:
                 # Probablemente sigue hablando - el timeout de 2s lo interrumpió
@@ -4778,6 +4814,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         palabras_577 = speech_limpio_577.split()
         fillers_577 = {'mhm', 'aja', 'ajá', 'este', 'eh', 'ah', 'mm', 'mmm', 'uh', 'pues', 'uhm'}
         palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
+
+        # FIX 700: Speech Processor - Verificar estado antes de fallback
+        try:
+            speech_machine_577 = getattr(agente, 'speech', None)
+            if speech_machine_577 and SPEECH_PROCESSOR_DISPONIBLE:
+                if speech_machine_577.should_wait():
+                    print(f" FIX 700: Speech Processor indica ESPERAR (estado={speech_machine_577.state.value}) - consistente con FIX 620A")
+        except Exception as e_sp:
+            print(f"    [WARN] FIX 700: Speech Processor error en FIX 577: {e_sp}")
 
         # FIX 620A: BRUCE2056/2057 - NO generar fallback si FIX 477 pausó INTENCIONALMENTE
         # Problema: FIX 477 retorna "" para esperar que cliente termine, pero FIX 577
