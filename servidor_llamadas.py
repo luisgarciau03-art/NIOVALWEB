@@ -2979,24 +2979,73 @@ def procesar_respuesta():
             # SALIR del modo espera y procesar normalmente
             from agente_ventas import EstadoConversacion
             if agente.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-                # Detectar si cliente "volvió" (está hablando con Bruce, no pidiendo más espera)
-                frases_cliente_volvio = [
-                    '¿bueno?', 'bueno', '¿vuelvo?', 'vuelvo',
-                    '¿hola?', 'hola', '¿sí?', 'si', '¿diga?', 'diga',
-                    'aquí estoy', 'ahi estoy', 'ya estoy', 'listo',
-                    '¿qué', '¿que', 'qué marca', 'que marca', 'qué vende', 'que vende',
-                    '¿quién habla', '¿quien habla', 'quién es', 'quien es',
-                    '¿de dónde', '¿de donde', 'de parte de',
-                    'están hablando', 'estan hablando', 'habla de', 'hablan de',
-                    'ferretería', 'ferreteria', 'empresa', 'negocio',
+                # FIX 712A: BRUCE2266 - Separar señales FUERTES vs DÉBILES de re-engagement
+                # Problema: "Ese es. ¿De cuánto? ¿Por qué? Sí." (cliente hablando con otra persona)
+                # matcheaba 'si' en frases_cliente_volvio + 'or not es_mas_espera' atrapaba todo
+                # Solución: Señales FUERTES siempre exit, DÉBILES solo si texto corto (< 25 chars)
+                frases_volvio_fuertes_712 = [
+                    # Re-engagement explícito
+                    'aquí estoy', 'aqui estoy', 'ahi estoy', 'ya estoy',
+                    'ya regresé', 'ya regrese', 'ya volví', 'ya volvi',
+                    'ya mire', 'ya, mire', 'ya listo', 'ya, listo', 'listo',
+                    # Dirigiéndose a Bruce
+                    'oiga', 'oye', 'mire', 'fijese', 'fíjese', 'le comento', 'sabe que',
+                    'me escucha', 'me escuchas', 'me oye', 'me oyes',
+                    # Preguntas sobre Bruce/empresa
+                    'quien habla', 'quien llama', 'quien me habla',
+                    'de donde habla', 'de donde llama', 'de parte de',
+                    'que marca', 'que vende', 'que venden',
+                    'estan hablando', 'habla de', 'hablan de',
+                    # Contenido específico conversación con Bruce
+                    'ferretería', 'ferreteria', 'nioval', 'bruce',
+                    'encargado', 'encargada', 'compras', 'proveedor',
+                    'empresa', 'negocio',
+                    # Estado del encargado
                     'no está', 'no esta', 'no se encuentra', 'salió', 'salio',
-                    'no tenemos', 'no manejamos', 'no nos interesa'
+                    'no tenemos', 'no manejamos', 'no nos interesa', 'no hacemos compras',
+                    'no hay encargado', 'no hay nadie',
+                    # Ofertas de datos
+                    'anote', 'apunte', 'tome nota', 'tienes donde anotar', 'tiene donde anotar',
+                    'le doy', 'le paso', 'te doy', 'te paso',
+                    # Acuerdo/rechazo a propuesta Bruce
+                    'de acuerdo', 'no gracias',
                 ]
 
-                # Si NO es petición de más espera → cliente volvió
+                # Señales DÉBILES: genéricas, podrían ser conversación de fondo
+                # Solo cuentan si texto < 25 chars (respuesta corta = dirigida a Bruce)
+                frases_volvio_debiles_712 = [
+                    'bueno', 'hola', 'si', 'diga', 'digame',
+                    'vuelvo', 'esta bien', 'ok',
+                ]
+
                 frases_mas_espera = ['un momento', 'momentito', 'espere', 'tantito', 'un segundo']
                 es_mas_espera = any(f in frase_limpia for f in frases_mas_espera)
-                cliente_volvio = any(f in frase_limpia for f in frases_cliente_volvio) or not es_mas_espera
+
+                # FIX 712A: Normalizar texto para matching (como FIX 631)
+                _fl_712 = frase_limpia.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+                _fl_712 = _fl_712.replace('¿','').replace('?','').replace('¡','').replace('!','').replace('.','').replace(',','')
+
+                tiene_senal_fuerte = any(f in _fl_712 for f in frases_volvio_fuertes_712)
+                tiene_senal_debil = any(f in _fl_712 for f in frases_volvio_debiles_712)
+                texto_corto_712 = len(_fl_712) < 25
+
+                # FIX 712A: Timeout - si > 60s desde "Claro, espero", asumir que volvió
+                import time as _time_712
+                _t_espera_712 = 0
+                if hasattr(agente, 'ultimo_claro_espero_timestamp') and agente.ultimo_claro_espero_timestamp > 0:
+                    _t_espera_712 = _time_712.time() - agente.ultimo_claro_espero_timestamp
+                timeout_espera_712 = _t_espera_712 > 60
+
+                cliente_volvio = (
+                    tiene_senal_fuerte or
+                    (tiene_senal_debil and texto_corto_712) or
+                    timeout_espera_712
+                )
+
+                if not cliente_volvio and not es_mas_espera:
+                    print(f"\n FIX 712A: BRUCE2266 - Conversación de fondo durante espera")
+                    print(f"   Texto: '{speech_result[:60]}' ({len(frase_limpia)} chars)")
+                    print(f"   Fuerte:{tiene_senal_fuerte} Débil:{tiene_senal_debil} Corto:{texto_corto_712} T:{_t_espera_712:.1f}s")
 
                 # FIX 569: Filtrar audio de fondo - requerir contenido significativo
                 palabras_espanol_569 = {'hola', 'bueno', 'si', 'sí', 'no', 'que', 'qué', 'como', 'cómo', 'quien', 'quién', 'donde', 'dónde',
@@ -3385,6 +3434,27 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 )
 
                 print(f"    FIX 470: Esperando transferencia con timeout de 30s...")
+                return Response(str(response), mimetype="text/xml")
+
+            # FIX 712B: BRUCE2266 - Si aún en ESPERANDO_TRANSFERENCIA después de FIX 520+470,
+            # es conversación de fondo → NO procesar por GPT, continuar esperando silenciosamente
+            from agente_ventas import EstadoConversacion as _EC_712
+            if agente.estado_conversacion == _EC_712.ESPERANDO_TRANSFERENCIA and not cliente_pidio_espera:
+                bruce_id_712 = agente.lead_data.get("bruce_id", "N/A")
+                print(f"\n FIX 712B: BRUCE2266 - Aún en ESPERANDO_TRANSFERENCIA, ignorando audio de fondo")
+                print(f"   Texto ignorado: '{speech_result[:80]}'")
+                log_evento(f"{bruce_id_712} - AUDIO FONDO IGNORADO: \"{speech_result[:60]}\"", "SISTEMA")
+
+                response = VoiceResponse()
+                # Continuar escuchando sin hablar (30s timeout como en FIX 470)
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=30,
+                    play_beep=False,
+                    trim="trim-silence"
+                )
                 return Response(str(response), mimetype="text/xml")
 
             es_pregunta_rapida = (
