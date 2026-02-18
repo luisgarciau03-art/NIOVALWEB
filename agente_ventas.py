@@ -8686,6 +8686,65 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         })
 
         # ============================================================
+        # FIX 708: PREGUNTAS OBVIAS - Respuestas instantáneas a preguntas capciosas
+        # Bruce es una IA: SIEMPRE tiene donde anotar, SIEMPRE escucha, NO es robot
+        # Intercepta ANTES de pattern detector y GPT = 0 latencia, 0 cascada
+        # ============================================================
+        texto_lower_708 = respuesta_cliente.strip().lower()
+        texto_lower_708 = texto_lower_708.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
+
+        # Diccionario: {patrones} → respuesta
+        # Orden importa: se evalúa primero el match más específico
+        preguntas_obvias_708 = [
+            # --- Cliente ofrece dictar dato ---
+            (['tienes donde anotar', 'tiene donde anotar', 'tienes para anotar',
+              'tiene para anotar', 'tienes con que anotar', 'tiene con que anotar',
+              'tienes lapiz', 'tiene lapiz', 'tienes papel', 'tiene papel',
+              'tienes pluma', 'tiene pluma', 'tienes donde apuntar', 'tiene donde apuntar',
+              'tienes donde escribir', 'tiene donde escribir'],
+             "Si, claro, digame por favor."),
+
+            # --- Verificación de conexión ---
+            (['me escuchas', 'me escucha', 'me oyes', 'me oye',
+              'sigues ahi', 'sigue ahi', 'estas ahi', 'esta ahi',
+              'hay alguien', 'hay alguien ahi', 'se oye', 'se escucha'],
+             "Si, le escucho perfectamente, digame."),
+
+            # --- ¿Eres robot/grabación? ---
+            (['eres robot', 'es un robot', 'eres una grabacion', 'es una grabacion',
+              'eres una maquina', 'es una maquina', 'es automatico', 'eres automatico',
+              'habla una maquina', 'habla un robot', 'eres inteligencia artificial',
+              'es inteligencia artificial'],
+             "No, soy Bruce, agente de ventas de NIOVAL. ¿En que le puedo ayudar?"),
+
+            # --- ¿Estás listo/preparado? ---
+            (['estas listo', 'esta listo', 'listo para anotar', 'ya estas',
+              'ya esta listo', 'preparado'],
+             "Si, estoy listo, digame por favor."),
+        ]
+
+        for patrones_708, respuesta_708 in preguntas_obvias_708:
+            if any(p in texto_lower_708 for p in patrones_708):
+                print(f"\n[OK] FIX 708: PREGUNTA OBVIA detectada")
+                print(f"   Cliente: '{respuesta_cliente[:60]}'")
+                print(f"   Respuesta: '{respuesta_708}'")
+
+                # Registrar en historial
+                self.conversation_history.append({
+                    "role": "assistant",
+                    "content": respuesta_708
+                })
+
+                # Actualizar Memory Layer
+                try:
+                    if hasattr(self, 'memory') and self.memory:
+                        self.memory.extract_facts(self.conversation_history)
+                except Exception:
+                    pass
+
+                return respuesta_708
+
+        # ============================================================
         # FIX 491: OPTIMIZACIÓN DE LATENCIA (Cache + Patrones + Reducción 66% delay)
         # Intentar respuesta INSTANTÁNEA antes de llamar a GPT (3.5s → 0.05-0.6s)
         # ============================================================
