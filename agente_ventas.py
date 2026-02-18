@@ -2370,15 +2370,22 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             cliente_listo_690 = any(k in ultimo_cliente_690 for k in keywords_dictar_690)
 
             if cliente_listo_690:
+                # FIX 707B: BRUCE2253 - Override también si GPT pide WhatsApp/correo/contacto
+                # cuando cliente OFRECE dictar. No solo respuestas genéricas.
                 respuesta_generica_690 = any(p in respuesta_lower for p in [
                     'me puede repetir', 'me podria repetir', 'no escuche', 'no le escuche',
                     'disculpe', 'me decia'
                 ])
-                if respuesta_generica_690:
+                respuesta_pide_contacto_707 = any(p in respuesta_lower for p in [
+                    'whatsapp', 'correo', 'email', 'me da su', 'me podria dar',
+                    'me proporciona', 'numero del encargado', 'numero directo',
+                    'catalogo', 'me comunico despues', 'entonces me comunico'
+                ])
+                if respuesta_generica_690 or respuesta_pide_contacto_707:
                     respuesta_original_690 = respuesta
                     respuesta = "Sí, claro, dígame el número por favor."
                     respuesta_lower = respuesta.lower()
-                    print(f"[OK] FIX 690C: Cliente listo para dictar + respuesta genérica → override")
+                    print(f"[OK] FIX 690C/707B: Cliente listo para dictar → override")
                     print(f"   Cliente dijo: '{ultimo_cliente_690[:60]}'")
                     print(f"   Respuesta original: '{respuesta_original_690[:60]}'")
                     print(f"   Respuesta corregida: '{respuesta}'")
@@ -2512,6 +2519,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'enviame', 'enviemelo', 'si por favor', 'si claro',
                 'como es el catalogo', 'donde lo veo', 'como lo recibo',
                 'a donde me lo manda', 'digame', 'platiqueme',
+                # FIX 707A: BRUCE2253 - Cliente ofrece dictar dato
+                'anotar', 'apuntar', 'donde anotar', 'donde apuntar',
+                'te doy', 'le doy', 'te paso su', 'le paso su',
+                'te lo paso', 'se lo paso', 'te lo doy', 'se lo doy',
             ]
             cliente_interesado_705 = any(p in ultimo_cliente_705 for p in patrones_interes_705)
             if cliente_interesado_705:
@@ -8806,6 +8817,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if len(partes_texto) >= 2 and tipo_patron not in patrones_inmunes_pregunta_598:
                 for parte in partes_texto[1:]:
                     if '?' in parte or parte.startswith('qué') or parte.startswith('que') or parte.startswith('cómo') or parte.startswith('como') or parte.startswith('cuál') or parte.startswith('cual') or parte.startswith('dónde') or parte.startswith('donde') or parte.startswith('quién') or parte.startswith('quien'):
+                        # FIX 707C: BRUCE2253 - "anotar/apuntar" = cliente OFRECE dato, NO contradicción
+                        parte_lower = parte.lower()
+                        if any(k in parte_lower for k in ['anotar', 'apuntar', 'donde escribir']):
+                            print(f"   FIX 707C: Pregunta '{parte[:30]}' es oferta de dato, NO contradicción")
+                            continue  # Skip this part, check next
                         tiene_pregunta_segunda_clausula = True
                         contradiccion_encontrada = f"pregunta en 2da cláusula: '{parte[:30]}'"
                         break
