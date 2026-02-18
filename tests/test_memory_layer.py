@@ -675,3 +675,168 @@ class TestIntegracionAgente:
         assert hasattr(m, 'validate_response')
         assert hasattr(m, 'reset')
         assert hasattr(m, 'get_summary')
+
+
+# ============================================================
+# FIX 704A: validate_response("") con dictado activo
+# ============================================================
+
+class TestFix704AEmptyResponseDictation:
+    """FIX 704A: Respuesta vacía durante dictado activo devuelve acknowledgment."""
+
+    def test_empty_response_no_dictation(self, memory):
+        """Sin dictado activo, respuesta vacía sigue siendo ok."""
+        ok, alt = memory.validate_response("")
+        assert ok == True
+        assert alt == ""
+
+    def test_empty_response_with_telefono(self, memory):
+        """Con teléfono proporcionado (dictando), devuelve acknowledgment."""
+        memory.datos_proporcionados['telefono'] = '3312345678'
+        ok, alt = memory.validate_response("")
+        assert ok == False
+        assert 'aja' in alt.lower() or 'si' in alt.lower()
+
+    def test_empty_response_with_email_verbal(self, memory):
+        """Con email dictado verbal, devuelve acknowledgment."""
+        memory.facts['email_dictado_verbal'] = True
+        ok, alt = memory.validate_response("")
+        assert ok == False
+        assert 'aja' in alt.lower() or 'si' in alt.lower()
+
+    def test_empty_response_dictation_but_despedida(self, memory):
+        """Con dictado activo PERO cliente se despide, no acknowledgment."""
+        memory.datos_proporcionados['telefono'] = '3312345678'
+        memory.facts['cliente_se_despide'] = True
+        ok, alt = memory.validate_response("")
+        assert ok == True
+        assert alt == ""
+
+    def test_none_response_with_dictation(self, memory):
+        """None con dictado activo también devuelve acknowledgment (not respuesta es True para None)."""
+        memory.datos_proporcionados['telefono'] = '3312345678'
+        ok, alt = memory.validate_response(None)
+        # None también es falsy → FIX 704A aplica
+        assert ok == False
+        assert 'aja' in alt.lower() or 'si' in alt.lower()
+
+
+# ============================================================
+# FIX 704B: Callback sin hora → preguntar hora, no contacto
+# ============================================================
+
+class TestFix704BCallbackSinHora:
+    """FIX 704B: Rule 7 - Callback sin hora bloquea preguntas de contacto."""
+
+    def test_callback_sin_hora_blocks_whatsapp(self, memory):
+        """Con callback sin hora, pedir WhatsApp debe bloquearse."""
+        memory.facts['callback_sin_hora'] = True
+        ok, alt = memory.validate_response("¿Me da su WhatsApp?")
+        assert ok == False
+        assert 'hora' in alt.lower()
+
+    def test_callback_sin_hora_blocks_correo(self, memory):
+        memory.facts['callback_sin_hora'] = True
+        ok, alt = memory.validate_response("¿Me da su correo?")
+        assert ok == False
+        assert 'hora' in alt.lower()
+
+    def test_callback_sin_hora_blocks_numero_directo(self, memory):
+        memory.facts['callback_sin_hora'] = True
+        ok, alt = memory.validate_response("¿Me proporciona el número directo?")
+        assert ok == False
+        assert 'hora' in alt.lower()
+
+    def test_callback_con_hora_no_blocks(self, memory):
+        """Si ya tiene hora, no bloquear preguntas de contacto."""
+        memory.facts['callback_sin_hora'] = True
+        memory.facts['hora_callback'] = '9:00'
+        ok, alt = memory.validate_response("¿Me da su WhatsApp?")
+        # Rule 7 no se activa porque hora_callback está
+        # Puede bloquearse por otra regla, pero no por Rule 7
+        # (Sin otros facts, debería ser ok)
+        assert ok == True
+
+    def test_callback_sin_hora_allows_non_contact(self, memory):
+        """Preguntas que NO piden contacto no se bloquean."""
+        memory.facts['callback_sin_hora'] = True
+        ok, alt = memory.validate_response("Perfecto, le marco mañana entonces.")
+        assert ok == True
+
+    def test_callback_sin_hora_extraction(self, memory):
+        """Verificar que extract_facts detecta callback sin hora."""
+        history = [
+            {"role": "user", "content": "No esta, hableme manana"}
+        ]
+        memory.extract_facts(history)
+        assert memory.facts.get('cliente_pide_callback') == True
+        # "manana" sin hora específica
+        assert memory.facts.get('callback_sin_hora') == True
+
+    def test_callback_con_hora_extraction(self, memory):
+        """Verificar que extract_facts detecta callback CON hora."""
+        history = [
+            {"role": "user", "content": "Hableme manana a las 9:00"}
+        ]
+        memory.extract_facts(history)
+        assert memory.facts.get('cliente_pide_callback') == True
+        assert memory.facts.get('hora_callback') is not None
+
+
+# ============================================================
+# FIX 704C: Re-pitch exception cuando cliente pide repetir
+# ============================================================
+
+class TestFix704CRePitchException:
+    """FIX 704C: Si cliente pide repetir, Rule 4 no bloquea re-pitch."""
+
+    def test_repitame_allows_repitch(self, memory):
+        """Cliente dice 'repítame' → pitch repetido es válido."""
+        history = [
+            {"role": "assistant", "content": "Le hablo de NIOVAL, manejamos productos para ferretería y catálogo completo."},
+            {"role": "user", "content": "repitame por favor, no le escuche"}
+        ]
+        memory.extract_facts(history)
+
+        assert memory.facts.get('pitch_dado') == True
+        assert 'pide_repetir' in memory.contexto_cliente
+
+        # Rule 4 should NOT block because client asked for repetition
+        ok, alt = memory.validate_response(
+            "Claro, le comento, le hablo de NIOVAL, somos distribuidores de productos para ferretería y le ofrecemos catálogo completo.")
+        assert ok == True
+
+    def test_no_pide_repetir_blocks_repitch(self, memory):
+        """Sin pedir repetir, pitch repetido SÍ se bloquea."""
+        memory.facts['pitch_dado'] = True
+        memory.facts['encargado_disponible'] = False
+
+        ok, alt = memory.validate_response(
+            "Le hablo de NIOVAL, somos distribuidores de productos para ferretería y le ofrecemos catálogo completo.")
+        assert ok == False
+
+    def test_que_decia_allows_repitch(self, memory):
+        """'que decía' es pedir repetir."""
+        history = [
+            {"role": "assistant", "content": "Le hablo de NIOVAL, distribuidores de productos para ferretería."},
+            {"role": "user", "content": "que decia? no le escuche bien"}
+        ]
+        memory.extract_facts(history)
+        assert 'pide_repetir' in memory.contexto_cliente
+
+    def test_otra_vez_allows_repitch(self, memory):
+        """'otra vez' es pedir repetir."""
+        history = [
+            {"role": "assistant", "content": "Le hablo de NIOVAL con productos para ferretería."},
+            {"role": "user", "content": "digame otra vez"}
+        ]
+        memory.extract_facts(history)
+        assert 'pide_repetir' in memory.contexto_cliente
+
+    def test_puede_repetir_allows_repitch(self, memory):
+        history = [
+            {"role": "assistant", "content": "Le hablo de NIOVAL, productos de ferretería."},
+            {"role": "user", "content": "puede repetir por favor"}
+        ]
+        memory.extract_facts(history)
+        assert 'pide_repetir' in memory.contexto_cliente

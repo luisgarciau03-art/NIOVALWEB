@@ -234,6 +234,10 @@ class IntentClassifier:
             'esperar a que vuelva', 'esperar a que entre', 'esperar a que este',
             'espera a que regrese', 'espera a que llegue', 'espera a que venga',
             'espera a que vuelva', 'espera a que entre', 'espera a que este',
+            # FIX 702: Variantes SIN "a que" (STT omite preposición frecuentemente)
+            'esperar que regrese', 'esperar que llegue', 'esperar que venga',
+            'esperar que vuelva', 'esperar que entre', 'esperar que este',
+            'necesitaria esperar', 'necesitas esperar', 'necesita esperar',
             'tendrias que esperar', 'tienes que esperar', 'tiene que esperar',
             'tendria que esperar', 'tendriamos que esperar',
             'habria que esperar', 'hay que esperar',
@@ -268,11 +272,17 @@ class IntentClassifier:
         ]
 
         # === TRANSFER: Transferir llamada / esperar en línea ===
+        # FIX 702: Removidos 'espera' y 'espere' (6 chars) porque matchean
+        # como substring dentro de 'esperar' (infinitivo) en frases callback.
+        # Reemplazados con variantes más específicas.
         patterns[IntentCategory.TRANSFER] = [
-            'permitame', 'permiteme', 'permiso', 'con permiso', 'con su permiso',
+            'permitame', 'permiteme', 'con su permiso',
             'un momento', 'un momentito', 'un segundo', 'un segundito',
             'dame un momento', 'deme un momento', 'dame un segundo', 'deme un segundo',
-            'espere', 'espereme', 'espera', 'esperame',
+            # FIX 702: Patterns específicos en vez de 'espera'/'espere' genéricos
+            'espereme', 'esperame',  # OK (7-8 chars, no matchean 'esperar')
+            'espere un', 'espera un', 'espere por favor', 'espera por favor',
+            'espere tantito', 'espera tantito', 'espereme tantito', 'esperame tantito',
             'dejeme', 'dejame',
             'aguarde', 'aguardeme', 'aguarda', 'aguardame',
             'tantito', 'un tantito', 'ahi le', 'ahorita le', 'ahorita te',
@@ -300,6 +310,10 @@ class IntentClassifier:
             'le doy mi numero', 'te doy mi numero',
             'le doy mi correo', 'te doy mi correo',
             'le paso mi', 'te paso mi',
+            # FIX 703: Ofrece correo explícitamente (BRUCE1889, BRUCE2068)
+            'te doy el correo', 'le doy el correo',
+            'te doy un correo', 'le doy un correo',
+            'por correo si', 'por correo mejor',
             # Genéricos de oferta
             'te paso su', 'le paso su', 'te voy a dar', 'le voy a dar',
             'te puedo pasar', 'le puedo pasar', 'te doy el', 'le doy el',
@@ -321,6 +335,10 @@ class IntentClassifier:
             'nada mas tengo telefono',
             'no quiero dejar', 'no quiero dar', 'no le quiero dar',
             'no le puedo dar', 'no te puedo dar',
+            # FIX 703: Formas plurales de rechazo (BRUCE1977: "no lo podemos pasar")
+            'no lo podemos pasar', 'no se lo podemos dar', 'no podemos dar',
+            'no lo puedo pasar', 'no se lo puedo pasar',
+            'no se lo puedo dar', 'no podemos pasar',
             'no estoy autorizado', 'no estoy autorizada',
             'no estaba autorizado', 'no estaba autorizada',
             'no me permiten', 'no nos permiten', 'no tengo autorizacion',
@@ -384,6 +402,9 @@ class IntentClassifier:
             'tienen catalogo', 'tienen pagina', 'tienen pagina web',
             'cuanto cuesta', 'que precio', 'que precios manejan',
             'a cuanto', 'cuanto sale',
+            # FIX 703: Preguntas directas mexicanas (BRUCE1893: "que quiere?")
+            'que quiere', 'que quieres', 'que desea', 'que desean',
+            'que necesita', 'que ocupan', 'que ocupa',
         ]
 
         # === ANOTHER_BRANCH: Otra sucursal ===

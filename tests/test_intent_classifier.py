@@ -905,5 +905,227 @@ class TestVariantesSTT(unittest.TestCase):
         self.assertEqual(r.category, IntentCategory.OFFER_DATA)
 
 
+# ============================================================
+# FIX 702: 'espera'/'espere' NO matchea como substring en TRANSFER
+# ============================================================
+
+class TestFix702EsperaSubstring(unittest.TestCase):
+    """FIX 702: Verifica que 'espera'/'espere' ya no son patrones TRANSFER
+    que matchean como substring dentro de 'esperar' (infinitivo)."""
+
+    def setUp(self):
+        self.c = IntentClassifier()
+
+    def test_esperar_que_vuelva_is_callback(self):
+        """'esperar que vuelva' debe ser CALLBACK, no TRANSFER."""
+        r = self.c.classify("tiene que esperar que vuelva")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_esperar_que_regrese_sin_a_que(self):
+        """STT omite 'a que' → 'esperar que regrese' debe ser CALLBACK."""
+        r = self.c.classify("esperar que regrese el encargado")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_esperar_que_llegue_sin_a_que(self):
+        r = self.c.classify("hay que esperar que llegue")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_esperar_que_entre_sin_a_que(self):
+        r = self.c.classify("esperar que entre el dueño")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_esperar_que_este_sin_a_que(self):
+        r = self.c.classify("tendría que esperar que esté")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_necesitaria_esperar_is_callback(self):
+        r = self.c.classify("necesitaría esperar a que venga")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_necesita_esperar_is_callback(self):
+        r = self.c.classify("necesita esperar")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    # TRANSFER patterns que SÍ deben seguir funcionando
+    def test_espereme_still_transfer(self):
+        """'espereme' (7 chars) SÍ es TRANSFER."""
+        r = self.c.classify("espereme tantito")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_espere_un_momento_still_transfer(self):
+        """'espere un momento' SÍ es TRANSFER."""
+        r = self.c.classify("espere un momento por favor")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_espera_un_momento_still_transfer(self):
+        r = self.c.classify("espera un momento")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_espere_por_favor_still_transfer(self):
+        r = self.c.classify("espere por favor")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_espera_tantito_still_transfer(self):
+        r = self.c.classify("espera tantito")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_esperar_infinitivo_en_frase_callback(self):
+        """'esperar' en frase callback NO debe matchear TRANSFER."""
+        r = self.c.classify("va a tener que esperar")
+        # En contexto de frase, debe ser CALLBACK, no TRANSFER
+        if r is not None:
+            self.assertNotEqual(r.category, IntentCategory.TRANSFER)
+
+    def test_necesita_esperar_no_es_transfer(self):
+        """'necesita esperar' es CALLBACK, no TRANSFER."""
+        r = self.c.classify("necesita esperar un rato")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_callback_vs_transfer_esperar_que_vuelva(self):
+        """classify_callback_vs_transfer con 'esperar que vuelva'."""
+        r = self.c.classify_callback_vs_transfer("tiene que esperar que vuelva")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.CALLBACK)
+
+    def test_callback_vs_transfer_espere_un_momento(self):
+        """classify_callback_vs_transfer con 'espere un momento' → TRANSFER."""
+        r = self.c.classify_callback_vs_transfer("espere un momento")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.TRANSFER)
+
+
+# ============================================================
+# FIX 703: Patterns faltantes REJECT_DATA, OFFER_DATA, QUESTION
+# ============================================================
+
+class TestFix703RejectDataPatterns(unittest.TestCase):
+    """FIX 703: Formas plurales de rechazo de datos."""
+
+    def setUp(self):
+        self.c = IntentClassifier()
+
+    def test_no_lo_podemos_pasar(self):
+        r = self.c.classify("no lo podemos pasar, es política de la empresa")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+    def test_no_se_lo_podemos_dar(self):
+        r = self.c.classify("no se lo podemos dar")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+    def test_no_podemos_dar(self):
+        r = self.c.classify("no podemos dar datos personales")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+    def test_no_lo_puedo_pasar(self):
+        r = self.c.classify("no lo puedo pasar, no estoy autorizada")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+    def test_no_se_lo_puedo_dar(self):
+        r = self.c.classify("no se lo puedo dar joven")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+    def test_no_podemos_pasar(self):
+        r = self.c.classify("no podemos pasar esa información")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.REJECT_DATA)
+
+
+class TestFix703OfferDataPatterns(unittest.TestCase):
+    """FIX 703: Ofrece correo explícitamente."""
+
+    def setUp(self):
+        self.c = IntentClassifier()
+
+    def test_te_doy_el_correo(self):
+        r = self.c.classify("te doy el correo del encargado")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+    def test_le_doy_el_correo(self):
+        r = self.c.classify("le doy el correo mejor")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+    def test_te_doy_un_correo(self):
+        r = self.c.classify("te doy un correo para que le mandes")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+    def test_le_doy_un_correo(self):
+        r = self.c.classify("le doy un correo")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+    def test_por_correo_si(self):
+        r = self.c.classify("por correo si le puedo dar")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+    def test_por_correo_mejor(self):
+        r = self.c.classify("por correo mejor, el WhatsApp es personal")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.OFFER_DATA)
+
+
+class TestFix703QuestionPatterns(unittest.TestCase):
+    """FIX 703: Preguntas directas mexicanas."""
+
+    def setUp(self):
+        self.c = IntentClassifier()
+
+    def test_que_quiere(self):
+        r = self.c.classify("¿Qué quiere?")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_quieres(self):
+        r = self.c.classify("que quieres joven")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_desea(self):
+        r = self.c.classify("que desea")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_desean(self):
+        r = self.c.classify("que desean")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_necesita(self):
+        r = self.c.classify("que necesita")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_ocupan(self):
+        r = self.c.classify("que ocupan")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+    def test_que_ocupa(self):
+        r = self.c.classify("que ocupa")
+        self.assertIsNotNone(r)
+        self.assertEqual(r.category, IntentCategory.QUESTION)
+
+
 if __name__ == '__main__':
     unittest.main()

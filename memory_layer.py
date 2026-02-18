@@ -196,6 +196,14 @@ class ConversationMemory:
         if any(p in content_lower for p in patrones_interes):
             self.facts['cliente_interesado'] = True
 
+        # --- FIX 704C: Cliente pide que Bruce repita ---
+        patrones_repetir = [
+            'repitame', 'repiteme', 'no le escuche', 'que me decia',
+            'que decia', 'no escuche', 'puede repetir', 'otra vez'
+        ]
+        if any(p in content_lower for p in patrones_repetir):
+            self.contexto_cliente.append('pide_repetir')
+
     def _extract_bruce_facts(self, content_lower, content_original):
         """Extrae hechos de mensajes de BRUCE."""
 
@@ -344,6 +352,11 @@ class ConversationMemory:
         - ok=False: respuesta contradice hechos, usar alternativa
         """
         if not respuesta:
+            # FIX 704A: Respuesta vacía durante dictado activo → acknowledgment
+            dictando = (self.facts.get('email_dictado_verbal') or
+                        'telefono' in self.datos_proporcionados)
+            if dictando and not self.facts.get('cliente_se_despide'):
+                return (False, "Aja, si.")
             return (True, "")
 
         resp_lower = self._normalize(respuesta)
@@ -396,7 +409,13 @@ class ConversationMemory:
                         "¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encargado?")
 
         # --- Regla 4: No repetir pitch si ya se dio ---
-        if self.facts.get('pitch_dado'):
+        # FIX 704C: Excepción si cliente pidió re-pitch ("repitame", "que decia")
+        cliente_pide_repetir = False
+        if self.contexto_cliente:
+            ultimo_ctx = self.contexto_cliente[-1] if self.contexto_cliente else ''
+            cliente_pide_repetir = ultimo_ctx == 'pide_repetir'
+
+        if self.facts.get('pitch_dado') and not cliente_pide_repetir:
             # Solo bloquear si es pitch COMPLETO (nioval + producto keywords)
             tiene_nioval = 'nioval' in resp_lower
             tiene_producto = any(p in resp_lower for p in [
@@ -437,6 +456,16 @@ class ConversationMemory:
             ]):
                 return (False,
                         "Perfecto, ya tengo su correo registrado. Le envio el catalogo a esa direccion.")
+
+        # --- Regla 7 (FIX 704B): Callback sin hora → preguntar hora, no contacto ---
+        if self.facts.get('callback_sin_hora') and not self.facts.get('hora_callback'):
+            pide_contacto = any(f in resp_lower for f in [
+                'whatsapp', 'correo', 'email', 'numero del encargado',
+                'numero directo', 'me proporciona', 'me da su'
+            ])
+            if pide_contacto:
+                return (False,
+                        "¿A que hora me recomienda llamar para encontrar al encargado?")
 
         return (True, "")
 

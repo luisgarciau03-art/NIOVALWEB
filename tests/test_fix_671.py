@@ -95,9 +95,9 @@ class TestFix671ComportamientoEsperado:
         """Verificar que FIX 671 usa respuesta de despedida cortés"""
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
 
-        # Buscar sección después de FIX 671
+        # Buscar sección después de FIX 671 (FIX 705 expandió el bloque)
         fix_671_start = source.find("FIX 671")
-        fix_671_section = source[fix_671_start:fix_671_start + 1500]
+        fix_671_section = source[fix_671_start:fix_671_start + 3000]
 
         # Debe tener respuesta alternativa
         assert "me comunico despues" in fix_671_section.lower() or "entonces me comunico" in fix_671_section.lower()

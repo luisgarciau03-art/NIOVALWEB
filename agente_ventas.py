@@ -2497,12 +2497,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 659 original bloqueaba en 3ra oferta (>=2 previos) → MISMATCH
         # FIX 671: Bloquear en 2da oferta (>=1 previo + 1 actual = 2 total)
         if ofrece_catalogo_493b and veces_ofrecio_catalogo >= 1:
-            print(f"\n[WARN] FIX 671 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
-            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
-            # Respuesta alternativa: agradecer y cerrar
-            respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."
-            print(f"   Respuesta anti-loop: '{respuesta}'")
-            return respuesta
+            # FIX 705: BRUCE2214 - NO bloquear si cliente muestra interés/pregunta aclaración
+            # Cliente preguntó "Como es? WhatsApp?" = INTERESADO, no repetición no solicitada
+            ultimo_cliente_705 = ""
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    ultimo_cliente_705 = msg.get('content', '').lower()
+                    break
+            patrones_interes_705 = [
+                'como es', 'como seria', 'como funciona', 'como le hago',
+                'whatsapp', 'por whatsapp', 'al whatsapp',
+                'por correo', 'al correo', 'me interesa',
+                'si me interesa', 'si quiero', 'mandame', 'mandeme',
+                'enviame', 'enviemelo', 'si por favor', 'si claro',
+                'como es el catalogo', 'donde lo veo', 'como lo recibo',
+                'a donde me lo manda', 'digame', 'platiqueme',
+            ]
+            cliente_interesado_705 = any(p in ultimo_cliente_705 for p in patrones_interes_705)
+            if cliente_interesado_705:
+                print(f"\n[INFO] FIX 705: Anti-loop SUSPENDIDO - cliente muestra interés")
+                print(f"   Último cliente: '{ultimo_cliente_705[:80]}'")
+                print(f"   Dejando pasar respuesta de catálogo (cliente lo pidió/preguntó)")
+            else:
+                print(f"\n[WARN] FIX 671 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
+                print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+                # Respuesta alternativa: agradecer y cerrar
+                respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."
+                print(f"   Respuesta anti-loop: '{respuesta}'")
+                return respuesta
 
         # FIX 494: INCOHERENCIA - Si ya tenemos WhatsApp capturado, NO pedir de nuevo
         whatsapp_ya_capturado = bool(self.lead_data.get("whatsapp"))
