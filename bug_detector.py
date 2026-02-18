@@ -65,9 +65,13 @@ MAX_BUGS_HISTORY = 200
 # GPT evaluation: minimo de turnos para justificar el costo
 # FIX 642B: Bajado de 3 a 2 (BRUCE2070 tenia 2 turnos y GPT eval no corrio)
 # FIX 692B: Subido de 2 a 3 (BRUCE2214: 2 turnos/43s genera FP 66% del tiempo)
-GPT_EVAL_MIN_TURNOS = 3
+# FIX 713A: Threshold dinámico - llamadas cortas (25-45s, 2 turnos) usan prompt enfocado
+GPT_EVAL_MIN_TURNOS = 2           # FIX 713A: Bajado de 3 a 2 (llamadas cortas usan prompt enfocado)
+GPT_EVAL_MIN_TURNOS_COMPLETO = 3  # FIX 713A: GPT eval completo requiere 3+ turnos
 # FIX 692B: Duración mínima para GPT eval (llamadas ultra-cortas = FP)
-GPT_EVAL_MIN_DURACION_S = 45
+# FIX 713A: Bajado de 45 a 25 (BRUCE2263: 41s/2 turnos tenía bugs reales no detectados)
+GPT_EVAL_MIN_DURACION_S = 25
+GPT_EVAL_DURACION_CORTA_S = 45    # FIX 713A: < 45s = llamada corta → prompt enfocado
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
 # FIX 691: Robustez - save inmediato, atexit handler, fsync
@@ -741,6 +745,49 @@ FIX 646E - CONTEO DE TURNOS:
 - Verifica que el mensaje en el turno reportado fue dicho por Bruce, NO por el cliente"""
 
 
+# FIX 713B: Prompt ENFOCADO para llamadas cortas (25-45s, 2 turnos)
+# Solo busca errores GRAVES de alta certeza - reduce FP en llamadas cortas
+_GPT_EVAL_PROMPT_CORTA = """Eres un auditor de calidad para llamadas cortas de Bruce, agente AI de la marca NIOVAL (productos ferreteros).
+
+Esta llamada fue MUY CORTA (el cliente colgó rápido). Solo reporta errores GRAVES y de ALTA CERTEZA.
+
+ERRORES GRAVES a buscar (solo estos 4 tipos):
+
+1. CONTEXTO_IGNORADO: Bruce trató al interlocutor como empleado/recepcionista cuando ERA el encargado/dueño.
+   Señales de que el interlocutor ES el encargado/decisor:
+   - "Yo soy el encargado/dueño"
+   - "Yo hago/me encargo de las compras"
+   - "Tienes donde anotar?" (= listo para dar sus datos, es decisor)
+   - "Qué me ofreces?" / "Qué venden?" (= interesado como comprador)
+   - Ofrece directamente un dato de contacto personal
+   Si Bruce responde con "le dejo recado al encargado" o "cuando regrese el encargado" a alguien que ES el encargado, es error GRAVE.
+
+2. RESPUESTA_INCOHERENTE: Bruce dio respuesta genérica ("entiendo", "mmm") sin procesar la información del cliente.
+   Ejemplo: Cliente dice algo específico → Bruce solo dice "Entiendo" y cambia de tema sin abordar lo dicho.
+   NO es error si "entiendo" va seguido de una acción relevante ("Entiendo. ¿Me podría dar su WhatsApp?").
+
+3. LOGICA_ROTA: Bruce pidió dato que el cliente YA proporcionó en el turno anterior.
+
+4. OPORTUNIDAD_PERDIDA: Cliente mostró interés claro o ofreció datos, y Bruce respondió con despedida o tema irrelevante.
+
+CONVERSACION:
+{conversacion}
+
+Responde SOLO en este formato JSON (array vacio si no hay errores):
+[
+  {{"tipo": "TIPO_ERROR", "severidad": "ALTO", "turno": N, "detalle": "descripcion breve"}}
+]
+
+REGLAS ESTRICTAS:
+- SOLO reporta errores de los 4 tipos listados arriba
+- Si tienes DUDA, NO reportes (mejor no reportar que falso positivo)
+- Si Bruce se despidió tras rechazo del cliente, NO es error
+- Si la llamada fue normal (pitch → encargado → catálogo → despedida), NO reportes nada
+- Al indicar turno N, cuenta SOLO mensajes de BRUCE (no del cliente)
+- Maximo 2 errores por llamada corta
+- Responde SOLO el JSON, sin texto adicional"""
+
+
 def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
     """Evalua la conversacion con GPT-4o-mini. Retorna lista de bugs."""
     bugs = []
@@ -749,11 +796,22 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         if len(tracker.respuestas_bruce) < GPT_EVAL_MIN_TURNOS:
             return bugs
 
-        # FIX 692B: Skip GPT eval si llamada fue ultra-corta (< 45s = cliente colgó rápido)
+        # FIX 713A: Threshold dinámico - determinar tipo de evaluación
         duracion_llamada = int(time.time() - tracker.created_at)
+        num_turnos = len(tracker.respuestas_bruce)
+
+        # Ultra-corta (< 25s) → SKIP total
         if duracion_llamada < GPT_EVAL_MIN_DURACION_S:
-            print(f"[FIX 692B] Llamada {tracker.bruce_id}: Solo {duracion_llamada}s, SKIP GPT eval (min {GPT_EVAL_MIN_DURACION_S}s)")
+            print(f"[FIX 713A] Llamada {tracker.bruce_id}: Solo {duracion_llamada}s, SKIP GPT eval (min {GPT_EVAL_MIN_DURACION_S}s)")
             return bugs
+
+        # FIX 713A: Determinar si es llamada corta (25-45s o 2 turnos) vs normal (>45s y 3+ turnos)
+        es_llamada_corta = (duracion_llamada < GPT_EVAL_DURACION_CORTA_S or num_turnos < GPT_EVAL_MIN_TURNOS_COMPLETO)
+
+        if es_llamada_corta:
+            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval ENFOCADO (llamada corta)")
+        else:
+            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval COMPLETO")
 
         # FIX 664B: Pre-filtro - detectar comportamiento correcto ANTES de GPT
         if _es_comportamiento_correcto(tracker.conversacion):
@@ -776,20 +834,31 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
 
         conversacion_texto = "\n".join(lineas)
 
-        # FIX 664C: Agregar metadata contextual al prompt
-        contexto_adicional = ""
-        if metadata['patrones_activados']:
-            contexto_adicional += "\n\nPATRONES DETECTADOS (comportamientos intencionalmente correctos):\n"
-            for patron in metadata['patrones_activados']:
-                contexto_adicional += f"- {patron}\n"
+        # FIX 713A: Seleccionar prompt según tipo de llamada
+        if es_llamada_corta:
+            # Llamada corta → prompt enfocado (solo errores graves)
+            prompt_base = _GPT_EVAL_PROMPT_CORTA
+            max_errores = 2
+        else:
+            # Llamada normal → prompt completo con metadata
+            prompt_base = _GPT_EVAL_PROMPT
+            max_errores = 3
 
-        if metadata['contexto_adicional']:
-            contexto_adicional += "\n\nCONTEXTO ADICIONAL:\n"
-            for ctx in metadata['contexto_adicional']:
-                contexto_adicional += f"- {ctx}\n"
+        # FIX 664C: Agregar metadata contextual al prompt (solo para eval completo)
+        contexto_adicional = ""
+        if not es_llamada_corta:
+            if metadata['patrones_activados']:
+                contexto_adicional += "\n\nPATRONES DETECTADOS (comportamientos intencionalmente correctos):\n"
+                for patron in metadata['patrones_activados']:
+                    contexto_adicional += f"- {patron}\n"
+
+            if metadata['contexto_adicional']:
+                contexto_adicional += "\n\nCONTEXTO ADICIONAL:\n"
+                for ctx in metadata['contexto_adicional']:
+                    contexto_adicional += f"- {ctx}\n"
 
         # Insertar metadata al inicio del prompt después del contexto
-        prompt_con_metadata = _GPT_EVAL_PROMPT.replace(
+        prompt_con_metadata = prompt_base.replace(
             "CONVERSACION:",
             f"{contexto_adicional}\n\nCONVERSACION:"
         )
@@ -802,7 +871,7 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
 
         client = openai.OpenAI(api_key=api_key)
 
-        # FIX 664C: Usar prompt con metadata contextual
+        # FIX 713A: Usar prompt según tipo de llamada
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -828,7 +897,7 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         if not isinstance(errores, list):
             return bugs
 
-        for error in errores[:3]:  # Maximo 3
+        for error in errores[:max_errores]:  # FIX 713A: max_errores según tipo
             tipo = error.get("tipo", "DESCONOCIDO")
             severidad = error.get("severidad", MEDIO)
             if severidad not in (CRITICO, ALTO, MEDIO):

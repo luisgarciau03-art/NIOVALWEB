@@ -136,15 +136,15 @@ class TestFix692AEncargadoThreshold:
 class TestFix692BGPTEvalFilters:
     """FIX 692B: Reducir falsos positivos en GPT eval."""
 
-    def test_min_turnos_es_3(self):
-        """GPT_EVAL_MIN_TURNOS debe ser 3 (no 2)."""
+    def test_min_turnos_es_2(self):
+        """FIX 713A: GPT_EVAL_MIN_TURNOS bajado a 2 (llamadas cortas usan prompt enfocado)."""
         from bug_detector import GPT_EVAL_MIN_TURNOS
-        assert GPT_EVAL_MIN_TURNOS == 3
+        assert GPT_EVAL_MIN_TURNOS == 2
 
     def test_min_duracion_existe(self):
-        """GPT_EVAL_MIN_DURACION_S debe existir y ser >= 45."""
+        """FIX 713A: GPT_EVAL_MIN_DURACION_S bajado a 25 (ultra-cortas skip, cortas prompt enfocado)."""
         from bug_detector import GPT_EVAL_MIN_DURACION_S
-        assert GPT_EVAL_MIN_DURACION_S >= 45
+        assert GPT_EVAL_MIN_DURACION_S >= 25
 
     def test_2_turnos_no_evalua(self):
         """Con solo 2 turnos de Bruce, GPT eval no debe ejecutarse."""
@@ -272,12 +272,14 @@ class TestIntegracionFix692:
         assert bloqueado_antes_de_bug, "Threshold debe bloquear ANTES de que bug detector marque"
 
     def test_gpt_eval_filtros_combinados(self):
-        """GPT eval debe tener múltiples filtros anti-FP."""
-        from bug_detector import GPT_EVAL_MIN_TURNOS, GPT_EVAL_MIN_DURACION_S
-        # Filtro 1: Min turnos
-        assert GPT_EVAL_MIN_TURNOS >= 3
-        # Filtro 2: Min duración
-        assert GPT_EVAL_MIN_DURACION_S >= 45
+        """GPT eval debe tener múltiples filtros anti-FP (FIX 713A: threshold dinámico)."""
+        from bug_detector import GPT_EVAL_MIN_TURNOS, GPT_EVAL_MIN_DURACION_S, GPT_EVAL_MIN_TURNOS_COMPLETO, GPT_EVAL_DURACION_CORTA_S
+        # Filtro 1: Min turnos (2 = prompt enfocado, 3 = prompt completo)
+        assert GPT_EVAL_MIN_TURNOS >= 2
+        assert GPT_EVAL_MIN_TURNOS_COMPLETO >= 3
+        # Filtro 2: Min duración (25 = ultra-corta skip, 45 = corta → prompt enfocado)
+        assert GPT_EVAL_MIN_DURACION_S >= 25
+        assert GPT_EVAL_DURACION_CORTA_S >= 45
 
     def test_persistencia_bugs_robusta(self):
         """FIX 691: _save_bugs tiene force parameter."""
