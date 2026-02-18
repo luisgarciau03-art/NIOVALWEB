@@ -6833,6 +6833,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'marcar después', 'marcar despues', 'llamar después', 'llamar despues',
         ]
 
+        # FIX 710C: BRUCE2255 - "No hacemos compras" = RECHAZO DEFINITIVO (antes de ENCARGADO_NO_ESTA)
+        # Cliente dice que el negocio NO compra → no tiene sentido pedir WhatsApp del encargado
+        patrones_no_hacemos_compras_710 = [
+            'no hacemos compra', 'no hacemos compras', 'no hacemos ningun tipo de compra',
+            'no compramos', 'no compro nada', 'no compramos nada',
+            'aqui no se compra', 'aqui no compramos', 'no hacemos pedidos',
+            'no manejamos compras', 'no realizamos compras', 'no adquirimos',
+            'no necesitamos proveedores', 'no necesitamos proveedor',
+        ]
+        if any(p in texto_lower for p in patrones_no_hacemos_compras_710):
+            print(f"   FIX 710C: BRUCE2255 - Cliente dice NO HACEN COMPRAS: '{texto_cliente[:60]}'")
+            return {
+                "tipo": "NO_HACEMOS_COMPRAS",
+                "respuesta": "Entendido, disculpe la molestia. Que tenga buen día.",
+                "accion": "DESPEDIDA"
+            }
+
         # Detectar si cliente menciona que el encargado NO ESTÁ
         encargado_no_esta = any(p in texto_lower for p in patrones_no_esta)
 
@@ -8746,6 +8763,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
               'dime tu nombre', 'digame su nombre'],
              "Mi nombre es Bruce, de la marca NIOVAL."),
 
+            # --- FIX 710A: BRUCE2255 - "No hacemos compras" = rechazo definitivo ---
+            (['no hacemos compra', 'no hacemos compras', 'no hacemos ningun tipo de compra',
+              'no compramos', 'no compramos nada', 'no compro nada',
+              'aqui no se compra', 'aqui no compramos', 'no hacemos pedidos',
+              'no manejamos compras', 'no realizamos compras',
+              'no adquirimos', 'no necesitamos proveedores', 'no necesitamos proveedor',
+              'ya tenemos todo cubierto', 'no nos interesa ningun producto',
+              'no estamos interesados en comprar'],
+             "Entendido, disculpe la molestia. Que tenga buen dia."),
+
             # --- FIX 709: Confirmación de nombre "¿Bruce?" ---
             (['eres bruce', 'es bruce', 'bruce verdad', 'bruce, verdad',
               'bruce cierto', 'bruce, cierto',
@@ -8955,7 +8982,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                      'CLIENTE_DICTA_EMAIL_COMPLETO',
                                      'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
                                      'CLIENTE_ACEPTA_CORREO', 'EVITAR_LOOP_WHATSAPP',
-                                     'PEDIR_TELEFONO_FIJO'}
+                                     'PEDIR_TELEFONO_FIJO',
+                                     'NO_HACEMOS_COMPRAS',  # FIX 710B: rechazo definitivo
+                                     'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO'}
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -9000,6 +9029,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 648: DESPEDIDA_NATURAL_CLIENTE_* inmunes (cierre natural del cliente)
             # FIX 661: Pattern audit - Agregar patrones con 0% survival
             # FIX 687B: Agregar PEDIR_TELEFONO_FIJO (0% survival - no estaba en ninguna lista)
+            # FIX 710B: BRUCE2255 - ENCARGADO_NO_ESTA_* inmunes (cliente repite 3x genera >12 palabras)
             patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
                                     'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
                                     'RECHAZO_DEFINITIVO',
@@ -9013,7 +9043,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'CLIENTE_DICTA_EMAIL_COMPLETO',
                                     'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
                                     'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
-                                    'PEDIR_TELEFONO_FIJO'}
+                                    'PEDIR_TELEFONO_FIJO',
+                                    'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
+                                    'ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
+                                    'NO_HACEMOS_COMPRAS'}
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
