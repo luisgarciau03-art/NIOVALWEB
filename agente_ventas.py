@@ -8686,12 +8686,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         })
 
         # ============================================================
-        # FIX 708: PREGUNTAS OBVIAS - Respuestas instantáneas a preguntas capciosas
-        # Bruce es una IA: SIEMPRE tiene donde anotar, SIEMPRE escucha, NO es robot
+        # FIX 708+709: PREGUNTAS OBVIAS - Respuestas instantáneas
+        # 708: anotar/papel, escuchas/ahí, robot/grabación, listo
+        # 709: quién habla, qué venden, cómo te llamas, eres Bruce
         # Intercepta ANTES de pattern detector y GPT = 0 latencia, 0 cascada
         # ============================================================
         texto_lower_708 = respuesta_cliente.strip().lower()
-        texto_lower_708 = texto_lower_708.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
+        texto_lower_708 = texto_lower_708.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+        texto_lower_708 = texto_lower_708.replace('¿','').replace('?','').replace('¡','').replace('!','')
 
         # Diccionario: {patrones} → respuesta
         # Orden importa: se evalúa primero el match más específico
@@ -8721,6 +8723,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             (['estas listo', 'esta listo', 'listo para anotar', 'ya estas',
               'ya esta listo', 'preparado'],
              "Si, estoy listo, digame por favor."),
+
+            # --- FIX 709: ¿Quién habla? / ¿De dónde llaman? ---
+            (['quien habla', 'quien llama', 'quien me habla', 'quien me llama',
+              'con quien hablo', 'con quien tengo el gusto',
+              'de donde habla', 'de donde hablan', 'de donde llama', 'de donde llaman',
+              'de donde me habla', 'de donde me llama', 'de donde me marcan',
+              'de que empresa', 'de que compania', 'que empresa es',
+              'de parte de quien', 'a nombre de quien'],
+             "Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros."),
+
+            # --- FIX 709: ¿Qué venden/manejan? ---
+            (['que venden', 'que vende', 'que ofrecen', 'que ofrece',
+              'que manejan', 'que maneja', 'que productos', 'que tipo de productos',
+              'que es lo que venden', 'a que se dedican', 'que es nioval',
+              'de que se trata', 'que comercializan', 'que distribuyen'],
+             "Distribuimos productos de ferreteria: cintas tapagoteras, griferia, herramientas, candados y mas de 15 categorias."),
+
+            # --- FIX 709: ¿Cómo te llamas? / ¿Tu nombre? ---
+            (['como te llamas', 'como se llama', 'cual es tu nombre', 'cual es su nombre',
+              'tu nombre', 'su nombre cual es', 'me dice su nombre',
+              'dime tu nombre', 'digame su nombre'],
+             "Mi nombre es Bruce, de la marca NIOVAL."),
+
+            # --- FIX 709: Confirmación de nombre "¿Bruce?" ---
+            (['eres bruce', 'es bruce', 'bruce verdad', 'bruce, verdad',
+              'bruce cierto', 'bruce, cierto',
+              'se llama bruce', 'te llamas bruce', 'usted es bruce'],
+             "Si, soy Bruce de NIOVAL. ¿En que le puedo ayudar?"),
         ]
 
         for patrones_708, respuesta_708 in preguntas_obvias_708:

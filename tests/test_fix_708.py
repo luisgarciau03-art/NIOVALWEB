@@ -44,7 +44,8 @@ PREGUNTAS_OBVIAS = [
 def classify_708(texto):
     """Simula la lógica de FIX 708."""
     texto_lower = texto.strip().lower()
-    texto_lower = texto_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
+    texto_lower = texto_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+    texto_lower = texto_lower.replace('¿','').replace('?','').replace('¡','').replace('!','')
     for patrones, respuesta in PREGUNTAS_OBVIAS:
         if any(p in texto_lower for p in patrones):
             return respuesta
