@@ -3022,12 +3022,19 @@ def procesar_respuesta():
             # FIX 470: BRUCE1412 - Detectar frases de ESPERA ANTES de cualquier otra lógica
             # Si el cliente dice "Permítame un segundo", "Un momento", etc., debemos
             # establecer estado ESPERANDO_TRANSFERENCIA y NO tratarlo como frase incompleta
+            # FIX 706A: Limpieza de frases_espera_cliente
+            # Removidos 'espera' y 'espere' (6 chars) porque matchean como substring
+            # dentro de 'esperar' (infinitivo) en frases callback como "esperar que vuelva"
+            # Reemplazados con patterns específicos (mismo enfoque que FIX 702)
             frases_espera_cliente = [
                 'permítame', 'permitame', 'permíteme', 'permiteme',
-                'permiso', 'con permiso', 'con su permiso',  # FIX 576: variantes de "permítame"
+                'con permiso', 'con su permiso',  # FIX 576: variantes de "permítame"
                 'un momento', 'un momentito', 'un segundo', 'un segundito',
                 'dame un momento', 'deme un momento', 'dame un segundo', 'deme un segundo',
-                'espere', 'espéreme', 'espereme', 'espera', 'espérame', 'esperame',
+                # FIX 706A: Patterns específicos en vez de 'espera'/'espere' genéricos
+                'espéreme', 'espereme', 'espérame', 'esperame',  # 7-8 chars, no matchean 'esperar'
+                'espere un', 'espera un', 'espere por favor', 'espera por favor',
+                'espere tantito', 'espera tantito', 'espereme tantito', 'esperame tantito',
                 'déjeme', 'dejeme', 'déjame', 'dejame',
                 'aguarde', 'aguárdeme', 'aguardeme', 'aguarda', 'aguárdame',
                 'tantito', 'un tantito', 'ahí le', 'ahorita le', 'ahorita te',
@@ -3181,6 +3188,10 @@ def procesar_respuesta():
                 patrones_callback_645 = [
                     'esperar a que regrese', 'esperar a que llegue', 'esperar a que venga',
                     'esperar a que vuelva', 'esperar a que entre', 'esperar a que esté',
+                    # FIX 706B: Variantes SIN "a que" (STT omite preposición frecuentemente)
+                    'esperar que regrese', 'esperar que llegue', 'esperar que venga',
+                    'esperar que vuelva', 'esperar que entre', 'esperar que este',
+                    'necesitaria esperar', 'necesitas esperar', 'necesita esperar',
                     'tendrías que esperar', 'tienes que esperar', 'tiene que esperar',
                     'tendría que esperar', 'tendríamos que esperar',
                     'habría que esperar', 'hay que esperar',
@@ -3235,18 +3246,37 @@ def procesar_respuesta():
                     print(f"   → Cliente NO está transfiriendo, está rechazando/explicando")
                     cliente_pidio_espera = False  # Desactivar modo espera
 
-            # FIX 701: Intent Classifier - override adicional callback vs transfer
+            # FIX 701/706C: Intent Classifier - override con classify() completo
+            # FIX 706C: Además de CALLBACK, detectar OFFER_DATA, REJECT_DATA, QUESTION, etc.
+            # Estas categorías NUNCA deben generar "Claro, espero"
             try:
                 if cliente_pidio_espera and INTENT_CLASSIFIER_DISPONIBLE:
-                    _classifier_701 = IntentClassifier()
-                    _intent_701 = _classifier_701.classify_callback_vs_transfer(speech_result)
-                    if _intent_701 and _intent_701.category == IntentCategory.CALLBACK and _intent_701.confidence >= 0.85:
-                        print(f"    [INTENT] FIX 701: Classifier detecta CALLBACK "
-                              f"(conf={_intent_701.confidence:.2f}, pattern='{_intent_701.pattern}')")
+                    _classifier_706 = IntentClassifier()
+                    # Primero: check callback vs transfer especializado
+                    _intent_cb = _classifier_706.classify_callback_vs_transfer(speech_result)
+                    if _intent_cb and _intent_cb.category == IntentCategory.CALLBACK and _intent_cb.confidence >= 0.80:
+                        print(f"    [INTENT] FIX 706C: Classifier detecta CALLBACK "
+                              f"(conf={_intent_cb.confidence:.2f}, pattern='{_intent_cb.pattern}')")
                         print(f"    → Desactivando modo espera (transfer → callback)")
                         cliente_pidio_espera = False
+                    # Segundo: check general para categorías NO-transfer
+                    elif cliente_pidio_espera:
+                        _intent_full = _classifier_706.classify(speech_result)
+                        if _intent_full and _intent_full.confidence >= 0.80:
+                            _cat = _intent_full.category
+                            _no_transfer = [
+                                IntentCategory.OFFER_DATA, IntentCategory.REJECT_DATA,
+                                IntentCategory.QUESTION, IntentCategory.NO_INTEREST,
+                                IntentCategory.FAREWELL, IntentCategory.ANOTHER_BRANCH,
+                                IntentCategory.CALLBACK
+                            ]
+                            if _cat in _no_transfer:
+                                print(f"    [INTENT] FIX 706C: Classifier detecta {_cat.value} "
+                                      f"(conf={_intent_full.confidence:.2f}, pattern='{_intent_full.pattern}')")
+                                print(f"    → Desactivando modo espera (no es transfer)")
+                                cliente_pidio_espera = False
             except Exception as e_ic:
-                print(f"    [WARN] FIX 701: Intent Classifier error: {e_ic}")
+                print(f"    [WARN] FIX 706C: Intent Classifier error: {e_ic}")
 
             # FIX 519: SENTIDO COMÚN con GPT - Analizar frases LARGAS/AMBIGUAS
             # Problema: BRUCE1736 - "marcó este número, pero con terminación 00, ahí le comunican"
