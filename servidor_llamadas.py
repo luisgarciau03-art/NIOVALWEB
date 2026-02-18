@@ -5604,10 +5604,31 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             for patron in patrones_dia_481
         )
 
-        # FIX 481: Preservar si contiene dígitos que parecen número telefónico (3+ dígitos)
+        # FIX 481: Preservar si contiene dígitos que parecen número telefónico
         # Excluir horas como "a las 2", "las 10"
         digitos = re_481.findall(r'\d', trans_lower)
-        contiene_telefono = len(digitos) >= 3 and not any(h in trans_lower for h in ['a las', 'las dos', 'las tres', 'las diez', 'las once', 'las doce'])
+        # FIX 714A: BRUCE2258 - También detectar números dictados en PALABRAS
+        # Problema: "Sí, ochenta y siete, uno." tiene 0 dígitos numéricos → FIX 481 descartaba
+        # pero cliente está dictando teléfono en palabras (como FIX 670 detecta en otro contexto)
+        numeros_palabras_714 = [
+            'cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+            'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+            'dieciseis', 'diecisiete', 'dieciocho', 'diecinueve',
+            'veinte', 'veintiuno', 'veintidos', 'veintitres', 'veinticuatro', 'veinticinco',
+            'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa',
+        ]
+        # Normalizar acentos para matching (FIX 631 pattern)
+        _tl_714 = trans_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+        _tl_714 = _tl_714.replace(',', ' ').replace('.', ' ')
+        # Contar por PALABRA del texto (no por item de lista) para "seis seis" = 2
+        _palabras_714 = _tl_714.split()
+        nums_en_palabras_714 = sum(1 for p in _palabras_714 if p in numeros_palabras_714)
+        # FIX 714B: Threshold reducido de 3 a 2 dígitos - "87 uno" (2 dígitos) es inicio de dictado
+        contiene_telefono = (len(digitos) >= 2 or nums_en_palabras_714 >= 2) and not any(h in trans_lower for h in ['a las', 'las dos', 'las tres', 'las diez', 'las once', 'las doce'])
+        if contiene_telefono and nums_en_palabras_714 >= 2:
+            print(f" FIX 714A: Números en PALABRAS detectados ({nums_en_palabras_714}): '{trans[:60]}'")
+        elif contiene_telefono and len(digitos) >= 2:
+            print(f" FIX 714B: Dígitos parciales preservados ({len(digitos)}): '{trans[:60]}'")
 
         # FIX 486: BRUCE1466 - Preservar frases de "interrupción válida"
         # Cliente dice "déjeme validar", "un momento", "espere" mientras Bruce procesa
@@ -5656,14 +5677,30 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     # Problema: Cliente dictó "6621" mientras GPT procesaba, FIX 481 preservó los dígitos
     # pero al ensamblar el número en el turno siguiente, esos dígitos se perdieron.
     # Solución: Guardar los dígitos en el agente para que el pattern detector los use
+    # FIX 714A: También convertir números en palabras a dígitos
     if transcripciones_importantes and call_sid in conversaciones_activas:
         agente_623 = conversaciones_activas[call_sid]
         digitos_preservados_623 = []
         for trans_623 in transcripciones_importantes:
             trans_623_str = str(trans_623).strip().rstrip('.')
             digitos_623 = re_481.findall(r'\d', trans_623_str)
-            if len(digitos_623) >= 3:
+            if len(digitos_623) >= 2:  # FIX 714B: Reducido de 3 a 2
                 digitos_preservados_623.extend(digitos_623)
+            # FIX 714A: Convertir números en palabras a dígitos
+            elif not digitos_623:
+                _numeros_conv_714 = {
+                    'cero': '0', 'uno': '1', 'dos': '2', 'tres': '3', 'cuatro': '4',
+                    'cinco': '5', 'seis': '6', 'siete': '7', 'ocho': '8', 'nueve': '9',
+                    'diez': '10', 'once': '11', 'doce': '12', 'trece': '13', 'catorce': '14',
+                    'quince': '15', 'veinte': '20', 'treinta': '30', 'cuarenta': '40',
+                    'cincuenta': '50', 'sesenta': '60', 'setenta': '70', 'ochenta': '80', 'noventa': '90',
+                }
+                _tl_623 = trans_623_str.lower().replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                for palabra, valor in _numeros_conv_714.items():
+                    if palabra in _tl_623:
+                        digitos_preservados_623.append(valor)
+                if len(digitos_preservados_623) >= 2:
+                    print(f" FIX 714A: Números en palabras convertidos a dígitos: {digitos_preservados_623}")
         if digitos_preservados_623:
             agente_623.digitos_preservados_previos = ''.join(digitos_preservados_623)
             print(f" FIX 623A: Dígitos preservados para siguiente turno: '{agente_623.digitos_preservados_previos}'")
@@ -5673,7 +5710,16 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
     # Solución: Si hay dígitos preservados Y Bruce pide número → reemplazar con "Ajá..."
     if transcripciones_importantes and call_sid in conversaciones_activas:
         agente_623c = conversaciones_activas[call_sid]
-        tiene_digitos_623c = any(len(re_481.findall(r'\d', str(t))) >= 3 for t in transcripciones_importantes)
+        # FIX 714A/B: También detectar números en palabras y dígitos parciales (>=2)
+        tiene_digitos_623c = any(len(re_481.findall(r'\d', str(t))) >= 2 for t in transcripciones_importantes)
+        if not tiene_digitos_623c:
+            # Verificar números en palabras
+            _nums_check_714 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa']
+            for _t_714 in transcripciones_importantes:
+                _t_lower_714 = str(_t_714).lower().replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                if sum(1 for n in _nums_check_714 if n in _t_lower_714) >= 2:
+                    tiene_digitos_623c = True
+                    break
         if tiene_digitos_623c and respuesta_agente:
             respuesta_lower_623c = respuesta_agente.lower()
             pide_numero_623c = any(p in respuesta_lower_623c for p in [
