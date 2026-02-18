@@ -8258,6 +8258,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     "accion": "CONTINUAR_CONVERSACION"
                 }
 
+        # FIX 711A: BRUCE2255 - "Dígame" NO es "Diga". "diga" substring matchea "digame"
+        # pero son cosas diferentes: "Diga" = "hello?" vs "Dígame" = "go ahead, tell me"
+        # Si texto es "digame"/"digame." NO debe tratarse como saludo/verificación
+        texto_stripped_711 = texto_lower.strip().rstrip('.,;:!?¿¡')
+        es_digame_711 = texto_stripped_711 in ['digame', 'si digame', 'si, digame']
+        if es_digame_711:
+            # "Dígame" = cliente dice "adelante, cuénteme" → responder con pitch o continuar
+            print(f"   FIX 711A: BRUCE2255 - 'Dígame' = go ahead (NO es 'Diga' verificación)")
+            historial_avanzado_711 = len(self.conversation_history) >= 4
+            if historial_avanzado_711:
+                # Ya dio pitch → cliente dice "dígame" = escucha activa, continuar
+                # NO repetir pregunta de encargado - dar info o preguntar por encargado naturalmente
+                ya_pregunto_encargado_711 = any(
+                    'encargado' in msg.get('content', '').lower()
+                    for msg in self.conversation_history if msg['role'] == 'assistant'
+                )
+                if ya_pregunto_encargado_711:
+                    print(f"   FIX 711A: Ya preguntó encargado + Dígame = cliente escucha → dar pitch corto")
+                    return {
+                        "tipo": "DIGAME_CONTINUAR",
+                        "respuesta": "Sí, le comento, manejamos productos de ferretería de la marca NIOVAL: cintas tapagoteras, grifería, herramientas y más de 15 categorías. ¿Con quién podría platicar sobre las compras?",
+                        "accion": "PITCH_CORTO"
+                    }
+                return {
+                    "tipo": "DIGAME_ADELANTE",
+                    "respuesta": "Sí, le comento, manejamos productos de ferretería de la marca NIOVAL. ¿Se encontrará el encargado o encargada de compras?",
+                    "accion": "AVANZAR_CONVERSACION"
+                }
+            # Inicio de conversación → dar pitch
+            return {
+                "tipo": "DIGAME_INICIO",
+                "respuesta": "Sí, le comento, me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros. ¿Se encontrará el encargado o encargada de compras?",
+                "accion": "AVANZAR_A_PRESENTACION"
+            }
+
         if any(s in texto_lower for s in saludos) and len(texto_lower) < 20 and not tiene_digitos:
             # FIX 535: SOLO responder "Hola, buen día" si NUNCA hemos avanzado de INICIO
             # Previene pérdida de contexto después de silencios (BRUCE1665)
