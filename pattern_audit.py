@@ -26,7 +26,9 @@ from collections import defaultdict
 # FIX 640: Usar CACHE_DIR del env var (consistente con servidor_llamadas.py)
 # Railway monta el Volume en /app/audio_cache, en local usa ./audio_cache
 _CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")
-AUDIT_FILE = os.path.join(_CACHE_DIR, "pattern_audit.json")
+# FIX 748: Railway Volume - usar PERSISTENT_DIR para sobrevivir deploys
+_PERSISTENT_DIR = os.getenv("PERSISTENT_DIR", _CACHE_DIR)
+AUDIT_FILE = os.path.join(_PERSISTENT_DIR, "pattern_audit.json")
 
 # Período de reset automático (7 días en segundos)
 RESET_PERIOD = 7 * 24 * 3600

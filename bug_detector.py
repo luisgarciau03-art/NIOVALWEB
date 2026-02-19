@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 747"
+_DEPLOY_VERSION = "FIX 748"
 
 # Severidades
 CRITICO = "CRITICO"
@@ -79,8 +79,10 @@ GPT_EVAL_DURACION_CORTA_S = 45    # FIX 713A: < 45s = llamada corta → prompt e
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
 # FIX 691: Robustez - save inmediato, atexit handler, fsync
+# FIX 748: Railway Volume - usar PERSISTENT_DIR para sobrevivir deploys
 _CACHE_DIR = os.getenv("CACHE_DIR", "audio_cache")
-_BUGS_FILE = os.path.join(_CACHE_DIR, "recent_bugs.json")
+_PERSISTENT_DIR = os.getenv("PERSISTENT_DIR", _CACHE_DIR)
+_BUGS_FILE = os.path.join(_PERSISTENT_DIR, "recent_bugs.json")
 _BUGS_SAVE_INTERVAL = 5  # FIX 691: Reducido de 30s a 5s para minimizar perdida
 _bugs_last_save = 0
 
@@ -1699,9 +1701,10 @@ _bugs_loaded = False      # FIX 640: Flag para lazy-load
 
 
 def _load_bugs():
-    """FIX 640+691: Carga bugs desde disco al iniciar."""
+    """FIX 640+691+748: Carga bugs desde disco al iniciar."""
     global _recent_bugs, _bugs_loaded
     try:
+        print(f"[BUG_DETECTOR] FIX 748: PERSISTENT_DIR={os.path.abspath(_PERSISTENT_DIR)}")
         print(f"[BUG_DETECTOR] FIX 691: Buscando bugs en {os.path.abspath(_BUGS_FILE)}")
         if os.path.exists(_BUGS_FILE):
             import json

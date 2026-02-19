@@ -8,11 +8,23 @@ import os
 from datetime import datetime
 
 
+def _get_tracker_path():
+    """FIX 748: Railway Volume - usar PERSISTENT_DIR para sobrevivir deploys."""
+    persistent_dir = os.getenv("PERSISTENT_DIR", "")
+    if persistent_dir:
+        return os.path.join(persistent_dir, 'tracker_data.json')
+    return os.path.join(os.path.dirname(__file__), 'tracker_data.json')
+
+
 def load_tracker_data():
     """Carga datos del archivo JSON persistente."""
-    json_path = os.path.join(os.path.dirname(__file__), 'tracker_data.json')
+    json_path = _get_tracker_path()
 
     if not os.path.exists(json_path):
+        # FIX 748: Fallback al archivo bundled si no existe en PERSISTENT_DIR
+        fallback_path = os.path.join(os.path.dirname(__file__), 'tracker_data.json')
+        if fallback_path != json_path and os.path.exists(fallback_path):
+            return json.load(open(fallback_path, 'r', encoding='utf-8'))
         return None
 
     with open(json_path, 'r', encoding='utf-8') as f:
@@ -21,8 +33,9 @@ def load_tracker_data():
 
 def save_tracker_data(data):
     """Guarda datos al archivo JSON persistente."""
-    json_path = os.path.join(os.path.dirname(__file__), 'tracker_data.json')
+    json_path = _get_tracker_path()
 
+    os.makedirs(os.path.dirname(json_path) or '.', exist_ok=True)
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
