@@ -1,7 +1,7 @@
 """
 FIX 632/637: Bug Detector - Deteccion automatica de bugs y errores en llamadas.
 
-Modulo independiente que rastrea eventos por llamada y detecta 12 tipos de problemas:
+Modulo independiente que rastrea eventos por llamada y detecta 17+ tipos de problemas:
 
 BUGS TECNICOS (FIX 632):
 1. BRUCE_MUDO: TwiML enviado pero audio nunca fetcheado por Twilio
@@ -232,6 +232,22 @@ class BugDetector:
             # FIX 718: DICTADO_INTERRUMPIDO - cliente dictando dato y Bruce se despide
             dictado_bugs = ContentAnalyzer._check_dictado_interrumpido(tracker.conversacion)
             bugs.extend(dictado_bugs)
+
+            # FIX 721: TRANSFER_IGNORADA - cliente pide esperar/transferir y Bruce sigue vendiendo
+            transfer_bugs = ContentAnalyzer._check_transfer_ignorada(tracker.conversacion)
+            bugs.extend(transfer_bugs)
+
+            # FIX 723: DEGRADACION_TTS - fillers TTS consecutivos
+            degradacion_bugs = ContentAnalyzer._check_degradacion_servicio(tracker)
+            bugs.extend(degradacion_bugs)
+
+            # FIX 724: PREFERENCIA_IGNORADA - cliente prefiere un canal y Bruce pide otro
+            preferencia_bugs = ContentAnalyzer._check_preferencia_ignorada(tracker.conversacion)
+            bugs.extend(preferencia_bugs)
+
+            # FIX 725: DATO_NEGADO_REINSISTIDO - cliente niega dato y Bruce lo pide después
+            negado_bugs = ContentAnalyzer._check_dato_negado_reinsistido(tracker.conversacion)
+            bugs.extend(negado_bugs)
 
             # FIX 639D: DATO_SIN_RESPUESTA - check independiente (no requiere 2+ respuestas)
             dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
@@ -525,6 +541,7 @@ class ContentAnalyzer:
     # =========================================================
     # FIX 716: AREA_EQUIVOCADA / NO_MANEJA_FERRETERIA
     # =========================================================
+    # FIX 716+720: Patrones de área equivocada / no aplica
     _AREA_EQUIVOCADA_PATTERNS = [
         'no manejo ferreteria', 'no manejamos ferreteria',
         'no manejo nada de ferreteria', 'no manejamos nada de ferreteria',
@@ -540,12 +557,20 @@ class ContentAnalyzer:
         'no hacemos eso', 'no manejamos eso',
         'no vendemos eso', 'no trabajamos con eso',
         'no es aqui', 'aqui no es',
+        # FIX 720: Variantes adicionales
+        'no es conmigo', 'no soy yo',
+        'no es mi departamento', 'no es de mi area',
+        'se equivoco', 'esta equivocado',
+        'no hacemos compras', 'no compramos',
+        'no hacemos ningun tipo de compra',
     ]
 
-    # Respuestas de Bruce que indican que NO entendió el rechazo
+    # FIX 716+720: Respuestas de Bruce que indican que NO entendió el rechazo
     _BRUCE_NO_ENTENDIO_RECHAZO = re.compile(
         r'(whatsapp|correo|cat[aá]logo|encargad[oa]|informaci[oó]n|producto|me comunico|me permite|'
-        r'le env[ií]o|le puedo|me podr[ií]a|aja.*si|mmm|entiendo.*me)',
+        r'le env[ií]o|le puedo|me podr[ií]a|aja.*si|mmm|entiendo.*me|'
+        r'le ofrecemos|nuestro cat[aá]logo|le comento|le comparto|'
+        r'le interesar[ií]a|le gustar[ií]a|qu[eé] le parece)',
         re.IGNORECASE
     )
 
@@ -591,12 +616,16 @@ class ContentAnalyzer:
     # =========================================================
     # FIX 718: DICTADO_INTERRUMPIDO
     # =========================================================
+    # FIX 718+720: Patrones de dictado (email, teléfono, WhatsApp, nombre, dirección)
     _DICTADO_PATTERNS = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
         r'a de|b de|c de|d de|e de|f de|g de|'
         r'ele|eme|ene|ese|erre|'
         r'doble (u|v|uve)|'
+        r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
+        r'mi correo es|mi email es|mi nombre es|me llamo|'
+        r'la direcci[oó]n es|estamos en|la calle es|'
         r'\d{2,})',
         re.IGNORECASE
     )
@@ -607,11 +636,14 @@ class ContentAnalyzer:
         re.IGNORECASE
     )
 
-    # FIX 718: Confirmaciones de Bruce que indican que SÍ procesó el dato
+    # FIX 718+720: Confirmaciones de Bruce que indican que SÍ procesó el dato
     _BRUCE_CONFIRMA_DATO = re.compile(
         r'(perfecto.*lo tengo|lo anot[eé]|le env[ií]o el cat[aá]logo|'
         r'perfecto.*env[ií]o|perfecto.*catalogo|listo.*anot|'
-        r'anotado|recibido|entendido.*env|ya lo tengo)',
+        r'anotado|recibido|entendido.*env|ya lo tengo|'
+        r'registrado|tom[eé] nota|correcto.*lo tengo|'
+        r'excelente.*dato|muy bien.*anot|perfecto.*dato|'
+        r'le mando|se lo env[ií]o)',
         re.IGNORECASE
     )
 
@@ -647,6 +679,231 @@ class ContentAnalyzer:
                                 "categoria": "contenido"
                             })
                         break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 721: TRANSFER_IGNORADA - Cliente pide esperar/transferir
+    # =========================================================
+    _TRANSFER_PATTERNS = re.compile(
+        r'(esp[eé]r[ea]me|le paso|le comunico|se lo paso|ahorita.+viene|'
+        r'd[eé]jeme.+(?:pasar|comunicar)|un momento.+(?:le paso|se lo paso)|'
+        r'le transfiero|ahorita le paso|d[eé]jeme ver si est[aá]|'
+        r'voy a ver si est[aá]|ahorita viene|ya viene|espere un momento)',
+        re.IGNORECASE
+    )
+
+    # Respuestas de Bruce que son correctas ante transfer (esperar)
+    _BRUCE_ESPERA_CORRECTO = re.compile(
+        r'(claro.+esper|por supuesto.+esper|s[ií].+esper|'
+        r'con gusto.+esper|adelante|claro que s[ií]|'
+        r'perfecto.+esper|s[ií].*no hay problema)',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_transfer_ignorada(conv: list) -> list:
+        """FIX 721: Detecta si cliente pide esperar/transferir y Bruce sigue vendiendo."""
+        bugs = []
+        try:
+            if len(conv) < 2:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                if not ContentAnalyzer._TRANSFER_PATTERNS.search(texto):
+                    continue
+
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        # ¿Bruce respondió correctamente (esperando)?
+                        if ContentAnalyzer._BRUCE_ESPERA_CORRECTO.search(t2):
+                            break  # Comportamiento correcto
+                        # ¿Bruce siguió vendiendo/hablando?
+                        if ContentAnalyzer._BRUCE_NO_ENTENDIO_RECHAZO.search(t2):
+                            bugs.append({
+                                "tipo": "TRANSFER_IGNORADA",
+                                "severidad": ALTO,
+                                "detalle": f"Cliente pidió transferir ('{texto[:50]}') pero Bruce siguió: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 723: DEGRADACION_TTS - Fillers consecutivos
+    # =========================================================
+    @staticmethod
+    def _check_degradacion_servicio(tracker) -> list:
+        """FIX 723: Detecta degradación de servicio por fillers TTS consecutivos."""
+        bugs = []
+        try:
+            if tracker.filler_162a_count >= 2:
+                bugs.append({
+                    "tipo": "DEGRADACION_TTS",
+                    "severidad": CRITICO,
+                    "detalle": f"ElevenLabs TTS falló {tracker.filler_162a_count}x consecutivas → degradación de servicio",
+                    "categoria": "tecnico"
+                })
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 724: PREFERENCIA_IGNORADA
+    # =========================================================
+    _PREFERENCIA_PATTERNS = re.compile(
+        r'(mejor por (?:correo|whatsapp|tel[eé]fono|email)|'
+        r'prefiero (?:correo|whatsapp|que me llamen|email|tel[eé]fono)|'
+        r'por (?:correo|whatsapp) mejor|'
+        r'mand[ea]me(?:lo)? por (?:correo|whatsapp|email)|'
+        r'env[ií]ame(?:lo)? por (?:correo|whatsapp|email)|'
+        r'mejor.+(?:correo|whatsapp|email)|'
+        r'(?:d[ea]me|dame).+(?:correo|whatsapp|email))',
+        re.IGNORECASE
+    )
+
+    # Mapeo de canales para detectar insistencia en canal diferente
+    _CANAL_CORREO = re.compile(r'(correo|email|e-mail)', re.IGNORECASE)
+    _CANAL_WHATSAPP = re.compile(r'(whatsapp|wats|what)', re.IGNORECASE)
+    _CANAL_TELEFONO = re.compile(r'(tel[eé]fono|celular|llamar|llam[ea]me)', re.IGNORECASE)
+
+    @staticmethod
+    def _check_preferencia_ignorada(conv: list) -> list:
+        """FIX 724: Detecta si cliente indica canal preferido y Bruce pide otro."""
+        bugs = []
+        try:
+            if len(conv) < 3:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                if not ContentAnalyzer._PREFERENCIA_PATTERNS.search(texto):
+                    continue
+
+                # Detectar canal preferido del cliente
+                canal_preferido = None
+                if ContentAnalyzer._CANAL_CORREO.search(texto):
+                    canal_preferido = "correo"
+                elif ContentAnalyzer._CANAL_WHATSAPP.search(texto):
+                    canal_preferido = "whatsapp"
+                elif ContentAnalyzer._CANAL_TELEFONO.search(texto):
+                    canal_preferido = "telefono"
+
+                if not canal_preferido:
+                    continue
+
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        t2_lower = t2.lower()
+                        # ¿Bruce pidió un canal diferente?
+                        bruce_pide_otro = False
+                        if canal_preferido == "correo" and ContentAnalyzer._CANAL_WHATSAPP.search(t2):
+                            bruce_pide_otro = True
+                        elif canal_preferido == "whatsapp" and 'correo' in t2_lower and 'whatsapp' not in t2_lower:
+                            bruce_pide_otro = True
+                        elif canal_preferido == "telefono" and (ContentAnalyzer._CANAL_WHATSAPP.search(t2) or ContentAnalyzer._CANAL_CORREO.search(t2)):
+                            bruce_pide_otro = True
+
+                        if bruce_pide_otro:
+                            bugs.append({
+                                "tipo": "PREFERENCIA_IGNORADA",
+                                "severidad": MEDIO,
+                                "detalle": f"Cliente prefiere {canal_preferido} ('{texto[:50]}') pero Bruce pidió otro canal: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 725: DATO_NEGADO_REINSISTIDO
+    # =========================================================
+    _NEGACION_DATO_PATTERNS = re.compile(
+        r'(no tengo (?:whatsapp|correo|celular|email)|'
+        r'solo tengo (?:fijo|tel[eé]fono de casa|de casa)|'
+        r'no uso (?:whatsapp|correo|email|celular)|'
+        r'no manejo (?:whatsapp|correo|redes|email|celular)|'
+        r'no cuento con (?:whatsapp|correo|email|celular))',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_dato_negado_reinsistido(conv: list) -> list:
+        """FIX 725: Detecta si cliente niega tener un dato y Bruce lo pide después."""
+        bugs = []
+        try:
+            if len(conv) < 3:
+                return bugs
+
+            # Recolectar negaciones del cliente
+            datos_negados = set()
+            negacion_indices = {}
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                match = ContentAnalyzer._NEGACION_DATO_PATTERNS.search(texto)
+                if not match:
+                    continue
+
+                texto_l = texto.lower()
+                if 'whatsapp' in texto_l or 'wats' in texto_l:
+                    datos_negados.add('whatsapp')
+                    negacion_indices['whatsapp'] = i
+                if 'correo' in texto_l or 'email' in texto_l:
+                    datos_negados.add('correo')
+                    negacion_indices['correo'] = i
+                if 'celular' in texto_l:
+                    datos_negados.add('celular')
+                    negacion_indices['celular'] = i
+
+            if not datos_negados:
+                return bugs
+
+            # Buscar si Bruce pide un dato negado después de la negación
+            for i, (role, texto) in enumerate(conv):
+                if role != "bruce" or not texto.strip():
+                    continue
+
+                texto_l = texto.lower()
+                for dato in datos_negados:
+                    idx_negacion = negacion_indices.get(dato, -1)
+                    if i <= idx_negacion:
+                        continue  # Bruce preguntó ANTES de la negación, OK
+
+                    # ¿Bruce pide ese dato después de la negación?
+                    pide = False
+                    if dato == 'whatsapp' and ('whatsapp' in texto_l or 'wats' in texto_l):
+                        pide = True
+                    elif dato == 'correo' and ('correo' in texto_l or 'email' in texto_l):
+                        pide = True
+                    elif dato == 'celular' and 'celular' in texto_l:
+                        pide = True
+
+                    if pide:
+                        bugs.append({
+                            "tipo": "DATO_NEGADO_REINSISTIDO",
+                            "severidad": ALTO,
+                            "detalle": f"Cliente dijo no tener {dato} pero Bruce lo pidió después: '{texto[:60]}'",
+                            "categoria": "contenido"
+                        })
+                        datos_negados.discard(dato)  # No reportar doble
+                        break
+
         except Exception:
             pass
         return bugs
@@ -768,17 +1025,25 @@ def _es_comportamiento_correcto(conversacion: list) -> bool:
                         break
 
         # CASO 2: Cliente no respondió pregunta de Bruce → Repetir es CORRECTO
+        # FIX 722: Restringido - NO skip si cliente mencionó rol/cargo (gerente, corporativo, dueño, jefe)
         if len(conversacion) >= 3:
-            for i in range(len(conversacion) - 3, -1, -1):
-                if conversacion[i][0] == "bruce":
-                    pregunta_bruce = conversacion[i][1].lower()
-                    if '?' in pregunta_bruce:
-                        # Verificar si cliente respondió sobre el mismo tema
-                        if 'encargado' in pregunta_bruce and 'encargado' not in ultimo_cliente:
-                            if 'whatsapp' not in ultimo_cliente and 'telefono' not in ultimo_cliente:
-                                print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente no respondió pregunta sobre tema específico")
-                                return True
-                    break
+            # FIX 722: Palabras que indican que cliente es decisor (NO skipear GPT eval)
+            roles_decisor = ['gerente', 'corporativo', 'dueño', 'dueno', 'jefe', 'encargado',
+                           'director', 'administrador', 'propietario', 'yo hago las compras',
+                           'yo me encargo', 'yo soy el que']
+            cliente_es_decisor = any(rol in ultimo_cliente for rol in roles_decisor)
+
+            if not cliente_es_decisor:
+                for i in range(len(conversacion) - 3, -1, -1):
+                    if conversacion[i][0] == "bruce":
+                        pregunta_bruce = conversacion[i][1].lower()
+                        if '?' in pregunta_bruce:
+                            # Verificar si cliente respondió sobre el mismo tema
+                            if 'encargado' in pregunta_bruce and 'encargado' not in ultimo_cliente:
+                                if 'whatsapp' not in ultimo_cliente and 'telefono' not in ultimo_cliente:
+                                    print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente no respondió pregunta sobre tema específico")
+                                    return True
+                        break
 
         # CASO 3: Bruce hablando con IVR (mensajes repetitivos del "cliente")
         mensajes_ivr = ['para ventas marque', 'marque uno', 'le agradecemos su preferencia',
@@ -852,6 +1117,15 @@ Tipos de errores a buscar:
 3. TONO_INADECUADO: Bruce fue grosero, impaciente o poco profesional
 4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN LA MISMA LLAMADA
 5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa" o "enviame info" y Bruce NO le pidio contacto
+6. CONTEXTO_IGNORADO: Bruce trato al interlocutor como empleado/recepcionista cuando ERA el encargado/dueño.
+   Senales de que el interlocutor ES el encargado/decisor:
+   - "Yo soy el encargado/dueno", "Yo hago las compras", "Tienes donde anotar?" (= listo para dar datos, es decisor)
+   - "Que me ofreces?" / "Que venden?" (= interesado como comprador)
+   - Ofrece directamente un dato de contacto personal
+   Si Bruce responde con "le dejo recado al encargado" o "cuando regrese el encargado" a alguien que ES el encargado, es error GRAVE.
+7. RESPUESTA_INCOHERENTE: Bruce dio respuesta generica ("entiendo", "mmm") sin procesar la informacion del cliente.
+   Ejemplo: Cliente dice algo especifico -> Bruce solo dice "Entiendo" y cambia de tema sin abordar lo dicho.
+   NO es error si "entiendo" va seguido de una accion relevante ("Entiendo. Me podria dar su WhatsApp?")
 
 FIX 664A - REGLAS CRITICAS PARA DETECTAR LOGICA_ROTA (reduce falsos positivos):
 
