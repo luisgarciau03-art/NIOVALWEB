@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 733"
+_DEPLOY_VERSION = "FIX 736"
 
 # Severidades
 CRITICO = "CRITICO"
@@ -281,6 +281,37 @@ class BugDetector:
             if not dato_bugs:
                 ultimo_bugs = ContentAnalyzer._check_cliente_habla_ultimo(tracker.conversacion)
                 bugs.extend(ultimo_bugs)
+
+            # =============================================
+            # FIX 735: FILTRO IVR/CONMUTADOR
+            # Si la "conversación" es con un IVR/PBX automatizado,
+            # los bugs de contenido son falsos positivos
+            # =============================================
+            if bugs and tracker.conversacion:
+                _IVR_PATTERNS_735 = re.compile(
+                    r'(extensi[oó]n|m[aá]rquelo ahora|seleccione una|'
+                    r'opciones?\s*\.?\s*(?:uno|dos|tres|cuatro)|'
+                    r'espere en la l[ií]nea|para ser atendido|'
+                    r'marque\s+(?:el|uno|dos|tres)|'
+                    r'bienvenido\s+a\s+(?:la\s+)?l[ií]nea|'
+                    r'horario de atenci[oó]n|'
+                    r'presione\s+(?:uno|dos|tres|\d)|'
+                    r'teclee\s+(?:el|su)|'
+                    r'si desea\s+(?:hablar|comunicarse))',
+                    re.IGNORECASE
+                )
+                texto_cliente_735 = ' '.join(t for who, t in tracker.conversacion if who == 'cliente')
+                if _IVR_PATTERNS_735.search(texto_cliente_735):
+                    # IVR detectado: filtrar bugs de contenido que son falsos positivos
+                    tipos_fp_ivr = {
+                        'GPT_CONTEXTO_IGNORADO', 'GPT_OPORTUNIDAD_PERDIDA',
+                        'INTERRUPCION_CONVERSACIONAL', 'DESPEDIDA_PREMATURA',
+                        'CONTEXTO_IGNORADO', 'DATO_IGNORADO',
+                    }
+                    bugs_originales = len(bugs)
+                    bugs = [b for b in bugs if b.get('tipo') not in tipos_fp_ivr]
+                    if len(bugs) < bugs_originales:
+                        print(f"[FIX 735] IVR/conmutador detectado: {bugs_originales - len(bugs)} falsos positivos filtrados")
 
         except Exception:
             pass  # Nunca fallar
@@ -1540,6 +1571,17 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
             print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval ENFOCADO (llamada corta)")
         else:
             print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval COMPLETO")
+
+        # FIX 735: Pre-filtro IVR - NO evaluar conversaciones con conmutador automático
+        _IVR_735 = re.compile(
+            r'(extensi[oó]n|m[aá]rquelo ahora|seleccione una|presione\s+(?:uno|dos|tres|\d)|'
+            r'espere en la l[ií]nea|para ser atendido)',
+            re.IGNORECASE
+        )
+        texto_cliente_735 = ' '.join(t for who, t in tracker.conversacion if who == 'cliente')
+        if _IVR_735.search(texto_cliente_735):
+            print(f"[FIX 735] Llamada {tracker.bruce_id}: IVR/conmutador detectado, SKIP GPT eval")
+            return bugs
 
         # FIX 664B: Pre-filtro - detectar comportamiento correcto ANTES de GPT
         if _es_comportamiento_correcto(tracker.conversacion):

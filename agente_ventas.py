@@ -2461,6 +2461,51 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         filtro_aplicado = True
 
         # ============================================================
+        # FIX 736: BRUCE2302 - Cliente anuncia dato ("El WhatsApp", "El correo es")
+        # pero GPT cambia tema (callback, despedida, encargado) → override con acknowledgment
+        # Distinto de FIX 733: aquí el cliente ANUNCIA que va a dictar, no ha dado datos aún
+        # ============================================================
+        if not filtro_aplicado and ultimo_cliente_667:
+            _sa_736 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+            resp_norm_736 = _sa_736(respuesta_lower)
+
+            # Cliente anuncia que va a dar dato de contacto
+            anuncio_dato_736 = re.search(
+                r'((?:este\s+)?si[.,]?\s+(?:el|mi)\s+whatsapp|'
+                r'el whatsapp\b|mi whatsapp\b|'
+                r'el correo\s+(?:es|seria)|mi correo\s+(?:es|seria)|'
+                r'el numero\s+(?:es|seria)|mi numero\s+(?:es|seria)|'
+                r'(?:si\s+)?(?:te|le)\s+(?:doy|paso)\s+(?:el|mi|un)\s+(?:whatsapp|correo|numero|telefono))',
+                ultimo_cliente_667, re.IGNORECASE
+            )
+
+            if anuncio_dato_736:
+                # GPT NO debe cambiar de tema (callback, despedida, hora)
+                cambio_tema_736 = any(w in resp_norm_736 for w in [
+                    'a que hora', 'me recomienda llamar', 'me comunico despues',
+                    'gracias por su tiempo', 'que tenga', 'buen dia',
+                    'encargado', 'catalogo', 'productos ferreteros',
+                    'le comento', 'le ofrecemos'
+                ])
+                # Verificar que GPT no es SOLO acknowledgment (sin cambio de tema)
+                es_ack_736 = any(w in resp_norm_736 for w in [
+                    'aja', 'perfecto', 'digame', 'adelante', 'continue',
+                    'si, digame', 'claro', 'anotado'
+                ])
+                # Si es ack + cambio_tema y respuesta larga → es despedida con cortesía, NO ack real
+                es_solo_ack_736 = es_ack_736 and not cambio_tema_736
+                es_ack_corto_736 = es_ack_736 and len(respuesta.strip()) < 35
+
+                if cambio_tema_736 and not es_ack_corto_736:
+                    respuesta_original_736 = respuesta
+                    respuesta = "Ajá, sí. Dígame."
+                    print(f"[OK] FIX 736: BRUCE2302 - Cliente anuncia dato, GPT cambió de tema → override")
+                    print(f"   Cliente dijo: '{ultimo_cliente_667[:60]}'")
+                    print(f"   Respuesta original: '{respuesta_original_736[:80]}'")
+                    print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 690C: BRUCE2202 - Cliente listo para dictar ("tienes donde anotar")
         # Si GPT responde con "me puede repetir" o genérico, override con "Sí, dígame"
         # ============================================================
@@ -9065,6 +9110,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
                 'OFRECER_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',  # FIX 686B: inmunidad pregunta 2da cláusula
                 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO', 'OTRA_SUCURSAL',  # FIX 731
+                'CLIENTE_DICTA_EMAIL_COMPLETO', 'PIDE_CONTACTO_NIOVAL',  # FIX 734
             }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
@@ -9124,6 +9170,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                      'NO_HACEMOS_COMPRAS',  # FIX 710B: rechazo definitivo
                                      'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
                                      'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO',  # FIX 731
+                                     'PIDE_CONTACTO_NIOVAL',  # FIX 734
                                      }
             tipo_600 = patron_detectado.get('tipo', '')
 
@@ -9188,6 +9235,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
                                     'NO_HACEMOS_COMPRAS',
                                     'CLIENTE_ES_ENCARGADO',  # FIX 731
+                                    'PIDE_CONTACTO_NIOVAL',  # FIX 734
                                     }
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
@@ -9247,6 +9295,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',  # FIX 731: 0% survival fix
                     'CLIENTE_ES_ENCARGADO',                    # FIX 731: 0% survival fix
                     'OTRA_SUCURSAL',                           # FIX 731: 0% survival fix
+                    'CLIENTE_DICTA_EMAIL_COMPLETO',            # FIX 734: 0% survival fix
+                    'PIDE_CONTACTO_NIOVAL',                    # FIX 734: 0% survival fix
                 }
 
                 if tipo_602 in patrones_inmunes_602:
