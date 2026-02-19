@@ -53,6 +53,9 @@ TELEGRAM_BOTS = [
     },
 ]
 
+# Deploy version - actualizar con cada push
+_DEPLOY_VERSION = "FIX 730"
+
 # Severidades
 CRITICO = "CRITICO"
 ALTO = "ALTO"
@@ -1771,6 +1774,7 @@ def analyze_and_cleanup(call_sid: str, telefono: str = ""):
             "bruce_id": tracker.bruce_id,
             "telefono": telefono or tracker.telefono,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "deploy": _DEPLOY_VERSION,
             "bugs": bugs,
             "stats": {
                 "turnos": len(tracker.respuestas_bruce),
@@ -1824,6 +1828,7 @@ def _gpt_eval_background(tracker: CallEventTracker, base_entry: dict):
             "bruce_id": tracker.bruce_id,
             "telefono": base_entry.get("telefono", ""),
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "deploy": _DEPLOY_VERSION,
             "bugs": gpt_bugs,
             "stats": base_entry.get("stats", {})
         }
@@ -1930,6 +1935,7 @@ def generar_bugs_html() -> str:
         bruce_id = entry.get("bruce_id", "???")
         telefono = entry.get("telefono", "")
         timestamp = entry.get("timestamp", "")
+        deploy = entry.get("deploy", "---")
         stats = entry.get("stats", {})
 
         for bug in entry.get("bugs", []):
@@ -1957,6 +1963,7 @@ def generar_bugs_html() -> str:
             <tr>
                 <td>{timestamp}</td>
                 <td><b>{bruce_id}</b></td>
+                <td><span style="color:#888;font-size:11px">{deploy}</span></td>
                 <td>{telefono}</td>
                 <td><span class="cat-{categoria}">{cat_icon}</span></td>
                 <td style="color:{color};font-weight:bold">{bug['tipo']}</td>
@@ -1971,7 +1978,7 @@ def generar_bugs_html() -> str:
         tabla = f"""
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px">
             <tr style="background:#333;color:white">
-                <th>Hora</th><th>BRUCE ID</th><th>Tel</th><th>Cat</th>
+                <th>Hora</th><th>BRUCE ID</th><th>Deploy</th><th>Tel</th><th>Cat</th>
                 <th>Tipo</th><th>Sev</th><th>Detalle</th><th>Stats</th>
             </tr>
             {''.join(rows)}
