@@ -2340,6 +2340,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             elif tiene_telefono_732:
                 dato_actual_732 = 'telefono'
 
+            # FIX 743: BRUCE2296 - "Te puedo proporcionar correo" = OFERTA futura, NO dato ya dado
+            # Distinguir "puedo dar/proporcionar/pasar" (intención) vs dato real (arroba, dígitos)
+            if dato_actual_732:
+                _ofertas_743 = ['puedo proporcionar', 'puedo dar', 'puedo pasar',
+                    'quieres que te', 'quiere que le', 'te paso un', 'le paso un',
+                    'te doy un', 'le doy un', 'si quieres te', 'si gusta le']
+                es_oferta_743 = any(p in ultimo_cliente_667 for p in _ofertas_743)
+                if es_oferta_743:
+                    print(f"[INFO] FIX 743: '{ultimo_cliente_667[:60]}' es OFERTA, no dato real → skip FIX 732")
+                    dato_actual_732 = None
+
             if dato_actual_732:
                 # Verificar si Bruce pide el MISMO tipo de dato que cliente acaba de dar
                 pide_mismo_732 = False
@@ -2732,12 +2743,37 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Último cliente: '{ultimo_cliente_705[:80]}'")
                 print(f"   Dejando pasar respuesta de catálogo (cliente lo pidió/preguntó)")
             else:
-                print(f"\n[WARN] FIX 671 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
-                print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
-                # Respuesta alternativa: agradecer y cerrar
-                respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."
-                print(f"   Respuesta anti-loop: '{respuesta}'")
-                return respuesta
+                # FIX 742: BRUCE2287+BRUCE2296 - NO bloquear si cliente dictando datos o ofreciendo contacto
+                # BRUCE2287: Cliente dictó "ochenta y siete trece" → FIX 671 reemplazó con despedida
+                # BRUCE2296: Cliente dijo "Te puedo proporcionar correo" → FIX 671 reemplazó con despedida
+                _uc_742 = ultimo_cliente_705.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                _digitos_742 = re.findall(r'\d', ultimo_cliente_705)
+                _nums_742 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete',
+                    'ocho','nueve','diez','once','doce','trece','catorce','quince',
+                    'veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa']
+                _nums_verbales_742 = sum(1 for p in _uc_742.split() if p in _nums_742)
+                cliente_dictando_742 = len(_digitos_742) >= 3 or _nums_verbales_742 >= 2
+
+                cliente_ofrece_742 = any(p in ultimo_cliente_705 for p in [
+                    'te puedo proporcionar', 'le puedo proporcionar',
+                    'te puedo dar', 'le puedo dar', 'te puedo pasar', 'le puedo pasar',
+                    'te doy el correo', 'te doy un correo', 'le doy el correo',
+                    'te paso el correo', 'le paso el correo', 'te paso un correo',
+                    'proporcionar correo', 'proporcionar el correo',
+                    'arroba', '@', 'gmail', 'hotmail', 'punto com', 'punto mx',
+                ])
+
+                if cliente_dictando_742 or cliente_ofrece_742:
+                    print(f"\n[INFO] FIX 742: Anti-loop SUSPENDIDO - cliente dictando/ofreciendo datos")
+                    print(f"   Último cliente: '{ultimo_cliente_705[:80]}'")
+                    print(f"   Dictando: {cliente_dictando_742}, Ofrece: {cliente_ofrece_742}")
+                else:
+                    print(f"\n[WARN] FIX 671 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_ofrecio_catalogo+1}a vez)")
+                    print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+                    # Respuesta alternativa: agradecer y cerrar
+                    respuesta = "Perfecto, entonces me comunico después. Muchas gracias por su tiempo, que tenga excelente día."
+                    print(f"   Respuesta anti-loop: '{respuesta}'")
+                    return respuesta
 
         # FIX 494: INCOHERENCIA - Si ya tenemos WhatsApp capturado, NO pedir de nuevo
         whatsapp_ya_capturado = bool(self.lead_data.get("whatsapp"))
