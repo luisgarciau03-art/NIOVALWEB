@@ -249,6 +249,26 @@ class BugDetector:
             negado_bugs = ContentAnalyzer._check_dato_negado_reinsistido(tracker.conversacion)
             bugs.extend(negado_bugs)
 
+            # FIX 726: RESPUESTA_FILLER_GPT - GPT genera fillers como respuesta
+            filler_gpt_bugs = ContentAnalyzer._check_respuesta_filler_gpt(tracker.respuestas_bruce, tracker.conversacion)
+            bugs.extend(filler_gpt_bugs)
+
+            # FIX 727: INTERRUPCION_CONVERSACIONAL - Bruce corta al cliente mientras explica
+            interrupcion_bugs = ContentAnalyzer._check_interrupcion_conversacional(tracker.conversacion)
+            bugs.extend(interrupcion_bugs)
+
+            # FIX 728: DESPEDIDA_PREMATURA - Bruce se despide sin capturar contacto
+            despedida_bugs = ContentAnalyzer._check_despedida_prematura(tracker.conversacion, tracker.respuestas_bruce)
+            bugs.extend(despedida_bugs)
+
+            # FIX 729: CONTEXTO_IGNORADO - Cliente es decisor pero Bruce lo ignora
+            contexto_bugs = ContentAnalyzer._check_contexto_ignorado(tracker.conversacion)
+            bugs.extend(contexto_bugs)
+
+            # FIX 730: SALUDO_FALTANTE - Bruce no saludó en primer turno
+            saludo_bugs = ContentAnalyzer._check_saludo_faltante(tracker.respuestas_bruce)
+            bugs.extend(saludo_bugs)
+
             # FIX 639D: DATO_SIN_RESPUESTA - check independiente (no requiere 2+ respuestas)
             dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
             bugs.extend(dato_bugs)
@@ -903,6 +923,287 @@ class ContentAnalyzer:
                         })
                         datos_negados.discard(dato)  # No reportar doble
                         break
+
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 726: RESPUESTA_FILLER_GPT - GPT genera fillers en vez de respuesta real
+    # =========================================================
+    # Diferente de FIX 715 (fallo TTS → audio hardcodeado "dejeme_ver")
+    # Aquí GPT MISMO genera frases vacías como respuesta
+    _FILLER_GPT_PATTERNS = re.compile(
+        r'^[\s.,!?]*('
+        r'd[eé]jeme ver|d[eé]jame ver|d[eé]jeme checar|d[eé]jame checar|'
+        r'd[eé]jeme revisar|d[eé]jame revisar|d[eé]jame validarlo|d[eé]jeme validar|'
+        r'mm+\s*(entiendo|aja|ok|si|ya)|'
+        r'mm+h*|'
+        r'aja\s*si|aj[aá]|'
+        r'entiendo\s*entiendo|'
+        r'ok\s*ok|'
+        r'si\s*si\s*si'
+        r')[\s.,!?]*$',
+        re.IGNORECASE
+    )
+
+    # Fillers que son bug SOLO si son la respuesta completa (no seguidos de acción)
+    _FILLER_GPT_PARCIAL = re.compile(
+        r'^[\s.,!?]*(entiendo|aja|mm+h?|ok|s[ií])[\s.,!?]*$',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_respuesta_filler_gpt(respuestas_bruce: list, conv: list) -> list:
+        """FIX 726: Detecta cuando GPT genera fillers como respuesta real."""
+        bugs = []
+        try:
+            if len(respuestas_bruce) < 2:
+                return bugs
+
+            filler_count = 0
+            filler_ejemplos = []
+
+            for i, resp in enumerate(respuestas_bruce):
+                resp_stripped = resp.strip()
+                if not resp_stripped:
+                    continue
+
+                # Match completo: respuesta ES un filler puro
+                if ContentAnalyzer._FILLER_GPT_PATTERNS.search(resp_stripped):
+                    filler_count += 1
+                    if len(filler_ejemplos) < 3:
+                        filler_ejemplos.append(resp_stripped[:40])
+                # Match parcial: respuesta muy corta y genérica (< 15 chars)
+                elif len(resp_stripped) < 15 and ContentAnalyzer._FILLER_GPT_PARCIAL.search(resp_stripped):
+                    filler_count += 1
+                    if len(filler_ejemplos) < 3:
+                        filler_ejemplos.append(resp_stripped[:40])
+
+            # 2+ fillers GPT en una llamada = patrón problemático
+            if filler_count >= 2:
+                bugs.append({
+                    "tipo": "RESPUESTA_FILLER_GPT",
+                    "severidad": ALTO if filler_count < 4 else CRITICO,
+                    "detalle": f"GPT generó {filler_count}x respuestas filler: {', '.join(filler_ejemplos)}",
+                    "categoria": "contenido"
+                })
+
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 727: INTERRUPCION_CONVERSACIONAL
+    # =========================================================
+    # Patrones que indican que el cliente está explicando algo
+    _CLIENTE_EXPLICANDO = re.compile(
+        r'(no.{0,5}est[aá]|no se encuentra|est[aá] ocupad|sali[oó]|'
+        r'mire.{0,15}que|lo que pasa|es que|le explico|'
+        r'ahorita.{0,10}est[aá]|viene.{0,10}(?:rato|tarde|mañana)|'
+        r'tendr[ií]a.{0,10}(?:marcar|llamar|hablar)|'
+        r'no.{0,5}hacemos|no.{0,5}manejamos|no.{0,5}vendemos|'
+        r'nosotros.{0,10}(?:somos|no|aqui)|'
+        r'(?:la |mi |nuestra )(?:tienda|empresa|negocio).{0,15}(?:es|se dedica|vende))',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_interrupcion_conversacional(conv: list) -> list:
+        """FIX 727: Detecta si Bruce interrumpe al cliente mientras explica algo."""
+        bugs = []
+        try:
+            if len(conv) < 3:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                # ¿El cliente está explicando algo?
+                if not ContentAnalyzer._CLIENTE_EXPLICANDO.search(texto):
+                    continue
+
+                # ¿El texto del cliente parece incompleto? (sin cierre natural)
+                texto_stripped = texto.strip()
+                termina_completo = texto_stripped.endswith(('.', '?', '!', 'adiós', 'bye', 'gracias'))
+
+                if termina_completo:
+                    continue  # Cliente terminó su idea, no es interrupción
+
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        # ¿Bruce respondió con algo que ignora lo que el cliente decía?
+                        t2_lower = t2.lower()
+                        bruce_ignora = (
+                            ContentAnalyzer._PITCH_NIOVAL.search(t2) or
+                            ContentAnalyzer._OFERTA_CATALOGO.search(t2) or
+                            ('whatsapp' in t2_lower and 'encargado' not in texto.lower()) or
+                            ContentAnalyzer._BRUCE_DESPEDIDA.search(t2)
+                        )
+
+                        if bruce_ignora:
+                            bugs.append({
+                                "tipo": "INTERRUPCION_CONVERSACIONAL",
+                                "severidad": ALTO,
+                                "detalle": f"Cliente explicaba ('{texto[:50]}') pero Bruce interrumpió: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 728: DESPEDIDA_PREMATURA
+    # =========================================================
+    _CONTACTO_CAPTURADO = re.compile(
+        r'(lo anot[eé]|anotado|perfecto.*(?:env[ií]o|mando|tengo)|'
+        r'le env[ií]o|se lo env[ií]o|registrado|'
+        r'ya.{0,5}tengo.{0,10}(?:dato|n[uú]mero|correo|whatsapp)|'
+        r'tom[eé] nota)',
+        re.IGNORECASE
+    )
+
+    _CLIENTE_INTERESADO = re.compile(
+        r'((?<!no )(?<!no me )me interesa|s[ií].{0,10}(?:mand[ea]|env[ií]a)|'
+        r'env[ií]ame|m[aá]ndame|'
+        r'claro.{0,5}(?:s[ií]|que s[ií])|'
+        r'tienes? donde anotar|'
+        r'(?:d[ea]me|dame).{0,10}(?:informaci[oó]n|cat[aá]logo))',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_despedida_prematura(conv: list, respuestas_bruce: list) -> list:
+        """FIX 728: Detecta si Bruce se despide sin haber capturado contacto."""
+        bugs = []
+        try:
+            if len(conv) < 3 or len(respuestas_bruce) < 2:
+                return bugs
+
+            # ¿Bruce capturó algún contacto?
+            contacto_capturado = any(
+                ContentAnalyzer._CONTACTO_CAPTURADO.search(r)
+                for r in respuestas_bruce
+            )
+            if contacto_capturado:
+                return bugs  # Tiene contacto, despedida es OK
+
+            # ¿Cliente mostró interés?
+            cliente_interesado = any(
+                ContentAnalyzer._CLIENTE_INTERESADO.search(t)
+                for role, t in conv if role == "cliente"
+            )
+            if not cliente_interesado:
+                return bugs  # Cliente no mostró interés, despedida es normal
+
+            # ¿Bruce se despidió?
+            ultima_bruce = ""
+            for i in range(len(conv) - 1, -1, -1):
+                if conv[i][0] == "bruce":
+                    ultima_bruce = conv[i][1]
+                    break
+
+            if not ultima_bruce:
+                return bugs
+
+            if ContentAnalyzer._DESPEDIDA_BRUCE.search(ultima_bruce):
+                bugs.append({
+                    "tipo": "DESPEDIDA_PREMATURA",
+                    "severidad": ALTO,
+                    "detalle": f"Cliente mostró interés pero Bruce se despidió sin capturar contacto: '{ultima_bruce[:60]}'",
+                    "categoria": "contenido"
+                })
+
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 729: CONTEXTO_IGNORADO (rule-based)
+    # =========================================================
+    _CLIENTE_ES_DECISOR = re.compile(
+        r'(yo soy (?:el|la) (?:encargad[oa]|due[ñn]o|jefe|gerente|administrador|propietari[oa])|'
+        r'yo (?:hago|me encargo de?) las compras|'
+        r'yo (?:veo|manejo) (?:lo de |las )?compras|'
+        r'conmigo es|a m[ií] me (?:puede|podr[ií]a)|'
+        r'yo mero|yo soy (?:quien|el que)|'
+        r'tienes? donde anotar)',
+        re.IGNORECASE
+    )
+
+    _BRUCE_IGNORA_DECISOR = re.compile(
+        r'(cuando (?:regrese|llegue|venga|est[eé]) (?:el|la) (?:encargad|due[ñn]|jef)|'
+        r'le dejo (?:recado|mensaje|el recado)|'
+        r'podr[ií]a (?:dejarle|pasarle) (?:el recado|recado)|'
+        r'si gusta le dejo|'
+        r'le (?:podr[ií]a|puedo) dejar (?:recado|el mensaje))',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_contexto_ignorado(conv: list) -> list:
+        """FIX 729: Detecta si cliente dice que ES el decisor y Bruce lo trata como empleado."""
+        bugs = []
+        try:
+            if len(conv) < 2:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                if not ContentAnalyzer._CLIENTE_ES_DECISOR.search(texto):
+                    continue
+
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        if ContentAnalyzer._BRUCE_IGNORA_DECISOR.search(t2):
+                            bugs.append({
+                                "tipo": "CONTEXTO_IGNORADO",
+                                "severidad": CRITICO,
+                                "detalle": f"Cliente dijo ser decisor ('{texto[:50]}') pero Bruce lo ignoró: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 730: SALUDO_FALTANTE
+    # =========================================================
+    _SALUDO_BRUCE = re.compile(
+        r'(buenos? (?:d[ií]as?|tardes?|noches?)|buen d[ií]a|'
+        r'hola.{0,10}(?:buenos?|buen)|'
+        r'me comunico de)',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_saludo_faltante(respuestas_bruce: list) -> list:
+        """FIX 730: Detecta si Bruce no saludó en su primer turno."""
+        bugs = []
+        try:
+            if not respuestas_bruce:
+                return bugs
+
+            primera = respuestas_bruce[0].strip()
+            if not primera:
+                return bugs
+
+            if not ContentAnalyzer._SALUDO_BRUCE.search(primera):
+                bugs.append({
+                    "tipo": "SALUDO_FALTANTE",
+                    "severidad": MEDIO,
+                    "detalle": f"Bruce no saludó en primer turno: '{primera[:60]}'",
+                    "categoria": "contenido"
+                })
 
         except Exception:
             pass
