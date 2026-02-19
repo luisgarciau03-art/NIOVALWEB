@@ -2317,6 +2317,54 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 filtro_aplicado = True
 
         # ============================================================
+        # FIX 732: BRUCE2294 - GPT_LOGICA_ROTA (Cliente dio dato EN ESTE TURNO pero GPT pide el mismo)
+        # "El correo es juan arroba gmail punto com" → Bruce pide correo (INCORRECTO)
+        # FIX 646A regla #2 verifica turnos ANTERIORES pero NO el turno ACTUAL
+        # ============================================================
+        if not filtro_aplicado and ultimo_cliente_667:
+            # Normalizar acentos para matching robusto (FIX 631 compat)
+            _sa_732 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+            resp_norm_732 = _sa_732(respuesta_lower)
+
+            # Detectar datos en el turno actual del cliente
+            tiene_email_732 = any(ind in ultimo_cliente_667 for ind in ['arroba', '@', 'gmail', 'hotmail', 'outlook', 'yahoo', 'punto com'])
+            digitos_732 = re.findall(r'\d', ultimo_cliente_667)
+            tiene_telefono_732 = len(digitos_732) >= 7
+            tiene_whatsapp_732 = any(ind in ultimo_cliente_667 for ind in ['mi whatsapp', 'el whatsapp es', 'whatsapp es el', 'por whatsapp es'])
+
+            dato_actual_732 = None
+            if tiene_email_732:
+                dato_actual_732 = 'correo'
+            elif tiene_whatsapp_732:
+                dato_actual_732 = 'whatsapp'
+            elif tiene_telefono_732:
+                dato_actual_732 = 'telefono'
+
+            if dato_actual_732:
+                # Verificar si Bruce pide el MISMO tipo de dato que cliente acaba de dar
+                pide_mismo_732 = False
+                if dato_actual_732 == 'correo' and any(w in resp_norm_732 for w in ['correo', 'email', 'e-mail']):
+                    # Verificar que Bruce PIDE (no confirma)
+                    pide_mismo_732 = any(w in resp_norm_732 for w in ['me podria dar', 'podria darme', 'proporcion', 'cual es su correo', 'cual es el correo'])
+                elif dato_actual_732 == 'whatsapp' and 'whatsapp' in resp_norm_732:
+                    pide_mismo_732 = any(w in resp_norm_732 for w in ['me podria dar', 'podria darme', 'proporcion', 'cual es su whatsapp'])
+                elif dato_actual_732 == 'telefono' and any(w in resp_norm_732 for w in ['telefono', 'numero', 'celular']):
+                    pide_mismo_732 = any(w in resp_norm_732 for w in ['me podria dar', 'podria darme', 'proporcion', 'cual es su', 'digitos', 'restantes'])
+
+                if pide_mismo_732:
+                    confirmaciones_732 = {
+                        'correo': 'Perfecto, ya lo tengo anotado. Muchas gracias.',
+                        'whatsapp': 'Perfecto, ya lo tengo registrado. Le envío el catálogo en un momento.',
+                        'telefono': 'Perfecto, ya lo tengo anotado. Muchas gracias por el dato.',
+                    }
+                    respuesta_original_732 = respuesta
+                    respuesta = confirmaciones_732.get(dato_actual_732, 'Perfecto, ya lo tengo anotado.')
+                    print(f"[OK] FIX 732: BRUCE2294 - Cliente dio {dato_actual_732.upper()} en ESTE turno, GPT pidio de nuevo → override")
+                    print(f"   Respuesta original: '{respuesta_original_732[:80]}'")
+                    print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 668: BRUCE2163 - GPT_LOGICA_ROTA (Encargado no disponible, pide contacto)
         # "encargada disponible mañana" → Bruce pide WhatsApp (INCORRECTO - debe preguntar hora)
         # FIX 646A regla #1 en system prompt NO funciona → reforzar con POST-FILTER
@@ -2357,6 +2405,60 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Respuesta original: '{respuesta_original_668[:80]}'")
                 print(f"   Respuesta corregida: '{respuesta[:80]}'")
                 filtro_aplicado = True
+
+        # ============================================================
+        # FIX 733: BRUCE2287 - Anti-interrupción durante dictado parcial
+        # Bruce pidió WhatsApp/teléfono/correo → cliente da datos parciales → GPT cambia de tema
+        # Debe esperar con acknowledgment en vez de interrumpir
+        # ============================================================
+        if not filtro_aplicado and len(self.conversation_history) >= 2:
+            # Normalizar acentos para matching robusto (FIX 631 compat)
+            _sa_733 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+
+            # Obtener último mensaje de Bruce (penúltimo en history)
+            ultimo_bruce_733 = ''
+            for msg in reversed(self.conversation_history):
+                if msg.get('role') == 'assistant':
+                    ultimo_bruce_733 = _sa_733(msg.get('content', '').lower())
+                    break
+
+            resp_norm_733 = _sa_733(respuesta_lower)
+
+            # ¿Bruce pidió dato de contacto?
+            bruce_pidio_dato_733 = any(w in ultimo_bruce_733 for w in [
+                'whatsapp', 'correo', 'email', 'numero', 'telefono',
+                'me podria dar', 'me podria proporcionar', 'podria darme',
+                'cual es su', 'digame el', 'paseme el'
+            ])
+
+            if bruce_pidio_dato_733:
+                # ¿Cliente está dando datos parciales? (2+ dígitos o email parcial)
+                digitos_733 = re.findall(r'\d', ultimo_cliente_667)
+                tiene_digitos_733 = len(digitos_733) >= 2
+                tiene_email_733 = any(ind in ultimo_cliente_667 for ind in ['arroba', '@', 'gmail', 'hotmail', 'punto com'])
+
+                if tiene_digitos_733 or tiene_email_733:
+                    # ¿GPT respondió con algo que NO es acknowledgment?
+                    es_acknowledgment_733 = any(w in resp_norm_733 for w in [
+                        'aja', 'perfecto', 'ya lo tengo', 'anotado', 'registrado',
+                        'continue', 'adelante', 'digame', 'lo tengo', 'tome nota'
+                    ])
+                    # ¿GPT cambió de tema? (pitch, catálogo, despedida, pregunta diferente)
+                    cambio_tema_733 = any(w in resp_norm_733 for w in [
+                        'catalogo', 'productos', 'ferretero', 'nioval', 'encargado',
+                        'buen dia', 'gracias por su tiempo', 'que tenga',
+                        'le comento', 'le ofrecemos'
+                    ])
+
+                    if not es_acknowledgment_733 and cambio_tema_733:
+                        respuesta_original_733 = respuesta
+                        respuesta = "Ajá, sí. Continúe por favor."
+                        self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO if tiene_digitos_733 else EstadoConversacion.DICTANDO_CORREO
+                        print(f"[OK] FIX 733: BRUCE2287 - Cliente dictando dato parcial, GPT cambió de tema → override")
+                        print(f"   Bruce pidió dato → cliente dio {len(digitos_733)} dígitos")
+                        print(f"   Respuesta original: '{respuesta_original_733[:80]}'")
+                        print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                        filtro_aplicado = True
 
         # ============================================================
         # FIX 690C: BRUCE2202 - Cliente listo para dictar ("tienes donde anotar")
@@ -8962,6 +9064,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
                 'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
                 'OFRECER_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',  # FIX 686B: inmunidad pregunta 2da cláusula
+                'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO', 'OTRA_SUCURSAL',  # FIX 731
             }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
@@ -9019,7 +9122,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                      'CLIENTE_ACEPTA_CORREO', 'EVITAR_LOOP_WHATSAPP',
                                      'PEDIR_TELEFONO_FIJO',
                                      'NO_HACEMOS_COMPRAS',  # FIX 710B: rechazo definitivo
-                                     'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO'}
+                                     'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
+                                     'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO',  # FIX 731
+                                     }
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -9081,7 +9186,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'PEDIR_TELEFONO_FIJO',
                                     'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
                                     'ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
-                                    'NO_HACEMOS_COMPRAS'}
+                                    'NO_HACEMOS_COMPRAS',
+                                    'CLIENTE_ES_ENCARGADO',  # FIX 731
+                                    }
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
@@ -9137,6 +9244,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'PEDIR_TELEFONO_FIJO',           # Alternativa de contacto (siempre válido)
                     'PREGUNTA_MARCAS',               # Cliente pregunta sobre productos (siempre responder)
                     'PREGUNTA_IDENTIDAD',            # FIX 694B: BRUCE2238 - "¿Cuál es su nombre?" (siempre responder)
+                    'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',  # FIX 731: 0% survival fix
+                    'CLIENTE_ES_ENCARGADO',                    # FIX 731: 0% survival fix
+                    'OTRA_SUCURSAL',                           # FIX 731: 0% survival fix
                 }
 
                 if tipo_602 in patrones_inmunes_602:
