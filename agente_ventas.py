@@ -2434,8 +2434,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             if bruce_pidio_dato_733:
                 # ¿Cliente está dando datos parciales? (2+ dígitos o email parcial)
                 digitos_733 = re.findall(r'\d', ultimo_cliente_667)
-                tiene_digitos_733 = len(digitos_733) >= 2
                 tiene_email_733 = any(ind in ultimo_cliente_667 for ind in ['arroba', '@', 'gmail', 'hotmail', 'punto com'])
+                # FIX 739: BRUCE2308 - También detectar números en PALABRAS ("ochenta y siete")
+                _nums_739 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete',
+                    'ocho','nueve','diez','once','doce','trece','catorce','quince',
+                    'veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa']
+                _uc_739 = ultimo_cliente_667.replace(',', ' ').replace('.', ' ')
+                _uc_739 = _uc_739.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                _nums_verbales_739 = sum(1 for p in _uc_739.split() if p in _nums_739)
+                tiene_digitos_733 = len(digitos_733) >= 2 or _nums_verbales_739 >= 2
 
                 if tiene_digitos_733 or tiene_email_733:
                     # ¿GPT respondió con algo que NO es acknowledgment?
@@ -2502,6 +2509,54 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"[OK] FIX 736: BRUCE2302 - Cliente anuncia dato, GPT cambió de tema → override")
                     print(f"   Cliente dijo: '{ultimo_cliente_667[:60]}'")
                     print(f"   Respuesta original: '{respuesta_original_736[:80]}'")
+                    print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    filtro_aplicado = True
+
+        # ============================================================
+        # FIX 737: BRUCE2306 - Cliente dictó email/teléfono pero GPT pide otro canal
+        # Backup de FIX 733: verifica últimos 2 mensajes del cliente (no solo 1)
+        # ============================================================
+        if not filtro_aplicado and ultimo_cliente_667:
+            _datos_recientes_737 = []
+            _count_737 = 0
+            for msg in reversed(self.conversation_history):
+                if msg.get('role') == 'user' and _count_737 < 2:
+                    _datos_recientes_737.append(msg['content'].lower())
+                    _count_737 += 1
+                elif _count_737 >= 2:
+                    break
+            _texto_reciente_737 = ' '.join(_datos_recientes_737)
+
+            tiene_email_737 = any(ind in _texto_reciente_737 for ind in [
+                'arroba', '@', 'gmail', 'hotmail', 'yahoo', 'outlook',
+                'punto com', 'punto mx', '.com', '.mx', '.net'
+            ])
+            _digitos_737 = re.findall(r'\d', _texto_reciente_737)
+            tiene_tel_737 = len(_digitos_737) >= 4
+
+            if tiene_email_737 or tiene_tel_737:
+                _sa_737 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+                _rn_737 = _sa_737(respuesta_lower)
+                pide_otro_737 = any(w in _rn_737 for w in [
+                    'me podria proporcionar', 'me puede dar', 'me podria dar',
+                    'me permite', 'tiene whatsapp', 'whatsapp del', 'correo del',
+                    'numero de whatsapp', 'numero de telefono',
+                    'proporcionar el whatsapp', 'proporcionar un whatsapp',
+                    'proporcionar el correo', 'proporcionar un numero'
+                ])
+                ya_confirma_737 = any(w in _rn_737 for w in [
+                    'anotado', 'registrado', 'ya lo tengo', 'perfecto',
+                    'le envio', 'lo tengo', 'recibido'
+                ])
+                if pide_otro_737 and not ya_confirma_737:
+                    respuesta_original_737 = respuesta
+                    if tiene_email_737:
+                        respuesta = "Perfecto, ya lo tengo anotado. Le envío la información al correo indicado."
+                    else:
+                        respuesta = "Perfecto, ya lo tengo anotado. Le envío el catálogo."
+                    print(f"[OK] FIX 737: BRUCE2306 - Cliente dictó datos pero GPT pidió otro canal → override")
+                    print(f"   Datos detectados: email={tiene_email_737}, tel={tiene_tel_737} ({len(_digitos_737)} dígitos)")
+                    print(f"   Respuesta original: '{respuesta_original_737[:80]}'")
                     print(f"   Respuesta corregida: '{respuesta[:80]}'")
                     filtro_aplicado = True
 
@@ -7725,6 +7780,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "de dónde habla", "de donde habla", "de dónde llama", "de donde llama",
             "de dónde me habla", "de donde me habla", "de dónde me llama", "de donde me llama",
             "de dónde es", "de donde es",  # "¿De dónde es la llamada?"
+            # FIX 738: BRUCE2307 - "¿Dónde dice que llama?" sin prefijo "de"
+            "donde dice que llama", "donde dice que habla",
+            "de que parte llama", "de que parte habla",
+            "donde llama usted", "donde llamas",
             # Variantes de quién habla
             "quién habla", "quien habla", "quién llama", "quien llama",
             "de parte de quién", "de parte de quien", "quién es", "quien es",
@@ -8246,7 +8305,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "número de", "el número", "un número", "algún número", "algun numero",
             "para contactar", "para llamar", "para comunicar",
             "cómo te llamo", "como te llamo", "cómo le llamo", "como le llamo",
-            "a dónde llamo", "a donde llamo", "dónde les llamo", "donde les llamo"
+            "a dónde llamo", "a donde llamo", "dónde les llamo", "donde les llamo",
+            # FIX 740: BRUCE2311 - "Me pasas tus datos" = pide contacto de Bruce/Nioval
+            "me pasas tus datos", "pasame tus datos", "me das tus datos",
+            "dame tus datos", "tus datos por favor", "sus datos por favor",
+            "me pasa sus datos", "me da sus datos", "paseme sus datos"
         ]):
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
@@ -9111,6 +9174,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'OFRECER_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',  # FIX 686B: inmunidad pregunta 2da cláusula
                 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO', 'OTRA_SUCURSAL',  # FIX 731
                 'CLIENTE_DICTA_EMAIL_COMPLETO', 'PIDE_CONTACTO_NIOVAL',  # FIX 734
+                'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
             }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
@@ -9171,6 +9235,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                      'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
                                      'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO',  # FIX 731
                                      'PIDE_CONTACTO_NIOVAL',  # FIX 734
+                                     'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
                                      }
             tipo_600 = patron_detectado.get('tipo', '')
 
@@ -9236,6 +9301,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'NO_HACEMOS_COMPRAS',
                                     'CLIENTE_ES_ENCARGADO',  # FIX 731
                                     'PIDE_CONTACTO_NIOVAL',  # FIX 734
+                                    'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
                                     }
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
@@ -9297,6 +9363,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'OTRA_SUCURSAL',                           # FIX 731: 0% survival fix
                     'CLIENTE_DICTA_EMAIL_COMPLETO',            # FIX 734: 0% survival fix
                     'PIDE_CONTACTO_NIOVAL',                    # FIX 734: 0% survival fix
+                    'CLIENTE_ACEPTA_CONTACTO_BRUCE',           # FIX 741: 0% survival fix
+                    'DAR_CONTACTO_BRUCE',                      # FIX 741: 0% survival fix
                 }
 
                 if tipo_602 in patrones_inmunes_602:
