@@ -30,10 +30,10 @@ class TestFix713AConstants:
         from bug_detector import GPT_EVAL_MIN_TURNOS_COMPLETO
         assert GPT_EVAL_MIN_TURNOS_COMPLETO == 3
 
-    def test_min_duracion_es_25(self):
-        """FIX 713A: Duración mínima bajada a 25s."""
+    def test_min_duracion_es_20(self):
+        """FIX 717: Duración mínima bajada a 20s (BRUCE2284: 24s no detectado)."""
         from bug_detector import GPT_EVAL_MIN_DURACION_S
-        assert GPT_EVAL_MIN_DURACION_S == 25
+        assert GPT_EVAL_MIN_DURACION_S == 20
 
     def test_duracion_corta_es_45(self):
         """FIX 713A: Llamada corta = < 45s."""
@@ -60,13 +60,13 @@ class TestFix713AClassification:
         return tracker
 
     def test_ultra_corta_skip(self):
-        """< 25s → SKIP total (sin GPT eval)."""
+        """< 20s → SKIP total (sin GPT eval). FIX 717: bajado de 25 a 20."""
         from bug_detector import GPT_EVAL_MIN_DURACION_S
-        assert GPT_EVAL_MIN_DURACION_S == 25
-        # 20s con 2 turnos → debería ser skipped
-        tracker = self._make_tracker(turnos_bruce=2, duracion_s=20)
+        assert GPT_EVAL_MIN_DURACION_S == 20
+        # 15s con 2 turnos → debería ser skipped
+        tracker = self._make_tracker(turnos_bruce=2, duracion_s=15)
         assert len(tracker.respuestas_bruce) >= 2
-        # La función _evaluar_con_gpt retornaría [] por duration < 25
+        # La función _evaluar_con_gpt retornaría [] por duration < 20
 
     def test_1_turno_skip(self):
         """1 turno Bruce → SKIP (insuficiente contexto)."""
@@ -285,10 +285,10 @@ class TestFix713EdgeCases:
         from bug_detector import GPT_EVAL_MIN_DURACION_S
         assert 25 >= GPT_EVAL_MIN_DURACION_S
 
-    def test_exactamente_24s(self):
-        """24s → SÍ es ultra-corta (<25)."""
+    def test_exactamente_19s(self):
+        """19s → SÍ es ultra-corta (<20). FIX 717."""
         from bug_detector import GPT_EVAL_MIN_DURACION_S
-        assert 24 < GPT_EVAL_MIN_DURACION_S
+        assert 19 < GPT_EVAL_MIN_DURACION_S
 
     def test_exactamente_45s(self):
         """45s → NO es corta (>=45), pero depende de turnos."""

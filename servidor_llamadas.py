@@ -5761,6 +5761,11 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         print(f" FIX 162A: ElevenLabs FALLÓ - usando audio de relleno")
         print(f"   Respuesta que falló: {respuesta_agente[:100]}...")
         print(f"   Call SID: {call_sid}")
+        # FIX 715: Registrar uso de filler para bug detector
+        try:
+            emit_event(call_sid, "FILLER_162A", {"respuesta_original": respuesta_agente[:100]})
+        except Exception:
+            pass
 
         if "dejeme_ver" in audio_cache:
             print(f" FIX 162A: Usando audio de relleno 'dejeme_ver'")

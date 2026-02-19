@@ -70,7 +70,8 @@ GPT_EVAL_MIN_TURNOS = 2           # FIX 713A: Bajado de 3 a 2 (llamadas cortas u
 GPT_EVAL_MIN_TURNOS_COMPLETO = 3  # FIX 713A: GPT eval completo requiere 3+ turnos
 # FIX 692B: Duración mínima para GPT eval (llamadas ultra-cortas = FP)
 # FIX 713A: Bajado de 45 a 25 (BRUCE2263: 41s/2 turnos tenía bugs reales no detectados)
-GPT_EVAL_MIN_DURACION_S = 25
+# FIX 717: Bajado de 25 a 20 (BRUCE2284: 24s tenía bugs claros no detectados por 1s)
+GPT_EVAL_MIN_DURACION_S = 20
 GPT_EVAL_DURACION_CORTA_S = 45    # FIX 713A: < 45s = llamada corta → prompt enfocado
 
 # FIX 640: Persistencia en disco (sobrevive deploys Railway)
@@ -103,6 +104,7 @@ class CallEventTracker:
         self.patrones_invalidados = 0
         self.respuestas_vacias = 0
         self.cliente_dijo_bueno = 0
+        self.filler_162a_count = 0  # FIX 715: Contador de veces que se usó audio filler por fallo TTS
 
     def emit(self, event_type: str, data: dict = None):
         """Registra un evento. Siempre seguro (no lanza excepciones)."""
@@ -133,6 +135,8 @@ class CallEventTracker:
                 self.patrones_invalidados += 1
             elif event_type == "RESPUESTA_VACIA":
                 self.respuestas_vacias += 1
+            elif event_type == "FILLER_162A":
+                self.filler_162a_count += 1  # FIX 715: TTS falló, se usó audio filler
         except Exception:
             pass  # Nunca fallar
 
@@ -206,11 +210,28 @@ class BugDetector:
                     "categoria": "tecnico"
                 })
 
+            # FIX 715: RESPUESTA_FILLER_INCOHERENTE - TTS falló y se usó "dejeme_ver" como filler
+            if tracker.filler_162a_count >= 1:
+                bugs.append({
+                    "tipo": "RESPUESTA_FILLER_INCOHERENTE",
+                    "severidad": ALTO,
+                    "detalle": f"ElevenLabs TTS falló {tracker.filler_162a_count}x → audio 'dejeme_ver' usado como filler (cliente escuchó respuesta incoherente)",
+                    "categoria": "tecnico"
+                })
+
             # =============================================
             # ERRORES DE CONTENIDO (FIX 637)
             # =============================================
             content_bugs = ContentAnalyzer.analyze(tracker)
             bugs.extend(content_bugs)
+
+            # FIX 716: AREA_EQUIVOCADA / NO_MANEJA_FERRETERIA
+            area_bugs = ContentAnalyzer._check_area_equivocada(tracker.conversacion)
+            bugs.extend(area_bugs)
+
+            # FIX 718: DICTADO_INTERRUMPIDO - cliente dictando dato y Bruce se despide
+            dictado_bugs = ContentAnalyzer._check_dictado_interrumpido(tracker.conversacion)
+            bugs.extend(dictado_bugs)
 
             # FIX 639D: DATO_SIN_RESPUESTA - check independiente (no requiere 2+ respuestas)
             dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
@@ -497,6 +518,135 @@ class ContentAnalyzer:
                     "categoria": "contenido"
                 })
 
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 716: AREA_EQUIVOCADA / NO_MANEJA_FERRETERIA
+    # =========================================================
+    _AREA_EQUIVOCADA_PATTERNS = [
+        'no manejo ferreteria', 'no manejamos ferreteria',
+        'no manejo nada de ferreteria', 'no manejamos nada de ferreteria',
+        'esto no es ferreteria', 'esto no es una ferreteria',
+        'aqui no es ferreteria', 'no somos ferreteria',
+        'no vendemos ferreteria', 'no es ferreteria',
+        'no tenemos ferreteria', 'no trabajamos ferreteria',
+        'area equivocada', 'departamento equivocado',
+        'numero equivocado', 'se equivoco de numero',
+        'corporativo', 'oficinas corporativas',
+        'no es mi area', 'no me corresponde',
+        'no es el area', 'llamo al lugar equivocado',
+        'no hacemos eso', 'no manejamos eso',
+        'no vendemos eso', 'no trabajamos con eso',
+        'no es aqui', 'aqui no es',
+    ]
+
+    # Respuestas de Bruce que indican que NO entendió el rechazo
+    _BRUCE_NO_ENTENDIO_RECHAZO = re.compile(
+        r'(whatsapp|correo|cat[aá]logo|encargad[oa]|informaci[oó]n|producto|me comunico|me permite|'
+        r'le env[ií]o|le puedo|me podr[ií]a|aja.*si|mmm|entiendo.*me)',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_area_equivocada(conv: list) -> list:
+        """FIX 716: Detecta si cliente dice que no es ferretería/área equivocada
+        y Bruce no se despide apropiadamente."""
+        bugs = []
+        try:
+            if len(conv) < 2:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                texto_l = texto.lower()
+                # Normalizar acentos
+                texto_norm = texto_l.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
+
+                cliente_dice_no_aplica = any(p in texto_norm for p in ContentAnalyzer._AREA_EQUIVOCADA_PATTERNS)
+
+                if not cliente_dice_no_aplica:
+                    continue
+
+                # Verificar si Bruce respondió DESPUÉS con algo que ignora el rechazo
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        # ¿Bruce ignoró el rechazo y siguió vendiendo?
+                        if ContentAnalyzer._BRUCE_NO_ENTENDIO_RECHAZO.search(t2):
+                            bugs.append({
+                                "tipo": "AREA_EQUIVOCADA",
+                                "severidad": ALTO,
+                                "detalle": f"Cliente dijo '{texto[:60]}' pero Bruce ignoró y respondió: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break  # Solo revisar la siguiente respuesta de Bruce
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
+    # FIX 718: DICTADO_INTERRUMPIDO
+    # =========================================================
+    _DICTADO_PATTERNS = re.compile(
+        r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
+        r'hotmail|gmail|yahoo|outlook|prodigy|'
+        r'a de|b de|c de|d de|e de|f de|g de|'
+        r'ele|eme|ene|ese|erre|'
+        r'doble (u|v|uve)|'
+        r'\d{2,})',
+        re.IGNORECASE
+    )
+
+    _BRUCE_DESPEDIDA = re.compile(
+        r'(me comunico despu[eé]s|muchas gracias por su tiempo|que tenga|buen d[ií]a|'
+        r'excelente d[ií]a|hasta luego|nos comunicamos|le marco)',
+        re.IGNORECASE
+    )
+
+    # FIX 718: Confirmaciones de Bruce que indican que SÍ procesó el dato
+    _BRUCE_CONFIRMA_DATO = re.compile(
+        r'(perfecto.*lo tengo|lo anot[eé]|le env[ií]o el cat[aá]logo|'
+        r'perfecto.*env[ií]o|perfecto.*catalogo|listo.*anot|'
+        r'anotado|recibido|entendido.*env|ya lo tengo)',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_dictado_interrumpido(conv: list) -> list:
+        """FIX 718: Detecta si cliente estaba dictando datos y Bruce se despidió/cambió tema."""
+        bugs = []
+        try:
+            if len(conv) < 3:
+                return bugs
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                # ¿El cliente estaba dictando?
+                if not ContentAnalyzer._DICTADO_PATTERNS.search(texto):
+                    continue
+
+                # Buscar la siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        # ¿Bruce se despidió en vez de confirmar el dato?
+                        if ContentAnalyzer._BRUCE_DESPEDIDA.search(t2):
+                            # FIX 718: Excluir si Bruce CONFIRMÓ el dato antes de despedirse
+                            if ContentAnalyzer._BRUCE_CONFIRMA_DATO.search(t2):
+                                break  # Bruce procesó el dato, no es interrupción
+                            bugs.append({
+                                "tipo": "DICTADO_INTERRUMPIDO",
+                                "severidad": CRITICO,
+                                "detalle": f"Cliente dictaba dato ('{texto[:50]}') pero Bruce se despidió: '{t2[:60]}'",
+                                "categoria": "contenido"
+                            })
+                        break
         except Exception:
             pass
         return bugs
@@ -800,9 +950,9 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         duracion_llamada = int(time.time() - tracker.created_at)
         num_turnos = len(tracker.respuestas_bruce)
 
-        # Ultra-corta (< 25s) → SKIP total
+        # FIX 717: Ultra-corta (< 20s) → SKIP total (bajado de 25s)
         if duracion_llamada < GPT_EVAL_MIN_DURACION_S:
-            print(f"[FIX 713A] Llamada {tracker.bruce_id}: Solo {duracion_llamada}s, SKIP GPT eval (min {GPT_EVAL_MIN_DURACION_S}s)")
+            print(f"[FIX 717] Llamada {tracker.bruce_id}: Solo {duracion_llamada}s, SKIP GPT eval (min {GPT_EVAL_MIN_DURACION_S}s)")
             return bugs
 
         # FIX 713A: Determinar si es llamada corta (25-45s o 2 turnos) vs normal (>45s y 3+ turnos)

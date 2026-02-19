@@ -142,9 +142,9 @@ class TestFix692BGPTEvalFilters:
         assert GPT_EVAL_MIN_TURNOS == 2
 
     def test_min_duracion_existe(self):
-        """FIX 713A: GPT_EVAL_MIN_DURACION_S bajado a 25 (ultra-cortas skip, cortas prompt enfocado)."""
+        """FIX 717: GPT_EVAL_MIN_DURACION_S bajado a 20 (BRUCE2284: 24s no detectado por 1s)."""
         from bug_detector import GPT_EVAL_MIN_DURACION_S
-        assert GPT_EVAL_MIN_DURACION_S >= 25
+        assert GPT_EVAL_MIN_DURACION_S >= 20
 
     def test_2_turnos_no_evalua(self):
         """Con solo 2 turnos de Bruce, GPT eval no debe ejecutarse."""
@@ -277,8 +277,8 @@ class TestIntegracionFix692:
         # Filtro 1: Min turnos (2 = prompt enfocado, 3 = prompt completo)
         assert GPT_EVAL_MIN_TURNOS >= 2
         assert GPT_EVAL_MIN_TURNOS_COMPLETO >= 3
-        # Filtro 2: Min duración (25 = ultra-corta skip, 45 = corta → prompt enfocado)
-        assert GPT_EVAL_MIN_DURACION_S >= 25
+        # Filtro 2: Min duración (FIX 717: 20 = ultra-corta skip, 45 = corta → prompt enfocado)
+        assert GPT_EVAL_MIN_DURACION_S >= 20
         assert GPT_EVAL_DURACION_CORTA_S >= 45
 
     def test_persistencia_bugs_robusta(self):
