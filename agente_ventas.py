@@ -2194,7 +2194,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if turno_bruce_650 == 1:  # Primer turno de Bruce (después del saludo automático)
             tiene_encargado = any(p in respuesta_lower for p in ["encargado", "encargada", "compras"])
             pide_contacto = any(p in respuesta_lower for p in ["whatsapp", "correo", "teléfono", "telefono", "número", "numero", "contacto"])
-            tiene_pitch = any(p in respuesta_lower for p in ["productos", "ferreteros", "distribuidor", "nioval", "marca"])
+            # FIX 746: BRUCE2317 - Pitch real = identificación empresa + productos (no solo mención incidental)
+            _tiene_identidad_746 = any(p in respuesta_lower for p in ["nioval", "marca", "distribuidor"])
+            _tiene_productos_746 = any(p in respuesta_lower for p in ["productos", "ferreteros", "ferreteria", "herramientas"])
+            tiene_pitch = _tiene_identidad_746 and _tiene_productos_746
 
             # FIX 660: Bloquear si pide contacto SIN pitch (peor que pedir encargado sin pitch)
             if pide_contacto and not tiene_pitch:
@@ -9211,6 +9214,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO', 'OTRA_SUCURSAL',  # FIX 731
                 'CLIENTE_DICTA_EMAIL_COMPLETO', 'PIDE_CONTACTO_NIOVAL',  # FIX 734
                 'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
+                'DIGAME_CONTINUAR',  # FIX 747
             }
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
@@ -9272,6 +9276,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                      'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO',  # FIX 731
                                      'PIDE_CONTACTO_NIOVAL',  # FIX 734
                                      'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
+                                     'DIGAME_CONTINUAR',  # FIX 747
                                      }
             tipo_600 = patron_detectado.get('tipo', '')
 
@@ -9338,6 +9343,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                     'CLIENTE_ES_ENCARGADO',  # FIX 731
                                     'PIDE_CONTACTO_NIOVAL',  # FIX 734
                                     'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
+                                    'DIGAME_CONTINUAR',  # FIX 747
                                     }
             if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
@@ -9401,6 +9407,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'PIDE_CONTACTO_NIOVAL',                    # FIX 734: 0% survival fix
                     'CLIENTE_ACEPTA_CONTACTO_BRUCE',           # FIX 741: 0% survival fix
                     'DAR_CONTACTO_BRUCE',                      # FIX 741: 0% survival fix
+                    'DIGAME_CONTINUAR',                        # FIX 747: 0% survival fix
                 }
 
                 if tipo_602 in patrones_inmunes_602:

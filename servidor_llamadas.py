@@ -3009,6 +3009,9 @@ def procesar_respuesta():
                     'le doy', 'le paso', 'te doy', 'te paso',
                     # Acuerdo/rechazo a propuesta Bruce
                     'de acuerdo', 'no gracias',
+                    # FIX 745A: BRUCE2316 - Saludos/disculpas = humano real (no IVR)
+                    'buenas tardes', 'buenas noches', 'muy buenas', 'buen dia',
+                    'perdon', 'disculpe', 'disculpa',
                 ]
 
                 # Señales DÉBILES: genéricas, podrían ser conversación de fondo
@@ -3058,7 +3061,9 @@ def procesar_respuesta():
                     for palabra in palabras_en_texto_569
                 ) if palabras_en_texto_569 else False
 
-                if cliente_volvio and len(frase_limpia) > 10 and tiene_palabras_reconocibles:  # FIX 569: min 10 chars + palabras españolas
+                # FIX 745B: BRUCE2316 - Si señal detectada (fuerte/débil), confiar sin len check
+                _senal_detectada_745 = tiene_senal_fuerte or tiene_senal_debil
+                if cliente_volvio and (_senal_detectada_745 or len(frase_limpia) > 10) and tiene_palabras_reconocibles:  # FIX 569+745B
                     print(f"\n FIX 520: CLIENTE VOLVIÓ después de espera - '{speech_result}'")
                     print(f"   Estado anterior: ESPERANDO_TRANSFERENCIA")
                     print(f"   → Saliendo del modo espera, procesando normalmente")
@@ -4876,9 +4881,16 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
     # FIX 682: Resetear contador GPT timeouts si respuesta exitosa (no fue fallback de timeout)
     # FIX 684: Actualizado para nuevo mensaje sin "problemas de conexión"
+    # FIX 744: BRUCE2315 - También NO resetear si fallback fue "me puede repetir" (anti-loop)
     if respuesta_agente and agente.gpt_timeouts_consecutivos > 0:
-        if 'no le estoy escuchando bien en este momento' not in str(respuesta_agente):
+        _ra_744 = str(respuesta_agente).lower()
+        _es_fallback_744 = ('no le estoy escuchando bien en este momento' in _ra_744 or
+                            'me puede repetir' in _ra_744)
+        if not _es_fallback_744:
             agente.gpt_timeouts_consecutivos = 0
+            print(f"[INFO] FIX 744: GPT timeout counter reset (respuesta exitosa)")
+        else:
+            print(f"[INFO] FIX 744: GPT timeout counter NO reset (fallback detectado, counter={agente.gpt_timeouts_consecutivos})")
 
     # FIX 632: Registrar respuesta de Bruce en bug detector
     try:
