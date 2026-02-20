@@ -691,11 +691,12 @@ class TestFix704AEmptyResponseDictation:
         assert alt == ""
 
     def test_empty_response_with_telefono(self, memory):
-        """Con teléfono proporcionado (dictando), devuelve acknowledgment."""
+        """FIX 751: Teléfono capturado NO activa acknowledgment permanente.
+        Solo email_dictado_verbal indica dictado activo real."""
         memory.datos_proporcionados['telefono'] = '3312345678'
         ok, alt = memory.validate_response("")
-        assert ok == False
-        assert 'aja' in alt.lower() or 'si' in alt.lower()
+        assert ok == True
+        assert alt == ""
 
     def test_empty_response_with_email_verbal(self, memory):
         """Con email dictado verbal, devuelve acknowledgment."""
@@ -705,20 +706,20 @@ class TestFix704AEmptyResponseDictation:
         assert 'aja' in alt.lower() or 'si' in alt.lower()
 
     def test_empty_response_dictation_but_despedida(self, memory):
-        """Con dictado activo PERO cliente se despide, no acknowledgment."""
-        memory.datos_proporcionados['telefono'] = '3312345678'
+        """Con email dictado PERO cliente se despide, no acknowledgment."""
+        memory.facts['email_dictado_verbal'] = True
         memory.facts['cliente_se_despide'] = True
         ok, alt = memory.validate_response("")
         assert ok == True
         assert alt == ""
 
     def test_none_response_with_dictation(self, memory):
-        """None con dictado activo también devuelve acknowledgment (not respuesta es True para None)."""
+        """FIX 751: None con solo teléfono capturado NO activa acknowledgment.
+        Solo email_dictado_verbal es indicador de dictado activo."""
         memory.datos_proporcionados['telefono'] = '3312345678'
         ok, alt = memory.validate_response(None)
-        # None también es falsy → FIX 704A aplica
-        assert ok == False
-        assert 'aja' in alt.lower() or 'si' in alt.lower()
+        assert ok == True
+        assert alt == ""
 
 
 # ============================================================

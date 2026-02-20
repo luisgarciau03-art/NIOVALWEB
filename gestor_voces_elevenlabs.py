@@ -30,6 +30,16 @@ VOCES_DISPONIBLES = {
         "nombre": "Bruce - Voz Masculina Original",
         "descripcion": "Voz masculina profesional mexicana"
     },
+    "diana_sanchez": {
+        "voice_id": "FIhWHKTvfI9sX1beLEJ8",
+        "nombre": "Diana Sanchez - Voz Femenina",
+        "descripcion": "Voz femenina profesional y clara"
+    },
+    "mauricio": {
+        "voice_id": "94zOad0g7T7K4oa7zhDq",
+        "nombre": "Mauricio - Voz Masculina",
+        "descripcion": "Voz masculina profesional y confiable"
+    },
     "domi_femenino": {
         "voice_id": "AZnzlk1XvdvUeBnXmlld",
         "nombre": "Domi - Voz Femenina",
@@ -363,7 +373,7 @@ def menu_principal():
 
         elif opcion == "4":
             listar_voces()
-            voice_key = input("\nSelecciona la voz (bruce_masculino/domi_femenino/jessica_femenino/matilda_femenino): ").strip()
+            voice_key = input("\nSelecciona la voz (bruce_masculino/diana_sanchez/mauricio/domi_femenino/jessica_femenino/matilda_femenino): ").strip()
 
             if voice_key not in VOCES_DISPONIBLES:
                 print("❌ Voz no válida")

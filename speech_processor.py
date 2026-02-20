@@ -153,9 +153,10 @@ class SpeechStateMachine:
             return (self.state, SpeechAction.ACKNOWLEDGE)
 
         # --- Transición 5: Pregunta directa → responder ---
+        # FIX 751: Usar patrones sin ¿ (el normalize no lo quita) y sin ? prefix
         preguntas_directas = [
-            '?que quiere', '?que se le ofrece', '?de que se trata',
-            '?que necesita', '?quien habla', '?de donde llama'
+            'que quiere', 'que se le ofrece', 'de que se trata',
+            'que necesita', 'quien habla', 'de donde llama'
         ]
         if any(p in texto_norm for p in preguntas_directas) or '?' in texto:
             self._transition(SpeechState.IDLE)

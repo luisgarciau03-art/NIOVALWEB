@@ -14,9 +14,8 @@ from twilio.rest import Client
 
 # Configurar encoding UTF-8 para Windows
 if sys.platform == 'win32':
-    import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 load_dotenv()
 
@@ -234,11 +233,9 @@ Duración total: {minutos}m {segundos}s"""
         try:
             url = f"{WEBHOOK_URL}/iniciar-llamada"
 
-            # Cargar referencia de columna U (si existe)
-            fila = contacto['fila']
-            referencia = self.sheets_adapter.obtener_referencia(fila)
+            # Referencia ya viene incluida en el contacto desde obtener_contactos_pendientes
+            referencia = contacto.get('referencia', '')
             if referencia:
-                contacto['referencia'] = referencia
                 print(f" Referencia encontrada: {referencia[:50]}...")
 
             # Enviar contacto completo con TODA la información

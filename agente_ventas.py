@@ -136,6 +136,12 @@ class MetricsLogger:
         """Registra que se bloqueó respuesta vacía (FIX 479)"""
         self.metricas["respuestas_vacias_bloqueadas"] += 1
 
+    def log_filtro_post_gpt(self, fix_id: str, tipo: str):
+        """Registra que un filtro post-GPT fue aplicado (FIX 693/697/699)"""
+        if "filtros_post_gpt" not in self.metricas:
+            self.metricas["filtros_post_gpt"] = []
+        self.metricas["filtros_post_gpt"].append({"fix": fix_id, "tipo": tipo})
+
     def get_promedios(self) -> dict:
         """Calcula promedios de todas las métricas de timing"""
         def avg(lista):
@@ -1206,6 +1212,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'si bueno', 'sí bueno', 'buenos dias', 'buenos días',
             'buenas tardes', 'buenas noches', 'si gracias', 'sí gracias'
         ]
+        # FIX 754: BRUCE2321 - "No, joven," es rechazo cortés, NO continuación
+        # Problema: "No, joven," termina en coma → FIX 477 trata como dato parcial → "Ajá, sí."
+        # Pero "No, [término cortés]" es rechazo COMPLETO en español mexicano
+        _rechazo_cortes_754 = [
+            'no joven', 'no muchacho', 'no señor', 'no senor',
+            'no señorita', 'no senorita', 'no mijo', 'no amigo',
+            'no gracias joven', 'no gracias muchacho', 'no gracias señor',
+        ]
+        _tl_754 = re.sub(r'[,.\s]+$', '', texto_lower).replace(',', ' ').strip()
+        _tl_754 = re.sub(r'\s+', ' ', _tl_754)
+        if any(r in _tl_754 for r in _rechazo_cortes_754):
+            print(f"   [DEBUG] FIX 754: '{_tl_754}' es rechazo cortés - NO pausar por coma")
+            return False
         texto_limpio_592 = re.sub(r'[,.\s]+$', '', texto_lower).strip()
         es_confirmacion_corta = texto_limpio_592 in confirmaciones_cortas_592
 
@@ -2400,7 +2419,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 break
 
         # Verificar que NO mencionó hora específica (FIX 665 ya cubre ese caso)
-        patron_hora_668 = r'\b(\d{1,2}):?(\d{2})?\s*(am|pm|de la ma[ñn]ana|de la tarde|de la noche)?\b'
+        # FIX 751: Requiere al menos :MM o am/pm/periodo del día (antes matcheaba cualquier número suelto)
+        patron_hora_668 = r'\b\d{1,2}(?::\d{2}|\s*(?:am|pm|de la ma[ñn]ana|de la tarde|de la noche))\b'
         tiene_hora_668 = re.search(patron_hora_668, ultimo_cliente_667)
         horas_palabras_668 = ['ocho', 'nueve', 'diez', 'once', 'doce', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete']
         menciona_hora_palabra_668 = any(f" {hora} " in f" {ultimo_cliente_667} " for hora in horas_palabras_668)
@@ -2513,8 +2533,6 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     'aja', 'perfecto', 'digame', 'adelante', 'continue',
                     'si, digame', 'claro', 'anotado'
                 ])
-                # Si es ack + cambio_tema y respuesta larga → es despedida con cortesía, NO ack real
-                es_solo_ack_736 = es_ack_736 and not cambio_tema_736
                 es_ack_corto_736 = es_ack_736 and len(respuesta.strip()) < 35
 
                 if cambio_tema_736 and not es_ack_corto_736:
@@ -6645,7 +6663,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"\n[FIX 693] PITCH REPETIDO SEMÁNTICO detectado (NIOVAL ya presentado)")
                 print(f"  Respuesta: '{respuesta[:80]}...'")
                 # Generar alternativa contextual sin repetir pitch
-                if self.encargado_disponible == False or (
+                if getattr(self, 'encargado_disponible', None) == False or (
                     any('no esta' in m.get('content', '').lower() or 'no está' in m.get('content', '').lower() or 'no se encuentra' in m.get('content', '').lower()
                         for m in self.conversation_history if m.get('role') == 'user')):
                     respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
@@ -9602,6 +9620,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 428: Retorna False si detecta problema de audio (no procesar)
         # ============================================================
         debe_continuar = self._actualizar_estado_conversacion(respuesta_cliente)
+        # FIX 751: Si _actualizar_estado_conversacion retorna string, es respuesta directa (FIX 389/394/395)
+        if isinstance(debe_continuar, str):
+            print(f"   FIX 751: _actualizar_estado_conversacion retornó respuesta directa")
+            return debe_continuar
         if not debe_continuar:
             # FIX 428 detectó problema de audio (¿bueno? repetido, etc.)
             # No generar respuesta - sistema de respuestas vacías manejará

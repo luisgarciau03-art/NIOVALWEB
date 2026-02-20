@@ -566,7 +566,8 @@ def limpiar_recursos_llamada(call_sid):
         cliente_hablando_activo,     # Tracking de interrupciones
         bruce_audio_enviado_timestamp,  # Timestamp del último audio
         respuesta_precargada,        # Respuestas pre-generadas
-        callsid_to_bruceid          # Mapeo call_sid -> bruce_id
+        callsid_to_bruceid,         # Mapeo call_sid -> bruce_id
+        audio_files                  # FIX 751: Archivos de audio temporales (antes no se limpiaba → memory leak)
     ]
 
     # Limpiar cada diccionario
@@ -3407,6 +3408,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     print(f"   FIX 519: Error en GPT ({e}) - usando lógica de patrones")
                     # Si GPT falla, continuar con la lógica de patrones existente
 
+            # FIX 755: BRUCE2326 - Safety: NO entrar en modo espera si es primer turno
+            # Problema: State leak causó que Bruce abriera con "Claro, espero." sin saludo
+            # Si conversation_history tiene 0-1 user messages, NO es transferencia real
+            _user_msgs_755 = sum(1 for m in agente.conversation_history if m.get('role') == 'user')
+            if cliente_pidio_espera and _user_msgs_755 < 1:
+                print(f"\n FIX 755: BRUCE2326 - Ignorando 'espera' en primer turno (sin pitch previo)")
+                cliente_pidio_espera = False
+
             if cliente_pidio_espera:
                 print(f"\n FIX 470: CLIENTE PIDIÓ ESPERAR - '{speech_result}'")
                 print(f"   Estableciendo estado ESPERANDO_TRANSFERENCIA")
@@ -3471,22 +3480,41 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     agente.respuestas_vacias_consecutivas = 0
                     # NO return aquí - continuar procesamiento normal (caerá al GPT)
                 else:
-                    bruce_id_712 = agente.lead_data.get("bruce_id", "N/A")
-                    print(f"\n FIX 712B: BRUCE2266 - Aún en ESPERANDO_TRANSFERENCIA, ignorando audio de fondo")
-                    print(f"   Texto ignorado: '{speech_result[:80]}'")
-                    log_evento(f"{bruce_id_712} - AUDIO FONDO IGNORADO: \"{speech_result[:60]}\"", "SISTEMA")
+                    # FIX 753: BRUCE2322 - Re-check señales ANTES de ignorar audio
+                    # Problema: FIX 712A solo corre dentro de `if call_sid in cliente_hablando_activo`
+                    # Si call_sid NO está ahí, 712A no evalúa señales y 712B ignora TODO
+                    # "¿Bueno?" x5 ignorados → cliente colgó
+                    _fl_753 = frase_limpia.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+                    _fl_753 = _fl_753.replace('¿','').replace('?','').replace('¡','').replace('!','').replace('.','').replace(',','')
+                    _debiles_753 = ['bueno', 'hola', 'si', 'diga', 'digame', 'vuelvo', 'esta bien', 'ok']
+                    _fuertes_753 = ['aqui estoy', 'ya estoy', 'ya regrese', 'ya volvi', 'oiga', 'oye', 'mire', 'me escucha', 'me oye', 'listo', 'fijese', 'encargado', 'ferreteria', 'nioval']
+                    _tiene_fuerte_753 = any(f in _fl_753 for f in _fuertes_753)
+                    _tiene_debil_753 = any(f in _fl_753 for f in _debiles_753)
+                    _corto_753 = len(_fl_753) < 25
+                    _volvio_753 = _tiene_fuerte_753 or (_tiene_debil_753 and _corto_753)
+                    if _volvio_753:
+                        print(f"\n FIX 753: BRUCE2322 - Re-engagement detectado en 712B: '{speech_result[:60]}'")
+                        print(f"   Fuerte:{_tiene_fuerte_753} Débil:{_tiene_debil_753} Corto:{_corto_753}")
+                        agente.estado_conversacion = _EC_712.CONVERSACION_NORMAL
+                        agente.respuestas_vacias_consecutivas = 0
+                        # NO return - continuar procesamiento normal
+                    else:
+                        bruce_id_712 = agente.lead_data.get("bruce_id", "N/A")
+                        print(f"\n FIX 712B: BRUCE2266 - Aún en ESPERANDO_TRANSFERENCIA, ignorando audio de fondo")
+                        print(f"   Texto ignorado: '{speech_result[:80]}'")
+                        log_evento(f"{bruce_id_712} - AUDIO FONDO IGNORADO: \"{speech_result[:60]}\"", "SISTEMA")
 
-                    response = VoiceResponse()
-                    # Continuar escuchando sin hablar (30s timeout como en FIX 470)
-                    response.record(
-                        action="/procesar-respuesta",
-                        method="POST",
-                        max_length=1,
-                        timeout=30,
-                        play_beep=False,
-                        trim="trim-silence"
-                    )
-                    return Response(str(response), mimetype="text/xml")
+                        response = VoiceResponse()
+                        # Continuar escuchando sin hablar (30s timeout como en FIX 470)
+                        response.record(
+                            action="/procesar-respuesta",
+                            method="POST",
+                            max_length=1,
+                            timeout=30,
+                            play_beep=False,
+                            trim="trim-silence"
+                        )
+                        return Response(str(response), mimetype="text/xml")
 
             es_pregunta_rapida = (
                 frase_limpia.startswith('¿') or
@@ -5955,6 +5983,8 @@ def despedida_final():
                 # 2. Manejo de REFERENCIAS - Llamar automáticamente al referido
                 telefono_referencia = agente.lead_data.get("referencia_telefono")
                 if telefono_referencia and fila:
+                    # FIX 751: Definir base_url aquí (antes solo se definía en bloque Buzon/Operadora)
+                    base_url = request.url_root.replace('http://', 'https://')
                     print(f"\n Procesando referencia...")
                     nombre_ref = agente.lead_data.get("referencia_nombre", "")
                     print(f"     Nombre del referido: {nombre_ref}")
@@ -6100,36 +6130,29 @@ def llamadas_masivas():
     data = request.json
     lista = data.get("lista_telefonos", [])
     delay = data.get("delay_segundos", 30)
-    
-    resultados = []
-    
-    for contacto in lista:
-        try:
-            call = twilio_client.calls.create(
-                to=contacto["telefono"],
-                from_=TWILIO_PHONE_NUMBER,
-                url=request.url_root + "webhook-voz",
-                method="POST"
-                # FIX 271: Removido record=True - ahora usamos <Start><Recording> en TwiML
-            )
+    webhook_url = request.url_root + "webhook-voz"
 
-            resultados.append({
-                "telefono": contacto["telefono"],
-                "nombre": contacto.get("nombre"),
-                "call_sid": call.sid,
-                "status": "iniciada"
-            })
-            
-            # Esperar entre llamadas
-            import time
-            time.sleep(delay)
-            
-        except Exception as e:
-            resultados.append({
-                "telefono": contacto["telefono"],
-                "error": str(e),
-                "status": "fallida"
-            })
+    # FIX 751: Ejecutar llamadas en background thread para no bloquear Flask worker
+    def ejecutar_llamadas_masivas(lista_contactos, delay_s, webhook):
+        import time
+        for contacto in lista_contactos:
+            try:
+                call = twilio_client.calls.create(
+                    to=contacto["telefono"],
+                    from_=TWILIO_PHONE_NUMBER,
+                    url=webhook,
+                    method="POST"
+                )
+                print(f"   Llamada masiva iniciada: {contacto['telefono']} → {call.sid}")
+                time.sleep(delay_s)
+            except Exception as e:
+                print(f"   Error llamada masiva {contacto['telefono']}: {e}")
+
+    import threading
+    t = threading.Thread(target=ejecutar_llamadas_masivas, args=(lista, delay, webhook_url), daemon=True)
+    t.start()
+
+    resultados = [{"status": "batch_iniciado", "total": len(lista), "delay": delay}]
     
     return {"resultados": resultados}
 
@@ -6152,7 +6175,7 @@ def status_callback():
         call_duration = request.form.get("CallDuration")
         answered_by = request.form.get("AnsweredBy", "")
 
-    print(f"\n STATUS CALLBACK - Llamada {call_sid[:10]}...")
+    print(f"\n STATUS CALLBACK - Llamada {(call_sid or 'unknown')[:10]}...")
     print(f"   Estado: {call_status}")
     print(f"   Duración: {call_duration}s")
     if answered_by:
@@ -10243,18 +10266,21 @@ def on_azure_transcript(call_sid, texto, is_final, confidence="N/A"):
         if is_final:
             print(f"✅ FIX 613: [FINAL Azure] '{texto}'")
             azure_transcripciones[call_sid].append(texto)
-            azure_ultima_final[call_sid] = {
-                "timestamp": time.time(),
-                "texto": texto,
-                "es_final": True
-            }
+            # FIX 751: Usar azure_ultima_final_lock (antes usaba azure_transcripciones_lock)
+            with azure_ultima_final_lock:
+                azure_ultima_final[call_sid] = {
+                    "timestamp": time.time(),
+                    "texto": texto,
+                    "es_final": True
+                }
         else:
             if len(texto) > 10:
                 print(f"⏳ FIX 613: [PARCIAL Azure] '{texto}'")
 
             # Aplicar misma lógica que FIX 538 - PARCIAL no reemplaza FINAL
             ultima_fue_final = False
-            ultima_info_az = azure_ultima_final.get(call_sid, {})
+            with azure_ultima_final_lock:
+                ultima_info_az = azure_ultima_final.get(call_sid, {})
             if ultima_info_az.get("es_final") and (time.time() - ultima_info_az.get("timestamp", 0)) < 1.0:
                 ultima_fue_final = True
 
@@ -10516,9 +10542,9 @@ def on_deepgram_transcript(call_sid, texto, is_final):
 
             # FIX 456: Siempre registrar la última PARCIAL para detectar si cliente sigue hablando
             deepgram_ultima_parcial[call_sid] = {
-            "timestamp": time.time(),
-            "texto": texto
-        }
+                "timestamp": time.time(),
+                "texto": texto
+            }
 
         # FIX 451: Marcar que solo tenemos PARCIAL (aún no llegó FINAL)
         if call_sid not in deepgram_ultima_final:
@@ -10582,6 +10608,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             connected = loop.run_until_complete(transcriber_azure.connect())
+                            loop.close()  # FIX 751: Cerrar event loop para evitar resource leak
 
                             if connected:
                                 print(f"✅ FIX 613: Azure Speech conectado para {call_sid}")
@@ -10605,6 +10632,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             connected = loop.run_until_complete(transcriber_deepgram.connect())
+                            loop.close()  # FIX 751: Cerrar event loop
 
                             if connected:
                                 if usando_azure:
@@ -10652,6 +10680,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     reconnected = loop.run_until_complete(transcriber_deepgram.reconnect())
+                                    loop.close()  # FIX 751: Cerrar event loop
                                     if not reconnected:
                                         print(f"❌ FIX 536: Reconexión fallida - continuando sin Deepgram")
                                 except Exception as recon_error:
@@ -10683,6 +10712,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(transcriber_azure.close())
+                    loop.close()  # FIX 751: Cerrar event loop
                     print(f"✅ FIX 613: Azure transcriber cerrado OK")
                 except Exception as e:
                     print(f"❌ FIX 613: Error cerrando Azure transcriber: {e}")
@@ -10704,6 +10734,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(transcriber_deepgram.close())
+                    loop.close()  # FIX 751: Cerrar event loop
                     print(f"✅ FIX 613: Deepgram transcriber cerrado OK")
                 except Exception as e:
                     print(f"❌ FIX 613: Error cerrando Deepgram transcriber: {e}")
@@ -10769,15 +10800,16 @@ if __name__ == "__main__":
     def notificar_telegram_deploy():
         """Envía notificación a Telegram cuando el servidor inicia"""
         import datetime
+        # FIX 751: Tokens movidos a variables de entorno (antes hardcoded en código fuente)
         TELEGRAM_BOTS = [
             {
-                "token": "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE",
-                "chat_id": "7314842427",
+                "token": os.getenv("TELEGRAM_BOT1_TOKEN", ""),
+                "chat_id": os.getenv("TELEGRAM_BOT1_CHAT_ID", ""),
                 "nombre": "Bot 1"
             },
             {
-                "token": "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI",
-                "chat_id": "5838212022",
+                "token": os.getenv("TELEGRAM_BOT2_TOKEN", ""),
+                "chat_id": os.getenv("TELEGRAM_BOT2_CHAT_ID", ""),
                 "nombre": "Bot 2"
             }
         ]

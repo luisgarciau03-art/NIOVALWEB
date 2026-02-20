@@ -41,15 +41,15 @@ from collections import defaultdict
 # CONFIGURACION
 # ============================================================
 
-# Telegram bots (mismos del deploy notification)
+# FIX 751: Telegram tokens movidos a variables de entorno (antes hardcoded)
 TELEGRAM_BOTS = [
     {
-        "token": "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE",
-        "chat_id": "7314842427",
+        "token": os.getenv("TELEGRAM_BOT1_TOKEN", ""),
+        "chat_id": os.getenv("TELEGRAM_BOT1_CHAT_ID", ""),
     },
     {
-        "token": "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI",
-        "chat_id": "5838212022",
+        "token": os.getenv("TELEGRAM_BOT2_TOKEN", ""),
+        "chat_id": os.getenv("TELEGRAM_BOT2_CHAT_ID", ""),
     },
 ]
 
@@ -562,7 +562,6 @@ class ContentAnalyzer:
             tipo_dato = None
             for i, (role, texto) in enumerate(conv):
                 if role == "cliente" and texto.strip():
-                    texto_l = texto.lower()
                     if ContentAnalyzer._CLIENTE_DIO_EMAIL.search(texto) or '@' in texto:
                         ultimo_dato_cliente_idx = i
                         tipo_dato = "email"
@@ -1345,8 +1344,10 @@ def _es_comportamiento_correcto(conversacion: list) -> bool:
             return False
 
         # CASO 1: Cliente dice "¿Bueno?" → Repetir pregunta es CORRECTO
-        verificaciones_conexion = ['¿bueno?', '¿bueno', 'bueno?', '¿qué?', '¿cómo?', '¿mande?', '¿me escucha?']
-        if any(verif in ultimo_cliente for verif in verificaciones_conexion):
+        # FIX 751: Normalizar acentos para compatibilidad con FIX 631 (texto puede venir sin acentos)
+        verificaciones_conexion = ['¿bueno?', '¿bueno', 'bueno?', '¿qué?', '¿que?', '¿cómo?', '¿como?', '¿mande?', '¿me escucha?']
+        ultimo_cliente_norm = ultimo_cliente.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+        if any(verif in ultimo_cliente for verif in verificaciones_conexion) or any(verif in ultimo_cliente_norm for verif in verificaciones_conexion):
             # Verificar que Bruce repitió pregunta del turno anterior
             if len(conversacion) >= 3:
                 for i in range(len(conversacion) - 2, -1, -1):

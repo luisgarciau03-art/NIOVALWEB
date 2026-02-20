@@ -353,8 +353,10 @@ class ConversationMemory:
         """
         if not respuesta:
             # FIX 704A: Respuesta vacía durante dictado activo → acknowledgment
-            dictando = (self.facts.get('email_dictado_verbal') or
-                        'telefono' in self.datos_proporcionados)
+            # FIX 751: Solo email_dictado_verbal indica dictado activo real.
+            # 'telefono' in datos_proporcionados es PERMANENTE post-captura y causaba
+            # "Aja, si." incorrecto cuando cliente ya no dictaba nada.
+            dictando = self.facts.get('email_dictado_verbal')
             if dictando and not self.facts.get('cliente_se_despide'):
                 return (False, "Aja, si.")
             return (True, "")
@@ -392,8 +394,7 @@ class ConversationMemory:
                             "Le envio el catalogo a este numero entonces. Muchas gracias por su tiempo.")
 
             if 'contacto' in self.rechazos and any(f in resp_lower for f in [
-                'me da su', 'me podria dar', 'me proporcion', 'tiene donde anotar',
-                'tiene donde anotar'
+                'me da su', 'me podria dar', 'me proporcion', 'tiene donde anotar'
             ]):
                 return (False,
                         "Entiendo, no se preocupe. Muchas gracias por su tiempo, que tenga excelente dia.")

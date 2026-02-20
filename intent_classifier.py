@@ -156,7 +156,8 @@ class IntentClassifier:
         return None
 
     def _fuzzy_match(self, texto_norm):
-        """Busca match fuzzy usando SequenceMatcher, iterando en orden de prioridad."""
+        """Busca match fuzzy usando SequenceMatcher, respetando orden de prioridad.
+        FIX 751: Si dos categorías tienen score similar (diff < 0.05), la de mayor prioridad gana."""
         best_result = None
         best_score = 0.0
 
@@ -176,9 +177,15 @@ class IntentClassifier:
             for pattern in patterns:
                 for segmento in segmentos:
                     score = self._similarity(segmento, pattern)
-                    if score >= self.FUZZY_THRESHOLD and score > best_score:
-                        best_score = score
-                        best_result = IntentResult(category, score, pattern, 'fuzzy')
+                    if score >= self.FUZZY_THRESHOLD:
+                        if score > best_score + 0.05:
+                            # Claramente mejor score → tomar este
+                            best_score = score
+                            best_result = IntentResult(category, score, pattern, 'fuzzy')
+                        elif score >= best_score - 0.05 and best_result is None:
+                            # Primer match → tomar (mayor prioridad por PRIORITY_ORDER)
+                            best_score = score
+                            best_result = IntentResult(category, score, pattern, 'fuzzy')
 
         return best_result
 
