@@ -503,6 +503,16 @@ class AgenteVentas:
         # FIX 571: Flag dictado de dígitos activo
         self.digitos_acumulados_flag = False
 
+        # FSM Engine - Motor determinista (shadow mode por defecto)
+        self.fsm = None
+        try:
+            from fsm_engine import FSMEngine, FSM_ENABLED
+            if FSM_ENABLED != "false":
+                self.fsm = FSMEngine()
+                print(f"  [FSM] Inicializado en modo: {FSM_ENABLED}")
+        except ImportError:
+            pass  # FSM no disponible, usar lógica existente
+
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
             "contacto_id": (contacto_info.get('fila') or contacto_info.get('ID')) if contacto_info else None,
@@ -9011,6 +9021,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "role": "user",
             "content": respuesta_cliente
         })
+
+        # ============================================================
+        # FSM ENGINE - Motor determinista como primer respondedor
+        # Modo shadow: loguea decisiones sin interceptar
+        # Modo active: intercepta, GPT como fallback
+        # ============================================================
+        if hasattr(self, 'fsm') and self.fsm:
+            try:
+                fsm_result = self.fsm.process(respuesta_cliente, self)
+                if fsm_result is not None:
+                    self.conversation_history.append({
+                        "role": "assistant",
+                        "content": fsm_result
+                    })
+                    self.turno_actual += 1
+                    return fsm_result
+            except Exception as e:
+                print(f"  [FSM ERROR] {e} - fallthrough a logica existente")
 
         # ============================================================
         # FIX 708+709: PREGUNTAS OBVIAS - Respuestas instantáneas

@@ -1,0 +1,781 @@
+"""
+fsm_engine.py - Motor de Estados Finitos Determinista para Bruce W.
+
+Reemplaza GPT-4o free-form como motor de decisión primario.
+FSM decide QUÉ hacer → templates/narrow GPT generan el texto.
+
+Modos (env FSM_ENABLED):
+  - "shadow": Loguea decisiones sin interceptar (comparar vs GPT)
+  - "active": Intercepta, GPT como fallback
+  - "false":  Deshabilitado
+"""
+import os
+import re
+import time
+from enum import Enum
+from dataclasses import dataclass, field
+from typing import Optional, Dict, List, Tuple, Any
+
+from response_templates import TEMPLATES, NARROW_PROMPTS
+
+# ============================================================
+# FSM_ENABLED mode
+# ============================================================
+FSM_ENABLED = os.getenv("FSM_ENABLED", "shadow").lower()
+
+
+# ============================================================
+# Estados FSM (12 estados explícitos)
+# ============================================================
+class FSMState(Enum):
+    SALUDO = "saludo"
+    PITCH = "pitch"
+    BUSCANDO_ENCARGADO = "buscando_encargado"
+    ENCARGADO_PRESENTE = "encargado_presente"
+    ENCARGADO_AUSENTE = "encargado_ausente"
+    ESPERANDO_TRANSFERENCIA = "esperando_transferencia"
+    CAPTURANDO_CONTACTO = "capturando_contacto"
+    DICTANDO_DATO = "dictando_dato"
+    OFRECIENDO_CONTACTO = "ofreciendo_contacto"
+    CONTACTO_CAPTURADO = "contacto_capturado"
+    DESPEDIDA = "despedida"
+    CONVERSACION_LIBRE = "conversacion_libre"
+
+
+# ============================================================
+# Tipos de acción
+# ============================================================
+class ActionType(Enum):
+    TEMPLATE = "template"         # Respuesta hardcoded (0ms, $0)
+    GPT_NARROW = "gpt_narrow"     # GPT con prompt single-purpose (~500ms)
+    ACKNOWLEDGE = "acknowledge"   # "Ajá, sí." (0ms, $0)
+    HANGUP = "hangup"             # Señal para colgar
+    NOOP = "noop"                 # Sin respuesta (esperar)
+
+
+# ============================================================
+# Intents reconocidos por FSM
+# ============================================================
+class FSMIntent(Enum):
+    CONFIRMATION = "confirmation"
+    INTEREST = "interest"
+    NO_INTEREST = "no_interest"
+    QUESTION = "question"
+    IDENTITY = "identity"
+    FAREWELL = "farewell"
+    MANAGER_ABSENT = "manager_absent"
+    MANAGER_PRESENT = "manager_present"
+    TRANSFER = "transfer"
+    CALLBACK = "callback"
+    OFFER_DATA = "offer_data"
+    REJECT_DATA = "reject_data"
+    ANOTHER_BRANCH = "another_branch"
+    CLOSED = "closed"
+    DICTATING_PARTIAL = "dictating_partial"
+    DICTATING_COMPLETE_PHONE = "dictating_complete_phone"
+    DICTATING_COMPLETE_EMAIL = "dictating_complete_email"
+    CONTINUATION = "continuation"
+    VERIFICATION = "verification"
+    UNKNOWN = "unknown"
+
+
+# ============================================================
+# Contexto FSM (reemplaza 40+ flags implícitos)
+# ============================================================
+@dataclass
+class FSMContext:
+    pitch_dado: bool = False
+    encargado_preguntado: bool = False
+    encargado_es_interlocutor: bool = False
+    cliente_no_autorizado: bool = False
+
+    canal_solicitado: Optional[str] = None
+    canales_rechazados: List[str] = field(default_factory=list)
+    canales_intentados: List[str] = field(default_factory=list)
+    mismo_numero: bool = False
+
+    datos_capturados: Dict[str, str] = field(default_factory=dict)
+    datos_parciales: str = ""
+
+    catalogo_ofrecido: bool = False
+    catalogo_prometido: bool = False
+    veces_ofrecio_catalogo: int = 0
+
+    callback_pedido: bool = False
+    callback_hora: Optional[str] = None
+
+    turnos_bruce: int = 0
+    ultimo_template: Optional[str] = None
+
+    tiempo_claro_espero: Optional[float] = None
+    donde_anotar_preguntado: bool = False
+
+
+# ============================================================
+# Transición FSM
+# ============================================================
+@dataclass
+class Transition:
+    next_state: FSMState
+    action_type: ActionType
+    template_key: Optional[str] = None
+    guards: List[str] = field(default_factory=list)
+
+
+# ============================================================
+# Intent Classifier (rule-based, fast)
+# ============================================================
+
+# Números en español para detectar dictado
+_NUMS_ESP = {
+    'cero', 'uno', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete',
+    'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+    'dieciseis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte',
+    'veintiuno', 'veintidos', 'veintitres', 'veinticuatro', 'veinticinco',
+    'veintiseis', 'veintisiete', 'veintiocho', 'veintinueve', 'treinta',
+    'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa',
+}
+
+
+def _normalize(texto: str) -> str:
+    """Normaliza texto: lowercase, strip acentos, strip puntuación."""
+    t = texto.lower().strip()
+    for a, b in [('á', 'a'), ('é', 'e'), ('í', 'i'), ('ó', 'o'), ('ú', 'u'),
+                 ('ü', 'u'), ('ñ', 'n')]:
+        t = t.replace(a, b)
+    t = t.replace('¿', '').replace('?', '').replace('¡', '').replace('!', '')
+    t = t.replace('.', '').replace(',', ' ').strip()
+    t = re.sub(r'\s+', ' ', t)
+    return t
+
+
+def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMIntent:
+    """Clasifica intent del cliente con reglas deterministas."""
+    tn = _normalize(texto)
+    tl = texto.lower().strip()
+
+    # --- Dictado: dígitos numéricos ---
+    digits = re.findall(r'\d', texto)
+    num_words = sum(1 for w in tn.split() if w in _NUMS_ESP)
+
+    if len(digits) >= 10 or (len(digits) + num_words) >= 10:
+        return FSMIntent.DICTATING_COMPLETE_PHONE
+    if len(digits) >= 2 or num_words >= 2:
+        if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO):
+            return FSMIntent.DICTATING_PARTIAL
+
+    # --- Email completo ---
+    if '@' in texto or ('arroba' in tn and ('punto' in tn or 'gmail' in tn or 'hotmail' in tn)):
+        return FSMIntent.DICTATING_COMPLETE_EMAIL
+
+    # --- Email parcial / oferta de dato ---
+    email_signals = ['arroba', 'gmail', 'hotmail', 'outlook', 'yahoo', 'punto com', 'punto mx']
+    if any(s in tn for s in email_signals):
+        return FSMIntent.OFFER_DATA
+
+    # --- Despedida ---
+    farewell_strong = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien']
+    farewell_weak = ['gracias', 'muchas gracias', 'ok gracias']
+    if any(f in tn for f in farewell_strong):
+        return FSMIntent.FAREWELL
+    if any(f == tn for f in farewell_weak):  # exact match only
+        return FSMIntent.FAREWELL
+
+    # --- No interés / rechazo definitivo ---
+    no_interest = [
+        'no me interesa', 'no nos interesa', 'no gracias', 'no estamos interesados',
+        'no hacemos compras', 'no compramos', 'no ocupamos', 'no necesitamos',
+        'no manejamos eso', 'aqui es un taller', 'no es ferreteria',
+        'no joven', 'no muchacho', 'no senor', 'no senorita', 'no mijo',
+    ]
+    if any(n in tn for n in no_interest):
+        return FSMIntent.NO_INTEREST
+
+    # --- Rechazo de dato específico ---
+    reject_data = [
+        'no tengo whatsapp', 'no tengo correo', 'no tengo email',
+        'no lo puedo dar', 'no se lo puedo dar', 'no lo podemos pasar',
+        'no le puedo dar', 'no le puedo pasar', 'no le podemos dar',
+        'solo tengo telefono', 'solo tengo celular', 'no manejo correo',
+        'no te lo puedo dar', 'no puedo darte', 'no estoy autorizado',
+    ]
+    if any(r in tn for r in reject_data):
+        return FSMIntent.REJECT_DATA
+
+    # --- Oferta de dato ---
+    offer_data = [
+        'te doy', 'le doy', 'te paso', 'le paso', 'te puedo dar',
+        'le puedo dar', 'te puedo proporcionar', 'le puedo proporcionar',
+        'te puedo pasar', 'anota', 'apunta', 'si gusta anotar',
+        'tiene donde anotar', 'yo le doy el correo', 'por correo',
+        'te mando', 'le mando', 'mi correo es', 'mi whatsapp es',
+        'mi numero es', 'el numero es', 'el correo es',
+        'mandelo por whatsapp', 'por whatsapp', 'mandalo por whatsapp',
+        'al whatsapp', 'a mi whatsapp', 'a mi correo',
+    ]
+    if any(o in tn for o in offer_data):
+        return FSMIntent.OFFER_DATA
+
+    # --- Encargado ausente ---
+    manager_absent = [
+        'no esta', 'no se encuentra', 'salio', 'esta en junta',
+        'no ha llegado', 'viene mas tarde', 'llega mas tarde',
+        'no viene hoy', 'esta de vacaciones', 'esta ocupado',
+        'esta ocupada', 'esta comiendo', 'salio a comer',
+        'no lo veo', 'todavia no llega', 'ya se fue',
+    ]
+    if any(m in tn for m in manager_absent):
+        return FSMIntent.MANAGER_ABSENT
+
+    # --- Encargado presente ("soy yo") ---
+    manager_present = [
+        'soy yo', 'yo soy', 'si soy', 'yo mero', 'yo soy el encargado',
+        'yo soy la encargada', 'si yo soy', 'aqui yo', 'servidor',
+        'yo me encargo', 'conmigo', 'a mi',
+    ]
+    if any(m in tn for m in manager_present):
+        return FSMIntent.MANAGER_PRESENT
+
+    # --- Transfer (espere en línea) ---
+    transfer = [
+        'espere un momento', 'espereme', 'espera por favor', 'permitame',
+        'permiteme', 'un momento', 'un momentito', 'un segundo',
+        'dejeme ver', 'le comunico', 'se lo paso', 'se lo comunico',
+        'ahorita le paso', 'ahorita se lo comunico',
+    ]
+    # Guard: NO es callback ("esperar a que regrese")
+    callback_guard = [
+        'esperar a que', 'esperar que regrese', 'esperar que llegue',
+        'esperar que vuelva', 'marcar mas tarde', 'llamar mas tarde',
+        'llamar despues', 'marcar despues', 'hablar luego',
+        'mandarme', 'enviarme', 'mandame', 'enviame',
+    ]
+    if any(c in tn for c in callback_guard):
+        return FSMIntent.CALLBACK
+    if any(t in tn for t in transfer):
+        return FSMIntent.TRANSFER
+
+    # --- Callback ---
+    callback = [
+        'mas tarde', 'manana', 'otro dia', 'la proxima semana',
+        'despues', 'luego', 'vuelva a llamar', 'llame despues',
+        'marque despues', 'regrese', 'vuelva', 'cuando llegue',
+        'a las', 'en la tarde', 'en la manana', 'por la manana',
+    ]
+    if any(c in tn for c in callback):
+        if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
+                     FSMState.PITCH):
+            return FSMIntent.CALLBACK
+
+    # --- Otra sucursal ---
+    another = [
+        'otra sucursal', 'otro local', 'no es aqui', 'numero equivocado',
+        'se equivoco', 'no es esta sucursal', 'otra ubicacion',
+    ]
+    if any(a in tn for a in another):
+        return FSMIntent.ANOTHER_BRANCH
+
+    # --- Cerrado ---
+    closed = ['esta cerrado', 'estamos cerrados', 'ya cerramos', 'no abrimos']
+    if any(c in tn for c in closed):
+        return FSMIntent.CLOSED
+
+    # --- Pregunta identidad ---
+    identity = [
+        'quien habla', 'de donde', 'de que empresa', 'de que parte',
+        'a donde llama', 'de donde llama', 'con quien hablo',
+    ]
+    if any(i in tn for i in identity):
+        return FSMIntent.IDENTITY
+
+    # --- Verificación conexión (ANTES de pregunta para que "¿Bueno?" no matchee como QUESTION) ---
+    verification = ['bueno', 'me escucha', 'me oye', 'ahi esta', 'aqui esta', 'sigue ahi']
+    if any(v == tn or v in tn for v in verification):
+        if len(tn) < 20:
+            return FSMIntent.VERIFICATION
+
+    # --- Pregunta general ---
+    question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
+    if any(tn.startswith(q + ' ') for q in question_markers):
+        return FSMIntent.QUESTION
+    if '?' in texto:
+        return FSMIntent.QUESTION
+
+    # --- Confirmación ---
+    confirm_exact = [
+        'si', 'si claro', 'claro', 'ok', 'esta bien', 'sale', 'va',
+        'claro que si', 'por supuesto', 'adelante', 'digame',
+        'diga', 'aja', 'como no', 'si digame',
+    ]
+    if tn in confirm_exact or any(c == tn for c in confirm_exact):
+        return FSMIntent.CONFIRMATION
+
+    # --- Continuación (texto termina en conector) ---
+    if tn.endswith(' y') or tn.endswith(' o') or tn.endswith(' pero'):
+        return FSMIntent.CONTINUATION
+
+    # --- Interés implícito ---
+    interest = [
+        'me interesa', 'si me interesa', 'digame', 'cuenteme',
+        'a ver', 'que ofrece', 'que tiene',
+    ]
+    if any(i in tn for i in interest):
+        return FSMIntent.INTEREST
+
+    return FSMIntent.UNKNOWN
+
+
+# ============================================================
+# Motor FSM
+# ============================================================
+class FSMEngine:
+    """Motor de Estados Finitos Determinista para Bruce W."""
+
+    def __init__(self):
+        self.state = FSMState.SALUDO
+        self.context = FSMContext()
+        self._transitions = self._build_transitions()
+
+    def reset(self):
+        """Reset para nueva llamada."""
+        self.state = FSMState.SALUDO
+        self.context = FSMContext()
+
+    # ----------------------------------------------------------
+    # Punto de entrada principal
+    # ----------------------------------------------------------
+    def process(self, texto: str, agente=None) -> Optional[str]:
+        """
+        Procesa input del cliente y retorna respuesta.
+
+        Returns:
+            str: Respuesta de Bruce (template o narrow GPT)
+            None: FSM no puede manejar → fallthrough a GPT existente
+        """
+        if FSM_ENABLED == "false":
+            return None
+
+        # 1. Clasificar intent
+        intent = classify_intent(texto, self.context, self.state)
+
+        # 2. Buscar transición
+        transition = self._lookup(self.state, intent)
+
+        # 3. Si no hay transición → escalate a CONVERSACION_LIBRE o fallthrough
+        if transition is None:
+            # Try UNKNOWN catch-all
+            transition = self._lookup(self.state, FSMIntent.UNKNOWN)
+            if transition is None:
+                if FSM_ENABLED == "shadow":
+                    print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → NO TRANSITION (fallthrough)")
+                return None
+
+        # 4. Evaluar guards
+        if not self._check_guards(transition.guards):
+            if FSM_ENABLED == "shadow":
+                print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → GUARDS FAILED (fallthrough)")
+            return None
+
+        # 5. Ejecutar acción
+        response = self._execute(transition, texto, agente)
+
+        # 6. Log en shadow mode
+        if FSM_ENABLED == "shadow":
+            print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} "
+                  f"→ next={transition.next_state.value} action={transition.action_type.value} "
+                  f"template={transition.template_key} response='{(response or '')[:60]}'")
+            return None  # Shadow mode: no interceptar
+
+        # 7. Actualizar estado y contexto
+        prev_state = self.state
+        self.state = transition.next_state
+        self._update_context(intent, texto, transition, agente)
+
+        print(f"  [FSM] {prev_state.value} + {intent.value} → {self.state.value} "
+              f"({transition.action_type.value}:{transition.template_key})")
+
+        return response
+
+    # ----------------------------------------------------------
+    # Tabla de transiciones
+    # ----------------------------------------------------------
+    def _build_transitions(self) -> Dict[Tuple[FSMState, FSMIntent], Transition]:
+        """Construye la tabla de transiciones completa."""
+        T = {}
+
+        def add(state, intent, next_state, action, template=None, guards=None):
+            T[(state, intent)] = Transition(
+                next_state=next_state,
+                action_type=action,
+                template_key=template,
+                guards=guards or [],
+            )
+
+        S = FSMState
+        I = FSMIntent
+        A = ActionType
+
+        # === SALUDO ===
+        add(S.SALUDO, I.CONFIRMATION,  S.PITCH, A.TEMPLATE, "pitch_inicial")
+        add(S.SALUDO, I.INTEREST,      S.PITCH, A.TEMPLATE, "pitch_inicial")
+        add(S.SALUDO, I.VERIFICATION,  S.PITCH, A.TEMPLATE, "pitch_inicial")
+        add(S.SALUDO, I.QUESTION,      S.PITCH, A.TEMPLATE, "identificacion_pitch")
+        add(S.SALUDO, I.IDENTITY,      S.PITCH, A.TEMPLATE, "identificacion_pitch")
+        add(S.SALUDO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.SALUDO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.SALUDO, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.SALUDO, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.SALUDO, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
+        add(S.SALUDO, I.UNKNOWN,       S.PITCH, A.TEMPLATE, "pitch_inicial")
+
+        # === PITCH ===
+        add(S.PITCH, I.CONFIRMATION,   S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        add(S.PITCH, I.INTEREST,       S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        add(S.PITCH, I.QUESTION,       S.PITCH, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.PITCH, I.IDENTITY,       S.PITCH, A.TEMPLATE, "identificacion_nioval")
+        add(S.PITCH, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.PITCH, I.FAREWELL,       S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.PITCH, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
+        add(S.PITCH, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.PITCH, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.PITCH, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
+        add(S.PITCH, I.CALLBACK,       S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        add(S.PITCH, I.ANOTHER_BRANCH, S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
+        add(S.PITCH, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
+        add(S.PITCH, I.VERIFICATION,   S.PITCH, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.PITCH, I.REJECT_DATA,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.PITCH, I.UNKNOWN,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+
+        # === BUSCANDO_ENCARGADO ===
+        add(S.BUSCANDO_ENCARGADO, I.CONFIRMATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        add(S.BUSCANDO_ENCARGADO, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.BUSCANDO_ENCARGADO, I.MANAGER_ABSENT,  S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
+        add(S.BUSCANDO_ENCARGADO, I.TRANSFER,        S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
+        add(S.BUSCANDO_ENCARGADO, I.CALLBACK,        S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        add(S.BUSCANDO_ENCARGADO, I.OFFER_DATA,      S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.BUSCANDO_ENCARGADO, I.QUESTION,        S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.BUSCANDO_ENCARGADO, I.IDENTITY,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "identificacion_nioval")
+        add(S.BUSCANDO_ENCARGADO, I.NO_INTEREST,     S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.BUSCANDO_ENCARGADO, I.FAREWELL,        S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.BUSCANDO_ENCARGADO, I.ANOTHER_BRANCH,  S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
+        add(S.BUSCANDO_ENCARGADO, I.CLOSED,          S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
+        add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.BUSCANDO_ENCARGADO, I.VERIFICATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.BUSCANDO_ENCARGADO, I.REJECT_DATA,     S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
+        add(S.BUSCANDO_ENCARGADO, I.UNKNOWN,         S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "conversacion_libre")
+
+        # === ENCARGADO_PRESENTE ===
+        add(S.ENCARGADO_PRESENTE, I.CONFIRMATION,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.ENCARGADO_PRESENTE, I.INTEREST,      S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.ENCARGADO_PRESENTE, I.QUESTION,      S.ENCARGADO_PRESENTE, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.ENCARGADO_PRESENTE, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.ENCARGADO_PRESENTE, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.ENCARGADO_PRESENTE, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_correo", ["whatsapp_rechazado"])
+        add(S.ENCARGADO_PRESENTE, I.VERIFICATION,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.ENCARGADO_PRESENTE, I.UNKNOWN,       S.ENCARGADO_PRESENTE, A.GPT_NARROW, "conversacion_libre")
+
+        # === ENCARGADO_AUSENTE ===
+        add(S.ENCARGADO_AUSENTE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.ENCARGADO_AUSENTE, I.REJECT_DATA,    S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
+        add(S.ENCARGADO_AUSENTE, I.CALLBACK,       S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        add(S.ENCARGADO_AUSENTE, I.CONFIRMATION,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.ENCARGADO_AUSENTE, I.INTEREST,       S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.ENCARGADO_AUSENTE, I.FAREWELL,       S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.ENCARGADO_AUSENTE, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.ENCARGADO_AUSENTE, I.ANOTHER_BRANCH, S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
+        add(S.ENCARGADO_AUSENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
+        add(S.ENCARGADO_AUSENTE, I.VERIFICATION,   S.ENCARGADO_AUSENTE, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.ENCARGADO_AUSENTE, I.QUESTION,       S.ENCARGADO_AUSENTE, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.ENCARGADO_AUSENTE, I.UNKNOWN,        S.ENCARGADO_AUSENTE, A.GPT_NARROW, "conversacion_libre")
+
+        # === ESPERANDO_TRANSFERENCIA ===
+        add(S.ESPERANDO_TRANSFERENCIA, I.CONFIRMATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
+        add(S.ESPERANDO_TRANSFERENCIA, I.IDENTITY,        S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
+        add(S.ESPERANDO_TRANSFERENCIA, I.QUESTION,        S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
+        add(S.ESPERANDO_TRANSFERENCIA, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.ESPERANDO_TRANSFERENCIA, I.MANAGER_ABSENT,  S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
+        add(S.ESPERANDO_TRANSFERENCIA, I.FAREWELL,        S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.ESPERANDO_TRANSFERENCIA, I.VERIFICATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
+        add(S.ESPERANDO_TRANSFERENCIA, I.OFFER_DATA,      S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.ESPERANDO_TRANSFERENCIA, I.UNKNOWN,         S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
+
+        # === CAPTURANDO_CONTACTO ===
+        add(S.CAPTURANDO_CONTACTO, I.OFFER_DATA,              S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.CAPTURANDO_CONTACTO, I.CONFIRMATION,            S.DICTANDO_DATO, A.TEMPLATE, "digame_numero")
+        add(S.CAPTURANDO_CONTACTO, I.DICTATING_PARTIAL,       S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.CAPTURANDO_CONTACTO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.CAPTURANDO_CONTACTO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.CAPTURANDO_CONTACTO, I.REJECT_DATA,             S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
+        add(S.CAPTURANDO_CONTACTO, I.NO_INTEREST,             S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.CAPTURANDO_CONTACTO, I.FAREWELL,                S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.CAPTURANDO_CONTACTO, I.VERIFICATION,            S.CAPTURANDO_CONTACTO, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.CAPTURANDO_CONTACTO, I.UNKNOWN,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "conversacion_libre")
+
+        # === DICTANDO_DATO ===
+        add(S.DICTANDO_DATO, I.DICTATING_PARTIAL,       S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.DICTANDO_DATO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.DICTANDO_DATO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.DICTANDO_DATO, I.CONTINUATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.DICTANDO_DATO, I.OFFER_DATA,               S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.DICTANDO_DATO, I.CONFIRMATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.DICTANDO_DATO, I.FAREWELL,                 S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+
+        # === OFRECIENDO_CONTACTO ===
+        add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
+        add(S.OFRECIENDO_CONTACTO, I.INTEREST,      S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
+        add(S.OFRECIENDO_CONTACTO, I.REJECT_DATA,   S.DESPEDIDA, A.TEMPLATE, "despedida_sin_contacto")
+        add(S.OFRECIENDO_CONTACTO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_sin_contacto")
+        add(S.OFRECIENDO_CONTACTO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.OFRECIENDO_CONTACTO, I.UNKNOWN,       S.OFRECIENDO_CONTACTO, A.TEMPLATE, "dictar_numero_bruce")
+
+        # === CONTACTO_CAPTURADO ===
+        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+
+        # === DESPEDIDA ===
+        add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.FAREWELL,      S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+
+        return T
+
+    # ----------------------------------------------------------
+    # Lookup transición
+    # ----------------------------------------------------------
+    def _lookup(self, state: FSMState, intent: FSMIntent) -> Optional[Transition]:
+        """Busca transición en la tabla."""
+        return self._transitions.get((state, intent))
+
+    # ----------------------------------------------------------
+    # Evaluar guards
+    # ----------------------------------------------------------
+    def _check_guards(self, guards: List[str]) -> bool:
+        """Evalúa guard conditions contra el contexto."""
+        for guard in guards:
+            negate = guard.startswith('!')
+            attr = guard.lstrip('!')
+            val = getattr(self.context, attr, None)
+            if val is None:
+                # Guard referencia atributo que no existe
+                if negate:
+                    continue  # !nonexistent = True
+                return False
+            if negate:
+                if val:
+                    return False
+            else:
+                if not val:
+                    return False
+        return True
+
+    # ----------------------------------------------------------
+    # Ejecutar acción
+    # ----------------------------------------------------------
+    def _execute(self, transition: Transition, texto: str, agente=None) -> Optional[str]:
+        """Ejecuta la acción de la transición."""
+        if transition.action_type == ActionType.TEMPLATE:
+            return self._get_template(transition.template_key)
+
+        elif transition.action_type == ActionType.ACKNOWLEDGE:
+            return self._get_template(transition.template_key or "aja_si")
+
+        elif transition.action_type == ActionType.GPT_NARROW:
+            return self._call_gpt_narrow(transition.template_key, texto, agente)
+
+        elif transition.action_type == ActionType.HANGUP:
+            return None  # Signal to hang up
+
+        elif transition.action_type == ActionType.NOOP:
+            return ""  # Silence
+
+        return None
+
+    # ----------------------------------------------------------
+    # Template lookup
+    # ----------------------------------------------------------
+    def _get_template(self, key: str) -> str:
+        """Obtiene template por key. Sustituye variables de contexto."""
+        templates = TEMPLATES.get(key)
+        if not templates:
+            return ""
+        response = templates[0]
+
+        # Variable substitution
+        if '{hora}' in response:
+            hora = self.context.callback_hora or "mas tarde"
+            response = response.replace('{hora}', hora)
+        if '{canal_alternativo}' in response:
+            alt = self._get_canal_alternativo()
+            response = response.replace('{canal_alternativo}', alt)
+
+        return response
+
+    # ----------------------------------------------------------
+    # GPT Narrow call
+    # ----------------------------------------------------------
+    def _call_gpt_narrow(self, prompt_key: str, texto: str, agente=None) -> Optional[str]:
+        """Llama a GPT con prompt single-purpose."""
+        config = NARROW_PROMPTS.get(prompt_key)
+        if not config:
+            return None
+
+        system_prompt = config["system"]
+
+        # Sustituir variables de contexto en prompt
+        if '{state}' in system_prompt:
+            system_prompt = system_prompt.replace('{state}', self.state.value)
+        if '{context_summary}' in system_prompt:
+            summary = self._build_context_summary()
+            system_prompt = system_prompt.replace('{context_summary}', summary)
+
+        try:
+            # Usar el cliente OpenAI del agente si disponible
+            client = None
+            if agente and hasattr(agente, 'openai_client'):
+                client = agente.openai_client
+            if client is None:
+                # Sin cliente GPT → fallback a template genérico
+                return None
+
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": texto},
+            ]
+
+            # Agregar últimos 2 mensajes de contexto si disponible
+            if agente and hasattr(agente, 'conversation_history'):
+                history = agente.conversation_history[-4:]  # últimos 4 msgs
+                messages = [{"role": "system", "content": system_prompt}] + history + [
+                    {"role": "user", "content": texto}
+                ]
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=config.get("max_tokens", 80),
+                temperature=config.get("temperature", 0.5),
+                timeout=3.0,
+            )
+
+            result = response.choices[0].message.content.strip()
+            print(f"  [FSM GPT_NARROW:{prompt_key}] → '{result[:80]}'")
+            return result
+
+        except Exception as e:
+            print(f"  [FSM GPT_NARROW ERROR] {prompt_key}: {e}")
+            return None  # Fallthrough a lógica existente
+
+    # ----------------------------------------------------------
+    # Helpers
+    # ----------------------------------------------------------
+    def _get_canal_alternativo(self) -> str:
+        """Determina canal alternativo basado en rechazos."""
+        rechazados = set(self.context.canales_rechazados)
+        if 'whatsapp' in rechazados:
+            if 'correo' not in rechazados:
+                return "correo electronico"
+            return "telefono fijo"
+        if 'correo' in rechazados:
+            return "WhatsApp"
+        return "correo electronico o telefono"
+
+    def _build_context_summary(self) -> str:
+        """Genera resumen de contexto para GPT narrow."""
+        parts = []
+        if self.context.pitch_dado:
+            parts.append("pitch dado")
+        if self.context.encargado_preguntado:
+            parts.append("encargado preguntado")
+        if self.context.encargado_es_interlocutor:
+            parts.append("cliente es encargado")
+        if self.context.canales_rechazados:
+            parts.append(f"rechazaron: {', '.join(self.context.canales_rechazados)}")
+        if self.context.datos_capturados:
+            parts.append(f"capturados: {', '.join(self.context.datos_capturados.keys())}")
+        if self.context.callback_pedido:
+            parts.append("callback pedido")
+        return "; ".join(parts) if parts else "inicio de conversacion"
+
+    def _update_context(self, intent: FSMIntent, texto: str,
+                        transition: Transition, agente=None):
+        """Actualiza contexto FSM tras transición."""
+        self.context.turnos_bruce += 1
+        self.context.ultimo_template = transition.template_key
+
+        # Track pitch dado
+        if transition.template_key in ('pitch_inicial', 'pitch_encargado',
+                                        'pitch_persona_nueva', 'identificacion_pitch'):
+            self.context.pitch_dado = True
+
+        # Track encargado preguntado
+        if transition.template_key == 'preguntar_encargado':
+            self.context.encargado_preguntado = True
+
+        # Track encargado es interlocutor
+        if intent == FSMIntent.MANAGER_PRESENT:
+            self.context.encargado_es_interlocutor = True
+
+        # Track canales
+        if transition.template_key == 'pedir_whatsapp':
+            self.context.canal_solicitado = 'whatsapp'
+            if 'whatsapp' not in self.context.canales_intentados:
+                self.context.canales_intentados.append('whatsapp')
+        elif transition.template_key == 'pedir_correo':
+            self.context.canal_solicitado = 'correo'
+            if 'correo' not in self.context.canales_intentados:
+                self.context.canales_intentados.append('correo')
+
+        # Track rechazos
+        if intent == FSMIntent.REJECT_DATA:
+            tn = _normalize(texto)
+            if 'whatsapp' in tn:
+                if 'whatsapp' not in self.context.canales_rechazados:
+                    self.context.canales_rechazados.append('whatsapp')
+            elif 'correo' in tn or 'email' in tn:
+                if 'correo' not in self.context.canales_rechazados:
+                    self.context.canales_rechazados.append('correo')
+            elif self.context.canal_solicitado:
+                c = self.context.canal_solicitado
+                if c not in self.context.canales_rechazados:
+                    self.context.canales_rechazados.append(c)
+
+        # Track catálogo
+        if transition.template_key in ('confirmar_telefono', 'confirmar_correo',
+                                        'despedida_catalogo_prometido'):
+            self.context.catalogo_prometido = True
+
+        # Track claro_espero
+        if transition.template_key == 'claro_espero':
+            self.context.tiempo_claro_espero = time.time()
+
+        # Track donde_anotar
+        if transition.template_key == 'tiene_donde_anotar':
+            self.context.donde_anotar_preguntado = True
+
+        # Track callback
+        if intent == FSMIntent.CALLBACK:
+            self.context.callback_pedido = True
+            # Extraer hora si la mencionaron
+            tn = _normalize(texto)
+            hour_match = re.search(r'a las (\d{1,2})', tn)
+            if hour_match:
+                self.context.callback_hora = f"a las {hour_match.group(1)}"
+
+    # ----------------------------------------------------------
+    # State info (para debug/logging)
+    # ----------------------------------------------------------
+    def get_state_info(self) -> Dict[str, Any]:
+        """Retorna info del estado actual para logging."""
+        return {
+            "state": self.state.value,
+            "pitch_dado": self.context.pitch_dado,
+            "encargado_preguntado": self.context.encargado_preguntado,
+            "canales_rechazados": self.context.canales_rechazados,
+            "datos_capturados": list(self.context.datos_capturados.keys()),
+            "turnos": self.context.turnos_bruce,
+        }
