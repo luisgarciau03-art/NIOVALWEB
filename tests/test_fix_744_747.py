@@ -112,12 +112,13 @@ class TestFix745CodigoPresente(unittest.TestCase):
         self.assertIn('disculpe', fuertes_section)
 
     def test_fix_745_gate_modificado(self):
-        """FIX 745B debe modificar gate para confiar en señales detectadas."""
+        """FASE 1.2 simplified gate: just 'if cliente_volvio:' (FIX 745B logic absorbed)."""
         servidor_path = os.path.join(os.path.dirname(__file__), '..', 'servidor_llamadas.py')
         with open(servidor_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        self.assertIn('_senal_detectada_745', source)
-        self.assertIn('FIX 745B', source)
+        # FASE 1.2 absorbed FIX 745B into simplified gate
+        self.assertIn('if cliente_volvio:', source)
+        self.assertIn('FASE 1.2', source)
 
 
 # ============================================================
@@ -261,31 +262,43 @@ def _get_procesar_source():
 
 
 class TestFix747CodigoPresente(unittest.TestCase):
-    """FIX 747: Verificar que DIGAME_CONTINUAR está en las 4 listas de inmunidad."""
+    """FIX 747: Verificar que DIGAME_CONTINUAR está en _PATRONES_INMUNES_UNIVERSAL (covers all 4 lists)."""
+
+    def _get_universal_section(self):
+        """Get the _PATRONES_INMUNES_UNIVERSAL set definition from procesar_respuesta."""
+        source = _get_procesar_source()
+        idx_univ = source.find('_PATRONES_INMUNES_UNIVERSAL')
+        self.assertGreater(idx_univ, -1, "_PATRONES_INMUNES_UNIVERSAL must exist in procesar_respuesta")
+        idx_end = source.find('}', idx_univ)
+        return source[idx_univ:idx_end + 1]
 
     def test_fix_747_en_598(self):
+        """FASE 1.1: patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL which has DIGAME_CONTINUAR."""
         source = _get_procesar_source()
-        idx_598 = source.find('patrones_inmunes_pregunta_598')
-        section_598 = source[idx_598:idx_598 + 1500]
-        self.assertIn('DIGAME_CONTINUAR', section_598)
+        section = self._get_universal_section()
+        self.assertIn('DIGAME_CONTINUAR', section)
+        self.assertIn('patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL', source)
 
     def test_fix_747_en_600(self):
+        """FASE 1.1: patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL which has DIGAME_CONTINUAR."""
         source = _get_procesar_source()
-        idx_600 = source.find('patrones_inmunes_pero')
-        section_600 = source[idx_600:idx_600 + 1500]
-        self.assertIn('DIGAME_CONTINUAR', section_600)
+        section = self._get_universal_section()
+        self.assertIn('DIGAME_CONTINUAR', section)
+        self.assertIn('patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL', source)
 
     def test_fix_747_en_601(self):
+        """FASE 1.1: patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL which has DIGAME_CONTINUAR."""
         source = _get_procesar_source()
-        idx_601 = source.find('patrones_inmunes_601')
-        section_601 = source[idx_601:idx_601 + 2500]
-        self.assertIn('DIGAME_CONTINUAR', section_601)
+        section = self._get_universal_section()
+        self.assertIn('DIGAME_CONTINUAR', section)
+        self.assertIn('patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL', source)
 
     def test_fix_747_en_602(self):
+        """FASE 1.1: patrones_inmunes_602 = _PATRONES_INMUNES_UNIVERSAL which has DIGAME_CONTINUAR."""
         source = _get_procesar_source()
-        idx_602 = source.find('patrones_inmunes_602')
-        section_602 = source[idx_602:idx_602 + 1500]
-        self.assertIn('DIGAME_CONTINUAR', section_602)
+        section = self._get_universal_section()
+        self.assertIn('DIGAME_CONTINUAR', section)
+        self.assertIn('patrones_inmunes_602 = _PATRONES_INMUNES_UNIVERSAL', source)
 
 
 if __name__ == "__main__":

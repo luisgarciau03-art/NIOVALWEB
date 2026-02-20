@@ -73,55 +73,55 @@ def _crear_agente_736():
 # ============================================================
 
 class TestFix734InmunidadPatrones598(unittest.TestCase):
-    """FIX 734: CLIENTE_DICTA_EMAIL_COMPLETO y PIDE_CONTACTO_NIOVAL en 598."""
+    """FIX 734: CLIENTE_DICTA_EMAIL_COMPLETO y PIDE_CONTACTO_NIOVAL en 598 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_cliente_dicta_email_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_pregunta_598 no encontrado")
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         self.assertIn('CLIENTE_DICTA_EMAIL_COMPLETO', match.group(1))
 
     def test_pide_contacto_nioval_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('PIDE_CONTACTO_NIOVAL', match.group(1))
 
 
 class TestFix734InmunidadPero600(unittest.TestCase):
-    """FIX 734: PIDE_CONTACTO_NIOVAL en patrones_inmunes_pero."""
+    """FIX 734: PIDE_CONTACTO_NIOVAL in patrones_inmunes_pero (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_pide_contacto_nioval_en_pero(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pero\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('PIDE_CONTACTO_NIOVAL', match.group(1))
 
 
 class TestFix734InmunidadComplejidad601(unittest.TestCase):
-    """FIX 734: PIDE_CONTACTO_NIOVAL en patrones_inmunes_601."""
+    """FIX 734: PIDE_CONTACTO_NIOVAL in patrones_inmunes_601 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_pide_contacto_nioval_en_601(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_601\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('PIDE_CONTACTO_NIOVAL', match.group(1))
 
 
 class TestFix734InmunidadContexto602(unittest.TestCase):
-    """FIX 734: Ambos patrones en patrones_inmunes_602."""
+    """FIX 734: Ambos patrones en patrones_inmunes_602 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
-    def _get_602_content(self):
+    def _get_universal_content(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_602\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_602 no encontrado")
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         return match.group(1)
 
     def test_cliente_dicta_email_en_602(self):
-        self.assertIn('CLIENTE_DICTA_EMAIL_COMPLETO', self._get_602_content())
+        self.assertIn('CLIENTE_DICTA_EMAIL_COMPLETO', self._get_universal_content())
 
     def test_pide_contacto_nioval_en_602(self):
-        self.assertIn('PIDE_CONTACTO_NIOVAL', self._get_602_content())
+        self.assertIn('PIDE_CONTACTO_NIOVAL', self._get_universal_content())
 
 
 # ============================================================

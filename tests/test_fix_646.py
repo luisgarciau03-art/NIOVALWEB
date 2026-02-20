@@ -54,15 +54,18 @@ def test_fix_646d_evitar_loop_whatsapp_inmune_601():
     with open('agente_ventas.py', 'r', encoding='utf-8') as f:
         code = f.read()
 
-    # Buscar patrones_inmunes_601
-    pattern = r"patrones_inmunes_601\s*=\s*\{([^}]+)\}"
+    # FASE 1.1: patrones_inmunes_601 ahora usa _PATRONES_INMUNES_UNIVERSAL
+    # Verificar que el set universal contiene los patrones requeridos
+    pattern = r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}"
     match = re.search(pattern, code, re.DOTALL)
 
-    assert match is not None, "Debe existir patrones_inmunes_601"
+    assert match is not None, "Debe existir _PATRONES_INMUNES_UNIVERSAL"
 
     inmunes = match.group(1)
-    assert "'EVITAR_LOOP_WHATSAPP'" in inmunes, "EVITAR_LOOP_WHATSAPP debe estar en inmunes_601"
-    assert "'CLIENTE_ACEPTA_CORREO'" in inmunes, "CLIENTE_ACEPTA_CORREO debe estar en inmunes_601"
+    assert "'EVITAR_LOOP_WHATSAPP'" in inmunes, "EVITAR_LOOP_WHATSAPP debe estar en inmunes universal"
+    assert "'CLIENTE_ACEPTA_CORREO'" in inmunes, "CLIENTE_ACEPTA_CORREO debe estar en inmunes universal"
+    # Verificar que 601 usa el set universal
+    assert "patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL" in code, "601 debe usar set universal"
 
 
 def test_fix_646a_reglas_anti_repeticion_en_codigo():

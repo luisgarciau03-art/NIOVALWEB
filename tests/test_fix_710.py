@@ -104,49 +104,57 @@ class TestFix710BInmunidad601:
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
         assert "'ENCARGADO_NO_ESTA_SIN_HORARIO'" in source
-        # Verify it's in patrones_inmunes_601
-        idx_601 = source.find("patrones_inmunes_601")
-        idx_enc = source.find("'ENCARGADO_NO_ESTA_SIN_HORARIO'", idx_601)
-        idx_end = source.find("}", idx_601)
-        assert idx_601 < idx_enc < idx_end, "ENCARGADO_NO_ESTA_SIN_HORARIO must be in patrones_inmunes_601"
+        # FASE 1.1: patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL
+        idx_univ = source.find("_PATRONES_INMUNES_UNIVERSAL = {")
+        idx_enc = source.find("'ENCARGADO_NO_ESTA_SIN_HORARIO'", idx_univ)
+        idx_end = source.find("}", idx_univ)
+        assert idx_univ < idx_enc < idx_end, "ENCARGADO_NO_ESTA_SIN_HORARIO must be in _PATRONES_INMUNES_UNIVERSAL"
+        assert "patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL" in source
 
     def test_encargado_no_esta_con_horario_inmune(self):
         agente_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agente_ventas.py')
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        idx_601 = source.find("patrones_inmunes_601")
-        idx_enc = source.find("'ENCARGADO_NO_ESTA_CON_HORARIO'", idx_601)
-        idx_end = source.find("}", idx_601)
-        assert idx_601 < idx_enc < idx_end
+        # FASE 1.1: patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL
+        idx_univ = source.find("_PATRONES_INMUNES_UNIVERSAL = {")
+        idx_enc = source.find("'ENCARGADO_NO_ESTA_CON_HORARIO'", idx_univ)
+        idx_end = source.find("}", idx_univ)
+        assert idx_univ < idx_enc < idx_end
 
     def test_no_hacemos_compras_inmune_601(self):
         agente_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agente_ventas.py')
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        idx_601 = source.find("patrones_inmunes_601")
-        idx_nhc = source.find("'NO_HACEMOS_COMPRAS'", idx_601)
-        idx_end = source.find("}", idx_601)
-        assert idx_601 < idx_nhc < idx_end
+        # FASE 1.1: patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL
+        idx_univ = source.find("_PATRONES_INMUNES_UNIVERSAL = {")
+        idx_nhc = source.find("'NO_HACEMOS_COMPRAS'", idx_univ)
+        idx_end = source.find("}", idx_univ)
+        assert idx_univ < idx_nhc < idx_end
 
     def test_no_hacemos_compras_inmune_600(self):
-        """NO_HACEMOS_COMPRAS also immune to FIX 600 (splitter adversativo)."""
+        """NO_HACEMOS_COMPRAS also immune to FIX 600 (via _PATRONES_INMUNES_UNIVERSAL)."""
         agente_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agente_ventas.py')
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        idx_600 = source.find("patrones_inmunes_pero")
-        idx_nhc = source.find("'NO_HACEMOS_COMPRAS'", idx_600)
-        idx_end = source.find("}", idx_600)
-        assert idx_600 < idx_nhc < idx_end
+        # FASE 1.1: patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL
+        idx_univ = source.find("_PATRONES_INMUNES_UNIVERSAL = {")
+        idx_nhc = source.find("'NO_HACEMOS_COMPRAS'", idx_univ)
+        idx_end = source.find("}", idx_univ)
+        assert idx_univ < idx_nhc < idx_end
+        assert "patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL" in source
 
     def test_encargado_no_esta_inmune_600(self):
-        """ENCARGADO_NO_ESTA_SIN_HORARIO also immune to FIX 600."""
+        """ENCARGADO_NO_ESTA_SIN_HORARIO also immune to FIX 600 (via _PATRONES_INMUNES_UNIVERSAL)."""
         agente_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agente_ventas.py')
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        idx_600 = source.find("patrones_inmunes_pero")
-        idx_enc = source.find("'ENCARGADO_NO_ESTA_SIN_HORARIO'", idx_600)
-        idx_end = source.find("}", idx_600)
-        assert idx_600 < idx_enc < idx_end
+        # FASE 1.1: patrones_inmunes_pero now references _PATRONES_INMUNES_UNIVERSAL
+        idx_univ = source.find("_PATRONES_INMUNES_UNIVERSAL")
+        idx_enc = source.find("'ENCARGADO_NO_ESTA_SIN_HORARIO'", idx_univ)
+        idx_end = source.find("}", idx_univ)
+        assert idx_univ < idx_enc < idx_end, "ENCARGADO_NO_ESTA_SIN_HORARIO must be in _PATRONES_INMUNES_UNIVERSAL"
+        # Also verify patrones_inmunes_pero references it
+        assert "patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL" in source
 
 
 # ============================================================

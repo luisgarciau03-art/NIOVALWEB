@@ -72,10 +72,11 @@ class TestFix648ClienteHablaUltimo:
 
         source = inspect.getsource(AgenteVentas.procesar_respuesta)
 
-        # Verificar que los nuevos types están en patrones_inmunes_601
+        # FASE 1.1: patrones_inmunes_601 usa _PATRONES_INMUNES_UNIVERSAL
         assert "patrones_inmunes_601" in source
-        assert source.count('DESPEDIDA_NATURAL_CLIENTE_DERIVACION') >= 2  # En ambas listas
-        assert source.count('DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE') >= 2
+        # Patterns must be in _PATRONES_INMUNES_UNIVERSAL (referenced by 601)
+        assert 'DESPEDIDA_NATURAL_CLIENTE_DERIVACION' in source
+        assert 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE' in source
 
 
 class TestFix649GPTLogicaRotaIndirecto:

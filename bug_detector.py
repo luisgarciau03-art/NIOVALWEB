@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 750"
+_DEPLOY_VERSION = "FASE 1+2"
 
 # Severidades
 CRITICO = "CRITICO"
@@ -1386,7 +1386,32 @@ def _es_comportamiento_correcto(conversacion: list) -> bool:
         mensajes_ivr = ['para ventas marque', 'marque uno', 'le agradecemos su preferencia',
                        'no puede ser atendida', 'deje un mensaje', 'lo siento no lo entiendo']
         if any(msg in ultimo_cliente for msg in mensajes_ivr):
-            print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente es un IVR automatizado")
+            print(f"[FIX 664B] COMPORTAMIENTO CORRECTO: Cliente es un IVR automatizado")
+            return True
+
+        # FASE 2.2: CASO 4: Llamada exitosa (Bruce obtuvo dato de contacto)
+        # Si Bruce ya tiene WhatsApp/correo/teléfono, la llamada fue exitosa
+        _conversacion_texto = ' '.join([c[1].lower() for c in conversacion if c[0] == 'bruce'])
+        _tuvo_exito = any(f in _conversacion_texto for f in [
+            'muchas gracias por su', 'le envio', 'le envío', 'excelente dia',
+            'queda registrado', 'le estaremos enviando'
+        ])
+        if _tuvo_exito:
+            print(f"[FASE 2.2] COMPORTAMIENTO CORRECTO: Llamada exitosa (cierre con agradecimiento)")
+            return True
+
+        # FASE 2.2: CASO 5: Modismos mexicanos - "dígame/qué necesita" NO es pregunta
+        _modismos_go_ahead = ['digame', 'si digame', 'que necesita', 'que se le ofrece',
+                              'que le ofrecemos', 'que ocupa', 'en que le ayudo', 'en que le puedo ayudar']
+        if any(m in ultimo_cliente.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+               for m in _modismos_go_ahead):
+            print(f"[FASE 2.2] COMPORTAMIENTO CORRECTO: Cliente dijo modismo 'go ahead' ('{ultimo_cliente[:30]}')")
+            return True
+
+        # FASE 2.2: CASO 6: Llamada < 2 turnos de Bruce → no hay suficiente contexto
+        _turnos_bruce = sum(1 for c in conversacion if c[0] == 'bruce')
+        if _turnos_bruce < 2:
+            print(f"[FASE 2.2] SKIP: Solo {_turnos_bruce} turno(s) de Bruce, insuficiente contexto")
             return True
 
     except Exception as e:
@@ -1439,6 +1464,17 @@ def _extraer_metadata_conversacion(tracker: CallEventTracker) -> dict:
 _GPT_EVAL_PROMPT = """Eres un auditor de calidad para llamadas de ventas de Bruce, agente AI de la marca NIOVAL (productos ferreteros).
 
 Analiza esta conversacion telefonica y detecta SOLO errores claros. NO reportes cosas normales o menores.
+
+MODISMOS MEXICANOS (NO son bugs, son expresiones normales):
+- "Si, bueno?" / "Bueno?" = verificacion de conexion telefonica (NO interes)
+- "No, joven" / "No, muchacho" / "No, mijo" = rechazo cortes (NO agresion ni queja)
+- "Oiga" / "Mire" / "Fijese" = llamar la atencion (NO queja ni reclamo)
+- "Ahi le encargo" / "Sale pues" = despedida informal mexicana
+- "Que cree" / "Fijese que" = introduccion a informacion (NO pregunta retórica)
+- "Mande" / "Mande?" = "no escuche, repita por favor" (NO es un comando)
+- "Andale" / "Sale" / "Orale" = confirmacion informal
+- "Digame" / "Si digame" / "Que necesita" = "adelante, lo escucho" (NO es pregunta)
+- "Tienes donde anotar?" = persona lista para dar datos (ES decisor/encargado)
 
 FLUJO NORMAL DE BRUCE (esto NO son errores):
 - Bruce se presenta, menciona NIOVAL y pregunta por el encargado de compras

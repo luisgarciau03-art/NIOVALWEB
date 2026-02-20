@@ -331,27 +331,27 @@ class TestFix740Deteccion(unittest.TestCase):
 # ============================================================
 
 class TestFix741Inmunidad598(unittest.TestCase):
-    """FIX 741: CLIENTE_ACEPTA_CONTACTO_BRUCE + DAR_CONTACTO_BRUCE en 598."""
+    """FIX 741: CLIENTE_ACEPTA_CONTACTO_BRUCE + DAR_CONTACTO_BRUCE en 598 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_cliente_acepta_contacto_bruce_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('CLIENTE_ACEPTA_CONTACTO_BRUCE', match.group(1))
 
     def test_dar_contacto_bruce_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('DAR_CONTACTO_BRUCE', match.group(1))
 
 
 class TestFix741Inmunidad600(unittest.TestCase):
-    """FIX 741: Ambos en patrones_inmunes_pero."""
+    """FIX 741: Ambos en patrones_inmunes_pero (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_ambos_en_pero(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pero\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         content = match.group(1)
         self.assertIn('CLIENTE_ACEPTA_CONTACTO_BRUCE', content)
@@ -359,11 +359,11 @@ class TestFix741Inmunidad600(unittest.TestCase):
 
 
 class TestFix741Inmunidad601(unittest.TestCase):
-    """FIX 741: Ambos en patrones_inmunes_601."""
+    """FIX 741: Ambos en patrones_inmunes_601 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_ambos_en_601(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_601\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         content = match.group(1)
         self.assertIn('CLIENTE_ACEPTA_CONTACTO_BRUCE', content)
@@ -371,11 +371,11 @@ class TestFix741Inmunidad601(unittest.TestCase):
 
 
 class TestFix741Inmunidad602(unittest.TestCase):
-    """FIX 741: Ambos en patrones_inmunes_602."""
+    """FIX 741: Ambos en patrones_inmunes_602 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_ambos_en_602(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_602\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         content = match.group(1)
         self.assertIn('CLIENTE_ACEPTA_CONTACTO_BRUCE', content)

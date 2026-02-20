@@ -3032,17 +3032,23 @@ def procesar_respuesta():
                 tiene_senal_debil = any(f in _fl_712 for f in frases_volvio_debiles_712)
                 texto_corto_712 = len(_fl_712) < 25
 
-                # FIX 712A: Timeout - si > 60s desde "Claro, espero", asumir que volvió
+                # FIX 712A: Timeout - si > 45s desde "Claro, espero", forzar exit (FASE 1.2)
                 import time as _time_712
                 _t_espera_712 = 0
                 if hasattr(agente, 'ultimo_claro_espero_timestamp') and agente.ultimo_claro_espero_timestamp > 0:
                     _t_espera_712 = _time_712.time() - agente.ultimo_claro_espero_timestamp
-                timeout_espera_712 = _t_espera_712 > 60
+                # FASE 1.2: Timeout reducido de 60s → 45s (máximo tolerable)
+                timeout_espera_712 = _t_espera_712 > 45
+
+                # FASE 1.2: Audio >3 palabras tras silencio = humano real (IVR habla continuamente)
+                _palabras_audio_751 = len(_fl_712.split()) if _fl_712.strip() else 0
+                _audio_sustancial_751 = _palabras_audio_751 >= 3
 
                 cliente_volvio = (
                     tiene_senal_fuerte or
                     (tiene_senal_debil and texto_corto_712) or
-                    timeout_espera_712
+                    timeout_espera_712 or
+                    _audio_sustancial_751  # FASE 1.2: >=3 palabras = humano
                 )
 
                 if not cliente_volvio and not es_mas_espera:
@@ -3066,10 +3072,11 @@ def procesar_respuesta():
                     for palabra in palabras_en_texto_569
                 ) if palabras_en_texto_569 else False
 
-                # FIX 745B: BRUCE2316 - Si señal detectada (fuerte/débil), confiar sin len check
-                _senal_detectada_745 = tiene_senal_fuerte or tiene_senal_debil
-                # FIX 749B: BRUCE2322+2326 - Señal fuerte bypassa FIX 569 (ya verificada por FIX 712A)
-                if cliente_volvio and (tiene_senal_fuerte or ((_senal_detectada_745 or len(frase_limpia) > 10) and tiene_palabras_reconocibles)):  # FIX 569+745B+749B
+                # FASE 1.2: Simplificar gate - FIX 712A ya verifica señales, FIX 569 era redundante
+                # tiene_palabras_reconocibles ahora es solo WARNING, no gate obligatorio
+                if not tiene_palabras_reconocibles and cliente_volvio:
+                    print(f"   FASE 1.2 WARNING: cliente_volvio=True pero sin palabras reconocibles ('{frase_limpia[:40]}')")
+                if cliente_volvio:  # FASE 1.2: Solo depende de señales ya validadas por FIX 712A
                     print(f"\n FIX 520: CLIENTE VOLVIÓ después de espera - '{speech_result}'")
                     print(f"   Estado anterior: ESPERANDO_TRANSFERENCIA")
                     print(f"   → Saliendo del modo espera, procesando normalmente")
@@ -3449,24 +3456,37 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
             # FIX 712B: BRUCE2266 - Si aún en ESPERANDO_TRANSFERENCIA después de FIX 520+470,
             # es conversación de fondo → NO procesar por GPT, continuar esperando silenciosamente
+            # FASE 1.2: Pero si >45s, forzar exit (no quedarse atrapado indefinidamente)
             from agente_ventas import EstadoConversacion as _EC_712
             if agente.estado_conversacion == _EC_712.ESPERANDO_TRANSFERENCIA and not cliente_pidio_espera:
-                bruce_id_712 = agente.lead_data.get("bruce_id", "N/A")
-                print(f"\n FIX 712B: BRUCE2266 - Aún en ESPERANDO_TRANSFERENCIA, ignorando audio de fondo")
-                print(f"   Texto ignorado: '{speech_result[:80]}'")
-                log_evento(f"{bruce_id_712} - AUDIO FONDO IGNORADO: \"{speech_result[:60]}\"", "SISTEMA")
+                # FASE 1.2: Check timeout forzoso antes de ignorar
+                import time as _time_712b
+                _t_712b = 0
+                if hasattr(agente, 'ultimo_claro_espero_timestamp') and agente.ultimo_claro_espero_timestamp > 0:
+                    _t_712b = _time_712b.time() - agente.ultimo_claro_espero_timestamp
+                if _t_712b > 45:
+                    print(f"\n FASE 1.2: TIMEOUT FORZOSO {_t_712b:.0f}s > 45s en ESPERANDO_TRANSFERENCIA")
+                    print(f"   Forzando exit a CONVERSACION_NORMAL + re-saludo")
+                    agente.estado_conversacion = _EC_712.CONVERSACION_NORMAL
+                    agente.respuestas_vacias_consecutivas = 0
+                    # NO return aquí - continuar procesamiento normal (caerá al GPT)
+                else:
+                    bruce_id_712 = agente.lead_data.get("bruce_id", "N/A")
+                    print(f"\n FIX 712B: BRUCE2266 - Aún en ESPERANDO_TRANSFERENCIA, ignorando audio de fondo")
+                    print(f"   Texto ignorado: '{speech_result[:80]}'")
+                    log_evento(f"{bruce_id_712} - AUDIO FONDO IGNORADO: \"{speech_result[:60]}\"", "SISTEMA")
 
-                response = VoiceResponse()
-                # Continuar escuchando sin hablar (30s timeout como en FIX 470)
-                response.record(
-                    action="/procesar-respuesta",
-                    method="POST",
-                    max_length=1,
-                    timeout=30,
-                    play_beep=False,
-                    trim="trim-silence"
-                )
-                return Response(str(response), mimetype="text/xml")
+                    response = VoiceResponse()
+                    # Continuar escuchando sin hablar (30s timeout como en FIX 470)
+                    response.record(
+                        action="/procesar-respuesta",
+                        method="POST",
+                        max_length=1,
+                        timeout=30,
+                        play_beep=False,
+                        trim="trim-silence"
+                    )
+                    return Response(str(response), mimetype="text/xml")
 
             es_pregunta_rapida = (
                 frase_limpia.startswith('¿') or
@@ -3951,24 +3971,35 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
         # El cliente pidió "Permítame un segundo" y está transfiriendo la llamada
         from agente_ventas import EstadoConversacion
         if agente.estado_conversacion == EstadoConversacion.ESPERANDO_TRANSFERENCIA:
-            print(f" FIX 470: Respuesta vacía pero estamos en ESPERANDO_TRANSFERENCIA - seguir esperando")
-            print(f"   Silencios ignorados, esperando que cliente vuelva...")
+            # FASE 1.2: Check timeout forzoso incluso con silencio
+            import time as _time_470
+            _t_470 = 0
+            if hasattr(agente, 'ultimo_claro_espero_timestamp') and agente.ultimo_claro_espero_timestamp > 0:
+                _t_470 = _time_470.time() - agente.ultimo_claro_espero_timestamp
+            if _t_470 > 45:
+                print(f" FASE 1.2: TIMEOUT FORZOSO (silencio) {_t_470:.0f}s > 45s → exit ESPERANDO_TRANSFERENCIA")
+                agente.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                agente.respuestas_vacias_consecutivas = 0
+                # Caer al procesamiento normal con speech_result vacío → FIX 577 generará fallback
+            else:
+                print(f" FIX 470: Respuesta vacía pero estamos en ESPERANDO_TRANSFERENCIA - seguir esperando ({_t_470:.0f}s)")
+                print(f"   Silencios ignorados, esperando que cliente vuelva...")
 
-            # NO incrementar respuestas_vacias_consecutivas
-            response = VoiceResponse()
+                # NO incrementar respuestas_vacias_consecutivas
+                response = VoiceResponse()
 
-            # Seguir esperando con timeout largo
-            response.record(
-                action="/procesar-respuesta",
-                method="POST",
-                max_length=1,
-                timeout=30,  # 30 segundos más de espera
-                play_beep=False,
-                trim="trim-silence"
-            )
+                # Seguir esperando con timeout largo
+                response.record(
+                    action="/procesar-respuesta",
+                    method="POST",
+                    max_length=1,
+                    timeout=30,  # 30 segundos más de espera
+                    play_beep=False,
+                    trim="trim-silence"
+                )
 
-            print(f"    FIX 470: Continuando espera con timeout de 30s...")
-            return Response(str(response), mimetype="text/xml")
+                print(f"    FIX 470: Continuando espera con timeout de 30s...")
+                return Response(str(response), mimetype="text/xml")
 
         # FIX 565: Si Bruce ha estado en silencio por 5+ segundos, generar fallback (max 2 veces)
         import time as time_565

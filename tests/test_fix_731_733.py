@@ -47,71 +47,71 @@ def _crear_agente_con_contexto():
 # ============================================================
 
 class TestFix731InmunidadPatrones598(unittest.TestCase):
-    """FIX 731: Patrones deben estar en patrones_inmunes_pregunta_598."""
+    """FIX 731: Patrones deben estar en patrones_inmunes_pregunta_598 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_encargado_llega_alternativa_en_598(self):
         source = _get_source()
-        # Buscar en sección entre pregunta_598 y la siguiente sección
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_pregunta_598 no encontrado")
+        # FASE 1.1: patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         self.assertIn('ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', match.group(1))
 
     def test_cliente_es_encargado_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('CLIENTE_ES_ENCARGADO', match.group(1))
 
     def test_otra_sucursal_en_598(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pregunta_598\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('OTRA_SUCURSAL', match.group(1))
 
 
 class TestFix731InmunidadPero600(unittest.TestCase):
-    """FIX 731: Patrones deben estar en patrones_inmunes_pero."""
+    """FIX 731: Patrones deben estar en patrones_inmunes_pero (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_encargado_llega_alternativa_en_pero(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pero\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_pero no encontrado")
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         self.assertIn('ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', match.group(1))
 
     def test_cliente_es_encargado_en_pero(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_pero\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
         self.assertIsNotNone(match)
         self.assertIn('CLIENTE_ES_ENCARGADO', match.group(1))
 
 
 class TestFix731InmunidadComplejidad601(unittest.TestCase):
-    """FIX 731: CLIENTE_ES_ENCARGADO debe estar en patrones_inmunes_601."""
+    """FIX 731: CLIENTE_ES_ENCARGADO debe estar en patrones_inmunes_601 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
     def test_cliente_es_encargado_en_601(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_601\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_601 no encontrado")
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         self.assertIn('CLIENTE_ES_ENCARGADO', match.group(1))
 
 
 class TestFix731InmunidadContexto602(unittest.TestCase):
-    """FIX 731: 3 patrones deben estar en patrones_inmunes_602."""
+    """FIX 731: 3 patrones deben estar en patrones_inmunes_602 (via _PATRONES_INMUNES_UNIVERSAL)."""
 
-    def _get_602_content(self):
+    def _get_universal_content(self):
         source = _get_source()
-        match = re.search(r"patrones_inmunes_602\s*=\s*\{([^}]+)\}", source, re.DOTALL)
-        self.assertIsNotNone(match, "patrones_inmunes_602 no encontrado")
+        match = re.search(r"_PATRONES_INMUNES_UNIVERSAL\s*=\s*\{([^}]+)\}", source, re.DOTALL)
+        self.assertIsNotNone(match, "_PATRONES_INMUNES_UNIVERSAL no encontrado")
         return match.group(1)
 
     def test_encargado_llega_alternativa_en_602(self):
-        self.assertIn('ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', self._get_602_content())
+        self.assertIn('ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', self._get_universal_content())
 
     def test_cliente_es_encargado_en_602(self):
-        self.assertIn('CLIENTE_ES_ENCARGADO', self._get_602_content())
+        self.assertIn('CLIENTE_ES_ENCARGADO', self._get_universal_content())
 
     def test_otra_sucursal_en_602(self):
-        self.assertIn('OTRA_SUCURSAL', self._get_602_content())
+        self.assertIn('OTRA_SUCURSAL', self._get_universal_content())
 
 
 # ============================================================
@@ -293,7 +293,9 @@ class TestDeployVersion(unittest.TestCase):
 
     def test_deploy_version_actual(self):
         from bug_detector import _DEPLOY_VERSION
-        self.assertIn("FIX", _DEPLOY_VERSION)
+        # FASE 1.1: Deploy version may use "FASE" prefix instead of "FIX"
+        self.assertTrue("FIX" in _DEPLOY_VERSION or "FASE" in _DEPLOY_VERSION,
+                        f"Deploy version should contain FIX or FASE, got: {_DEPLOY_VERSION}")
 
 
 if __name__ == "__main__":

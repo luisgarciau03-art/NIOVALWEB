@@ -165,25 +165,24 @@ class TestFix661Inmunidades:
         assert "CLIENTE_OFRECE_WHATSAPP" in source
 
     def test_fix_661_patrones_inmunes_601(self):
-        """Verificar que FIX 661 agregó patrones a inmunes_601"""
+        """Verificar que FIX 661 agregó patrones a inmunes_601 (via _PATRONES_INMUNES_UNIVERSAL)"""
         # Leer archivo completo
         import os
         agente_path = os.path.join(os.path.dirname(__file__), '..', 'agente_ventas.py')
         with open(agente_path, 'r', encoding='utf-8') as f:
             source = f.read()
 
-        # Buscar la sección de patrones_inmunes_601
+        # FASE 1.1: patrones_inmunes_601 ahora apunta a _PATRONES_INMUNES_UNIVERSAL
         assert "patrones_inmunes_601" in source
 
-        # Verificar que los nuevos patrones están en el código cerca de patrones_inmunes_601
-        # (dentro de las 50 líneas siguientes a la definición)
+        # Verificar que los patrones están en _PATRONES_INMUNES_UNIVERSAL
         lines = source.split('\n')
         for i, line in enumerate(lines):
-            if 'patrones_inmunes_601 =' in line:
-                # Buscar en las próximas 20 líneas
-                block = '\n'.join(lines[i:i+20])
-                assert "OFRECER_CONTACTO_BRUCE" in block, "OFRECER_CONTACTO_BRUCE no está en patrones_inmunes_601"
-                assert "CLIENTE_OFRECE_WHATSAPP" in block, "CLIENTE_OFRECE_WHATSAPP no está en patrones_inmunes_601"
+            if '_PATRONES_INMUNES_UNIVERSAL = {' in line:
+                # Buscar hasta el cierre del set
+                block = '\n'.join(lines[i:i+40])
+                assert "OFRECER_CONTACTO_BRUCE" in block, "OFRECER_CONTACTO_BRUCE no está en _PATRONES_INMUNES_UNIVERSAL"
+                assert "CLIENTE_OFRECE_WHATSAPP" in block, "CLIENTE_OFRECE_WHATSAPP no está en _PATRONES_INMUNES_UNIVERSAL"
                 break
 
 

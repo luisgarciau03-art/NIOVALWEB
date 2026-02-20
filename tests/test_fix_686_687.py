@@ -252,11 +252,12 @@ class TestFix687AInmunesPero:
         assert not invalidado, "PEDIR_TELEFONO_FIJO es inmune a adversativo"
 
     def test_source_code_tiene_inmunes_pero(self):
-        """Verificar en código fuente que los 3 patrones están en patrones_inmunes_pero."""
+        """Verificar en código fuente que los 3 patrones están en patrones_inmunes_pero (via _PATRONES_INMUNES_UNIVERSAL)."""
         with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agente_ventas.py'),
                   encoding='utf-8') as f:
             source = f.read()
-        start = source.find('patrones_inmunes_pero = {')
+        # FASE 1.1: patrones_inmunes_pero ahora apunta a _PATRONES_INMUNES_UNIVERSAL
+        start = source.find('_PATRONES_INMUNES_UNIVERSAL = {')
         end = source.find('}', start)
         bloque = source[start:end+1]
         assert 'CLIENTE_ACEPTA_CORREO' in bloque
@@ -294,11 +295,12 @@ class TestFix687BInmunes601:
         assert not invalidado, "PEDIR_TELEFONO_FIJO es inmune a FIX 601"
 
     def test_source_code_tiene_inmune_601(self):
-        """Verificar en código fuente que PEDIR_TELEFONO_FIJO está en patrones_inmunes_601."""
+        """Verificar en código fuente que PEDIR_TELEFONO_FIJO está en patrones_inmunes_601 (via _PATRONES_INMUNES_UNIVERSAL)."""
         with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agente_ventas.py'),
                   encoding='utf-8') as f:
             source = f.read()
-        start = source.find('patrones_inmunes_601 = {')
+        # FASE 1.1: patrones_inmunes_601 ahora apunta a _PATRONES_INMUNES_UNIVERSAL
+        start = source.find('_PATRONES_INMUNES_UNIVERSAL = {')
         end = source.find('}', start)
         bloque = source[start:end+1]
         assert 'PEDIR_TELEFONO_FIJO' in bloque

@@ -6708,8 +6708,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 self.metrics.log_filtro_post_gpt("FIX_697B", "RECHAZO_DATO_IGNORADO")
 
         # ============================================================
-        # FIX 679: DETECTOR HASH DE DUPLICADOS EXACTOS
-        # Si Bruce ya dijo algo muy similar (>=85% similar), generar alternativa
+        # FIX 679 + FASE 1.3: CIRCUIT BREAKER ANTI-LOOP
+        # Si Bruce ya dijo algo muy similar (>=85%), generar alternativa
+        # FASE 1.3: Track count - 2da repetición = cierre cortés con catálogo
         # ============================================================
         import re as re_679
         import unicodedata as ud_679
@@ -6718,6 +6719,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Solo verificar si respuesta tiene contenido sustancial (>25 chars normalizados)
         if len(respuesta_norm_679) > 25:
             respuestas_previas_679 = [m.get('content', '') for m in self.conversation_history if m.get('role') == 'assistant']
+            _dup_count_751 = 0  # FASE 1.3: Contar cuántas veces ya se dijo algo similar
             for prev in respuestas_previas_679:
                 prev_norm = ud_679.normalize('NFKD', prev.lower()).encode('ascii', 'ignore').decode('ascii')
                 prev_norm = re_679.sub(r'[^\w\s]', '', prev_norm).strip()
@@ -6725,22 +6727,28 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     from difflib import SequenceMatcher as SM_679
                     ratio_679 = SM_679(None, respuesta_norm_679, prev_norm).ratio()
                     if ratio_679 >= 0.85:
-                        print(f"\n[FIX 679] DUPLICADO DETECTADO ({ratio_679:.0%} similar)")
-                        print(f"  Previo: '{prev[:60]}...'")
-                        print(f"  Actual: '{respuesta[:60]}...'")
-                        # Generar alternativa contextual
-                        if 'encargado' in respuesta.lower():
-                            respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
-                        elif 'nioval' in respuesta.lower():
-                            respuesta = "¿Se encontrará el encargado o encargada de compras?"
-                        elif 'whatsapp' in respuesta.lower():
-                            respuesta = "¿Prefiere que le envíe la información por correo electrónico?"
-                        elif 'catálogo' in respuesta.lower() or 'catalogo' in respuesta.lower():
-                            respuesta = "Muchas gracias por su tiempo. Que tenga excelente día."
-                        else:
-                            respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
-                        print(f"  Override: '{respuesta}'")
-                        break
+                        _dup_count_751 += 1
+            if _dup_count_751 >= 2:
+                # FASE 1.3: 3ra repetición → cierre cortés definitivo
+                print(f"\n[FASE 1.3] CIRCUIT BREAKER: Respuesta repetida {_dup_count_751 + 1}x")
+                print(f"  Respuesta: '{respuesta[:60]}...'")
+                respuesta = "Le envío la información por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
+                print(f"  Override CIERRE: '{respuesta}'")
+            elif _dup_count_751 == 1:
+                print(f"\n[FIX 679] DUPLICADO DETECTADO (2da vez)")
+                print(f"  Actual: '{respuesta[:60]}...'")
+                # Generar alternativa contextual
+                if 'encargado' in respuesta.lower():
+                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
+                elif 'nioval' in respuesta.lower():
+                    respuesta = "¿Se encontrará el encargado o encargada de compras?"
+                elif 'whatsapp' in respuesta.lower():
+                    respuesta = "¿Prefiere que le envíe la información por correo electrónico?"
+                elif 'catálogo' in respuesta.lower() or 'catalogo' in respuesta.lower():
+                    respuesta = "Muchas gracias por su tiempo. Que tenga excelente día."
+                else:
+                    respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
+                print(f"  Override: '{respuesta}'")
 
         # ============================================================
         # FIX 684: POST-FILTER ANTI-PROBLEMAS-TECNICOS (CTN-002)
@@ -9113,11 +9121,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"   Texto: '{respuesta_cliente[-40:]}'")
                 patron_detectado = None
 
+        # FASE 1.3: CIRCUIT BREAKER - Si 3+ patrones invalidados consecutivamente, skip validators
+        # Problema: Validators invalidan patrones correctos en cadena → siempre cae a GPT → GPT puede fallar
+        # Solución: Si el agente acumula 3+ invalidaciones seguidas, confiar en pattern detector
+        _skip_validators_751 = False
+        if patron_detectado:
+            _inv_count = getattr(self, '_patrones_invalidados_consecutivos', 0)
+            if _inv_count >= 3:
+                _skip_validators_751 = True
+                print(f"\n FASE 1.3: CIRCUIT BREAKER ACTIVO - {_inv_count} patrones invalidados consecutivamente")
+                print(f"   Confiando en pattern detector: '{patron_detectado.get('tipo', '')}'")
+                self._patrones_invalidados_consecutivos = 0  # Reset después de bypass
+
         # FIX 598: VALIDADOR POST-PATRÓN - Detectar contradicciones antes de responder
         # Problema: El pattern detector responde en 0.05s pero a veces la respuesta
         # CONTRADICE lo que el cliente dijo (ej: cliente ofrece correo pero Bruce dice "le llamo")
         # Solución: Tabla de contradicciones patron→keywords. Si se detecta contradicción, GPT decide.
-        if patron_detectado:
+        if patron_detectado and not _skip_validators_751:
             tipo_patron = patron_detectado.get('tipo', '')
             texto_validacion = respuesta_cliente.strip().lower()
             # FIX 631: Normalizar acentos (consistente con texto_lower)
@@ -9202,20 +9222,41 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Ej: "No se encuentra. ¿De dónde habla?" → la pregunta es más importante que el estado
             # FIX 635: Patrones de confirmación/dato inmunes a pregunta complementaria
             # Ej: "sí es el mismo, ¿me puedes mandar?" → la pregunta NO contradice CONFIRMA_MISMO_NUMERO
-            patrones_inmunes_pregunta_598 = {
-                'CONFIRMA_MISMO_NUMERO', 'CONFIRMACION_SIMPLE', 'CLIENTE_DICE_SI',
-                'CLIENTE_ACEPTA_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
+            # FASE 1.1: Set UNIVERSAL de inmunidad - reemplaza 4 listas separadas
+            # Patrones en este set sobreviven TODOS los validadores (598, 600, 601, 602)
+            _PATRONES_INMUNES_UNIVERSAL = {
+                # Confirmaciones/aceptaciones
+                'CONFIRMA_MISMO_NUMERO', 'CONFIRMACION_SIMPLE', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
+                'CLIENTE_ACEPTA_WHATSAPP', 'CLIENTE_ACEPTA_CORREO', 'CLIENTE_ACEPTA_CONTACTO_BRUCE',
+                # Ofertas de datos del cliente
                 'CLIENTE_OFRECE_WHATSAPP', 'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                'DESPEDIDA_CLIENTE', 'DESPEDIDA', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
-                'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
-                'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
-                'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
-                'OFRECER_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',  # FIX 686B: inmunidad pregunta 2da cláusula
-                'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO', 'OTRA_SUCURSAL',  # FIX 731
-                'CLIENTE_DICTA_EMAIL_COMPLETO', 'PIDE_CONTACTO_NIOVAL',  # FIX 734
-                'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
-                'DIGAME_CONTINUAR',  # FIX 747
+                'CLIENTE_OFRECE_SU_CONTACTO', 'OFRECE_CONTACTO_ENCARGADO',
+                # Dictado activo
+                'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO', 'NUMERO_PARCIAL_CON_VERIFICACION',
+                'NUMERO_COMPLETO_DICTADO', 'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
+                'CLIENTE_DICTA_EMAIL_COMPLETO',
+                # Despedidas/rechazos
+                'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
+                'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
+                'NO_HACEMOS_COMPRAS', 'SALUDO',
+                # Estado encargado
+                'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
+                'ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
+                'CLIENTE_ES_ENCARGADO',
+                # Sucursal/ubicacion
+                'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
+                # Contacto Bruce
+                'OFRECER_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE', 'PEDIR_TELEFONO_FIJO',
+                'PIDE_CONTACTO_NIOVAL',
+                # Anti-loop
+                'EVITAR_LOOP_WHATSAPP',
+                # Conversacionales
+                'DIGAME_CONTINUAR', 'PREGUNTA_IDENTIDAD', 'PREGUNTA_MARCAS',
+                'VERIFICACION_CONEXION', 'VERIFICACION_CONEXION_REPETIR_PREGUNTA',
+                # Callback
+                'SOLICITUD_CALLBACK',
             }
+            patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL
             tiene_pregunta_segunda_clausula = False
             partes_texto = [p.strip() for p in texto_validacion.replace('.', '|').replace('?', '?|').split('|') if p.strip()]
             if len(partes_texto) >= 2 and tipo_patron not in patrones_inmunes_pregunta_598:
@@ -9242,12 +9283,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 except Exception:
                     pass
                 patron_detectado = None  # Invalidar patrón, GPT decidirá
+                # FASE 1.3: Incrementar counter de invalidaciones consecutivas
+                self._patrones_invalidados_consecutivos = getattr(self, '_patrones_invalidados_consecutivos', 0) + 1
 
         # FIX 600: SPLITTER ADVERSATIVO - "pero/sin embargo/aunque" cambia intención
         # Problema: "No está pero yo le ayudo" → patrón matchea "no está" e ignora "yo le ayudo"
         # Solución: Si texto tiene conjunción adversativa y la parte después tiene contenido
         # sustancial (>=3 palabras), invalidar patrón porque la intención real está DESPUÉS del "pero"
-        if patron_detectado:
+        if patron_detectado and not _skip_validators_751:
             texto_600 = respuesta_cliente.strip().lower()
             # FIX 631: Normalizar acentos (consistente con texto_lower)
             texto_600 = texto_600.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
@@ -9262,22 +9305,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 648: Agregar DESPEDIDA_NATURAL_CLIENTE_* (cierre natural del cliente)
             # FIX 661: Pattern audit - Agregar patrones con 0% survival
             # FIX 687A: Agregar CLIENTE_ACEPTA_CORREO, EVITAR_LOOP_WHATSAPP, PEDIR_TELEFONO_FIJO (0% survival)
-            patrones_inmunes_pero = {'DESPEDIDA', 'DESPEDIDA_CLIENTE', 'RECHAZO_DEFINITIVO', 'NO_INTERESA_FINAL',
-                                     'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
-                                     'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
-                                     'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                                     'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
-                                     'CLIENTE_DICTA_EMAIL_COMPLETO',
-                                     'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
-                                     'CLIENTE_ACEPTA_CORREO', 'EVITAR_LOOP_WHATSAPP',
-                                     'PEDIR_TELEFONO_FIJO',
-                                     'NO_HACEMOS_COMPRAS',  # FIX 710B: rechazo definitivo
-                                     'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
-                                     'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA', 'CLIENTE_ES_ENCARGADO',  # FIX 731
-                                     'PIDE_CONTACTO_NIOVAL',  # FIX 734
-                                     'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
-                                     'DIGAME_CONTINUAR',  # FIX 747
-                                     }
+            # FASE 1.1: Usar set universal (reemplaza lista individual)
+            patrones_inmunes_pero = _PATRONES_INMUNES_UNIVERSAL
             tipo_600 = patron_detectado.get('tipo', '')
 
             if tipo_600 not in patrones_inmunes_pero:
@@ -9297,6 +9326,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             except Exception:
                                 pass
                             patron_detectado = None
+                            # FASE 1.3: Incrementar counter
+                            self._patrones_invalidados_consecutivos = getattr(self, '_patrones_invalidados_consecutivos', 0) + 1
                         break
 
         # FIX 601: UMBRAL DE COMPLEJIDAD - Textos largos multi-cláusula → GPT
@@ -9304,7 +9335,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # para pattern matching simple. Ej: "No está el jefe, salió a comer, pero si quiere
         # le paso al encargado del área de compras" → patrón ve "no está" e ignora todo lo demás
         # Solución: Si texto tiene >12 palabras Y >1 cláusula (separada por punto/coma/;) → GPT
-        if patron_detectado:
+        if patron_detectado and not _skip_validators_751:
             texto_601 = respuesta_cliente.strip()
             palabras_601 = texto_601.split()
             tipo_601 = patron_detectado.get('tipo', '')
@@ -9323,34 +9354,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 661: Pattern audit - Agregar patrones con 0% survival
             # FIX 687B: Agregar PEDIR_TELEFONO_FIJO (0% survival - no estaba en ninguna lista)
             # FIX 710B: BRUCE2255 - ENCARGADO_NO_ESTA_* inmunes (cliente repite 3x genera >12 palabras)
-            patrones_inmunes_601 = {'CONFIRMACION_SIMPLE', 'SALUDO', 'DESPEDIDA', 'DESPEDIDA_CLIENTE',
-                                    'DESPEDIDA_NATURAL_CLIENTE_DERIVACION', 'DESPEDIDA_NATURAL_CLIENTE_NO_DISPONIBLE',
-                                    'RECHAZO_DEFINITIVO',
-                                    'NO_INTERESA_FINAL', 'CLIENTE_DICE_SI', 'CLIENTE_DICE_NO',
-                                    'CORREO_DETECTADO', 'WHATSAPP_DETECTADO',
-                                    'OTRA_SUCURSAL', 'OTRA_SUCURSAL_INSISTENCIA',
-                                    'CLIENTE_OFRECE_CORREO', 'CLIENTE_OFRECE_NUMERO',
-                                    'OFRECE_CONTACTO_ENCARGADO', 'CLIENTE_OFRECE_SU_CONTACTO',
-                                    'CLIENTE_DICTANDO_NUMERO', 'NUMERO_PARCIAL_DICTADO',
-                                    'NUMERO_PARCIAL_CON_VERIFICACION',
-                                    'CLIENTE_DICTA_EMAIL_COMPLETO',
-                                    'EVITAR_LOOP_WHATSAPP', 'CLIENTE_ACEPTA_CORREO',
-                                    'OFRECER_CONTACTO_BRUCE', 'CLIENTE_OFRECE_WHATSAPP',
-                                    'PEDIR_TELEFONO_FIJO',
-                                    'ENCARGADO_NO_ESTA_SIN_HORARIO', 'ENCARGADO_NO_ESTA_CON_HORARIO',
-                                    'ENCARGADO_LLEGA_MAS_TARDE', 'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',
-                                    'NO_HACEMOS_COMPRAS',
-                                    'CLIENTE_ES_ENCARGADO',  # FIX 731
-                                    'PIDE_CONTACTO_NIOVAL',  # FIX 734
-                                    'CLIENTE_ACEPTA_CONTACTO_BRUCE', 'DAR_CONTACTO_BRUCE',  # FIX 741
-                                    'DIGAME_CONTINUAR',  # FIX 747
-                                    }
-            if len(palabras_601) > 12 and tipo_601 not in patrones_inmunes_601:
+            # FASE 1.1: Usar set universal (reemplaza lista individual)
+            patrones_inmunes_601 = _PATRONES_INMUNES_UNIVERSAL
+            # FASE 1.1: Threshold subido de 12/3 → 25/5 (solo invalida textos REALMENTE ambiguos)
+            if len(palabras_601) > 25 and tipo_601 not in patrones_inmunes_601:
                 # Contar cláusulas (separadores: . , ; ¿ ?)
                 num_clausulas = 1
                 for sep in ['. ', ', ', '; ', '¿', '?']:
                     num_clausulas += texto_601.count(sep)
-                if num_clausulas >= 3:
+                if num_clausulas >= 5:
                     print(f"   FIX 601: UMBRAL COMPLEJIDAD: {len(palabras_601)} palabras + {num_clausulas} cláusulas")
                     print(f"   Texto: '{texto_601[:60]}...'")
                     print(f"   Patrón '{tipo_601}' INVALIDADO → GPT maneja complejidad mejor")
@@ -9361,13 +9373,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     except Exception:
                         pass
                     patron_detectado = None
+                    # FASE 1.3: Incrementar counter
+                    self._patrones_invalidados_consecutivos = getattr(self, '_patrones_invalidados_consecutivos', 0) + 1
 
         # FIX 602: VALIDADOR DE CONTEXTO CONVERSACIONAL
         # Problema: El patrón detectado puede ser técnicamente correcto pero INCOHERENTE
         # con lo que Bruce preguntó. Ej: Bruce pidió correo → cliente dice "no" → patrón RECHAZO
         # pero lo correcto es que GPT pida alternativa (WhatsApp).
         # Solución: Extraer el tema de la última pregunta de Bruce y validar coherencia.
-        if patron_detectado and len(self.conversation_history) >= 2:
+        if patron_detectado and len(self.conversation_history) >= 2 and not _skip_validators_751:
             tipo_602 = patron_detectado.get('tipo', '')
             # Obtener último mensaje de Bruce
             ultimo_bruce_602 = None
@@ -9392,23 +9406,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 # FIX 692C: Patrones que SIEMPRE sobreviven FIX 602 (0% survival fix)
                 # Estos patrones son válidos en CUALQUIER contexto conversacional
-                patrones_inmunes_602 = {
-                    'OFRECER_CONTACTO_BRUCE',       # Bruce ofrece su contacto como último recurso
-                    'CLIENTE_ACEPTA_CORREO',         # Cliente acepta correo (siempre válido)
-                    'CLIENTE_OFRECE_SU_CONTACTO',    # Cliente ofrece su contacto (siempre aceptar)
-                    'CLIENTE_OFRECE_WHATSAPP',       # Cliente ofrece WhatsApp (siempre aceptar)
-                    'PEDIR_TELEFONO_FIJO',           # Alternativa de contacto (siempre válido)
-                    'PREGUNTA_MARCAS',               # Cliente pregunta sobre productos (siempre responder)
-                    'PREGUNTA_IDENTIDAD',            # FIX 694B: BRUCE2238 - "¿Cuál es su nombre?" (siempre responder)
-                    'ENCARGADO_LLEGA_MAS_TARDE_ALTERNATIVA',  # FIX 731: 0% survival fix
-                    'CLIENTE_ES_ENCARGADO',                    # FIX 731: 0% survival fix
-                    'OTRA_SUCURSAL',                           # FIX 731: 0% survival fix
-                    'CLIENTE_DICTA_EMAIL_COMPLETO',            # FIX 734: 0% survival fix
-                    'PIDE_CONTACTO_NIOVAL',                    # FIX 734: 0% survival fix
-                    'CLIENTE_ACEPTA_CONTACTO_BRUCE',           # FIX 741: 0% survival fix
-                    'DAR_CONTACTO_BRUCE',                      # FIX 741: 0% survival fix
-                    'DIGAME_CONTINUAR',                        # FIX 747: 0% survival fix
-                }
+                # FASE 1.1: Usar set universal (reemplaza lista individual)
+                patrones_inmunes_602 = _PATRONES_INMUNES_UNIVERSAL
 
                 if tipo_602 in patrones_inmunes_602:
                     print(f"   FIX 692C: Patrón '{tipo_602}' es INMUNE a FIX 602 (válido en cualquier contexto)")
@@ -9461,8 +9460,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         except Exception:
                             pass
                         patron_detectado = None
+                        # FASE 1.3: Incrementar counter
+                        self._patrones_invalidados_consecutivos = getattr(self, '_patrones_invalidados_consecutivos', 0) + 1
 
         if patron_detectado:
+            # FASE 1.3: Patrón sobrevivió → reset counter
+            self._patrones_invalidados_consecutivos = 0
             # FIX 633: Registrar que patrón sobrevivió todos los checks
             try:
                 from pattern_audit import track_pattern_survived
@@ -9503,6 +9506,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             })
 
             return patron_detectado['respuesta']
+
+        # FASE 2.1: GPT-4o-mini intent classifier como fallback
+        # Si patron_detectado fue invalidado o no hubo match, intentar clasificación rápida
+        _gpt_intent_751 = None
+        try:
+            from gpt_intent_classifier import classify_intent, intent_to_pattern_type
+            _ultimo_bruce_751 = ""
+            for _m in reversed(self.conversation_history):
+                if _m.get('role') == 'assistant':
+                    _ultimo_bruce_751 = _m.get('content', '')[:100]
+                    break
+            _estado_751 = getattr(self, 'estado_conversacion', None)
+            _estado_str_751 = _estado_751.value if _estado_751 and hasattr(_estado_751, 'value') else str(_estado_751)
+            _gpt_intent_751 = classify_intent(
+                respuesta_cliente, _ultimo_bruce_751, _estado_str_751,
+                call_sid=self.lead_data.get('bruce_id', '')
+            )
+            if _gpt_intent_751 and _gpt_intent_751.get('confidence', 0) >= 0.85:
+                _mapped_type = intent_to_pattern_type(_gpt_intent_751['intent'])
+                if _mapped_type:
+                    print(f"   FASE 2.1: GPT intent '{_gpt_intent_751['intent']}' → tipo patrón '{_mapped_type}'")
+                    # Enriquecer el contexto para GPT principal (no override, solo hint)
+                    self._gpt_intent_hint = _gpt_intent_751
+        except ImportError:
+            pass  # Module not available
+        except Exception as e_gi:
+            print(f"   [WARN] FASE 2.1: GPT intent classifier error: {e_gi}")
 
         # FIX 699: Memory Layer - Extraer hechos antes de procesar
         try:

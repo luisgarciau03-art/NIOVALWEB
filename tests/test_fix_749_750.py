@@ -139,11 +139,13 @@ class TestFix749BStrongSignalBypass(unittest.TestCase):
     """FIX 749B: Strong signals bypass tiene_palabras_reconocibles check."""
 
     def test_gate_code_present(self):
-        """FIX 749B gate condition must be in servidor."""
+        """FASE 1.2 simplified gate: 'if cliente_volvio:' (absorbed FIX 749B)."""
         servidor_path = os.path.join(os.path.dirname(__file__), '..', 'servidor_llamadas.py')
         with open(servidor_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        self.assertIn('FIX 749B', source)
+        # FASE 1.2 absorbed FIX 749B into simplified gate
+        self.assertIn('if cliente_volvio:', source)
+        # tiene_senal_fuerte is still used in cliente_volvio computation
         self.assertIn('tiene_senal_fuerte or', source)
 
     def test_strong_signal_bypasses_569(self):

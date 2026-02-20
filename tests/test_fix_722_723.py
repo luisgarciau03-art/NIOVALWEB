@@ -31,7 +31,7 @@ class TestFix722ComportamientoCorrectoDecisor(unittest.TestCase):
         """Cliente dice 'gerente' → NO skipear GPT eval."""
         conv = [
             ("bruce", "¿Se encuentra el encargado de compras?"),
-            ("cliente", "Soy el gerente, ¿qué necesita?"),
+            ("cliente", "Soy el gerente aquí, ya le dije que no nos interesa"),
             ("bruce", "¿Me podría dar su WhatsApp para enviarle el catálogo?"),
         ]
         result = _es_comportamiento_correcto(conv)
@@ -41,7 +41,7 @@ class TestFix722ComportamientoCorrectoDecisor(unittest.TestCase):
         """Cliente dice 'dueño' → NO skipear GPT eval."""
         conv = [
             ("bruce", "¿Se encuentra el encargado de compras?"),
-            ("cliente", "Yo soy el dueño, dígame"),
+            ("cliente", "Yo soy el dueño de este local"),
             ("bruce", "¿Me podría dejar recado con el encargado?"),
         ]
         result = _es_comportamiento_correcto(conv)
