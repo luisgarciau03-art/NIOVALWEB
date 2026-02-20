@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 748"
+_DEPLOY_VERSION = "FIX 750"
 
 # Severidades
 CRITICO = "CRITICO"
@@ -1454,6 +1454,7 @@ Tipos de errores a buscar:
 3. TONO_INADECUADO: Bruce fue grosero, impaciente o poco profesional
 4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN LA MISMA LLAMADA
 5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa" o "enviame info" y Bruce NO le pidio contacto
+   FIX 750: "Si, bueno?", "Bueno?", "Si, bueno." son VERIFICACION DE CONEXION (= "Sigues ahi?"), NO interes. Ignorar como senal de interes.
 6. CONTEXTO_IGNORADO: Bruce trato al interlocutor como empleado/recepcionista cuando ERA el encargado/dueño.
    Senales de que el interlocutor ES el encargado/decisor:
    - "Yo soy el encargado/dueno", "Yo hago las compras", "Tienes donde anotar?" (= listo para dar datos, es decisor)
@@ -1530,6 +1531,9 @@ ERRORES GRAVES a buscar (solo estos 4 tipos):
 3. LOGICA_ROTA: Bruce pidió dato que el cliente YA proporcionó en el turno anterior.
 
 4. OPORTUNIDAD_PERDIDA: Cliente mostró interés claro o ofreció datos, y Bruce respondió con despedida o tema irrelevante.
+   FIX 750: BRUCE2321 - "Sí, bueno?", "¿Bueno?", "Sí, bueno." son VERIFICACION DE CONEXION en México (= "¿Sigues ahí?").
+   NO son expresiones de interés. Si cliente dijo "Sí, bueno?" y Bruce continuó con pregunta de contacto, eso es CORRECTO.
+   "No, joven" seguido de "Sí, bueno?" = cliente verificó conexión tras pausa, NO mostró interés.
 
 CONVERSACION:
 {conversacion}

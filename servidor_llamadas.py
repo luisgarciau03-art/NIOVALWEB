@@ -3051,11 +3051,16 @@ def procesar_respuesta():
                     print(f"   Fuerte:{tiene_senal_fuerte} Débil:{tiene_senal_debil} Corto:{texto_corto_712} T:{_t_espera_712:.1f}s")
 
                 # FIX 569: Filtrar audio de fondo - requerir contenido significativo
-                palabras_espanol_569 = {'hola', 'bueno', 'si', 'sí', 'no', 'que', 'qué', 'como', 'cómo', 'quien', 'quién', 'donde', 'dónde',
+                # FIX 749A: BRUCE2322+2326 - Agregar palabras de saludos/disculpas que FIX 745A usa
+                palabras_espanol_569 = {'hola', 'bueno', 'buenas', 'buenos', 'buen', 'si', 'sí', 'no', 'que', 'qué', 'como', 'cómo', 'quien', 'quién', 'donde', 'dónde',
                     'esta', 'está', 'aqui', 'aquí', 'mande', 'diga', 'oiga', 'por', 'favor', 'gracias',
                     'espere', 'momento', 'listo', 'ya', 'voy', 'estoy', 'el', 'la',
-                    'encargado', 'ferreteria', 'ferretería', 'marca', 'empresa', 'negocio', 'interesa'}
-                palabras_en_texto_569 = frase_limpia.lower().split()
+                    'encargado', 'ferreteria', 'ferretería', 'marca', 'empresa', 'negocio', 'interesa',
+                    'tardes', 'noches', 'dias', 'perdon', 'perdón', 'disculpe', 'disculpa', 'nombre',
+                    'digame', 'permiteme', 'para', 'dia'}
+                # FIX 749A: Strip puntuación antes de comparar (¿bueno? → bueno, tardes. → tardes)
+                _punct_749 = '¿?¡!.,;:()'
+                palabras_en_texto_569 = [w.strip(_punct_749) for w in frase_limpia.lower().split()]
                 tiene_palabras_reconocibles = any(
                     palabra in palabras_espanol_569
                     for palabra in palabras_en_texto_569
@@ -3063,7 +3068,8 @@ def procesar_respuesta():
 
                 # FIX 745B: BRUCE2316 - Si señal detectada (fuerte/débil), confiar sin len check
                 _senal_detectada_745 = tiene_senal_fuerte or tiene_senal_debil
-                if cliente_volvio and (_senal_detectada_745 or len(frase_limpia) > 10) and tiene_palabras_reconocibles:  # FIX 569+745B
+                # FIX 749B: BRUCE2322+2326 - Señal fuerte bypassa FIX 569 (ya verificada por FIX 712A)
+                if cliente_volvio and (tiene_senal_fuerte or ((_senal_detectada_745 or len(frase_limpia) > 10) and tiene_palabras_reconocibles)):  # FIX 569+745B+749B
                     print(f"\n FIX 520: CLIENTE VOLVIÓ después de espera - '{speech_result}'")
                     print(f"   Estado anterior: ESPERANDO_TRANSFERENCIA")
                     print(f"   → Saliendo del modo espera, procesando normalmente")
