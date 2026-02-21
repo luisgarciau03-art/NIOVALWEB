@@ -9252,7 +9252,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         "role": "assistant",
                         "content": fsm_result
                     })
-                    self.turno_actual += 1
+                    # FIX 755: turno_actual puede no existir si FSM intercepta temprano
+                    self.turno_actual = getattr(self, 'turno_actual', 0) + 1
                     return fsm_result
             except Exception as e:
                 print(f"  [FSM ERROR] {e} - fallthrough a logica existente")
