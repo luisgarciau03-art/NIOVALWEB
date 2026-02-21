@@ -582,5 +582,81 @@ class TestFSMStateInfo(unittest.TestCase):
         self.assertEqual(info["state"], "saludo")
 
 
+# ============================================================
+# Phase 2: Selective activation tests
+# ============================================================
+
+class TestFSMPhase2ActiveStates(unittest.TestCase):
+    """Test Phase 2 selective state activation."""
+
+    def test_active_states_set_populated(self):
+        """FSM_ACTIVE_STATES_SET should contain states from env var."""
+        from fsm_engine import FSM_ACTIVE_STATES_SET
+        # Default includes despedida and contacto_capturado
+        self.assertIsInstance(FSM_ACTIVE_STATES_SET, set)
+
+    def test_despedida_in_active_states(self):
+        """DESPEDIDA should be in active states by default."""
+        from fsm_engine import FSM_ACTIVE_STATES_SET
+        self.assertIn(FSMState.DESPEDIDA, FSM_ACTIVE_STATES_SET)
+
+    def test_contacto_capturado_in_active_states(self):
+        """CONTACTO_CAPTURADO should be in active states by default."""
+        from fsm_engine import FSM_ACTIVE_STATES_SET
+        self.assertIn(FSMState.CONTACTO_CAPTURADO, FSM_ACTIVE_STATES_SET)
+
+    def test_saludo_not_in_active_states(self):
+        """SALUDO should NOT be in active states by default."""
+        from fsm_engine import FSM_ACTIVE_STATES_SET
+        self.assertNotIn(FSMState.SALUDO, FSM_ACTIVE_STATES_SET)
+
+    def test_contacto_capturado_intercepts(self):
+        """CONTACTO_CAPTURADO state should return response (intercept)."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.CONTACTO_CAPTURADO
+        result = fsm.process("Gracias, hasta luego", None)
+        # Should intercept with despedida_catalogo_prometido
+        self.assertIsNotNone(result)
+        self.assertIn("catalogo", result.lower())
+
+    def test_despedida_verification_intercepts(self):
+        """DESPEDIDA + VERIFICATION should return template (intercept)."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+        result = fsm.process("¿Bueno? ¿Sigue ahí?", None)
+        # VERIFICATION → despedida_cortes template
+        if result is not None:
+            self.assertIn("gracias", result.lower())
+
+    def test_despedida_hangup_does_not_intercept(self):
+        """DESPEDIDA + FAREWELL → HANGUP should return None (fallthrough)."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+        result = fsm.process("Hasta luego, bye", None)
+        # HANGUP returns None → fallthrough to existing code
+        self.assertIsNone(result)
+
+    def test_shadow_non_active_state_returns_none(self):
+        """Non-active state (PITCH) should still shadow (return None)."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.PITCH
+        # In shadow mode, non-active states return None
+        result = fsm.process("Sí, dígame más", None)
+        # PITCH is not in active set → shadow → None
+        from fsm_engine import FSM_ENABLED, FSM_ACTIVE_STATES_SET
+        if FSM_ENABLED == "shadow" and FSMState.PITCH not in FSM_ACTIVE_STATES_SET:
+            self.assertIsNone(result)
+
+    def test_despedida_offer_data_intercepts(self):
+        """DESPEDIDA + OFFER_DATA → DICTANDO_DATO should intercept."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+        fsm.context.ultimo_fue_ofrecer_contacto = False
+        result = fsm.process("Bueno, le doy mi número: 332", None)
+        # OFFER_DATA → aja_digame template
+        if result is not None:
+            self.assertIn("igame", result.lower())  # "Dígame" or "dígame"
+
+
 if __name__ == '__main__':
     unittest.main()

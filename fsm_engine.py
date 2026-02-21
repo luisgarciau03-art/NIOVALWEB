@@ -23,6 +23,15 @@ from response_templates import TEMPLATES, NARROW_PROMPTS
 # ============================================================
 FSM_ENABLED = os.getenv("FSM_ENABLED", "shadow").lower()
 
+# ============================================================
+# FSM Phase 2: Estados activos (interceptan en vez de shadow)
+# ============================================================
+# Comma-separated list of state names que interceptan GPT.
+# Ej: "despedida,contacto_capturado,dictando_dato"
+# Default: "despedida,contacto_capturado" (100% deterministas, 0 riesgo)
+_ACTIVE_RAW = os.getenv("FSM_ACTIVE_STATES", "despedida,contacto_capturado").lower().strip()
+FSM_ACTIVE_STATES_SET = set()  # Populated after FSMState defined
+
 
 # ============================================================
 # Estados FSM (12 estados explícitos)
@@ -40,6 +49,16 @@ class FSMState(Enum):
     CONTACTO_CAPTURADO = "contacto_capturado"
     DESPEDIDA = "despedida"
     CONVERSACION_LIBRE = "conversacion_libre"
+
+
+# Populate FSM_ACTIVE_STATES_SET now that FSMState is defined
+_state_map = {s.value: s for s in FSMState}
+for _name in _ACTIVE_RAW.split(','):
+    _name = _name.strip()
+    if _name and _name in _state_map:
+        FSM_ACTIVE_STATES_SET.add(_state_map[_name])
+if FSM_ACTIVE_STATES_SET:
+    print(f"  [FSM] Active states (Phase 2): {[s.value for s in FSM_ACTIVE_STATES_SET]}")
 
 
 # ============================================================
@@ -423,13 +442,32 @@ class FSMEngine:
         self.state = transition.next_state
         self._update_context(intent, texto, transition, agente)
 
-        # 7. Log en shadow mode y retornar None (no interceptar)
-        if FSM_ENABLED == "shadow":
+        # 7. Decidir: shadow, phase2 (selective), o full active
+        is_state_active = prev_state in FSM_ACTIVE_STATES_SET
+
+        if FSM_ENABLED == "shadow" and not is_state_active:
+            # Pure shadow: log only, no intercept
             print(f"  [FSM SHADOW] state={prev_state.value} intent={intent.value} "
                   f"→ next={self.state.value} action={transition.action_type.value} "
                   f"template={transition.template_key} response='{(response or '')[:60]}'")
-            return None  # Shadow mode: no interceptar
+            return None
 
+        if FSM_ENABLED == "shadow" and is_state_active:
+            # Phase 2: state is in active set → intercept
+            # Skip HANGUP/NOOP (let existing code handle closing)
+            if transition.action_type in (ActionType.HANGUP, ActionType.NOOP):
+                print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
+                      f"→ {transition.action_type.value} (fallthrough - let existing code handle)")
+                return None
+            if response:
+                print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
+                      f"→ next={self.state.value} INTERCEPTING: '{response[:60]}'")
+                return response
+            # Empty response → shadow
+            print(f"  [FSM SHADOW] state={prev_state.value} (active but empty response)")
+            return None
+
+        # Full active mode
         print(f"  [FSM] {prev_state.value} + {intent.value} → {self.state.value} "
               f"({transition.action_type.value}:{transition.template_key})")
 
