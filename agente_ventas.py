@@ -1044,6 +1044,22 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                            'marque más tarde', 'marque mas tarde', 'llame más tarde', 'llame mas tarde',
                            'marcar después', 'marcar despues', 'llamar después', 'llamar despues']
         if any(p in mensaje_lower for p in patrones_no_esta):
+            # FIX 747: BRUCE2386 - Check if client is ALSO dictating numbers
+            # "Es que no estan ahorita. Es cuarenta y cuatro cuarenta"
+            # First clause = encargado absent, second clause = phone number being dictated
+            # If concurrent dictation detected, flag it for post-filter override
+            _nums_747 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete',
+                'ocho','nueve','diez','once','doce','trece','catorce','quince',
+                'veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa']
+            _msg_norm_747 = mensaje_lower.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+            _nums_verbales_747 = sum(1 for p in _msg_norm_747.split() if p in _nums_747)
+            import re as _re_747
+            _digitos_747 = len(_re_747.findall(r'\d', mensaje_lower))
+            if _nums_verbales_747 >= 2 or _digitos_747 >= 3:
+                self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
+                self._datos_parciales_en_no_esta_747 = True
+                print(f"[OK] FIX 747: BRUCE2386 - ENCARGADO_NO_ESTA + dictado concurrente ({_nums_verbales_747} nums verbales, {_digitos_747} digitos)")
+                return True
             self.estado_conversacion = EstadoConversacion.ENCARGADO_NO_ESTA
             print(f"[EMOJI] FIX 339/417/425: Estado → ENCARGADO_NO_ESTA")
             return True
@@ -2510,6 +2526,24 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         print(f"   Respuesta original: '{respuesta_original_733[:80]}'")
                         print(f"   Respuesta corregida: '{respuesta[:80]}'")
                         filtro_aplicado = True
+
+        # ============================================================
+        # FIX 747: BRUCE2386 - ENCARGADO_NO_ESTA + dictado concurrente
+        # Cliente dijo "Es que no estan ahorita. Es cuarenta y cuatro cuarenta"
+        # Pattern detector set ENCARGADO_NO_ESTA but client was ALSO dictating numbers
+        # Override response to acknowledge the data being dictated
+        # ============================================================
+        if not filtro_aplicado and getattr(self, '_datos_parciales_en_no_esta_747', False):
+            # Client said encargado isn't there AND dictated numbers in same sentence
+            # Acknowledge the number instead of asking for contact again
+            respuesta_original_747 = respuesta
+            respuesta = "Entendido, no se encuentra. Ajá, sí, dígame el número por favor."
+            self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
+            print(f"\n[OK] FIX 747: BRUCE2386 - ENCARGADO_NO_ESTA + dictado concurrente → override")
+            print(f"   Respuesta original: '{respuesta_original_747[:80]}'")
+            print(f"   Respuesta corregida: '{respuesta[:80]}'")
+            filtro_aplicado = True
+            self._datos_parciales_en_no_esta_747 = False  # Reset flag
 
         # ============================================================
         # FIX 736: BRUCE2302 - Cliente anuncia dato ("El WhatsApp", "El correo es")
@@ -7886,6 +7920,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "quién habla", "quien habla", "quién llama", "quien llama",
             "de parte de quién", "de parte de quien", "quién es", "quien es",
             "con quién hablo", "con quien hablo",
+            # FIX 749A: BRUCE2388 - "¿Con quién tengo el gusto?"
+            "con quién tengo el gusto", "con quien tengo el gusto",
+            "con quién tengo gusto", "con quien tengo gusto",
             # FIX 513: BRUCE1580 - "¿De qué empresa dice que habla?"
             "de qué empresa", "de que empresa", "qué empresa", "que empresa",
             "de qué compañía", "de que compañia", "qué compañía", "que compañia",
@@ -9122,14 +9159,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
               'ya esta listo', 'preparado'],
              "Si, estoy listo, digame por favor."),
 
-            # --- FIX 709: ¿Quién habla? / ¿De dónde llaman? ---
+            # --- FIX 709/749A: ¿Quién habla? / ¿De dónde llaman? ---
+            # FIX 749A: BRUCE2388 - Response includes greeting prefix + encargado question
+            # Bug detector marked SALUDO_FALTANTE because FIX 708 returned identification without "Buen día"
             (['quien habla', 'quien llama', 'quien me habla', 'quien me llama',
-              'con quien hablo', 'con quien tengo el gusto',
+              'con quien hablo', 'con quien tengo el gusto', 'con quien tengo gusto',
               'de donde habla', 'de donde hablan', 'de donde llama', 'de donde llaman',
               'de donde me habla', 'de donde me llama', 'de donde me marcan',
               'de que empresa', 'de que compania', 'que empresa es',
               'de parte de quien', 'a nombre de quien'],
-             "Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros."),
+             "Buen día. Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros. ¿Se encontrará el encargado o encargada de compras?"),
 
             # --- FIX 709: ¿Qué venden/manejan? ---
             (['que venden', 'que vende', 'que ofrecen', 'que ofrece',
@@ -10552,10 +10591,24 @@ Ejemplo correcto:
                 'no se la maneja', 'no le puedo', 'no tengo esa información', 'no tengo esa informacion'
             ])
 
+            # FIX 749B: BRUCE2388 - "Te comunico sobre" = "I inform you about", NOT transfer
+            # "Te comunico sobre una línea directa de atención a clientes" matched "te comunico"
+            # but client was explaining their business, NOT transferring the call
+            _te_comunico_explicacion_749 = any(p in respuesta_lower for p in [
+                'te comunico sobre', 'le comunico sobre', 'se comunica a',
+                'te comunico que', 'le comunico que', 'comunico de que',
+                'linea directa de atencion', 'línea directa de atención',
+                'linea de atencion', 'línea de atención'
+            ])
+
             if cliente_dice_llamar_despues:
                 print(f"[EMOJI] FIX 460: Cliente sugiere LLAMAR DESPUÉS - NO es transferencia")
                 print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
                 # NO activar transferencia - dejar que GPT maneje con despedida apropiada
+            elif _te_comunico_explicacion_749:
+                print(f"[OK] FIX 749B: BRUCE2388 - 'te comunico sobre/que' = explicación, NO transferencia")
+                print(f"   Respuesta cliente: '{respuesta_cliente[:100]}'")
+                # NO activar transferencia - dejar que GPT responda normalmente
             else:
                 for patron in patrones_transferencia_inmediata:
                     if patron in respuesta_lower:

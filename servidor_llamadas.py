@@ -4884,7 +4884,26 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                         elif not ya_encargado_682:
                             respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"
                         else:
-                            respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                            # FIX 748: BRUCE2392 - Check for callback info before generic "me puede repetir"
+                            # Client said "se presenta el lunes" → GPT timed out → should acknowledge callback, NOT ask to repeat
+                            _dias_748 = ['lunes', 'martes', 'miercoles', 'miércoles', 'jueves', 'viernes', 'sabado', 'sábado', 'domingo']
+                            _momentos_748 = ['mañana', 'manana', 'pasado mañana', 'pasado manana', 'la proxima semana', 'la próxima semana']
+                            _callback_748 = ['se presenta', 'viene hasta', 'llega hasta', 'regresa', 'vuelve',
+                                'esta hasta', 'está hasta', 'marque el', 'llame el', 'mejor el']
+                            _sl_748 = speech_lower_690
+                            _tiene_dia_748 = any(d in _sl_748 for d in _dias_748 + _momentos_748)
+                            _tiene_callback_748 = any(c in _sl_748 for c in _callback_748)
+                            if _tiene_dia_748 and _tiene_callback_748:
+                                # Extract which day
+                                _dia_encontrado_748 = next((d for d in _dias_748 + _momentos_748 if d in _sl_748), '')
+                                respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748}. Muchas gracias por la información."
+                                print(f"    FIX 748: BRUCE2392 - Callback detectado en timeout (dia={_dia_encontrado_748})")
+                            elif _tiene_dia_748:
+                                _dia_encontrado_748 = next((d for d in _dias_748 + _momentos_748 if d in _sl_748), '')
+                                respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748}. ¿A qué hora le puedo llamar?"
+                                print(f"    FIX 748: BRUCE2392 - Día detectado en timeout (dia={_dia_encontrado_748})")
+                            else:
+                                respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
                         respuesta_container["completado"] = True
                         try:
                             if BUG_DETECTOR_AVAILABLE:
@@ -4961,7 +4980,24 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 elif not ya_encargado_682b:
                     respuesta_container["respuesta"] = "¿Se encontrará el encargado o encargada de compras?"
                 else:
-                    respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                    # FIX 748: BRUCE2392 - Check for callback info before generic "me puede repetir"
+                    _dias_748b = ['lunes', 'martes', 'miercoles', 'miércoles', 'jueves', 'viernes', 'sabado', 'sábado', 'domingo']
+                    _momentos_748b = ['mañana', 'manana', 'pasado mañana', 'pasado manana', 'la proxima semana', 'la próxima semana']
+                    _callback_748b = ['se presenta', 'viene hasta', 'llega hasta', 'regresa', 'vuelve',
+                        'esta hasta', 'está hasta', 'marque el', 'llame el', 'mejor el']
+                    _sl_748b = speech_lower_690b
+                    _tiene_dia_748b = any(d in _sl_748b for d in _dias_748b + _momentos_748b)
+                    _tiene_callback_748b = any(c in _sl_748b for c in _callback_748b)
+                    if _tiene_dia_748b and _tiene_callback_748b:
+                        _dia_encontrado_748b = next((d for d in _dias_748b + _momentos_748b if d in _sl_748b), '')
+                        respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748b}. Muchas gracias por la información."
+                        print(f"    FIX 748: BRUCE2392 - Callback detectado en timeout (dia={_dia_encontrado_748b})")
+                    elif _tiene_dia_748b:
+                        _dia_encontrado_748b = next((d for d in _dias_748b + _momentos_748b if d in _sl_748b), '')
+                        respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748b}. ¿A qué hora le puedo llamar?"
+                        print(f"    FIX 748: BRUCE2392 - Día detectado en timeout (dia={_dia_encontrado_748b})")
+                    else:
+                        respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
                 respuesta_container["completado"] = True
                 try:
                     if BUG_DETECTOR_AVAILABLE:
@@ -5091,6 +5127,24 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 log_evento(f"{bruce_id} DICE: \"{respuesta_674}\" (FIX 674: respuesta a pregunta de clarificación)", "BRUCE")
                 response.record(action="/procesar-respuesta", method="POST", max_length=30, timeout=3, play_beep=False, trim="trim-silence")
                 return Response(str(response), mimetype="text/xml")
+
+        # FIX 750: BRUCE2387 - Garbled/duplicated STT detection
+        # Azure returned "hola buen dia Hola, buen dia" (repeated) → GPT empty → bad fallback
+        # If first half ≈ second half, de-duplicate to get the real text
+        if speech_limpio_577 and len(palabras_577) >= 4:
+            import re as _re_750
+            _half_750 = len(palabras_577) // 2
+            _clean_750 = lambda t: _re_750.sub(r'[.,!?¿¡:;]', '', t).lower().strip()
+            _first_half_750 = _clean_750(' '.join(palabras_577[:_half_750]))
+            _second_half_750 = _clean_750(' '.join(palabras_577[_half_750:]))
+            # Check if halves are similar (exact match or very close)
+            if _first_half_750 == _second_half_750 or (
+                len(_first_half_750) > 5 and _first_half_750 in _second_half_750
+            ):
+                speech_limpio_577 = ' '.join(palabras_577[:_half_750])
+                palabras_577 = speech_limpio_577.split()
+                palabras_significativas_577 = [p for p in palabras_577 if p.lower() not in fillers_577]
+                print(f"    FIX 750: Garbled STT detectado (duplicado) → de-duplicado: '{speech_limpio_577}'")
 
         # FIX 617C: BRUCE2032 - NO generar fallback si estamos en modo DICTANDO
         # Problema: Cliente dicta correo → procesar_respuesta retorna "" (esperar) →
