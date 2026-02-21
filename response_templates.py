@@ -142,6 +142,10 @@ TEMPLATES = {
     "despedida_cerrado": [
         "Entiendo, disculpe la molestia. Que tenga buen dia.",
     ],
+    # FIX 744: Area equivocada / no tengo negocio
+    "despedida_area_equivocada": [
+        "Disculpe la molestia, que tenga buen dia.",
+    ],
     "despedida_sin_contacto": [
         "Entendido, no se preocupe. Le vuelvo a llamar mas tarde. "
         "Muchas gracias por su tiempo.",

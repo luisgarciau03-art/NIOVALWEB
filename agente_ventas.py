@@ -7127,6 +7127,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 "accion": "DESPEDIDA"
             }
 
+        # FIX 744: BRUCE2366 - AREA_EQUIVOCADA inmediato
+        # Cliente dice "no tengo negocio", "está equivocado", "número equivocado" etc.
+        # Bruce debe disculparse y colgar INMEDIATAMENTE (no pedir WhatsApp)
+        patrones_area_equivocada_744 = [
+            'esta equivocado', 'estas equivocado', 'usted esta equivocado',
+            'numero equivocado', 'se equivoco de numero', 'se equivoco de telefono',
+            'marco equivocado', 'llamo equivocado', 'llamo al lugar equivocado',
+            'no tengo negocio', 'no tenemos negocio', 'yo no tengo negocio',
+            'no es negocio', 'aqui no hay negocio', 'no hay ningun negocio',
+            'no es ferreteria', 'esto no es ferreteria', 'aqui no es ferreteria',
+            'no vendemos ferreteria', 'no manejamos ferreteria', 'no manejo ferreteria',
+            'no es mi area', 'no es el area', 'area equivocada', 'departamento equivocado',
+            'no es aqui', 'aqui no es', 'no es conmigo', ' no soy yo', 'no, no soy yo',
+            'no es mi departamento', 'no es de mi area',
+        ]
+        if any(p in texto_lower for p in patrones_area_equivocada_744):
+            print(f"   FIX 744: BRUCE2366 - AREA_EQUIVOCADA detectada: '{texto_cliente[:60]}'")
+            return {
+                "tipo": "AREA_EQUIVOCADA",
+                "respuesta": "Disculpe la molestia, que tenga buen día.",
+                "accion": "DESPEDIDA"
+            }
+
         # Detectar si cliente menciona que el encargado NO ESTÁ
         encargado_no_esta = any(p in texto_lower for p in patrones_no_esta)
 
@@ -8509,6 +8532,17 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         ultimo_bruce_621b = msg.get('content', '')
                         break
                 if ultimo_bruce_621b and ultimo_bruce_621b.strip().endswith('?'):
+                    # FIX 745: BRUCE2370 - Anti-recursive garble
+                    # Si último msg de Bruce ya empieza con "Sí, le preguntaba", NO envolver de nuevo
+                    # Causa recursión: "Sí, le preguntaba, ¿le preguntaba, ¿...?"
+                    _ub_lower_745 = ultimo_bruce_621b.strip().lower()
+                    if _ub_lower_745.startswith('sí, le preguntaba') or _ub_lower_745.startswith('si, le preguntaba'):
+                        print(f"   FIX 745: BRUCE2370 - Anti-recursive: último Bruce ya era 'le preguntaba' → fallback limpio")
+                        return {
+                            "tipo": "VERIFICACION_CONEXION",
+                            "respuesta": "Sí, aquí estoy. Dígame.",
+                            "accion": "CONTINUAR_CONVERSACION"
+                        }
                     # Extraer la última pregunta (después del último punto)
                     partes_621b = re.split(r'[.!]\s+', ultimo_bruce_621b)
                     ultima_pregunta_621b = partes_621b[-1].strip() if partes_621b else ultimo_bruce_621b.strip()
@@ -8594,6 +8628,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         ultimo_bruce_535b = msg.get('content', '')
                         break
                 if ultimo_bruce_535b and ultimo_bruce_535b.strip().endswith('?'):
+                    # FIX 745: BRUCE2370 - Anti-recursive garble (copia 535b)
+                    _ub_lower_745b = ultimo_bruce_535b.strip().lower()
+                    if _ub_lower_745b.startswith('sí, le preguntaba') or _ub_lower_745b.startswith('si, le preguntaba'):
+                        print(f"   FIX 745: Anti-recursive (535b): último Bruce ya era 'le preguntaba' → fallback limpio")
+                        return {
+                            "tipo": "VERIFICACION_CONEXION",
+                            "respuesta": "Sí, aquí estoy. Dígame.",
+                            "accion": "CONTINUAR_CONVERSACION"
+                        }
                     partes_535b = re.split(r'[.!]\s+', ultimo_bruce_535b)
                     ultima_pregunta_535b = partes_535b[-1].strip() if partes_535b else ultimo_bruce_535b.strip()
                     # FIX 624: BRUCE2045 - Si es muy larga, buscar último ¿
@@ -9301,6 +9344,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'VERIFICACION_CONEXION', 'VERIFICACION_CONEXION_REPETIR_PREGUNTA',
                 # Callback
                 'SOLICITUD_CALLBACK',
+                # FIX 744: Area equivocada (despedida inmediata, no invalidar)
+                'AREA_EQUIVOCADA',
             }
             patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL
             tiene_pregunta_segunda_clausula = False

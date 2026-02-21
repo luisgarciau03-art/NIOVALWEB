@@ -76,6 +76,7 @@ class FSMIntent(Enum):
     DICTATING_COMPLETE_EMAIL = "dictating_complete_email"
     CONTINUATION = "continuation"
     VERIFICATION = "verification"
+    WRONG_NUMBER = "wrong_number"  # FIX 744: Area equivocada / no tengo negocio
     UNKNOWN = "unknown"
 
 
@@ -185,6 +186,19 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.FAREWELL
     if any(f == tn for f in farewell_weak):  # exact match only
         return FSMIntent.FAREWELL
+
+    # --- FIX 744: Area equivocada / número incorrecto ---
+    wrong_number = [
+        'esta equivocado', 'estas equivocado', 'usted esta equivocado',
+        'numero equivocado', 'se equivoco de numero', 'se equivoco de telefono',
+        'no tengo negocio', 'no tenemos negocio', 'yo no tengo negocio',
+        'aqui no hay negocio', 'no es aqui', 'aqui no es',
+        'area equivocada', 'departamento equivocado',
+        'no es conmigo', ' no soy yo', 'no, no soy yo', 'no es mi departamento',
+        'marco equivocado', 'llamo equivocado',
+    ]
+    if any(w in tn for w in wrong_number):
+        return FSMIntent.WRONG_NUMBER
 
     # --- No interés / rechazo definitivo ---
     no_interest = [
@@ -448,6 +462,7 @@ class FSMEngine:
         add(S.SALUDO, I.IDENTITY,      S.PITCH, A.TEMPLATE, "identificacion_pitch")
         add(S.SALUDO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.SALUDO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.SALUDO, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.SALUDO, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         add(S.SALUDO, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.SALUDO, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
@@ -460,6 +475,7 @@ class FSMEngine:
         add(S.PITCH, I.IDENTITY,       S.PITCH, A.TEMPLATE, "identificacion_nioval")
         add(S.PITCH, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.PITCH, I.FAREWELL,       S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.PITCH, I.WRONG_NUMBER,   S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.PITCH, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
         add(S.PITCH, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.PITCH, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -482,6 +498,7 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.IDENTITY,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "identificacion_nioval")
         add(S.BUSCANDO_ENCARGADO, I.NO_INTEREST,     S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.BUSCANDO_ENCARGADO, I.FAREWELL,        S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.BUSCANDO_ENCARGADO, I.WRONG_NUMBER,    S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.BUSCANDO_ENCARGADO, I.ANOTHER_BRANCH,  S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
         add(S.BUSCANDO_ENCARGADO, I.CLOSED,          S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
         add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
@@ -496,6 +513,7 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         add(S.ENCARGADO_PRESENTE, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.ENCARGADO_PRESENTE, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.ENCARGADO_PRESENTE, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_correo", ["whatsapp_rechazado"])
         add(S.ENCARGADO_PRESENTE, I.VERIFICATION,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.ENCARGADO_PRESENTE, I.UNKNOWN,       S.ENCARGADO_PRESENTE, A.GPT_NARROW, "conversacion_libre")
@@ -508,6 +526,7 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.INTEREST,       S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.ENCARGADO_AUSENTE, I.FAREWELL,       S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.ENCARGADO_AUSENTE, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.ENCARGADO_AUSENTE, I.WRONG_NUMBER,   S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.ENCARGADO_AUSENTE, I.ANOTHER_BRANCH, S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
         add(S.ENCARGADO_AUSENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
         add(S.ENCARGADO_AUSENTE, I.VERIFICATION,   S.ENCARGADO_AUSENTE, A.TEMPLATE, "verificacion_aqui_estoy")

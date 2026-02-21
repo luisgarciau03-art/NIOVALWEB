@@ -3023,7 +3023,18 @@ def procesar_respuesta():
                 ]
 
                 frases_mas_espera = ['un momento', 'momentito', 'espere', 'tantito', 'un segundo']
-                es_mas_espera = any(f in frase_limpia for f in frases_mas_espera)
+                # FIX 746: BRUCE2370 - Ampliar frases de MÁS ESPERA para no perder estado transferencia
+                # "permiteme" repetido = cliente sigue intentando transferir, NO ha vuelto
+                # "iban a entrar a junta, permiteme" = contexto de espera, NO re-engagement
+                frases_mas_espera_746 = [
+                    'permiteme', 'permitame', 'dejame ver', 'dejeme ver',
+                    'voy a ver', 'ahorita', 'aguardeme', 'aguardame',
+                    'en un momento', 'un minuto', 'un minutito',
+                    'dame chance', 'deme chance', 'un ratito',
+                    'se lo paso', 'le paso', 'te paso', 'ahorita le',
+                ]
+                es_mas_espera = any(f in frase_limpia for f in frases_mas_espera) or \
+                                any(f in frase_limpia for f in frases_mas_espera_746)
 
                 # FIX 712A: Normalizar texto para matching (como FIX 631)
                 _fl_712 = frase_limpia.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
@@ -3045,12 +3056,20 @@ def procesar_respuesta():
                 _palabras_audio_751 = len(_fl_712.split()) if _fl_712.strip() else 0
                 _audio_sustancial_751 = _palabras_audio_751 >= 3
 
-                cliente_volvio = (
-                    tiene_senal_fuerte or
-                    (tiene_senal_debil and texto_corto_712) or
-                    timeout_espera_712 or
-                    _audio_sustancial_751  # FASE 1.2: >=3 palabras = humano
-                )
+                # FIX 746: BRUCE2370 - Si es_mas_espera, cliente NO ha vuelto (sigue pidiendo espera)
+                # _audio_sustancial_751 causaba false positive: "iban a entrar a junta, permiteme" = 7 palabras
+                # → cliente_volvio=True → Bruce perdía estado ESPERANDO_TRANSFERENCIA
+                # Prioridad: es_mas_espera ANULA señales débiles y audio sustancial
+                if es_mas_espera:
+                    cliente_volvio = False
+                    print(f"\n FIX 746: BRUCE2370 - Cliente pide MÁS espera: '{speech_result[:60]}' → mantener ESPERANDO_TRANSFERENCIA")
+                else:
+                    cliente_volvio = (
+                        tiene_senal_fuerte or
+                        (tiene_senal_debil and texto_corto_712) or
+                        timeout_espera_712 or
+                        _audio_sustancial_751  # FASE 1.2: >=3 palabras = humano
+                    )
 
                 if not cliente_volvio and not es_mas_espera:
                     print(f"\n FIX 712A: BRUCE2266 - Conversación de fondo durante espera")
@@ -3486,12 +3505,23 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     # "¿Bueno?" x5 ignorados → cliente colgó
                     _fl_753 = frase_limpia.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
                     _fl_753 = _fl_753.replace('¿','').replace('?','').replace('¡','').replace('!','').replace('.','').replace(',','')
+                    # FIX 746: Check si es pedido de más espera ANTES de evaluar señales
+                    _mas_espera_753 = ['permiteme', 'permitame', 'un momento', 'momentito', 'espere',
+                                       'tantito', 'un segundo', 'dejame ver', 'dejeme ver', 'voy a ver',
+                                       'ahorita', 'aguardeme', 'en un momento', 'un minuto',
+                                       'se lo paso', 'le paso', 'te paso']
+                    _es_mas_espera_753 = any(f in _fl_753 for f in _mas_espera_753)
                     _debiles_753 = ['bueno', 'hola', 'si', 'diga', 'digame', 'vuelvo', 'esta bien', 'ok']
                     _fuertes_753 = ['aqui estoy', 'ya estoy', 'ya regrese', 'ya volvi', 'oiga', 'oye', 'mire', 'me escucha', 'me oye', 'listo', 'fijese', 'encargado', 'ferreteria', 'nioval']
                     _tiene_fuerte_753 = any(f in _fl_753 for f in _fuertes_753)
                     _tiene_debil_753 = any(f in _fl_753 for f in _debiles_753)
                     _corto_753 = len(_fl_753) < 25
-                    _volvio_753 = _tiene_fuerte_753 or (_tiene_debil_753 and _corto_753)
+                    # FIX 746: Si pide más espera → NO volvió
+                    if _es_mas_espera_753:
+                        _volvio_753 = False
+                        print(f"\n FIX 746: Más espera en 753: '{speech_result[:60]}' → seguir esperando")
+                    else:
+                        _volvio_753 = _tiene_fuerte_753 or (_tiene_debil_753 and _corto_753)
                     if _volvio_753:
                         print(f"\n FIX 753: BRUCE2322 - Re-engagement detectado en 712B: '{speech_result[:60]}'")
                         print(f"   Fuerte:{_tiene_fuerte_753} Débil:{_tiene_debil_753} Corto:{_corto_753}")
