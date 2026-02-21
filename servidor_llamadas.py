@@ -5192,6 +5192,31 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     # FIX 618: NO pedir repetir (crea loop) - aceptar lo que se pueda
                     respuesta_fallback_577 = "Perfecto, ya lo tengo anotado. Le envío el catálogo en las próximas horas. Muchas gracias."
                     print(f"   FIX 618: Texto tiene indicadores de email - aceptar sin repetir")
+            # FIX 753: BRUCE2413 - Cliente OFRECE dato ("si te paso un correo", "te doy un número")
+            # pero GPT retornó vacío → FIX 577 generaba "me puede repetir" → incoherente
+            # Solución: Detectar oferta de dato y aceptar en vez de pedir repetir
+            elif any(p in speech_lower_597 for p in [
+                'te paso un', 'le paso un', 'si te doy', 'si le doy',
+                'te puedo dar', 'le puedo dar', 'te podria dar', 'le podria dar',
+                'te puedo pasar', 'le puedo pasar', 'te podria pasar', 'le podria pasar',
+                'te puedo proporcionar', 'le puedo proporcionar',
+                'por correo mejor', 'mejor por correo', 'te paso el correo',
+                'le paso el correo', 'te doy el correo', 'le doy el correo',
+                'te paso el numero', 'le paso el numero', 'te doy un numero',
+                'le doy un numero', 'te paso mi', 'le paso mi',
+                'te puedo mandar', 'le puedo mandar', 'te mando un',
+                'le mando un', 'si quieres te paso', 'si gusta le paso'
+            ]):
+                # Determinar qué tipo de dato ofrece
+                if any(w in speech_lower_597 for w in ['correo', 'email', 'mail']):
+                    respuesta_fallback_577 = "Claro que sí, dígame el correo por favor."
+                    print(f"   FIX 753: Cliente ofrece correo → aceptar (no 'me puede repetir')")
+                elif any(w in speech_lower_597 for w in ['whatsapp', 'wats', 'guats']):
+                    respuesta_fallback_577 = "Claro que sí, dígame el número de WhatsApp por favor."
+                    print(f"   FIX 753: Cliente ofrece WhatsApp → aceptar")
+                else:
+                    respuesta_fallback_577 = "Claro que sí, dígame por favor."
+                    print(f"   FIX 753: Cliente ofrece dato genérico → aceptar")
             elif any(p in speech_lower_597 for p in ['ayudar', 'servir', 'ofrecer', 'que necesita', 'que se le ofrece', 'en que le']):
                 if ya_presento_675:
                     respuesta_fallback_577 = "Claro, le comento, quería enviarle el catálogo de productos al encargado de compras. ¿Me podría compartir un número de WhatsApp donde le pueda enviar la información?"

@@ -186,7 +186,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if len(digits) >= 10 or (len(digits) + num_words) >= 10:
         return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
-        if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO):
+        # FIX 754: Detectar dictado parcial en más estados (no solo DICTANDO_DATO/CAPTURANDO_CONTACTO)
+        if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO,
+                     FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE,
+                     FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH):
             return FSMIntent.DICTATING_PARTIAL
 
     # --- Email completo ---
@@ -523,6 +526,10 @@ class FSMEngine:
         add(S.PITCH, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
         add(S.PITCH, I.VERIFICATION,   S.PITCH, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.PITCH, I.REJECT_DATA,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        # FIX 754: Cliente dicta teléfono/email completo durante pitch → capturar
+        add(S.PITCH, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.PITCH, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.PITCH, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.PITCH, I.UNKNOWN,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
 
         # === BUSCANDO_ENCARGADO ===
@@ -542,6 +549,10 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.BUSCANDO_ENCARGADO, I.VERIFICATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.BUSCANDO_ENCARGADO, I.REJECT_DATA,     S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
+        # FIX 754: Cliente dicta teléfono/email completo buscando encargado → capturar
+        add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.BUSCANDO_ENCARGADO, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.BUSCANDO_ENCARGADO, I.UNKNOWN,         S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "conversacion_libre")
 
         # === ENCARGADO_PRESENTE ===
@@ -554,6 +565,10 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_correo", ["whatsapp_rechazado"])
         add(S.ENCARGADO_PRESENTE, I.VERIFICATION,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "verificacion_aqui_estoy")
+        # FIX 754: Cliente dicta teléfono/email completo estando con encargado → capturar
+        add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.ENCARGADO_PRESENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.ENCARGADO_PRESENTE, I.UNKNOWN,       S.ENCARGADO_PRESENTE, A.GPT_NARROW, "conversacion_libre")
 
         # === ENCARGADO_AUSENTE ===
@@ -569,6 +584,10 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
         add(S.ENCARGADO_AUSENTE, I.VERIFICATION,   S.ENCARGADO_AUSENTE, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.ENCARGADO_AUSENTE, I.QUESTION,       S.ENCARGADO_AUSENTE, A.GPT_NARROW, "responder_pregunta_producto")
+        # FIX 754: Cliente dicta teléfono/email completo → capturar aunque encargado ausente
+        add(S.ENCARGADO_AUSENTE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.ENCARGADO_AUSENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.ENCARGADO_AUSENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.ENCARGADO_AUSENTE, I.UNKNOWN,        S.ENCARGADO_AUSENTE, A.GPT_NARROW, "conversacion_libre")
 
         # === ESPERANDO_TRANSFERENCIA ===

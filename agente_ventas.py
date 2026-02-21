@@ -2637,6 +2637,143 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     filtro_aplicado = True
 
         # ============================================================
+        # FIX 751: BRUCE2404 - Cliente OFRECE canal de contacto pero GPT pide otro
+        # Diferente de FIX 737: FIX 737 detecta datos YA DICTADOS, FIX 751 detecta
+        # OFERTAS de canal ("te podría pasar un correo", "por correo mejor")
+        # Si cliente ofrece correo pero GPT pide WhatsApp → aceptar canal ofrecido
+        # ============================================================
+        if not filtro_aplicado and ultimo_cliente_667:
+            _sa_751 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+            _cl_751 = _sa_751(ultimo_cliente_667)
+            # Detectar oferta de canal específico por el cliente
+            _ofrece_correo_751 = any(p in _cl_751 for p in [
+                'te paso un correo', 'le paso un correo', 'si te doy un correo',
+                'te podria pasar un correo', 'le podria pasar un correo',
+                'te puedo pasar un correo', 'le puedo dar un correo',
+                'por correo mejor', 'mejor por correo', 'correo electronico',
+                'te paso el correo', 'le paso el correo', 'te doy el correo',
+                'le doy el correo', 'si te paso correo', 'te mando un correo',
+                'le mando un correo', 'si quieres te paso un correo',
+                'te puedo proporcionar un correo', 'le puedo proporcionar un correo'
+            ])
+            _ofrece_whatsapp_751 = any(p in _cl_751 for p in [
+                'te paso un whatsapp', 'le paso un whatsapp', 'te doy mi whatsapp',
+                'por whatsapp mejor', 'mejor por whatsapp',
+                'te paso el whatsapp', 'le paso el whatsapp'
+            ])
+            _ofrece_telefono_751 = any(p in _cl_751 for p in [
+                'te paso un telefono', 'le paso un telefono', 'te doy el telefono',
+                'te paso el numero', 'le paso el numero', 'te doy un numero',
+                'le doy un numero', 'te puedo dar un numero', 'le puedo dar un numero'
+            ])
+            _canal_ofrecido_751 = None
+            if _ofrece_correo_751:
+                _canal_ofrecido_751 = 'correo'
+            elif _ofrece_whatsapp_751:
+                _canal_ofrecido_751 = 'whatsapp'
+            elif _ofrece_telefono_751:
+                _canal_ofrecido_751 = 'telefono'
+
+            if _canal_ofrecido_751:
+                _rn_751 = _sa_751(respuesta_lower)
+                # GPT pide un canal DIFERENTE al ofrecido
+                _pide_otro_751 = False
+                if _canal_ofrecido_751 == 'correo' and any(w in _rn_751 for w in [
+                    'whatsapp', 'numero de whatsapp', 'proporcionar el whatsapp',
+                    'numero de telefono', 'proporcionar un numero'
+                ]):
+                    _pide_otro_751 = True
+                elif _canal_ofrecido_751 == 'whatsapp' and any(w in _rn_751 for w in [
+                    'correo', 'email', 'proporcionar un correo',
+                    'proporcionar el correo'
+                ]):
+                    _pide_otro_751 = True
+                elif _canal_ofrecido_751 == 'telefono' and any(w in _rn_751 for w in [
+                    'whatsapp', 'correo', 'email'
+                ]):
+                    _pide_otro_751 = True
+
+                # También detectar si GPT ignora la oferta completamente
+                _ignora_oferta_751 = any(w in _rn_751 for w in [
+                    'me puede repetir', 'no escuche', 'me podria repetir',
+                    'me decia', 'disculpe'
+                ])
+
+                if _pide_otro_751 or _ignora_oferta_751:
+                    respuesta_original_751 = respuesta
+                    if _canal_ofrecido_751 == 'correo':
+                        respuesta = "Claro que sí, dígame el correo por favor."
+                    elif _canal_ofrecido_751 == 'whatsapp':
+                        respuesta = "Claro que sí, dígame el número de WhatsApp por favor."
+                    else:
+                        respuesta = "Claro que sí, dígame el número por favor."
+                    respuesta_lower = respuesta.lower()
+                    print(f"[OK] FIX 751: Cliente ofreció {_canal_ofrecido_751} pero GPT pidió otro canal → override")
+                    print(f"   Cliente: '{ultimo_cliente_667[:80]}'")
+                    print(f"   Respuesta original: '{respuesta_original_751[:80]}'")
+                    print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    filtro_aplicado = True
+
+        # ============================================================
+        # FIX 752: BRUCE2407/2409/2410 - Callback sin contacto → despedida prematura
+        # Bruce acepta callback pero se despide SIN pedir datos de contacto
+        # Si callback detectado + no hay contacto capturado + Bruce se despide → override
+        # ============================================================
+        if not filtro_aplicado and self.conversation_history:
+            _sa_752 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u').replace('ñ','n')
+            _rn_752 = _sa_752(respuesta_lower)
+            # Detectar si Bruce se está despidiendo
+            _despedida_bruce_752 = any(p in _rn_752 for p in [
+                'que tenga excelente dia', 'que tenga buen dia', 'hasta luego',
+                'hasta pronto', 'le agradezco', 'muchas gracias por su tiempo',
+                'me comunico despues', 'entonces me comunico', 'le marco despues',
+                'le llamo despues', 'le marco mas tarde', 'le llamo mas tarde'
+            ])
+            if _despedida_bruce_752:
+                # Verificar si hay contacto capturado
+                _tiene_contacto_752 = bool(
+                    getattr(self, 'lead_data', {}).get('telefono') or
+                    getattr(self, 'lead_data', {}).get('whatsapp') or
+                    getattr(self, 'lead_data', {}).get('email') or
+                    getattr(self, 'lead_data', {}).get('correo')
+                )
+                # Verificar si hay callback mencionado en conversación
+                _callback_752 = False
+                _hora_callback_752 = ''
+                for msg in self.conversation_history[-6:]:
+                    _mc_752 = _sa_752(msg.get('content', '').lower())
+                    if any(p in _mc_752 for p in [
+                        'manana', 'mas tarde', 'otro dia', 'la proxima',
+                        'despues de', 'en la tarde', 'en la manana',
+                        'marcar despues', 'llamar despues', 'regresa',
+                        'vuelve', 'no esta', 'no se encuentra', 'salio',
+                        'marcar mas tarde', 'llamar mas tarde'
+                    ]):
+                        _callback_752 = True
+                        # Buscar hora mencionada
+                        import re as _re_752
+                        _hora_match_752 = _re_752.search(r'(\d{1,2}(?::\d{2})?\s*(?:am|pm|de la manana|de la tarde)?)', _mc_752)
+                        if _hora_match_752:
+                            _hora_callback_752 = _hora_match_752.group(1)
+                        if 'manana' in _mc_752 and not _hora_callback_752:
+                            _hora_callback_752 = 'mañana'
+                        break
+
+                if _callback_752 and not _tiene_contacto_752:
+                    respuesta_original_752 = respuesta
+                    if _hora_callback_752:
+                        respuesta = f"Con gusto le marco {_hora_callback_752}. ¿Me podría dejar un número directo donde pueda comunicarme?"
+                    else:
+                        respuesta = "Con gusto. ¿Me podría dejar un número directo donde pueda comunicarme?"
+                    respuesta_lower = respuesta.lower()
+                    print(f"[OK] FIX 752: Callback sin contacto → despedida prematura → override pedir contacto")
+                    print(f"   Callback detectado: hora='{_hora_callback_752}'")
+                    print(f"   Contacto capturado: {_tiene_contacto_752}")
+                    print(f"   Respuesta original: '{respuesta_original_752[:80]}'")
+                    print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 690C: BRUCE2202 - Cliente listo para dictar ("tienes donde anotar")
         # Si GPT responde con "me puede repetir" o genérico, override con "Sí, dígame"
         # ============================================================
