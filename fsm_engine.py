@@ -109,6 +109,7 @@ class FSMContext:
 
     tiempo_claro_espero: Optional[float] = None
     donde_anotar_preguntado: bool = False
+    ultimo_fue_ofrecer_contacto: bool = False
 
 
 # ============================================================
@@ -153,6 +154,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     """Clasifica intent del cliente con reglas deterministas."""
     tn = _normalize(texto)
     tl = texto.lower().strip()
+
+    # --- Mid-sentence: texto termina en coma = cliente sigue hablando ---
+    if tl.endswith(',') and len(tn) < 40:
+        return FSMIntent.CONTINUATION
 
     # --- Dictado: dígitos numéricos ---
     digits = re.findall(r'\d', texto)
@@ -226,6 +231,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
+    # "No" a secas después de preguntar por encargado = MANAGER_ABSENT contextual
+    if tn in ('no', 'no fijese', 'no fijate', 'no senor', 'no senorita'):
+        if context.encargado_preguntado and state == FSMState.BUSCANDO_ENCARGADO:
+            return FSMIntent.MANAGER_ABSENT
 
     # --- Encargado presente ("soy yo") ---
     manager_present = [
@@ -249,6 +258,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'esperar que vuelva', 'marcar mas tarde', 'llamar mas tarde',
         'llamar despues', 'marcar despues', 'hablar luego',
         'mandarme', 'enviarme', 'mandame', 'enviame',
+        'viene hasta el', 'regresa hasta el', 'llega hasta el',
+        'regresa el', 'viene el', 'llega el',
     ]
     if any(c in tn for c in callback_guard):
         return FSMIntent.CALLBACK
@@ -305,7 +316,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     confirm_exact = [
         'si', 'si claro', 'claro', 'ok', 'esta bien', 'sale', 'va',
         'claro que si', 'por supuesto', 'adelante', 'digame',
-        'diga', 'aja', 'como no', 'si digame',
+        'diga', 'aja', 'como no', 'si digame', 'ok esta bien',
+        'si esta bien', 'bueno esta bien', 'ah ok', 'ah bueno',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
         return FSMIntent.CONFIRMATION
@@ -358,8 +370,21 @@ class FSMEngine:
         # 1. Clasificar intent
         intent = classify_intent(texto, self.context, self.state)
 
-        # 2. Buscar transición
-        transition = self._lookup(self.state, intent)
+        # 1.5. Recovery: DESPEDIDA + CONFIRMATION cuando último fue ofrecer contacto
+        if (self.state == FSMState.DESPEDIDA and
+                intent == FSMIntent.CONFIRMATION and
+                self.context.ultimo_fue_ofrecer_contacto):
+            transition = Transition(
+                next_state=FSMState.DESPEDIDA,
+                action_type=ActionType.TEMPLATE,
+                template_key="dictar_numero_bruce",
+            )
+        else:
+            transition = None
+
+        # 2. Buscar transición (si no fue override)
+        if transition is None:
+            transition = self._lookup(self.state, intent)
 
         # 3. Si no hay transición → escalate a CONVERSACION_LIBRE o fallthrough
         if transition is None:
@@ -379,17 +404,17 @@ class FSMEngine:
         # 5. Ejecutar acción
         response = self._execute(transition, texto, agente)
 
-        # 6. Log en shadow mode
-        if FSM_ENABLED == "shadow":
-            print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} "
-                  f"→ next={transition.next_state.value} action={transition.action_type.value} "
-                  f"template={transition.template_key} response='{(response or '')[:60]}'")
-            return None  # Shadow mode: no interceptar
-
-        # 7. Actualizar estado y contexto
+        # 6. Actualizar estado y contexto (SIEMPRE, incluyendo shadow mode)
         prev_state = self.state
         self.state = transition.next_state
         self._update_context(intent, texto, transition, agente)
+
+        # 7. Log en shadow mode y retornar None (no interceptar)
+        if FSM_ENABLED == "shadow":
+            print(f"  [FSM SHADOW] state={prev_state.value} intent={intent.value} "
+                  f"→ next={self.state.value} action={transition.action_type.value} "
+                  f"template={transition.template_key} response='{(response or '')[:60]}'")
+            return None  # Shadow mode: no interceptar
 
         print(f"  [FSM] {prev_state.value} + {intent.value} → {self.state.value} "
               f"({transition.action_type.value}:{transition.template_key})")
@@ -541,6 +566,7 @@ class FSMEngine:
         add(S.DESPEDIDA, I.FAREWELL,      S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.DESPEDIDA, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
 
         return T
 
@@ -756,6 +782,11 @@ class FSMEngine:
         # Track donde_anotar
         if transition.template_key == 'tiene_donde_anotar':
             self.context.donde_anotar_preguntado = True
+
+        # Track ofrecer contacto (para recovery DESPEDIDA → dictar número)
+        self.context.ultimo_fue_ofrecer_contacto = (
+            transition.template_key in ('ofrecer_contacto_bruce', 'tiene_donde_anotar')
+        )
 
         # Track callback
         if intent == FSMIntent.CALLBACK:

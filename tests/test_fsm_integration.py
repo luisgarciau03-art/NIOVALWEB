@@ -389,5 +389,153 @@ class TestFlowMultipleRejections(unittest.TestCase):
         self.assertIn("correo", self.fsm.context.canales_rechazados)
 
 
+class TestFSMShadowStateTracking(unittest.TestCase):
+    """FIX 1: Shadow mode must update state across turns."""
+
+    def test_shadow_updates_state(self):
+        """Shadow mode updates state even though it returns None."""
+        import fsm_engine
+        original = fsm_engine.FSM_ENABLED
+        fsm_engine.FSM_ENABLED = "shadow"
+        try:
+            fsm = FSMEngine()
+            fsm.process("Bueno")  # → PITCH (returns None)
+            self.assertEqual(fsm.state, FSMState.PITCH)
+
+            fsm.process("No está el encargado")  # → ENCARGADO_AUSENTE
+            self.assertEqual(fsm.state, FSMState.ENCARGADO_AUSENTE)
+        finally:
+            fsm_engine.FSM_ENABLED = original
+
+    def test_shadow_tracks_context(self):
+        """Shadow mode updates context (pitch_dado, etc)."""
+        import fsm_engine
+        original = fsm_engine.FSM_ENABLED
+        fsm_engine.FSM_ENABLED = "shadow"
+        try:
+            fsm = FSMEngine()
+            fsm.process("Diga")
+            self.assertTrue(fsm.context.pitch_dado)
+            self.assertEqual(fsm.context.turnos_bruce, 1)
+        finally:
+            fsm_engine.FSM_ENABLED = original
+
+
+class TestContextualNo(unittest.TestCase):
+    """FIX 2: Bare 'No' after encargado question = MANAGER_ABSENT."""
+
+    def test_bare_no_after_encargado(self):
+        """'No' after asking for encargado → MANAGER_ABSENT."""
+        fsm = FSMEngine()
+        fsm.process("Sí diga")  # → PITCH
+        fsm.state = FSMState.BUSCANDO_ENCARGADO
+        fsm.context.encargado_preguntado = True
+
+        r = fsm.process("No")
+        self.assertIsNotNone(r)
+        self.assertEqual(fsm.state, FSMState.ENCARGADO_AUSENTE)
+
+    def test_no_fijese_after_encargado(self):
+        """'No, fíjese' after asking for encargado → MANAGER_ABSENT."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.BUSCANDO_ENCARGADO
+        fsm.context.encargado_preguntado = True
+
+        r = fsm.process("No fíjese")
+        self.assertIsNotNone(r)
+        self.assertEqual(fsm.state, FSMState.ENCARGADO_AUSENTE)
+
+    def test_bare_no_without_encargado_context(self):
+        """'No' without encargado context → NOT MANAGER_ABSENT."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        ctx.encargado_preguntado = False
+        intent = classify_intent("No", ctx, FSMState.PITCH)
+        self.assertNotEqual(intent, FSMIntent.MANAGER_ABSENT)
+
+
+class TestCallbackVieneHasta(unittest.TestCase):
+    """FIX 3: 'viene hasta el [día]' = CALLBACK."""
+
+    def test_viene_hasta_el_lunes(self):
+        """'viene hasta el lunes' → CALLBACK."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("viene hasta el lunes", ctx, FSMState.BUSCANDO_ENCARGADO)
+        self.assertEqual(intent, FSMIntent.CALLBACK)
+
+    def test_regresa_el_martes(self):
+        """'regresa el martes' → CALLBACK."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("regresa el martes", ctx, FSMState.BUSCANDO_ENCARGADO)
+        self.assertEqual(intent, FSMIntent.CALLBACK)
+
+    def test_llega_hasta_el_miercoles(self):
+        """'llega hasta el miércoles' → CALLBACK."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("llega hasta el miércoles", ctx, FSMState.BUSCANDO_ENCARGADO)
+        self.assertEqual(intent, FSMIntent.CALLBACK)
+
+
+class TestMidSentenceDetection(unittest.TestCase):
+    """FIX 4: Text ending in comma = CONTINUATION (mid-sentence)."""
+
+    def test_comma_ending_short(self):
+        """Short text ending in comma → CONTINUATION."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("No, no se encuentra,", ctx, FSMState.BUSCANDO_ENCARGADO)
+        self.assertEqual(intent, FSMIntent.CONTINUATION)
+
+    def test_comma_ending_dictation(self):
+        """Dictation mid-sentence with comma."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("331 234,", ctx, FSMState.DICTANDO_DATO)
+        self.assertEqual(intent, FSMIntent.CONTINUATION)
+
+    def test_no_comma_processes_normally(self):
+        """Without comma, normal classification."""
+        from fsm_engine import classify_intent, FSMIntent
+        ctx = FSMContext()
+        intent = classify_intent("No, no se encuentra", ctx, FSMState.BUSCANDO_ENCARGADO)
+        self.assertEqual(intent, FSMIntent.MANAGER_ABSENT)
+
+
+class TestDespedidaRecovery(unittest.TestCase):
+    """FIX 5: Recovery from DESPEDIDA when client accepts Bruce's number."""
+
+    def test_confirmation_after_ofrecer_contacto(self):
+        """Client says 'ok' after Bruce offered number → dictar número."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+        fsm.context.ultimo_fue_ofrecer_contacto = True
+
+        r = fsm.process("Ok, está bien")
+        self.assertIsNotNone(r)
+        self.assertIn("662", r)  # Bruce's number
+
+    def test_confirmation_without_ofrecer_goes_hangup(self):
+        """Normal DESPEDIDA + confirmation → HANGUP (no recovery)."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+        fsm.context.ultimo_fue_ofrecer_contacto = False
+
+        r = fsm.process("Ok")
+        # HANGUP returns None
+        self.assertIsNone(r)
+
+    def test_offer_data_from_despedida(self):
+        """Client offers data from DESPEDIDA → DICTANDO_DATO."""
+        fsm = FSMEngine()
+        fsm.state = FSMState.DESPEDIDA
+
+        r = fsm.process("Le paso mi número, anote")
+        self.assertIsNotNone(r)
+        self.assertEqual(fsm.state, FSMState.DICTANDO_DATO)
+
+
 if __name__ == '__main__':
     unittest.main()
