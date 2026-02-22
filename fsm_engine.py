@@ -223,7 +223,7 @@ if FSM_ACTIVE_STATES_SET:
 class ActionType(Enum):
     TEMPLATE = "template"         # Respuesta hardcoded (0ms, $0)
     GPT_NARROW = "gpt_narrow"     # GPT con prompt single-purpose (~500ms)
-    ACKNOWLEDGE = "acknowledge"   # "Ajá, sí." (0ms, $0)
+    ACKNOWLEDGE = "acknowledge"   # Acknowledgment formal con rotación (0ms, $0)
     HANGUP = "hangup"             # Señal para colgar
     NOOP = "noop"                 # Sin respuesta (esperar)
 
@@ -869,11 +869,17 @@ class FSMEngine:
     # Template lookup
     # ----------------------------------------------------------
     def _get_template(self, key: str) -> str:
-        """Obtiene template por key. Sustituye variables de contexto."""
+        """Obtiene template por key. Rota variantes para evitar repetición."""
         templates = TEMPLATES.get(key)
         if not templates:
             return ""
-        response = templates[0]
+        # FIX 769: Rotar variantes si hay más de una
+        if len(templates) > 1:
+            idx = getattr(self, '_template_counter', 0)
+            response = templates[idx % len(templates)]
+            self._template_counter = idx + 1
+        else:
+            response = templates[0]
 
         # Variable substitution
         if '{hora}' in response:

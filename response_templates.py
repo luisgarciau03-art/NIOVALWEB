@@ -76,11 +76,19 @@ TEMPLATES = {
     ],
 
     # === DICTADO / ACKNOWLEDGMENT ===
+    # FIX 769: Variantes formales con rotación (evitar repetición)
     "aja_si": [
-        "Aja, si.",
+        "Si, adelante.",
+        "Claro, continue.",
+        "Si, lo escucho.",
+        "Entendido, continue.",
+        "Perfecto, adelante.",
     ],
     "aja_digame": [
-        "Aja, si. Digame.",
+        "Claro, digame.",
+        "Si, adelante, digame.",
+        "Perfecto, digame.",
+        "Entendido, digame.",
     ],
 
     # === CONFIRMACIÓN DE DATO CAPTURADO ===

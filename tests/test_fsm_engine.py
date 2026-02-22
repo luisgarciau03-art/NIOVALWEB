@@ -414,7 +414,11 @@ class TestFSMTransitionsDictado(unittest.TestCase):
         result = self.fsm.process("Seis seis dos")
         self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.DICTANDO_DATO)
-        self.assertIn("si", result.lower())
+        # FIX 769: Acknowledgment formal con variantes
+        self.assertTrue(
+            any(w in result.lower() for w in ["si", "claro", "entendido", "perfecto", "adelante"]),
+            f"Unexpected acknowledgment: {result}"
+        )
 
 
 class TestFSMTransitionsContactoCapturado(unittest.TestCase):

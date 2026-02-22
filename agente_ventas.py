@@ -14,6 +14,32 @@ import pandas as pd
 from dotenv import load_dotenv
 from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
 
+# FIX 769: Variantes formales de acknowledgment con rotación
+_ACK_VARIANTS_769 = [
+    "Sí, adelante.",
+    "Claro, continúe.",
+    "Sí, lo escucho.",
+    "Entendido, continúe.",
+    "Perfecto, adelante.",
+]
+_ACK_DIGAME_769 = [
+    "Claro, dígame.",
+    "Sí, adelante, dígame.",
+    "Perfecto, dígame.",
+    "Entendido, dígame.",
+]
+_ack_counter_769 = 0
+
+
+def _get_ack_769(digame=False):
+    """FIX 769: Retorna acknowledgment formal con rotación."""
+    global _ack_counter_769
+    variants = _ACK_DIGAME_769 if digame else _ACK_VARIANTS_769
+    result = variants[_ack_counter_769 % len(variants)]
+    _ack_counter_769 += 1
+    return result
+
+
 # FIX 519: Sistema de auto-aprendizaje de patrones
 try:
     from cache_patrones_aprendidos import obtener_cache_patrones, inicializar_cache_patrones
@@ -2533,7 +2559,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                     if not es_acknowledgment_733 and cambio_tema_733:
                         respuesta_original_733 = respuesta
-                        respuesta = "Ajá, sí. Continúe por favor."
+                        respuesta = _get_ack_769() + " Continúe por favor."
                         self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO if tiene_digitos_733 else EstadoConversacion.DICTANDO_CORREO
                         print(f"[OK] FIX 733: BRUCE2287 - Cliente dictando dato parcial, GPT cambió de tema → override")
                         print(f"   Bruce pidió dato → cliente dio {len(digitos_733)} dígitos")
@@ -2551,7 +2577,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # Client said encargado isn't there AND dictated numbers in same sentence
             # Acknowledge the number instead of asking for contact again
             respuesta_original_747 = respuesta
-            respuesta = "Entendido, no se encuentra. Ajá, sí, dígame el número por favor."
+            respuesta = f"Entendido, no se encuentra. {_get_ack_769(digame=True)} el número por favor."
             self.estado_conversacion = EstadoConversacion.DICTANDO_NUMERO
             print(f"\n[OK] FIX 747: BRUCE2386 - ENCARGADO_NO_ESTA + dictado concurrente → override")
             print(f"   Respuesta original: '{respuesta_original_747[:80]}'")
@@ -2595,7 +2621,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
                 if cambio_tema_736 and not es_ack_corto_736:
                     respuesta_original_736 = respuesta
-                    respuesta = "Ajá, sí. Dígame."
+                    respuesta = _get_ack_769(digame=True)
                     print(f"[OK] FIX 736: BRUCE2302 - Cliente anuncia dato, GPT cambió de tema → override")
                     print(f"   Cliente dijo: '{ultimo_cliente_667[:60]}'")
                     print(f"   Respuesta original: '{respuesta_original_736[:80]}'")
@@ -9965,7 +9991,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   FIX 620A: pausa_intencional=True (FIX 577 NO generará fallback)")
 
             # Agregar acknowledgment al historial
-            acknowledgment = "Ajá, sí."
+            acknowledgment = _get_ack_769()
             self.conversation_history.append({
                 "role": "assistant",
                 "content": acknowledgment

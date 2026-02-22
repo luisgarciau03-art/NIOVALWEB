@@ -355,10 +355,10 @@ class ConversationMemory:
             # FIX 704A: Respuesta vacía durante dictado activo → acknowledgment
             # FIX 751: Solo email_dictado_verbal indica dictado activo real.
             # 'telefono' in datos_proporcionados es PERMANENTE post-captura y causaba
-            # "Aja, si." incorrecto cuando cliente ya no dictaba nada.
+            # acknowledgment incorrecto cuando cliente ya no dictaba nada.
             dictando = self.facts.get('email_dictado_verbal')
             if dictando and not self.facts.get('cliente_se_despide'):
-                return (False, "Aja, si.")
+                return (False, "Sí, adelante.")
             return (True, "")
 
         resp_lower = self._normalize(respuesta)

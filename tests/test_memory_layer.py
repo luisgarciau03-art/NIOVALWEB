@@ -703,7 +703,8 @@ class TestFix704AEmptyResponseDictation:
         memory.facts['email_dictado_verbal'] = True
         ok, alt = memory.validate_response("")
         assert ok == False
-        assert 'aja' in alt.lower() or 'si' in alt.lower()
+        # FIX 769: Acknowledgment formal con variantes
+        assert any(w in alt.lower() for w in ['si', 'claro', 'entendido', 'perfecto', 'adelante'])
 
     def test_empty_response_dictation_but_despedida(self, memory):
         """Con email dictado PERO cliente se despide, no acknowledgment."""

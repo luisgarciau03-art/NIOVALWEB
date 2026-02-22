@@ -6012,14 +6012,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                 from agente_ventas import EstadoConversacion as EC623
                 agente_623c.estado_conversacion = EC623.DICTANDO_NUMERO
                 # Reemplazar respuesta con confirmación mínima
-                respuesta_agente = "Ajá, sí..."
+                respuesta_agente = "Sí, adelante..."
                 respuesta_container["respuesta"] = respuesta_agente
                 # Regenerar audio con la nueva respuesta
                 audio_id_623c = f"respuesta_{call_sid}_{len(audio_files)}"
                 result_623c = generar_audio_elevenlabs(respuesta_agente, audio_id_623c)
                 if result_623c:
                     audio_id = audio_id_623c
-                    print(f"   FIX 623C: Reemplazado con 'Ajá, sí...' (dejar que cliente continúe dictando)")
+                    print(f"   FIX 623C: Reemplazado con 'Sí, adelante...' (dejar que cliente continúe dictando)")
 
     # Limpiar el tracking de FINAL/PARCIAL si no hay transcripciones importantes
     if not transcripciones_importantes and call_sid in deepgram_ultima_final:
