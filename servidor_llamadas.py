@@ -8364,6 +8364,7 @@ def ver_dashboard():
                  <a href="/historial-llamadas">Historial + Calificaciones</a>
                  <a href="/stats">Estadísticas de Caché</a>
                  <a href="/diagnostico-persistencia">Diagnóstico</a>
+                 <a href="/diagnostico-narrow-cache">Narrow Cache</a>
                  <a href="/logs" onclick="location.reload(); return false;">Refrescar</a>
             </div>
 
@@ -9209,6 +9210,176 @@ def tracker_bugs_deploys():
                 return "<h1>Tracker no disponible</h1><p>tracker_generator.py y TRACKER_BUGS_DEPLOYS.html no encontrados.</p>", 404
         except Exception as e:
             return f"<h1>Error (fallback)</h1><p>{e}</p>", 500
+    except Exception as e:
+        return f"<h1>Error</h1><p>{e}</p>", 500
+
+
+# ============================================================================
+# FIX 768: Diagnóstico del Caché Adaptativo GPT_NARROW
+# ============================================================================
+
+@app.route("/diagnostico-narrow-cache", methods=["GET"])
+def diagnostico_narrow_cache():
+    """Dashboard del caché adaptativo para respuestas GPT_NARROW."""
+    try:
+        from fsm_engine import narrow_cache, NarrowResponseCache
+
+        stats = narrow_cache.stats()
+        entries = narrow_cache._cache
+
+        # Ordenar entradas por count descendente
+        sorted_entries = sorted(entries.items(), key=lambda x: x[1].get("count", 0), reverse=True)
+
+        # Construir filas de la tabla
+        rows_html = ""
+        for i, (key, entry) in enumerate(sorted_entries, 1):
+            parts = key.split("::", 2)
+            state = parts[0] if len(parts) > 0 else "?"
+            prompt = parts[1] if len(parts) > 1 else "?"
+            question_norm = parts[2] if len(parts) > 2 else "?"
+            count = entry.get("count", 0)
+            question_orig = entry.get("question_original", "")
+            response = entry.get("response", "")
+            first_seen = entry.get("first_seen", "")[:16]
+            last_seen = entry.get("last_seen", "")[:16]
+            min_hits = NarrowResponseCache.MIN_HITS
+
+            # Color por estado de promoción
+            if count >= min_hits:
+                row_class = "promoted"
+                badge = f'<span class="badge badge-green">ACTIVO ({count})</span>'
+            else:
+                row_class = "pending"
+                badge = f'<span class="badge badge-yellow">PENDIENTE ({count}/{min_hits})</span>'
+
+            rows_html += f"""
+            <tr class="{row_class}">
+                <td>{i}</td>
+                <td><span class="state-tag">{state}</span></td>
+                <td><span class="prompt-tag">{prompt}</span></td>
+                <td title="{question_norm}">{question_orig[:60]}</td>
+                <td class="response-cell" title="{response}">{response[:80]}{'...' if len(response) > 80 else ''}</td>
+                <td>{badge}</td>
+                <td>{first_seen}</td>
+                <td>{last_seen}</td>
+            </tr>"""
+
+        # Stats cards
+        total = stats["total_entries"]
+        promoted = stats["promoted"]
+        pending = total - promoted
+        total_hits = stats["total_hits"]
+        savings_est = f"~{total_hits * 0.5:.0f}s" if total_hits > 0 else "0s"
+
+        html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Cache GPT_NARROW - Bruce W</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ background: #1a1a2e; color: #eee; font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }}
+        h1 {{ color: #4CAF50; margin-bottom: 5px; font-size: 1.8em; }}
+        .subtitle {{ color: #888; margin-bottom: 20px; font-size: 0.9em; }}
+
+        .nav-links {{ margin: 15px 0; padding: 12px; background: #16213e; border-radius: 8px; }}
+        .nav-links a {{ color: #4CAF50; margin-right: 18px; text-decoration: none; font-size: 0.9em; }}
+        .nav-links a:hover {{ text-decoration: underline; }}
+
+        .stats-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }}
+        .stat-card {{ background: #16213e; padding: 20px; border-radius: 10px; text-align: center; }}
+        .stat-card .number {{ font-size: 2.2em; font-weight: bold; display: block; }}
+        .stat-card .label {{ color: #888; font-size: 0.85em; margin-top: 5px; }}
+        .green {{ color: #4CAF50; }}
+        .yellow {{ color: #FFD700; }}
+        .blue {{ color: #2196F3; }}
+        .cyan {{ color: #00BCD4; }}
+
+        table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85em; }}
+        th {{ background: #0f3460; padding: 10px 8px; text-align: left; position: sticky; top: 0; }}
+        td {{ padding: 8px; border-bottom: 1px solid #2a2a4a; }}
+        tr:hover {{ background: #1e2a4a; }}
+        tr.promoted {{ border-left: 3px solid #4CAF50; }}
+        tr.pending {{ border-left: 3px solid #FFD700; opacity: 0.8; }}
+
+        .state-tag {{ background: #0f3460; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }}
+        .prompt-tag {{ background: #2a1a4e; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }}
+        .badge {{ padding: 3px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }}
+        .badge-green {{ background: #1b5e20; color: #4CAF50; }}
+        .badge-yellow {{ background: #4a3f00; color: #FFD700; }}
+        .response-cell {{ max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa; }}
+
+        .empty-state {{ text-align: center; padding: 60px 20px; color: #666; }}
+        .empty-state h2 {{ color: #888; margin-bottom: 10px; }}
+
+        .config-info {{ background: #16213e; padding: 12px 18px; border-radius: 8px; margin-top: 20px; font-size: 0.8em; color: #888; }}
+        .config-info code {{ color: #4CAF50; background: #0a0a1a; padding: 1px 6px; border-radius: 3px; }}
+    </style>
+</head>
+<body>
+    <h1>Cache Adaptativo GPT_NARROW</h1>
+    <div class="subtitle">FIX 768 - Respuestas cacheadas de preguntas frecuentes (auto-refresh 30s)</div>
+
+    <div class="nav-links">
+        <a href="/logs">Dashboard</a>
+        <a href="/historial-llamadas">Historial</a>
+        <a href="/tracker">Tracker</a>
+        <a href="/bugs">Bugs</a>
+        <a href="/diagnostico-persistencia">Persistencia</a>
+        <a href="/diagnostico-narrow-cache"><b>Narrow Cache</b></a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="number green">{promoted}</span>
+            <span class="label">Respuestas activas</span>
+        </div>
+        <div class="stat-card">
+            <span class="number yellow">{pending}</span>
+            <span class="label">Pendientes (1 hit)</span>
+        </div>
+        <div class="stat-card">
+            <span class="number blue">{total}</span>
+            <span class="label">Total entradas</span>
+        </div>
+        <div class="stat-card">
+            <span class="number cyan">{total_hits}</span>
+            <span class="label">Cache hits totales</span>
+        </div>
+    </div>
+
+    {"<div class='empty-state'><h2>Cache vacío</h2><p>Las preguntas se irán agregando conforme los clientes hagan preguntas a Bruce.</p><p>Primera vez = GPT responde + almacena. Segunda vez = respuesta cacheada (0ms, $0).</p></div>" if total == 0 else f'''
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Estado FSM</th>
+                <th>Prompt</th>
+                <th>Pregunta original</th>
+                <th>Respuesta cacheada</th>
+                <th>Status</th>
+                <th>Primera vez</th>
+                <th>Última vez</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+    '''}
+
+    <div class="config-info">
+        Config: <code>MIN_HITS={NarrowResponseCache.MIN_HITS}</code>
+        <code>MAX_ENTRIES={NarrowResponseCache.MAX_ENTRIES}</code>
+        <code>FUZZY_THRESHOLD={NarrowResponseCache.FUZZY_THRESHOLD}</code>
+        <code>TTL_DAYS={NarrowResponseCache.TTL_DAYS}</code>
+        | Archivo: <code>narrow_cache.json</code>
+    </div>
+</body>
+</html>"""
+        return html
+
     except Exception as e:
         return f"<h1>Error</h1><p>{e}</p>", 500
 
