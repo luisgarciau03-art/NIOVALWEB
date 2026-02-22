@@ -9272,6 +9272,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return
 
         try:
+            import re  # FIX 770: Needed for regex in data extraction below
             from fsm_engine import FSMState
         except ImportError:
             return
