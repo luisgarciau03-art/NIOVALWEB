@@ -513,6 +513,13 @@ class AgenteVentas:
         except ImportError:
             pass  # FSM no disponible, usar lógica existente
 
+        # FIX 762+765+766: Diccionario para conversión de números verbales a dígitos
+        self._nums_to_digit_762 = {
+            'cero': '0', 'uno': '1', 'una': '1', 'dos': '2', 'tres': '3',
+            'cuatro': '4', 'cinco': '5', 'seis': '6', 'siete': '7',
+            'ocho': '8', 'nueve': '9', 'diez': '10',
+        }
+
         # Datos del lead que se van capturando durante la llamada
         self.lead_data = {
             "contacto_id": (contacto_info.get('fila') or contacto_info.get('ID')) if contacto_info else None,
@@ -9227,6 +9234,94 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Detectar objeciones complejas o preguntas largas
         return 200
 
+    # ============================================================
+    # FIX 762+765+766: Sync FSM state/data back to agent
+    # Cuando FSM intercepta, procesar_respuesta() retorna temprano
+    # saltándose pattern detector y data extraction. Este método
+    # asegura que lead_data y flags se sincronizan correctamente.
+    # ============================================================
+    def _sync_fsm_to_agent(self, texto_cliente: str, fsm_response: str):
+        """FIX 762: Sync FSM state/data back to agent after FSM intercepts."""
+        if not hasattr(self, 'fsm') or not self.fsm:
+            return
+
+        try:
+            from fsm_engine import FSMState
+        except ImportError:
+            return
+
+        fsm_state = self.fsm.state
+        fsm_ctx = self.fsm.context
+
+        # --- 1. Extracción de teléfono cuando FSM llega a CONTACTO_CAPTURADO ---
+        if fsm_state == FSMState.CONTACTO_CAPTURADO:
+            # 1a. Dígitos numéricos
+            digitos = re.findall(r'\d', texto_cliente)
+
+            # FIX 765: También convertir números en palabras (FIX 670 approach)
+            if len(digitos) < 10:
+                tn_762 = texto_cliente.lower()
+                for _a, _b in [('á','a'),('é','e'),('í','i'),('ó','o'),('ú','u')]:
+                    tn_762 = tn_762.replace(_a, _b)
+                words_762 = tn_762.split()
+                word_digits = [self._nums_to_digit_762[w] for w in words_762
+                               if w in self._nums_to_digit_762]
+                all_digits = digitos + word_digits
+                if len(all_digits) >= 10:
+                    digitos = all_digits
+
+            if len(digitos) >= 10:
+                numero_final = ''.join(d[:1] for d in digitos[:10])  # Cada elemento puede ser '10' → solo '1'
+                if not self.lead_data.get("whatsapp"):
+                    self.lead_data["whatsapp"] = numero_final
+                    self.lead_data["whatsapp_valido"] = True
+                    print(f"  [FSM FIX 762] WhatsApp synced: {numero_final}")
+
+            # 1b. Extracción de email (literal @)
+            email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', texto_cliente)
+            if email_match and not self.lead_data.get("email"):
+                self.lead_data["email"] = email_match.group(0)
+                print(f"  [FSM FIX 762] Email synced: {email_match.group(0)}")
+
+            # 1c. Email dictado por voz ("arroba gmail punto com") - FIX 617B approach
+            if not email_match and 'arroba' in texto_cliente.lower():
+                tn_email = texto_cliente.lower().strip()
+                tn_email = tn_email.replace(' arroba ', '@').replace(' punto com', '.com')
+                tn_email = tn_email.replace(' punto mx', '.mx').replace(' punto net', '.net')
+                tn_email = tn_email.replace(' punto org', '.org')
+                email_match2 = re.search(r'[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}', tn_email)
+                if email_match2 and not self.lead_data.get("email"):
+                    self.lead_data["email"] = email_match2.group(0)
+                    print(f"  [FSM FIX 762] Email (voice) synced: {email_match2.group(0)}")
+
+        # --- 2. Sync catalogo_prometido ---
+        if fsm_ctx.catalogo_prometido:
+            self.catalogo_prometido = True
+
+        # --- 3. Sync estado_conversacion ---
+        _FSM_TO_ESTADO = {
+            FSMState.BUSCANDO_ENCARGADO: EstadoConversacion.BUSCANDO_ENCARGADO,
+            FSMState.ENCARGADO_AUSENTE: EstadoConversacion.ENCARGADO_NO_ESTA,
+            FSMState.ENCARGADO_PRESENTE: EstadoConversacion.BUSCANDO_ENCARGADO,  # No hay equivalente exacto
+            FSMState.CAPTURANDO_CONTACTO: EstadoConversacion.PIDIENDO_WHATSAPP,
+            FSMState.CONTACTO_CAPTURADO: EstadoConversacion.CONTACTO_CAPTURADO,
+            FSMState.DESPEDIDA: EstadoConversacion.DESPEDIDA,
+            FSMState.DICTANDO_DATO: EstadoConversacion.DICTANDO_NUMERO,
+            FSMState.ESPERANDO_TRANSFERENCIA: EstadoConversacion.ESPERANDO_TRANSFERENCIA,
+        }
+        new_estado = _FSM_TO_ESTADO.get(fsm_state)
+        if new_estado:
+            self.estado_conversacion = new_estado
+
+        # --- FIX 766: Sync lead_data para callback ---
+        if fsm_ctx.callback_pedido and fsm_ctx.callback_hora:
+            if not self.lead_data.get("pregunta_4"):
+                self.lead_data["pregunta_4"] = fsm_ctx.callback_hora
+
+        # --- 4. Log sync ---
+        print(f"  [FSM FIX 762] Sync: fsm={fsm_state.value} → estado={self.estado_conversacion.value}"
+              f" | wapp={self.lead_data.get('whatsapp','')} email={self.lead_data.get('email','')}")
+
     def procesar_respuesta(self, respuesta_cliente: str) -> str:
         """
         Procesa la respuesta del cliente y genera una respuesta del agente
@@ -9255,6 +9350,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             try:
                 fsm_result = self.fsm.process(respuesta_cliente, self)
                 if fsm_result is not None:
+                    # FIX 762: Sync FSM state/data back to agent before returning
+                    self._sync_fsm_to_agent(respuesta_cliente, fsm_result)
                     self.conversation_history.append({
                         "role": "assistant",
                         "content": fsm_result

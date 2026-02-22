@@ -24,12 +24,13 @@ from response_templates import TEMPLATES, NARROW_PROMPTS
 FSM_ENABLED = os.getenv("FSM_ENABLED", "shadow").lower()
 
 # ============================================================
-# FSM Phase 2: Estados activos (interceptan en vez de shadow)
+# FIX 761: FSM Phase 3 - Core flow activo
 # ============================================================
 # Comma-separated list of state names que interceptan GPT.
-# Ej: "despedida,contacto_capturado,dictando_dato"
-# Default: "despedida,contacto_capturado" (100% deterministas, 0 riesgo)
-_ACTIVE_RAW = os.getenv("FSM_ACTIVE_STATES", "despedida,contacto_capturado").lower().strip()
+# Phase 2: "despedida,contacto_capturado"
+# Phase 3: + buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto
+# Rollback: FSM_ACTIVE_STATES=despedida,contacto_capturado en Railway
+_ACTIVE_RAW = os.getenv("FSM_ACTIVE_STATES", "despedida,contacto_capturado,buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto").lower().strip()
 FSM_ACTIVE_STATES_SET = set()  # Populated after FSMState defined
 
 
@@ -58,7 +59,7 @@ for _name in _ACTIVE_RAW.split(','):
     if _name and _name in _state_map:
         FSM_ACTIVE_STATES_SET.add(_state_map[_name])
 if FSM_ACTIVE_STATES_SET:
-    print(f"  [FSM] Active states (Phase 2): {[s.value for s in FSM_ACTIVE_STATES_SET]}")
+    print(f"  [FSM] Active states (Phase 3): {[s.value for s in FSM_ACTIVE_STATES_SET]}")
 
 
 # ============================================================
@@ -235,10 +236,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- Rechazo de dato específico ---
     reject_data = [
         'no tengo whatsapp', 'no tengo correo', 'no tengo email',
+        'no tengo telefono', 'no tengo celular', 'no tengo fijo',
         'no lo puedo dar', 'no se lo puedo dar', 'no lo podemos pasar',
         'no le puedo dar', 'no le puedo pasar', 'no le podemos dar',
         'solo tengo telefono', 'solo tengo celular', 'no manejo correo',
         'no te lo puedo dar', 'no puedo darte', 'no estoy autorizado',
+        'tampoco tengo', 'no cuento con',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -418,6 +421,13 @@ class FSMEngine:
         else:
             transition = None
 
+        # FIX 763: REJECT_DATA dinámico con alternación de canales
+        if (transition is None and
+                intent == FSMIntent.REJECT_DATA and
+                self.state in (FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.ENCARGADO_PRESENTE)):
+            transition = self._handle_reject_data_763()
+
         # 2. Buscar transición (si no fue override)
         if transition is None:
             transition = self._lookup(self.state, intent)
@@ -563,7 +573,9 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.ENCARGADO_PRESENTE, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.ENCARGADO_PRESENTE, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
-        add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_correo", ["whatsapp_rechazado"])
+        # FIX 763: REJECT_DATA ahora es dinámico (ver _handle_reject_data_763)
+        # Guard ["whatsapp_rechazado"] removido - atributo no existía en FSMContext
+        add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
         add(S.ENCARGADO_PRESENTE, I.VERIFICATION,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "verificacion_aqui_estoy")
         # FIX 754: Cliente dicta teléfono/email completo estando con encargado → capturar
         add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
@@ -575,7 +587,8 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         add(S.ENCARGADO_AUSENTE, I.REJECT_DATA,    S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
         add(S.ENCARGADO_AUSENTE, I.CALLBACK,       S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
-        add(S.ENCARGADO_AUSENTE, I.CONFIRMATION,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        # FIX 764: "Sí" tras pedir contacto alternativo = ready to dictate, NO repetir pedir_whatsapp
+        add(S.ENCARGADO_AUSENTE, I.CONFIRMATION,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
         add(S.ENCARGADO_AUSENTE, I.INTEREST,       S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.ENCARGADO_AUSENTE, I.FAREWELL,       S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.ENCARGADO_AUSENTE, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
@@ -872,6 +885,33 @@ class FSMEngine:
             hour_match = re.search(r'a las (\d{1,2})', tn)
             if hour_match:
                 self.context.callback_hora = f"a las {hour_match.group(1)}"
+
+    # ----------------------------------------------------------
+    # FIX 763: REJECT_DATA dinámico
+    # ----------------------------------------------------------
+    def _handle_reject_data_763(self) -> Transition:
+        """FIX 763: Alternación inteligente de canales cuando cliente rechaza."""
+        rechazados = set(self.context.canales_rechazados)
+        # Incluir canal actual (será agregado por _update_context después)
+        if self.context.canal_solicitado:
+            rechazados.add(self.context.canal_solicitado)
+
+        S = FSMState
+        A = ActionType
+
+        if 'whatsapp' not in rechazados:
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir WhatsApp")
+            return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_whatsapp")
+        elif 'correo' not in rechazados:
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir correo")
+            return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
+        elif 'telefono' not in rechazados:
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir teléfono")
+            return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_telefono")
+        else:
+            # Todos los canales rechazados → ofrecer número de Bruce
+            print(f"  [FIX 763] REJECT_DATA: TODOS rechazados → ofrecer contacto Bruce")
+            return Transition(S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
 
     # ----------------------------------------------------------
     # State info (para debug/logging)
