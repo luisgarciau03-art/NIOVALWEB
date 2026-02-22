@@ -7178,6 +7178,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             return None
 
         # ================================================================
+        # FIX 776: BRUCE2446 - Post-farewell: Si Bruce YA se despidió y cliente
+        # dice "¿Aló?/¿Bueno?/Hello?" → repetir despedida breve, NO "me puede repetir"
+        # ================================================================
+        if len(self.conversation_history) >= 2:
+            _ultimo_bruce_776 = ''
+            for _m776 in reversed(self.conversation_history):
+                if _m776['role'] == 'assistant':
+                    _ultimo_bruce_776 = _m776['content'].lower()
+                    break
+            _bruce_ya_despidio_776 = any(p in _ultimo_bruce_776 for p in [
+                'que tenga buen dia', 'que tenga excelente dia', 'que tenga buena tarde',
+                'que tenga excelente tarde', 'gracias por su tiempo', 'hasta luego',
+                'que le vaya bien', 'que este bien', 'disculpe la molestia',
+                'buen dia', 'buena tarde', 'fue un placer'
+            ])
+            _cliente_post_farewell_776 = any(p in texto_lower for p in [
+                'alo', 'bueno', 'hello', 'hola', 'oiga', 'si', 'ok'
+            ]) and len(texto_lower) < 20
+            if _bruce_ya_despidio_776 and _cliente_post_farewell_776:
+                print(f"[OK] FIX 776: BRUCE2446 - Post-farewell '{texto_lower[:30]}' → despedida final")
+                return {
+                    "tipo": "POST_FAREWELL",
+                    "respuesta": "Que tenga excelente día, hasta luego.",
+                    "accion": "DESPEDIDA_FINAL"
+                }
+
+        # ================================================================
         # FIX 520 BRUCE1652: Flujo de ofrecer contacto de Bruce
         # Cuando cliente no puede dar info del encargado, Bruce ofrece su número
         # ================================================================
@@ -8213,7 +8240,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "fuera de horario", "no hay horario", "hasta mañana", "hasta el lunes",
             "ya no atendemos", "ya nos fuimos", "ya se fueron"
         ]):
+            # FIX 775: BRUCE2443 - Si cliente YA mencionó hora, NO preguntar "¿A qué hora?"
+            # "viene hasta mañana a las diez" → FIX 513 matchea "hasta mañana" pero hora ya está
+            _horas_palabras_775 = ['ocho', 'nueve', 'diez', 'once', 'doce', 'una', 'dos',
+                                   'tres', 'cuatro', 'cinco', 'seis', 'siete']
+            _tiene_hora_775 = (
+                re.search(r'a las\s+\d{1,2}', texto_lower) or
+                re.search(r'\b\d{1,2}\s*:\s*\d{2}', texto_lower) or
+                re.search(r'\b\d{1,2}\s*(?:am|pm)\b', texto_lower) or
+                any(f'a las {h}' in texto_lower for h in _horas_palabras_775) or
+                any(f'las {h}' in texto_lower for h in _horas_palabras_775)
+            )
+            # FIX 775B: Si ya preguntamos hora y cliente repite → confirmar (anti-loop)
+            _ya_pregunto_hora_775 = self.esperando_hora_callback
+            if _tiene_hora_775 or _ya_pregunto_hora_775:
+                if _ya_pregunto_hora_775:
+                    self.esperando_hora_callback = False
+                print(f"[OK] FIX 775: BRUCE2443 - TIENDA CERRADA + hora{'(ya preguntada)' if _ya_pregunto_hora_775 else ''} → confirmar")
+                return {
+                    "tipo": "TIENDA_CERRADA_CON_HORA",
+                    "respuesta": "Perfecto, le llamo mañana a esa hora entonces. Muchas gracias por su tiempo.",
+                    "accion": "CONFIRMAR_CALLBACK"
+                }
             print(f"[OK] FIX 513: TIENDA CERRADA detectado: '{texto_cliente[:50]}'")
+            self.esperando_hora_callback = True  # FIX 775: Marcar que preguntamos hora
             return {
                 "tipo": "TIENDA_CERRADA",
                 "respuesta": "Entiendo, disculpe la molestia. ¿A qué hora puedo llamar mañana para encontrarlos?",
