@@ -9523,6 +9523,8 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'SOLICITUD_CALLBACK',
                 # FIX 744: Area equivocada (despedida inmediata, no invalidar)
                 'AREA_EQUIVOCADA',
+                # FIX 757: Patrones con 0% survival en pattern audit
+                'ESPERANDO_QUE_ANOTE', 'TIENDA_CERRADA',
             }
             patrones_inmunes_pregunta_598 = _PATRONES_INMUNES_UNIVERSAL
             tiene_pregunta_segunda_clausula = False

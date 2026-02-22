@@ -454,7 +454,7 @@ class TestFase22GPTEvalFPReduction(unittest.TestCase):
         bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
         with open(bd_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        self.assertIn('FIX 755', source)
+        self.assertIn('FIX 756-757', source)
 
 
 # ============================================================

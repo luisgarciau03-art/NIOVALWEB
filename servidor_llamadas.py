@@ -4903,7 +4903,33 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                                 respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748}. ¿A qué hora le puedo llamar?"
                                 print(f"    FIX 748: BRUCE2392 - Día detectado en timeout (dia={_dia_encontrado_748})")
                             else:
-                                respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                                # FIX 756: BRUCE2425 - Cliente OFRECE dato pero GPT timeout
+                                # "¿Te puedo proporcionar su correo?" → timeout → "me puede repetir" = incoherente
+                                # Detectar oferta de dato y aceptar (mismo patrón que FIX 753 en path 577)
+                                _sl_756 = speech_lower_690
+                                _ofrece_756 = any(p in _sl_756 for p in [
+                                    'te paso un', 'le paso un', 'si te doy', 'si le doy',
+                                    'te puedo dar', 'le puedo dar', 'te podria dar', 'le podria dar',
+                                    'te puedo pasar', 'le puedo pasar', 'te podria pasar', 'le podria pasar',
+                                    'te puedo proporcionar', 'le puedo proporcionar',
+                                    'por correo mejor', 'mejor por correo', 'te paso el correo',
+                                    'le paso el correo', 'te doy el correo', 'le doy el correo',
+                                    'te paso el numero', 'le paso el numero', 'te doy un numero',
+                                    'le doy un numero', 'te paso mi', 'le paso mi',
+                                    'te puedo mandar', 'le puedo mandar', 'te mando un', 'le mando un'
+                                ])
+                                if _ofrece_756:
+                                    if any(w in _sl_756 for w in ['correo', 'email', 'mail']):
+                                        respuesta_container["respuesta"] = "Claro que sí, dígame el correo por favor."
+                                        print(f"    FIX 756: Cliente ofrece correo en timeout → aceptar")
+                                    elif any(w in _sl_756 for w in ['whatsapp', 'wats', 'guats']):
+                                        respuesta_container["respuesta"] = "Claro que sí, dígame el número de WhatsApp por favor."
+                                        print(f"    FIX 756: Cliente ofrece WhatsApp en timeout → aceptar")
+                                    else:
+                                        respuesta_container["respuesta"] = "Claro que sí, dígame por favor."
+                                        print(f"    FIX 756: Cliente ofrece dato en timeout → aceptar")
+                                else:
+                                    respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
                         respuesta_container["completado"] = True
                         try:
                             if BUG_DETECTOR_AVAILABLE:
@@ -4997,7 +5023,31 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                         respuesta_container["respuesta"] = f"Perfecto, le marco el {_dia_encontrado_748b}. ¿A qué hora le puedo llamar?"
                         print(f"    FIX 748: BRUCE2392 - Día detectado en timeout (dia={_dia_encontrado_748b})")
                     else:
-                        respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
+                        # FIX 756: BRUCE2425 - Cliente OFRECE dato pero GPT timeout (path B)
+                        _sl_756b = speech_lower_690b
+                        _ofrece_756b = any(p in _sl_756b for p in [
+                            'te paso un', 'le paso un', 'si te doy', 'si le doy',
+                            'te puedo dar', 'le puedo dar', 'te podria dar', 'le podria dar',
+                            'te puedo pasar', 'le puedo pasar', 'te podria pasar', 'le podria pasar',
+                            'te puedo proporcionar', 'le puedo proporcionar',
+                            'por correo mejor', 'mejor por correo', 'te paso el correo',
+                            'le paso el correo', 'te doy el correo', 'le doy el correo',
+                            'te paso el numero', 'le paso el numero', 'te doy un numero',
+                            'le doy un numero', 'te paso mi', 'le paso mi',
+                            'te puedo mandar', 'le puedo mandar', 'te mando un', 'le mando un'
+                        ])
+                        if _ofrece_756b:
+                            if any(w in _sl_756b for w in ['correo', 'email', 'mail']):
+                                respuesta_container["respuesta"] = "Claro que sí, dígame el correo por favor."
+                                print(f"    FIX 756: Cliente ofrece correo en timeout → aceptar (path B)")
+                            elif any(w in _sl_756b for w in ['whatsapp', 'wats', 'guats']):
+                                respuesta_container["respuesta"] = "Claro que sí, dígame el número de WhatsApp por favor."
+                                print(f"    FIX 756: Cliente ofrece WhatsApp en timeout → aceptar (path B)")
+                            else:
+                                respuesta_container["respuesta"] = "Claro que sí, dígame por favor."
+                                print(f"    FIX 756: Cliente ofrece dato en timeout → aceptar (path B)")
+                        else:
+                            respuesta_container["respuesta"] = "Disculpe, ¿me puede repetir lo que me decía?"
                 respuesta_container["completado"] = True
                 try:
                     if BUG_DETECTOR_AVAILABLE:

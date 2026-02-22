@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 755"
+_DEPLOY_VERSION = "FIX 756-757"
 
 # Severidades
 CRITICO = "CRITICO"
