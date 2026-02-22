@@ -54,7 +54,7 @@ TELEGRAM_BOTS = [
 ]
 
 # Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FIX 770 re-import-sync"
+_DEPLOY_VERSION = "FIX 774 audit-bugs-fix"
 
 # Severidades
 CRITICO = "CRITICO"
@@ -1072,10 +1072,30 @@ class ContentAnalyzer:
                     if r2 == "bruce" and t2.strip():
                         # ¿Bruce respondió con algo que ignora lo que el cliente decía?
                         t2_lower = t2.lower()
+                        texto_lower_727 = texto.lower()
+
+                        # FIX 772: BRUCE2435/2436 - Si cliente dijo "no está" y Bruce pide
+                        # WhatsApp del encargado, es flujo CORRECTO (no interrupción)
+                        # "No, no está" → "¿WhatsApp del encargado?" = respuesta apropiada
+                        _cliente_dijo_no_esta_772 = any(p in texto_lower_727 for p in [
+                            'no esta', 'no está', 'no se encuentra', 'no hay',
+                            'no esta disponible', 'no está disponible',
+                        ])
+                        _bruce_pide_dato_encargado_772 = (
+                            ('whatsapp' in t2_lower and 'encargado' in t2_lower) or
+                            ('correo' in t2_lower and 'encargado' in t2_lower) or
+                            ('número' in t2_lower and 'encargado' in t2_lower) or
+                            ('numero' in t2_lower and 'encargado' in t2_lower) or
+                            'entiendo' in t2_lower[:20]  # "Entiendo. ¿Me podría..." = acknowledges
+                        )
+                        if _cliente_dijo_no_esta_772 and _bruce_pide_dato_encargado_772:
+                            print(f"  [FIX 772] SKIP interrupcion: 'no está' + pedir dato encargado = flujo correcto")
+                            break  # Not a bug
+
                         bruce_ignora = (
                             ContentAnalyzer._PITCH_NIOVAL.search(t2) or
                             ContentAnalyzer._OFERTA_CATALOGO.search(t2) or
-                            ('whatsapp' in t2_lower and 'encargado' not in texto.lower()) or
+                            ('whatsapp' in t2_lower and 'encargado' not in texto_lower_727) or
                             ContentAnalyzer._BRUCE_DESPEDIDA.search(t2)
                         )
 

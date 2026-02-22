@@ -2978,6 +2978,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'anotar', 'apuntar', 'donde anotar', 'donde apuntar',
                 'te doy', 'le doy', 'te paso su', 'le paso su',
                 'te lo paso', 'se lo paso', 'te lo doy', 'se lo doy',
+                # FIX 773: BRUCE2436 - Preguntas sobre la empresa = interés
+                'donde estan', 'donde están', 'de donde son', 'de dónde son',
+                'que productos', 'qué productos', 'que marcas', 'qué marcas',
+                'que manejan', 'qué manejan', 'que venden', 'qué venden',
+                'tienen envios', 'hacen envios', 'hacen envíos',
+                'te paso su correo', 'le paso su correo', 'te paso el correo',
             ]
             cliente_interesado_705 = any(p in ultimo_cliente_705 for p in patrones_interes_705)
             if cliente_interesado_705:
@@ -3105,13 +3111,15 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         )
 
         pregunta_repetir = any(p in respuesta_lower for p in preguntas_repetir)
-        if pregunta_repetir and veces_pidio_repetir >= 2:
-            print(f"\n[WARN] FIX 493 ANTI-LOOP: Bruce iba a pedir repetición ({veces_pidio_repetir+1}a vez)")
+        # FIX 774: BRUCE2438 - Threshold >= 1 (bloquea 2da repetición, alineado con bug detector)
+        # Bug detector marca PREGUNTA_REPETIDA con 2 ocurrencias, FIX 493 bloqueaba 3ra → MISMATCH
+        if pregunta_repetir and veces_pidio_repetir >= 1:
+            print(f"\n[WARN] FIX 774 ANTI-LOOP: Bruce iba a pedir repetición ({veces_pidio_repetir+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
-            # Problema de audio - ofrecer llamar después
-            # FIX 684: Eliminada mención "problemas de conexión" (CTN-002)
-            respuesta = "Disculpe, no le estoy escuchando bien. ¿Le puedo llamar en otro momento?"
-            print(f"   Respuesta anti-loop: '{respuesta}' (FIX 684 - sin mención técnica)")
+            # FIX 774: En vez de pedir repetir de nuevo, usar fallback contextual
+            # Ofrecer enviar catálogo para no perder la oportunidad
+            respuesta = "¿Le gustaría que le envíe nuestro catálogo por WhatsApp para que lo revise con calma?"
+            print(f"   Respuesta anti-loop: '{respuesta}' (FIX 774 - oferta catálogo)")
             return respuesta
 
         # FIX 517 BRUCE1733: Anti-loop para "¿Me permite dejarle el número?"
@@ -11438,6 +11446,33 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
 
             # FIX 352: Respuestas de fallback según contexto del cliente
             respuesta_lower = respuesta_cliente.lower() if respuesta_cliente else ""
+
+            # FIX 771: BRUCE2435 - Si Bruce YA DIO su contacto y cliente se despide → despedida
+            # PROBLEMA: APITimeoutError cuando cliente dijo "Ok, gracias" → fallback genérico
+            # repetía "¿Se encontrará el encargado?" causando loop de 5+ turnos
+            _todos_bruce_771 = [m['content'].lower() for m in self.conversation_history if m['role'] == 'assistant']
+            _bruce_dio_contacto_771 = any(
+                any(w in msg for w in ['6 6 2', '662', '4 1 5', '415', '1 9 9 7', '1997',
+                                        'ventas arroba nioval', 'ventas@nioval',
+                                        'nuestro whatsapp es', 'nuestro correo es',
+                                        'mi número es', 'mi numero es', 'nuestro número es'])
+                for msg in _todos_bruce_771
+            )
+            _cliente_despide_771 = any(p in respuesta_lower for p in [
+                'gracias', 'ok gracias', 'bien gracias', 'hasta luego', 'adios', 'adiós',
+                'bye', 'bueno gracias', 'muchas gracias', 'muy amable',
+                'esta bien', 'está bien', 'ya quedo', 'ya quedó', 'perfecto gracias'
+            ])
+            _cliente_pide_numero_771 = any(p in respuesta_lower for p in [
+                'cual es tu numero', 'cuál es tu número', 'dame tu numero', 'dime tu numero',
+                'dimelo', 'dímelo', 'si dime', 'sí dime', 'dame el numero', 'pásame tu'
+            ])
+            if _bruce_dio_contacto_771 and _cliente_despide_771:
+                print(f"[OK] FIX 771: Bruce ya dio contacto + cliente se despide → despedida formal")
+                return "Perfecto, muchas gracias por su tiempo. Que tenga excelente día."
+            if _cliente_pide_numero_771 and not _bruce_dio_contacto_771:
+                print(f"[OK] FIX 771: Cliente pide número de Bruce → darlo")
+                return "Claro, nuestro WhatsApp es 6 6 2, 4 1 5, 1 9 9 7 y nuestro correo es ventas arroba nioval punto com."
 
             # FIX 422: Si Bruce pidió número del encargado y cliente aceptó, preguntar directamente
             # Caso BRUCE1244: Bruce pidió número, cliente dijo "Si gusta,", Bruce debió preguntar por número
