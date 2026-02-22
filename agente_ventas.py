@@ -1206,6 +1206,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Patrones: "9 51", "662 415", "tres tres dos"
         digitos = re.findall(r'\d', texto_cliente)
         if len(digitos) >= 2 and len(digitos) < 10:
+            # FIX 758: BRUCE2431 - Excluir dígitos en contexto temporal
+            # "Llega como en 30 minutos" → "30" es tiempo, NOT teléfono
+            # Solo si pocos dígitos (<=3) Y hay palabra de tiempo adyacente
+            _time_match_758 = re.search(r'\b\d{1,3}\s*(minuto|hora|dia|día|semana|rato|segundo|mes)', texto_lower)
+            if _time_match_758 and len(digitos) <= 3:
+                print(f"   [DEBUG] FIX 758: Dígitos en contexto temporal ('{_time_match_758.group()}') - NO es teléfono")
+                return False
             # Tiene 2-9 dígitos (incompleto para número mexicano de 10)
             # Probablemente está dictando número
             print(f"   [DEBUG] FIX 477: DETECTADO número parcial ({len(digitos)} dígitos) - Cliente probablemente sigue dictando")
@@ -9257,6 +9264,28 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     return fsm_result
             except Exception as e:
                 print(f"  [FSM ERROR] {e} - fallthrough a logica existente")
+
+        # ============================================================
+        # FIX 759B: BRUCE2427 - Re-introducción post-transferencia
+        # Después de "Claro, espero", si persona nueva dice saludo genérico
+        # (hola, buen día, bueno), Bruce debe re-presentarse con pitch + encargado
+        # FIX 749A ya cubre "quién habla" → solo cubrir saludos sin pregunta identidad
+        # ============================================================
+        if getattr(self, '_post_espera_reintroducir_759', False):
+            self._post_espera_reintroducir_759 = False
+            _t759 = respuesta_cliente.strip().lower()
+            _t759 = _t759.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+            _t759 = _t759.replace('¿','').replace('?','').replace('¡','').replace('!','').replace('.','').replace(',','')
+            _saludos_759 = ['hola', 'bueno', 'buen dia', 'buenas tardes', 'buenas noches', 'que tal', 'digame', 'diga', 'si digame', 'mande']
+            _es_saludo_759 = any(s in _t759 for s in _saludos_759)
+            # Excluir si ya es pregunta de identidad (FIX 749A lo maneja)
+            _es_identidad_759 = any(q in _t759 for q in ['quien habla', 'quien llama', 'de donde', 'que empresa', 'de parte de'])
+            if _es_saludo_759 and not _es_identidad_759:
+                _reintro = "Buen día. Mi nombre es Bruce, le llamo de la marca NIOVAL, distribuidores de productos ferreteros. ¿Se encontrará el encargado o encargada de compras?"
+                print(f"\n [FIX 759B] Post-transferencia: persona nueva saluda '{respuesta_cliente[:60]}' → re-introducción")
+                self.conversation_history.append({"role": "assistant", "content": _reintro})
+                self.turno_actual = getattr(self, 'turno_actual', 0) + 1
+                return _reintro
 
         # ============================================================
         # FIX 708+709: PREGUNTAS OBVIAS - Respuestas instantáneas

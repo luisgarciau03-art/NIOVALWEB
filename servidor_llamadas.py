@@ -3060,6 +3060,16 @@ def procesar_respuesta():
                 # _audio_sustancial_751 causaba false positive: "iban a entrar a junta, permiteme" = 7 palabras
                 # → cliente_volvio=True → Bruce perdía estado ESPERANDO_TRANSFERENCIA
                 # Prioridad: es_mas_espera ANULA señales débiles y audio sustancial
+                # FIX 759: BRUCE2427 - Azure STT acumula texto VIEJO + NUEVO como fallback
+                # "hola buen día qué tal sí te lo paso dame un momento" = texto garbled
+                # "dame un momento" (viejo) matchea frases_mas_espera → permanece en ESPERANDO
+                # PERO "hola buen día" (nuevo) = señal fuerte de persona nueva
+                # Si texto largo (>50 chars) tiene AMBOS: más_espera + señal_fuerte → garbled
+                # → priorizar señal fuerte (persona nueva) sobre más_espera (texto viejo)
+                if es_mas_espera and tiene_senal_fuerte and len(_fl_712) > 50:
+                    es_mas_espera = False
+                    print(f"\n FIX 759: BRUCE2427 - Texto largo ({len(_fl_712)} chars) con 'más espera' Y señal fuerte")
+                    print(f"    → Probablemente Azure acumuló texto viejo. Priorizando señal fuerte (re-engagement)")
                 if es_mas_espera:
                     cliente_volvio = False
                     print(f"\n FIX 746: BRUCE2370 - Cliente pide MÁS espera: '{speech_result[:60]}' → mantener ESPERANDO_TRANSFERENCIA")
@@ -3105,6 +3115,10 @@ def procesar_respuesta():
                     # Resetear silencios
                     if hasattr(agente, 'silencios_durante_dictado'):
                         agente.silencios_durante_dictado = 0
+                    # FIX 759B: BRUCE2427 - Marcar flag para re-introducción post-transferencia
+                    # Si persona nueva dice saludo genérico (no pregunta identidad),
+                    # agente debe re-introducirse con pitch + encargado
+                    agente._post_espera_reintroducir_759 = True
 
             # FIX 470: BRUCE1412 - Detectar frases de ESPERA ANTES de cualquier otra lógica
             # Si el cliente dice "Permítame un segundo", "Un momento", etc., debemos
@@ -4692,6 +4706,28 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
         def procesar_gpt_y_audio():
             """FIX 97: Procesar GPT y cuando termine, iniciar audio INMEDIATAMENTE"""
+            nonlocal speech_result
+            # FIX 760: BRUCE2430/2432 - De-duplicar STT garbled ANTES de GPT
+            # Azure/Deepgram a veces concatenan turnos: "que tal soy yo digame Soy yo, digame?"
+            # GPT interpreta como nuevo saludo → re-pitch 2-3x
+            # Aplicar FIX 750 logic (half comparison) ANTES de GPT, no solo en FIX 577
+            import re as _re_760
+            _words_760 = speech_result.split() if speech_result else []
+            if len(_words_760) >= 6:
+                _half_760 = len(_words_760) // 2
+                _clean_760 = lambda t: _re_760.sub(r'[.,!?¿¡:;]', '', t).lower().strip()
+                _first_760 = _clean_760(' '.join(_words_760[:_half_760]))
+                _second_760 = _clean_760(' '.join(_words_760[_half_760:]))
+                if _first_760 and _second_760 and (
+                    _first_760 == _second_760 or
+                    (len(_first_760) > 8 and _first_760 in _second_760) or
+                    (len(_second_760) > 8 and _second_760 in _first_760)
+                ):
+                    _dedup_760 = ' '.join(_words_760[_half_760:])  # Keep second half (more complete)
+                    print(f" FIX 760: STT garbled detectado PRE-GPT")
+                    print(f"    Original ({len(_words_760)} words): '{speech_result[:80]}...'")
+                    print(f"    De-duplicado: '{_dedup_760[:80]}'")
+                    speech_result = _dedup_760
             # 1. Procesar con GPT (3-5s)
             respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
             respuesta_container["completado"] = True
