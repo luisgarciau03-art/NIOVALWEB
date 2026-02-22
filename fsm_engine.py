@@ -11,8 +11,12 @@ Modos (env FSM_ENABLED):
 """
 import os
 import re
+import json
 import time
+import unicodedata
 from enum import Enum
+from datetime import datetime
+from difflib import SequenceMatcher
 from dataclasses import dataclass, field
 from typing import Optional, Dict, List, Tuple, Any
 
@@ -22,6 +26,157 @@ from response_templates import TEMPLATES, NARROW_PROMPTS
 # FSM_ENABLED mode
 # ============================================================
 FSM_ENABLED = os.getenv("FSM_ENABLED", "shadow").lower()
+
+
+# ============================================================
+# FIX 768: Caché adaptativo para respuestas GPT_NARROW
+# ============================================================
+class NarrowResponseCache:
+    """FIX 768: Caché adaptativo que aprende de respuestas GPT_NARROW.
+
+    Primera vez → GPT responde, se almacena (count=1).
+    Segunda vez (count >= MIN_HITS) → respuesta cacheada (0ms, $0).
+    Fuzzy matching para preguntas similares (SequenceMatcher >= 0.85).
+    Persiste a JSON para sobrevivir restarts.
+    """
+
+    CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "narrow_cache.json")
+    MAX_ENTRIES = 500
+    MIN_HITS = 2
+    FUZZY_THRESHOLD = 0.85
+    TTL_DAYS = 30
+
+    def __init__(self):
+        self._cache: Dict[str, dict] = {}
+        self._store_count = 0
+        self._load()
+
+    @staticmethod
+    def _normalize(texto: str) -> str:
+        """Normaliza: lowercase, sin acentos, sin puntuación, espacios colapsados."""
+        t = texto.lower().strip()
+        t = unicodedata.normalize('NFD', t)
+        t = ''.join(c for c in t if unicodedata.category(c) != 'Mn')
+        t = re.sub(r'[^\w\s]', '', t)
+        t = re.sub(r'\s+', ' ', t).strip()
+        return t
+
+    def _make_key(self, state: str, prompt_key: str, texto_norm: str) -> str:
+        return f"{state}::{prompt_key}::{texto_norm}"
+
+    def lookup(self, state: str, prompt_key: str, texto: str) -> Optional[str]:
+        """Retorna respuesta cacheada si count >= MIN_HITS, None si miss."""
+        texto_norm = self._normalize(texto)
+        key = self._make_key(state, prompt_key, texto_norm)
+
+        # 1. Exact match
+        entry = self._cache.get(key)
+        if entry:
+            if entry["count"] >= self.MIN_HITS:
+                entry["count"] += 1
+                entry["last_seen"] = datetime.now().isoformat()
+                print(f"  [FIX 768 CACHE HIT] key='{texto_norm[:40]}' count={entry['count']}")
+                return entry["response"]
+            # Exists but below threshold
+            return None
+
+        # 2. Fuzzy match
+        prefix = f"{state}::{prompt_key}::"
+        for cached_key, cached_entry in self._cache.items():
+            if not cached_key.startswith(prefix):
+                continue
+            cached_text = cached_key[len(prefix):]
+            if SequenceMatcher(None, texto_norm, cached_text).ratio() >= self.FUZZY_THRESHOLD:
+                if cached_entry["count"] >= self.MIN_HITS:
+                    cached_entry["count"] += 1
+                    cached_entry["last_seen"] = datetime.now().isoformat()
+                    print(f"  [FIX 768 CACHE FUZZY HIT] '{texto_norm[:30]}' ~ '{cached_text[:30]}' count={cached_entry['count']}")
+                    return cached_entry["response"]
+                # Below threshold but fuzzy matched → increment existing
+                cached_entry["count"] += 1
+                cached_entry["last_seen"] = datetime.now().isoformat()
+                if cached_entry["count"] >= self.MIN_HITS:
+                    print(f"  [FIX 768 CACHE PROMOTED] '{cached_text[:40]}' count={cached_entry['count']}")
+                return None
+
+        return None
+
+    def store(self, state: str, prompt_key: str, texto: str, response: str):
+        """Almacena respuesta GPT_NARROW. No cachea vacías/cortas."""
+        if not response or len(response.strip()) < 5:
+            return
+
+        texto_norm = self._normalize(texto)
+        key = self._make_key(state, prompt_key, texto_norm)
+
+        if key in self._cache:
+            self._cache[key]["count"] += 1
+            self._cache[key]["last_seen"] = datetime.now().isoformat()
+        else:
+            self._cache[key] = {
+                "question_original": texto[:100],
+                "response": response,
+                "count": 1,
+                "first_seen": datetime.now().isoformat(),
+                "last_seen": datetime.now().isoformat(),
+            }
+
+        if len(self._cache) > self.MAX_ENTRIES:
+            self._evict()
+
+        self._store_count += 1
+        if self._store_count % 5 == 0:
+            self._save()
+
+    def _evict(self):
+        """Elimina entradas más viejas con count bajo."""
+        sorted_entries = sorted(
+            self._cache.items(),
+            key=lambda x: (x[1]["count"], x[1]["last_seen"])
+        )
+        to_remove = len(self._cache) - int(self.MAX_ENTRIES * 0.8)
+        for key, _ in sorted_entries[:max(to_remove, 1)]:
+            del self._cache[key]
+
+    def _load(self):
+        try:
+            if os.path.exists(self.CACHE_FILE):
+                with open(self.CACHE_FILE, 'r', encoding='utf-8') as f:
+                    self._cache = json.load(f)
+                now = datetime.now()
+                expired = []
+                for k, v in self._cache.items():
+                    try:
+                        if (now - datetime.fromisoformat(v["last_seen"])).days > self.TTL_DAYS:
+                            expired.append(k)
+                    except (KeyError, ValueError):
+                        expired.append(k)
+                for k in expired:
+                    del self._cache[k]
+                if self._cache or expired:
+                    print(f"  [FIX 768] Cache loaded: {len(self._cache)} entries ({len(expired)} expired)")
+        except Exception as e:
+            print(f"  [FIX 768] Error loading cache: {e}")
+            self._cache = {}
+
+    def _save(self):
+        try:
+            with open(self.CACHE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(self._cache, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    def stats(self) -> dict:
+        total = len(self._cache)
+        promoted = sum(1 for e in self._cache.values() if e["count"] >= self.MIN_HITS)
+        total_hits = sum(e["count"] for e in self._cache.values() if e["count"] >= self.MIN_HITS)
+        return {"total_entries": total, "promoted": promoted, "total_hits": total_hits}
+
+    def flush(self):
+        self._save()
+
+
+narrow_cache = NarrowResponseCache()
 
 # ============================================================
 # FIX 761: FSM Phase 3 - Core flow activo
@@ -739,6 +894,11 @@ class FSMEngine:
         if not config:
             return None
 
+        # FIX 768: Check cache BEFORE calling GPT
+        cached = narrow_cache.lookup(self.state.value, prompt_key, texto)
+        if cached is not None:
+            return cached
+
         system_prompt = config["system"]
 
         # Sustituir variables de contexto en prompt
@@ -779,6 +939,10 @@ class FSMEngine:
 
             result = response.choices[0].message.content.strip()
             print(f"  [FSM GPT_NARROW:{prompt_key}] → '{result[:80]}'")
+
+            # FIX 768: Store in cache AFTER successful GPT response
+            narrow_cache.store(self.state.value, prompt_key, texto, result)
+
             return result
 
         except Exception as e:
