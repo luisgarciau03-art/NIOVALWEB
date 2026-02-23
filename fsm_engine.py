@@ -384,10 +384,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
                                           FSMState.ENCARGADO_PRESENTE):
             pass  # Fall through to callback/other classifiers
         else:
-            # FIX 754: Detectar dictado parcial en más estados (no solo DICTANDO_DATO/CAPTURANDO_CONTACTO)
+            # FIX 754+787: Detectar dictado parcial en más estados
             if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO,
                          FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE,
-                         FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH):
+                         FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH,
+                         FSMState.OFRECIENDO_CONTACTO, FSMState.ESPERANDO_TRANSFERENCIA):
                 return FSMIntent.DICTATING_PARTIAL
 
     # --- Despedida ya chequeada arriba por FIX 783 (movida antes de dictado) ---
@@ -496,7 +497,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
-                     FSMState.PITCH):
+                     FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
+                     FSMState.ENCARGADO_PRESENTE):
             return FSMIntent.CALLBACK
 
     # --- Otra sucursal ---
@@ -725,6 +727,8 @@ class FSMEngine:
         add(S.SALUDO, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.SALUDO, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
         add(S.SALUDO, I.UNKNOWN,       S.PITCH, A.TEMPLATE, "pitch_inicial")
+        # FIX 786: CONTINUATION - cliente sigue hablando, no interrumpir
+        add(S.SALUDO, I.CONTINUATION,  S.SALUDO, A.NOOP, None)
 
         # === PITCH ===
         add(S.PITCH, I.CONFIRMATION,   S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
@@ -748,6 +752,8 @@ class FSMEngine:
         add(S.PITCH, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.PITCH, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.PITCH, I.UNKNOWN,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.PITCH, I.CONTINUATION,  S.PITCH, A.NOOP, None)
 
         # === BUSCANDO_ENCARGADO ===
         add(S.BUSCANDO_ENCARGADO, I.CONFIRMATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
@@ -771,6 +777,8 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.BUSCANDO_ENCARGADO, I.UNKNOWN,         S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "conversacion_libre")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.BUSCANDO_ENCARGADO, I.CONTINUATION,  S.BUSCANDO_ENCARGADO, A.NOOP, None)
 
         # === ENCARGADO_PRESENTE ===
         add(S.ENCARGADO_PRESENTE, I.CONFIRMATION,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
@@ -789,6 +797,14 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.ENCARGADO_PRESENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.ENCARGADO_PRESENTE, I.UNKNOWN,       S.ENCARGADO_PRESENTE, A.GPT_NARROW, "conversacion_libre")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.ENCARGADO_PRESENTE, I.CONTINUATION,  S.ENCARGADO_PRESENTE, A.NOOP, None)
+        # FIX 788: Gaps - IDENTITY, ANOTHER_BRANCH, CLOSED, CALLBACK, TRANSFER
+        add(S.ENCARGADO_PRESENTE, I.IDENTITY,       S.ENCARGADO_PRESENTE, A.TEMPLATE, "identificacion_nioval")
+        add(S.ENCARGADO_PRESENTE, I.ANOTHER_BRANCH, S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
+        add(S.ENCARGADO_PRESENTE, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
+        add(S.ENCARGADO_PRESENTE, I.CALLBACK,       S.ENCARGADO_PRESENTE, A.TEMPLATE, "preguntar_hora_callback")
+        add(S.ENCARGADO_PRESENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === ENCARGADO_AUSENTE ===
         add(S.ENCARGADO_AUSENTE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -809,6 +825,11 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.ENCARGADO_AUSENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.ENCARGADO_AUSENTE, I.UNKNOWN,        S.ENCARGADO_AUSENTE, A.GPT_NARROW, "conversacion_libre")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.ENCARGADO_AUSENTE, I.CONTINUATION,  S.ENCARGADO_AUSENTE, A.NOOP, None)
+        # FIX 788: Gaps - IDENTITY, CLOSED
+        add(S.ENCARGADO_AUSENTE, I.IDENTITY,      S.ENCARGADO_AUSENTE, A.TEMPLATE, "identificacion_nioval")
+        add(S.ENCARGADO_AUSENTE, I.CLOSED,        S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
 
         # === ESPERANDO_TRANSFERENCIA ===
         add(S.ESPERANDO_TRANSFERENCIA, I.CONFIRMATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
@@ -820,6 +841,15 @@ class FSMEngine:
         add(S.ESPERANDO_TRANSFERENCIA, I.VERIFICATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
         add(S.ESPERANDO_TRANSFERENCIA, I.OFFER_DATA,      S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         add(S.ESPERANDO_TRANSFERENCIA, I.UNKNOWN,         S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
+        # FIX 786: CONTINUATION - cliente sigue hablando durante espera
+        add(S.ESPERANDO_TRANSFERENCIA, I.CONTINUATION,   S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
+        # FIX 788: Gaps - NO_INTEREST, CALLBACK, DICTATING_*, WRONG_NUMBER
+        add(S.ESPERANDO_TRANSFERENCIA, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.ESPERANDO_TRANSFERENCIA, I.CALLBACK,       S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        add(S.ESPERANDO_TRANSFERENCIA, I.WRONG_NUMBER,   S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
+        add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
 
         # === CAPTURANDO_CONTACTO ===
         add(S.CAPTURANDO_CONTACTO, I.OFFER_DATA,              S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -832,6 +862,11 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.FAREWELL,                S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.CAPTURANDO_CONTACTO, I.VERIFICATION,            S.CAPTURANDO_CONTACTO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.CAPTURANDO_CONTACTO, I.UNKNOWN,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "conversacion_libre")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.CAPTURANDO_CONTACTO, I.CONTINUATION,           S.CAPTURANDO_CONTACTO, A.NOOP, None)
+        # FIX 788: Gaps - IDENTITY, WRONG_NUMBER
+        add(S.CAPTURANDO_CONTACTO, I.IDENTITY,               S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
+        add(S.CAPTURANDO_CONTACTO, I.WRONG_NUMBER,           S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
 
         # === DICTANDO_DATO ===
         add(S.DICTANDO_DATO, I.DICTATING_PARTIAL,       S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
@@ -843,6 +878,10 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.FAREWELL,                 S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        # FIX 788: Gaps - NO_INTEREST, REJECT_DATA, IDENTITY
+        add(S.DICTANDO_DATO, I.NO_INTEREST,              S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.DICTANDO_DATO, I.REJECT_DATA,              S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
+        add(S.DICTANDO_DATO, I.IDENTITY,                 S.DICTANDO_DATO, A.TEMPLATE, "identificacion_nioval")
 
         # === OFRECIENDO_CONTACTO ===
         add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
@@ -851,11 +890,27 @@ class FSMEngine:
         add(S.OFRECIENDO_CONTACTO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_sin_contacto")
         add(S.OFRECIENDO_CONTACTO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.OFRECIENDO_CONTACTO, I.UNKNOWN,       S.OFRECIENDO_CONTACTO, A.TEMPLATE, "dictar_numero_bruce")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.OFRECIENDO_CONTACTO, I.CONTINUATION,  S.OFRECIENDO_CONTACTO, A.NOOP, None)
+        # FIX 787: Gaps críticos OFRECIENDO_CONTACTO - cliente dicta datos
+        add(S.OFRECIENDO_CONTACTO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.OFRECIENDO_CONTACTO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.OFRECIENDO_CONTACTO, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.OFRECIENDO_CONTACTO, I.VERIFICATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.OFRECIENDO_CONTACTO, I.QUESTION,      S.OFRECIENDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.OFRECIENDO_CONTACTO, I.IDENTITY,      S.OFRECIENDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
+        add(S.OFRECIENDO_CONTACTO, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.OFRECIENDO_CONTACTO, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
 
         # === CONTACTO_CAPTURADO ===
         add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.CONTACTO_CAPTURADO, I.CONTINUATION, S.CONTACTO_CAPTURADO, A.NOOP, None)
+        # FIX 788: Gaps - VERIFICATION, NO_INTEREST
+        add(S.CONTACTO_CAPTURADO, I.VERIFICATION, S.CONTACTO_CAPTURADO, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.CONTACTO_CAPTURADO, I.NO_INTEREST,  S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
 
         # === DESPEDIDA ===
         add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.HANGUP, None)
@@ -863,6 +918,11 @@ class FSMEngine:
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DESPEDIDA, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        # FIX 786: CONTINUATION - cliente sigue hablando
+        add(S.DESPEDIDA, I.CONTINUATION, S.DESPEDIDA, A.NOOP, None)
+        # FIX 788: Gaps - NO_INTEREST, WRONG_NUMBER
+        add(S.DESPEDIDA, I.NO_INTEREST,  S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.WRONG_NUMBER, S.DESPEDIDA, A.HANGUP, None)
 
         return T
 
