@@ -216,7 +216,7 @@ for _name in _ACTIVE_RAW.split(','):
     if _name and _name in _state_map:
         FSM_ACTIVE_STATES_SET.add(_state_map[_name])
 if FSM_ACTIVE_STATES_SET:
-    print(f"  [FSM] Active states (Phase 3): {[s.value for s in FSM_ACTIVE_STATES_SET]}")
+    print(f"  [FSM] Active states (Phase 4): {[s.value for s in FSM_ACTIVE_STATES_SET]}")
 
 
 # ============================================================

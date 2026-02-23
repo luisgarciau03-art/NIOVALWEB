@@ -529,6 +529,9 @@ class AgenteVentas:
         # FIX 571: Flag dictado de dígitos activo
         self.digitos_acumulados_flag = False
 
+        # FIX 778: Exponer openai_client como atributo de instancia para GPT_NARROW
+        self.openai_client = openai_client
+
         # FSM Engine - Motor determinista (shadow mode por defecto)
         self.fsm = None
         try:

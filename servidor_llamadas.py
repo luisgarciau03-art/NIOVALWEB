@@ -4277,6 +4277,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
                     log_evento(f"{bruce_id} DICE: \"{respuesta_timeout}\" (FIX 408: timeout #2)", "BRUCE")
 
+                    # FIX 777: Si timeout envió pitch+encargado, avanzar FSM
+                    if 'nioval' in respuesta_timeout.lower() or 'encargad' in respuesta_timeout.lower():
+                        if hasattr(agente, 'fsm') and agente.fsm:
+                            from fsm_engine import FSMState
+                            agente.fsm.state = FSMState.BUSCANDO_ENCARGADO
+                            agente.fsm.context.pitch_dado = True
+                            print(f" FIX 777: FSM avanzado SALUDO→BUSCANDO_ENCARGADO (timeout #2 path)")
+
                 else:
                     # TERCER TIMEOUT+: Asumir problema de audio y continuar (lógica original FIX 211)
                     print(f"    FIX 408: Tercer timeout - asumiendo problema de audio, continuando con saludo")
@@ -4331,6 +4339,13 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                             response.say(segunda_parte, voice="alice", language="es-MX")
 
                     log_evento(f"{bruce_id} DICE: \"{segunda_parte}\" (FIX 408: timeout #3+, continuando)", "BRUCE")
+
+                    # FIX 777: Avanzar FSM después de timeout→segunda_parte_saludo
+                    if hasattr(agente, 'fsm') and agente.fsm:
+                        from fsm_engine import FSMState
+                        agente.fsm.state = FSMState.BUSCANDO_ENCARGADO
+                        agente.fsm.context.pitch_dado = True
+                        print(f" FIX 777: FSM avanzado SALUDO→BUSCANDO_ENCARGADO (FIX 408 timeout path)")
 
                 # FIX 214/215: Record en lugar de Gather (elimina costos de Speech Recognition)
                 response.record(
@@ -4649,6 +4664,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
             cache_respuestas_stats["cache_hits"] += 1
             tiempo_cache = time.time() - timestamp_inicio_cache
             print(f" FIX 121: Respuesta instantánea desde caché completada en {tiempo_cache:.3f}s")
+
+            # FIX 777: Avanzar FSM después de segunda_parte_saludo
+            # La cache ya entregó pitch + pregunta encargado → FSM debe estar en BUSCANDO_ENCARGADO
+            # Sin esto, FSM sigue en SALUDO y genera pitch duplicado en el siguiente turno
+            if hasattr(agente, 'fsm') and agente.fsm:
+                from fsm_engine import FSMState
+                agente.fsm.state = FSMState.BUSCANDO_ENCARGADO
+                agente.fsm.context.pitch_dado = True
+                print(f" FIX 777: FSM avanzado SALUDO→BUSCANDO_ENCARGADO (cache ya entregó pitch+encargado)")
 
     # FIX 97: Preparar contenedor para audio generado en paralelo
     audio_container = {"audio_id": None, "completado": False, "usa_cache": False, "cache_key": None}
