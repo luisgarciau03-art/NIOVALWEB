@@ -337,27 +337,46 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if tl.endswith(',') and len(tn) < 40:
         return FSMIntent.CONTINUATION
 
+    # --- FIX 781: Email completo ANTES de dictado (email con números no es dictado parcial) ---
+    # BRUCE2472: "Ferrebillas seis cuatro arroba gmail punto com" tiene num_words=4
+    # Sin este check, se clasifica como DICTATING_PARTIAL y nunca llega a email detection
+    if '@' in texto or ('arroba' in tn and ('punto' in tn or 'gmail' in tn or 'hotmail' in tn)):
+        return FSMIntent.DICTATING_COMPLETE_EMAIL
+
+    # --- FIX 781: Email parcial ANTES de dictado ---
+    email_signals = ['arroba', 'gmail', 'hotmail', 'outlook', 'yahoo', 'punto com', 'punto mx']
+    if any(s in tn for s in email_signals):
+        return FSMIntent.OFFER_DATA
+
     # --- Dictado: dígitos numéricos ---
     digits = re.findall(r'\d', texto)
     num_words = sum(1 for w in tn.split() if w in _NUMS_ESP)
 
+    # FIX 780: Excluir frases con contexto temporal de dictado parcial
+    # BRUCE2468: "llegan en una hora" → "una" × 2 = num_words=2 → falso DICTATING_PARTIAL
+    # Palabras temporales junto a números no son dictado de teléfono
+    _time_context = {'hora', 'horas', 'rato', 'minuto', 'minutos', 'momento', 'dia', 'dias',
+                     'semana', 'semanas', 'mes', 'meses', 'tarde', 'manana', 'noche'}
+    words = set(tn.split())
+    has_time_context = bool(words & _time_context)
+
     if len(digits) >= 10 or (len(digits) + num_words) >= 10:
-        return FSMIntent.DICTATING_COMPLETE_PHONE
+        # FIX 780: 10+ dígitos con contexto temporal en BUSCANDO_ENCARGADO = callback, no teléfono
+        if has_time_context and state == FSMState.BUSCANDO_ENCARGADO:
+            pass  # Fall through to callback/other classifiers
+        else:
+            return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
-        # FIX 754: Detectar dictado parcial en más estados (no solo DICTANDO_DATO/CAPTURANDO_CONTACTO)
-        if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO,
-                     FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE,
-                     FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH):
-            return FSMIntent.DICTATING_PARTIAL
-
-    # --- Email completo ---
-    if '@' in texto or ('arroba' in tn and ('punto' in tn or 'gmail' in tn or 'hotmail' in tn)):
-        return FSMIntent.DICTATING_COMPLETE_EMAIL
-
-    # --- Email parcial / oferta de dato ---
-    email_signals = ['arroba', 'gmail', 'hotmail', 'outlook', 'yahoo', 'punto com', 'punto mx']
-    if any(s in tn for s in email_signals):
-        return FSMIntent.OFFER_DATA
+        # FIX 780: Con contexto temporal, no es dictado parcial (es info de disponibilidad)
+        if has_time_context and state in (FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH,
+                                          FSMState.ENCARGADO_PRESENTE):
+            pass  # Fall through to callback/other classifiers
+        else:
+            # FIX 754: Detectar dictado parcial en más estados (no solo DICTANDO_DATO/CAPTURANDO_CONTACTO)
+            if state in (FSMState.DICTANDO_DATO, FSMState.CAPTURANDO_CONTACTO,
+                         FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE,
+                         FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH):
+                return FSMIntent.DICTATING_PARTIAL
 
     # --- Despedida ---
     farewell_strong = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien']

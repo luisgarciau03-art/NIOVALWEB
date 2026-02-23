@@ -103,6 +103,7 @@ try:
         crear_transcriber as crear_transcriber_deepgram,
         obtener_transcriber as obtener_transcriber_deepgram,
         eliminar_transcriber as eliminar_transcriber_deepgram,
+        obtener_last_stats as obtener_last_stats_deepgram,
         verificar_configuracion as verificar_deepgram
     )
     DEEPGRAM_AVAILABLE = verificar_deepgram() if DEEPGRAM_API_KEY else False
@@ -4154,7 +4155,15 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                       f"transcripts={stats.get('transcripts', 0)}, finals={stats.get('final_transcripts', 0)}", "DIAGNÓSTICO")
             log_evento(f"{bruce_id} - Deepgram Estado: is_connected={is_connected}, has_connection={has_connection}", "DIAGNÓSTICO")
         else:
-            log_evento(f"{bruce_id} - Deepgram Transcriber: NO ENCONTRADO (problema crítico)", "DIAGNÓSTICO")
+            # FIX 782: Intentar stats guardadas del transcriber ya cerrado
+            last_stats = obtener_last_stats_deepgram(call_sid) if DEEPGRAM_AVAILABLE else None
+            if last_stats:
+                log_evento(f"{bruce_id} - Deepgram Transcriber: cerrado (WebSocket terminó). "
+                          f"Stats previas: audio_chunks={last_stats.get('audio_chunks', 0)}, "
+                          f"transcripts={last_stats.get('transcripts', 0)}, "
+                          f"finals={last_stats.get('final_transcripts', 0)}", "DIAGNÓSTICO")
+            else:
+                log_evento(f"{bruce_id} - Deepgram Transcriber: NO ENCONTRADO (nunca inicializado)", "DIAGNÓSTICO")
 
         log_evento(f"=== FIN DIAGNÓSTICO ===", "DIAGNÓSTICO")
 

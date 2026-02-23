@@ -369,10 +369,28 @@ def obtener_transcriber(call_sid):
     return transcripciones_activas.get(call_sid)
 
 
+# FIX 782: Guardar stats del transcriber antes de eliminar para diagnóstico
+_transcriber_last_stats = {}
+
+
+def obtener_last_stats(call_sid):
+    """FIX 782: Obtiene stats guardadas del transcriber cerrado."""
+    return _transcriber_last_stats.get(call_sid)
+
+
 def eliminar_transcriber(call_sid):
     """Elimina y cierra el transcriber de una llamada"""
     if call_sid in transcripciones_activas:
         transcriber = transcripciones_activas.pop(call_sid)
+        # FIX 782: Guardar stats antes de eliminar para diagnóstico posterior
+        try:
+            _transcriber_last_stats[call_sid] = transcriber.get_stats()
+            # Limitar tamaño del cache de stats
+            if len(_transcriber_last_stats) > 50:
+                oldest = list(_transcriber_last_stats.keys())[0]
+                del _transcriber_last_stats[oldest]
+        except Exception:
+            pass
         if call_sid in transcripcion_callbacks:
             del transcripcion_callbacks[call_sid]
         return transcriber
