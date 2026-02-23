@@ -337,6 +337,18 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if tl.endswith(',') and len(tn) < 40:
         return FSMIntent.CONTINUATION
 
+    # --- FIX 783: Despedida ANTES de dictado (BRUCE2494 P0) ---
+    # "No una disculpa... hasta luego" tiene num_words=2 ("no","una") → DICTATING_PARTIAL
+    # Farewell debe chequearse ANTES de conteo numérico para evitar malclasificación
+    # NOTA: NO incluir "buenas tardes/noches/buen dia" aquí - son saludos ambiguos
+    farewell_strong_783 = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien',
+                           'hasta pronto']
+    farewell_weak_783 = ['gracias', 'muchas gracias', 'ok gracias']
+    if any(f in tn for f in farewell_strong_783):
+        return FSMIntent.FAREWELL
+    if any(f == tn for f in farewell_weak_783):  # exact match only
+        return FSMIntent.FAREWELL
+
     # --- FIX 781: Email completo ANTES de dictado (email con números no es dictado parcial) ---
     # BRUCE2472: "Ferrebillas seis cuatro arroba gmail punto com" tiene num_words=4
     # Sin este check, se clasifica como DICTATING_PARTIAL y nunca llega a email detection
@@ -378,13 +390,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
                          FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH):
                 return FSMIntent.DICTATING_PARTIAL
 
-    # --- Despedida ---
-    farewell_strong = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien']
-    farewell_weak = ['gracias', 'muchas gracias', 'ok gracias']
-    if any(f in tn for f in farewell_strong):
-        return FSMIntent.FAREWELL
-    if any(f == tn for f in farewell_weak):  # exact match only
-        return FSMIntent.FAREWELL
+    # --- Despedida ya chequeada arriba por FIX 783 (movida antes de dictado) ---
 
     # --- FIX 744: Area equivocada / número incorrecto ---
     wrong_number = [
@@ -616,6 +622,31 @@ class FSMEngine:
                 if FSM_ENABLED == "shadow":
                     print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → NO TRANSITION (fallthrough)")
                 return None
+
+        # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
+        if (intent == FSMIntent.CALLBACK and
+                transition.template_key == 'preguntar_hora_callback'):
+            hora_detectada = self._detectar_hora_en_texto_784(texto)
+            if hora_detectada:
+                self.context.callback_hora = hora_detectada
+                transition = Transition(
+                    next_state=transition.next_state,
+                    action_type=transition.action_type,
+                    template_key='confirmar_callback',
+                )
+                print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' → confirmar_callback")
+
+        # FIX 785: BRUCE2492/2497 - No repetir "¿Se encontrará el encargado?" si ya se preguntó
+        # pitch_inicial ya incluye la pregunta → PITCH→BUSCANDO con preguntar_encargado la duplica
+        if (transition.template_key == 'preguntar_encargado' and
+                self.context.encargado_preguntado):
+            # Ya preguntamos por encargado → usar acknowledgment genérico
+            transition = Transition(
+                next_state=transition.next_state,
+                action_type=transition.action_type,
+                template_key='verificacion_aqui_estoy',
+            )
+            print(f"  [FIX 785] Encargado ya preguntado → no repetir, usando verificacion")
 
         # 4. Evaluar guards
         if not self._check_guards(transition.guards):
@@ -1019,7 +1050,9 @@ class FSMEngine:
             self.context.pitch_dado = True
 
         # Track encargado preguntado
-        if transition.template_key == 'preguntar_encargado':
+        # FIX 785: BRUCE2492/2497 - pitch_inicial ya incluye "¿Se encontrará el encargado?"
+        # Sin este fix, PITCH→BUSCANDO_ENCARGADO repite la pregunta porque flag=False
+        if transition.template_key in ('preguntar_encargado', 'pitch_inicial'):
             self.context.encargado_preguntado = True
 
         # Track encargado es interlocutor
@@ -1071,11 +1104,60 @@ class FSMEngine:
         # Track callback
         if intent == FSMIntent.CALLBACK:
             self.context.callback_pedido = True
-            # Extraer hora si la mencionaron
-            tn = _normalize(texto)
-            hour_match = re.search(r'a las (\d{1,2})', tn)
-            if hour_match:
-                self.context.callback_hora = f"a las {hour_match.group(1)}"
+            # FIX 784: Extraer hora (dígitos o palabras)
+            hora = self._detectar_hora_en_texto_784(texto)
+            if hora:
+                self.context.callback_hora = hora
+
+    # ----------------------------------------------------------
+    # FIX 784: Detectar hora en texto (dígitos + palabras)
+    # ----------------------------------------------------------
+    _HORAS_PALABRAS_784 = {
+        'una': '1', 'dos': '2', 'tres': '3', 'cuatro': '4', 'cinco': '5',
+        'seis': '6', 'siete': '7', 'ocho': '8', 'nueve': '9', 'diez': '10',
+        'once': '11', 'doce': '12',
+    }
+
+    def _detectar_hora_en_texto_784(self, texto: str) -> Optional[str]:
+        """FIX 784: Detecta hora en texto, tanto dígitos como palabras.
+
+        Returns: str con la hora (e.g. 'a las 8 de la mañana') o None.
+        """
+        tn = _normalize(texto)
+
+        # 1. Hora numérica: "a las 8", "a las 9:00"
+        hour_match = re.search(r'a las (\d{1,2})', tn)
+        if hour_match:
+            hora_str = f"a las {hour_match.group(1)}"
+            # Agregar periodo si está
+            if 'manana' in tn or 'de la manana' in tn:
+                hora_str += " de la manana"
+            elif 'tarde' in tn:
+                hora_str += " de la tarde"
+            elif 'noche' in tn:
+                hora_str += " de la noche"
+            return hora_str
+
+        # 2. Hora en palabras: "a las ocho", "a las nueve de la mañana"
+        for palabra, digito in self._HORAS_PALABRAS_784.items():
+            pattern = f'a las {palabra}'
+            if pattern in tn:
+                hora_str = f"a las {digito}"
+                if 'manana' in tn or 'de la manana' in tn:
+                    hora_str += " de la manana"
+                elif 'tarde' in tn:
+                    hora_str += " de la tarde"
+                elif 'noche' in tn:
+                    hora_str += " de la noche"
+                return hora_str
+
+        # 3. Solo periodo: "en la mañana", "en la tarde" (sin hora específica)
+        if 'en la manana' in tn or 'por la manana' in tn:
+            return "en la manana"
+        if 'en la tarde' in tn or 'por la tarde' in tn:
+            return "en la tarde"
+
+        return None
 
     # ----------------------------------------------------------
     # FIX 763: REJECT_DATA dinámico

@@ -312,11 +312,11 @@ class TestFSMTransitionsPitch(unittest.TestCase):
         self.assertEqual(self.fsm.state, FSMState.PITCH)
 
     def test_interest_to_encargado(self):
-        """Client shows interest → ask for encargado."""
+        """Client shows interest → transition to BUSCANDO_ENCARGADO.
+        FIX 785: encargado already asked in pitch_inicial, so no duplicate."""
         result = self.fsm.process("Sí, claro")
         self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.BUSCANDO_ENCARGADO)
-        self.assertIn("encargado", result.lower())
 
     def test_no_interest_to_despedida(self):
         """Client not interested → goodbye."""
@@ -463,13 +463,13 @@ class TestFSMContextTracking(unittest.TestCase):
 
     def test_pitch_dado_after_pitch(self):
         fsm = FSMEngine()
-        fsm.process("Buenas tardes")
+        fsm.process("Bueno")  # → PITCH with pitch_inicial
         self.assertTrue(fsm.context.pitch_dado)
 
     def test_encargado_preguntado(self):
         fsm = FSMEngine()
-        fsm.process("Buenas tardes")  # → PITCH
-        fsm.process("Sí, claro")      # → BUSCANDO_ENCARGADO
+        fsm.process("Bueno")       # → PITCH (pitch_inicial includes encargado question)
+        # FIX 785: pitch_inicial sets encargado_preguntado=True
         self.assertTrue(fsm.context.encargado_preguntado)
 
     def test_canal_rechazado_tracked(self):
