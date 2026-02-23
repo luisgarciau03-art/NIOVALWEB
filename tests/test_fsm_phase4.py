@@ -134,11 +134,12 @@ class TestPitchState(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.DESPEDIDA)
 
-    def test_pitch_unknown_to_buscando(self):
-        """Client text ambiguo → BUSCANDO_ENCARGADO (preguntar encargado)."""
+    def test_pitch_unknown_stays_in_pitch(self):
+        """Client text ambiguo → stays PITCH (GPT_NARROW manejar_objecion, FIX 789A)."""
         result = self.fsm.process("Ajá, está bien")
-        self.assertIsNotNone(result)
-        self.assertEqual(self.fsm.state, FSMState.BUSCANDO_ENCARGADO)
+        # GPT_NARROW without agente returns None (no OpenAI client)
+        # State stays PITCH (not advancing to BUSCANDO)
+        self.assertEqual(self.fsm.state, FSMState.PITCH)
 
 
 # =============================================================================

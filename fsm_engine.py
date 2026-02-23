@@ -281,6 +281,7 @@ class FSMContext:
 
     callback_pedido: bool = False
     callback_hora: Optional[str] = None
+    callback_hora_preguntada: bool = False  # FIX 789B: ya preguntamos hora callback
 
     turnos_bruce: int = 0
     ultimo_template: Optional[str] = None
@@ -637,6 +638,15 @@ class FSMEngine:
                     template_key='confirmar_callback',
                 )
                 print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' → confirmar_callback")
+            elif self.context.callback_hora_preguntada:
+                # FIX 789B: Ya preguntamos hora y cliente da callback vago ("más tarde")
+                # → confirmar genérico en vez de repetir "¿A qué hora?"
+                transition = Transition(
+                    next_state=transition.next_state,
+                    action_type=transition.action_type,
+                    template_key='confirmar_callback_generico',
+                )
+                print(f"  [FIX 789B] Callback hora ya preguntada → confirmar_callback_generico (anti-loop)")
 
         # FIX 785: BRUCE2492/2497 - No repetir "¿Se encontrará el encargado?" si ya se preguntó
         # pitch_inicial ya incluye la pregunta → PITCH→BUSCANDO con preguntar_encargado la duplica
@@ -751,7 +761,9 @@ class FSMEngine:
         add(S.PITCH, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.PITCH, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.PITCH, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
-        add(S.PITCH, I.UNKNOWN,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        # FIX 789A: UNKNOWN durante pitch → GPT narrow con manejar_objecion
+        # (antes: blindly avanzaba a preguntar_encargado)
+        add(S.PITCH, I.UNKNOWN,        S.PITCH, A.GPT_NARROW, "manejar_objecion")
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.PITCH, I.CONTINUATION,  S.PITCH, A.NOOP, None)
 
@@ -923,6 +935,27 @@ class FSMEngine:
         # FIX 788: Gaps - NO_INTEREST, WRONG_NUMBER
         add(S.DESPEDIDA, I.NO_INTEREST,  S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.WRONG_NUMBER, S.DESPEDIDA, A.HANGUP, None)
+
+        # === CONVERSACION_LIBRE (FIX 790: shadow transitions, sin entry points aún) ===
+        # No está en FSM_ACTIVE_STATES - solo shadow logging.
+        # Preparado para futura activación cuando se definan entry points.
+        add(S.CONVERSACION_LIBRE, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.CONVERSACION_LIBRE, I.NO_INTEREST,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.CONVERSACION_LIBRE, I.VERIFICATION,   S.CONVERSACION_LIBRE, A.TEMPLATE, "verificacion_aqui_estoy")
+        add(S.CONVERSACION_LIBRE, I.QUESTION,       S.CONVERSACION_LIBRE, A.GPT_NARROW, "responder_pregunta_producto")
+        add(S.CONVERSACION_LIBRE, I.IDENTITY,       S.CONVERSACION_LIBRE, A.TEMPLATE, "identificacion_nioval")
+        add(S.CONVERSACION_LIBRE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        add(S.CONVERSACION_LIBRE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
+        add(S.CONVERSACION_LIBRE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
+        add(S.CONVERSACION_LIBRE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        add(S.CONVERSACION_LIBRE, I.REJECT_DATA,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
+        add(S.CONVERSACION_LIBRE, I.WRONG_NUMBER,   S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
+        add(S.CONVERSACION_LIBRE, I.ANOTHER_BRANCH, S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
+        add(S.CONVERSACION_LIBRE, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
+        add(S.CONVERSACION_LIBRE, I.CONTINUATION,   S.CONVERSACION_LIBRE, A.NOOP, None)
+        add(S.CONVERSACION_LIBRE, I.CONFIRMATION,   S.CONVERSACION_LIBRE, A.GPT_NARROW, "conversacion_libre")
+        add(S.CONVERSACION_LIBRE, I.INTEREST,       S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        add(S.CONVERSACION_LIBRE, I.UNKNOWN,        S.CONVERSACION_LIBRE, A.GPT_NARROW, "conversacion_libre")
 
         return T
 
@@ -1147,6 +1180,10 @@ class FSMEngine:
         if transition.template_key in ('confirmar_telefono', 'confirmar_correo',
                                         'despedida_catalogo_prometido'):
             self.context.catalogo_prometido = True
+
+        # FIX 789B: Track callback hora preguntada
+        if transition.template_key == 'preguntar_hora_callback':
+            self.context.callback_hora_preguntada = True
 
         # Track claro_espero
         if transition.template_key == 'claro_espero':

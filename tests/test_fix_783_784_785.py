@@ -291,21 +291,19 @@ class TestFix785EncargadoPreguntado(unittest.TestCase):
         self.assertTrue(fsm.context.encargado_preguntado,
                        "pitch_inicial should set encargado_preguntado=True")
 
-    def test_pitch_to_buscando_no_duplicate(self):
-        """PITCH→BUSCANDO_ENCARGADO should NOT duplicate encargado question."""
+    def test_pitch_unknown_no_duplicate_encargado(self):
+        """PITCH+UNKNOWN stays in PITCH with GPT_NARROW (FIX 789A), no encargado duplication."""
         fsm = FSMEngine()
         # Step 1: SALUDO→PITCH
         fsm.process("Sí", agente=None)
         self.assertEqual(fsm.state, FSMState.PITCH)
         self.assertTrue(fsm.context.encargado_preguntado)
 
-        # Step 2: PITCH→BUSCANDO_ENCARGADO (client says something unclear)
+        # Step 2: PITCH+UNKNOWN → stays PITCH (GPT_NARROW manejar_objecion, FIX 789A)
+        # Without agente, GPT_NARROW returns None → no response
         result = fsm.process("Pues cuando termine.", agente=None)
-        self.assertEqual(fsm.state, FSMState.BUSCANDO_ENCARGADO)
-        if result:
-            # Should NOT contain "encargado o encargada de compras" again
-            self.assertNotIn("encargado o encargada de compras", result.lower(),
-                           f"FIX 785 should prevent duplicate encargado question, got: {result}")
+        self.assertEqual(fsm.state, FSMState.PITCH)
+        # No duplicate encargado question because state didn't advance
 
     def test_first_preguntar_encargado_still_works(self):
         """When encargado NOT preguntado yet, preguntar_encargado works normally."""
