@@ -9393,6 +9393,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             FSMState.DESPEDIDA: EstadoConversacion.DESPEDIDA,
             FSMState.DICTANDO_DATO: EstadoConversacion.DICTANDO_NUMERO,
             FSMState.ESPERANDO_TRANSFERENCIA: EstadoConversacion.ESPERANDO_TRANSFERENCIA,
+            # Phase 4: 3 nuevos mappings
+            FSMState.SALUDO: EstadoConversacion.ESPERANDO_SALUDO,
+            FSMState.PITCH: EstadoConversacion.PRESENTACION,
+            FSMState.OFRECIENDO_CONTACTO: EstadoConversacion.OFRECIENDO_CONTACTO_BRUCE,
         }
         new_estado = _FSM_TO_ESTADO.get(fsm_state)
         if new_estado:

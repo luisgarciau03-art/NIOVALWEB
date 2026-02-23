@@ -609,10 +609,10 @@ class TestFSMPhase2ActiveStates(unittest.TestCase):
         from fsm_engine import FSM_ACTIVE_STATES_SET
         self.assertIn(FSMState.CONTACTO_CAPTURADO, FSM_ACTIVE_STATES_SET)
 
-    def test_saludo_not_in_active_states(self):
-        """SALUDO should NOT be in active states by default."""
+    def test_saludo_in_active_states(self):
+        """SALUDO should be in active states (Phase 4)."""
         from fsm_engine import FSM_ACTIVE_STATES_SET
-        self.assertNotIn(FSMState.SALUDO, FSM_ACTIVE_STATES_SET)
+        self.assertIn(FSMState.SALUDO, FSM_ACTIVE_STATES_SET)
 
     def test_contacto_capturado_intercepts(self):
         """CONTACTO_CAPTURADO state should return response (intercept)."""

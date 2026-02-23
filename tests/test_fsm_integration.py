@@ -297,15 +297,16 @@ class TestFlowShadowMode(unittest.TestCase):
     """Test shadow mode behavior."""
 
     def test_shadow_returns_none(self):
-        """Shadow mode should return None (no interception)."""
+        """Shadow mode should return None for non-active states."""
         import fsm_engine
         original = fsm_engine.FSM_ENABLED
         fsm_engine.FSM_ENABLED = "shadow"
         try:
             fsm_shadow = FSMEngine()
+            # Use CONVERSACION_LIBRE (not active in any phase) to test pure shadow
+            fsm_shadow.state = FSMState.CONVERSACION_LIBRE
             result = fsm_shadow.process("Bueno")
             self.assertIsNone(result)
-            # Shadow mode does NOT update state (returns before update)
         finally:
             fsm_engine.FSM_ENABLED = original
 

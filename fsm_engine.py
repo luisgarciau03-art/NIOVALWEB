@@ -184,8 +184,10 @@ narrow_cache = NarrowResponseCache()
 # Comma-separated list of state names que interceptan GPT.
 # Phase 2: "despedida,contacto_capturado"
 # Phase 3: + buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto
-# Rollback: FSM_ACTIVE_STATES=despedida,contacto_capturado en Railway
-_ACTIVE_RAW = os.getenv("FSM_ACTIVE_STATES", "despedida,contacto_capturado,buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto").lower().strip()
+# Phase 4: + dictando_dato,ofreciendo_contacto,esperando_transferencia,saludo,pitch
+# Rollback Phase 3: FSM_ACTIVE_STATES=despedida,contacto_capturado,buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto
+# Rollback Phase 2: FSM_ACTIVE_STATES=despedida,contacto_capturado
+_ACTIVE_RAW = os.getenv("FSM_ACTIVE_STATES", "despedida,contacto_capturado,buscando_encargado,encargado_presente,encargado_ausente,capturando_contacto,dictando_dato,ofreciendo_contacto,esperando_transferencia,saludo,pitch").lower().strip()
 FSM_ACTIVE_STATES_SET = set()  # Populated after FSMState defined
 
 

@@ -293,9 +293,9 @@ class TestDeployVersion(unittest.TestCase):
 
     def test_deploy_version_actual(self):
         from bug_detector import _DEPLOY_VERSION
-        # FASE 1.1: Deploy version may use "FASE" prefix instead of "FIX"
-        self.assertTrue("FIX" in _DEPLOY_VERSION or "FASE" in _DEPLOY_VERSION,
-                        f"Deploy version should contain FIX or FASE, got: {_DEPLOY_VERSION}")
+        # Deploy version may use FIX, FASE, or FSM prefix
+        self.assertTrue("FIX" in _DEPLOY_VERSION or "FASE" in _DEPLOY_VERSION or "FSM" in _DEPLOY_VERSION,
+                        f"Deploy version should contain FIX, FASE, or FSM, got: {_DEPLOY_VERSION}")
 
 
 if __name__ == "__main__":

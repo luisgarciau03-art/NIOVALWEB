@@ -254,7 +254,7 @@ class TestDeployVersion(unittest.TestCase):
         bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
         with open(bd_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        self.assertIn('FIX 776', source)
+        self.assertIn('FSM Phase 4', source)
 
 
 if __name__ == '__main__':

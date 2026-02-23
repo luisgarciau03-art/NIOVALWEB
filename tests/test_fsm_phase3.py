@@ -50,14 +50,17 @@ class TestPhase3StateActivation(unittest.TestCase):
     def test_contacto_capturado_still_active(self):
         self.assertIn(FSMState.CONTACTO_CAPTURADO, FSM_ACTIVE_STATES_SET)
 
-    def test_saludo_not_active(self):
-        self.assertNotIn(FSMState.SALUDO, FSM_ACTIVE_STATES_SET)
+    def test_saludo_active_phase4(self):
+        """Phase 4: SALUDO now active."""
+        self.assertIn(FSMState.SALUDO, FSM_ACTIVE_STATES_SET)
 
-    def test_dictando_dato_not_active(self):
-        self.assertNotIn(FSMState.DICTANDO_DATO, FSM_ACTIVE_STATES_SET)
+    def test_dictando_dato_active_phase4(self):
+        """Phase 4: DICTANDO_DATO now active."""
+        self.assertIn(FSMState.DICTANDO_DATO, FSM_ACTIVE_STATES_SET)
 
-    def test_pitch_not_active(self):
-        self.assertNotIn(FSMState.PITCH, FSM_ACTIVE_STATES_SET)
+    def test_pitch_active_phase4(self):
+        """Phase 4: PITCH now active."""
+        self.assertIn(FSMState.PITCH, FSM_ACTIVE_STATES_SET)
 
 
 # ============================================================
