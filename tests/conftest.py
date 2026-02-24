@@ -173,3 +173,32 @@ def conversations_with_patterns(conversations):
     }
 
 
+# ============================================================
+# DATOS DE REGRESIÓN AUTOMATIZADA
+# ============================================================
+
+@pytest.fixture(scope="session")
+def scenario_db():
+    """Carga scenario_db.json generado por log_scenario_extractor."""
+    path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "test_data", "scenario_db.json"
+    )
+    if not os.path.exists(path):
+        pytest.skip("scenario_db.json no encontrado - ejecutar scripts/log_scenario_extractor.py primero")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@pytest.fixture(scope="session")
+def bug_catalog():
+    """Carga bug_regression_catalog.json para tests de regresión."""
+    path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "test_data", "bug_regression_catalog.json"
+    )
+    if not os.path.exists(path):
+        pytest.skip("bug_regression_catalog.json no encontrado - ejecutar scripts/log_scenario_extractor.py --bug-catalog primero")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+

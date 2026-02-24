@@ -428,6 +428,79 @@ class TestLogReplayExecution:
         )
 
 
+class TestLogReplayWithBugDetector:
+    """Replay con BugDetector integration — valida que conversaciones
+    recientes no producen bugs CRITICOS."""
+
+    def test_replay_sample_no_critical_bugs(self, all_conversations):
+        """Replay de 30 conversaciones recientes sin bugs CRITICOS."""
+        from unittest.mock import patch as mock_patch
+        from bug_detector import CallEventTracker, BugDetector
+
+        filtered, _ = all_conversations
+        sample = list(filtered.items())[:30]
+
+        critical_bugs = []
+        critical_types = {'LOOP', 'BRUCE_MUDO'}
+
+        for bruce_id, data in sample:
+            with mock_patch('agente_ventas.openai_client') as mock_client:
+                mock_client.chat.completions.create.side_effect = _replay_gpt_mock
+
+                from agente_ventas import AgenteVentas, EstadoConversacion
+                agente = AgenteVentas()
+                agente.estado_conversacion = EstadoConversacion.CONVERSACION_NORMAL
+                agente.conversacion_iniciada = True
+                agente.segunda_parte_saludo_dicha = True
+                agente.conversation_history = [
+                    {"role": "assistant", "content": "Hola, buen día."}
+                ]
+
+                tracker = CallEventTracker(
+                    call_sid=f"replay_{bruce_id}",
+                    bruce_id=bruce_id,
+                    telefono="+5216621234567"
+                )
+                tracker.emit("BRUCE_RESPONDE", {"texto": "Hola, buen día."})
+
+                for turn in data["turns"]:
+                    if turn["role"] != "user":
+                        continue
+                    text = turn["text"].strip()
+                    if not text:
+                        continue
+
+                    try:
+                        _orig = sys.stdout
+                        sys.stdout = open(os.devnull, 'w', encoding='utf-8')
+                        try:
+                            response = agente.procesar_respuesta(text)
+                        finally:
+                            sys.stdout.close()
+                            sys.stdout = _orig
+
+                        tracker.emit("CLIENTE_DICE", {"texto": text})
+                        if response:
+                            tracker.emit("BRUCE_RESPONDE", {"texto": response})
+                    except Exception:
+                        tracker.emit("CLIENTE_DICE", {"texto": text})
+
+                bugs = BugDetector.analyze(tracker)
+                criticos = [b for b in bugs if b['tipo'] in critical_types]
+                if criticos:
+                    critical_bugs.append({
+                        'bruce_id': bruce_id,
+                        'bugs': [(b['tipo'], b['detalle'][:60]) for b in criticos],
+                    })
+
+        # Máximo 10% de conversaciones con bugs críticos (GPT mock causa FP)
+        rate = len(critical_bugs) * 100 / max(len(sample), 1)
+        assert rate <= 10, (
+            f"Demasiados bugs CRITICOS: {len(critical_bugs)}/{len(sample)} ({rate:.0f}%): "
+            f"{critical_bugs[:5]}"
+        )
+
+
 # ============================================================
 # STANDALONE: Reporte completo
 # ============================================================
