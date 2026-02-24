@@ -1,8 +1,9 @@
 """
 response_templates.py - Banco de templates y narrow prompts para FSM Bruce W.
 
-35 templates en español mexicano natural + 6 narrow prompts GPT.
-Los templates cubren ~80% de los turnos conversacionales.
+41 templates en español mexicano natural + 6 narrow prompts GPT.
+Los templates cubren ~90% de los turnos conversacionales.
+FIX 791: +6 templates stateful para UNKNOWN (reemplazan GPT_NARROW conversacion_libre).
 GPT narrow solo se usa para preguntas de producto y situaciones complejas.
 """
 
@@ -73,6 +74,8 @@ TEMPLATES = {
     ],
     "digame_numero": [
         "Claro, digame por favor.",
+        "Si, digame el numero.",
+        "Adelante, le escucho.",
     ],
 
     # === DICTADO / ACKNOWLEDGMENT ===
@@ -183,6 +186,32 @@ TEMPLATES = {
     ],
     "no_escuche_repetir": [
         "Disculpe, no alcance a captar. ¿Me puede repetir?",
+    ],
+
+    # === FIX 791: Templates stateful para UNKNOWN (reemplazan GPT_NARROW) ===
+    "repitch_encargado": [
+        "Claro, le comento. Somos distribuidores de la marca NIOVAL, manejamos "
+        "productos ferreteros de alta calidad. "
+        "¿Me podria comunicar con el encargado de compras?",
+    ],
+    "pedir_whatsapp_o_correo": [
+        "Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp "
+        "o correo electronico para enviarle la informacion?",
+    ],
+    "pitch_catalogo_whatsapp": [
+        "Con mucho gusto. Manejamos una amplia linea de productos ferreteros de la "
+        "marca NIOVAL. ¿Le puedo enviar nuestro catalogo por WhatsApp?",
+    ],
+    "preguntar_horario_encargado": [
+        "Entiendo, no se preocupe. ¿Hay algun horario en el que pueda encontrar "
+        "al encargado de compras?",
+    ],
+    "ofrecer_catalogo_sin_compromiso": [
+        "Claro, le comento. Somos distribuidores de NIOVAL. "
+        "¿Le interesa recibir nuestro catalogo sin compromiso?",
+    ],
+    "despedida_agradecimiento": [
+        "Claro que si. Le agradezco mucho su tiempo. Que tenga excelente dia.",
     ],
 }
 

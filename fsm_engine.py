@@ -626,6 +626,16 @@ class FSMEngine:
                     print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → NO TRANSITION (fallthrough)")
                 return None
 
+        # FIX 791: Para UNKNOWN, intentar template stateful antes de GPT_NARROW
+        if (intent == FSMIntent.UNKNOWN and
+                transition.action_type == ActionType.GPT_NARROW):
+            stateful = self._handle_unknown_stateful(texto)
+            if stateful is not None:
+                transition = stateful
+                print(f"  [FIX 791] UNKNOWN→template stateful: {stateful.template_key} "
+                      f"(estado={self.state.value})")
+            # else: fallback a GPT_NARROW original (sin cambio)
+
         # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback'):
@@ -704,6 +714,59 @@ class FSMEngine:
               f"({transition.action_type.value}:{transition.template_key})")
 
         return response
+
+    # ----------------------------------------------------------
+    # FIX 791: Selección stateful de template para UNKNOWN
+    # ----------------------------------------------------------
+    def _handle_unknown_stateful(self, texto: str) -> Optional[Transition]:
+        """FIX 791: Selecciona template basado en estado + contexto para UNKNOWN.
+
+        Reemplaza GPT_NARROW en 90%+ de casos UNKNOWN.
+        Retorna Transition con template o None para fallback a GPT_NARROW.
+        Actualiza context flags para evitar loops por template repetido.
+        """
+        S = FSMState
+        A = ActionType
+        ctx = self.context
+
+        if self.state == S.PITCH:
+            # PITCH+UNKNOWN: cliente responde vago al pitch
+            # Flags se actualizan via _update_context() existente (lines 1204-1213)
+            if not ctx.encargado_preguntado:
+                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+            elif not ctx.canales_intentados:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
+            else:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso")
+
+        elif self.state == S.BUSCANDO_ENCARGADO:
+            # Flags se actualizan via _update_context() existente
+            if not ctx.pitch_dado:
+                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "repitch_encargado")
+            elif ctx.encargado_preguntado:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
+            else:
+                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+
+        elif self.state == S.ENCARGADO_AUSENTE:
+            if not ctx.canales_intentados:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
+            elif ctx.callback_pedido:
+                return Transition(S.DESPEDIDA, A.TEMPLATE, "despedida_agradecimiento")
+            else:
+                return Transition(S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_horario_encargado")
+
+        elif self.state == S.ENCARGADO_PRESENTE:
+            if not ctx.canales_intentados:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+            else:
+                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_catalogo_whatsapp")
+
+        elif self.state == S.CAPTURANDO_CONTACTO:
+            return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
+
+        # Estados no mapeados → None → fallback a GPT_NARROW existente
+        return None
 
     # ----------------------------------------------------------
     # Tabla de transiciones
@@ -1139,7 +1202,8 @@ class FSMEngine:
 
         # Track pitch dado
         if transition.template_key in ('pitch_inicial', 'pitch_encargado',
-                                        'pitch_persona_nueva', 'identificacion_pitch'):
+                                        'pitch_persona_nueva', 'identificacion_pitch',
+                                        'repitch_encargado'):  # FIX 791
             self.context.pitch_dado = True
 
         # Track encargado preguntado

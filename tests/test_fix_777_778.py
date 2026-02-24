@@ -78,9 +78,9 @@ class TestFix777FSMAdvanceAfterSegundaParte(unittest.TestCase):
         # Process client response like "Sí, es él"
         result = fsm.process("Sí, es él", agente=None)
         # Should NOT contain full pitch (Nioval/productos phrase)
-        if result and result.response:
+        if result:
             # Pitch typically mentions "nioval" or "productos de limpieza"
-            resp_lower = result.response.lower()
+            resp_lower = result.lower()
             # It's fine to mention Nioval in a short confirmation, but shouldn't be full pitch
             if 'productos de limpieza' in resp_lower and 'nioval' in resp_lower:
                 # Full pitch detected - this would be the bug FIX 777 prevents

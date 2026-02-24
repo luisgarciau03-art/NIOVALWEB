@@ -11096,6 +11096,15 @@ Ejemplo correcto:
 
             return respuesta_agente
 
+        # FIX 792: Safety net template ANTES de GPT full
+        # Si FSM retornó None pero estado_conversacion es conocido → template
+        _narrow_792 = self._try_narrow_prompt_792(respuesta_cliente)
+        if _narrow_792:
+            print(f"\n [FIX 792] Template fallback: estado={self.estado_conversacion.value} → '{_narrow_792[:60]}'")
+            self.conversation_history.append({"role": "assistant", "content": _narrow_792})
+            self.turno_actual = getattr(self, 'turno_actual', 0) + 1
+            return _narrow_792
+
         # Generar respuesta con GPT-4o-mini (OPTIMIZADO para baja latencia)
         try:
             import time
@@ -13275,6 +13284,46 @@ Responde SOLO en este formato JSON:
             return "contestada"
         else:
             return "contestada_sin_interes"
+
+    def _try_narrow_prompt_792(self, respuesta_cliente: str):
+        """FIX 792: Template fallback antes de GPT full.
+
+        Safety net para cuando FSM retorna None pero estado_conversacion
+        es conocido. Retorna template (0ms) o None (fallthrough a GPT full).
+        """
+        estado = self.estado_conversacion
+
+        if estado == EstadoConversacion.ENCARGADO_NO_ESTA:
+            return ("Entiendo. ¿Me podria proporcionar un WhatsApp o correo "
+                    "del encargado para enviarle nuestro catalogo?")
+
+        elif estado == EstadoConversacion.CONTACTO_CAPTURADO:
+            return ("Perfecto, le envio el catalogo en las proximas 2 horas. "
+                    "Le agradezco mucho su tiempo. Que tenga excelente dia.")
+
+        elif estado in (EstadoConversacion.DICTANDO_NUMERO,
+                        EstadoConversacion.DICTANDO_CORREO):
+            return "Aja, si, adelante."
+
+        elif estado == EstadoConversacion.DESPEDIDA:
+            return "Le agradezco mucho su tiempo. Que tenga excelente dia."
+
+        elif estado == EstadoConversacion.PIDIENDO_WHATSAPP:
+            return "Claro, digame el numero de WhatsApp por favor."
+
+        elif estado == EstadoConversacion.PIDIENDO_CORREO:
+            return "Claro, digame el correo electronico por favor."
+
+        elif estado == EstadoConversacion.PRESENTACION:
+            return ("Somos distribuidores de la marca NIOVAL, manejamos "
+                    "productos ferreteros de alta calidad. ¿Me podria comunicar "
+                    "con el encargado de compras?")
+
+        elif estado == EstadoConversacion.BUSCANDO_ENCARGADO:
+            return "¿Se encontrara el encargado o encargada de compras?"
+
+        # Estados no mapeados → None → GPT full como fallback
+        return None
 
     def _construir_prompt_dinamico(self) -> str:
         """

@@ -134,12 +134,14 @@ class TestPitchState(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.DESPEDIDA)
 
-    def test_pitch_unknown_stays_in_pitch(self):
-        """Client text ambiguo → stays PITCH (GPT_NARROW manejar_objecion, FIX 789A)."""
+    def test_pitch_unknown_advances_via_fix791(self):
+        """Client text ambiguo → FIX 791 template advances state (no longer stays PITCH)."""
         result = self.fsm.process("Ajá, está bien")
-        # GPT_NARROW without agente returns None (no OpenAI client)
-        # State stays PITCH (not advancing to BUSCANDO)
-        self.assertEqual(self.fsm.state, FSMState.PITCH)
+        # FIX 791: PITCH+UNKNOWN → stateful template → advances to BUSCANDO or CAPTURANDO
+        self.assertIn(self.fsm.state, [
+            FSMState.BUSCANDO_ENCARGADO,
+            FSMState.CAPTURANDO_CONTACTO,
+        ])
 
 
 # =============================================================================

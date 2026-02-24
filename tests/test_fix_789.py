@@ -57,17 +57,18 @@ class TestFix789APitchUnknown(unittest.TestCase):
         self.assertIn("max_tokens", config)
         self.assertIn("NIOVAL", config["system"])
 
-    def test_pitch_unknown_without_agente_returns_none(self):
-        """Without OpenAI client, GPT_NARROW returns None (fallthrough)."""
+    def test_pitch_unknown_uses_fix791_template(self):
+        """FIX 791: PITCH+UNKNOWN → stateful template (no GPT needed)."""
         fsm = FSMEngine()
         fsm.state = FSMState.PITCH
         fsm.context.pitch_dado = True
-        # "ya tenemos proveedor" classified as UNKNOWN (not matching any specific intent)
         result = fsm.process("Pues no sé qué decirle.", agente=None)
-        # Without agente → GPT_NARROW returns None → fallthrough in shadow/phase2
-        # In active mode, empty response means no intercept
-        # Either way, state should update
-        self.assertIn(fsm.state, [FSMState.PITCH])
+        # FIX 791: stateful template advances state
+        self.assertIn(fsm.state, [
+            FSMState.BUSCANDO_ENCARGADO,
+            FSMState.CAPTURANDO_CONTACTO,
+        ])
+        self.assertIsNotNone(result)
 
     def test_other_states_unknown_unchanged(self):
         """Other states' UNKNOWN handlers should NOT be manejar_objecion."""
