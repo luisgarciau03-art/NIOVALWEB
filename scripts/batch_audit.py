@@ -759,10 +759,15 @@ def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False):
                 except Exception as e:
                     print(f"\n  [!] Error en auditoria: {e}")
 
-                # Reset contador
+                # FIX 804: Reset completo post-lote
+                # Re-baseline al BRUCE ID mas reciente para no re-contar llamadas del lote anterior
+                _, fresh_max = _count_new_calls({'last_bruce_id_seen': 0})
                 state['calls_since_last_audit'] = 0
+                state['last_bruce_id_seen'] = fresh_max if fresh_max > 0 else state.get('last_bruce_id_seen', 0)
+                state['last_check'] = datetime.now().isoformat()
                 _save_monitor_state(state)
-                print(f"\n  Contador reseteado. Esperando siguiente lote de {batch_size} llamadas...\n")
+                print(f"\n  Reset automatico: contador=0, baseline=BRUCE{state['last_bruce_id_seen']}")
+                print(f"  Esperando siguiente lote de {batch_size} llamadas...\n")
 
             # Esperar
             time.sleep(interval_minutes * 60)
