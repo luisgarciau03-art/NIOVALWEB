@@ -351,6 +351,16 @@ def step_generate_report(log_files, parse_metrics, regression_results, prod_summ
     if excel_path:
         print(f"  Excel generado: {excel_path}")
 
+    # Generar HTML (persistente - se actualiza cada auditoría)
+    html_path = None
+    try:
+        from batch_report_html import generate_html
+        html_path = generate_html(history)
+        if html_path:
+            print(f"  HTML generado: {html_path}")
+    except Exception as e:
+        print(f"  [!] Error generando HTML: {e}")
+
     return batch_num, excel_path
 
 
