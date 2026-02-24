@@ -1,23 +1,26 @@
 """
-Orquestador del ciclo de auditoría por lotes para Bruce W.
+Orquestador del ciclo de auditoria por lotes para Bruce W.
 
 Workflow:
-  1. Descargar datos de producción (bugs, patterns, logs)
+  1. Descargar datos de produccion (bugs, patterns, logs)
   2. Identificar logs nuevos (no procesados previamente)
-  3. Parsear logs → extraer conversaciones y bugs
-  4. Ejecutar suite de regresión
+  3. Parsear logs -> extraer conversaciones y bugs
+  4. Ejecutar suite de regresion
   5. Generar reporte Excel con resultados del lote
-  6. Mostrar resumen con próximos pasos
+  6. Mostrar resumen con proximos pasos
 
 El historial evita procesar el mismo log dos veces.
-Cada ejecución = 1 lote en el Excel.
+Cada ejecucion = 1 lote en el Excel.
 
 Uso:
-  python scripts/batch_audit.py                    # Auditoría completa
-  python scripts/batch_audit.py --skip-download    # Usar datos locales
-  python scripts/batch_audit.py --skip-regression  # Sin tests de regresión
-  python scripts/batch_audit.py --only-report      # Solo regenerar Excel
-  python scripts/batch_audit.py --status           # Ver estado actual
+  python scripts/batch_audit.py                          # Auditoria completa (manual)
+  python scripts/batch_audit.py --monitor                # Auto-monitor (default 25 llamadas)
+  python scripts/batch_audit.py --monitor --batch-size 10 # Auto cada 10 llamadas
+  python scripts/batch_audit.py --monitor --batch-size 5  # Auto cada 5 llamadas
+  python scripts/batch_audit.py --skip-download          # Usar datos locales
+  python scripts/batch_audit.py --skip-regression        # Sin tests de regresion
+  python scripts/batch_audit.py --only-report            # Solo regenerar Excel
+  python scripts/batch_audit.py --status                 # Ver estado actual
 """
 
 import os
@@ -26,6 +29,7 @@ import re
 import json
 import time
 import subprocess
+import requests
 from datetime import datetime
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,6 +38,8 @@ LOGS_DIR = os.path.join(PROJECT_DIR, 'LOGS')
 AUDIT_DATA_DIR = os.path.join(PROJECT_DIR, 'audit_data')
 TESTS_DIR = os.path.join(PROJECT_DIR, 'tests')
 TEST_DATA_DIR = os.path.join(TESTS_DIR, 'test_data')
+MONITOR_STATE_PATH = os.path.join(AUDIT_DATA_DIR, 'monitor_state.json')
+SERVER_URL = "https://nioval-webhook-server-production.up.railway.app"
 
 sys.path.insert(0, PROJECT_DIR)
 sys.path.insert(0, SCRIPTS_DIR)
@@ -435,25 +441,235 @@ def show_status():
 
 
 # ============================================================
+# MONITOR: Auto-detecta llamadas nuevas y dispara auditoria
+# ============================================================
+
+def _load_monitor_state():
+    """Carga estado del monitor."""
+    if os.path.exists(MONITOR_STATE_PATH):
+        try:
+            with open(MONITOR_STATE_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {'last_bruce_id_seen': 0, 'calls_since_last_audit': 0, 'last_check': None}
+
+
+def _save_monitor_state(state):
+    """Guarda estado del monitor."""
+    os.makedirs(AUDIT_DATA_DIR, exist_ok=True)
+    with open(MONITOR_STATE_PATH, 'w', encoding='utf-8') as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+
+
+def _get_latest_bruce_id():
+    """Consulta el servidor para obtener el BRUCE ID mas reciente."""
+    try:
+        resp = requests.get(f"{SERVER_URL}/version", timeout=10)
+        resp.raise_for_status()
+        # Buscar bruce_id en la respuesta
+        text = resp.text
+        m = re.search(r'BRUCE(\d+)', text)
+        if m:
+            return int(m.group(1))
+    except Exception:
+        pass
+
+    # Fallback: consultar historial
+    try:
+        resp = requests.get(f"{SERVER_URL}/logs/api?limite=5&formato=json", timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        logs_text = ''
+        if isinstance(data, dict):
+            logs_text = str(data.get('logs', ''))
+        elif isinstance(data, list):
+            logs_text = str(data)
+        else:
+            logs_text = str(data)
+
+        ids = [int(x) for x in re.findall(r'BRUCE(\d+)', logs_text)]
+        if ids:
+            return max(ids)
+    except Exception:
+        pass
+
+    return 0
+
+
+def _count_new_calls(state):
+    """Cuenta cuantas llamadas nuevas hay desde la ultima auditoria."""
+    current_max = _get_latest_bruce_id()
+    last_seen = state.get('last_bruce_id_seen', 0)
+
+    if current_max <= 0:
+        return 0, current_max
+
+    if last_seen <= 0:
+        # Primera vez - no contar las existentes como nuevas
+        return 0, current_max
+
+    new_calls = max(0, current_max - last_seen)
+    return new_calls, current_max
+
+
+def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False):
+    """Monitorea el servidor y ejecuta auditoria al acumular batch_size llamadas.
+
+    Args:
+        batch_size: Llamadas necesarias para disparar auditoria (5, 10, 25, 50...)
+        interval_minutes: Minutos entre cada chequeo
+        skip_regression: Saltear suite de regresion (mas rapido)
+    """
+    _ensure_dirs()
+    state = _load_monitor_state()
+
+    # Inicializar si es primera vez
+    if state.get('last_bruce_id_seen', 0) == 0:
+        _, current_max = _count_new_calls(state)
+        state['last_bruce_id_seen'] = current_max
+        state['calls_since_last_audit'] = 0
+        _save_monitor_state(state)
+        print(f"  Monitor inicializado. BRUCE ID actual: BRUCE{current_max}")
+        print(f"  Las llamadas a partir de ahora se contaran como nuevas.\n")
+
+    print(f"\n{'='*60}")
+    print(f"  BRUCE W - MONITOR AUTOMATICO")
+    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*60}")
+    print(f"  Batch size: {batch_size} llamadas")
+    print(f"  Intervalo: cada {interval_minutes} min")
+    print(f"  Ultimo BRUCE ID: BRUCE{state.get('last_bruce_id_seen', '?')}")
+    print(f"  Acumuladas: {state.get('calls_since_last_audit', 0)}/{batch_size}")
+    print(f"  Ctrl+C para detener")
+    print(f"{'='*60}\n")
+
+    audit_count = 0
+
+    try:
+        while True:
+            now = datetime.now().strftime('%H:%M:%S')
+            new_calls, current_max = _count_new_calls(state)
+
+            if new_calls > 0:
+                state['calls_since_last_audit'] = state.get('calls_since_last_audit', 0) + new_calls
+                state['last_bruce_id_seen'] = current_max
+                state['last_check'] = datetime.now().isoformat()
+                _save_monitor_state(state)
+
+            accumulated = state.get('calls_since_last_audit', 0)
+
+            if new_calls > 0:
+                print(f"  [{now}] +{new_calls} llamada(s) nueva(s) "
+                      f"(BRUCE{current_max}) | "
+                      f"Acumuladas: {accumulated}/{batch_size}")
+            else:
+                print(f"  [{now}] Sin llamadas nuevas | "
+                      f"Acumuladas: {accumulated}/{batch_size}", end='\r')
+
+            # Disparar auditoria si llegamos al batch_size
+            if accumulated >= batch_size:
+                audit_count += 1
+                print(f"\n\n{'*'*60}")
+                print(f"  BATCH COMPLETO! {accumulated} llamadas acumuladas")
+                print(f"  Iniciando auditoria #{audit_count}...")
+                print(f"{'*'*60}\n")
+
+                # Descargar logs nuevos
+                try:
+                    from production_data_fetcher import download_new_logs
+                    download_new_logs()
+                except Exception as e:
+                    print(f"  [!] Error descargando logs: {e}")
+
+                # Ejecutar auditoria completa
+                try:
+                    # Paso 1: Datos de produccion
+                    prod_summary = None
+                    try:
+                        prod_summary = step_download_production_data()
+                    except Exception as e:
+                        print(f"  [!] Error descargando datos: {e}")
+
+                    # Paso 2: Logs nuevos
+                    new_logs = step_identify_new_logs()
+
+                    if new_logs:
+                        # Paso 3: Parsear
+                        parse_metrics = step_parse_logs(new_logs)
+
+                        # Paso 4: Regresion
+                        regression_results = {'pass_rate': 0, 'passed': 0, 'failed': 0}
+                        if not skip_regression:
+                            try:
+                                regression_results = step_run_regression()
+                            except Exception as e:
+                                print(f"  [!] Error regresion: {e}")
+
+                        # Paso 5: Reporte
+                        batch_num, excel_path = step_generate_report(
+                            new_logs, parse_metrics, regression_results, prod_summary
+                        )
+
+                        bugs = parse_metrics.get('total_bugs', 0)
+                        cal = parse_metrics.get('calificacion_promedio', 0)
+                        print(f"\n  LOTE #{batch_num} COMPLETADO")
+                        print(f"  Bugs: {bugs} | Calif: {cal} | Regresion: {regression_results.get('pass_rate', 0):.0f}%")
+                    else:
+                        print(f"\n  Sin logs nuevos para procesar")
+
+                except Exception as e:
+                    print(f"\n  [!] Error en auditoria: {e}")
+
+                # Reset contador
+                state['calls_since_last_audit'] = 0
+                _save_monitor_state(state)
+                print(f"\n  Contador reseteado. Esperando siguiente lote de {batch_size} llamadas...\n")
+
+            # Esperar
+            time.sleep(interval_minutes * 60)
+
+    except KeyboardInterrupt:
+        print(f"\n\n  Monitor detenido.")
+        print(f"  Auditorias realizadas: {audit_count}")
+        print(f"  Llamadas pendientes: {state.get('calls_since_last_audit', 0)}/{batch_size}")
+        _save_monitor_state(state)
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Bruce W - Auditoría por Lotes')
+    parser = argparse.ArgumentParser(description='Bruce W - Auditoria por Lotes')
     parser.add_argument('--skip-download', action='store_true',
-                        help='No descargar datos de producción')
+                        help='No descargar datos de produccion')
     parser.add_argument('--skip-regression', action='store_true',
-                        help='No ejecutar suite de regresión')
+                        help='No ejecutar suite de regresion')
     parser.add_argument('--only-report', action='store_true',
                         help='Solo regenerar Excel desde historial')
     parser.add_argument('--status', action='store_true',
                         help='Mostrar estado actual')
     parser.add_argument('--process-all', action='store_true',
                         help='Procesar TODOS los logs (incluso ya procesados)')
+    parser.add_argument('--monitor', action='store_true',
+                        help='Modo monitor: vigila servidor y dispara auditoria automaticamente')
+    parser.add_argument('--batch-size', type=int, default=25,
+                        help='Llamadas para disparar auditoria en modo monitor (default: 25)')
+    parser.add_argument('--interval', type=int, default=3,
+                        help='Minutos entre chequeos en modo monitor (default: 3)')
     args = parser.parse_args()
 
     _ensure_dirs()
+
+    if args.monitor:
+        run_monitor(
+            batch_size=args.batch_size,
+            interval_minutes=args.interval,
+            skip_regression=args.skip_regression,
+        )
+        return
 
     if args.status:
         show_status()
