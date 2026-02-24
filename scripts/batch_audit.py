@@ -131,11 +131,80 @@ def step_identify_new_logs():
 # PASO 3: Parsear logs y extraer bugs
 # ============================================================
 
+def _fetch_bugs_from_server(bruce_ids):
+    """Consulta /bugs endpoint para obtener bugs de BRUCE IDs especificos.
+
+    Esta es la fuente MAS CONFIABLE de bugs (base de datos del servidor).
+    """
+    bugs_by_bruce = {}
+    try:
+        resp = requests.get(f"{SERVER_URL}/bugs", timeout=15)
+        resp.raise_for_status()
+        text = resp.text
+
+        # Parsear HTML del endpoint /bugs
+        # Formato: BRUCE#### ... tipo ... severidad ... detalle
+        for bid in bruce_ids:
+            bid_str = bid if bid.startswith('BRUCE') else f'BRUCE{bid}'
+            # Buscar bloques de este BRUCE ID
+            pattern = re.compile(
+                rf'{re.escape(bid_str)}\s+.*?'
+                rf'(GPT_\w+|\w+)\s+'
+                rf'(CRITICO|ALTO|MEDIO|BAJO)\s+'
+                rf'\[turno \d+\]\s*(.*?)(?=\d+t\s*/|\Z)',
+                re.DOTALL
+            )
+            for m in pattern.finditer(text):
+                if bid_str not in bugs_by_bruce:
+                    bugs_by_bruce[bid_str] = []
+                bugs_by_bruce[bid_str].append({
+                    'tipo': m.group(1).strip(),
+                    'severidad': m.group(2).strip(),
+                    'detalle': re.sub(r'\s+', ' ', m.group(3)).strip()[:200],
+                    'source': 'server_bugs',
+                })
+    except Exception:
+        pass
+
+    # Fallback: parsear con regex mas simple si el formato es diferente
+    if not bugs_by_bruce:
+        try:
+            text_clean = re.sub(r'<[^>]+>', ' ', text)
+            text_clean = re.sub(r'\s+', ' ', text_clean)
+            for bid in bruce_ids:
+                bid_str = bid if bid.startswith('BRUCE') else f'BRUCE{bid}'
+                # Buscar: BRUCE#### ... TIPO SEVERIDAD [turno N] detalle
+                chunks = text_clean.split(bid_str)
+                for i, chunk in enumerate(chunks[1:], 1):
+                    # Extraer tipo y severidad del chunk
+                    m = re.search(
+                        r'(GPT_\w+|\w+)\s+(CRITICO|ALTO|MEDIO|BAJO)\s+(.+?)(?=BRUCE\d{4}|\Z)',
+                        chunk[:500]
+                    )
+                    if m:
+                        if bid_str not in bugs_by_bruce:
+                            bugs_by_bruce[bid_str] = []
+                        bugs_by_bruce[bid_str].append({
+                            'tipo': m.group(1).strip(),
+                            'severidad': m.group(2).strip(),
+                            'detalle': m.group(3).strip()[:200],
+                            'source': 'server_bugs',
+                        })
+        except Exception:
+            pass
+
+    return bugs_by_bruce
+
+
 def step_parse_logs(log_files):
     """Parsea logs nuevos, extrae conversaciones y bugs.
 
+    Usa DOS fuentes de bugs:
+    1. Parseo de archivos de log (lineas [BUG_DETECTOR], [ALTO], [GPT ALTO])
+    2. Consulta directa al endpoint /bugs del servidor (fuente principal)
+
     Returns:
-        dict con métricas del parseo
+        dict con metricas del parseo
     """
     print("\n[3/5] PARSEANDO LOGS Y EXTRAYENDO BUGS\n")
 
@@ -150,7 +219,7 @@ def step_parse_logs(log_files):
             'calificaciones': [],
         }
 
-    # Usar log_scenario_extractor para parsear
+    # Usar log_scenario_extractor para parsear (genera scenario_db.json)
     extractor_path = os.path.join(SCRIPTS_DIR, 'log_scenario_extractor.py')
     if os.path.exists(extractor_path):
         ok, output = _run(
@@ -159,7 +228,7 @@ def step_parse_logs(log_files):
             timeout=120,
         )
 
-    # Parsear logs directamente para métricas del lote
+    # Parsear logs directamente para metricas del lote
     metrics = {
         'total_conversations': 0,
         'total_bugs': 0,
@@ -171,16 +240,15 @@ def step_parse_logs(log_files):
     }
 
     # Regex patterns
-    RE_BRUCE_ID = re.compile(r'BRUCE(\d+)')
-    RE_BUG = re.compile(r'\[BUG_DETECTOR\]\s*(BRUCE\d+):\s*(\d+)\s*bug')
-    RE_BUG_LINE = re.compile(r'\[(CRITICO|ALTO|MEDIO|BAJO)\]\s*(\w+):\s*(.*)')
+    RE_BRUCE_CONV = re.compile(r'\[(?:CLIENTE|BRUCE)\]\s*(BRUCE\d+)')
+    RE_BUG_HEADER = re.compile(r'\[BUG_DETECTOR\]\s*(BRUCE\d+):\s*(\d+)\s*bug')
+    RE_BUG_RULE = re.compile(r'\[(CRITICO|ALTO|MEDIO|BAJO)\]\s*(\w+):\s*(.*)')
+    RE_BUG_GPT = re.compile(r'\[GPT\s+(CRITICO|ALTO|MEDIO|BAJO)\]\s*(GPT_\w+):\s*(.*)')
     RE_CALIFICACION = re.compile(r'Calificaci[oó]n Bruce:\s*(\d+)/10')
-    RE_CONCLUSION = re.compile(r'Conclusi[oó]n determinada:\s*(\w+)')
-    RE_CLIENTE = re.compile(r'\[CLIENTE\]\s*(BRUCE\d+)')
-    RE_BRUCE = re.compile(r'\[BRUCE\]\s*(BRUCE\d+)')
 
     all_bruce_ids = set()
-    current_bruce_bugs = {}
+    last_bug_bruce_id = None
+    seen_bugs = set()  # Deduplicar bugs
 
     for log_file in log_files:
         filepath = os.path.join(LOGS_DIR, log_file)
@@ -194,42 +262,87 @@ def step_parse_logs(log_files):
             print(f"  [!] Error leyendo {log_file}: {e}")
             continue
 
-        # Extraer BRUCE IDs
-        for m in RE_BRUCE_ID.finditer(content):
-            bid = f"BRUCE{m.group(1)}"
-            all_bruce_ids.add(bid)
+        # Limpiar HTML residual
+        content = re.sub(r'<[^>]+>', '\n', content)
 
-        # Extraer bugs
-        for m in RE_BUG.finditer(content):
-            bruce_id = m.group(1)
-            n_bugs = int(m.group(2))
-            current_bruce_bugs[bruce_id] = n_bugs
+        # Extraer BRUCE IDs de conversaciones (solo CLIENTE/BRUCE dice)
+        for m in RE_BRUCE_CONV.finditer(content):
+            all_bruce_ids.add(m.group(1))
 
-        # Extraer detalle de bugs
-        for m in RE_BUG_LINE.finditer(content):
-            sev = m.group(1)
-            tipo = m.group(2)
-            detalle = m.group(3).strip()
+        # Parsear linea por linea para asociacion correcta de bugs
+        for line in content.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
 
-            # Asociar con el BRUCE ID más reciente
-            recent_bruce = None
-            for bid in reversed(list(current_bruce_bugs.keys())):
-                recent_bruce = bid
-                break
+            # Bug detector header: establece BRUCE ID para bugs siguientes
+            m = RE_BUG_HEADER.search(line)
+            if m:
+                last_bug_bruce_id = m.group(1)
+                continue
 
-            metrics['bugs_detalle'].append({
-                'bruce_id': recent_bruce or 'UNKNOWN',
-                'tipo': tipo,
-                'severidad': sev,
-                'detalle': detalle[:200],
-            })
-            metrics['bugs_por_tipo'][tipo] = metrics['bugs_por_tipo'].get(tipo, 0) + 1
-            metrics['total_bugs'] += 1
+            # Bug rule-based: [ALTO] TIPO: detalle
+            m = RE_BUG_RULE.search(line)
+            if m and last_bug_bruce_id:
+                sev, tipo, detalle = m.group(1), m.group(2), m.group(3).strip()
+                bug_key = f"{last_bug_bruce_id}_{tipo}_{detalle[:50]}"
+                if bug_key not in seen_bugs:
+                    seen_bugs.add(bug_key)
+                    metrics['bugs_detalle'].append({
+                        'bruce_id': last_bug_bruce_id,
+                        'tipo': tipo,
+                        'severidad': sev,
+                        'detalle': detalle[:200],
+                        'source': 'log_rule',
+                    })
+                    metrics['bugs_por_tipo'][tipo] = metrics['bugs_por_tipo'].get(tipo, 0) + 1
+                    metrics['total_bugs'] += 1
+                continue
 
-        # Extraer calificaciones
-        for m in RE_CALIFICACION.finditer(content):
-            cal = int(m.group(1))
-            metrics['calificaciones'].append(cal)
+            # Bug GPT eval: [GPT ALTO] GPT_TIPO: detalle
+            m = RE_BUG_GPT.search(line)
+            if m and last_bug_bruce_id:
+                sev, tipo, detalle = m.group(1), m.group(2), m.group(3).strip()
+                bug_key = f"{last_bug_bruce_id}_{tipo}_{detalle[:50]}"
+                if bug_key not in seen_bugs:
+                    seen_bugs.add(bug_key)
+                    metrics['bugs_detalle'].append({
+                        'bruce_id': last_bug_bruce_id,
+                        'tipo': tipo,
+                        'severidad': sev,
+                        'detalle': detalle[:200],
+                        'source': 'log_gpt',
+                    })
+                    metrics['bugs_por_tipo'][tipo] = metrics['bugs_por_tipo'].get(tipo, 0) + 1
+                    metrics['total_bugs'] += 1
+                continue
+
+            # Calificacion
+            m = RE_CALIFICACION.search(line)
+            if m:
+                metrics['calificaciones'].append(int(m.group(1)))
+
+    bugs_from_logs = metrics['total_bugs']
+
+    # === FUENTE 2: Consultar /bugs endpoint del servidor ===
+    print(f"  > Consultando /bugs endpoint...")
+    server_bugs = _fetch_bugs_from_server(all_bruce_ids)
+    bugs_added_from_server = 0
+    for bid, bugs in server_bugs.items():
+        for bug in bugs:
+            bug_key = f"{bid}_{bug['tipo']}_{bug['detalle'][:50]}"
+            if bug_key not in seen_bugs:
+                seen_bugs.add(bug_key)
+                metrics['bugs_detalle'].append({
+                    'bruce_id': bid,
+                    'tipo': bug['tipo'],
+                    'severidad': bug['severidad'],
+                    'detalle': bug['detalle'],
+                    'source': 'server_bugs',
+                })
+                metrics['bugs_por_tipo'][bug['tipo']] = metrics['bugs_por_tipo'].get(bug['tipo'], 0) + 1
+                metrics['total_bugs'] += 1
+                bugs_added_from_server += 1
 
     metrics['bruce_ids'] = sorted(all_bruce_ids)
     metrics['total_llamadas'] = len(all_bruce_ids)
@@ -237,14 +350,17 @@ def step_parse_logs(log_files):
 
     print(f"  Conversaciones encontradas: {metrics['total_conversations']}")
     print(f"  BRUCE IDs: {len(metrics['bruce_ids'])}")
-    print(f"  Bugs detectados: {metrics['total_bugs']}")
+    print(f"  Bugs de logs: {bugs_from_logs}")
+    if bugs_added_from_server:
+        print(f"  Bugs de /bugs endpoint: +{bugs_added_from_server}")
+    print(f"  Bugs TOTAL: {metrics['total_bugs']}")
     if metrics['bugs_por_tipo']:
         print(f"  Por tipo:")
         for tipo, count in sorted(metrics['bugs_por_tipo'].items(), key=lambda x: -x[1])[:10]:
             print(f"    {tipo}: {count}")
     if metrics['calificaciones']:
         avg = sum(metrics['calificaciones']) / len(metrics['calificaciones'])
-        print(f"  Calificación promedio: {avg:.1f}/10")
+        print(f"  Calificacion promedio: {avg:.1f}/10")
         metrics['calificacion_promedio'] = round(avg, 1)
     else:
         metrics['calificacion_promedio'] = 0
@@ -464,37 +580,31 @@ def _save_monitor_state(state):
 
 def _get_latest_bruce_id():
     """Consulta el servidor para obtener el BRUCE ID mas reciente."""
+    max_id = 0
+
+    # Fuente 1: /historial-llamadas (mas confiable, tiene TODOS los registros)
     try:
-        resp = requests.get(f"{SERVER_URL}/version", timeout=10)
+        resp = requests.get(f"{SERVER_URL}/historial-llamadas", timeout=15)
         resp.raise_for_status()
-        # Buscar bruce_id en la respuesta
-        text = resp.text
-        m = re.search(r'BRUCE(\d+)', text)
-        if m:
-            return int(m.group(1))
+        ids = [int(x) for x in re.findall(r'BRUCE(\d+)', resp.text)]
+        if ids:
+            max_id = max(max_id, max(ids))
     except Exception:
         pass
 
-    # Fallback: consultar historial
+    # Fuente 2: /logs/api (tiene llamadas en curso que aun no estan en historial)
     try:
-        resp = requests.get(f"{SERVER_URL}/logs/api?limite=5&formato=json", timeout=15)
+        resp = requests.get(f"{SERVER_URL}/logs/api?limite=500&formato=json", timeout=15)
         resp.raise_for_status()
         data = resp.json()
-        logs_text = ''
-        if isinstance(data, dict):
-            logs_text = str(data.get('logs', ''))
-        elif isinstance(data, list):
-            logs_text = str(data)
-        else:
-            logs_text = str(data)
-
-        ids = [int(x) for x in re.findall(r'BRUCE(\d+)', logs_text)]
-        if ids:
-            return max(ids)
+        logs_list = data.get('logs', []) if isinstance(data, dict) else data if isinstance(data, list) else []
+        for line in logs_list:
+            for m in re.findall(r'BRUCE(\d+)', str(line)):
+                max_id = max(max_id, int(m))
     except Exception:
         pass
 
-    return 0
+    return max_id
 
 
 def _count_new_calls(state):

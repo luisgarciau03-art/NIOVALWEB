@@ -216,6 +216,10 @@ def download_new_logs(history=None):
         content = resp.text
 
         if len(content.strip()) > 100:
+            # Limpiar HTML que contamina los logs
+            content = re.sub(r'<[^>]+>', '\n', content)
+            content = re.sub(r'\n{3,}', '\n\n', content)
+
             # Calcular hash para evitar duplicados
             content_hash = hashlib.md5(content[:5000].encode()).hexdigest()[:12]
 
