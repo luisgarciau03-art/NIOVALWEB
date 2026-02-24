@@ -262,6 +262,10 @@ class BugDetector:
             interrupcion_bugs = ContentAnalyzer._check_interrupcion_conversacional(tracker.conversacion)
             bugs.extend(interrupcion_bugs)
 
+            # FIX 793B: PREGUNTA_IGNORADA - Cliente pregunta y Bruce solo da acknowledgment
+            pregunta_bugs = ContentAnalyzer._check_pregunta_ignorada(tracker.conversacion)
+            bugs.extend(pregunta_bugs)
+
             # FIX 728: DESPEDIDA_PREMATURA - Bruce se despide sin capturar contacto
             despedida_bugs = ContentAnalyzer._check_despedida_prematura(tracker.conversacion, tracker.respuestas_bruce)
             bugs.extend(despedida_bugs)
@@ -1330,6 +1334,69 @@ class ContentAnalyzer:
             pass
         return bugs
 
+    # =========================================================
+    # FIX 793B: PREGUNTA_IGNORADA
+    # =========================================================
+    # Preguntas directas del cliente que requieren respuesta real
+    _PREGUNTA_DIRECTA_CLIENTE = re.compile(
+        r'((?:¿|¡)?(?:qui[eé]n|de d[oó]nde|de qu[eé]|qu[eé]|a qui[eé]n)'
+        r'.{0,30}(?:habla|llama|busca|empresa|marca|vende|ofrece|es usted)\??)',
+        re.IGNORECASE
+    )
+
+    # Acknowledgments puros de Bruce (modo dictado, sin responder la pregunta)
+    _BRUCE_ACK_PURO_793 = re.compile(
+        r'^[\s.,!?¡¿]*(claro[,.]?\s*(?:continue|adelante|s[ií])|'
+        r's[ií][,.]?\s*(?:adelante|continue|lo escucho)|'
+        r'perfecto[,.]?\s*(?:adelante|continue)|'
+        r'entendido[,.]?\s*(?:continue|adelante)|'
+        r'adelante|continue|lo escucho|aja(?:[,.]?\s*s[ií])?)[\s.,!?]*$',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_pregunta_ignorada(conv: list) -> list:
+        """FIX 793B: Detecta cuando cliente pregunta directamente y Bruce
+        responde con solo acknowledgment sin contestar la pregunta."""
+        bugs = []
+        try:
+            if len(conv) < 4:
+                return bugs
+
+            ignoradas = 0
+            ejemplos = []
+
+            for i, (role, texto) in enumerate(conv):
+                if role != "cliente" or not texto.strip():
+                    continue
+
+                # ¿El cliente hizo una pregunta directa?
+                if not ContentAnalyzer._PREGUNTA_DIRECTA_CLIENTE.search(texto):
+                    continue
+
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, len(conv)):
+                    r2, t2 = conv[j]
+                    if r2 == "bruce" and t2.strip():
+                        # ¿Bruce respondió con solo acknowledgment?
+                        if ContentAnalyzer._BRUCE_ACK_PURO_793.search(t2.strip()):
+                            ignoradas += 1
+                            if len(ejemplos) < 2:
+                                ejemplos.append(f"'{texto[:40]}' -> '{t2[:40]}'")
+                        break
+
+            if ignoradas >= 1:
+                bugs.append({
+                    "tipo": "PREGUNTA_IGNORADA",
+                    "severidad": ALTO if ignoradas >= 2 else MEDIO,
+                    "detalle": f"Cliente pregunto {ignoradas}x pero Bruce solo dio acknowledgment: {'; '.join(ejemplos)}",
+                    "categoria": "contenido"
+                })
+
+        except Exception:
+            pass
+        return bugs
+
 
 # ============================================================
 # EVALUACION GPT POST-LLAMADA (FIX 637)
@@ -1410,16 +1477,10 @@ def _es_comportamiento_correcto(conversacion: list) -> bool:
             print(f"[FIX 664B] COMPORTAMIENTO CORRECTO: Cliente es un IVR automatizado")
             return True
 
-        # FASE 2.2: CASO 4: Llamada exitosa (Bruce obtuvo dato de contacto)
-        # Si Bruce ya tiene WhatsApp/correo/teléfono, la llamada fue exitosa
-        _conversacion_texto = ' '.join([c[1].lower() for c in conversacion if c[0] == 'bruce'])
-        _tuvo_exito = any(f in _conversacion_texto for f in [
-            'muchas gracias por su', 'le envio', 'le envío', 'excelente dia',
-            'queda registrado', 'le estaremos enviando'
-        ])
-        if _tuvo_exito:
-            print(f"[FASE 2.2] COMPORTAMIENTO CORRECTO: Llamada exitosa (cierre con agradecimiento)")
-            return True
+        # FIX 793A: CASO 4 ELIMINADO - Antes skipeaba GPT eval en llamadas "exitosas"
+        # (muchas gracias, le envio, etc.). Problema: BRUCE2512 tenía respuesta incoherente
+        # en Turn 2 pero como capturó contacto, GPT eval se saltó y nunca detectó el bug.
+        # Ahora GPT eval siempre corre para detectar bugs en cualquier turno.
 
         # FASE 2.2: CASO 5: Modismos mexicanos - "dígame/qué necesita" NO es pregunta
         _modismos_go_ahead = ['digame', 'si digame', 'que necesita', 'que se le ofrece',

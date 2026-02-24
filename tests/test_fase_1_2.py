@@ -426,12 +426,13 @@ class TestFase22GPTEvalFPReduction(unittest.TestCase):
             self.assertIn(idiom, source, f"Idiom '{idiom}' must be in prompts")
 
     def test_prefilter_exitosa(self):
-        """Pre-filter must detect successful calls."""
+        """FIX 793A: CASO 4 eliminated - GPT eval now runs on successful calls too."""
         bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
         with open(bd_path, 'r', encoding='utf-8') as f:
             source = f.read()
-        self.assertIn('CASO 4', source)
-        self.assertIn('Llamada exitosa', source)
+        # FIX 793A: CASO 4 was removed (no longer skips GPT eval for successful calls)
+        self.assertIn('CASO 4 ELIMINADO', source)
+        self.assertIn('FIX 793A', source)
 
     def test_prefilter_modismos_go_ahead(self):
         """Pre-filter must detect 'go ahead' modismos."""
