@@ -417,8 +417,9 @@ def convertir_numeros_escritos_a_digitos(texto: str) -> str:
         'sesenta': '60', 'setenta': '70', 'ochenta': '80', 'noventa': '90'
     }
 
-    # Reemplazar cada palabra por su dígito
-    for palabra, digito in numeros_palabras.items():
+    # FIX 794: Reemplazar palabras más largas PRIMERO para evitar
+    # que "ocho" dentro de "dieciocho" se reemplace antes → "dieci8"
+    for palabra, digito in sorted(numeros_palabras.items(), key=lambda x: len(x[0]), reverse=True):
         texto_convertido = texto_convertido.replace(palabra, digito)
 
     return texto_convertido
@@ -9343,23 +9344,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
 
         # --- 1. Extracción de teléfono cuando FSM llega a CONTACTO_CAPTURADO ---
         if fsm_state == FSMState.CONTACTO_CAPTURADO:
-            # 1a. Dígitos numéricos
-            digitos = re.findall(r'\d', texto_cliente)
-
-            # FIX 765: También convertir números en palabras (FIX 670 approach)
-            if len(digitos) < 10:
-                tn_762 = texto_cliente.lower()
-                for _a, _b in [('á','a'),('é','e'),('í','i'),('ó','o'),('ú','u')]:
-                    tn_762 = tn_762.replace(_a, _b)
-                words_762 = tn_762.split()
-                word_digits = [self._nums_to_digit_762[w] for w in words_762
-                               if w in self._nums_to_digit_762]
-                all_digits = digitos + word_digits
-                if len(all_digits) >= 10:
-                    digitos = all_digits
+            # FIX 794: Usar convertir_numeros_escritos_a_digitos() para preservar orden
+            # Bug anterior: re.findall(r'\d') extraía dígitos literales PRIMERO,
+            # luego _nums_to_digit_762 APPENDED palabras → orden incorrecto
+            # Ejemplo: "seis seis veintitrés... 23531804" → 2353180466 (MAL)
+            # Ahora: convertir TODO a dígitos preservando orden → 6623531804 (BIEN)
+            texto_convertido_794 = convertir_numeros_escritos_a_digitos(texto_cliente)
+            digitos = re.findall(r'\d', texto_convertido_794)
 
             if len(digitos) >= 10:
-                numero_final = ''.join(d[:1] for d in digitos[:10])  # Cada elemento puede ser '10' → solo '1'
+                numero_final = ''.join(digitos[:10])
                 if not self.lead_data.get("whatsapp"):
                     self.lead_data["whatsapp"] = numero_final
                     self.lead_data["whatsapp_valido"] = True

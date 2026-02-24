@@ -4761,6 +4761,35 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
                     print(f"    Original ({len(_words_760)} words): '{speech_result[:80]}...'")
                     print(f"    De-duplicado: '{_dedup_760[:80]}'")
                     speech_result = _dedup_760
+
+            # FIX 796: Sentence-level dedup para ecos que FIX 760 no detecta
+            # "Sí, el número es 6623 Sí, el número es 6623531804." → keep second
+            # Azure STT a veces captura eco de Bruce mezclado con cliente
+            if speech_result and len(speech_result) > 30:
+                import re as _re_796
+                _sentences_796 = _re_796.split(r'(?<=[.!?])\s+', speech_result)
+                _sentences_796 = [s.strip() for s in _sentences_796 if s.strip() and len(s.strip()) > 3]
+                if len(_sentences_796) >= 2:
+                    _unique_796 = []
+                    for s in _sentences_796:
+                        _sc = _re_796.sub(r'[.,!?¿¡:;]', '', s).lower().strip()
+                        _is_dup = False
+                        for idx, u in enumerate(_unique_796):
+                            _uc = _re_796.sub(r'[.,!?¿¡:;]', '', u).lower().strip()
+                            if len(_sc) > 10 and len(_uc) > 10 and _sc[:10] == _uc[:10]:
+                                if len(s) >= len(u):
+                                    _unique_796[idx] = s  # Keep longer/later version
+                                _is_dup = True
+                                break
+                        if not _is_dup:
+                            _unique_796.append(s)
+                    if len(_unique_796) < len(_sentences_796):
+                        _dedup_796 = ' '.join(_unique_796)
+                        print(f"  FIX 796: Sentence-level dedup")
+                        print(f"    Original: '{speech_result[:80]}...'")
+                        print(f"    Clean: '{_dedup_796[:80]}'")
+                        speech_result = _dedup_796
+
             # 1. Procesar con GPT (3-5s)
             respuesta_container["respuesta"] = agente.procesar_respuesta(speech_result)
             respuesta_container["completado"] = True

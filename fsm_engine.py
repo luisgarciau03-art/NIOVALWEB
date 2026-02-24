@@ -531,10 +531,15 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Pregunta general ---
     question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
+    # FIX 795: Saludos que empiezan con "que" NO son preguntas reales
+    # "que tal buen dia" → NO QUESTION (es re-saludo)
+    greeting_not_question_795 = ['que tal', 'que onda', 'que hubo', 'que paso']
     if any(tn.startswith(q + ' ') for q in question_markers):
-        return FSMIntent.QUESTION
+        if not any(tn.startswith(g) for g in greeting_not_question_795):
+            return FSMIntent.QUESTION
     if '?' in texto:
-        return FSMIntent.QUESTION
+        if not any(tn.startswith(g) for g in greeting_not_question_795):
+            return FSMIntent.QUESTION
 
     # --- Confirmación ---
     confirm_exact = [
@@ -942,6 +947,11 @@ class FSMEngine:
         # FIX 788: Gaps - IDENTITY, WRONG_NUMBER
         add(S.CAPTURANDO_CONTACTO, I.IDENTITY,               S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
         add(S.CAPTURANDO_CONTACTO, I.WRONG_NUMBER,           S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
+        # FIX 797: En CAPTURANDO_CONTACTO, manejar intents de encargado (eco STT)
+        # STT echo "no está" → MANAGER_ABSENT → sin transición → UNKNOWN → GPT "contacto alternativo"
+        add(S.CAPTURANDO_CONTACTO, I.MANAGER_ABSENT,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
+        add(S.CAPTURANDO_CONTACTO, I.MANAGER_PRESENT, S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
+        add(S.CAPTURANDO_CONTACTO, I.QUESTION,        S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
 
         # === DICTANDO_DATO ===
         add(S.DICTANDO_DATO, I.DICTATING_PARTIAL,       S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
