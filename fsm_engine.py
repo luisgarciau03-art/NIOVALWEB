@@ -596,6 +596,25 @@ class FSMEngine:
         if FSM_ENABLED == "false":
             return None
 
+        # FIX 802: BRUCE2522 - Post-transfer re-introduction
+        # FSM runs BEFORE FIX 759B in agente_ventas → flag never consumed
+        # Check flag HERE so FSM doesn't intercept with wrong template
+        if agente and getattr(agente, '_post_espera_reintroducir_759', False):
+            agente._post_espera_reintroducir_759 = False
+            _t802 = texto.strip().lower()
+            _t802 = _t802.replace('\xe1','a').replace('\xe9','e').replace('\xed','i').replace('\xf3','o').replace('\xfa','u')
+            _t802 = _t802.replace('?','').replace('!','').replace('.','').replace(',','').replace('\xbf','').replace('\xa1','')
+            _saludos_802 = ['hola', 'bueno', 'buen dia', 'buenas tardes', 'buenas noches', 'que tal', 'digame', 'diga', 'si digame', 'mande']
+            _es_saludo_802 = any(s in _t802 for s in _saludos_802)
+            _es_identidad_802 = any(q in _t802 for q in ['quien habla', 'quien llama', 'de donde', 'que empresa', 'de parte de'])
+            if _es_saludo_802 and not _es_identidad_802:
+                # Persona nueva saludando → re-introducción con pitch
+                print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' → pitch_persona_nueva")
+                self.state = FSMState.BUSCANDO_ENCARGADO
+                self.context.pitch_dado = True
+                self.context.encargado_preguntado = True
+                return self._get_template("pitch_persona_nueva")
+
         # 1. Clasificar intent
         intent = classify_intent(texto, self.context, self.state)
 
@@ -967,6 +986,9 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.NO_INTEREST,              S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.REJECT_DATA,              S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
         add(S.DICTANDO_DATO, I.IDENTITY,                 S.DICTANDO_DATO, A.TEMPLATE, "identificacion_nioval")
+        # FIX 801: BRUCE2522 - QUESTION durante dictado → responder pregunta y salir de dictado
+        # Sin esta transición, QUESTION cae al catch-all UNKNOWN → filler loop infinito
+        add(S.DICTANDO_DATO, I.QUESTION,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
 
         # === OFRECIENDO_CONTACTO ===
         add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])

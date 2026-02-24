@@ -15,11 +15,12 @@ from dotenv import load_dotenv
 from detector_ivr import DetectorIVR  # FIX 202: Detector de IVR/contestadoras automáticas
 
 # FIX 769: Variantes formales de acknowledgment con rotación
+# FIX 803: "continúe" → "prosiga" (TTS pronunciaba como portugués "continue")
 _ACK_VARIANTS_769 = [
     "Sí, adelante.",
-    "Claro, continúe.",
+    "Claro, prosiga.",
     "Sí, lo escucho.",
-    "Entendido, continúe.",
+    "Entendido, prosiga.",
     "Perfecto, adelante.",
 ]
 _ACK_DIGAME_769 = [
@@ -2552,7 +2553,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     # ¿GPT respondió con algo que NO es acknowledgment?
                     es_acknowledgment_733 = any(w in resp_norm_733 for w in [
                         'aja', 'perfecto', 'ya lo tengo', 'anotado', 'registrado',
-                        'continue', 'adelante', 'digame', 'lo tengo', 'tome nota'
+                        'continue', 'prosiga', 'adelante', 'digame', 'lo tengo', 'tome nota'
                     ])
                     # ¿GPT cambió de tema? (pitch, catálogo, despedida, pregunta diferente)
                     cambio_tema_733 = any(w in resp_norm_733 for w in [
@@ -2618,7 +2619,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 ])
                 # Verificar que GPT no es SOLO acknowledgment (sin cambio de tema)
                 es_ack_736 = any(w in resp_norm_736 for w in [
-                    'aja', 'perfecto', 'digame', 'adelante', 'continue',
+                    'aja', 'perfecto', 'digame', 'adelante', 'continue', 'prosiga',
                     'si, digame', 'claro', 'anotado'
                 ])
                 es_ack_corto_736 = es_ack_736 and len(respuesta.strip()) < 35
@@ -10217,7 +10218,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     '¿bueno?', 'bueno?', 'bueno', 'sí', 'si', 'ya', 'ya estoy',
                     'aquí estoy', 'aqui estoy', 'listo', 'diga', 'dígame', 'digame',
                     'mande', 'sí diga', 'si diga', 'ya regresé', 'ya regrese',
-                    'continúe', 'continue', 'siga', 'ahí está', 'ahi esta'
+                    'continúe', 'continue', 'prosiga', 'siga', 'ahí está', 'ahi esta'
                 ])
 
                 # FIX 498: BRUCE1473 - Detectar si cliente OFRECE correo/WhatsApp durante espera

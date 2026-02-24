@@ -80,11 +80,12 @@ TEMPLATES = {
 
     # === DICTADO / ACKNOWLEDGMENT ===
     # FIX 769: Variantes formales con rotación (evitar repetición)
+    # FIX 803: "continue" → "prosiga" (TTS pronunciaba como portugués)
     "aja_si": [
         "Si, adelante.",
-        "Claro, continue.",
+        "Claro, prosiga.",
         "Si, lo escucho.",
-        "Entendido, continue.",
+        "Entendido, prosiga.",
         "Perfecto, adelante.",
     ],
     "aja_digame": [
