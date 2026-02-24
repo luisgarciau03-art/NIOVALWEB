@@ -10551,6 +10551,302 @@ def logs_api():
 
 
 # ============================================================================
+# FIX 798: ENDPOINT /auditoria - REPORTE PERSISTENTE DE AUDITORIA POR LOTES
+# ============================================================================
+
+@app.route("/auditoria", methods=["GET"])
+def auditoria_dashboard():
+    """FIX 798: Dashboard de auditoria por lotes - persistente."""
+    try:
+        # Obtener bugs recientes
+        bugs_data = []
+        bugs_por_tipo = {}
+        bugs_criticos = 0
+        if BUG_DETECTOR_AVAILABLE:
+            from bug_detector import get_recent_bugs
+            raw_bugs = get_recent_bugs(200)
+            for b in raw_bugs:
+                bruce_id = b.get('bruce_id', '')
+                for bug in b.get('bugs', []):
+                    tipo = bug.get('tipo', 'UNKNOWN')
+                    sev = bug.get('severidad', 'MEDIO')
+                    bugs_data.append({
+                        'bruce_id': bruce_id,
+                        'tipo': tipo,
+                        'severidad': sev,
+                        'detalle': bug.get('detalle', '')[:120],
+                        'timestamp': b.get('timestamp', ''),
+                    })
+                    bugs_por_tipo[tipo] = bugs_por_tipo.get(tipo, 0) + 1
+                    if sev == 'CRITICO':
+                        bugs_criticos += 1
+
+        # Historial de llamadas
+        total_llamadas = len(historial_llamadas)
+        ultimas_llamadas = list(historial_llamadas)[-50:]
+
+        # Calificaciones
+        total_calificadas = len(calificaciones_llamadas)
+        calificaciones_vals = []
+        for k, v in calificaciones_llamadas.items():
+            cal = v.get('calificacion', 0) if isinstance(v, dict) else 0
+            if cal > 0:
+                calificaciones_vals.append(cal)
+        avg_cal = sum(calificaciones_vals) / len(calificaciones_vals) if calificaciones_vals else 0
+
+        # Resultados por tipo
+        resultados = {}
+        for ll in historial_llamadas:
+            res = ll.get('resultado', 'desconocido')
+            resultados[res] = resultados.get(res, 0) + 1
+
+        # Colores para severidad
+        def sev_color(s):
+            return {'CRITICO': '#dc3545', 'ALTO': '#fd7e14', 'MEDIO': '#ffc107', 'BAJO': '#17a2b8'}.get(s, '#6c757d')
+
+        # Version
+        try:
+            version_info = os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local')[:8]
+        except Exception:
+            version_info = 'N/A'
+
+        total_bugs = len(bugs_data)
+        bug_rate = (total_bugs / total_llamadas * 100) if total_llamadas > 0 else 0
+
+        # ---- Generar HTML ----
+        html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bruce W - Auditoria en Vivo</title>
+    <meta http-equiv="refresh" content="300">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a; color: #e2e8f0; padding: 20px;
+        }}
+        .container {{ max-width: 1400px; margin: 0 auto; }}
+        h1 {{ font-size: 28px; color: #60a5fa; margin-bottom: 5px; }}
+        .subtitle {{ color: #94a3b8; font-size: 14px; margin-bottom: 30px; }}
+        .kpi-grid {{
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 30px;
+        }}
+        .kpi-card {{
+            background: #1e293b; border-radius: 12px; padding: 20px;
+            border: 1px solid #334155;
+        }}
+        .kpi-card .label {{ color: #94a3b8; font-size: 13px; text-transform: uppercase; }}
+        .kpi-card .value {{ font-size: 32px; font-weight: 700; margin: 8px 0 4px; }}
+        .kpi-card .detail {{ font-size: 12px; color: #64748b; }}
+        .value.good {{ color: #34d399; }}
+        .value.ok {{ color: #60a5fa; }}
+        .value.warn {{ color: #fbbf24; }}
+        .value.bad {{ color: #f87171; }}
+        .section {{ margin-bottom: 40px; }}
+        .section-title {{
+            font-size: 18px; color: #60a5fa; margin-bottom: 12px;
+            padding-bottom: 8px; border-bottom: 1px solid #334155;
+        }}
+        table {{
+            width: 100%; border-collapse: collapse; background: #1e293b;
+            border-radius: 8px; overflow: hidden;
+        }}
+        th {{
+            background: #334155; color: #e2e8f0; padding: 12px 16px;
+            text-align: left; font-size: 13px; text-transform: uppercase;
+        }}
+        td {{ padding: 10px 16px; border-bottom: 1px solid #0f172a; font-size: 14px; }}
+        tr:hover {{ background: #262f40; }}
+        tr:nth-child(even) {{ background: #1a2332; }}
+        .badge {{
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 12px; font-weight: 600;
+        }}
+        .badge-good {{ background: #064e3b; color: #34d399; }}
+        .badge-warn {{ background: #78350f; color: #fbbf24; }}
+        .badge-bad {{ background: #7f1d1d; color: #f87171; }}
+        .badge-info {{ background: #1e3a5f; color: #60a5fa; }}
+        .severity {{
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 700; color: white;
+        }}
+        .bar-container {{ display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }}
+        .bar-label {{ width: 220px; font-size: 13px; text-align: right; color: #cbd5e1; }}
+        .bar-track {{ flex: 1; height: 22px; background: #334155; border-radius: 4px; overflow: hidden; }}
+        .bar-fill {{
+            height: 100%; border-radius: 4px; display: flex; align-items: center;
+            padding-left: 8px; font-size: 12px; font-weight: 600; color: white;
+        }}
+        .nav-links {{
+            display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+        }}
+        .nav-links a {{
+            color: #60a5fa; text-decoration: none; padding: 6px 14px;
+            background: #1e293b; border-radius: 8px; border: 1px solid #334155;
+            font-size: 13px;
+        }}
+        .nav-links a:hover {{ background: #334155; }}
+        footer {{
+            text-align: center; color: #475569; font-size: 12px;
+            margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b;
+        }}
+        @media (max-width: 768px) {{
+            .kpi-grid {{ grid-template-columns: repeat(2, 1fr); }}
+        }}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Bruce W - Auditoria en Vivo</h1>
+    <p class="subtitle">
+        Datos en tiempo real del servidor | Auto-refresh cada 5 min |
+        Deploy: {version_info} |
+        {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    </p>
+
+    <div class="nav-links">
+        <a href="/bugs">Bugs</a>
+        <a href="/pattern-audit">Pattern Audit</a>
+        <a href="/historial-llamadas">Historial</a>
+        <a href="/tracker">Tracker</a>
+        <a href="/diagnostico-narrow-cache">Narrow Cache</a>
+        <a href="/stats">Stats</a>
+        <a href="/logs">Logs</a>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="label">Llamadas Totales</div>
+            <div class="value ok">{total_llamadas}</div>
+            <div class="detail">En historial</div>
+        </div>
+        <div class="kpi-card">
+            <div class="label">Bugs Detectados</div>
+            <div class="value {'good' if total_bugs == 0 else 'bad' if total_bugs > 20 else 'warn'}">{total_bugs}</div>
+            <div class="detail">{bug_rate:.1f}% bug rate</div>
+        </div>
+        <div class="kpi-card">
+            <div class="label">Bugs Criticos</div>
+            <div class="value {'good' if bugs_criticos == 0 else 'bad'}">{bugs_criticos}</div>
+            <div class="detail">Requieren atencion inmediata</div>
+        </div>
+        <div class="kpi-card">
+            <div class="label">Calificacion Prom.</div>
+            <div class="value {'good' if avg_cal >= 8 else 'warn' if avg_cal >= 6 else 'bad' if avg_cal > 0 else 'ok'}">{avg_cal:.1f}/10</div>
+            <div class="detail">{total_calificadas} calificadas</div>
+        </div>
+        <div class="kpi-card">
+            <div class="label">Tipos de Bug</div>
+            <div class="value ok">{len(bugs_por_tipo)}</div>
+            <div class="detail">Categorias detectadas</div>
+        </div>
+    </div>
+"""
+
+        # ---- Distribucion de Bugs ----
+        if bugs_por_tipo:
+            max_count = max(bugs_por_tipo.values())
+            colors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4',
+                      '#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6',
+                      '#a855f7','#6366f1','#84cc16','#f59e0b','#10b981']
+            html += '<div class="section"><h2 class="section-title">Distribucion de Bugs</h2>\n'
+            for i, (tipo, count) in enumerate(sorted(bugs_por_tipo.items(), key=lambda x: -x[1])):
+                pct = count / max_count * 100
+                color = colors[i % len(colors)]
+                html += f'''<div class="bar-container">
+                    <div class="bar-label">{tipo}</div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width:{max(pct, 5)}%; background:{color}">{count}</div>
+                    </div>
+                </div>\n'''
+            html += '</div>\n'
+
+        # ---- Resultados de Llamadas ----
+        if resultados:
+            html += '<div class="section"><h2 class="section-title">Resultados de Llamadas</h2>\n'
+            html += '<table><thead><tr><th>Resultado</th><th>Cantidad</th><th>%</th></tr></thead><tbody>\n'
+            for res, count in sorted(resultados.items(), key=lambda x: -x[1]):
+                pct = count / total_llamadas * 100 if total_llamadas > 0 else 0
+                badge = 'badge-good' if 'exitosa' in res.lower() or 'catalogo' in res.lower() else 'badge-warn' if 'callback' in res.lower() else 'badge-info'
+                html += f'<tr><td><span class="badge {badge}">{res}</span></td><td>{count}</td><td>{pct:.1f}%</td></tr>\n'
+            html += '</tbody></table></div>\n'
+
+        # ---- Detalle de Bugs ----
+        if bugs_data:
+            html += '<div class="section"><h2 class="section-title">Bugs Recientes (ultimos 100)</h2>\n'
+            html += '<table><thead><tr><th>Bruce ID</th><th>Tipo</th><th>Severidad</th><th>Detalle</th><th>Fecha</th></tr></thead><tbody>\n'
+            for bug in bugs_data[:100]:
+                sev = bug.get('severidad', 'MEDIO')
+                sc = sev_color(sev)
+                ts = bug.get('timestamp', '')[:19]
+                html += f'''<tr>
+                    <td>{bug.get('bruce_id', '')}</td>
+                    <td><strong>{bug.get('tipo', '')}</strong></td>
+                    <td><span class="severity" style="background:{sc}">{sev}</span></td>
+                    <td style="font-size:12px">{bug.get('detalle', '')}</td>
+                    <td style="font-size:12px; color:#64748b">{ts}</td>
+                </tr>\n'''
+            if len(bugs_data) > 100:
+                html += f'<tr><td colspan="5" style="text-align:center; color:#64748b">... {len(bugs_data)-100} bugs mas</td></tr>\n'
+            html += '</tbody></table></div>\n'
+
+        # ---- Ultimas Llamadas ----
+        if ultimas_llamadas:
+            html += '<div class="section"><h2 class="section-title">Ultimas 50 Llamadas</h2>\n'
+            html += '<table><thead><tr><th>Bruce ID</th><th>Negocio</th><th>Resultado</th><th>Duracion</th><th>Fecha</th></tr></thead><tbody>\n'
+            for ll in reversed(ultimas_llamadas[-50:]):
+                res = ll.get('resultado', '')
+                badge = 'badge-good' if 'exitosa' in res.lower() else 'badge-warn' if 'callback' in res.lower() else 'badge-info'
+                dur = ll.get('duracion', 0)
+                dur_str = f"{dur}s" if dur else "N/A"
+                html += f'''<tr>
+                    <td>{ll.get('bruce_id', '')}</td>
+                    <td style="font-size:13px">{ll.get('negocio', '')[:40]}</td>
+                    <td><span class="badge {badge}">{res}</span></td>
+                    <td>{dur_str}</td>
+                    <td style="font-size:12px; color:#64748b">{ll.get('fecha', '')[:19]}</td>
+                </tr>\n'''
+            html += '</tbody></table></div>\n'
+
+        # ---- Workflow ----
+        html += """
+    <div class="section">
+        <h2 class="section-title">Ciclo de Mejora Continua</h2>
+        <div style="background:#1e293b; border-radius:12px; padding:20px; border:1px solid #334155;">
+            <ol style="color:#cbd5e1; line-height:2; padding-left:20px;">
+                <li>Hacer <strong>25 llamadas</strong> de prueba</li>
+                <li>Descargar logs: <code style="color:#60a5fa">python auto_descarga_logs.py --una-vez</code></li>
+                <li>Ejecutar auditoria: <code style="color:#60a5fa">python scripts/batch_audit.py</code></li>
+                <li>Revisar bugs en <strong>este dashboard</strong></li>
+                <li>Aplicar FIX para bugs encontrados</li>
+                <li>Validar en simulador: <code style="color:#60a5fa">python simulador_llamadas.py</code></li>
+                <li>Deploy: <code style="color:#60a5fa">git push</code></li>
+                <li>Repetir desde paso 1</li>
+            </ol>
+        </div>
+    </div>
+"""
+
+        html += f"""
+    <footer>
+        Bruce W - Auditoria en Vivo | Deploy: {version_info} |
+        {datetime.now().strftime('%Y-%m-%d %H:%M')}
+    </footer>
+</div>
+</body>
+</html>"""
+
+        return html
+
+    except Exception as e:
+        import traceback
+        return f"<h1>Error en Auditoria</h1><pre>{traceback.format_exc()}</pre>", 500
+
+
+# ============================================================================
 # FIX 212: WEBSOCKET ENDPOINT PARA DEEPGRAM STREAMING
 # ============================================================================
 
