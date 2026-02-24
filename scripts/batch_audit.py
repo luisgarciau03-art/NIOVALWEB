@@ -17,6 +17,7 @@ Uso:
   python scripts/batch_audit.py --monitor                # Auto-monitor (default 25 llamadas)
   python scripts/batch_audit.py --monitor --batch-size 10 # Auto cada 10 llamadas
   python scripts/batch_audit.py --monitor --batch-size 5  # Auto cada 5 llamadas
+  python scripts/batch_audit.py --monitor --reset         # Reiniciar conteo desde cero
   python scripts/batch_audit.py --skip-download          # Usar datos locales
   python scripts/batch_audit.py --skip-regression        # Sin tests de regresion
   python scripts/batch_audit.py --only-report            # Solo regenerar Excel
@@ -578,17 +579,19 @@ def _save_monitor_state(state):
         json.dump(state, f, ensure_ascii=False, indent=2)
 
 
-def _get_latest_bruce_id():
-    """Consulta el servidor para obtener el BRUCE ID mas reciente."""
-    max_id = 0
+def _get_all_bruce_ids():
+    """Consulta el servidor y retorna TODOS los BRUCE IDs encontrados (set).
+
+    FIX 804: Retorna set completo en vez de solo el max, para conteo preciso.
+    """
+    all_ids = set()
 
     # Fuente 1: /historial-llamadas (mas confiable, tiene TODOS los registros)
     try:
         resp = requests.get(f"{SERVER_URL}/historial-llamadas", timeout=15)
         resp.raise_for_status()
-        ids = [int(x) for x in re.findall(r'BRUCE(\d+)', resp.text)]
-        if ids:
-            max_id = max(max_id, max(ids))
+        ids = {int(x) for x in re.findall(r'BRUCE(\d+)', resp.text)}
+        all_ids.update(ids)
     except Exception:
         pass
 
@@ -600,27 +603,41 @@ def _get_latest_bruce_id():
         logs_list = data.get('logs', []) if isinstance(data, dict) else data if isinstance(data, list) else []
         for line in logs_list:
             for m in re.findall(r'BRUCE(\d+)', str(line)):
-                max_id = max(max_id, int(m))
+                all_ids.add(int(m))
     except Exception:
         pass
 
-    return max_id
+    return all_ids
+
+
+def _get_latest_bruce_id():
+    """Consulta el servidor para obtener el BRUCE ID mas reciente."""
+    all_ids = _get_all_bruce_ids()
+    return max(all_ids) if all_ids else 0
 
 
 def _count_new_calls(state):
-    """Cuenta cuantas llamadas nuevas hay desde la ultima auditoria."""
-    current_max = _get_latest_bruce_id()
-    last_seen = state.get('last_bruce_id_seen', 0)
+    """Cuenta cuantas llamadas nuevas hay desde la ultima auditoria.
 
-    if current_max <= 0:
-        return 0, current_max
+    FIX 804: Cuenta IDs reales > last_seen en vez de resta simple max - last_seen.
+    Esto corrige deteccion incorrecta cuando IDs no son secuenciales o el monitor
+    se inicia despues de que algunas llamadas ya ocurrieron.
+    """
+    all_ids = _get_all_bruce_ids()
+
+    if not all_ids:
+        return 0, 0
+
+    current_max = max(all_ids)
+    last_seen = state.get('last_bruce_id_seen', 0)
 
     if last_seen <= 0:
         # Primera vez - no contar las existentes como nuevas
         return 0, current_max
 
-    new_calls = max(0, current_max - last_seen)
-    return new_calls, current_max
+    # FIX 804: Contar IDs REALES mayores a last_seen (no resta simple)
+    new_ids = {bid for bid in all_ids if bid > last_seen}
+    return len(new_ids), current_max
 
 
 def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False):
@@ -642,6 +659,17 @@ def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False):
         _save_monitor_state(state)
         print(f"  Monitor inicializado. BRUCE ID actual: BRUCE{current_max}")
         print(f"  Las llamadas a partir de ahora se contaran como nuevas.\n")
+    else:
+        # FIX 804: Startup catch-up - detectar llamadas que ocurrieron mientras el monitor
+        # estaba apagado y sumarlas al acumulador
+        catchup_count, current_max = _count_new_calls(state)
+        if catchup_count > 0:
+            state['calls_since_last_audit'] = state.get('calls_since_last_audit', 0) + catchup_count
+            state['last_bruce_id_seen'] = current_max
+            state['last_check'] = datetime.now().isoformat()
+            _save_monitor_state(state)
+            print(f"  FIX 804: {catchup_count} llamada(s) detectada(s) mientras monitor estaba apagado")
+            print(f"  Acumuladas ahora: {state['calls_since_last_audit']}\n")
 
     print(f"\n{'='*60}")
     print(f"  BRUCE W - MONITOR AUTOMATICO")
@@ -769,11 +797,17 @@ def main():
                         help='Llamadas para disparar auditoria en modo monitor (default: 25)')
     parser.add_argument('--interval', type=int, default=3,
                         help='Minutos entre chequeos en modo monitor (default: 3)')
+    parser.add_argument('--reset', action='store_true',
+                        help='Reiniciar estado del monitor (contar desde cero)')
     args = parser.parse_args()
 
     _ensure_dirs()
 
     if args.monitor:
+        # FIX 804: --reset reinicia el estado del monitor
+        if args.reset:
+            _save_monitor_state({'last_bruce_id_seen': 0, 'calls_since_last_audit': 0, 'last_check': None})
+            print("  Monitor reseteado. Se re-inicializara con el BRUCE ID actual.\n")
         run_monitor(
             batch_size=args.batch_size,
             interval_minutes=args.interval,
