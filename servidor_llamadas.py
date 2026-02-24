@@ -10551,75 +10551,139 @@ def logs_api():
 
 
 # ============================================================================
-# FIX 798: ENDPOINT /auditoria - REPORTE PERSISTENTE DE AUDITORIA POR LOTES
+# FIX 798: ENDPOINT /auditoria - COMPARATIVO PERSISTENTE POR DEPLOY
 # ============================================================================
 
-@app.route("/auditoria", methods=["GET"])
-def auditoria_dashboard():
-    """FIX 798: Dashboard de auditoria por lotes - persistente."""
+# Archivo persistente para snapshots por deploy
+AUDITORIA_HISTORY_FILE = os.path.join(CACHE_DIR, "auditoria_deploys.json")
+
+def _cargar_auditoria_deploys():
+    """Carga historial de snapshots por deploy."""
     try:
-        # Obtener bugs recientes
-        bugs_data = []
-        bugs_por_tipo = {}
-        bugs_criticos = 0
-        if BUG_DETECTOR_AVAILABLE:
+        if os.path.exists(AUDITORIA_HISTORY_FILE):
+            with open(AUDITORIA_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"  [AUDITORIA] Error cargando historial: {e}")
+    return {'deploys': [], 'current_deploy_key': None}
+
+def _guardar_auditoria_deploys(data):
+    """Guarda historial de snapshots por deploy."""
+    try:
+        os.makedirs(os.path.dirname(AUDITORIA_HISTORY_FILE), exist_ok=True)
+        with open(AUDITORIA_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"  [AUDITORIA] Error guardando historial: {e}")
+
+def _snapshot_deploy_actual():
+    """Toma snapshot de metricas del deploy actual."""
+    snapshot = {
+        'deploy_name': DEPLOY_NAME,
+        'deploy_id': DEPLOY_ID,
+        'commit_sha': os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local')[:8],
+        'commit_msg': os.environ.get('RAILWAY_GIT_COMMIT_MESSAGE', '')[:80],
+        'timestamp': datetime.now().isoformat(),
+        'llamadas': 0,
+        'bugs_total': 0,
+        'bugs_criticos': 0,
+        'bugs_por_tipo': {},
+        'resultados': {},
+        'calificacion_promedio': 0,
+        'bruce_ids': [],
+    }
+
+    # Contar llamadas de ESTE deploy
+    deploy_llamadas = []
+    for ll in historial_llamadas:
+        deploy_llamadas.append(ll)
+    snapshot['llamadas'] = len(deploy_llamadas)
+
+    # Resultados
+    for ll in deploy_llamadas:
+        res = ll.get('resultado', 'desconocido')
+        snapshot['resultados'][res] = snapshot['resultados'].get(res, 0) + 1
+        bid = ll.get('bruce_id', '')
+        if bid and bid not in snapshot['bruce_ids']:
+            snapshot['bruce_ids'].append(bid)
+
+    # Bugs
+    if BUG_DETECTOR_AVAILABLE:
+        try:
             from bug_detector import get_recent_bugs
             raw_bugs = get_recent_bugs(200)
             for b in raw_bugs:
-                bruce_id = b.get('bruce_id', '')
                 for bug in b.get('bugs', []):
                     tipo = bug.get('tipo', 'UNKNOWN')
                     sev = bug.get('severidad', 'MEDIO')
-                    bugs_data.append({
-                        'bruce_id': bruce_id,
-                        'tipo': tipo,
-                        'severidad': sev,
-                        'detalle': bug.get('detalle', '')[:120],
-                        'timestamp': b.get('timestamp', ''),
-                    })
-                    bugs_por_tipo[tipo] = bugs_por_tipo.get(tipo, 0) + 1
+                    snapshot['bugs_total'] += 1
+                    snapshot['bugs_por_tipo'][tipo] = snapshot['bugs_por_tipo'].get(tipo, 0) + 1
                     if sev == 'CRITICO':
-                        bugs_criticos += 1
+                        snapshot['bugs_criticos'] += 1
+        except Exception:
+            pass
 
-        # Historial de llamadas
-        total_llamadas = len(historial_llamadas)
-        ultimas_llamadas = list(historial_llamadas)[-50:]
+    # Calificacion
+    cals = []
+    for k, v in calificaciones_llamadas.items():
+        cal = v.get('calificacion', 0) if isinstance(v, dict) else 0
+        if cal > 0:
+            cals.append(cal)
+    snapshot['calificacion_promedio'] = round(sum(cals) / len(cals), 1) if cals else 0
 
-        # Calificaciones
-        total_calificadas = len(calificaciones_llamadas)
-        calificaciones_vals = []
-        for k, v in calificaciones_llamadas.items():
-            cal = v.get('calificacion', 0) if isinstance(v, dict) else 0
-            if cal > 0:
-                calificaciones_vals.append(cal)
-        avg_cal = sum(calificaciones_vals) / len(calificaciones_vals) if calificaciones_vals else 0
+    return snapshot
 
-        # Resultados por tipo
-        resultados = {}
-        for ll in historial_llamadas:
-            res = ll.get('resultado', 'desconocido')
-            resultados[res] = resultados.get(res, 0) + 1
+# Registrar deploy actual al iniciar
+_auditoria_history = _cargar_auditoria_deploys()
+_current_deploy_key = f"{DEPLOY_NAME}_{DEPLOY_ID}"
+if _auditoria_history.get('current_deploy_key') != _current_deploy_key:
+    # Nuevo deploy - guardar snapshot del deploy anterior y crear nuevo
+    _auditoria_history['current_deploy_key'] = _current_deploy_key
+    _auditoria_history['deploys'].append({
+        'deploy_key': _current_deploy_key,
+        'deploy_name': DEPLOY_NAME,
+        'deploy_id': DEPLOY_ID,
+        'commit_sha': os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local')[:8],
+        'commit_msg': os.environ.get('RAILWAY_GIT_COMMIT_MESSAGE', '')[:80],
+        'started': datetime.now().isoformat(),
+        'snapshot': None,  # Se actualiza en cada request a /auditoria
+    })
+    # Mantener max 50 deploys
+    _auditoria_history['deploys'] = _auditoria_history['deploys'][-50:]
+    _guardar_auditoria_deploys(_auditoria_history)
+    print(f"  [AUDITORIA] Nuevo deploy registrado: {DEPLOY_NAME}")
 
-        # Colores para severidad
+
+@app.route("/auditoria", methods=["GET"])
+def auditoria_dashboard():
+    """FIX 798: Dashboard comparativo persistente por deploy."""
+    try:
+        # Actualizar snapshot del deploy actual
+        history = _cargar_auditoria_deploys()
+        current_snapshot = _snapshot_deploy_actual()
+
+        # Guardar snapshot actualizado del deploy actual
+        if history['deploys']:
+            history['deploys'][-1]['snapshot'] = current_snapshot
+            history['deploys'][-1]['last_updated'] = datetime.now().isoformat()
+            _guardar_auditoria_deploys(history)
+
+        deploys = history.get('deploys', [])
+
+        # Deploy actual
+        cur = current_snapshot
+        version_info = cur.get('commit_sha', 'N/A')
+
         def sev_color(s):
             return {'CRITICO': '#dc3545', 'ALTO': '#fd7e14', 'MEDIO': '#ffc107', 'BAJO': '#17a2b8'}.get(s, '#6c757d')
 
-        # Version
-        try:
-            version_info = os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local')[:8]
-        except Exception:
-            version_info = 'N/A'
-
-        total_bugs = len(bugs_data)
-        bug_rate = (total_bugs / total_llamadas * 100) if total_llamadas > 0 else 0
-
-        # ---- Generar HTML ----
+        # ---- HTML ----
         html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bruce W - Auditoria en Vivo</title>
+    <title>Bruce W - Auditoria Comparativa</title>
     <meta http-equiv="refresh" content="300">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
@@ -10641,69 +10705,42 @@ def auditoria_dashboard():
         .kpi-card .label {{ color: #94a3b8; font-size: 13px; text-transform: uppercase; }}
         .kpi-card .value {{ font-size: 32px; font-weight: 700; margin: 8px 0 4px; }}
         .kpi-card .detail {{ font-size: 12px; color: #64748b; }}
-        .value.good {{ color: #34d399; }}
-        .value.ok {{ color: #60a5fa; }}
-        .value.warn {{ color: #fbbf24; }}
-        .value.bad {{ color: #f87171; }}
+        .value.good {{ color: #34d399; }} .value.ok {{ color: #60a5fa; }}
+        .value.warn {{ color: #fbbf24; }} .value.bad {{ color: #f87171; }}
         .section {{ margin-bottom: 40px; }}
         .section-title {{
             font-size: 18px; color: #60a5fa; margin-bottom: 12px;
             padding-bottom: 8px; border-bottom: 1px solid #334155;
         }}
-        table {{
-            width: 100%; border-collapse: collapse; background: #1e293b;
-            border-radius: 8px; overflow: hidden;
-        }}
-        th {{
-            background: #334155; color: #e2e8f0; padding: 12px 16px;
-            text-align: left; font-size: 13px; text-transform: uppercase;
-        }}
+        table {{ width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; }}
+        th {{ background: #334155; color: #e2e8f0; padding: 12px 16px; text-align: left; font-size: 13px; text-transform: uppercase; }}
         td {{ padding: 10px 16px; border-bottom: 1px solid #0f172a; font-size: 14px; }}
-        tr:hover {{ background: #262f40; }}
-        tr:nth-child(even) {{ background: #1a2332; }}
-        .badge {{
-            display: inline-block; padding: 2px 10px; border-radius: 12px;
-            font-size: 12px; font-weight: 600;
-        }}
+        tr:hover {{ background: #262f40; }} tr:nth-child(even) {{ background: #1a2332; }}
+        .badge {{ display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }}
         .badge-good {{ background: #064e3b; color: #34d399; }}
         .badge-warn {{ background: #78350f; color: #fbbf24; }}
         .badge-bad {{ background: #7f1d1d; color: #f87171; }}
         .badge-info {{ background: #1e3a5f; color: #60a5fa; }}
-        .severity {{
-            display: inline-block; padding: 2px 8px; border-radius: 4px;
-            font-size: 11px; font-weight: 700; color: white;
-        }}
+        .badge-current {{ background: #312e81; color: #a78bfa; border: 1px solid #6366f1; }}
+        .severity {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; color: white; }}
         .bar-container {{ display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }}
         .bar-label {{ width: 220px; font-size: 13px; text-align: right; color: #cbd5e1; }}
         .bar-track {{ flex: 1; height: 22px; background: #334155; border-radius: 4px; overflow: hidden; }}
-        .bar-fill {{
-            height: 100%; border-radius: 4px; display: flex; align-items: center;
-            padding-left: 8px; font-size: 12px; font-weight: 600; color: white;
-        }}
-        .nav-links {{
-            display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
-        }}
-        .nav-links a {{
-            color: #60a5fa; text-decoration: none; padding: 6px 14px;
-            background: #1e293b; border-radius: 8px; border: 1px solid #334155;
-            font-size: 13px;
-        }}
+        .bar-fill {{ height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 12px; font-weight: 600; color: white; }}
+        .nav-links {{ display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }}
+        .nav-links a {{ color: #60a5fa; text-decoration: none; padding: 6px 14px; background: #1e293b; border-radius: 8px; border: 1px solid #334155; font-size: 13px; }}
         .nav-links a:hover {{ background: #334155; }}
-        footer {{
-            text-align: center; color: #475569; font-size: 12px;
-            margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b;
-        }}
-        @media (max-width: 768px) {{
-            .kpi-grid {{ grid-template-columns: repeat(2, 1fr); }}
-        }}
+        .trend-up {{ color: #f87171; }} .trend-down {{ color: #34d399; }} .trend-flat {{ color: #94a3b8; }}
+        footer {{ text-align: center; color: #475569; font-size: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }}
+        @media (max-width: 768px) {{ .kpi-grid {{ grid-template-columns: repeat(2, 1fr); }} }}
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Bruce W - Auditoria en Vivo</h1>
+    <h1>Bruce W - Auditoria Comparativa por Deploy</h1>
     <p class="subtitle">
-        Datos en tiempo real del servidor | Auto-refresh cada 5 min |
-        Deploy: {version_info} |
+        Persistente entre deploys | Auto-refresh 5 min |
+        Deploy actual: <strong>{DEPLOY_NAME}</strong> ({version_info}) |
         {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     </p>
 
@@ -10717,127 +10754,150 @@ def auditoria_dashboard():
         <a href="/logs">Logs</a>
     </div>
 
+    <!-- KPIs del deploy actual -->
     <div class="kpi-grid">
         <div class="kpi-card">
-            <div class="label">Llamadas Totales</div>
-            <div class="value ok">{total_llamadas}</div>
+            <div class="label">Deploy Actual</div>
+            <div class="value ok" style="font-size:20px">{DEPLOY_NAME}</div>
+            <div class="detail">{version_info}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="label">Llamadas (este deploy)</div>
+            <div class="value ok">{cur['llamadas']}</div>
             <div class="detail">En historial</div>
         </div>
         <div class="kpi-card">
-            <div class="label">Bugs Detectados</div>
-            <div class="value {'good' if total_bugs == 0 else 'bad' if total_bugs > 20 else 'warn'}">{total_bugs}</div>
-            <div class="detail">{bug_rate:.1f}% bug rate</div>
+            <div class="label">Bugs (este deploy)</div>
+            <div class="value {'good' if cur['bugs_total'] == 0 else 'bad' if cur['bugs_total'] > 10 else 'warn'}">{cur['bugs_total']}</div>
+            <div class="detail">{'%.1f' % (cur['bugs_total']/max(cur['llamadas'],1)*100)}% bug rate</div>
         </div>
         <div class="kpi-card">
             <div class="label">Bugs Criticos</div>
-            <div class="value {'good' if bugs_criticos == 0 else 'bad'}">{bugs_criticos}</div>
-            <div class="detail">Requieren atencion inmediata</div>
+            <div class="value {'good' if cur['bugs_criticos'] == 0 else 'bad'}">{cur['bugs_criticos']}</div>
+            <div class="detail">Requieren atencion</div>
         </div>
         <div class="kpi-card">
-            <div class="label">Calificacion Prom.</div>
-            <div class="value {'good' if avg_cal >= 8 else 'warn' if avg_cal >= 6 else 'bad' if avg_cal > 0 else 'ok'}">{avg_cal:.1f}/10</div>
-            <div class="detail">{total_calificadas} calificadas</div>
+            <div class="label">Calificacion</div>
+            <div class="value {'good' if cur['calificacion_promedio'] >= 8 else 'warn' if cur['calificacion_promedio'] >= 6 else 'bad' if cur['calificacion_promedio'] > 0 else 'ok'}">{cur['calificacion_promedio']}/10</div>
+            <div class="detail">Promedio</div>
         </div>
         <div class="kpi-card">
-            <div class="label">Tipos de Bug</div>
-            <div class="value ok">{len(bugs_por_tipo)}</div>
-            <div class="detail">Categorias detectadas</div>
+            <div class="label">Deploys Registrados</div>
+            <div class="value ok">{len(deploys)}</div>
+            <div class="detail">Historicos</div>
         </div>
     </div>
 """
 
-        # ---- Distribucion de Bugs ----
-        if bugs_por_tipo:
-            max_count = max(bugs_por_tipo.values())
+        # ---- TABLA COMPARATIVA POR DEPLOY ----
+        html += """
+    <div class="section">
+        <h2 class="section-title">Comparativo por Deploy</h2>
+        <table>
+            <thead><tr>
+                <th></th><th>Deploy</th><th>Commit</th><th>Fecha</th>
+                <th>Llamadas</th><th>Bugs</th><th>Criticos</th>
+                <th>Bug Rate</th><th>Calif.</th><th>Tendencia</th>
+            </tr></thead>
+            <tbody>
+"""
+        prev_bug_rate = None
+        for i, dep in enumerate(reversed(deploys)):
+            snap = dep.get('snapshot')
+            is_current = (i == 0)
+            name = dep.get('deploy_name', '?')
+            sha = dep.get('commit_sha', '')[:8]
+            msg = dep.get('commit_msg', '')[:40]
+            started = dep.get('started', '')[:16]
+
+            if snap:
+                llam = snap.get('llamadas', 0)
+                bugs = snap.get('bugs_total', 0)
+                crit = snap.get('bugs_criticos', 0)
+                cal = snap.get('calificacion_promedio', 0)
+                br = (bugs / max(llam, 1) * 100)
+            else:
+                llam = bugs = crit = 0
+                cal = br = 0
+
+            # Tendencia vs deploy anterior
+            trend = ''
+            if prev_bug_rate is not None:
+                diff = br - prev_bug_rate
+                if abs(diff) < 0.5:
+                    trend = '<span class="trend-flat">= igual</span>'
+                elif diff < 0:
+                    trend = f'<span class="trend-down">-{abs(diff):.1f}% mejor</span>'
+                else:
+                    trend = f'<span class="trend-up">+{diff:.1f}% peor</span>'
+            prev_bug_rate = br
+
+            cur_badge = '<span class="badge badge-current">ACTUAL</span> ' if is_current else ''
+            bug_badge = 'badge-good' if bugs == 0 else 'badge-warn' if bugs <= 5 else 'badge-bad'
+
+            html += f"""<tr{'style="background:#1a1f3a"' if is_current else ''}>
+                <td>{cur_badge}</td>
+                <td><strong>{name}</strong></td>
+                <td style="font-size:12px" title="{msg}">{sha}</td>
+                <td style="font-size:12px">{started}</td>
+                <td>{llam}</td>
+                <td><span class="badge {bug_badge}">{bugs}</span></td>
+                <td>{'<span class="badge badge-bad">'+str(crit)+'</span>' if crit > 0 else '0'}</td>
+                <td>{br:.1f}%</td>
+                <td><span class="badge {'badge-good' if cal >= 8 else 'badge-warn' if cal >= 6 else 'badge-bad' if cal > 0 else 'badge-info'}">{cal}</span></td>
+                <td>{trend}</td>
+            </tr>\n"""
+
+        html += "</tbody></table></div>\n"
+
+        # ---- Bugs del deploy actual ----
+        if cur['bugs_por_tipo']:
+            max_count = max(cur['bugs_por_tipo'].values())
             colors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4',
-                      '#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6',
-                      '#a855f7','#6366f1','#84cc16','#f59e0b','#10b981']
-            html += '<div class="section"><h2 class="section-title">Distribucion de Bugs</h2>\n'
-            for i, (tipo, count) in enumerate(sorted(bugs_por_tipo.items(), key=lambda x: -x[1])):
+                      '#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6']
+            html += '<div class="section"><h2 class="section-title">Bugs del Deploy Actual</h2>\n'
+            for i, (tipo, count) in enumerate(sorted(cur['bugs_por_tipo'].items(), key=lambda x: -x[1])):
                 pct = count / max_count * 100
                 color = colors[i % len(colors)]
-                html += f'''<div class="bar-container">
-                    <div class="bar-label">{tipo}</div>
-                    <div class="bar-track">
-                        <div class="bar-fill" style="width:{max(pct, 5)}%; background:{color}">{count}</div>
-                    </div>
-                </div>\n'''
+                html += f'<div class="bar-container"><div class="bar-label">{tipo}</div><div class="bar-track"><div class="bar-fill" style="width:{max(pct,5)}%;background:{color}">{count}</div></div></div>\n'
             html += '</div>\n'
 
-        # ---- Resultados de Llamadas ----
-        if resultados:
-            html += '<div class="section"><h2 class="section-title">Resultados de Llamadas</h2>\n'
+        # ---- Resultados del deploy actual ----
+        if cur.get('resultados'):
+            html += '<div class="section"><h2 class="section-title">Resultados de Llamadas (Deploy Actual)</h2>\n'
             html += '<table><thead><tr><th>Resultado</th><th>Cantidad</th><th>%</th></tr></thead><tbody>\n'
-            for res, count in sorted(resultados.items(), key=lambda x: -x[1]):
-                pct = count / total_llamadas * 100 if total_llamadas > 0 else 0
+            for res, count in sorted(cur['resultados'].items(), key=lambda x: -x[1]):
+                pct = count / max(cur['llamadas'], 1) * 100
                 badge = 'badge-good' if 'exitosa' in res.lower() or 'catalogo' in res.lower() else 'badge-warn' if 'callback' in res.lower() else 'badge-info'
                 html += f'<tr><td><span class="badge {badge}">{res}</span></td><td>{count}</td><td>{pct:.1f}%</td></tr>\n'
             html += '</tbody></table></div>\n'
 
-        # ---- Detalle de Bugs ----
-        if bugs_data:
-            html += '<div class="section"><h2 class="section-title">Bugs Recientes (ultimos 100)</h2>\n'
-            html += '<table><thead><tr><th>Bruce ID</th><th>Tipo</th><th>Severidad</th><th>Detalle</th><th>Fecha</th></tr></thead><tbody>\n'
-            for bug in bugs_data[:100]:
-                sev = bug.get('severidad', 'MEDIO')
-                sc = sev_color(sev)
-                ts = bug.get('timestamp', '')[:19]
-                html += f'''<tr>
-                    <td>{bug.get('bruce_id', '')}</td>
-                    <td><strong>{bug.get('tipo', '')}</strong></td>
-                    <td><span class="severity" style="background:{sc}">{sev}</span></td>
-                    <td style="font-size:12px">{bug.get('detalle', '')}</td>
-                    <td style="font-size:12px; color:#64748b">{ts}</td>
-                </tr>\n'''
-            if len(bugs_data) > 100:
-                html += f'<tr><td colspan="5" style="text-align:center; color:#64748b">... {len(bugs_data)-100} bugs mas</td></tr>\n'
-            html += '</tbody></table></div>\n'
+        # ---- Bugs detalle del deploy actual ----
+        if BUG_DETECTOR_AVAILABLE:
+            try:
+                from bug_detector import get_recent_bugs
+                raw_bugs = get_recent_bugs(50)
+                if raw_bugs:
+                    html += '<div class="section"><h2 class="section-title">Bugs Recientes (Deploy Actual)</h2>\n'
+                    html += '<table><thead><tr><th>Bruce ID</th><th>Tipo</th><th>Severidad</th><th>Detalle</th><th>Fecha</th></tr></thead><tbody>\n'
+                    for b in raw_bugs[:50]:
+                        bid = b.get('bruce_id', '')
+                        for bug in b.get('bugs', []):
+                            sev = bug.get('severidad', 'MEDIO')
+                            sc = sev_color(sev)
+                            html += f'<tr><td>{bid}</td><td><strong>{bug.get("tipo","")}</strong></td><td><span class="severity" style="background:{sc}">{sev}</span></td><td style="font-size:12px">{bug.get("detalle","")[:120]}</td><td style="font-size:12px;color:#64748b">{b.get("timestamp","")[:19]}</td></tr>\n'
+                    html += '</tbody></table></div>\n'
+            except Exception:
+                pass
 
-        # ---- Ultimas Llamadas ----
-        if ultimas_llamadas:
-            html += '<div class="section"><h2 class="section-title">Ultimas 50 Llamadas</h2>\n'
-            html += '<table><thead><tr><th>Bruce ID</th><th>Negocio</th><th>Resultado</th><th>Duracion</th><th>Fecha</th></tr></thead><tbody>\n'
-            for ll in reversed(ultimas_llamadas[-50:]):
-                res = ll.get('resultado', '')
-                badge = 'badge-good' if 'exitosa' in res.lower() else 'badge-warn' if 'callback' in res.lower() else 'badge-info'
-                dur = ll.get('duracion', 0)
-                dur_str = f"{dur}s" if dur else "N/A"
-                html += f'''<tr>
-                    <td>{ll.get('bruce_id', '')}</td>
-                    <td style="font-size:13px">{ll.get('negocio', '')[:40]}</td>
-                    <td><span class="badge {badge}">{res}</span></td>
-                    <td>{dur_str}</td>
-                    <td style="font-size:12px; color:#64748b">{ll.get('fecha', '')[:19]}</td>
-                </tr>\n'''
-            html += '</tbody></table></div>\n'
-
-        # ---- Workflow ----
-        html += """
-    <div class="section">
-        <h2 class="section-title">Ciclo de Mejora Continua</h2>
-        <div style="background:#1e293b; border-radius:12px; padding:20px; border:1px solid #334155;">
-            <ol style="color:#cbd5e1; line-height:2; padding-left:20px;">
-                <li>Hacer <strong>25 llamadas</strong> de prueba</li>
-                <li>Descargar logs: <code style="color:#60a5fa">python auto_descarga_logs.py --una-vez</code></li>
-                <li>Ejecutar auditoria: <code style="color:#60a5fa">python scripts/batch_audit.py</code></li>
-                <li>Revisar bugs en <strong>este dashboard</strong></li>
-                <li>Aplicar FIX para bugs encontrados</li>
-                <li>Validar en simulador: <code style="color:#60a5fa">python simulador_llamadas.py</code></li>
-                <li>Deploy: <code style="color:#60a5fa">git push</code></li>
-                <li>Repetir desde paso 1</li>
-            </ol>
-        </div>
-    </div>
-"""
-
+        # ---- Footer ----
         html += f"""
     <footer>
-        Bruce W - Auditoria en Vivo | Deploy: {version_info} |
+        Bruce W - Auditoria Comparativa | Persistente entre deploys |
+        Deploy: {DEPLOY_NAME} ({version_info}) |
         {datetime.now().strftime('%Y-%m-%d %H:%M')}
     </footer>
-</div>
-</body>
-</html>"""
+</div></body></html>"""
 
         return html
 
