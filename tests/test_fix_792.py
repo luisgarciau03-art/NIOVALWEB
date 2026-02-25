@@ -164,8 +164,10 @@ class TestFix792CodeExists(unittest.TestCase):
             source = f.read()
         # FIX 792 call point
         pos_792 = source.find('_try_narrow_prompt_792(respuesta_cliente)')
-        # GPT full call
-        pos_gpt = source.find('openai_client.chat.completions.create')
+        # GPT full call (FIX 819: ahora usa llm_client adapter)
+        pos_gpt = source.find('llm_client.chat_completion(')
+        if pos_gpt < 0:
+            pos_gpt = source.find('openai_client.chat.completions.create')
         self.assertGreater(pos_792, 0, "FIX 792 call not found")
         self.assertGreater(pos_gpt, 0, "GPT full call not found")
         self.assertLess(pos_792, pos_gpt,

@@ -292,6 +292,9 @@ else:
 
 elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
+# FIX 819: LLM Client Adapter (soporte OpenAI + Anthropic)
+from llm_client import llm_client
+
 # Sistema de Prompt para Bruce
 # Cargado desde archivo externo para mejor mantenibilidad
 from prompts import obtener_system_prompt
@@ -11405,16 +11408,16 @@ MAXIMA PRIORIDAD: Verifica el historial COMPLETO antes de generar tu respuesta."
                     except Exception as e_mem:
                         print(f"   [WARN] FIX 699: Memory GPT context error: {e_mem}")
 
-                    response = openai_client.chat.completions.create(
-                        model="gpt-4o-mini",
+                    # FIX 819: Usar LLM Client Adapter (OpenAI o Anthropic)
+                    respuesta_agente_819 = llm_client.chat_completion(
                         messages=mensajes_con_reglas,
+                        openai_client=openai_client,
                         temperature=0.7,
                         max_tokens=tokens_actual,  # FIX 491/533: Dinámico, reducido en retry
-                        presence_penalty=0.6,
-                        frequency_penalty=1.5,  # FIX 74: CRÍTICO - Aumentado de 1.2 a 1.5 (penalización MÁXIMA de repeticiones)
                         timeout=timeout_actual,  # FIX 533: Timeout progresivo
-                        stream=False,
-                        top_p=0.9  # FIX 55: Reducir diversidad para respuestas más rápidas
+                        presence_penalty=0.6,
+                        frequency_penalty=1.5,  # FIX 74: Penalización MÁXIMA de repeticiones
+                        top_p=0.9,  # FIX 55: Reducir diversidad
                     )
                     # Éxito - salir del loop
                     if intentos_gpt > 0:
@@ -11441,9 +11444,9 @@ MAXIMA PRIORIDAD: Verifica el historial COMPLETO antes de generar tu respuesta."
             frase_relleno = ""
             if duracion_gpt > 3.0:
                 frase_relleno = self._obtener_frase_relleno(duracion_gpt)
-                print(f"[EMOJI] FIX 163: GPT tardó {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
+                print(f"[EMOJI] FIX 163: GPT tardo {duracion_gpt:.1f}s - agregando frase de relleno: '{frase_relleno}'")
 
-            respuesta_agente = response.choices[0].message.content
+            respuesta_agente = respuesta_agente_819  # FIX 819: Resultado del adapter
 
             # FIX 519: Guardar transcripción + respuesta para aprendizaje automático
             if CACHE_PATRONES_DISPONIBLE and hasattr(self, '_transcripcion_pendiente_aprender') and self._transcripcion_pendiente_aprender:
@@ -11659,21 +11662,20 @@ Genera una respuesta COMPLETAMENTE DIFERENTE ahora."""
                 })
 
                 # Regenerar respuesta con contexto de no repetir
-                print(f"[EMOJI] FIX 204: Regenerando respuesta sin repetición...")
+                # FIX 819: Usar modelo potente para retry (gpt-4o o claude-sonnet)
+                print(f"[EMOJI] FIX 204: Regenerando respuesta sin repeticion...")
                 try:
-                    response_reintento = openai_client.chat.completions.create(
-                        model="gpt-4o",
+                    respuesta_agente = llm_client.chat_completion(
                         messages=self.conversation_history,
+                        openai_client=openai_client,
+                        model_override=llm_client.get_retry_model(),  # gpt-4o o claude-sonnet
                         temperature=0.9,  # Más creatividad para evitar repetición
                         max_tokens=80,
-                        presence_penalty=0.8,  # Penalizar tokens ya usados
-                        frequency_penalty=2.0,  # MÁXIMA penalización de repeticiones
                         timeout=2.8,
-                        stream=False,
-                        top_p=0.9
+                        presence_penalty=0.8,
+                        frequency_penalty=2.0,
+                        top_p=0.9,
                     )
-
-                    respuesta_agente = response_reintento.choices[0].message.content
                     print(f"[OK] FIX 204: Nueva respuesta generada: \"{respuesta_agente[:60]}...\"")
 
                 except Exception as e:
@@ -13330,20 +13332,20 @@ Responde SOLO en este formato JSON:
   "opinion_bruce": "Texto breve de 2-3 líneas"
 }}"""
 
-            # Llamar a GPT para analizar
-            response = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+            # FIX 819: Usar LLM Client Adapter para analisis
+            analisis_raw_819 = llm_client.chat_completion(
                 messages=[
-                    {"role": "system", "content": "Eres un analista de llamadas de ventas. Analiza objetivamente la conversación y proporciona insights."},
+                    {"role": "system", "content": "Eres un analista de llamadas de ventas. Analiza objetivamente la conversacion y proporciona insights."},
                     {"role": "user", "content": prompt_analisis}
                 ],
+                openai_client=openai_client,
                 temperature=0.3,
-                max_tokens=200
+                max_tokens=200,
             )
 
             # Parsear respuesta JSON
             import json
-            analisis_texto = response.choices[0].message.content.strip()
+            analisis_texto = analisis_raw_819.strip()
             # Remover markdown code blocks si existen
             if "```json" in analisis_texto:
                 analisis_texto = analisis_texto.split("```json")[1].split("```")[0].strip()
