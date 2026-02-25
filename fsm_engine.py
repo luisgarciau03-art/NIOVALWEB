@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, List, Tuple, Any
 
 from response_templates import TEMPLATES, NARROW_PROMPTS
+from llm_client import llm_client  # FIX 820: Usar Claude/OpenAI adapter
 
 # ============================================================
 # FSM_ENABLED mode
@@ -380,9 +381,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
-        # FIX 780: Con contexto temporal, no es dictado parcial (es info de disponibilidad)
+        # FIX 780+820: Con contexto temporal, no es dictado parcial (es info de disponibilidad)
+        # FIX 820: Agregado ENCARGADO_AUSENTE (BRUCE2534: "por la tarde a las 4" era dictating_partial)
         if has_time_context and state in (FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH,
-                                          FSMState.ENCARGADO_PRESENTE):
+                                          FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE):
             pass  # Fall through to callback/other classifiers
         else:
             # FIX 754+787: Detectar dictado parcial en más estados
@@ -418,6 +420,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.NO_INTEREST
 
     # --- Rechazo de dato específico ---
+    # FIX 820: Expandido con patrones de BRUCE2533/2535
     reject_data = [
         'no tengo whatsapp', 'no tengo correo', 'no tengo email',
         'no tengo telefono', 'no tengo celular', 'no tengo fijo',
@@ -426,6 +429,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'solo tengo telefono', 'solo tengo celular', 'no manejo correo',
         'no te lo puedo dar', 'no puedo darte', 'no estoy autorizado',
         'tampoco tengo', 'no cuento con',
+        # FIX 820: Patrones faltantes detectados en BRUCE2533/2535
+        'no te puedo pasar', 'no puedo proporcionar', 'no le puedo proporcionar',
+        'no te puedo proporcionar', 'no uso whatsapp', 'no manejo whatsapp',
+        'no tengo de eso', 'no puedo pasar informacion', 'no puedo dar informacion',
+        'no te puedo pasar informacion', 'no le puedo pasar informacion',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -476,6 +484,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ahorita le paso', 'ahorita se lo comunico',
     ]
     # Guard: NO es callback ("esperar a que regrese")
+    # FIX 820: Expandido callback_guard con patrones de BRUCE2535
     callback_guard = [
         'esperar a que', 'esperar que regrese', 'esperar que llegue',
         'esperar que vuelva', 'marcar mas tarde', 'llamar mas tarde',
@@ -483,6 +492,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mandarme', 'enviarme', 'mandame', 'enviame',
         'viene hasta el', 'regresa hasta el', 'llega hasta el',
         'regresa el', 'viene el', 'llega el',
+        # FIX 820: BRUCE2535 "esperar ya que regrese"
+        'esperar ya que', 'tendrias que esperar', 'tendria que esperar',
+        'tienes que esperar', 'tiene que esperar', 'hay que esperar',
     ]
     if any(c in tn for c in callback_guard):
         return FSMIntent.CALLBACK
@@ -981,7 +993,9 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.CONFIRMATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.DICTANDO_DATO, I.FAREWELL,                 S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
-        add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        # FIX 820: UNKNOWN durante dictado → Claude decide (no fillers)
+        # ANTES: A.ACKNOWLEDGE "aja_si" → loop de fillers cuando cliente no dicta
+        add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.GPT_NARROW, "conversacion_libre")
         # FIX 788: Gaps - NO_INTEREST, REJECT_DATA, IDENTITY
         add(S.DICTANDO_DATO, I.NO_INTEREST,              S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.REJECT_DATA,              S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
@@ -1135,12 +1149,12 @@ class FSMEngine:
     # GPT Narrow call
     # ----------------------------------------------------------
     def _call_gpt_narrow(self, prompt_key: str, texto: str, agente=None) -> Optional[str]:
-        """Llama a GPT con prompt single-purpose."""
+        """FIX 820: Llama a LLM (Claude/OpenAI) con prompt single-purpose."""
         config = NARROW_PROMPTS.get(prompt_key)
         if not config:
             return None
 
-        # FIX 768: Check cache BEFORE calling GPT
+        # FIX 768: Check cache BEFORE calling LLM
         cached = narrow_cache.lookup(self.state.value, prompt_key, texto)
         if cached is not None:
             return cached
@@ -1154,46 +1168,68 @@ class FSMEngine:
             summary = self._build_context_summary()
             system_prompt = system_prompt.replace('{context_summary}', summary)
 
+        # FIX 820: Agregar contexto FSM al prompt para mejor razonamiento
+        fsm_context = self._build_fsm_context_820()
+        if fsm_context:
+            system_prompt += f"\n\n[CONTEXTO FSM]\n{fsm_context}"
+
         try:
-            # Usar el cliente OpenAI del agente si disponible
-            client = None
+            # FIX 820: Usar llm_client adapter (Claude o OpenAI según config)
+            openai_client = None
             if agente and hasattr(agente, 'openai_client'):
-                client = agente.openai_client
-            if client is None:
-                # Sin cliente GPT → fallback a template genérico
-                return None
+                openai_client = agente.openai_client
 
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": texto},
             ]
 
-            # Agregar últimos 2 mensajes de contexto si disponible
+            # Agregar últimos 4 mensajes de contexto si disponible
             if agente and hasattr(agente, 'conversation_history'):
-                history = agente.conversation_history[-4:]  # últimos 4 msgs
+                history = agente.conversation_history[-4:]
                 messages = [{"role": "system", "content": system_prompt}] + history + [
                     {"role": "user", "content": texto}
                 ]
 
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
+            result = llm_client.chat_completion(
                 messages=messages,
-                max_tokens=config.get("max_tokens", 80),
+                openai_client=openai_client,
                 temperature=config.get("temperature", 0.5),
+                max_tokens=config.get("max_tokens", 80),
                 timeout=3.0,
             )
 
-            result = response.choices[0].message.content.strip()
-            print(f"  [FSM GPT_NARROW:{prompt_key}] → '{result[:80]}'")
+            result = result.strip()
+            print(f"  [FSM LLM_NARROW:{prompt_key}] -> '{result[:80]}'")
 
-            # FIX 768: Store in cache AFTER successful GPT response
+            # FIX 768: Store in cache AFTER successful response
             narrow_cache.store(self.state.value, prompt_key, texto, result)
 
             return result
 
         except Exception as e:
-            print(f"  [FSM GPT_NARROW ERROR] {prompt_key}: {e}")
+            print(f"  [FSM LLM_NARROW ERROR] {prompt_key}: {e}")
             return None  # Fallthrough a lógica existente
+
+    def _build_fsm_context_820(self) -> str:
+        """FIX 820: Construye contexto FSM para inyectar en prompts narrow."""
+        ctx = self.context
+        parts = [f"Estado: {self.state.value}"]
+        if ctx.canales_rechazados:
+            parts.append(f"Canales rechazados por cliente: {', '.join(ctx.canales_rechazados)}")
+        if ctx.datos_capturados:
+            parts.append(f"Datos ya capturados: {ctx.datos_capturados}")
+        if ctx.callback_pedido:
+            parts.append(f"Callback solicitado: si")
+        if ctx.callback_hora:
+            parts.append(f"Hora callback: {ctx.callback_hora}")
+        if ctx.encargado_es_interlocutor:
+            parts.append("El interlocutor ES el encargado de compras")
+        if ctx.cliente_no_autorizado:
+            parts.append("El cliente NO esta autorizado para dar datos")
+        if ctx.catalogo_prometido:
+            parts.append("Ya se prometio enviar catalogo")
+        return "\n".join(parts)
 
     # ----------------------------------------------------------
     # Helpers
