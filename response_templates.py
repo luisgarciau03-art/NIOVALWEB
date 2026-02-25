@@ -231,7 +231,9 @@ NARROW_PROMPTS = {
             "Responde en 1-2 oraciones, mexicano coloquial. "
             "Productos: cintas tapagoteras, griferia, herramientas, candados, "
             "silicones, adhesivos, cerraduras, y mas de 15 categorias. "
-            "NO preguntes nada, solo responde la pregunta."
+            "REGLAS: NO preguntes nada, solo responde la pregunta. "
+            "NO repitas informacion que ya dijiste. "
+            "Si no sabes un precio exacto, di 'con gusto le envio la lista de precios'."
         ),
         "max_tokens": 80,
         "temperature": 0.5,
@@ -275,10 +277,13 @@ NARROW_PROMPTS = {
             "Eres Bruce, vendedor de NIOVAL (productos ferreteros: cintas, griferia, "
             "herramientas, candados). La conversacion esta en una situacion no estandar. "
             "REGLAS ABSOLUTAS:\n"
-            "1. Si cliente ya dijo algo, NO preguntar lo mismo\n"
-            "2. Si encargado no esta, pedir contacto alternativo\n"
-            "3. Maximo 2 oraciones\n"
-            "4. Mexicano coloquial\n"
+            "1. Si cliente ya dijo un dato (nombre, telefono, correo, WhatsApp) "
+            "en CUALQUIER turno anterior, NUNCA pedir ese dato de nuevo\n"
+            "2. Si cliente rechazo un canal ('no tengo WhatsApp', 'no tengo correo'), "
+            "NO pedir ese canal. Ofrecer alternativa distinta\n"
+            "3. Si encargado no esta, pedir contacto alternativo (WhatsApp, correo o telefono)\n"
+            "4. Maximo 2 oraciones, mexicano coloquial\n"
+            "5. NO repetir frases que Bruce ya dijo en turnos anteriores\n"
             "Estado actual: {state}\n"
             "Contexto: {context_summary}"
         ),

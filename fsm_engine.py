@@ -583,6 +583,31 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if any(i in tn for i in interest):
         return FSMIntent.INTEREST
 
+    # --- FIX 824: "No tengo" corto sin canal = rechazo genérico ---
+    # BRUCE2538: "No tengo" (2 palabras) → UNKNOWN → FIX 791 pide WhatsApp de nuevo
+    # En estados de captura, "no tengo" corto = rechazo de dato
+    _reject_short_824 = ['no tengo', 'tampoco tengo', 'no puedo', 'tampoco', 'no manejo',
+                          'solo telefono', 'solo fijo', 'nada mas telefono', 'solo celular']
+    if any(tn == r or (tn.startswith(r) and len(tn) < 25) for r in _reject_short_824):
+        if state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                     FSMState.DICTANDO_DATO, FSMState.ENCARGADO_AUSENTE):
+            return FSMIntent.REJECT_DATA
+
+    # --- FIX 825: "Buen día/tardes/noches" = saludo recíproco o despedida contextual ---
+    # 104 llamadas: cliente dice "Buen día" respondiendo al saludo → UNKNOWN → salta a PITCH
+    # En SALUDO/PITCH: saludo recíproco → VERIFICATION (procede normal)
+    # En DESPEDIDA/CONTACTO_CAPTURADO: despedida cortés → FAREWELL
+    _saludo_reciproco_825 = ['buen dia', 'buenos dias', 'buenas tardes', 'buenas noches']
+    if any(s in tn for s in _saludo_reciproco_825):
+        if state in (FSMState.DESPEDIDA, FSMState.CONTACTO_CAPTURADO):
+            return FSMIntent.FAREWELL
+        return FSMIntent.VERIFICATION
+
+    # --- FIX 829: Patterns adicionales ---
+    # "tardes" sola como verificación (32 casos), "que tal" ya en FIX 795
+    if tn in ('tardes', 'buenas', 'dias', 'noches'):
+        return FSMIntent.VERIFICATION
+
     return FSMIntent.UNKNOWN
 
 
