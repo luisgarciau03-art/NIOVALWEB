@@ -237,6 +237,471 @@ ESCENARIOS = [
         ],
         "bugs_esperados": ["PITCH_REPETIDO"],
     },
+
+    # ----------------------------------------------------------
+    # 9. PREGUNTA_REPETIDA (LIVE) - Bruce NO repite pregunta encargado
+    # ----------------------------------------------------------
+    {
+        "nombre": "No repite pregunta encargado",
+        "descripcion": "Bruce pregunta por encargado 1 vez, cliente dice si -> no repite",
+        "contacto": {"nombre_negocio": "Ferreteria Uno"},
+        "turnos": [
+            {
+                "cliente": "Bueno, digame",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, yo soy el encargado de compras",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, mandeme el catalogo",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["PREGUNTA_REPETIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 10. PREGUNTA_REPETIDA (RAW) - Deteccion bug repeticion
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion pregunta repetida (BugDetector)",
+        "descripcion": "Bruce pregunta 'encargado' 3x -> bug PREGUNTA_REPETIDA",
+        "contacto": {"nombre_negocio": "Ferreteria RepBug"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de NIOVAL."),
+            ("cliente", "Bueno"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "Ahorita no se"),
+            ("bruce", "Se encontrara el encargado o encargada de compras?"),
+            ("cliente", "Ya le dije que no se"),
+            ("bruce", "Me podria comunicar con el encargado de compras?"),
+        ],
+        "bugs_esperados": ["PREGUNTA_REPETIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 11. CLIENTE_HABLA_ULTIMO (RAW) - Cliente habla y Bruce no responde
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion cliente habla ultimo (BugDetector)",
+        "descripcion": "Cliente dice algo al final pero Bruce nunca responde",
+        "contacto": {"nombre_negocio": "Tienda Silencio"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Manejamos productos ferreteros. Se encuentra el encargado?"),
+            ("cliente", "Mire, le voy a dar un correo y me puede enviar la informacion ahi"),
+        ],
+        "bugs_esperados": ["CLIENTE_HABLA_ULTIMO"],
+    },
+
+    # ----------------------------------------------------------
+    # 12. CLIENTE_HABLA_ULTIMO (LIVE) - Bruce SI responde al final
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce responde cuando cliente ofrece dato",
+        "descripcion": "Cliente ofrece correo al final -> Bruce debe responder",
+        "contacto": {"nombre_negocio": "Ferreteria Respuesta"},
+        "turnos": [
+            {
+                "cliente": "Bueno, buen dia",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, yo soy el encargado",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Le doy mi correo para que me mande info",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["CLIENTE_HABLA_ULTIMO"],
+    },
+
+    # ----------------------------------------------------------
+    # 13. GPT_LOGICA_ROTA (RAW) - Bruce pide dato ya proporcionado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion logica rota (BugDetector)",
+        "descripcion": "Bruce pide horario que cliente ya dio -> GPT_LOGICA_ROTA",
+        "contacto": {"nombre_negocio": "Ferreteria Logica"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Manejamos productos ferreteros. Se encuentra el encargado?"),
+            ("cliente", "No, no esta. Viene a las 3 de la tarde"),
+            ("bruce", "Entiendo. A que hora me recomienda llamar para encontrar al encargado?"),
+            ("cliente", "Ya le dije, a las 3"),
+            ("bruce", "A que hora me recomienda llamar para encontrar al encargado?"),
+        ],
+        "bugs_esperados": ["PREGUNTA_REPETIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 14. SALUDO_FALTANTE (RAW) - Bruce no saluda en primer turno
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion saludo faltante (BugDetector)",
+        "descripcion": "Bruce inicia sin 'hola/buen dia' -> SALUDO_FALTANTE",
+        "contacto": {"nombre_negocio": "Tienda SinSaludo"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Mi nombre es Bruce, le llamo de NIOVAL. Somos distribuidores de productos ferreteros."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+        ],
+        "bugs_esperados": ["SALUDO_FALTANTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 15. SALUDO_FALTANTE (LIVE) - Bruce SI saluda
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce saluda correctamente",
+        "descripcion": "Primer turno de Bruce incluye saludo",
+        "contacto": {"nombre_negocio": "Ferreteria Saludo"},
+        "turnos": [
+            {
+                "cliente": "Bueno",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["SALUDO_FALTANTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 16. CATALOGO_REPETIDO (RAW) - Bruce ofrece catalogo 2x
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion catalogo repetido (BugDetector)",
+        "descripcion": "Bruce ofrece catalogo 2 veces -> CATALOGO_REPETIDO",
+        "contacto": {"nombre_negocio": "Ferreteria CatRep"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Manejamos productos ferreteros. Le podemos enviar un catalogo por WhatsApp."),
+            ("cliente", "Ah ok"),
+            ("bruce", "Le puedo enviar nuestro catalogo de productos por WhatsApp si gusta."),
+            ("cliente", "Si"),
+            ("bruce", "Digame su numero"),
+        ],
+        "bugs_esperados": ["CATALOGO_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 17. INTERRUPCION_CONVERSACIONAL (RAW) - Bruce corta al cliente
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion interrupcion conversacional (BugDetector)",
+        "descripcion": "Bruce interrumpe mientras cliente explica situacion",
+        "contacto": {"nombre_negocio": "Ferreteria Corta"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Mire, es que nosotros no vendemos eso"),
+            ("bruce", "Me comunico de Nioval, trabajamos productos ferreteros de calidad"),
+        ],
+        "bugs_esperados": ["INTERRUPCION_CONVERSACIONAL"],
+    },
+
+    # ----------------------------------------------------------
+    # 18. BRUCE_MUDO (RAW) - TwiML enviado pero audio nunca fetcheado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion Bruce mudo (BugDetector)",
+        "descripcion": "TwiML enviado pero audio no fetcheado -> BRUCE_MUDO",
+        "contacto": {"nombre_negocio": "Ferreteria Muda"},
+        "simular_bug": True,
+        "tracker_attrs": {"twiml_count": 3, "audio_fetch_count": 0},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Bueno"),
+            ("bruce", ""),
+            ("cliente", "Bueno? Me escucha?"),
+        ],
+        "bugs_esperados": ["BRUCE_MUDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 19. RESPUESTA_FILLER_INCOHERENTE (RAW) - TTS fallo, filler de respaldo
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion filler incoherente (BugDetector)",
+        "descripcion": "ElevenLabs TTS fallo -> filler dejeme_ver usado",
+        "contacto": {"nombre_negocio": "Ferreteria Filler"},
+        "simular_bug": True,
+        "tracker_attrs": {"filler_162a_count": 2},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Que tipo de productos manejan?"),
+            ("bruce", "Dejeme ver"),
+            ("cliente", "Bueno?"),
+            ("bruce", "Mmm"),
+        ],
+        "bugs_esperados": ["RESPUESTA_FILLER_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 20. DICTADO_INTERRUMPIDO (RAW) - Bruce se despide durante dictado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion dictado interrumpido (BugDetector)",
+        "descripcion": "Cliente dicta numero y Bruce se despide sin confirmar",
+        "contacto": {"nombre_negocio": "Ferreteria Dictado"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Me podria dar su numero de WhatsApp?"),
+            ("cliente", "Si claro, mi whatsapp es 33 12 34"),
+            ("bruce", "Muchas gracias por su tiempo, que tenga buen dia"),
+        ],
+        "bugs_esperados": ["DICTADO_INTERRUMPIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 21. LOOP (RAW) - Bruce repite misma respuesta
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion loop (BugDetector)",
+        "descripcion": "Bruce da misma respuesta 3 veces -> LOOP",
+        "contacto": {"nombre_negocio": "Ferreteria Loop"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Le llamo de NIOVAL."),
+            ("cliente", "Bueno"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "No"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "Que no"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+        ],
+        "bugs_esperados": ["LOOP"],
+    },
+
+    # ----------------------------------------------------------
+    # 22. LOOP (LIVE) - Bruce NO entra en loop
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce no entra en loop con rechazo",
+        "descripcion": "Cliente rechaza varias veces -> Bruce no repite",
+        "contacto": {"nombre_negocio": "Ferreteria NoLoop"},
+        "turnos": [
+            {
+                "cliente": "Bueno",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "No me interesa",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["LOOP"],
+    },
+
+    # ----------------------------------------------------------
+    # 23. DATO_IGNORADO (RAW) - Bruce pide dato que cliente ya dio
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion dato ignorado (BugDetector)",
+        "descripcion": "Cliente da numero pero Bruce pide de nuevo",
+        "contacto": {"nombre_negocio": "Ferreteria Dato"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Me podria dar su numero de WhatsApp?"),
+            ("cliente", "Si, es 3312345678"),
+            ("bruce", "Cual es su numero de WhatsApp?"),
+        ],
+        "bugs_esperados": ["DATO_IGNORADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 24. DESPEDIDA_PREMATURA (RAW) - Bruce se despide sin capturar contacto
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion despedida prematura (BugDetector)",
+        "descripcion": "Cliente interesado, Bruce se despide sin capturar contacto",
+        "contacto": {"nombre_negocio": "Ferreteria Prematura"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, me interesa el catalogo"),
+            ("bruce", "Gracias por su tiempo, que tenga buen dia"),
+        ],
+        "bugs_esperados": ["DESPEDIDA_PREMATURA"],
+    },
+
+    # ----------------------------------------------------------
+    # 25. AREA_EQUIVOCADA (RAW) - Cliente dice no es ferreteria
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion area equivocada (BugDetector)",
+        "descripcion": "Cliente dice no es ferreteria, Bruce sigue vendiendo",
+        "contacto": {"nombre_negocio": "Ferreteria Equivocada"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Aqui no vendemos ferreteria, se equivoco"),
+            ("bruce", "Le puedo enviar nuestro catalogo por WhatsApp?"),
+        ],
+        "bugs_esperados": ["AREA_EQUIVOCADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 26. TRANSFER_IGNORADA (RAW) - Cliente pide esperar, Bruce sigue
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion transfer ignorada (BugDetector)",
+        "descripcion": "Cliente pide esperar para transferir y Bruce sigue vendiendo",
+        "contacto": {"nombre_negocio": "Ferreteria Transfer"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Espereme un momento, le paso al encargado"),
+            ("bruce", "Le puedo enviar nuestro catalogo por WhatsApp?"),
+        ],
+        "bugs_esperados": ["TRANSFER_IGNORADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 27. PITCH_REPETIDO (RAW) - Bruce repite pitch 2+ veces
+    # ----------------------------------------------------------
+    {
+        "nombre": "Deteccion pitch repetido (BugDetector)",
+        "descripcion": "Bruce repite el pitch de Nioval 2+ veces",
+        "contacto": {"nombre_negocio": "Ferreteria Pitch"},
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval."),
+            ("cliente", "Bueno, digame"),
+            ("bruce", "Somos una marca Nioval de productos ferreteros"),
+            ("cliente", "Ajam"),
+            ("bruce", "Me comunico de la marca Nioval para ofrecerle"),
+        ],
+        "bugs_esperados": ["PITCH_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 28. DATO_IGNORADO (LIVE) - Bruce NO re-pide dato ya dado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce no ignora datos del cliente",
+        "descripcion": "Cliente da WhatsApp -> Bruce confirma, no re-pide",
+        "contacto": {"nombre_negocio": "Ferreteria Dato OK", "ciudad": "Guadalajara"},
+        "turnos": [
+            {
+                "cliente": "Bueno, buen dia",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, yo soy el encargado de compras",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Mi WhatsApp es 33 14 25 36 47",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["DATO_IGNORADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 29. AREA_EQUIVOCADA (LIVE) - Bruce se despide si no es ferreteria
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce maneja area equivocada correctamente",
+        "descripcion": "Cliente dice no es ferreteria -> Bruce se despide",
+        "contacto": {"nombre_negocio": "Tortilleria Test", "ciudad": "Monterrey"},
+        "turnos": [
+            {
+                "cliente": "Bueno",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "No, esto no es ferreteria, somos tortilleria",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["AREA_EQUIVOCADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 30. TRANSFER_IGNORADA (LIVE) - Bruce espera la transferencia
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce espera transferencia correctamente",
+        "descripcion": "Cliente dice espereme le paso -> Bruce espera",
+        "contacto": {"nombre_negocio": "Ferreteria Espera", "ciudad": "Guadalajara"},
+        "turnos": [
+            {
+                "cliente": "Bueno",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Espereme un momento, le paso al encargado",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["TRANSFER_IGNORADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 31. DESPEDIDA_PREMATURA (LIVE) - Bruce captura contacto antes de despedir
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce no se despide prematuramente",
+        "descripcion": "Cliente interesado -> Bruce pide WhatsApp antes de despedir",
+        "contacto": {"nombre_negocio": "Ferreteria Despedida OK", "ciudad": "Guadalajara"},
+        "turnos": [
+            {
+                "cliente": "Bueno, buen dia",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, yo soy el encargado. Me interesa el catalogo",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si, mi WhatsApp es 33 98 76 54 32",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["DESPEDIDA_PREMATURA"],
+    },
+
+    # ----------------------------------------------------------
+    # 32. Calidad general (LIVE) - Bruce responde coherentemente
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce responde coherente ante preguntas",
+        "descripcion": "Cliente pregunta sobre productos -> Bruce responde con info",
+        "contacto": {"nombre_negocio": "Ferreteria Coherente", "ciudad": "Guadalajara"},
+        "turnos": [
+            {
+                "cliente": "Bueno",
+                "check_bruce": None,
+            },
+            {
+                "cliente": "Si soy el encargado, que tipo de productos manejan?",
+                "check_bruce": None,
+            },
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["INTERRUPCION_CONVERSACIONAL", "LOOP"],
+    },
 ]
 
 
@@ -349,16 +814,21 @@ class SimuladorLlamada:
                 "estado": "-",
             })
 
-        # Bug detection
-        self._run_bug_detector(resultado)
+        # Bug detection (con tracker_attrs opcionales para metadata del servidor)
+        self._run_bug_detector(resultado, tracker_attrs=escenario.get("tracker_attrs"))
 
-    def _run_bug_detector(self, resultado):
+    def _run_bug_detector(self, resultado, tracker_attrs=None):
         """Corre bug detector rule-based sobre la conversacion."""
         tracker = CallEventTracker(
             call_sid=f"SIM-{resultado['idx']:03d}",
             bruce_id=f"SIMTEST-{resultado['idx']:03d}",
             telefono="0000000000"
         )
+
+        # Aplicar atributos de tracker opcionales (metadata servidor: twiml_count, etc.)
+        if tracker_attrs:
+            for attr, val in tracker_attrs.items():
+                setattr(tracker, attr, val)
 
         for turno in resultado["turnos"]:
             role = turno["role"]
