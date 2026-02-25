@@ -2247,6 +2247,57 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         filtro_aplicado = False
 
         # ============================================================
+        # FIX 810B: BRUCE2528 - GPT genera filler como respuesta cuando cliente dio info sustantiva
+        # "No se encuentra" → Bruce: "Sí, adelante" (INCORRECTO - debería procesar info)
+        # "seis seis veintitrés..." → Bruce: "Sí, adelante" (INCORRECTO - debería confirmar dato)
+        # Detecta fillers GPT y reemplaza con respuesta contextual
+        # ============================================================
+        _fillers_gpt_810 = [
+            'sí, adelante', 'si, adelante', 'claro, continue', 'claro, continúe',
+            'adelante, le escucho', 'sí, por favor', 'si, por favor',
+            'sí, dígame', 'si, digame', 'entendido, continue', 'entendido, continúe',
+            'perfecto, adelante', 'sí, lo escucho', 'si, lo escucho',
+            'adelante', 'continúe', 'continue', 'le escucho',
+        ]
+        _resp_strip_810 = respuesta_lower.strip().rstrip('.')
+        _es_filler_810 = _resp_strip_810 in _fillers_gpt_810
+
+        if _es_filler_810:
+            # Obtener último mensaje del cliente
+            _ult_cliente_810 = ""
+            for msg in reversed(self.conversation_history):
+                if msg['role'] == 'user':
+                    _ult_cliente_810 = msg.get('content', '').lower()
+                    break
+
+            # Solo override si cliente dio info sustantiva (>15 chars, no solo "bueno")
+            if len(_ult_cliente_810) > 15:
+                _sa_810 = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                _uc_810 = _sa_810(_ult_cliente_810)
+
+                # Caso 1: Cliente dijo que encargado no está
+                if any(p in _uc_810 for p in ['no esta', 'no se encuentra', 'no se encue', 'salio', 'no puede', 'esta enfermo', 'no vino']):
+                    respuesta = "Entiendo que no se encuentra. ¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo al encargado?"
+                    print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (encargado no está)")
+                    filtro_aplicado = True
+                # Caso 2: Cliente dictó número/dato
+                elif any(p in _uc_810 for p in ['seis', 'siete', 'ocho', 'nueve', 'arroba', '@', 'gmail']):
+                    _nums_810 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
+                                 'diez','veinte','treinta','cuarenta','cincuenta']
+                    if sum(1 for n in _nums_810 if n in _uc_810) >= 3 or re.search(r'\d{3,}', _uc_810):
+                        respuesta = "Perfecto, ya lo tengo registrado. Muchas gracias."
+                        print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (dato dictado)")
+                        filtro_aplicado = True
+                # Caso 3: Cliente explicó algo sustantivo
+                elif any(p in _uc_810 for p in ['no tengo', 'no lo tengo', 'no hay', 'no vendemos', 'no es', 'aqui no']):
+                    respuesta = "Entiendo, muchas gracias por la información. ¿Habría otra persona con quien pudiera comunicarme?"
+                    print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (cliente explicó)")
+                    filtro_aplicado = True
+
+                if filtro_aplicado:
+                    respuesta_lower = respuesta.lower()
+
+        # ============================================================
         # FIX 615B: BRUCE2030 - NO repetir números de teléfono en voz
         # GPT a veces repite el número completo (ej: "+526623531804")
         # El TTS lo lee con acento extranjero y suena mal
@@ -2423,6 +2474,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             tiene_email_732 = any(ind in ultimo_cliente_667 for ind in ['arroba', '@', 'gmail', 'hotmail', 'outlook', 'yahoo', 'punto com'])
             digitos_732 = re.findall(r'\d', ultimo_cliente_667)
             tiene_telefono_732 = len(digitos_732) >= 7
+            # FIX 809: BRUCE2519 - También detectar números dictados en PALABRAS
+            # "seis seis veintitrés cincuenta y tres dieciocho cero cuatro" = teléfono
+            if not tiene_telefono_732:
+                _nums_palabras_809 = [
+                    'cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+                    'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+                    'dieciseis', 'diecisiete', 'dieciocho', 'diecinueve',
+                    'veinte', 'veintiuno', 'veintidos', 'veintitres', 'veinticuatro', 'veinticinco',
+                    'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'
+                ]
+                _conteo_809 = sum(1 for p in _nums_palabras_809 if p in ultimo_cliente_667)
+                if _conteo_809 >= 4:
+                    tiene_telefono_732 = True
+                    print(f"[OK] FIX 809: Detectados {_conteo_809} números en PALABRAS → teléfono")
             tiene_whatsapp_732 = any(ind in ultimo_cliente_667 for ind in ['mi whatsapp', 'el whatsapp es', 'whatsapp es el', 'por whatsapp es'])
 
             dato_actual_732 = None
@@ -2886,6 +2951,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Si la respuesta actual pregunta por encargado
         pregunta_por_encargado = any(p in respuesta_lower for p in preguntas_encargado)
 
+        # FIX 810A: BRUCE2528 - State-based check: si estado = ENCARGADO_NO_ESTA, NUNCA re-preguntar
+        # El counter de FIX 493 puede fallar si historial es largo; el estado es definitivo
+        _estado_str_810 = str(getattr(self, 'estado_conversacion', ''))
+        if pregunta_por_encargado and 'ENCARGADO_NO_ESTA' in _estado_str_810:
+            print(f"\n[WARN] FIX 810A: Estado={_estado_str_810} → BLOQUEAR pregunta por encargado")
+            print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
+            respuesta = "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"
+            print(f"   Respuesta corregida: '{respuesta}'")
+            return respuesta
+
         # FIX 494: INCOHERENCIA CRÍTICA - Cliente YA ES el encargado
         # Si encargado_ya_confirmado = True, BLOQUEAR INMEDIATAMENTE cualquier pregunta por encargado
         if pregunta_por_encargado and encargado_ya_confirmado:
@@ -2991,6 +3066,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 'te paso su correo', 'le paso su correo', 'te paso el correo',
             ]
             cliente_interesado_705 = any(p in ultimo_cliente_705 for p in patrones_interes_705)
+            # FIX 812: BRUCE2516,2518,2523,2525 - Narrowar FIX 705: patrones genéricos
+            # ("dígame", "sí claro") NO son interés real en catálogo si son respuesta corta
+            if cliente_interesado_705 and len(ultimo_cliente_705) < 25:
+                _genericos_812 = ['digame', 'si claro', 'si por favor', 'platiqueme', 'como es']
+                _solo_generico_812 = any(p in ultimo_cliente_705 for p in _genericos_812)
+                _tiene_catalogo_812 = 'catalogo' in ultimo_cliente_705 or 'catálogo' in ultimo_cliente_705
+                if _solo_generico_812 and not _tiene_catalogo_812:
+                    # Respuesta genérica corta sin mención de catálogo = NO interés real
+                    cliente_interesado_705 = False
+                    print(f"[INFO] FIX 812: Respuesta genérica corta '{ultimo_cliente_705[:40]}' → NO suspender anti-loop")
             if cliente_interesado_705:
                 print(f"\n[INFO] FIX 705: Anti-loop SUSPENDIDO - cliente muestra interés")
                 print(f"   Último cliente: '{ultimo_cliente_705[:80]}'")
@@ -10843,6 +10928,9 @@ Ejemplo correcto:
             "te puedo pasar", "te paso", "le paso", "se lo paso",
             "te lo paso", "ahorita te lo paso", "te comunico",
             "me lo comunica", "me lo pasa", "pásamelo",
+            # FIX 811: BRUCE2522 - Variantes con "ahí" ("ahí le paso", "ahí se lo paso")
+            "ahí le paso", "ahi le paso", "ahí se lo paso", "ahi se lo paso",
+            "ahí te lo paso", "ahi te lo paso",
             # FIX 350: "déjeme lo transfiero" y variantes
             "déjeme lo transfiero", "dejeme lo transfiero",
             "déjeme la transfiero", "dejeme la transfiero",
