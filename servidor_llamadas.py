@@ -24,7 +24,7 @@ import re  # FIX 458: Para limpiar puntuación en detección de saludos
 
 # FIX 632: Bug Detector - detección automática de bugs en llamadas
 try:
-    from bug_detector import get_or_create_tracker, emit_event, analyze_and_cleanup, generar_bugs_html
+    from bug_detector import get_or_create_tracker, emit_event, analyze_and_cleanup, generar_bugs_html, set_deploy_version
     BUG_DETECTOR_AVAILABLE = True
 except ImportError:
     BUG_DETECTOR_AVAILABLE = False
@@ -295,7 +295,13 @@ elif _deploy_id:
     DEPLOY_NAME = _deploy_id[:8]  # Primeros 8 caracteres del hash
 else:
     DEPLOY_NAME = datetime.now().strftime("%m-%d %H:%M")
-cache_metadata = {}  # Metadata: frase → archivo MP3
+
+# FIX 818: Sincronizar deploy version con bug_detector
+if BUG_DETECTOR_AVAILABLE:
+    set_deploy_version(f"{DEPLOY_NAME} ({DEPLOY_ID})")
+    print(f"[BUG_DETECTOR] Deploy version: {DEPLOY_NAME} ({DEPLOY_ID})")
+
+cache_metadata = {}  # Metadata: frase -> archivo MP3
 
 # FIX 56: CACHÉ DE RESPUESTAS DE GPT (0s delay para preguntas comunes)
 # Diccionario: patrón de pregunta → respuesta pre-definida

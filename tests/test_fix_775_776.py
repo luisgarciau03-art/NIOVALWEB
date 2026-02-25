@@ -250,11 +250,16 @@ class TestDeployVersion(unittest.TestCase):
     """Verificar deploy version actualizada."""
 
     def test_deploy_version_fix_776(self):
-        """Deploy version debe incluir FIX 776."""
-        bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
-        with open(bd_path, 'r', encoding='utf-8') as f:
-            source = f.read()
-        self.assertIn('FSM Phase 4', source)
+        """FIX 818: Deploy version es dinamico via set_deploy_version."""
+        from bug_detector import set_deploy_version, _DEPLOY_VERSION
+        self.assertIsInstance(_DEPLOY_VERSION, str)
+        self.assertTrue(len(_DEPLOY_VERSION) > 0)
+        # Verificar que set_deploy_version funciona
+        original = _DEPLOY_VERSION
+        set_deploy_version("TEST-776")
+        import bug_detector
+        self.assertEqual(bug_detector._DEPLOY_VERSION, "TEST-776")
+        set_deploy_version(original)
 
 
 if __name__ == '__main__':

@@ -451,11 +451,10 @@ class TestFase22GPTEvalFPReduction(unittest.TestCase):
         self.assertIn('_turnos_bruce', source)
 
     def test_deploy_version_updated(self):
-        """Deploy version must be updated."""
-        bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
-        with open(bd_path, 'r', encoding='utf-8') as f:
-            source = f.read()
-        self.assertIn('FSM Phase 4', source)
+        """FIX 818: Deploy version es dinamico via set_deploy_version."""
+        from bug_detector import set_deploy_version, _DEPLOY_VERSION
+        self.assertIsInstance(_DEPLOY_VERSION, str)
+        self.assertTrue(len(_DEPLOY_VERSION) > 0)
 
 
 # ============================================================

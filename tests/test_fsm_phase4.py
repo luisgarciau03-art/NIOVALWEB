@@ -42,11 +42,10 @@ class TestPhase4ActiveStates(unittest.TestCase):
         self.assertNotIn(FSMState.CONVERSACION_LIBRE, FSM_ACTIVE_STATES_SET)
 
     def test_deploy_version_phase4(self):
-        """Deploy version debe incluir Phase 4."""
-        bd_path = os.path.join(os.path.dirname(__file__), '..', 'bug_detector.py')
-        with open(bd_path, 'r', encoding='utf-8') as f:
-            source = f.read()
-        self.assertIn('FSM Phase 4', source)
+        """FIX 818: Deploy version es dinamico via set_deploy_version."""
+        from bug_detector import set_deploy_version, _DEPLOY_VERSION
+        self.assertIsInstance(_DEPLOY_VERSION, str)
+        self.assertTrue(len(_DEPLOY_VERSION) > 0)
 
 
 # =============================================================================

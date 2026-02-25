@@ -53,8 +53,14 @@ TELEGRAM_BOTS = [
     },
 ]
 
-# Deploy version - actualizar con cada push
-_DEPLOY_VERSION = "FSM Phase 4 - 11 estados activos"
+# Deploy version - se actualiza automaticamente via set_deploy_version()
+_DEPLOY_VERSION = "sin-deploy-info"
+
+
+def set_deploy_version(version: str):
+    """Permite a servidor_llamadas.py configurar la version del deploy actual."""
+    global _DEPLOY_VERSION
+    _DEPLOY_VERSION = version
 
 # Severidades
 CRITICO = "CRITICO"
@@ -2185,6 +2191,7 @@ def generar_bugs_html() -> str:
 </style>
 </head><body>
 <h1>Bug Detector + Quality Checker - Bruce W</h1>
+<p style="color:#88ff88;font-size:14px">Deploy actual: <b>{_DEPLOY_VERSION}</b></p>
 <p><a href="/historial-llamadas">Historial</a> | <a href="/bugs">Bugs</a> | <a href="/pattern-audit">Pattern Audit</a></p>
 
 <div class="resumen">
