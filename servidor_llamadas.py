@@ -85,12 +85,12 @@ try:
     )
     AZURE_AVAILABLE = verificar_azure() if AZURE_SPEECH_KEY else False
     if AZURE_AVAILABLE:
-        print("🎤 FIX 613: Azure Speech configurado como STT PRIMARIO (120-200ms, 95-97% precisión es-MX)")
+        print("[OK] FIX 613: Azure Speech configurado como STT PRIMARIO (120-200ms, 95-97% precision es-MX)")
     else:
-        print("❌ FIX 613: Azure Speech no configurado - usando Deepgram como primario")
+        print("[ERROR] FIX 613: Azure Speech no configurado - usando Deepgram como primario")
 except ImportError as e:
     AZURE_AVAILABLE = False
-    print(f"❌ FIX 613: Módulo azure_transcriber no disponible: {e}")
+    print(f"[ERROR] FIX 613: Módulo azure_transcriber no disponible: {e}")
 
 # FIX 212: Importar módulo de Deepgram (STT fallback)
 deepgram_transcriber = None
@@ -108,12 +108,12 @@ try:
     )
     DEEPGRAM_AVAILABLE = verificar_deepgram() if DEEPGRAM_API_KEY else False
     if DEEPGRAM_AVAILABLE:
-        print("🔄 FIX 613: Deepgram configurado como STT FALLBACK")
+        print("[OK] FIX 613: Deepgram configurado como STT FALLBACK")
     else:
-        print("⚠️ FIX 613: Deepgram no configurado - sin sistema de fallback STT")
+        print("[WARN] FIX 613: Deepgram no configurado - sin sistema de fallback STT")
 except ImportError as e:
     DEEPGRAM_AVAILABLE = False
-    print(f"❌ FIX 212: Módulo deepgram_transcriber no disponible: {e}")
+    print(f"[ERROR] FIX 212: Módulo deepgram_transcriber no disponible: {e}")
 
 # FIX 613: Almacenamiento de transcripciones de Azure Speech (STT primario)
 azure_transcripciones = {}  # call_sid -> [transcripciones]
@@ -11398,10 +11398,10 @@ if FLASK_SOCK_AVAILABLE and sock:
                                 print(f"✅ FIX 613: Azure Speech conectado para {call_sid}")
                                 usando_azure = True
                             else:
-                                print(f"❌ FIX 613: Error conectando Azure - usando Deepgram fallback")
+                                print(f"[ERROR] FIX 613: Error conectando Azure - usando Deepgram fallback")
                                 transcriber_azure = None
                         else:
-                            print(f"❌ FIX 613: crear_transcriber_azure() retornó None")
+                            print(f"[ERROR] FIX 613: crear_transcriber_azure() retornó None")
 
                     # Crear Deepgram como fallback (o primario si Azure no está disponible)
                     if DEEPGRAM_AVAILABLE and USE_DEEPGRAM:
@@ -11424,10 +11424,10 @@ if FLASK_SOCK_AVAILABLE and sock:
                                 else:
                                     print(f"⚠️ FIX 613: [OK] Deepgram conectado como PRIMARIO (Azure no disponible) - CallSid: {call_sid}")
                             else:
-                                print(f"❌ FIX 613: [ERROR] Deepgram NO pudo conectar - CallSid: {call_sid}")
+                                print(f"[ERROR] FIX 613: [ERROR] Deepgram NO pudo conectar - CallSid: {call_sid}")
                                 transcriber_deepgram = None
                         else:
-                            print(f"❌ FIX 613: [ERROR] crear_transcriber_deepgram() retornó None - CallSid: {call_sid}")
+                            print(f"[ERROR] FIX 613: [ERROR] crear_transcriber_deepgram() retornó None - CallSid: {call_sid}")
                     else:
                         print(f"⚠️ FIX 613: [SKIP] Deepgram no disponible - DEEPGRAM_AVAILABLE={DEEPGRAM_AVAILABLE}, USE_DEEPGRAM={USE_DEEPGRAM}")
 
@@ -11439,7 +11439,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     elif transcriber_deepgram:
                         print(f"⚠️ FIX 613: Solo Deepgram activo (Azure no disponible)")
                     else:
-                        print(f"❌ FIX 613: ADVERTENCIA - Sin transcriber activo!")
+                        print(f"[ERROR] FIX 613: ADVERTENCIA - Sin transcriber activo!")
 
                 elif event == 'media':
                     # Audio chunk recibido de Twilio
@@ -11452,7 +11452,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                             transcriber_azure.send_audio_base64(payload)
                         elif transcriber_azure and not transcriber_azure.is_connected:
                             # Azure se desconectó - marcar para usar Deepgram
-                            print(f"❌ FIX 613: Azure desconectado - switching a Deepgram")
+                            print(f"[ERROR] FIX 613: Azure desconectado - switching a Deepgram")
                             usando_azure = False
 
                         # FIX 613: Enviar también a Deepgram (como backup o primario)
@@ -11466,9 +11466,9 @@ if FLASK_SOCK_AVAILABLE and sock:
                                     reconnected = loop.run_until_complete(transcriber_deepgram.reconnect())
                                     loop.close()  # FIX 751: Cerrar event loop
                                     if not reconnected:
-                                        print(f"❌ FIX 536: Reconexión fallida - continuando sin Deepgram")
+                                        print(f"[ERROR] FIX 536: Reconexión fallida - continuando sin Deepgram")
                                 except Exception as recon_error:
-                                    print(f"❌ FIX 536: Error en reconexión: {recon_error}")
+                                    print(f"[ERROR] FIX 536: Error en reconexión: {recon_error}")
 
                             # Enviar audio si está conectado
                             if transcriber_deepgram.is_connected:
@@ -11499,7 +11499,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     loop.close()  # FIX 751: Cerrar event loop
                     print(f"✅ FIX 613: Azure transcriber cerrado OK")
                 except Exception as e:
-                    print(f"❌ FIX 613: Error cerrando Azure transcriber: {e}")
+                    print(f"[ERROR] FIX 613: Error cerrando Azure transcriber: {e}")
 
                 if call_sid:
                     eliminar_transcriber_azure(call_sid)
@@ -11521,7 +11521,7 @@ if FLASK_SOCK_AVAILABLE and sock:
                     loop.close()  # FIX 751: Cerrar event loop
                     print(f"✅ FIX 613: Deepgram transcriber cerrado OK")
                 except Exception as e:
-                    print(f"❌ FIX 613: Error cerrando Deepgram transcriber: {e}")
+                    print(f"[ERROR] FIX 613: Error cerrando Deepgram transcriber: {e}")
 
                 if call_sid:
                     eliminar_transcriber_deepgram(call_sid)

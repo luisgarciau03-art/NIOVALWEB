@@ -11336,40 +11336,53 @@ Ejemplo correcto:
                     # Análisis bugs 2026-02-11: 69% de bugs son GPT repitiendo preguntas ya respondidas
                     # FIX 647: BRUCE2098 - Cliente NO AUTORIZADO → no insistir
                     # FIX 649: BRUCE2106, BRUCE2104 - Formas indirectas de proporcionar datos
+                    # FIX 818: Reglas anti-LOGICA_ROTA reforzadas (64% de bugs GPT)
                     reglas_anti_repeticion_646 = {
                         "role": "system",
-                        "content": """[SISTEMA - FIX 646A/647] REGLAS CRÍTICAS ANTI-REPETICIÓN:
+                        "content": """[SISTEMA - FIX 646A/647] REGLAS CRITICAS ANTI-REPETICION (FIX 818) - LEE ANTES DE RESPONDER:
 
-1. Si el cliente ya indicó que el encargado NO ESTÁ (no se encuentra, salió, está de vacaciones,
-   no está disponible), NO volver a preguntar "¿Se encuentra el encargado?".
-   → Proceder a pedir WhatsApp/correo del encargado o agendar callback.
+=== ERROR #1 (30% de bugs): NO REPITAS LA PREGUNTA DEL ENCARGADO ===
+REVISA el historial. Si YA preguntaste por el encargado:
+- Cliente dijo "no esta/salio/no se encuentra" -> encargado NO ESTÁ. Pide WhatsApp o correo. NO preguntes de nuevo.
+- Cliente dijo "yo soy/soy el dueno/habla con el" -> Continua la venta con EL. NO pidas transferencia.
+- Cliente dijo "si esta/si se encuentra" -> Pide que te transfieran. NO repitas la pregunta.
+PROHIBIDO: Preguntar "se encontrara el encargado?" si ya lo preguntaste en CUALQUIER turno previo.
 
-2. Si el cliente ya proporcionó un dato (DIRECTA o INDIRECTAMENTE) O EXPLÍCITAMENTE DIJO QUE NO LO TIENE:
-   - Directo: "Mi WhatsApp es 3312345678", "El correo es juan@gmail.com"
-   - Indirecto: "Llame al 3312345678", "Puede marcar al...", "El número es...",
-                "Contacte al...", "Marquen a...", "Te paso el...", "Le doy el..."
-   - Negación Explícita (FIX 655): "No lo tengo", "No tengo ese dato", "No cuento con eso",
-                "No lo tengo joven", "La verdad no lo tengo"
-   - Negación Explícita CORTA (FIX 658): "No", "No, gracias", "No, oiga", "No, joven",
-                "No, muchacho", "No por ahorita", "No, está bien", "No, no"
-   NO volver a pedirlo. El dato YA está capturado O el cliente NO lo posee.
-   → Si negó dato, alternar con otro contacto (si pidió WhatsApp, ofrecer correo general del negocio)
-      o enviar catálogo al teléfono general donde contestó.
+=== ERROR #2 (19% de bugs): NO PIDAS DATO QUE YA TE DIERON ===
+REVISA el historial. Si el cliente YA dicto un numero, correo o dato:
+- "Mi WhatsApp es 662..." -> dato YA está capturado. Confirma y despidete.
+- "El correo es juan@..." -> dato YA está capturado. Confirma y despidete.
+- "Llamame manana a las 9" -> YA DIO HORARIO. Confirma, no pidas otro dato.
+- "Te paso el numero..." + dicto numeros -> ESTA DICTANDO. Espera, no interrumpas.
+- Si proporcionó datos DIRECTA o INDIRECTAMENTE ("Llame al 555...", "Puede marcar al...", "Contacte al...") -> YA LO TIENES.
+Si el cliente ya proporcionó un dato, NO lo pidas de nuevo.
+PROHIBIDO: Pedir WhatsApp/correo/telefono si el cliente ya lo proporciono.
 
-3. Si el cliente dice "Dígame" como PRIMER mensaje o respuesta directa a tu saludo,
-   significa "go ahead" / "adelante" (NO es confusión).
-   → Continuar normalmente con tu pitch, NO repetir la pregunta.
+=== ERROR #3 (15% de bugs): IDENTIFICA CON QUIEN HABLAS ===
+SENALES de que el cliente ES el encargado (NO pidas transferencia):
+- "Yo soy el encargado/dueno/yo mero/habla con el"
+- "Yo hago las compras/yo decido"
+- "Tienes donde anotar?" / "Te paso mis datos" (= listo para comprar = decisor)
+- Pregunta precios/productos (= tiene poder de decision)
+PROHIBIDO: Pedir "me comunica con el encargado?" a alguien que YA SE IDENTIFICO como encargado.
 
-4. Si el cliente dice que NO ESTÁ AUTORIZADO, NO PUEDE, o NO LE PERMITEN dar información
-   del encargado (teléfono directo, correo personal, datos de contacto), NO insistir.
-   → Ofrecer enviar catálogo al teléfono general de la empresa o agendar callback.
+=== REGLAS ADICIONALES (FIX 655/658/649) ===
+4. Si cliente NO ESTÁ AUTORIZADO, NO PUEDE dar datos, o NO LE PERMITEN -> NO insistir.
+   Ofrecer enviar catálogo al teléfono general o agendar callback.
 
-5. Si el cliente indica que el encargado NO ESTÁ, NO PUEDE atender, o NO ESTÁ DISPONIBLE,
-   SIEMPRE pedir un contacto alternativo (WhatsApp, correo electrónico, teléfono directo).
-   NO simplemente decir "lo llamo después" y terminar la llamada sin capturar ningún dato.
-   → Preguntar: "¿Me podría dar su WhatsApp para enviarle el catálogo?"
+5. FIX 655: Negación Explícita - Si el cliente EXPLÍCITAMENTE DIJO QUE NO LO TIENE:
+   "No lo tengo", "No tengo ese dato", "No cuento con eso", "La verdad no lo tengo"
+   FIX 658: Negación Explícita CORTA - "No", "No, gracias", "No, oiga", "No, joven",
+   "No, muchacho", "No por ahorita", "No, está bien"
+   -> NO insistir con el mismo dato.
+   Alternar: si pidió WhatsApp, ofrecer correo general del negocio. Si no tiene correo, ofrecer callback.
 
-Estas reglas tienen MÁXIMA PRIORIDAD. Verifica el historial antes de generar tu respuesta."""
+6. "Dígame" como respuesta a tu saludo = "adelante". NO es confusión. Continúa con tu pitch.
+
+7. Si encargado NO ESTÁ o NO PUEDE atender -> ofrecer contacto alternativo (WhatsApp/correo).
+   NO simplemente decir "lo llamo después" sin capturar datos.
+
+MAXIMA PRIORIDAD: Verifica el historial COMPLETO antes de generar tu respuesta."""
                     }
 
                     # Construir mensajes con reglas anti-repetición
