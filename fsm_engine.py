@@ -336,8 +336,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     tl = texto.lower().strip()
 
     # --- Mid-sentence: texto termina en coma = cliente sigue hablando ---
+    # FIX 821: REJECT_DATA tiene prioridad sobre CONTINUATION
+    # BRUCE2538: "No tengo WhatsApp," → era CONTINUATION por la coma, debe ser REJECT_DATA
+    _reject_quick_821 = ['no tengo', 'no puedo', 'tampoco tengo', 'solo tengo',
+                          'no manejo', 'no uso', 'no le puedo', 'no te puedo']
     if tl.endswith(',') and len(tn) < 40:
-        return FSMIntent.CONTINUATION
+        if not any(r in tn for r in _reject_quick_821):
+            return FSMIntent.CONTINUATION
+        # else: fall through — será clasificado como REJECT_DATA más abajo
 
     # --- FIX 783: Despedida ANTES de dictado (BRUCE2494 P0) ---
     # "No una disculpa... hasta luego" tiene num_words=2 ("no","una") → DICTATING_PARTIAL
@@ -381,10 +387,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
-        # FIX 780+820: Con contexto temporal, no es dictado parcial (es info de disponibilidad)
+        # FIX 780+820+823: Con contexto temporal, no es dictado parcial (es info de disponibilidad)
         # FIX 820: Agregado ENCARGADO_AUSENTE (BRUCE2534: "por la tarde a las 4" era dictating_partial)
+        # FIX 823: Agregado DICTANDO_DATO (BRUCE2541: "marca a las cuatro" era dictating_partial)
         if has_time_context and state in (FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH,
-                                          FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE):
+                                          FSMState.ENCARGADO_PRESENTE, FSMState.ENCARGADO_AUSENTE,
+                                          FSMState.DICTANDO_DATO):
             pass  # Fall through to callback/other classifiers
         else:
             # FIX 754+787: Detectar dictado parcial en más estados
@@ -1200,6 +1208,18 @@ class FSMEngine:
             )
 
             result = result.strip()
+
+            # FIX 822: Anti-repetición en LLM_NARROW
+            # BRUCE2539: Claude repitió "segunda opción" 4 veces en loop
+            if agente and hasattr(agente, 'conversation_history'):
+                recent_bruce = [m.get('content', '') for m in agente.conversation_history[-6:]
+                                if m.get('role') == 'assistant']
+                from difflib import SequenceMatcher
+                for prev in recent_bruce:
+                    if prev and result and SequenceMatcher(None, prev.lower(), result.lower()).ratio() >= 0.75:
+                        print(f"  [FSM LLM_NARROW:{prompt_key}] REPETIDO ({SequenceMatcher(None, prev.lower(), result.lower()).ratio():.0%}) -> fallthrough")
+                        return None  # Fallthrough a lógica existente del agente
+
             print(f"  [FSM LLM_NARROW:{prompt_key}] -> '{result[:80]}'")
 
             # FIX 768: Store in cache AFTER successful response
