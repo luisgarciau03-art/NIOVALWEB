@@ -715,7 +715,7 @@ ESCENARIOS = [
         "descripcion": "Cliente da WhatsApp, Bruce lo pide de nuevo",
         "contacto": {"nombre_negocio": "Ferreteria GPT1"},
         "simular_bug": True,
-        "requiere_gpt_eval": True,
+
         "turnos_raw": [
             ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
             ("cliente", "Si, que tienen?"),
@@ -734,7 +734,7 @@ ESCENARIOS = [
         "descripcion": "Cliente es el encargado pero Bruce lo trata como empleado",
         "contacto": {"nombre_negocio": "Ferreteria GPT2"},
         "simular_bug": True,
-        "requiere_gpt_eval": True,
+
         "turnos_raw": [
             ("bruce", "Hola, me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
             ("cliente", "Yo soy el encargado de compras, yo mero"),
@@ -753,7 +753,7 @@ ESCENARIOS = [
         "descripcion": "Cliente dice me interesa, Bruce se despide sin pedir contacto",
         "contacto": {"nombre_negocio": "Ferreteria GPT3"},
         "simular_bug": True,
-        "requiere_gpt_eval": True,
+
         "turnos_raw": [
             ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
             ("cliente", "Ah si, que tienen?"),
@@ -772,7 +772,7 @@ ESCENARIOS = [
         "descripcion": "Cliente da info, Bruce responde 'entiendo' sin procesar",
         "contacto": {"nombre_negocio": "Ferreteria GPT4"},
         "simular_bug": True,
-        "requiere_gpt_eval": True,
+
         "turnos_raw": [
             ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
             ("cliente", "Si, nosotros compramos llaves, candados y herramientas. Que precios manejan?"),
@@ -791,7 +791,7 @@ ESCENARIOS = [
         "descripcion": "Bruce habla de seguros de vida en vez de ferreteria",
         "contacto": {"nombre_negocio": "Ferreteria GPT5"},
         "simular_bug": True,
-        "requiere_gpt_eval": True,
+
         "turnos_raw": [
             ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
             ("cliente", "Si, que productos tienen"),
@@ -809,7 +809,7 @@ ESCENARIOS = [
         "nombre": "Bruce no pide dato ya dado (GPT eval)",
         "descripcion": "Cliente da WhatsApp -> Bruce confirma, no re-pide",
         "contacto": {"nombre_negocio": "Ferreteria GPT6", "ciudad": "Guadalajara"},
-        "requiere_gpt_eval": True,
+
         "turnos": [
             {"cliente": "Bueno, buen dia", "check_bruce": None},
             {"cliente": "Si, yo soy el encargado de compras", "check_bruce": None},
@@ -826,7 +826,7 @@ ESCENARIOS = [
         "nombre": "Bruce reconoce al encargado (GPT eval)",
         "descripcion": "Cliente es encargado -> Bruce le ofrece catalogo directamente",
         "contacto": {"nombre_negocio": "Ferreteria GPT7", "ciudad": "Monterrey"},
-        "requiere_gpt_eval": True,
+
         "turnos": [
             {"cliente": "Bueno", "check_bruce": None},
             {"cliente": "Yo soy el encargado de compras, que me ofrece?", "check_bruce": None},
@@ -842,7 +842,7 @@ ESCENARIOS = [
         "nombre": "Bruce captura datos cuando cliente esta interesado (GPT eval)",
         "descripcion": "Cliente interesado -> Bruce pide WhatsApp",
         "contacto": {"nombre_negocio": "Ferreteria GPT8", "ciudad": "Guadalajara"},
-        "requiere_gpt_eval": True,
+
         "turnos": [
             {"cliente": "Bueno, buen dia", "check_bruce": None},
             {"cliente": "Si soy el encargado, me interesa el catalogo", "check_bruce": None},
@@ -859,7 +859,7 @@ ESCENARIOS = [
         "nombre": "Bruce responde coherente a preguntas (GPT eval)",
         "descripcion": "Cliente pregunta sobre productos -> Bruce responde con info real",
         "contacto": {"nombre_negocio": "Ferreteria GPT9", "ciudad": "Guadalajara"},
-        "requiere_gpt_eval": True,
+
         "turnos": [
             {"cliente": "Bueno", "check_bruce": None},
             {"cliente": "Si soy el encargado, que tipo de productos manejan?", "check_bruce": None},
@@ -875,7 +875,7 @@ ESCENARIOS = [
         "nombre": "Bruce se mantiene en tema ferretero (GPT eval)",
         "descripcion": "Conversacion normal -> Bruce habla solo de ferreteria/NIOVAL",
         "contacto": {"nombre_negocio": "Ferreteria GPT10", "ciudad": "Guadalajara"},
-        "requiere_gpt_eval": True,
+
         "turnos": [
             {"cliente": "Bueno, buen dia", "check_bruce": None},
             {"cliente": "Si, yo soy el encargado. Que marcas manejan?", "check_bruce": None},
@@ -893,9 +893,8 @@ ESCENARIOS = [
 class SimuladorLlamada:
     """Ejecuta escenarios de prueba contra AgenteVentas + BugDetector."""
 
-    def __init__(self, verbose=False, gpt_eval=False):
+    def __init__(self, verbose=False):
         self.verbose = verbose
-        self.gpt_eval = gpt_eval
         self.tiene_openai = bool(os.environ.get('OPENAI_API_KEY', ''))
         self.resultados = []
 
@@ -916,14 +915,6 @@ class SimuladorLlamada:
         }
 
         t0 = time.time()
-
-        # Skip escenarios GPT si no se paso --gpt-eval
-        if escenario.get("requiere_gpt_eval") and not self.gpt_eval:
-            resultado["passed"] = True
-            resultado["skipped"] = True
-            resultado["tiempo_ms"] = 0
-            self.resultados.append(resultado)
-            return resultado
 
         try:
             if escenario.get("simular_bug"):
@@ -1016,9 +1007,8 @@ class SimuladorLlamada:
             telefono="0000000000"
         )
 
-        # GPT eval: simular duracion de 60s para pasar threshold de 20s
-        if self.gpt_eval:
-            tracker.created_at = time.time() - 60
+        # Simular duracion de 60s para pasar threshold GPT eval (20s)
+        tracker.created_at = time.time() - 60
 
         # Aplicar atributos de tracker opcionales (metadata servidor: twiml_count, etc.)
         if tracker_attrs:
@@ -1039,12 +1029,11 @@ class SimuladorLlamada:
             bugs = BugDetector.analyze(tracker)
 
             # GPT eval: evaluar conversacion con GPT-4o-mini
-            if self.gpt_eval:
-                try:
-                    gpt_bugs = _evaluar_con_gpt(tracker)
-                    bugs.extend(gpt_bugs)
-                except Exception as e:
-                    resultado["errores"].append(f"GPT eval error: {e}")
+            try:
+                gpt_bugs = _evaluar_con_gpt(tracker)
+                bugs.extend(gpt_bugs)
+            except Exception as e:
+                resultado["errores"].append(f"GPT eval error: {e}")
 
             resultado["bugs_detectados"] = bugs
         except Exception as e:
@@ -1095,10 +1084,8 @@ def imprimir_reporte(resultados, verbose=False):
     """Imprime reporte formateado."""
     modo = "GPT REAL" if os.environ.get('OPENAI_API_KEY', '') else "TEMPLATE (sin OPENAI_API_KEY)"
     total = len(resultados)
-    skipped_count = sum(1 for r in resultados if r.get("skipped"))
-    ejecutados = total - skipped_count
-    passed = sum(1 for r in resultados if r["passed"] and not r.get("skipped"))
-    failed = ejecutados - passed
+    passed = sum(1 for r in resultados if r["passed"])
+    failed = total - passed
 
     print()
     print("=" * 60)
@@ -1112,12 +1099,6 @@ def imprimir_reporte(resultados, verbose=False):
         idx = r["idx"]
         nombre = r["nombre"]
         tiempo = r["tiempo_ms"]
-
-        if r.get("skipped"):
-            print(f"  [{idx}/{total}] {nombre}")
-            print(f"    [SKIP] GPT eval (usar --gpt-eval)")
-            print()
-            continue
 
         status = "PASS" if r["passed"] else "FAIL"
         icon = "[OK]" if r["passed"] else "[FAIL]"
@@ -1152,11 +1133,10 @@ def imprimir_reporte(resultados, verbose=False):
 
     # Resumen
     print("=" * 60)
-    skip_str = f", {skipped_count} SKIP" if skipped_count > 0 else ""
     if failed == 0:
-        print(f"  RESULTADO: {passed}/{ejecutados} PASS{skip_str}")
+        print(f"  RESULTADO: {passed}/{total} PASS")
     else:
-        print(f"  RESULTADO: {passed}/{ejecutados} PASS, {failed} FAIL{skip_str}")
+        print(f"  RESULTADO: {passed}/{total} PASS, {failed} FAIL")
     print("=" * 60)
     print()
 
@@ -1170,20 +1150,17 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true", help="Mostrar detalle completo")
     parser.add_argument("--escenario", "-e", type=int, help="Ejecutar solo escenario N")
     parser.add_argument("--list", "-l", action="store_true", help="Listar escenarios disponibles")
-    parser.add_argument("--gpt-eval", action="store_true",
-                        help="Incluir evaluacion GPT (requiere OPENAI_API_KEY, ~$0.001/escenario)")
     args = parser.parse_args()
 
     if args.list:
         print("\nEscenarios disponibles:")
         for i, e in enumerate(ESCENARIOS):
             bug_str = f" -> espera: {', '.join(e.get('bugs_esperados', []))}" if e.get('bugs_esperados') else ""
-            gpt_tag = " [GPT]" if e.get("requiere_gpt_eval") else ""
-            print(f"  {i+1}. {e['nombre']}: {e['descripcion']}{bug_str}{gpt_tag}")
+            print(f"  {i+1}. {e['nombre']}: {e['descripcion']}{bug_str}")
         print()
         return
 
-    sim = SimuladorLlamada(verbose=args.verbose, gpt_eval=args.gpt_eval)
+    sim = SimuladorLlamada(verbose=args.verbose)
 
     if args.escenario:
         idx = args.escenario - 1
