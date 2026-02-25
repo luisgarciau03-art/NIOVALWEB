@@ -36,7 +36,7 @@ for _k in ['ELEVENLABS_API_KEY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN',
     os.environ.setdefault(_k, 'SIM_DUMMY')
 
 from agente_ventas import AgenteVentas, EstadoConversacion
-from bug_detector import BugDetector, CallEventTracker
+from bug_detector import BugDetector, CallEventTracker, _evaluar_con_gpt
 
 # ============================================================
 # ESCENARIOS DE PRUEBA
@@ -702,6 +702,187 @@ ESCENARIOS = [
         "bugs_esperados": [],
         "bugs_no_esperados": ["INTERRUPCION_CONVERSACIONAL", "LOOP"],
     },
+
+    # ==========================================================
+    # GPT EVAL ESCENARIOS (requieren --gpt-eval + OPENAI_API_KEY)
+    # ==========================================================
+
+    # ----------------------------------------------------------
+    # 33. GPT_LOGICA_ROTA (RAW) - Bruce pide dato ya dado
+    # ----------------------------------------------------------
+    {
+        "nombre": "GPT detecta logica rota (dato ya dado)",
+        "descripcion": "Cliente da WhatsApp, Bruce lo pide de nuevo",
+        "contacto": {"nombre_negocio": "Ferreteria GPT1"},
+        "simular_bug": True,
+        "requiere_gpt_eval": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
+            ("cliente", "Si, que tienen?"),
+            ("bruce", "Tenemos productos de alta calidad. Me podria dar su WhatsApp para enviarle el catalogo?"),
+            ("cliente", "Si claro, mi WhatsApp es 33 14 25 36 47"),
+            ("bruce", "Me podria dar su numero de WhatsApp para enviarle el catalogo?"),
+        ],
+        "bugs_esperados_any": ["GPT_LOGICA_ROTA", "GPT_RESPUESTA_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 34. GPT_CONTEXTO_IGNORADO (RAW) - Trata encargado como empleado
+    # ----------------------------------------------------------
+    {
+        "nombre": "GPT detecta contexto ignorado (encargado)",
+        "descripcion": "Cliente es el encargado pero Bruce lo trata como empleado",
+        "contacto": {"nombre_negocio": "Ferreteria GPT2"},
+        "simular_bug": True,
+        "requiere_gpt_eval": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "Yo soy el encargado de compras, yo mero"),
+            ("bruce", "Ah muy bien. Y cuando regresa el encargado de compras?"),
+            ("cliente", "Le digo que yo soy el encargado"),
+            ("bruce", "Entendido, le paso el recado al encargado cuando este. Gracias."),
+        ],
+        "bugs_esperados_any": ["GPT_CONTEXTO_IGNORADO", "GPT_LOGICA_ROTA", "GPT_RESPUESTA_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 35. GPT_OPORTUNIDAD_PERDIDA (RAW) - Cliente interesado, Bruce no pide contacto
+    # ----------------------------------------------------------
+    {
+        "nombre": "GPT detecta oportunidad perdida",
+        "descripcion": "Cliente dice me interesa, Bruce se despide sin pedir contacto",
+        "contacto": {"nombre_negocio": "Ferreteria GPT3"},
+        "simular_bug": True,
+        "requiere_gpt_eval": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
+            ("cliente", "Ah si, que tienen?"),
+            ("bruce", "Tenemos productos ferreteros de alta calidad para ferreterias como la suya."),
+            ("cliente", "Me interesa mucho, mandame la informacion por favor"),
+            ("bruce", "Gracias por su tiempo, que tenga un excelente dia. Hasta luego."),
+        ],
+        "bugs_esperados_any": ["GPT_OPORTUNIDAD_PERDIDA", "GPT_LOGICA_ROTA"],
+    },
+
+    # ----------------------------------------------------------
+    # 36. GPT_RESPUESTA_INCOHERENTE (RAW) - Bruce solo dice "entiendo"
+    # ----------------------------------------------------------
+    {
+        "nombre": "GPT detecta respuesta incoherente",
+        "descripcion": "Cliente da info, Bruce responde 'entiendo' sin procesar",
+        "contacto": {"nombre_negocio": "Ferreteria GPT4"},
+        "simular_bug": True,
+        "requiere_gpt_eval": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
+            ("cliente", "Si, nosotros compramos llaves, candados y herramientas. Que precios manejan?"),
+            ("bruce", "Entiendo. Mmm."),
+            ("cliente", "Pero necesito saber los precios para hacer un pedido grande"),
+            ("bruce", "Aja, si. Entiendo, entiendo."),
+        ],
+        "bugs_esperados_any": ["GPT_RESPUESTA_INCOHERENTE", "GPT_OPORTUNIDAD_PERDIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 37. GPT_FUERA_DE_TEMA (RAW) - Bruce habla de algo no relacionado
+    # ----------------------------------------------------------
+    {
+        "nombre": "GPT detecta fuera de tema",
+        "descripcion": "Bruce habla de seguros de vida en vez de ferreteria",
+        "contacto": {"nombre_negocio": "Ferreteria GPT5"},
+        "simular_bug": True,
+        "requiere_gpt_eval": True,
+        "turnos_raw": [
+            ("bruce", "Hola, me comunico de la marca Nioval para ofrecerle productos ferreteros."),
+            ("cliente", "Si, que productos tienen"),
+            ("bruce", "Queria preguntarle si le gustaria comprar un seguro de vida para proteger a su familia."),
+            ("cliente", "Pero usted no me hablaba de ferreteria?"),
+            ("bruce", "Tambien tenemos seguros de gastos medicos muy completos para su empresa."),
+        ],
+        "bugs_esperados_any": ["GPT_FUERA_DE_TEMA", "GPT_RESPUESTA_INCORRECTA"],
+    },
+
+    # ----------------------------------------------------------
+    # 38. GPT_LOGICA_ROTA (LIVE) - Bruce NO pide dato ya dado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce no pide dato ya dado (GPT eval)",
+        "descripcion": "Cliente da WhatsApp -> Bruce confirma, no re-pide",
+        "contacto": {"nombre_negocio": "Ferreteria GPT6", "ciudad": "Guadalajara"},
+        "requiere_gpt_eval": True,
+        "turnos": [
+            {"cliente": "Bueno, buen dia", "check_bruce": None},
+            {"cliente": "Si, yo soy el encargado de compras", "check_bruce": None},
+            {"cliente": "Si, mi WhatsApp es 33 14 25 36 47", "check_bruce": None},
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["DATO_IGNORADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 39. GPT_CONTEXTO_IGNORADO (LIVE) - Bruce reconoce al encargado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce reconoce al encargado (GPT eval)",
+        "descripcion": "Cliente es encargado -> Bruce le ofrece catalogo directamente",
+        "contacto": {"nombre_negocio": "Ferreteria GPT7", "ciudad": "Monterrey"},
+        "requiere_gpt_eval": True,
+        "turnos": [
+            {"cliente": "Bueno", "check_bruce": None},
+            {"cliente": "Yo soy el encargado de compras, que me ofrece?", "check_bruce": None},
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["AREA_EQUIVOCADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 40. GPT_OPORTUNIDAD_PERDIDA (LIVE) - Bruce captura datos
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce captura datos cuando cliente esta interesado (GPT eval)",
+        "descripcion": "Cliente interesado -> Bruce pide WhatsApp",
+        "contacto": {"nombre_negocio": "Ferreteria GPT8", "ciudad": "Guadalajara"},
+        "requiere_gpt_eval": True,
+        "turnos": [
+            {"cliente": "Bueno, buen dia", "check_bruce": None},
+            {"cliente": "Si soy el encargado, me interesa el catalogo", "check_bruce": None},
+            {"cliente": "Si, mi WhatsApp es 33 98 76 54 32", "check_bruce": None},
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["DESPEDIDA_PREMATURA"],
+    },
+
+    # ----------------------------------------------------------
+    # 41. GPT_RESPUESTA_INCOHERENTE (LIVE) - Bruce responde coherente
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce responde coherente a preguntas (GPT eval)",
+        "descripcion": "Cliente pregunta sobre productos -> Bruce responde con info real",
+        "contacto": {"nombre_negocio": "Ferreteria GPT9", "ciudad": "Guadalajara"},
+        "requiere_gpt_eval": True,
+        "turnos": [
+            {"cliente": "Bueno", "check_bruce": None},
+            {"cliente": "Si soy el encargado, que tipo de productos manejan?", "check_bruce": None},
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["INTERRUPCION_CONVERSACIONAL"],
+    },
+
+    # ----------------------------------------------------------
+    # 42. GPT_FUERA_DE_TEMA (LIVE) - Bruce se mantiene en tema
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce se mantiene en tema ferretero (GPT eval)",
+        "descripcion": "Conversacion normal -> Bruce habla solo de ferreteria/NIOVAL",
+        "contacto": {"nombre_negocio": "Ferreteria GPT10", "ciudad": "Guadalajara"},
+        "requiere_gpt_eval": True,
+        "turnos": [
+            {"cliente": "Bueno, buen dia", "check_bruce": None},
+            {"cliente": "Si, yo soy el encargado. Que marcas manejan?", "check_bruce": None},
+        ],
+        "bugs_esperados": [],
+        "bugs_no_esperados": ["LOOP"],
+    },
 ]
 
 
@@ -712,8 +893,9 @@ ESCENARIOS = [
 class SimuladorLlamada:
     """Ejecuta escenarios de prueba contra AgenteVentas + BugDetector."""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, gpt_eval=False):
         self.verbose = verbose
+        self.gpt_eval = gpt_eval
         self.tiene_openai = bool(os.environ.get('OPENAI_API_KEY', ''))
         self.resultados = []
 
@@ -726,6 +908,7 @@ class SimuladorLlamada:
             "turnos": [],
             "bugs_detectados": [],
             "bugs_esperados": escenario.get("bugs_esperados", []),
+            "bugs_esperados_any": escenario.get("bugs_esperados_any", []),
             "bugs_no_esperados": escenario.get("bugs_no_esperados", []),
             "passed": False,
             "errores": [],
@@ -733,6 +916,14 @@ class SimuladorLlamada:
         }
 
         t0 = time.time()
+
+        # Skip escenarios GPT si no se paso --gpt-eval
+        if escenario.get("requiere_gpt_eval") and not self.gpt_eval:
+            resultado["passed"] = True
+            resultado["skipped"] = True
+            resultado["tiempo_ms"] = 0
+            self.resultados.append(resultado)
+            return resultado
 
         try:
             if escenario.get("simular_bug"):
@@ -818,12 +1009,16 @@ class SimuladorLlamada:
         self._run_bug_detector(resultado, tracker_attrs=escenario.get("tracker_attrs"))
 
     def _run_bug_detector(self, resultado, tracker_attrs=None):
-        """Corre bug detector rule-based sobre la conversacion."""
+        """Corre bug detector rule-based (y GPT eval si --gpt-eval) sobre la conversacion."""
         tracker = CallEventTracker(
             call_sid=f"SIM-{resultado['idx']:03d}",
             bruce_id=f"SIMTEST-{resultado['idx']:03d}",
             telefono="0000000000"
         )
+
+        # GPT eval: simular duracion de 60s para pasar threshold de 20s
+        if self.gpt_eval:
+            tracker.created_at = time.time() - 60
 
         # Aplicar atributos de tracker opcionales (metadata servidor: twiml_count, etc.)
         if tracker_attrs:
@@ -842,6 +1037,15 @@ class SimuladorLlamada:
 
         try:
             bugs = BugDetector.analyze(tracker)
+
+            # GPT eval: evaluar conversacion con GPT-4o-mini
+            if self.gpt_eval:
+                try:
+                    gpt_bugs = _evaluar_con_gpt(tracker)
+                    bugs.extend(gpt_bugs)
+                except Exception as e:
+                    resultado["errores"].append(f"GPT eval error: {e}")
+
             resultado["bugs_detectados"] = bugs
         except Exception as e:
             resultado["errores"].append(f"Bug detector error: {e}")
@@ -851,11 +1055,20 @@ class SimuladorLlamada:
         tipos_detectados = {b["tipo"] for b in resultado["bugs_detectados"]}
         passed = True
 
-        # Verificar bugs esperados esten presentes
+        # Verificar bugs esperados esten presentes (todos deben existir)
         for esperado in resultado["bugs_esperados"]:
             if esperado not in tipos_detectados:
                 resultado["errores"].append(
                     f"Bug esperado '{esperado}' NO detectado"
+                )
+                passed = False
+
+        # Verificar bugs esperados ANY (al menos uno debe existir)
+        bugs_any = resultado.get("bugs_esperados_any", [])
+        if bugs_any:
+            if not any(b in tipos_detectados for b in bugs_any):
+                resultado["errores"].append(
+                    f"Ninguno de {bugs_any} detectado (encontrados: {list(tipos_detectados)})"
                 )
                 passed = False
 
@@ -882,8 +1095,10 @@ def imprimir_reporte(resultados, verbose=False):
     """Imprime reporte formateado."""
     modo = "GPT REAL" if os.environ.get('OPENAI_API_KEY', '') else "TEMPLATE (sin OPENAI_API_KEY)"
     total = len(resultados)
-    passed = sum(1 for r in resultados if r["passed"])
-    failed = total - passed
+    skipped_count = sum(1 for r in resultados if r.get("skipped"))
+    ejecutados = total - skipped_count
+    passed = sum(1 for r in resultados if r["passed"] and not r.get("skipped"))
+    failed = ejecutados - passed
 
     print()
     print("=" * 60)
@@ -896,9 +1111,16 @@ def imprimir_reporte(resultados, verbose=False):
     for r in resultados:
         idx = r["idx"]
         nombre = r["nombre"]
+        tiempo = r["tiempo_ms"]
+
+        if r.get("skipped"):
+            print(f"  [{idx}/{total}] {nombre}")
+            print(f"    [SKIP] GPT eval (usar --gpt-eval)")
+            print()
+            continue
+
         status = "PASS" if r["passed"] else "FAIL"
         icon = "[OK]" if r["passed"] else "[FAIL]"
-        tiempo = r["tiempo_ms"]
 
         print(f"  [{idx}/{total}] {nombre}")
 
@@ -930,10 +1152,11 @@ def imprimir_reporte(resultados, verbose=False):
 
     # Resumen
     print("=" * 60)
+    skip_str = f", {skipped_count} SKIP" if skipped_count > 0 else ""
     if failed == 0:
-        print(f"  RESULTADO: {passed}/{total} PASS")
+        print(f"  RESULTADO: {passed}/{ejecutados} PASS{skip_str}")
     else:
-        print(f"  RESULTADO: {passed}/{total} PASS, {failed} FAIL")
+        print(f"  RESULTADO: {passed}/{ejecutados} PASS, {failed} FAIL{skip_str}")
     print("=" * 60)
     print()
 
@@ -947,17 +1170,20 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true", help="Mostrar detalle completo")
     parser.add_argument("--escenario", "-e", type=int, help="Ejecutar solo escenario N")
     parser.add_argument("--list", "-l", action="store_true", help="Listar escenarios disponibles")
+    parser.add_argument("--gpt-eval", action="store_true",
+                        help="Incluir evaluacion GPT (requiere OPENAI_API_KEY, ~$0.001/escenario)")
     args = parser.parse_args()
 
     if args.list:
         print("\nEscenarios disponibles:")
         for i, e in enumerate(ESCENARIOS):
             bug_str = f" -> espera: {', '.join(e.get('bugs_esperados', []))}" if e.get('bugs_esperados') else ""
-            print(f"  {i+1}. {e['nombre']}: {e['descripcion']}{bug_str}")
+            gpt_tag = " [GPT]" if e.get("requiere_gpt_eval") else ""
+            print(f"  {i+1}. {e['nombre']}: {e['descripcion']}{bug_str}{gpt_tag}")
         print()
         return
 
-    sim = SimuladorLlamada(verbose=args.verbose)
+    sim = SimuladorLlamada(verbose=args.verbose, gpt_eval=args.gpt_eval)
 
     if args.escenario:
         idx = args.escenario - 1
