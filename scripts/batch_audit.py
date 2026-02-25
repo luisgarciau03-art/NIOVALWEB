@@ -640,36 +640,47 @@ def _count_new_calls(state):
     return len(new_ids), current_max
 
 
-def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False):
+def run_monitor(batch_size=25, interval_minutes=3, skip_regression=False, reset=False):
     """Monitorea el servidor y ejecuta auditoria al acumular batch_size llamadas.
 
     Args:
         batch_size: Llamadas necesarias para disparar auditoria (5, 10, 25, 50...)
         interval_minutes: Minutos entre cada chequeo
         skip_regression: Saltear suite de regresion (mas rapido)
+        reset: Reiniciar estado del monitor (contar desde cero)
     """
     _ensure_dirs()
-    state = _load_monitor_state()
 
-    # Inicializar si es primera vez
-    if state.get('last_bruce_id_seen', 0) == 0:
-        _, current_max = _count_new_calls(state)
-        state['last_bruce_id_seen'] = current_max
-        state['calls_since_last_audit'] = 0
+    # FIX 804: --reset fuerza reinicio EN MEMORIA (no depende del archivo)
+    if reset:
+        all_ids = _get_all_bruce_ids()
+        current_max = max(all_ids) if all_ids else 0
+        state = {'last_bruce_id_seen': current_max, 'calls_since_last_audit': 0, 'last_check': None}
         _save_monitor_state(state)
-        print(f"  Monitor inicializado. BRUCE ID actual: BRUCE{current_max}")
+        print(f"  Monitor reseteado. Baseline: BRUCE{current_max}")
         print(f"  Las llamadas a partir de ahora se contaran como nuevas.\n")
     else:
-        # FIX 804: Startup catch-up - detectar llamadas que ocurrieron mientras el monitor
-        # estaba apagado y sumarlas al acumulador
-        catchup_count, current_max = _count_new_calls(state)
-        if catchup_count > 0:
-            state['calls_since_last_audit'] = state.get('calls_since_last_audit', 0) + catchup_count
+        state = _load_monitor_state()
+
+        # Inicializar si es primera vez
+        if state.get('last_bruce_id_seen', 0) == 0:
+            _, current_max = _count_new_calls(state)
             state['last_bruce_id_seen'] = current_max
-            state['last_check'] = datetime.now().isoformat()
+            state['calls_since_last_audit'] = 0
             _save_monitor_state(state)
-            print(f"  FIX 804: {catchup_count} llamada(s) detectada(s) mientras monitor estaba apagado")
-            print(f"  Acumuladas ahora: {state['calls_since_last_audit']}\n")
+            print(f"  Monitor inicializado. BRUCE ID actual: BRUCE{current_max}")
+            print(f"  Las llamadas a partir de ahora se contaran como nuevas.\n")
+        else:
+            # FIX 804: Startup catch-up - detectar llamadas que ocurrieron mientras el monitor
+            # estaba apagado y sumarlas al acumulador
+            catchup_count, current_max = _count_new_calls(state)
+            if catchup_count > 0:
+                state['calls_since_last_audit'] = state.get('calls_since_last_audit', 0) + catchup_count
+                state['last_bruce_id_seen'] = current_max
+                state['last_check'] = datetime.now().isoformat()
+                _save_monitor_state(state)
+                print(f"  FIX 804: {catchup_count} llamada(s) detectada(s) mientras monitor estaba apagado")
+                print(f"  Acumuladas ahora: {state['calls_since_last_audit']}\n")
 
     print(f"\n{'='*60}")
     print(f"  BRUCE W - MONITOR AUTOMATICO")
@@ -809,14 +820,11 @@ def main():
     _ensure_dirs()
 
     if args.monitor:
-        # FIX 804: --reset reinicia el estado del monitor
-        if args.reset:
-            _save_monitor_state({'last_bruce_id_seen': 0, 'calls_since_last_audit': 0, 'last_check': None})
-            print("  Monitor reseteado. Se re-inicializara con el BRUCE ID actual.\n")
         run_monitor(
             batch_size=args.batch_size,
             interval_minutes=args.interval,
             skip_regression=args.skip_regression,
+            reset=args.reset,
         )
         return
 
