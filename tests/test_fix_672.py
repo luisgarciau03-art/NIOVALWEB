@@ -45,52 +45,52 @@ class TestFix672ExisteEnCodigo:
 class TestFix672ThresholdAjustado:
     """Verificar que FIX 672 ajustó los thresholds correctamente"""
 
-    def test_fix_672_threshold_whatsapp_dos(self):
-        """Verificar que FIX 672 usa threshold >= 2 para WhatsApp (no >= 3)"""
+    def test_fix_672_813_threshold_whatsapp(self):
+        """Verificar que FIX 672+813 usa threshold >= 1 para WhatsApp (bloquea 2da pregunta)"""
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
 
-        # Buscar sección de FIX 672 WhatsApp
+        # Buscar sección de FIX 672+813 WhatsApp
         fix_672_start = source.find("FIX 672")
         fix_672_section = source[fix_672_start:fix_672_start + 1500]
 
-        # Debe verificar >= 2 (bloquea 2da pregunta WhatsApp)
-        assert "veces_pregunto_whatsapp >= 2" in fix_672_section
+        # FIX 813: >= 1 (bloquea 2da pregunta, alineado con bug detector)
+        assert "veces_pregunto_whatsapp >= 1" in fix_672_section
 
-    def test_fix_672_threshold_catalogo_dos(self):
-        """Verificar que FIX 672 usa threshold >= 2 para catálogo (no >= 3)"""
+    def test_fix_672_813_threshold_catalogo(self):
+        """Verificar que FIX 672+813 usa threshold >= 1 para catálogo (bloquea 2da pregunta)"""
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
 
-        # Buscar sección de catálogo (después de WhatsApp)
-        # FIX 672 debe haber modificado el threshold de catálogo también
-        assert "veces_pregunto_catalogo >= 2" in source
+        # FIX 813: >= 1 (bloquea 2da pregunta, alineado con bug detector)
+        assert "veces_pregunto_catalogo >= 1" in source
 
-    def test_fix_672_no_threshold_tres(self):
-        """Verificar que FIX 672 NO usa >= 3 (era el problema)"""
+    def test_fix_672_813_no_threshold_viejo(self):
+        """Verificar que FIX 672+813 NO usa >= 2 ni >= 3 (eran los problemas)"""
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
 
         # Buscar secciones de FIX 672
         fix_672_start = source.find("FIX 672")
         if fix_672_start > 0:
-            # Verificar contexto alrededor de FIX 672
-            # NO debe tener >= 3 en la misma sección
             fix_672_section = source[fix_672_start:fix_672_start + 2000]
+            # NO debe tener >= 2 ni >= 3 (FIX 813 cambió a >= 1)
+            assert "veces_pregunto_whatsapp >= 2" not in fix_672_section
             assert "veces_pregunto_whatsapp >= 3" not in fix_672_section
+            assert "veces_pregunto_catalogo >= 2" not in fix_672_section
             assert "veces_pregunto_catalogo >= 3" not in fix_672_section
 
 
 class TestFix672ComportamientoEsperado:
     """Verificar comportamiento esperado de FIX 672"""
 
-    def test_fix_672_bloquea_segunda_pregunta_whatsapp(self):
-        """Verificar que FIX 672 bloquea la 2da pregunta WhatsApp (2 previos + 1 actual)"""
+    def test_fix_672_813_bloquea_segunda_pregunta_whatsapp(self):
+        """Verificar que FIX 672+813 bloquea la 2da pregunta WhatsApp (1 previo + 1 actual)"""
         source = inspect.getsource(AgenteVentas._filtrar_respuesta_post_gpt)
 
-        # Buscar sección de FIX 672 WhatsApp
+        # Buscar sección de FIX 672+813 WhatsApp
         fix_672_start = source.find("FIX 672")
         fix_672_section = source[fix_672_start:fix_672_start + 1500]
 
-        # Debe bloquear con >= 2 previos
-        assert ">= 2" in fix_672_section
+        # FIX 813: Debe bloquear con >= 1 previo
+        assert ">= 1" in fix_672_section
 
     def test_fix_672_bloquea_segunda_pregunta_catalogo(self):
         """Verificar que FIX 672 bloquea la 2da pregunta catálogo"""

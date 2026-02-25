@@ -2298,6 +2298,43 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     respuesta_lower = respuesta.lower()
 
         # ============================================================
+        # FIX 816: OFERTA_POST_DESPEDIDA prevention
+        # Bug detector marca cuando Bruce ofrece catálogo/pitch DESPUÉS de haberse despedido
+        # 95 instancias en audit masivo - sin prevención previa
+        # Detectar si último mensaje de Bruce fue despedida → bloquear cualquier oferta nueva
+        # ============================================================
+        if not filtro_aplicado and len(self.conversation_history) >= 2:
+            _ultimo_bruce_816 = ''
+            for _m816 in reversed(self.conversation_history):
+                if _m816['role'] == 'assistant':
+                    _ultimo_bruce_816 = _m816['content'].lower()
+                    break
+            # Patrones de despedida EXPLÍCITA (no ambiguos con saludos)
+            # "buen día" solo = ambiguo (puede ser saludo), REQUIERE contexto de despedida
+            _despedida_816 = any(p in _ultimo_bruce_816 for p in [
+                'que tenga buen dia', 'que tenga buen día', 'que tenga excelente dia',
+                'que tenga excelente día', 'gracias por su tiempo', 'hasta luego',
+                'que le vaya bien', 'que este bien', 'que esté bien',
+                'fue un placer',
+            ])
+            # Excluir saludos: "Hola, buen día" NO es despedida
+            if _despedida_816 and 'hola' in _ultimo_bruce_816[:15]:
+                _despedida_816 = False
+            if _despedida_816:
+                _oferta_816 = any(p in respuesta_lower for p in [
+                    'catálogo', 'catalogo', 'le envío', 'le envio',
+                    'nioval', 'productos', 'información', 'informacion',
+                    'whatsapp', 'correo', 'le mando',
+                ])
+                if _oferta_816:
+                    print(f"\n[FIX 816] OFERTA_POST_DESPEDIDA: Bruce ya se despidió pero GPT ofrece algo nuevo")
+                    print(f"  Despedida previa: '{_ultimo_bruce_816[:60]}'")
+                    print(f"  Oferta bloqueada: '{respuesta[:60]}'")
+                    respuesta = "Que tenga excelente día, hasta luego."
+                    respuesta_lower = respuesta.lower()
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 615B: BRUCE2030 - NO repetir números de teléfono en voz
         # GPT a veces repite el número completo (ej: "+526623531804")
         # El TTS lo lee con acento extranjero y suena mal
@@ -2360,8 +2397,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if "nioval" in respuesta_lower:
             # Reemplazar todas las variantes por NIOVAL mayúsculas
             respuesta = re.sub(r'\bnioval\b', 'NIOVAL', respuesta, flags=re.IGNORECASE)
-            print(f"   FIX 653: Normalizado 'nioval' → 'NIOVAL'")
-            filtro_aplicado = True
+            print(f"   FIX 653: Normalizado 'nioval' -> 'NIOVAL'")
+            # FIX 813: NO poner filtro_aplicado - es cosmético, no sustantivo
+            respuesta_lower = respuesta.lower()
 
         # ============================================================
         # FIX 667A: BRUCE2171 - GPT_LOGICA_ROTA (Cliente negó tener dato específico)
@@ -2744,6 +2782,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Datos detectados: email={tiene_email_737}, tel={tiene_tel_737} ({len(_digitos_737)} dígitos)")
                     print(f"   Respuesta original: '{respuesta_original_737[:80]}'")
                     print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    respuesta_lower = respuesta.lower()  # FIX 813: Actualizar respuesta_lower para evitar checks stale
                     filtro_aplicado = True
 
         # ============================================================
@@ -2822,6 +2861,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Cliente: '{ultimo_cliente_667[:80]}'")
                     print(f"   Respuesta original: '{respuesta_original_751[:80]}'")
                     print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    respuesta_lower = respuesta.lower()  # FIX 813: Actualizar respuesta_lower
                     filtro_aplicado = True
 
         # ============================================================
@@ -2881,6 +2921,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Contacto capturado: {_tiene_contacto_752}")
                     print(f"   Respuesta original: '{respuesta_original_752[:80]}'")
                     print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                    respuesta_lower = respuesta.lower()  # FIX 813: Actualizar respuesta_lower
                     filtro_aplicado = True
 
         # ============================================================
@@ -2999,6 +3040,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 respuesta = "¿Me puede proporcionar un WhatsApp donde le envíe información?"
                 print(f"   Respuesta anti-loop: '{respuesta}' (genérico)")
 
+            return respuesta
+
+        # ============================================================
+        # FIX 813: Si un filtro previo (737/751/752/810B) ya corrigió la respuesta,
+        # NO aplicar anti-loop (catálogo/whatsapp/correo) - evitar sobreescribir correcciones
+        if filtro_aplicado:
+            print(f"[INFO] FIX 813: filtro_aplicado=True, saltando checks anti-loop (493B/671/672)")
             return respuesta
 
         # ============================================================
@@ -3139,11 +3187,11 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             print(f"   Respuesta corregida: '{respuesta}'")
             return respuesta
 
-        # FIX 672: BRUCE2143, 2142, 2128, 2114 - Alinear threshold con bug detector
-        # Bug detector marca PREGUNTA_REPETIDA si preguntó 2+ veces (>=2)
-        # FIX 493 original bloqueaba 3ra pregunta (>=3) → MISMATCH
-        # FIX 672: Bloquear en 2da pregunta (>=2 previos + 1 actual)
-        if pregunta_whatsapp and veces_pregunto_whatsapp >= 2:
+        # FIX 672+813: Alinear threshold con bug detector
+        # Bug detector marca PREGUNTA_REPETIDA si preguntó 2+ veces (count >= 2)
+        # FIX 672 original: >= 2 previos (bloqueaba 3ra) → MISMATCH con detector que marca 2da
+        # FIX 813: >= 1 previo (bloquea 2da pregunta, alineado con detector)
+        if pregunta_whatsapp and veces_pregunto_whatsapp >= 1:
             print(f"\n[WARN] FIX 672 ANTI-LOOP: Bruce iba a pedir WhatsApp ({veces_pregunto_whatsapp+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             respuesta = "Entiendo. ¿Prefiere que le envíe la información por correo electrónico?"
@@ -3181,8 +3229,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         )
 
         pregunta_catalogo = any(p in respuesta_lower for p in preguntas_catalogo)
-        # FIX 672: BRUCE2138, 2143, 2142, 2128, 2114 - Alinear threshold (mismo que WhatsApp)
-        if pregunta_catalogo and veces_pregunto_catalogo >= 2:
+        # FIX 672+813: Alinear threshold con bug detector (mismo que WhatsApp)
+        # FIX 813: >= 1 previo (bloquea 2da pregunta, alineado con detector)
+        if pregunta_catalogo and veces_pregunto_catalogo >= 1:
             print(f"\n[WARN] FIX 672 ANTI-LOOP: Bruce iba a ofrecer catálogo ({veces_pregunto_catalogo+1}a vez)")
             print(f"   Respuesta bloqueada: '{respuesta[:60]}...'")
             # Cliente ya rechazó 2 veces - despedirse profesionalmente
@@ -4628,8 +4677,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             respuesta = "Perfecto, muchas gracias por la información. Le marco entonces. Que tenga excelente día."
                             print(f"   FIX 281: Cliente mencionó tiempo/día - usando despedida apropiada")
                         elif respuesta_negativa:
-                            respuesta = "Entiendo. ¿A qué hora puedo llamar para contactarlo?"
-                            print(f"   FIX 281: Cliente indicó ausencia - preguntando horario")
+                            # FIX 817: Ofrecer WhatsApp/correo además de callback
+                            respuesta = "Entiendo. ¿Me podría dejar un WhatsApp o correo para enviarle la información al encargado?"
+                            print(f"   FIX 281+817: Cliente indicó ausencia - ofreciendo WhatsApp/correo")
                         else:
                             # FIX 445: NO usar "¿Me escucha?" genérico - el cliente SÍ escucha
                             respuesta = "Sí, dígame."
@@ -6976,9 +7026,25 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                               'brindar información', 'ofrecer información']
         ya_presento_693 = any('nioval' in m.get('content', '').lower()
                               for m in self.conversation_history if m.get('role') == 'assistant')
-        if ya_presento_693 and 'nioval' in respuesta.lower():
-            tiene_pitch_693 = any(p in respuesta.lower() for p in palabras_pitch_693)
-            if tiene_pitch_693:
+        # FIX 815: Expandir detección de pitch repetido
+        # FIX 693 original: solo si 'nioval' en respuesta actual → pitch reformulado sin 'nioval' escapaba
+        # FIX 815: También detectar si ya hizo pitch Y respuesta tiene 2+ palabras de pitch (sin necesitar 'nioval')
+        _ya_hizo_pitch_815 = ya_presento_693 or any(
+            sum(1 for p in palabras_pitch_693 if p in m.get('content', '').lower()) >= 2
+            for m in self.conversation_history if m.get('role') == 'assistant'
+        )
+        _resp_tiene_nioval_815 = 'nioval' in respuesta.lower()
+        # Palabras FUERTES de pitch (excluyendo catálogo/catalogo que es normal en ofertas)
+        _palabras_pitch_fuerte_815 = ['distribuidor', 'marca nioval', 'brindar informacion',
+                                       'brindar información', 'ofrecer informacion', 'ofrecer información',
+                                       'línea', 'linea']
+        _pitch_fuerte_815 = sum(1 for p in _palabras_pitch_fuerte_815 if p in respuesta.lower())
+        _pitch_total_815 = sum(1 for p in palabras_pitch_693 if p in respuesta.lower())
+        # Trigger: (ya presentó nioval + respuesta tiene nioval + pitch) → original FIX 693
+        # OR (ya hizo pitch + respuesta tiene 3+ pitch keywords incluyendo al menos 1 fuerte)
+        _trigger_815 = (ya_presento_693 and _resp_tiene_nioval_815 and _pitch_total_815 >= 1) or \
+                        (_ya_hizo_pitch_815 and _pitch_total_815 >= 3 and _pitch_fuerte_815 >= 1 and len(respuesta) > 30)
+        if _trigger_815:
                 print(f"\n[FIX 693] PITCH REPETIDO SEMÁNTICO detectado (NIOVAL ya presentado)")
                 print(f"  Respuesta: '{respuesta[:80]}...'")
                 # Generar alternativa contextual sin repetir pitch
@@ -6986,7 +7052,7 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     any('no esta' in m.get('content', '').lower() or 'no está' in m.get('content', '').lower() or 'no se encuentra' in m.get('content', '').lower()
                         for m in self.conversation_history if m.get('role') == 'user')):
                     respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
-                elif self.encargado_confirmado:
+                elif getattr(self, 'encargado_confirmado', False):
                     respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
                 elif any('encargad' in m.get('content', '').lower()
                          for m in self.conversation_history if m.get('role') == 'assistant'):
@@ -7085,6 +7151,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     respuesta = "Muchas gracias por su tiempo. Que tenga excelente día."
                 else:
                     respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
+                print(f"  Override: '{respuesta}'")
+
+        # ============================================================
+        # FIX 814: LOOP SHORT-STRING PROTECTION
+        # FIX 679 solo protege strings >25 chars (similarity-based)
+        # Frases cortas como "Claro, espero" (14 chars) escapan y se repiten 6x+
+        # FIX 814: Exact match para strings 10-25 chars normalizados
+        # ============================================================
+        if 10 <= len(respuesta_norm_679) <= 25:
+            _dup_short_814 = 0
+            _previas_814 = [m.get('content', '') for m in self.conversation_history if m.get('role') == 'assistant']
+            for prev in _previas_814:
+                prev_norm_814 = ud_679.normalize('NFKD', prev.lower()).encode('ascii', 'ignore').decode('ascii')
+                prev_norm_814 = re_679.sub(r'[^\w\s]', '', prev_norm_814).strip()
+                if respuesta_norm_679 == prev_norm_814:
+                    _dup_short_814 += 1
+            if _dup_short_814 >= 2:
+                print(f"\n[FIX 814] LOOP SHORT: Frase corta repetida {_dup_short_814 + 1}x: '{respuesta[:40]}'")
+                respuesta = "Le envío la información por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
+                print(f"  Override CIERRE: '{respuesta}'")
+            elif _dup_short_814 == 1:
+                print(f"\n[FIX 814] LOOP SHORT: Frase corta repetida 2x: '{respuesta[:40]}'")
+                if 'espero' in respuesta_norm_679 or 'momento' in respuesta_norm_679:
+                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo mientras tanto?"
+                elif 'encargado' in respuesta_norm_679:
+                    respuesta = "¿Me podría dar un WhatsApp donde le envíe información?"
+                else:
+                    respuesta = "¿Me podría indicar cómo le puedo apoyar?"
                 print(f"  Override: '{respuesta}'")
 
         # ============================================================

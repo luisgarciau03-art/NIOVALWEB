@@ -220,7 +220,7 @@ class BugDetector:
                 bugs.append({
                     "tipo": "RESPUESTA_FILLER_INCOHERENTE",
                     "severidad": ALTO,
-                    "detalle": f"ElevenLabs TTS falló {tracker.filler_162a_count}x → audio 'dejeme_ver' usado como filler (cliente escuchó respuesta incoherente)",
+                    "detalle": f"ElevenLabs TTS fallo {tracker.filler_162a_count}x -> audio 'dejeme_ver' usado como filler (cliente escucho respuesta incoherente)",
                     "categoria": "tecnico"
                 })
 
@@ -808,7 +808,7 @@ class ContentAnalyzer:
                 bugs.append({
                     "tipo": "DEGRADACION_TTS",
                     "severidad": CRITICO,
-                    "detalle": f"ElevenLabs TTS falló {tracker.filler_162a_count}x consecutivas → degradación de servicio",
+                    "detalle": f"ElevenLabs TTS fallo {tracker.filler_162a_count}x consecutivas -> degradacion de servicio",
                     "categoria": "tecnico"
                 })
         except Exception:
@@ -1445,7 +1445,7 @@ def _es_comportamiento_correcto(conversacion: list) -> bool:
                             # Buscar palabras clave de la pregunta anterior en mensaje actual
                             palabras_clave = [p for p in pregunta_anterior.split() if len(p) > 4][:3]
                             if any(palabra in ultimo_bruce for palabra in palabras_clave):
-                                print(f"[FIX 664B] ✅ COMPORTAMIENTO CORRECTO: Cliente verificó conexión ('{ultimo_cliente[:30]}...') → Bruce repitió pregunta")
+                                print(f"[FIX 664B] COMPORTAMIENTO CORRECTO: Cliente verifico conexion ('{ultimo_cliente[:30]}...') -> Bruce repitio pregunta")
                                 return True
                         break
 
@@ -1692,9 +1692,9 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         es_llamada_corta = (duracion_llamada < GPT_EVAL_DURACION_CORTA_S or num_turnos < GPT_EVAL_MIN_TURNOS_COMPLETO)
 
         if es_llamada_corta:
-            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval ENFOCADO (llamada corta)")
+            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos -> GPT eval ENFOCADO (llamada corta)")
         else:
-            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos → GPT eval COMPLETO")
+            print(f"[FIX 713A] Llamada {tracker.bruce_id}: {duracion_llamada}s/{num_turnos} turnos -> GPT eval COMPLETO")
 
         # FIX 735: Pre-filtro IVR - NO evaluar conversaciones con conmutador automático
         _IVR_735 = re.compile(
