@@ -3,7 +3,7 @@ LLM Client Adapter - Soporte OpenAI y Anthropic para Bruce W
 
 Switcheable via env vars:
   LLM_PROVIDER=openai|anthropic (default: openai)
-  LLM_MODEL=gpt-4o-mini|claude-haiku-4-5-20251001 (default: gpt-4o-mini)
+  LLM_MODEL=gpt-4.1-mini|claude-haiku-4-5-20251001 (default: gpt-4.1-mini)
   ANTHROPIC_API_KEY=sk-ant-xxx (solo si anthropic)
 """
 
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4.1-mini")
 
 # Mapeo de modelos "potentes" para retry (FIX 204)
 _RETRY_MODEL = {
