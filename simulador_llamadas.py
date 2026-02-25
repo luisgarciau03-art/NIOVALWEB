@@ -883,6 +883,673 @@ ESCENARIOS = [
         "bugs_esperados": [],
         "bugs_no_esperados": ["LOOP"],
     },
+
+    # ============================================================
+    # ESCENARIOS 43-82: BASADOS EN LOGS REALES (2 por bug)
+    # ============================================================
+
+    # ----------------------------------------------------------
+    # 43. PREGUNTA_REPETIDA (BRUCE2143) - WhatsApp pedido 2x
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2143: WhatsApp pedido 2x tras rechazo",
+        "descripcion": "Bruce pide WhatsApp despues de que cliente dice no tengo",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval para ofrecerle productos ferreteros."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Manejamos productos ferreteros de alta calidad. Me podria dar su numero de WhatsApp para enviarle el catalogo?"),
+            ("cliente", "No tengo WhatsApp ahorita"),
+            ("bruce", "Entiendo. Me podria dar su numero de WhatsApp para enviarle informacion?"),
+        ],
+        "bugs_esperados": ["PREGUNTA_REPETIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 44. PREGUNTA_REPETIDA (BRUCE2111) - Dejar numero pedido 2x
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2111: Pide dejar numero 2x tras confirmacion",
+        "descripcion": "Bruce repite pregunta de dejar numero despues de que cliente dijo si",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Bueno"),
+            ("bruce", "Me permite dejarle mi numero para que el encargado nos contacte cuando llegue?"),
+            ("cliente", "Si, claro"),
+            ("bruce", "Me permite dejarle mi numero para que el encargado nos contacte?"),
+        ],
+        "bugs_esperados": ["PREGUNTA_REPETIDA"],
+    },
+
+    # ----------------------------------------------------------
+    # 45. CLIENTE_HABLA_ULTIMO (BRUCE2111) - Sucursal Sahuayo
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2111: Cliente redirige a sucursal sin respuesta",
+        "descripcion": "Cliente dice hablar a otra sucursal y Bruce no responde",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si"),
+            ("bruce", "Se encontrara el encargado o encargada de compras?"),
+            ("cliente", "No muchacha, tienes que hablar a la sucursal de Sahuayo"),
+        ],
+        "bugs_esperados": ["CLIENTE_HABLA_ULTIMO"],
+    },
+
+    # ----------------------------------------------------------
+    # 46. CLIENTE_HABLA_ULTIMO (BRUCE2112) - No hay ahorita
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2112: Cliente dice no hay nadie sin respuesta",
+        "descripcion": "Cliente dice que no hay nadie y Bruce no responde",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Se encontrara el encargado o encargada de compras?"),
+            ("cliente", "No, no hay ahorita, en esta hora no hay"),
+        ],
+        "bugs_esperados": ["CLIENTE_HABLA_ULTIMO"],
+    },
+
+    # ----------------------------------------------------------
+    # 47. SALUDO_FALTANTE (BRUCE2317) - Abre pidiendo WhatsApp
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2317: Abre pidiendo WhatsApp sin saludo",
+        "descripcion": "Bruce abre la conversacion pidiendo WhatsApp sin saludar primero",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Me podria dar su WhatsApp para enviarle el catalogo de nuestros productos?"),
+            ("cliente", "Que? Quien habla?"),
+            ("bruce", "Le llamo de la marca Nioval, somos distribuidores de productos ferreteros."),
+        ],
+        "bugs_esperados": ["SALUDO_FALTANTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 48. SALUDO_FALTANTE (BRUCE2350) - Abre con pregunta encargado
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2350: Abre preguntando encargado sin saludo",
+        "descripcion": "Bruce pregunta por encargado sin saludar primero",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Se encontrara el encargado o encargada de compras para hablarle sobre productos ferreteros?"),
+            ("cliente", "Quien habla?"),
+            ("bruce", "Le llamo de la marca Nioval."),
+        ],
+        "bugs_esperados": ["SALUDO_FALTANTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 49. PITCH_REPETIDO (BRUCE2118) - Pitch 2x misma llamada
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2118: Pitch Nioval repetido 2x",
+        "descripcion": "Bruce repite el pitch de Nioval despues de que cliente pregunta",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros."),
+            ("cliente", "Ah si? Ustedes venden herramientas?"),
+            ("bruce", "Si, me comunico de la marca Nioval, trabajamos productos ferreteros para su negocio."),
+            ("cliente", "Ok, y que tienen?"),
+        ],
+        "bugs_esperados": ["PITCH_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 50. PITCH_REPETIDO (BRUCE2106) - Pitch repetido tras IVR
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2106: Pitch repetido tras respuesta IVR",
+        "descripcion": "Bruce repite pitch exacto despues de IVR",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros. Se encuentra el encargado de compras?"),
+            ("cliente", "Para ventas marque uno, administracion dos"),
+            ("bruce", "Me comunico de la marca Nioval, trabajamos productos ferreteros. Se encuentra el encargado de compras?"),
+        ],
+        "bugs_esperados": ["PITCH_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 51. CATALOGO_REPETIDO (BRUCE2118) - Catalogo ofrecido 2x
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2118: Catalogo ofrecido 2x en misma llamada",
+        "descripcion": "Bruce ofrece enviar catalogo dos veces",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, digame"),
+            ("bruce", "Le puedo enviar nuestro catalogo de productos por WhatsApp si gusta."),
+            ("cliente", "Mmm, no se si me interese"),
+            ("bruce", "Le envio el catalogo para que lo revise con calma, sin compromiso."),
+        ],
+        "bugs_esperados": ["CATALOGO_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 52. CATALOGO_REPETIDO - Variante con "mando" y "envio"
+    # ----------------------------------------------------------
+    {
+        "nombre": "Catalogo repetido: mando + envio variante",
+        "descripcion": "Bruce ofrece catalogo con diferentes palabras pero mismo intent",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, que necesita?"),
+            ("bruce", "Le mando nuestro catalogo de productos ferreteros por WhatsApp?"),
+            ("cliente", "No se, dejeme ver"),
+            ("bruce", "Le envio nuestro catalogo sin compromiso para que lo revise?"),
+        ],
+        "bugs_esperados": ["CATALOGO_REPETIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 53. INTERRUPCION_CONVERSACIONAL (BRUCE2446) - No es ferreteria
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: Cliente dice no es ferreteria, Bruce sigue",
+        "descripcion": "Cliente explica que no es ferreteria pero Bruce interrumpe con pitch",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Es que no es aqui en ferreteria, no hacemos eso"),
+            ("bruce", "Me comunico de Nioval, trabajamos productos ferreteros de calidad."),
+        ],
+        "bugs_esperados": ["INTERRUPCION_CONVERSACIONAL"],
+    },
+
+    # ----------------------------------------------------------
+    # 54. INTERRUPCION_CONVERSACIONAL - Cliente explica su ramo
+    # ----------------------------------------------------------
+    {
+        "nombre": "Cliente explica su ramo, Bruce interrumpe con pitch",
+        "descripcion": "Cliente dice que estan enfocados en otro ramo y Bruce interrumpe",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Mire, le explico, nosotros estamos enfocados en otro ramo"),
+            ("bruce", "Me comunico de Nioval, trabajamos productos ferreteros para su negocio."),
+        ],
+        "bugs_esperados": ["INTERRUPCION_CONVERSACIONAL"],
+    },
+
+    # ----------------------------------------------------------
+    # 55. BRUCE_MUDO (BRUCE2133) - TwiML sin audio
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2133: TwiML enviado pero audio nunca fetched",
+        "descripcion": "Bruce genera TwiML pero el audio nunca se reproduce",
+        "simular_bug": True,
+        "tracker_attrs": {"twiml_count": 2, "audio_fetch_count": 0},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Bueno?"),
+            ("bruce", ""),
+            ("cliente", "Bueno? Me escucha? Hay alguien ahi?"),
+        ],
+        "bugs_esperados": ["BRUCE_MUDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 56. BRUCE_MUDO - Respuesta vacia tras pregunta
+    # ----------------------------------------------------------
+    {
+        "nombre": "Bruce mudo: respuesta vacia tras pregunta cliente",
+        "descripcion": "Cliente pregunta y Bruce no responde",
+        "simular_bug": True,
+        "tracker_attrs": {"twiml_count": 3, "audio_fetch_count": 0},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, que productos manejan?"),
+            ("bruce", ""),
+            ("cliente", "Oiga? Hay alguien?"),
+        ],
+        "bugs_esperados": ["BRUCE_MUDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 57. RESPUESTA_FILLER_INCOHERENTE (BRUCE2446) - TTS falla
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: TTS falla y envia filler incoherente",
+        "descripcion": "ElevenLabs TTS falla y Bruce responde con filler dejeme ver",
+        "simular_bug": True,
+        "tracker_attrs": {"filler_162a_count": 2},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, que tipo de productos manejan?"),
+            ("bruce", "Dejeme ver"),
+            ("cliente", "Bueno?"),
+            ("bruce", "Mmm"),
+        ],
+        "bugs_esperados": ["RESPUESTA_FILLER_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 58. RESPUESTA_FILLER_INCOHERENTE - Fillers consecutivos
+    # ----------------------------------------------------------
+    {
+        "nombre": "Fillers consecutivos: dejeme ver + mmm + ajasi",
+        "descripcion": "Bruce responde solo con fillers sin contenido real",
+        "simular_bug": True,
+        "tracker_attrs": {"filler_162a_count": 3},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, cuanto cuesta el catalogo?"),
+            ("bruce", "Dejeme ver"),
+            ("cliente", "Ya tiene el precio?"),
+            ("bruce", "Mmm dejeme ver"),
+        ],
+        "bugs_esperados": ["RESPUESTA_FILLER_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 59. DICTADO_INTERRUMPIDO (BRUCE2446) - Despedida durante dictado
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: Bruce se despide mientras cliente dicta",
+        "descripcion": "Cliente dictando dato y Bruce se despide abruptamente",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Me podria dar su correo electronico?"),
+            ("cliente", "Si, mi correo es ferreteria arroba hotmail punto"),
+            ("bruce", "Muchas gracias por su tiempo, que tenga buen dia."),
+        ],
+        "bugs_esperados": ["DICTADO_INTERRUMPIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 60. DICTADO_INTERRUMPIDO - Numero parcial cortado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Dictado interrumpido: numero parcial cortado",
+        "descripcion": "Cliente da numero parcial y Bruce cambia tema",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Digame su numero de WhatsApp por favor."),
+            ("cliente", "Si claro, mi whatsapp es 33 14 25"),
+            ("bruce", "Muchas gracias por su tiempo, que tenga buen dia."),
+        ],
+        "bugs_esperados": ["DICTADO_INTERRUMPIDO"],
+    },
+
+    # ----------------------------------------------------------
+    # 61. LOOP (BRUCE1889) - Digame el correo 3x
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE1889: Pide correo 4 veces en loop",
+        "descripcion": "Bruce repite si por favor digame el correo multiples veces",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Muy bien, yo te doy el correo"),
+            ("bruce", "Si, por favor, digame el correo."),
+            ("cliente", "Espereme tantito"),
+            ("bruce", "Si, por favor, digame el correo."),
+            ("cliente", "Si mire es Martin Compras"),
+            ("bruce", "Si, por favor, digame el correo."),
+        ],
+        "bugs_esperados": ["LOOP"],
+    },
+
+    # ----------------------------------------------------------
+    # 62. LOOP - Encargado preguntado 3x
+    # ----------------------------------------------------------
+    {
+        "nombre": "Loop: pregunta por encargado 3 veces",
+        "descripcion": "Bruce pregunta se encontrara el encargado 3 veces seguidas",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "No se"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "Le digo que no se"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+        ],
+        "bugs_esperados": ["LOOP"],
+    },
+
+    # ----------------------------------------------------------
+    # 63. DATO_IGNORADO (BRUCE2087) - Email dictado e ignorado
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2087: Email completo dictado pero Bruce re-pregunta",
+        "descripcion": "Cliente dicta correo completo y Bruce lo pide de nuevo",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, le doy el correo, es ferreterialafuente arroba hotmail punto com"),
+            ("bruce", "Me podria dar su correo electronico para enviarle informacion?"),
+        ],
+        "bugs_esperados": ["DATO_IGNORADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 64. DATO_IGNORADO - WhatsApp dado e ignorado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Dato ignorado: WhatsApp dado y Bruce lo pide otra vez",
+        "descripcion": "Cliente da WhatsApp y Bruce pide el numero de nuevo",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, mi numero es 3312456789"),
+            ("bruce", "Me podria dar su numero de WhatsApp para enviarle el catalogo?"),
+        ],
+        "bugs_esperados": ["DATO_IGNORADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 65. AREA_EQUIVOCADA (BRUCE1893) - Taller mecanico
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE1893: Cliente dice es taller mecanico",
+        "descripcion": "Cliente indica que es taller mecanico y Bruce sigue vendiendo ferreteria",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros."),
+            ("cliente", "Lo que pasa es que aqui no es ferreteria, es un taller mecanico"),
+            ("bruce", "Entiendo, le puedo enviar nuestro catalogo de productos ferreteros?"),
+        ],
+        "bugs_esperados": ["AREA_EQUIVOCADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 66. AREA_EQUIVOCADA - No vendemos ferreteria
+    # ----------------------------------------------------------
+    {
+        "nombre": "Area equivocada: no vendemos ferreteria",
+        "descripcion": "Cliente dice que no vende ferreteria y Bruce insiste",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Mire, nosotros no vendemos ferreteria, somos una papeleria"),
+            ("bruce", "Le puedo enviar nuestro catalogo de productos para que lo revise?"),
+        ],
+        "bugs_esperados": ["AREA_EQUIVOCADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 67. DESPEDIDA_PREMATURA (BRUCE2080) - Sin datos capturados
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2080: Despedida sin capturar ningun dato",
+        "descripcion": "Bruce se despide cuando cliente mostro interes sin capturar contacto",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, me interesa, mandame informacion"),
+            ("bruce", "Con gusto. Que tipo de productos le interesan?"),
+            ("cliente", "Herramientas en general"),
+            ("bruce", "Muchas gracias por su tiempo, que tenga buen dia."),
+        ],
+        "bugs_esperados": ["DESPEDIDA_PREMATURA"],
+    },
+
+    # ----------------------------------------------------------
+    # 68. DESPEDIDA_PREMATURA (BRUCE2446) - Se despide sin info
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: Se despide cuando cliente quiere dar dato",
+        "descripcion": "Cliente dice enviame info y Bruce se despide sin capturar",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si claro, enviame el catalogo"),
+            ("bruce", "Perfecto. Que productos le interesan mas?"),
+            ("cliente", "Herramientas y cerraduras"),
+            ("bruce", "Hasta luego, que tenga buen dia."),
+        ],
+        "bugs_esperados": ["DESPEDIDA_PREMATURA"],
+    },
+
+    # ----------------------------------------------------------
+    # 69. TRANSFER_IGNORADA - Espereme le paso al encargado
+    # ----------------------------------------------------------
+    {
+        "nombre": "Transfer ignorada: espereme le paso al encargado",
+        "descripcion": "Cliente pide esperar para transferir y Bruce sigue con pitch",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, espereme, le paso al encargado"),
+            ("bruce", "Le puedo enviar nuestro catalogo de productos ferreteros por WhatsApp?"),
+        ],
+        "bugs_esperados": ["TRANSFER_IGNORADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 70. TRANSFER_IGNORADA - Permitame un momento
+    # ----------------------------------------------------------
+    {
+        "nombre": "Transfer ignorada: permitame un momento le comunico",
+        "descripcion": "Cliente dice permitame y Bruce hace pitch en vez de esperar",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado?"),
+            ("cliente", "Si, dejeme comunicarlo, un momento por favor"),
+            ("bruce", "Le comento, somos distribuidores de productos ferreteros de alta calidad."),
+        ],
+        "bugs_esperados": ["TRANSFER_IGNORADA"],
+    },
+
+    # ----------------------------------------------------------
+    # 71. DEGRADACION_TTS (BRUCE1895) - Fillers multiples
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE1895: Degradacion TTS con fillers multiples",
+        "descripcion": "TTS falla y genera multiples fillers consecutivos",
+        "simular_bug": True,
+        "tracker_attrs": {"filler_162a_count": 3},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Si, que productos tienen?"),
+            ("bruce", "Mmm"),
+            ("cliente", "Bueno?"),
+            ("bruce", "Dejeme ver"),
+            ("cliente", "Oiga?"),
+            ("bruce", "Mmm dejeme ver"),
+        ],
+        "bugs_esperados": ["DEGRADACION_TTS"],
+    },
+
+    # ----------------------------------------------------------
+    # 72. DEGRADACION_TTS - Doble filler mmm
+    # ----------------------------------------------------------
+    {
+        "nombre": "Degradacion TTS: doble filler sin respuesta real",
+        "descripcion": "Bruce responde con fillers sin dar respuesta real",
+        "simular_bug": True,
+        "tracker_attrs": {"filler_162a_count": 2},
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Cuanto cuesta el envio?"),
+            ("bruce", "Mmm"),
+            ("cliente", "Me escucha?"),
+            ("bruce", "Mmm dejeme ver"),
+        ],
+        "bugs_esperados": ["DEGRADACION_TTS"],
+    },
+
+    # ----------------------------------------------------------
+    # 73. GPT_LOGICA_ROTA (BRUCE2505) - Pide WhatsApp ya sabiendo
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2505: Pide WhatsApp cuando ya sabe que encargado no esta",
+        "descripcion": "Cliente dice que encargado no se encuentra, Bruce pide WhatsApp como si no supiera",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "No, no se encuentra"),
+            ("bruce", "Entiendo que no se encuentra. Me podria proporcionar un WhatsApp para enviarle el catalogo al encargado?"),
+            ("cliente", "Ya le dije que no esta el encargado, no insista"),
+            ("bruce", "Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encargado?"),
+        ],
+        "bugs_esperados_any": ["GPT_LOGICA_ROTA", "GPT_RESPUESTA_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 74. GPT_LOGICA_ROTA (BRUCE2106) - Repite pregunta tras IVR
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2106: Repite pregunta identica tras IVR",
+        "descripcion": "IVR da opciones y Bruce repite la misma pregunta sin procesar",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encuentra el encargado de compras?"),
+            ("cliente", "Para ventas marque uno, administracion dos"),
+            ("bruce", "Se encuentra el encargado de compras?"),
+            ("cliente", "Le digo que es un conmutador, no hay encargado aqui"),
+            ("bruce", "Disculpe, no escuche bien. Me puede repetir su pregunta?"),
+        ],
+        "bugs_esperados_any": ["GPT_LOGICA_ROTA", "GPT_FUERA_DE_TEMA", "GPT_RESPUESTA_INCOHERENTE"],
+    },
+
+    # ----------------------------------------------------------
+    # 75. GPT_CONTEXTO_IGNORADO (BRUCE2508) - Area de ventas
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2508: Ignora que cliente es de area de ventas",
+        "descripcion": "Cliente dice esta es area de ventas y Bruce sigue buscando encargado compras",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "No, disculpe, esta es area de ventas"),
+            ("bruce", "Entiendo. Tendras algun contacto para poder hablar con el encargado de compras?"),
+            ("cliente", "Le digo que aqui no hay encargado de compras, esta es area de ventas"),
+            ("bruce", "Me podria comunicar con alguien del area de compras?"),
+        ],
+        "bugs_esperados_any": ["GPT_CONTEXTO_IGNORADO", "GPT_LOGICA_ROTA", "GPT_FUERA_DE_TEMA"],
+    },
+
+    # ----------------------------------------------------------
+    # 76. GPT_CONTEXTO_IGNORADO - Yo soy el dueno
+    # ----------------------------------------------------------
+    {
+        "nombre": "Contexto ignorado: cliente es el dueno y Bruce busca encargado",
+        "descripcion": "Cliente dice yo soy el dueno y Bruce pide hablar con encargado",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "Yo soy el dueno de la ferreteria"),
+            ("bruce", "Entiendo. Y cuando regresa el encargado de compras?"),
+            ("cliente", "Le digo que yo soy el dueno, yo mero"),
+            ("bruce", "Ah perfecto. Y a que hora puedo encontrar al encargado de compras?"),
+        ],
+        "bugs_esperados_any": ["GPT_CONTEXTO_IGNORADO", "GPT_LOGICA_ROTA"],
+    },
+
+    # ----------------------------------------------------------
+    # 77. GPT_OPORTUNIDAD_PERDIDA (BRUCE2508) - Web ofrecida
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2508: Cliente ofrece pagina web y Bruce ignora",
+        "descripcion": "Cliente da pagina web como contacto alternativo pero Bruce no capitaliza",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "No esta. Pero en la pagina de internet esta disponible, gota punto com punto mx"),
+            ("bruce", "Entiendo. Me podria dar un numero de WhatsApp?"),
+            ("cliente", "Le digo que en la pagina esta toda la informacion"),
+            ("bruce", "Me podria dar su numero de WhatsApp para enviarle el catalogo?"),
+        ],
+        "bugs_esperados_any": ["GPT_OPORTUNIDAD_PERDIDA", "GPT_LOGICA_ROTA", "GPT_FUERA_DE_TEMA"],
+    },
+
+    # ----------------------------------------------------------
+    # 78. GPT_OPORTUNIDAD_PERDIDA (BRUCE2507) - Callback ignorado
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2507: Cliente dice en 20 min llega, Bruce pide WhatsApp",
+        "descripcion": "Cliente ofrece horario de callback pero Bruce ignora y pide WhatsApp",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval. Se encontrara el encargado de compras?"),
+            ("cliente", "No se encuentra, como en veinte minutos llega"),
+            ("bruce", "Entiendo que no se encuentra. Me podria proporcionar un WhatsApp o correo?"),
+            ("cliente", "Le digo que en veinte minutos llega, llamele otra vez"),
+            ("bruce", "Me podria dar su numero de WhatsApp para enviarle informacion?"),
+        ],
+        "bugs_esperados_any": ["GPT_OPORTUNIDAD_PERDIDA", "GPT_LOGICA_ROTA"],
+    },
+
+    # ----------------------------------------------------------
+    # 79. GPT_RESPUESTA_INCOHERENTE (BRUCE2505) - Adelante x3
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2505: Responde si adelante sin procesar info",
+        "descripcion": "Bruce responde genericamente adelante/continue sin procesar lo que dice el cliente",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval."),
+            ("cliente", "Buenas tardes"),
+            ("bruce", "Se encontrara el encargado de compras?"),
+            ("cliente", "A quien busca?"),
+            ("bruce", "Si, adelante."),
+            ("cliente", "Le pregunte a quien busca, al encargado o a quien"),
+            ("bruce", "Claro, continue."),
+        ],
+        "bugs_esperados_any": ["GPT_RESPUESTA_INCOHERENTE", "GPT_LOGICA_ROTA", "GPT_FUERA_DE_TEMA"],
+    },
+
+    # ----------------------------------------------------------
+    # 80. GPT_RESPUESTA_INCOHERENTE (BRUCE2446) - Entiendo sin procesar
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: Entiendo sin procesar que no es ferreteria",
+        "descripcion": "Cliente dice que no es ferreteria y Bruce dice entiendo sin reaccionar",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros."),
+            ("cliente", "Es que no es aqui ferreteria, no hacemos eso"),
+            ("bruce", "Entiendo. Me permite dejarle mi numero para que el encargado nos contacte?"),
+            ("cliente", "Le digo que no es ferreteria, aqui no hay encargado de eso"),
+            ("bruce", "Ajá, si. Y me podria dar un WhatsApp del encargado?"),
+        ],
+        "bugs_esperados_any": ["GPT_RESPUESTA_INCOHERENTE", "GPT_CONTEXTO_IGNORADO", "GPT_LOGICA_ROTA", "GPT_FUERA_DE_TEMA"],
+    },
+
+    # ----------------------------------------------------------
+    # 81. GPT_FUERA_DE_TEMA (BRUCE2100) - Rechazo pero ofrece catalogo
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2100: Cliente rechaza pero Bruce ofrece catalogo",
+        "descripcion": "Cliente dice voy a comprar aqui y Bruce sigue ofreciendo catalogo",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros."),
+            ("cliente", "No, no se preocupe, voy a comprar eso aqui, no"),
+            ("bruce", "Entiendo. Si le interesa, le puedo enviar nuestro catalogo por WhatsApp."),
+            ("cliente", "No gracias, ya le dije que no"),
+            ("bruce", "Le envio el catalogo sin compromiso para que lo revise con calma?"),
+        ],
+        "bugs_esperados_any": ["GPT_FUERA_DE_TEMA", "GPT_LOGICA_ROTA", "GPT_OPORTUNIDAD_PERDIDA", "GPT_TONO_INADECUADO"],
+    },
+
+    # ----------------------------------------------------------
+    # 82. GPT_FUERA_DE_TEMA (BRUCE2446) - No es ferreteria pero insiste
+    # ----------------------------------------------------------
+    {
+        "nombre": "BRUCE2446: Insiste dejar numero en negocio no ferretero",
+        "descripcion": "Cliente dice que no es ferreteria y Bruce insiste en dejar numero",
+        "simular_bug": True,
+        "turnos_raw": [
+            ("bruce", "Hola, buen dia. Me comunico de la marca Nioval, trabajamos productos ferreteros."),
+            ("cliente", "Mire, aqui no es ferreteria, somos una farmacia"),
+            ("bruce", "Entiendo. Me permite dejarle mi numero para que el encargado nos contacte?"),
+            ("cliente", "Le digo que somos farmacia, no tenemos encargado de ferreteria"),
+            ("bruce", "Le envio nuestro catalogo de productos ferreteros por WhatsApp?"),
+        ],
+        "bugs_esperados_any": ["GPT_FUERA_DE_TEMA", "GPT_CONTEXTO_IGNORADO", "GPT_LOGICA_ROTA"],
+    },
 ]
 
 
