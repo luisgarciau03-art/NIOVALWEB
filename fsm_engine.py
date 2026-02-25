@@ -41,7 +41,9 @@ class NarrowResponseCache:
     Persiste a JSON para sobrevivir restarts.
     """
 
-    CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "narrow_cache.json")
+    # FIX 831: Persistir en PERSISTENT_DIR (Railway Volume) para sobrevivir deploys
+    _PERSISTENT_DIR = os.getenv("PERSISTENT_DIR", os.getenv("CACHE_DIR", "audio_cache"))
+    CACHE_FILE = os.path.join(_PERSISTENT_DIR, "narrow_cache.json")
     MAX_ENTRIES = 500
     MIN_HITS = 2
     FUZZY_THRESHOLD = 0.85
@@ -155,7 +157,7 @@ class NarrowResponseCache:
                 for k in expired:
                     del self._cache[k]
                 if self._cache or expired:
-                    print(f"  [FIX 768] Cache loaded: {len(self._cache)} entries ({len(expired)} expired)")
+                    print(f"  [FIX 768] Cache loaded: {len(self._cache)} entries ({len(expired)} expired) from {self.CACHE_FILE}")
         except Exception as e:
             print(f"  [FIX 768] Error loading cache: {e}")
             self._cache = {}
