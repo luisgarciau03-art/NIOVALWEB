@@ -546,10 +546,16 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.IDENTITY
 
     # --- Verificación conexión (ANTES de pregunta para que "¿Bueno?" no matchee como QUESTION) ---
-    verification = ['bueno', 'me escucha', 'me oye', 'ahi esta', 'aqui esta', 'sigue ahi']
+    verification = ['bueno', 'me escucha', 'me oye', 'ahi esta', 'aqui esta', 'sigue ahi',
+                    'oiga', 'oye']
     if any(v == tn or v in tn for v in verification):
         if len(tn) < 20:
             return FSMIntent.VERIFICATION
+    # FIX 837: Fillers cortos - SOLO exact match (no substring)
+    # NO incluir 'mmhmm' - en ESPERANDO_TRANSFERENCIA es ruido de fondo (debe ser NOOP)
+    _filler_exact_837 = ['mhm', 'mmm', 'aha', 'ajam']
+    if tn in _filler_exact_837:
+        return FSMIntent.VERIFICATION
 
     # --- Pregunta general ---
     question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
@@ -569,6 +575,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'claro que si', 'por supuesto', 'adelante', 'digame',
         'diga', 'aja', 'como no', 'si digame', 'ok esta bien',
         'si esta bien', 'bueno esta bien', 'ah ok', 'ah bueno',
+        # FIX 837: Patterns faltantes que caian como UNKNOWN
+        'orale', 'andale', 'correcto', 'exacto', 'asi es',
+        'si si', 'si si si', 'ah si', 'ah ok si', 'ah ya',
+        'efectivamente', 'mande', 'si mande', 'ya', 'listo',
+        'si gracias', 'ok gracias', 'perfecto', 'muy bien',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
         return FSMIntent.CONFIRMATION
@@ -588,8 +599,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- FIX 824: "No tengo" corto sin canal = rechazo genérico ---
     # BRUCE2538: "No tengo" (2 palabras) → UNKNOWN → FIX 791 pide WhatsApp de nuevo
     # En estados de captura, "no tengo" corto = rechazo de dato
+    # FIX 837: Expandido con mas variantes
     _reject_short_824 = ['no tengo', 'tampoco tengo', 'no puedo', 'tampoco', 'no manejo',
-                          'solo telefono', 'solo fijo', 'nada mas telefono', 'solo celular']
+                          'solo telefono', 'solo fijo', 'nada mas telefono', 'solo celular',
+                          'no uso', 'no cuento con', 'no lo tengo', 'eso no', 'no de eso no',
+                          'solo el telefono', 'solo el fijo', 'nomas telefono', 'puro telefono']
     if any(tn == r or (tn.startswith(r) and len(tn) < 25) for r in _reject_short_824):
         if state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
                      FSMState.DICTANDO_DATO, FSMState.ENCARGADO_AUSENTE):

@@ -2467,6 +2467,51 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 filtro_aplicado = True
 
         # ============================================================
+        # FIX 835: Post-filter anti canal rechazado via FSM context
+        # FIX 667A solo revisa el ÚLTIMO turno del cliente.
+        # FIX 835 revisa canales_rechazados del FSM (TODA la conversación).
+        # Si GPT pide un canal que el cliente rechazó en CUALQUIER turno → override
+        # ============================================================
+        if not filtro_aplicado and getattr(self, 'fsm', None) and hasattr(self.fsm, 'context'):
+            _rechazados_835 = getattr(self.fsm.context, 'canales_rechazados', [])
+            if _rechazados_835:
+                _pide_rechazado_835 = None
+                if 'whatsapp' in _rechazados_835 and 'whatsapp' in respuesta_lower:
+                    _pide_rechazado_835 = 'whatsapp'
+                elif 'correo' in _rechazados_835 and any(w in respuesta_lower for w in ['correo', 'email', 'e-mail']):
+                    _pide_rechazado_835 = 'correo'
+                elif 'telefono' in _rechazados_835 and any(w in respuesta_lower for w in ['telefono', 'celular', 'numero de telefono']):
+                    _pide_rechazado_835 = 'telefono'
+
+                if _pide_rechazado_835:
+                    # Elegir canal alternativo que NO haya sido rechazado
+                    _canales_835 = ['whatsapp', 'correo', 'telefono']
+                    _disponibles_835 = [c for c in _canales_835 if c not in _rechazados_835]
+
+                    if _disponibles_835:
+                        _alt_map_835 = {
+                            'whatsapp': 'WhatsApp',
+                            'correo': 'correo electronico',
+                            'telefono': 'telefono',
+                        }
+                        _alt_835 = _alt_map_835.get(_disponibles_835[0], _disponibles_835[0])
+                        _resp_original_835 = respuesta
+                        respuesta = f"Entiendo. ¿Me podria proporcionar entonces un {_alt_835}?"
+                        respuesta_lower = respuesta.lower()
+                        print(f"[OK] FIX 835: GPT pidio {_pide_rechazado_835} pero FSM tiene rechazados={_rechazados_835}")
+                        print(f"   Respuesta original: '{_resp_original_835[:80]}'")
+                        print(f"   Respuesta corregida: '{respuesta[:80]}'")
+                        filtro_aplicado = True
+                    else:
+                        # Todos los canales rechazados → ofrecer contacto de Bruce
+                        _resp_original_835 = respuesta
+                        respuesta = "Entiendo. Si gusta le dejo mi numero para cuando necesiten algo de ferreteria."
+                        respuesta_lower = respuesta.lower()
+                        print(f"[OK] FIX 835: TODOS canales rechazados → ofrecer contacto Bruce")
+                        print(f"   Respuesta original: '{_resp_original_835[:80]}'")
+                        filtro_aplicado = True
+
+        # ============================================================
         # FIX 667B: BRUCE2173 - GPT_LOGICA_ROTA (Bruce ignora información clave)
         # "esa no es la sucursal correcta" → Bruce pide datos de esa sucursal (INCORRECTO)
         # FIX 646A regla #3 en system prompt NO funciona → mover a POST-FILTER
@@ -2959,6 +3004,42 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"   Respuesta original: '{respuesta_original_690[:60]}'")
                     print(f"   Respuesta corregida: '{respuesta}'")
                     filtro_aplicado = True
+
+        # ============================================================
+        # FIX 836: Anti dato-ya-capturado - GPT pide dato que ya tenemos
+        # BRUCE2550: GPT pidio WhatsApp/email que ya estaba en lead_data
+        # Si lead_data ya tiene el dato y GPT lo pide → confirmar y avanzar
+        # ============================================================
+        if not filtro_aplicado:
+            _ld_836 = getattr(self, 'lead_data', {})
+            _tiene_whatsapp_836 = bool(_ld_836.get('whatsapp'))
+            _tiene_correo_836 = bool(_ld_836.get('email'))
+
+            _pide_whatsapp_836 = any(w in respuesta_lower for w in [
+                'whatsapp', 'me podria dar su whatsapp', 'numero de whatsapp',
+                'le envio por whatsapp', 'me pasa su whatsapp'
+            ])
+            _pide_correo_836 = any(w in respuesta_lower for w in [
+                'correo', 'email', 'correo electronico',
+                'me podria dar su correo', 'me pasa su correo'
+            ])
+
+            if _tiene_whatsapp_836 and _pide_whatsapp_836:
+                _wp_836 = _ld_836.get('whatsapp', '')
+                _resp_original_836 = respuesta
+                respuesta = f"Ya tengo su WhatsApp registrado: {_wp_836}. Le envio el catalogo por ahi. Muchas gracias."
+                respuesta_lower = respuesta.lower()
+                print(f"[OK] FIX 836: GPT pidio WhatsApp pero ya tenemos: {_wp_836}")
+                print(f"   Respuesta original: '{_resp_original_836[:80]}'")
+                filtro_aplicado = True
+            elif _tiene_correo_836 and _pide_correo_836:
+                _em_836 = _ld_836.get('email', '')
+                _resp_original_836 = respuesta
+                respuesta = f"Ya tengo su correo registrado. Le envio el catalogo por ahi. Muchas gracias."
+                respuesta_lower = respuesta.lower()
+                print(f"[OK] FIX 836: GPT pidio correo pero ya tenemos: {_em_836}")
+                print(f"   Respuesta original: '{_resp_original_836[:80]}'")
+                filtro_aplicado = True
 
         # ============================================================
         # FIX 493: PARCHE GLOBAL ANTI-LOOP - PRIORIDAD MÁXIMA
