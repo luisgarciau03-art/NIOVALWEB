@@ -2,7 +2,7 @@
 fsm_engine.py - Motor de Estados Finitos Determinista para Bruce W.
 
 Reemplaza GPT-4o free-form como motor de decisión primario.
-FSM decide QUÉ hacer → templates/narrow GPT generan el texto.
+FSM decide QUÉ hacer -> templates/narrow GPT generan el texto.
 
 Modos (env FSM_ENABLED):
   - "shadow": Loguea decisiones sin interceptar (comparar vs GPT)
@@ -35,8 +35,8 @@ FSM_ENABLED = os.getenv("FSM_ENABLED", "shadow").lower()
 class NarrowResponseCache:
     """FIX 768: Caché adaptativo que aprende de respuestas GPT_NARROW.
 
-    Primera vez → GPT responde, se almacena (count=1).
-    Segunda vez (count >= MIN_HITS) → respuesta cacheada (0ms, $0).
+    Primera vez -> GPT responde, se almacena (count=1).
+    Segunda vez (count >= MIN_HITS) -> respuesta cacheada (0ms, $0).
     Fuzzy matching para preguntas similares (SequenceMatcher >= 0.85).
     Persiste a JSON para sobrevivir restarts.
     """
@@ -95,7 +95,7 @@ class NarrowResponseCache:
                     cached_entry["last_seen"] = datetime.now().isoformat()
                     print(f"  [FIX 768 CACHE FUZZY HIT] '{texto_norm[:30]}' ~ '{cached_text[:30]}' count={cached_entry['count']}")
                     return cached_entry["response"]
-                # Below threshold but fuzzy matched → increment existing
+                # Below threshold but fuzzy matched -> increment existing
                 cached_entry["count"] += 1
                 cached_entry["last_seen"] = datetime.now().isoformat()
                 if cached_entry["count"] >= self.MIN_HITS:
@@ -339,7 +339,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Mid-sentence: texto termina en coma = cliente sigue hablando ---
     # FIX 821: REJECT_DATA tiene prioridad sobre CONTINUATION
-    # BRUCE2538: "No tengo WhatsApp," → era CONTINUATION por la coma, debe ser REJECT_DATA
+    # BRUCE2538: "No tengo WhatsApp," -> era CONTINUATION por la coma, debe ser REJECT_DATA
     _reject_quick_821 = ['no tengo', 'no puedo', 'tampoco tengo', 'solo tengo',
                           'no manejo', 'no uso', 'no le puedo', 'no te puedo']
     if tl.endswith(',') and len(tn) < 40:
@@ -348,7 +348,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # else: fall through — será clasificado como REJECT_DATA más abajo
 
     # --- FIX 783: Despedida ANTES de dictado (BRUCE2494 P0) ---
-    # "No una disculpa... hasta luego" tiene num_words=2 ("no","una") → DICTATING_PARTIAL
+    # "No una disculpa... hasta luego" tiene num_words=2 ("no","una") -> DICTATING_PARTIAL
     # Farewell debe chequearse ANTES de conteo numérico para evitar malclasificación
     # NOTA: NO incluir "buenas tardes/noches/buen dia" aquí - son saludos ambiguos
     farewell_strong_783 = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien',
@@ -375,7 +375,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     num_words = sum(1 for w in tn.split() if w in _NUMS_ESP)
 
     # FIX 780: Excluir frases con contexto temporal de dictado parcial
-    # BRUCE2468: "llegan en una hora" → "una" × 2 = num_words=2 → falso DICTATING_PARTIAL
+    # BRUCE2468: "llegan en una hora" -> "una" × 2 = num_words=2 -> falso DICTATING_PARTIAL
     # Palabras temporales junto a números no son dictado de teléfono
     _time_context = {'hora', 'horas', 'rato', 'minuto', 'minutos', 'momento', 'dia', 'dias',
                      'semana', 'semanas', 'mes', 'meses', 'tarde', 'manana', 'noche'}
@@ -560,7 +560,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- Pregunta general ---
     question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
     # FIX 795: Saludos que empiezan con "que" NO son preguntas reales
-    # "que tal buen dia" → NO QUESTION (es re-saludo)
+    # "que tal buen dia" -> NO QUESTION (es re-saludo)
     greeting_not_question_795 = ['que tal', 'que onda', 'que hubo', 'que paso']
     if any(tn.startswith(q + ' ') for q in question_markers):
         if not any(tn.startswith(g) for g in greeting_not_question_795):
@@ -597,7 +597,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.INTEREST
 
     # --- FIX 824: "No tengo" corto sin canal = rechazo genérico ---
-    # BRUCE2538: "No tengo" (2 palabras) → UNKNOWN → FIX 791 pide WhatsApp de nuevo
+    # BRUCE2538: "No tengo" (2 palabras) -> UNKNOWN -> FIX 791 pide WhatsApp de nuevo
     # En estados de captura, "no tengo" corto = rechazo de dato
     # FIX 837: Expandido con mas variantes
     _reject_short_824 = ['no tengo', 'tampoco tengo', 'no puedo', 'tampoco', 'no manejo',
@@ -610,9 +610,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             return FSMIntent.REJECT_DATA
 
     # --- FIX 825: "Buen día/tardes/noches" = saludo recíproco o despedida contextual ---
-    # 104 llamadas: cliente dice "Buen día" respondiendo al saludo → UNKNOWN → salta a PITCH
-    # En SALUDO/PITCH: saludo recíproco → VERIFICATION (procede normal)
-    # En DESPEDIDA/CONTACTO_CAPTURADO: despedida cortés → FAREWELL
+    # 104 llamadas: cliente dice "Buen día" respondiendo al saludo -> UNKNOWN -> salta a PITCH
+    # En SALUDO/PITCH: saludo recíproco -> VERIFICATION (procede normal)
+    # En DESPEDIDA/CONTACTO_CAPTURADO: despedida cortés -> FAREWELL
     _saludo_reciproco_825 = ['buen dia', 'buenos dias', 'buenas tardes', 'buenas noches']
     if any(s in tn for s in _saludo_reciproco_825):
         if state in (FSMState.DESPEDIDA, FSMState.CONTACTO_CAPTURADO):
@@ -652,13 +652,13 @@ class FSMEngine:
 
         Returns:
             str: Respuesta de Bruce (template o narrow GPT)
-            None: FSM no puede manejar → fallthrough a GPT existente
+            None: FSM no puede manejar -> fallthrough a GPT existente
         """
         if FSM_ENABLED == "false":
             return None
 
         # FIX 802: BRUCE2522 - Post-transfer re-introduction
-        # FSM runs BEFORE FIX 759B in agente_ventas → flag never consumed
+        # FSM runs BEFORE FIX 759B in agente_ventas -> flag never consumed
         # Check flag HERE so FSM doesn't intercept with wrong template
         if agente and getattr(agente, '_post_espera_reintroducir_759', False):
             agente._post_espera_reintroducir_759 = False
@@ -669,8 +669,8 @@ class FSMEngine:
             _es_saludo_802 = any(s in _t802 for s in _saludos_802)
             _es_identidad_802 = any(q in _t802 for q in ['quien habla', 'quien llama', 'de donde', 'que empresa', 'de parte de'])
             if _es_saludo_802 and not _es_identidad_802:
-                # Persona nueva saludando → re-introducción con pitch
-                print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' → pitch_persona_nueva")
+                # Persona nueva saludando -> re-introducción con pitch
+                print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' -> pitch_persona_nueva")
                 self.state = FSMState.BUSCANDO_ENCARGADO
                 self.context.pitch_dado = True
                 self.context.encargado_preguntado = True
@@ -702,13 +702,13 @@ class FSMEngine:
         if transition is None:
             transition = self._lookup(self.state, intent)
 
-        # 3. Si no hay transición → escalate a CONVERSACION_LIBRE o fallthrough
+        # 3. Si no hay transición -> escalate a CONVERSACION_LIBRE o fallthrough
         if transition is None:
             # Try UNKNOWN catch-all
             transition = self._lookup(self.state, FSMIntent.UNKNOWN)
             if transition is None:
                 if FSM_ENABLED == "shadow":
-                    print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → NO TRANSITION (fallthrough)")
+                    print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} -> NO TRANSITION (fallthrough)")
                 return None
 
         # FIX 791: Para UNKNOWN, intentar template stateful antes de GPT_NARROW
@@ -717,7 +717,7 @@ class FSMEngine:
             stateful = self._handle_unknown_stateful(texto)
             if stateful is not None:
                 transition = stateful
-                print(f"  [FIX 791] UNKNOWN→template stateful: {stateful.template_key} "
+                print(f"  [FIX 791] UNKNOWN->template stateful: {stateful.template_key} "
                       f"(estado={self.state.value})")
             # else: fallback a GPT_NARROW original (sin cambio)
 
@@ -732,33 +732,44 @@ class FSMEngine:
                     action_type=transition.action_type,
                     template_key='confirmar_callback',
                 )
-                print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' → confirmar_callback")
+                print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' -> confirmar_callback")
             elif self.context.callback_hora_preguntada:
                 # FIX 789B: Ya preguntamos hora y cliente da callback vago ("más tarde")
-                # → confirmar genérico en vez de repetir "¿A qué hora?"
+                # -> confirmar genérico en vez de repetir "¿A qué hora?"
                 transition = Transition(
                     next_state=transition.next_state,
                     action_type=transition.action_type,
                     template_key='confirmar_callback_generico',
                 )
-                print(f"  [FIX 789B] Callback hora ya preguntada → confirmar_callback_generico (anti-loop)")
+                print(f"  [FIX 789B] Callback hora ya preguntada -> confirmar_callback_generico (anti-loop)")
+
+        # FIX 839: Anti catálogo repetido - si ya prometimos catálogo, no repetirlo
+        # BRUCE2550/2546: despedida_catalogo_prometido después de confirmar_telefono duplica "catálogo"
+        if (transition.template_key == 'despedida_catalogo_prometido' and
+                self.context.catalogo_prometido):
+            transition = Transition(
+                next_state=transition.next_state,
+                action_type=transition.action_type,
+                template_key='despedida_cortes',
+            )
+            print(f"  [FIX 839] Catálogo ya prometido -> despedida_cortes (sin repetir catálogo)")
 
         # FIX 785: BRUCE2492/2497 - No repetir "¿Se encontrará el encargado?" si ya se preguntó
-        # pitch_inicial ya incluye la pregunta → PITCH→BUSCANDO con preguntar_encargado la duplica
+        # pitch_inicial ya incluye la pregunta -> PITCH->BUSCANDO con preguntar_encargado la duplica
         if (transition.template_key == 'preguntar_encargado' and
                 self.context.encargado_preguntado):
-            # Ya preguntamos por encargado → usar acknowledgment genérico
+            # Ya preguntamos por encargado -> usar acknowledgment genérico
             transition = Transition(
                 next_state=transition.next_state,
                 action_type=transition.action_type,
                 template_key='verificacion_aqui_estoy',
             )
-            print(f"  [FIX 785] Encargado ya preguntado → no repetir, usando verificacion")
+            print(f"  [FIX 785] Encargado ya preguntado -> no repetir, usando verificacion")
 
         # 4. Evaluar guards
         if not self._check_guards(transition.guards):
             if FSM_ENABLED == "shadow":
-                print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} → GUARDS FAILED (fallthrough)")
+                print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} -> GUARDS FAILED (fallthrough)")
             return None
 
         # 5. Ejecutar acción
@@ -775,27 +786,27 @@ class FSMEngine:
         if FSM_ENABLED == "shadow" and not is_state_active:
             # Pure shadow: log only, no intercept
             print(f"  [FSM SHADOW] state={prev_state.value} intent={intent.value} "
-                  f"→ next={self.state.value} action={transition.action_type.value} "
+                  f"-> next={self.state.value} action={transition.action_type.value} "
                   f"template={transition.template_key} response='{(response or '')[:60]}'")
             return None
 
         if FSM_ENABLED == "shadow" and is_state_active:
-            # Phase 2: state is in active set → intercept
+            # Phase 2: state is in active set -> intercept
             # Skip HANGUP/NOOP (let existing code handle closing)
             if transition.action_type in (ActionType.HANGUP, ActionType.NOOP):
                 print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
-                      f"→ {transition.action_type.value} (fallthrough - let existing code handle)")
+                      f"-> {transition.action_type.value} (fallthrough - let existing code handle)")
                 return None
             if response:
                 print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
-                      f"→ next={self.state.value} INTERCEPTING: '{response[:60]}'")
+                      f"-> next={self.state.value} INTERCEPTING: '{response[:60]}'")
                 return response
-            # Empty response → shadow
+            # Empty response -> shadow
             print(f"  [FSM SHADOW] state={prev_state.value} (active but empty response)")
             return None
 
         # Full active mode
-        print(f"  [FSM] {prev_state.value} + {intent.value} → {self.state.value} "
+        print(f"  [FSM] {prev_state.value} + {intent.value} -> {self.state.value} "
               f"({transition.action_type.value}:{transition.template_key})")
 
         return response
@@ -850,7 +861,7 @@ class FSMEngine:
         elif self.state == S.CAPTURANDO_CONTACTO:
             return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
 
-        # Estados no mapeados → None → fallback a GPT_NARROW existente
+        # Estados no mapeados -> None -> fallback a GPT_NARROW existente
         return None
 
     # ----------------------------------------------------------
@@ -905,11 +916,11 @@ class FSMEngine:
         add(S.PITCH, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
         add(S.PITCH, I.VERIFICATION,   S.PITCH, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.PITCH, I.REJECT_DATA,    S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
-        # FIX 754: Cliente dicta teléfono/email completo durante pitch → capturar
+        # FIX 754: Cliente dicta teléfono/email completo durante pitch -> capturar
         add(S.PITCH, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.PITCH, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.PITCH, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
-        # FIX 789A: UNKNOWN durante pitch → GPT narrow con manejar_objecion
+        # FIX 789A: UNKNOWN durante pitch -> GPT narrow con manejar_objecion
         # (antes: blindly avanzaba a preguntar_encargado)
         add(S.PITCH, I.UNKNOWN,        S.PITCH, A.GPT_NARROW, "manejar_objecion")
         # FIX 786: CONTINUATION - cliente sigue hablando
@@ -932,7 +943,7 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.BUSCANDO_ENCARGADO, I.VERIFICATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.BUSCANDO_ENCARGADO, I.REJECT_DATA,     S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
-        # FIX 754: Cliente dicta teléfono/email completo buscando encargado → capturar
+        # FIX 754: Cliente dicta teléfono/email completo buscando encargado -> capturar
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
@@ -952,7 +963,7 @@ class FSMEngine:
         # Guard ["whatsapp_rechazado"] removido - atributo no existía en FSMContext
         add(S.ENCARGADO_PRESENTE, I.REJECT_DATA,   S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
         add(S.ENCARGADO_PRESENTE, I.VERIFICATION,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "verificacion_aqui_estoy")
-        # FIX 754: Cliente dicta teléfono/email completo estando con encargado → capturar
+        # FIX 754: Cliente dicta teléfono/email completo estando con encargado -> capturar
         add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.ENCARGADO_PRESENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.ENCARGADO_PRESENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
@@ -980,7 +991,7 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
         add(S.ENCARGADO_AUSENTE, I.VERIFICATION,   S.ENCARGADO_AUSENTE, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.ENCARGADO_AUSENTE, I.QUESTION,       S.ENCARGADO_AUSENTE, A.GPT_NARROW, "responder_pregunta_producto")
-        # FIX 754: Cliente dicta teléfono/email completo → capturar aunque encargado ausente
+        # FIX 754: Cliente dicta teléfono/email completo -> capturar aunque encargado ausente
         add(S.ENCARGADO_AUSENTE, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.ENCARGADO_AUSENTE, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.ENCARGADO_AUSENTE, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
@@ -1028,7 +1039,7 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.IDENTITY,               S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
         add(S.CAPTURANDO_CONTACTO, I.WRONG_NUMBER,           S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         # FIX 797: En CAPTURANDO_CONTACTO, manejar intents de encargado (eco STT)
-        # STT echo "no está" → MANAGER_ABSENT → sin transición → UNKNOWN → GPT "contacto alternativo"
+        # STT echo "no está" -> MANAGER_ABSENT -> sin transición -> UNKNOWN -> GPT "contacto alternativo"
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_ABSENT,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_PRESENT, S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
         add(S.CAPTURANDO_CONTACTO, I.QUESTION,        S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
@@ -1042,15 +1053,15 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.CONFIRMATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.DICTANDO_DATO, I.FAREWELL,                 S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
-        # FIX 820: UNKNOWN durante dictado → Claude decide (no fillers)
-        # ANTES: A.ACKNOWLEDGE "aja_si" → loop de fillers cuando cliente no dicta
+        # FIX 820: UNKNOWN durante dictado -> Claude decide (no fillers)
+        # ANTES: A.ACKNOWLEDGE "aja_si" -> loop de fillers cuando cliente no dicta
         add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.GPT_NARROW, "conversacion_libre")
         # FIX 788: Gaps - NO_INTEREST, REJECT_DATA, IDENTITY
         add(S.DICTANDO_DATO, I.NO_INTEREST,              S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.REJECT_DATA,              S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
         add(S.DICTANDO_DATO, I.IDENTITY,                 S.DICTANDO_DATO, A.TEMPLATE, "identificacion_nioval")
-        # FIX 801: BRUCE2522 - QUESTION durante dictado → responder pregunta y salir de dictado
-        # Sin esta transición, QUESTION cae al catch-all UNKNOWN → filler loop infinito
+        # FIX 801: BRUCE2522 - QUESTION durante dictado -> responder pregunta y salir de dictado
+        # Sin esta transición, QUESTION cae al catch-all UNKNOWN -> filler loop infinito
         add(S.DICTANDO_DATO, I.QUESTION,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
 
         # === OFRECIENDO_CONTACTO ===
@@ -1076,6 +1087,10 @@ class FSMEngine:
         add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        # FIX 839: Cliente repite número después de captura -> despedida corta (ya tenemos el dato)
+        add(S.CONTACTO_CAPTURADO, I.DICTATING_COMPLETE_PHONE, S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.CONTACTO_CAPTURADO, I.DICTATING_COMPLETE_EMAIL, S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        add(S.CONTACTO_CAPTURADO, I.DICTATING_PARTIAL,        S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.CONTACTO_CAPTURADO, I.CONTINUATION, S.CONTACTO_CAPTURADO, A.NOOP, None)
         # FIX 788: Gaps - VERIFICATION, NO_INTEREST
@@ -1088,6 +1103,10 @@ class FSMEngine:
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DESPEDIDA, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
+        # FIX 839: Cliente sigue dictando después de despedida -> hangup (ya tenemos el dato)
+        add(S.DESPEDIDA, I.DICTATING_COMPLETE_PHONE, S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.DICTATING_COMPLETE_EMAIL, S.DESPEDIDA, A.HANGUP, None)
+        add(S.DESPEDIDA, I.DICTATING_PARTIAL,        S.DESPEDIDA, A.HANGUP, None)
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.DESPEDIDA, I.CONTINUATION, S.DESPEDIDA, A.NOOP, None)
         # FIX 788: Gaps - NO_INTEREST, WRONG_NUMBER
@@ -1337,7 +1356,7 @@ class FSMEngine:
 
         # Track encargado preguntado
         # FIX 785: BRUCE2492/2497 - pitch_inicial ya incluye "¿Se encontrará el encargado?"
-        # Sin este fix, PITCH→BUSCANDO_ENCARGADO repite la pregunta porque flag=False
+        # Sin este fix, PITCH->BUSCANDO_ENCARGADO repite la pregunta porque flag=False
         if transition.template_key in ('preguntar_encargado', 'pitch_inicial'):
             self.context.encargado_preguntado = True
 
@@ -1346,25 +1365,34 @@ class FSMEngine:
             self.context.encargado_es_interlocutor = True
 
         # Track canales
-        if transition.template_key == 'pedir_whatsapp':
+        # FIX 838: Incluir pedir_alternativa_* para que canal_solicitado se actualice
+        # cuando FIX 763 pide canal alternativo (antes solo trackeaba pedir_whatsapp/pedir_correo)
+        if transition.template_key in ('pedir_whatsapp', 'pedir_alternativa_whatsapp'):
             self.context.canal_solicitado = 'whatsapp'
             if 'whatsapp' not in self.context.canales_intentados:
                 self.context.canales_intentados.append('whatsapp')
-        elif transition.template_key == 'pedir_correo':
+        elif transition.template_key in ('pedir_correo', 'pedir_alternativa_correo'):
             self.context.canal_solicitado = 'correo'
             if 'correo' not in self.context.canales_intentados:
                 self.context.canales_intentados.append('correo')
+        elif transition.template_key == 'pedir_alternativa_telefono':
+            self.context.canal_solicitado = 'telefono'
+            if 'telefono' not in self.context.canales_intentados:
+                self.context.canales_intentados.append('telefono')
 
         # Track rechazos
+        # FIX 838B: Usar 'if' en vez de 'elif' + siempre rechazar canal_solicitado
+        # Antes: "Es que no tengo WhatsApp" (mientras Bruce pedia correo) solo rechazaba whatsapp
+        # Ahora: rechaza TANTO whatsapp (del texto) como correo (canal_solicitado)
         if intent == FSMIntent.REJECT_DATA:
             tn = _normalize(texto)
             if 'whatsapp' in tn:
                 if 'whatsapp' not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append('whatsapp')
-            elif 'correo' in tn or 'email' in tn:
+            if 'correo' in tn or 'email' in tn:
                 if 'correo' not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append('correo')
-            elif self.context.canal_solicitado:
+            if self.context.canal_solicitado:
                 c = self.context.canal_solicitado
                 if c not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append(c)
@@ -1386,7 +1414,7 @@ class FSMEngine:
         if transition.template_key == 'tiene_donde_anotar':
             self.context.donde_anotar_preguntado = True
 
-        # Track ofrecer contacto (para recovery DESPEDIDA → dictar número)
+        # Track ofrecer contacto (para recovery DESPEDIDA -> dictar número)
         self.context.ultimo_fue_ofrecer_contacto = (
             transition.template_key in ('ofrecer_contacto_bruce', 'tiene_donde_anotar')
         )
@@ -1480,17 +1508,17 @@ class FSMEngine:
         A = ActionType
 
         if 'whatsapp' not in rechazados:
-            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir WhatsApp")
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} -> pedir WhatsApp")
             return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_whatsapp")
         elif 'correo' not in rechazados:
-            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir correo")
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} -> pedir correo")
             return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
         elif 'telefono' not in rechazados:
-            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} → pedir teléfono")
+            print(f"  [FIX 763] REJECT_DATA: rechazados={rechazados} -> pedir teléfono")
             return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_telefono")
         else:
-            # Todos los canales rechazados → ofrecer número de Bruce
-            print(f"  [FIX 763] REJECT_DATA: TODOS rechazados → ofrecer contacto Bruce")
+            # Todos los canales rechazados -> ofrecer número de Bruce
+            print(f"  [FIX 763] REJECT_DATA: TODOS rechazados -> ofrecer contacto Bruce")
             return Transition(S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
 
     # ----------------------------------------------------------

@@ -248,8 +248,20 @@ class LogReplaySimulator:
             print(f"    [ERROR] iniciar_conversacion: {e}")
 
         # 4. Reproducir mensajes del cliente
+        # FIX 840: Detectar farewell para detener replay (en produccion Twilio cuelga)
+        _farewell_phrases = [
+            'muchas gracias por su tiempo', 'que tenga excelente dia',
+            'que tenga buen dia', 'hasta pronto', 'hasta luego',
+        ]
+        call_ended = False
+
         respuestas_replay = []
         for i, msg in enumerate(client_messages):
+            if call_ended:
+                if self.verbose:
+                    print(f"    [FIX 840] Llamada terminada - ignorando turno {i+1}")
+                break
+
             tracker.emit("CLIENTE_DICE", {"texto": msg})
 
             if self.verbose:
@@ -269,6 +281,11 @@ class LogReplaySimulator:
 
             if self.verbose:
                 print(f"    Bruce [{i+1}]: {respuesta}")
+
+            # FIX 840: Detectar si Bruce se despidio (en produccion aqui se cuelga)
+            resp_lower = respuesta.lower()
+            if any(fp in resp_lower for fp in _farewell_phrases):
+                call_ended = True
 
         # 5. Detectar bugs del replay
         duracion = time.time() - t0
