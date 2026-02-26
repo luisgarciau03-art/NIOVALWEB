@@ -2255,6 +2255,14 @@ def procesar_respuesta():
                     # FIX 451: Limpiar también el tracking de FINAL/PARCIAL
                     if call_sid in deepgram_ultima_final:
                         deepgram_ultima_final[call_sid] = {}
+                    # FIX 833: Limpiar buffer Azure entre turnos para evitar desfase
+                    # BRUCE2551: Azure acumulaba texto de turnos anteriores, contaminando transcripciones
+                    if AZURE_AVAILABLE:
+                        with azure_transcripciones_lock:
+                            if call_sid in azure_transcripciones:
+                                azure_transcripciones[call_sid] = []
+                            if call_sid in azure_ultima_final:
+                                azure_ultima_final[call_sid] = {}
                     break
             time.sleep(wait_interval)
             tiempo_esperado += wait_interval
@@ -2322,6 +2330,13 @@ def procesar_respuesta():
                 deepgram_transcripciones[call_sid] = []
                 if call_sid in deepgram_ultima_final:
                     deepgram_ultima_final[call_sid] = {}
+                # FIX 833: Limpiar buffer Azure también al usar FIX 469
+                if AZURE_AVAILABLE:
+                    with azure_transcripciones_lock:
+                        if call_sid in azure_transcripciones:
+                            azure_transcripciones[call_sid] = []
+                        if call_sid in azure_ultima_final:
+                            azure_ultima_final[call_sid] = {}
             else:
                 print(f" FIX 401: Deepgram no respondió en {max_wait_deepgram}s")
 
@@ -6009,6 +6024,14 @@ Responde SOLO con una letra: A, B, C, D, E o F"""
 
     # Solo conservar las transcripciones importantes
     deepgram_transcripciones[call_sid] = transcripciones_importantes
+
+    # FIX 833: Limpiar buffer Azure en limpieza pre-audio para evitar desfase entre turnos
+    if AZURE_AVAILABLE:
+        with azure_transcripciones_lock:
+            if call_sid in azure_transcripciones:
+                azure_transcripciones[call_sid] = []
+            if call_sid in azure_ultima_final:
+                azure_ultima_final[call_sid] = {}
 
     if transcripciones_importantes:
         print(f" FIX 481: Conservando {len(transcripciones_importantes)} transcripciones importantes")

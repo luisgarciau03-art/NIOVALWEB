@@ -682,7 +682,7 @@ class FSMEngine:
                 intent == FSMIntent.REJECT_DATA and
                 self.state in (FSMState.CAPTURANDO_CONTACTO,
                                FSMState.ENCARGADO_PRESENTE)):
-            transition = self._handle_reject_data_763()
+            transition = self._handle_reject_data_763(texto)
 
         # 2. Buscar transición (si no fue override)
         if transition is None:
@@ -1438,12 +1438,29 @@ class FSMEngine:
     # ----------------------------------------------------------
     # FIX 763: REJECT_DATA dinámico
     # ----------------------------------------------------------
-    def _handle_reject_data_763(self) -> Transition:
+    def _handle_reject_data_763(self, texto: str = "") -> Transition:
         """FIX 763: Alternación inteligente de canales cuando cliente rechaza."""
         rechazados = set(self.context.canales_rechazados)
         # Incluir canal actual (será agregado por _update_context después)
         if self.context.canal_solicitado:
             rechazados.add(self.context.canal_solicitado)
+
+        # FIX 834: BRUCE2549 - Pre-parsear canal rechazado del texto ACTUAL
+        # _update_context() corre DESPUÉS de esta función, así que canales_rechazados
+        # aún no tiene el canal que el cliente ACABA de rechazar en este turno.
+        # Parseamos el texto aquí para incluirlo en rechazados ANTES de elegir alternativa.
+        if texto:
+            tn834 = _normalize(texto)
+            if 'whatsapp' in tn834:
+                rechazados.add('whatsapp')
+            if 'correo' in tn834 or 'email' in tn834 or 'mail' in tn834:
+                rechazados.add('correo')
+            if 'telefono' in tn834 or 'celular' in tn834 or 'numero' in tn834:
+                # Solo si es rechazo explícito (no "te doy mi número")
+                _reject_words_834 = ['no tengo', 'tampoco', 'no manejo', 'no uso', 'no cuento']
+                if any(r in tn834 for r in _reject_words_834):
+                    rechazados.add('telefono')
+            print(f"  [FIX 834] REJECT_DATA: rechazados pre-parse={rechazados} texto='{texto[:60]}'")
 
         S = FSMState
         A = ActionType
