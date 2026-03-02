@@ -285,6 +285,7 @@ class FSMContext:
     callback_pedido: bool = False
     callback_hora: Optional[str] = None
     callback_hora_preguntada: bool = False  # FIX 789B: ya preguntamos hora callback
+    callback_confirmaciones: int = 0        # FIX 849: contador de confirmar_callback emitidos
 
     turnos_bruce: int = 0
     ultimo_template: Optional[str] = None
@@ -726,13 +727,28 @@ class FSMEngine:
                 transition.template_key == 'preguntar_hora_callback'):
             hora_detectada = self._detectar_hora_en_texto_784(texto)
             if hora_detectada:
-                self.context.callback_hora = hora_detectada
-                transition = Transition(
-                    next_state=transition.next_state,
-                    action_type=transition.action_type,
-                    template_key='confirmar_callback',
-                )
-                print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' -> confirmar_callback")
+                # FIX 849: Anti-LOOP confirmar_callback - limitar a 1 confirmar_callback específico
+                # + 1 genérico; en el 3ro+ ceder a GPT para romper el loop
+                if self.context.callback_confirmaciones >= 2:
+                    print(f"  [FIX 849] callback_confirmaciones={self.context.callback_confirmaciones} >= 2 -> fallthrough a GPT (anti-loop)")
+                    return None
+                elif self.context.callback_confirmaciones == 1:
+                    # Ya dimos confirmación específica, dar genérica
+                    transition = Transition(
+                        next_state=transition.next_state,
+                        action_type=transition.action_type,
+                        template_key='confirmar_callback_generico',
+                    )
+                    print(f"  [FIX 849] callback_confirmaciones=1 -> confirmar_callback_generico (anti-loop)")
+                else:
+                    # Primera confirmación: usar hora específica
+                    self.context.callback_hora = hora_detectada
+                    transition = Transition(
+                        next_state=transition.next_state,
+                        action_type=transition.action_type,
+                        template_key='confirmar_callback',
+                    )
+                    print(f"  [FIX 784] Cliente ya mencionó hora: '{hora_detectada}' -> confirmar_callback")
             elif self.context.callback_hora_preguntada:
                 # FIX 789B: Ya preguntamos hora y cliente da callback vago ("más tarde")
                 # -> confirmar genérico en vez de repetir "¿A qué hora?"
@@ -1405,6 +1421,10 @@ class FSMEngine:
         # FIX 789B: Track callback hora preguntada
         if transition.template_key == 'preguntar_hora_callback':
             self.context.callback_hora_preguntada = True
+
+        # FIX 849: Track callback confirmaciones emitidas
+        if transition.template_key in ('confirmar_callback', 'confirmar_callback_generico'):
+            self.context.callback_confirmaciones += 1
 
         # Track claro_espero
         if transition.template_key == 'claro_espero':

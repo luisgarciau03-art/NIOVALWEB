@@ -21,8 +21,11 @@ TEMPLATES = {
         "herramientas, candados y mucho mas. "
         "¿Se encontrara el encargado o encargada de compras?",
     ],
+    # FIX 846: Cambiado "Me comunico de la marca NIOVAL" → "Le llamo de parte de NIOVAL"
+    # para evitar que _PITCH_NIOVAL matchee 2 veces (pitch_inicial + pitch_persona_nueva)
+    # y cause PITCH_REPETIDO en bug_detector
     "pitch_persona_nueva": [
-        "Hola, buen dia. Me comunico de la marca NIOVAL para ofrecer informacion de "
+        "Hola, buen dia. Le llamo de parte de NIOVAL para ofrecerle informacion de "
         "nuestros productos de ferreteria. "
         "¿Se encontrara el encargado o encargada de compras?",
     ],
@@ -50,11 +53,13 @@ TEMPLATES = {
     ],
 
     # === SOLICITAR CONTACTO ===
+    # FIX 847: Removida mención de "catálogo" en pedir_whatsapp/pedir_correo
+    # para evitar CATALOGO_REPETIDO (combined con confirmar_telefono ya suman 2 matches)
     "pedir_whatsapp": [
-        "¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?",
+        "¿Me podria proporcionar un numero de WhatsApp?",
     ],
     "pedir_correo": [
-        "¿Me podria dar un correo electronico para enviarle el catalogo?",
+        "¿Me podria dar un correo electronico?",
     ],
     "pedir_telefono": [
         "¿Me podria dar un telefono fijo o directo del encargado?",

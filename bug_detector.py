@@ -684,6 +684,10 @@ class ContentAnalyzer:
     # FIX 718+720: Patrones de dictado (email, teléfono, WhatsApp, nombre, dirección)
     # FIX 842: \b en nombres de letras (ele/eme/ene/ese/erre) para evitar falsos positivos
     # en palabras comunes: "tenemos" contiene "ene", "presente" contiene "ese", etc.
+    # FIX 847: \d{2,} → \d{3,} para evitar falso positivo con horas "4:00", "3:00"
+    # (el "00" de la hora matcheaba como inicio de dictado de número)
+    # FIX 847B+: También detectar múltiples grupos de 2+ dígitos separados por espacios/guiones
+    # (teléfonos mexicanos tipo "33 12 34 56 78") que no tienen 3+ dígitos consecutivos
     _DICTADO_PATTERNS = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
@@ -693,7 +697,7 @@ class ContentAnalyzer:
         r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
         r'mi correo es|mi email es|mi nombre es|me llamo|'
         r'la direcci[oó]n es|estamos en|la calle es|'
-        r'\d{2,})',
+        r'\d{3,}|(?:\d{2,}[\s\-]+){2,}\d{2,})',
         re.IGNORECASE
     )
 
@@ -1087,21 +1091,33 @@ class ContentAnalyzer:
                         texto_lower_727 = texto.lower()
 
                         # FIX 772: BRUCE2435/2436 - Si cliente dijo "no está" y Bruce pide
-                        # WhatsApp del encargado, es flujo CORRECTO (no interrupción)
-                        # "No, no está" → "¿WhatsApp del encargado?" = respuesta apropiada
+                        # cualquier dato de contacto, es flujo CORRECTO (no interrupción)
+                        # "No, no está" → "¿WhatsApp o correo del encargado?" = respuesta apropiada
+                        # FIX 843: Expandido - ya no requiere 'encargado' en texto de Bruce
                         _cliente_dijo_no_esta_772 = any(p in texto_lower_727 for p in [
                             'no esta', 'no está', 'no se encuentra', 'no hay',
                             'no esta disponible', 'no está disponible',
                         ])
-                        _bruce_pide_dato_encargado_772 = (
-                            ('whatsapp' in t2_lower and 'encargado' in t2_lower) or
-                            ('correo' in t2_lower and 'encargado' in t2_lower) or
-                            ('número' in t2_lower and 'encargado' in t2_lower) or
-                            ('numero' in t2_lower and 'encargado' in t2_lower) or
+                        _bruce_pide_contacto_843 = (
+                            'whatsapp' in t2_lower or
+                            'correo' in t2_lower or
+                            'numero' in t2_lower or
+                            'número' in t2_lower or
+                            'telefono' in t2_lower or
+                            'teléfono' in t2_lower or
                             'entiendo' in t2_lower[:20]  # "Entiendo. ¿Me podría..." = acknowledges
                         )
-                        if _cliente_dijo_no_esta_772 and _bruce_pide_dato_encargado_772:
-                            print(f"  [FIX 772] SKIP interrupcion: 'no está' + pedir dato encargado = flujo correcto")
+                        if _cliente_dijo_no_esta_772 and _bruce_pide_contacto_843:
+                            print(f"  [FIX 843/772] SKIP interrupcion: 'no está' + pedir contacto = flujo correcto")
+                            break  # Not a bug
+
+                        # FIX 843: Excepción callback - Si Bruce confirma hora de callback, es respuesta correcta
+                        _bruce_confirma_callback_843 = (
+                            any(p in t2_lower for p in ['le marco', 'le llamo', 'vuelvo a llamar']) and
+                            any(p in t2_lower for p in ['las ', 'hora', 'mañana', 'manana', 'tarde', 'rato'])
+                        )
+                        if _bruce_confirma_callback_843:
+                            print(f"  [FIX 843] SKIP interrupcion: Bruce confirma callback = flujo correcto")
                             break  # Not a bug
 
                         bruce_ignora = (

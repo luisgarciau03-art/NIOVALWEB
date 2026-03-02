@@ -389,6 +389,10 @@ class IntentClassifier:
             'no gracias', 'no necesito', 'no necesitamos',
             'estamos bien asi', 'estamos completos',
             'ya tenemos proveedor', 'ya tenemos proveedores',
+            # FIX 844: Variantes "tengo" (primera persona singular) para capturar
+            # "Pues, ya tengo unos proveedores" → clasificar como NO_INTEREST
+            'ya tengo proveedor', 'ya tengo proveedores',
+            'tengo proveedor de eso', 'tengo mis proveedores',
             'ya compramos', 'ya tenemos', 'ya contamos con',
             'no ocupamos', 'no ocupo', 'no requerimos',
             'no por el momento', 'por el momento no',

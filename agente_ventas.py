@@ -9425,8 +9425,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Problema: GPT tardó 10+ segundos cuando cliente dictó número
         # Solución: Si hay 7+ dígitos (número parcial/completo), confirmar SIN GPT
         # FIX 617D: Usar texto_numeros_617 (ya convertido arriba) para contar dígitos
+        # FIX 848: BRUCE2443 - Excluir patrones de hora (HH:MM) antes de contar dígitos
+        # Problema: "viene hasta mañana a las 10:00 ... a las 10:00" = 8 dígitos → NUMERO_PARCIAL_DICTADO falso
+        # Solución: Eliminar patrones de hora antes de contar dígitos de teléfono
         # ================================================================
-        digitos_en_texto = re.findall(r'\d', texto_numeros_617)
+        _texto_sin_horas_848 = re.sub(r'\b\d{1,2}:\d{2}\b', '', texto_numeros_617)
+        digitos_en_texto = re.findall(r'\d', _texto_sin_horas_848)
         num_digitos = len(digitos_en_texto)
 
         if num_digitos >= 7:
@@ -9699,6 +9703,25 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         if hasattr(self, 'fsm') and self.fsm:
             try:
                 fsm_result = self.fsm.process(respuesta_cliente, self)
+                if fsm_result is not None:
+                    # FIX 845: Anti-LOOP en ruta FSM - si el template ya fue emitido 2+ veces
+                    # en las últimas 8 respuestas, ceder a GPT para romper el loop
+                    try:
+                        _prev_bruce_845 = [
+                            m['content'] for m in self.conversation_history[-8:]
+                            if m['role'] == 'assistant'
+                        ]
+                        _fsm_norm_845 = re.sub(r'[^\w\s]', '', fsm_result.lower()).strip()
+                        _loop_count_845 = sum(
+                            1 for r in _prev_bruce_845
+                            if re.sub(r'[^\w\s]', '', r.lower()).strip() == _fsm_norm_845
+                        )
+                        if _loop_count_845 >= 2:
+                            print(f"  [FIX 845] LOOP FSM detectado ({_loop_count_845}x '{fsm_result[:40]}...') → cediendo a GPT")
+                            fsm_result = None  # Fall through to GPT
+                    except Exception:
+                        pass  # Si falla la detección, continuar normal
+
                 if fsm_result is not None:
                     # FIX 762: Sync FSM state/data back to agent before returning
                     self._sync_fsm_to_agent(respuesta_cliente, fsm_result)
