@@ -68,9 +68,11 @@ TEMPLATES = {
     "pedir_alternativa_whatsapp": [
         "Entiendo. ¿Tendra un WhatsApp donde le pueda enviar la informacion?",
     ],
+    # FIX 841: Removida mención de "catálogo" para evitar CATALOGO_REPETIDO
+    # (confirmar_telefono/correo ya incluye la promesa del catálogo)
     "pedir_contacto_alternativo": [
         "Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo "
-        "para enviarle el catalogo al encargado?",
+        "del encargado?",
     ],
     "digame_numero": [
         "Claro, digame por favor.",
