@@ -682,11 +682,13 @@ class ContentAnalyzer:
     # FIX 718: DICTADO_INTERRUMPIDO
     # =========================================================
     # FIX 718+720: Patrones de dictado (email, teléfono, WhatsApp, nombre, dirección)
+    # FIX 842: \b en nombres de letras (ele/eme/ene/ese/erre) para evitar falsos positivos
+    # en palabras comunes: "tenemos" contiene "ene", "presente" contiene "ese", etc.
     _DICTADO_PATTERNS = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
         r'a de|b de|c de|d de|e de|f de|g de|'
-        r'ele|eme|ene|ese|erre|'
+        r'\bele\b|\beme\b|\bene\b|\bese\b|\berre\b|'
         r'doble (u|v|uve)|'
         r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
         r'mi correo es|mi email es|mi nombre es|me llamo|'
