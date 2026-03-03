@@ -185,7 +185,7 @@ class BugDetector:
                 from collections import Counter
                 conteo = Counter(tracker.respuestas_bruce)
                 for resp, count in conteo.most_common(3):
-                    if count >= 3 and len(resp) > 10:
+                    if count >= 3 and len(resp) > 20:  # FIX 853: 10→20 evita LOOP en acks cortos (BRUCE2540: "Si, adelante." 13 chars)
                         bugs.append({
                             "tipo": "LOOP",
                             "severidad": ALTO,
@@ -701,6 +701,23 @@ class ContentAnalyzer:
         re.IGNORECASE
     )
 
+    # FIX 851: Versión FUERTE sin nombres de letras sueltas (ele/eme/ene/ese/erre)
+    # Usada en _check_dictado_interrumpido para evitar falsos positivos:
+    # BRUCE2494: "nosotros no tenemos ese tipo de caso" → \bese\b matcheaba "ese" (pronombre)
+    # Las letras sueltas son señal DÉBIL (confunden pronombres con deletreo)
+    # Señales FUERTES: arroba, dominios, frases explícitas "mi número es", dígitos largos
+    _DICTADO_PATTERNS_FUERTE = re.compile(
+        r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
+        r'hotmail|gmail|yahoo|outlook|prodigy|'
+        r'a de|b de|c de|d de|e de|f de|g de|'
+        r'doble (u|v|uve)|'
+        r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
+        r'mi correo es|mi email es|mi nombre es|me llamo|'
+        r'la direcci[oó]n es|estamos en|la calle es|'
+        r'\d{3,}|(?:\d{2,}[\s\-]+){2,}\d{2,})',
+        re.IGNORECASE
+    )
+
     _BRUCE_DESPEDIDA = re.compile(
         r'(me comunico despu[eé]s|muchas gracias por su tiempo|que tenga|buen d[ií]a|'
         r'excelente d[ií]a|hasta luego|nos comunicamos|le marco)',
@@ -731,7 +748,10 @@ class ContentAnalyzer:
                     continue
 
                 # ¿El cliente estaba dictando?
-                if not ContentAnalyzer._DICTADO_PATTERNS.search(texto):
+                # FIX 851: Usar _DICTADO_PATTERNS_FUERTE (sin \bese\b|\bele\b etc.)
+                # para evitar falsos positivos con pronombres/palabras comunes españolas
+                # BRUCE2494: "ese tipo de caso" → \bese\b matcheaba incorrectamente
+                if not ContentAnalyzer._DICTADO_PATTERNS_FUERTE.search(texto):
                     continue
 
                 # Buscar la siguiente respuesta de Bruce

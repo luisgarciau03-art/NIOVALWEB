@@ -7226,15 +7226,31 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"  Actual: '{respuesta[:60]}...'")
                 # Generar alternativa contextual
                 if 'encargado' in respuesta.lower():
-                    respuesta = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
+                    _alt_679 = "¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo?"
                 elif 'nioval' in respuesta.lower():
-                    respuesta = "¿Se encontrará el encargado o encargada de compras?"
+                    _alt_679 = "¿Se encontrará el encargado o encargada de compras?"
                 elif 'whatsapp' in respuesta.lower():
-                    respuesta = "¿Prefiere que le envíe la información por correo electrónico?"
+                    _alt_679 = "¿Prefiere que le envíe la información por correo electrónico?"
                 elif 'catálogo' in respuesta.lower() or 'catalogo' in respuesta.lower():
-                    respuesta = "Muchas gracias por su tiempo. Que tenga excelente día."
+                    _alt_679 = "Muchas gracias por su tiempo. Que tenga excelente día."
                 else:
-                    respuesta = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
+                    _alt_679 = "Disculpe, ¿me podría indicar cómo le puedo apoyar?"
+                # FIX 852: Verificar si la alternativa misma es ya un dup en el historial
+                # BRUCE2522: GPT repite "Manejamos..." → alt "Disculpe..." → alt se repite 3x → LOOP
+                _alt_679_norm = ud_679.normalize('NFKD', _alt_679.lower()).encode('ascii', 'ignore').decode('ascii')
+                _alt_679_norm = re_679.sub(r'[^\w\s]', '', _alt_679_norm).strip()
+                _alt_dup_852 = sum(
+                    1 for p in respuestas_previas_679
+                    if re_679.sub(r'[^\w\s]', '',
+                        ud_679.normalize('NFKD', p.lower()).encode('ascii', 'ignore').decode('ascii')
+                    ).strip() == _alt_679_norm
+                )
+                if _alt_dup_852 >= 2:
+                    # FIX 852: Alternativa también se repetiría 3x → usar cierre de contacto
+                    print(f"  [FIX 852] Alt '{_alt_679[:40]}' ya dicha {_alt_dup_852}x → cierre contacto")
+                    respuesta = "Le envío la información por WhatsApp. Muchas gracias por su tiempo, que tenga excelente día."
+                else:
+                    respuesta = _alt_679
                 print(f"  Override: '{respuesta}'")
 
         # ============================================================

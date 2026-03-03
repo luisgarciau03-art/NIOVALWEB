@@ -393,6 +393,13 @@ class IntentClassifier:
             # "Pues, ya tengo unos proveedores" → clasificar como NO_INTEREST
             'ya tengo proveedor', 'ya tengo proveedores',
             'tengo proveedor de eso', 'tengo mis proveedores',
+            # FIX 850: Variantes con artículos/adjetivos indefinidos antes de "proveedores"
+            # BRUCE2539: "ya tengo unos proveedores" no era detectado
+            'ya tengo unos proveedores', 'ya tengo varios proveedores',
+            'ya tenemos unos proveedores', 'ya tenemos varios proveedores',
+            'tenemos nuestros proveedores', 'tenemos nuestros propios proveedores',
+            'contamos con proveedores', 'contamos con nuestros proveedores',
+            'ya contamos con proveedor', 'ya contamos con proveedores',
             'ya compramos', 'ya tenemos', 'ya contamos con',
             'no ocupamos', 'no ocupo', 'no requerimos',
             'no por el momento', 'por el momento no',
