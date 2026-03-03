@@ -545,12 +545,29 @@ class ContentAnalyzer:
             pass
         return bugs
 
+    # FIX 862: Patrón de confirmación de dato capturado (confirmar_correo/confirmar_telefono)
+    # "ya tengo el correo/numero registrado. Le envio el catalogo..." → NO es nueva oferta
+    _CONFIRMACION_DATO_862 = re.compile(
+        r'ya tengo (el (correo|numero|dato)|anotado)',
+        re.IGNORECASE
+    )
+
     @staticmethod
     def _check_catalogo_repetido(respuestas: list) -> list:
-        """Detecta si Bruce ofrecio catalogo 2+ veces."""
+        """Detecta si Bruce ofrecio catalogo 2+ veces.
+
+        FIX 862: Excluye confirmaciones de dato capturado (confirmar_correo/confirmar_telefono)
+        que contienen 'Le envio el catalogo' como promesa de envío, no nueva oferta.
+        """
         bugs = []
         try:
-            count = sum(1 for r in respuestas if ContentAnalyzer._OFERTA_CATALOGO.search(r))
+            count = 0
+            for r in respuestas:
+                if ContentAnalyzer._OFERTA_CATALOGO.search(r):
+                    # FIX 862: Si es confirmación de dato, no cuenta como oferta
+                    if ContentAnalyzer._CONFIRMACION_DATO_862.search(r):
+                        continue
+                    count += 1
             if count >= 2:
                 bugs.append({
                     "tipo": "CATALOGO_REPETIDO",

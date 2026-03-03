@@ -389,5 +389,63 @@ class TestFix859CatalogoThresholdDos(unittest.TestCase):
         self.assertNotIn("CATALOGO_REPETIDO", tipos)
 
 
+# =============================================================================
+# FIX 862: CATALOGO_REPETIDO - excluir confirmaciones de dato capturado
+# =============================================================================
+
+class TestFix862CatalogoExcluirConfirmaciones(unittest.TestCase):
+    """FIX 862: confirmar_correo/confirmar_telefono no cuentan como nueva oferta de catálogo."""
+
+    def _make_tracker(self):
+        from bug_detector import CallEventTracker
+        return CallEventTracker(
+            call_sid="test_fix862",
+            bruce_id="TEST_862",
+            telefono="+5216621234567"
+        )
+
+    def test_confirmacion_correo_mas_oferta_no_es_bug(self):
+        """FIX 862: Una oferta real + confirmar_correo (promesa envío) → NO CATALOGO_REPETIDO."""
+        from bug_detector import ContentAnalyzer
+        tracker = self._make_tracker()
+        # Primera mención en el pitch (oferta real)
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le puedo enviar el catalogo de productos ferreteros."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Sí, al correo."})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Claro, digame el correo."})
+        tracker.emit("CLIENTE_DICE", {"texto": "contacto arroba empresa punto com"})
+        # Confirmación de dato (template confirmar_correo) — NO debe contar como nueva oferta
+        tracker.emit("BRUCE_RESPONDE", {
+            "texto": "Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su tiempo."
+        })
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        self.assertNotIn("CATALOGO_REPETIDO", tipos)
+
+    def test_confirmacion_telefono_mas_oferta_no_es_bug(self):
+        """FIX 862: confirmar_telefono también excluido del conteo."""
+        from bug_detector import ContentAnalyzer
+        tracker = self._make_tracker()
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le envio nuestro catalogo por WhatsApp."})
+        tracker.emit("CLIENTE_DICE", {"texto": "33 1234 5678"})
+        # confirmar_telefono — NO debe contar como segunda oferta
+        tracker.emit("BRUCE_RESPONDE", {
+            "texto": "Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias."
+        })
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        self.assertNotIn("CATALOGO_REPETIDO", tipos)
+
+    def test_dos_ofertas_reales_si_es_bug(self):
+        """FIX 862: Dos ofertas reales (sin confirmación de dato) → SÍ CATALOGO_REPETIDO."""
+        from bug_detector import ContentAnalyzer
+        tracker = self._make_tracker()
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le puedo enviar el catalogo de productos."})
+        tracker.emit("CLIENTE_DICE", {"texto": "No se"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le envio nuestro catalogo por WhatsApp para que lo revise."})
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        self.assertIn("CATALOGO_REPETIDO", tipos)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

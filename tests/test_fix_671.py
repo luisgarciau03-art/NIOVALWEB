@@ -131,7 +131,7 @@ class TestFix671AlineacionBugDetector:
 
         # Bug detector marca CATALOGO_REPETIDO con >= 2 ofertas
         catalogo_section_start = source.find("def _check_catalogo_repetido")
-        catalogo_section = source[catalogo_section_start:catalogo_section_start + 500]
+        catalogo_section = source[catalogo_section_start:catalogo_section_start + 1000]
 
         assert ">= 2" in catalogo_section
 
