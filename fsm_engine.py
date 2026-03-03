@@ -289,6 +289,7 @@ class FSMContext:
 
     turnos_bruce: int = 0
     ultimo_template: Optional[str] = None
+    preguntas_producto_respondidas: int = 0  # FIX 855: contador preguntas producto en capturando_contacto
 
     tiempo_claro_espero: Optional[float] = None
     donde_anotar_preguntado: bool = False
@@ -426,6 +427,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no hacemos compras', 'no compramos', 'no ocupamos', 'no necesitamos',
         'no manejamos eso', 'aqui es un taller', 'no es ferreteria',
         'no joven', 'no muchacho', 'no senor', 'no senorita', 'no mijo',
+        # FIX 854: "ya tengo proveedores" variantes (sincronizado con IntentClassifier FIX 844/850)
+        # BRUCE2539: 'ya tengo unos proveedores' no detectado → Bruce re-preguntaba encargado
+        'ya tengo proveedor', 'ya tengo proveedores',
+        'ya tengo unos proveedores', 'ya tengo varios proveedores',
+        'ya tenemos proveedor', 'ya tenemos proveedores',
+        'ya tenemos unos proveedores', 'ya tenemos varios proveedores',
+        'tengo mis proveedores', 'tenemos nuestros proveedores',
+        'contamos con proveedores', 'ya contamos con proveedor',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -781,6 +790,36 @@ class FSMEngine:
                 template_key='verificacion_aqui_estoy',
             )
             print(f"  [FIX 785] Encargado ya preguntado -> no repetir, usando verificacion")
+
+        # FIX 855+856: BRUCE2522 - Anti-LOOP preguntas de producto repetidas
+        # Cliente pregunta "¿Qué tipo de productos manejan?" 10+ veces → GPT genera misma respuesta → LOOP
+        # Después de 2 respuestas de producto, redirigir a captura de contacto
+        # FIX 856: Escalación progresiva para evitar LOOP + PREGUNTA_REPETIDA
+        #   - 3ra pregunta: pedir_whatsapp_o_correo
+        #   - 4ta pregunta: ofrecer_contacto_bruce
+        #   - 5ta+: despedida_cortes (cliente claramente no coopera)
+        if (transition.template_key == 'responder_pregunta_producto' and
+                self.context.preguntas_producto_respondidas >= 2):
+            # FIX 856: Incrementar aquí porque _update_context no lo verá (template cambia)
+            self.context.preguntas_producto_respondidas += 1
+            redirect_n = self.context.preguntas_producto_respondidas - 2  # 1=primera, 2=segunda, 3+=tercera+
+
+            if redirect_n <= 1:
+                new_template = 'pedir_whatsapp_o_correo'
+                new_state = FSMState.CAPTURANDO_CONTACTO
+            elif redirect_n == 2:
+                new_template = 'ofrecer_contacto_bruce'
+                new_state = FSMState.OFRECIENDO_CONTACTO
+            else:
+                new_template = 'despedida_cortes'
+                new_state = FSMState.DESPEDIDA
+
+            print(f"  [FIX 856] Pregunta producto #{self.context.preguntas_producto_respondidas} → escalation {redirect_n} → {new_template}")
+            transition = Transition(
+                next_state=new_state,
+                action_type=ActionType.TEMPLATE,
+                template_key=new_template,
+            )
 
         # 4. Evaluar guards
         if not self._check_guards(transition.guards):
@@ -1425,6 +1464,10 @@ class FSMEngine:
         # FIX 849: Track callback confirmaciones emitidas
         if transition.template_key in ('confirmar_callback', 'confirmar_callback_generico'):
             self.context.callback_confirmaciones += 1
+
+        # FIX 855: Track preguntas de producto respondidas
+        if transition.template_key == 'responder_pregunta_producto':
+            self.context.preguntas_producto_respondidas += 1
 
         # Track claro_espero
         if transition.template_key == 'claro_espero':
