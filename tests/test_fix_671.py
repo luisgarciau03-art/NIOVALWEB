@@ -129,7 +129,7 @@ class TestFix671AlineacionBugDetector:
         with open(bug_detector_path, 'r', encoding='utf-8') as f:
             source = f.read()
 
-        # Bug detector debe marcar con >= 2
+        # Bug detector marca CATALOGO_REPETIDO con >= 2 ofertas
         catalogo_section_start = source.find("def _check_catalogo_repetido")
         catalogo_section = source[catalogo_section_start:catalogo_section_start + 500]
 

@@ -429,23 +429,31 @@ class ContentAnalyzer:
                         if '?' in p:
                             preguntas.append(p.strip().lower())
 
-            # Buscar preguntas similares (>70% overlap)
+            # Buscar preguntas similares (>60% overlap, >80% para preguntas de contacto)
+            # FIX 858: BRUCE2454/2441 - Preguntas de contacto (WhatsApp/correo) se ofrecen
+            # de formas ligeramente distintas en flujo normal. Requieren mayor similitud
+            # para ser agrupadas (0.8 vs 0.6), evitando falsos positivos sin perder detección
+            # de repeticiones reales idénticas (BRUCE2114: overlap 1.0 >= 0.8 → detectado).
+            _CONTACT_WORDS_858 = {'whatsapp', 'correo', 'proporcionar', 'numero'}
             seen = {}
             for preg in preguntas:
                 # Normalizar: quitar signos y palabras cortas
                 palabras = set(re.findall(r'[a-záéíóúüñ]{4,}', preg))
+                # FIX 858: preguntas de contacto requieren mayor similitud para agruparse
+                is_contact_q = len(palabras & _CONTACT_WORDS_858) >= 2
+                threshold_overlap = 0.8 if is_contact_q else 0.6
                 matched = False
                 for key, (ref_palabras, count) in list(seen.items()):
                     if len(palabras) > 0 and len(ref_palabras) > 0:
                         overlap = len(palabras & ref_palabras) / max(len(palabras), len(ref_palabras))
-                        if overlap >= 0.6:
+                        if overlap >= threshold_overlap:
                             seen[key] = (ref_palabras | palabras, count + 1)
                             matched = True
                             break
                 if not matched and len(palabras) >= 2:
                     seen[preg] = (palabras, 1)
 
-            for preg, (_, count) in seen.items():
+            for preg, (ref_palabras, count) in seen.items():
                 if count >= 2:
                     bugs.append({
                         "tipo": "PREGUNTA_REPETIDA",

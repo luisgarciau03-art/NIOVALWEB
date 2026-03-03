@@ -290,6 +290,7 @@ class FSMContext:
     turnos_bruce: int = 0
     ultimo_template: Optional[str] = None
     preguntas_producto_respondidas: int = 0  # FIX 855: contador preguntas producto en capturando_contacto
+    whatsapp_ya_solicitado: bool = False      # FIX 861: track si ya pedimos WhatsApp (evita PREGUNTA_REPETIDA FIX 856)
 
     tiempo_claro_espero: Optional[float] = None
     donde_anotar_preguntado: bool = False
@@ -779,17 +780,29 @@ class FSMEngine:
             )
             print(f"  [FIX 839] Catálogo ya prometido -> despedida_cortes (sin repetir catálogo)")
 
-        # FIX 785: BRUCE2492/2497 - No repetir "¿Se encontrará el encargado?" si ya se preguntó
-        # pitch_inicial ya incluye la pregunta -> PITCH->BUSCANDO con preguntar_encargado la duplica
-        if (transition.template_key == 'preguntar_encargado' and
-                self.context.encargado_preguntado):
+        # FIX 785/860: BRUCE2492/2497/2462 - No repetir pregunta encargado si ya se preguntó
+        # FIX 785: solo bloqueaba 'preguntar_encargado'
+        # FIX 860: extiende a pitch_inicial + identificacion_pitch
+        # FIX 860B: pitch_persona_nueva bloqueado para intents no-IDENTITY (BRUCE2462:
+        #   esperando_transferencia+QUESTION → pitch_persona_nueva repite "¿Se encontrará encargado?")
+        #   IDENTITY se permite (nueva persona que no ha oído el pitch)
+        _PITCH_TEMPLATES_CON_ENCARGADO_Q = {
+            'preguntar_encargado', 'pitch_inicial', 'identificacion_pitch',
+        }
+        _block_encargado_q = (
+            (transition.template_key in _PITCH_TEMPLATES_CON_ENCARGADO_Q) or
+            (transition.template_key == 'pitch_persona_nueva' and
+             intent != FSMIntent.IDENTITY)
+        )
+        if _block_encargado_q and self.context.encargado_preguntado:
             # Ya preguntamos por encargado -> usar acknowledgment genérico
+            _orig_template_860 = transition.template_key
             transition = Transition(
                 next_state=transition.next_state,
                 action_type=transition.action_type,
                 template_key='verificacion_aqui_estoy',
             )
-            print(f"  [FIX 785] Encargado ya preguntado -> no repetir, usando verificacion")
+            print(f"  [FIX 785/860] Encargado ya preguntado -> no repetir ({_orig_template_860}), usando verificacion")
 
         # FIX 855+856: BRUCE2522 - Anti-LOOP preguntas de producto repetidas
         # Cliente pregunta "¿Qué tipo de productos manejan?" 10+ veces → GPT genera misma respuesta → LOOP
@@ -798,6 +811,7 @@ class FSMEngine:
         #   - 3ra pregunta: pedir_whatsapp_o_correo
         #   - 4ta pregunta: ofrecer_contacto_bruce
         #   - 5ta+: despedida_cortes (cliente claramente no coopera)
+        # FIX 861: BRUCE2454/2441 - Si WhatsApp ya fue solicitado, saltar directo a ofrecer_contacto_bruce
         if (transition.template_key == 'responder_pregunta_producto' and
                 self.context.preguntas_producto_respondidas >= 2):
             # FIX 856: Incrementar aquí porque _update_context no lo verá (template cambia)
@@ -805,8 +819,14 @@ class FSMEngine:
             redirect_n = self.context.preguntas_producto_respondidas - 2  # 1=primera, 2=segunda, 3+=tercera+
 
             if redirect_n <= 1:
-                new_template = 'pedir_whatsapp_o_correo'
-                new_state = FSMState.CAPTURANDO_CONTACTO
+                # FIX 861: si WhatsApp ya se pidió, saltar a ofrecer_contacto_bruce (evita PREGUNTA_REPETIDA)
+                if self.context.whatsapp_ya_solicitado:
+                    new_template = 'ofrecer_contacto_bruce'
+                    new_state = FSMState.OFRECIENDO_CONTACTO
+                    print(f"  [FIX 861] WhatsApp ya solicitado → saltar pedir_whatsapp → ofrecer_contacto_bruce")
+                else:
+                    new_template = 'pedir_whatsapp_o_correo'
+                    new_state = FSMState.CAPTURANDO_CONTACTO
             elif redirect_n == 2:
                 new_template = 'ofrecer_contacto_bruce'
                 new_state = FSMState.OFRECIENDO_CONTACTO
@@ -1064,7 +1084,9 @@ class FSMEngine:
         add(S.ESPERANDO_TRANSFERENCIA, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.ESPERANDO_TRANSFERENCIA, I.MANAGER_ABSENT,  S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
         add(S.ESPERANDO_TRANSFERENCIA, I.FAREWELL,        S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
-        add(S.ESPERANDO_TRANSFERENCIA, I.VERIFICATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
+        # FIX 860: BRUCE2462 - VERIFICATION ("¿Bueno?") tras transfer = misma persona volviendo
+        # → verificacion_aqui_estoy (no re-pitch con encargado question repetida)
+        add(S.ESPERANDO_TRANSFERENCIA, I.VERIFICATION,    S.PITCH, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.ESPERANDO_TRANSFERENCIA, I.OFFER_DATA,      S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         add(S.ESPERANDO_TRANSFERENCIA, I.UNKNOWN,         S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
         # FIX 786: CONTINUATION - cliente sigue hablando durante espera
@@ -1411,8 +1433,12 @@ class FSMEngine:
 
         # Track encargado preguntado
         # FIX 785: BRUCE2492/2497 - pitch_inicial ya incluye "¿Se encontrará el encargado?"
-        # Sin este fix, PITCH->BUSCANDO_ENCARGADO repite la pregunta porque flag=False
-        if transition.template_key in ('preguntar_encargado', 'pitch_inicial'):
+        # FIX 857: Todos los templates de pitch incluyen la pregunta → BRUCE2462/2458/2419
+        #   Solo pitch_inicial e identificacion_pitch van a BUSCANDO_ENCARGADO directamente
+        #   pitch_persona_nueva, pitch_encargado, repitch_encargado también preguntan
+        if transition.template_key in ('preguntar_encargado', 'pitch_inicial',
+                                       'identificacion_pitch', 'pitch_persona_nueva',
+                                       'pitch_encargado', 'repitch_encargado'):
             self.context.encargado_preguntado = True
 
         # Track encargado es interlocutor
@@ -1468,6 +1494,10 @@ class FSMEngine:
         # FIX 855: Track preguntas de producto respondidas
         if transition.template_key == 'responder_pregunta_producto':
             self.context.preguntas_producto_respondidas += 1
+
+        # FIX 861: Track si ya pedimos WhatsApp (para evitar PREGUNTA_REPETIDA en FIX 856)
+        if transition.template_key in ('pedir_whatsapp_o_correo', 'pedir_whatsapp', 'pedir_correo'):
+            self.context.whatsapp_ya_solicitado = True
 
         # Track claro_espero
         if transition.template_key == 'claro_espero':

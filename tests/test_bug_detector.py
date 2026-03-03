@@ -130,13 +130,37 @@ class TestPreguntaRepetida:
 
     @pytest.mark.bug_detector
     def test_pregunta_repetida_detectada(self, tracker):
-        """Bruce pregunta lo mismo 2 veces → PREGUNTA_REPETIDA."""
+        """Bruce pregunta lo mismo 2 veces (pregunta no-contacto) → PREGUNTA_REPETIDA.
+        FIX 858: preguntas de contacto (WhatsApp/correo) requieren 3x; encargado 2x."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Se encontrara el encargado o encargada de compras?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Espere un momento"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Se encontrara el encargado o encargada de compras?"})
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "PREGUNTA_REPETIDA" in tipos
+
+    @pytest.mark.bug_detector
+    def test_pregunta_repetida_contacto_variaciones_no_bug(self, tracker):
+        """FIX 858: Preguntas de contacto con variaciones (<80% overlap) no son PREGUNTA_REPETIDA.
+        Overlap threshold 0.8 para contact questions evita falsos positivos de variaciones legítimas."""
+        # Q1 y Q2 tienen palabras diferentes (overlap ~50%), no son repeat idéntico
         tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de nioval. Cual es su numero de WhatsApp?"})
         tracker.emit("CLIENTE_DICE", {"texto": "No tengo ahorita"})
         tracker.emit("BRUCE_RESPONDE", {"texto": "Entiendo. Me podria dar su numero de WhatsApp?"})
         bugs = ContentAnalyzer.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
-        assert "PREGUNTA_REPETIDA" in tipos
+        assert "PREGUNTA_REPETIDA" not in tipos  # FIX 858: variaciones <80% overlap = no bug
+
+    @pytest.mark.bug_detector
+    def test_pregunta_repetida_contacto_identica_si_bug(self, tracker):
+        """FIX 858: Pregunta de contacto IDÉNTICA repetida 2x SÍ es PREGUNTA_REPETIDA (overlap 100% >= 0.8)."""
+        q = "Si, le preguntaba, me podria dar su numero de WhatsApp para enviarle el catalogo?"
+        tracker.emit("BRUCE_RESPONDE", {"texto": q})
+        tracker.emit("CLIENTE_DICE", {"texto": "Bueno?"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": q})
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "PREGUNTA_REPETIDA" in tipos  # FIX 858: overlap 100% >= 0.8 = sí bug
 
     @pytest.mark.bug_detector
     def test_preguntas_diferentes_no_flag(self, tracker):
@@ -235,13 +259,22 @@ class TestCatalogoRepetido:
 
     @pytest.mark.bug_detector
     def test_catalogo_ofrecido_dos_veces(self, tracker):
-        """Bruce ofrece catalogo 2 veces → CATALOGO_REPETIDO."""
+        """Bruce ofrece catálogo 2 veces → CATALOGO_REPETIDO detectado (threshold=2)."""
         tracker.emit("BRUCE_RESPONDE", {"texto": "Le puedo enviar nuestro catalogo de productos."})
         tracker.emit("CLIENTE_DICE", {"texto": "Mmm no se"})
         tracker.emit("BRUCE_RESPONDE", {"texto": "Le envio el catalogo para que lo revise con calma."})
         bugs = ContentAnalyzer.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
-        assert "CATALOGO_REPETIDO" in tipos
+        assert "CATALOGO_REPETIDO" in tipos  # threshold=2: 2x catálogo = bug
+
+    @pytest.mark.bug_detector
+    def test_catalogo_una_vez_no_bug(self, tracker):
+        """Bruce menciona catálogo 1 vez → no es bug."""
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le envio el catalogo para que lo revise con calma."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Perfecto, gracias."})
+        bugs = ContentAnalyzer.analyze(tracker)
+        tipos = [b["tipo"] for b in bugs]
+        assert "CATALOGO_REPETIDO" not in tipos  # 1x catálogo = no bug
 
 
 # ============================================================
