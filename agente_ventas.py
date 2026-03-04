@@ -7454,6 +7454,53 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # le llamo de la marca NIOVAL..." con lista de productos DESPUÉS de capturar contacto.
         # Si contacto ya capturado Y respuesta empieza con "Mi nombre es" → versión compacta.
         # ============================================================
+        # ============================================================
+        # FIX 879: Respuesta larga ante pedido corto de repetición
+        # Audit 04/03: "Respuesta muy larga (157 chars) ante pedido de repetición"
+        # Si cliente pide repetición/clarificación en ≤8 palabras Y Bruce responde >120 chars
+        # con contenido de pitch → truncar a primera oración + pivot encargado.
+        # ============================================================
+        _PIDE_REPETICION_879 = re.compile(
+            r'(?:perd[oó]n|mande|c[oó]mo\s+dijo|de\s+d[oó]nde|d[oó]nde\s+(?:est[aá]n?|se\s+ubican?|hablan?|dice)\b|no\s+(?:entend|escu[ij]))',
+            re.IGNORECASE
+        )
+        _PITCH_LARGO_879 = re.compile(
+            r'^(?:mi\s+nombre\s+es|somos\s+de\s+guadalajara|somos\s+distribuidores|le\s+comento|me\s+comunico\s+de)',
+            re.IGNORECASE
+        )
+        if len(respuesta) > 120 and _PITCH_LARGO_879.match(respuesta):
+            _ultimo_user_879 = next(
+                (m['content'] for m in reversed(self.conversation_history) if m.get('role') == 'user'),
+                ''
+            )
+            _palabras_879 = len(_ultimo_user_879.split())
+            if _palabras_879 <= 8 and _PIDE_REPETICION_879.search(_ultimo_user_879):
+                # Primera oración de la respuesta (hasta primer punto)
+                _primera_879 = respuesta.split('.')[0].strip() + '.'
+                if len(_primera_879) > 80:
+                    _primera_879 = "Somos de Guadalajara, Jalisco."
+                respuesta = _primera_879 + " ¿Se encuentra el encargado de compras?"
+                print(f"  [FIX 879] Respuesta larga ante repeticion corta → concisa: '{respuesta[:60]}'")
+
+        # ============================================================
+        # FIX 880: Validar que número capturado no sea el propio de Bruce (echo STT)
+        # BRUCE2551: cliente "dio" 6623531804 = 662 353 1804 (número de Bruce), probablemente
+        # por echo de audio: el TTS de dictar_numero_bruce fue captado por el micrófono.
+        # Si el número guardado en lead_data termina en "6623531804" → eliminar y re-preguntar.
+        # ============================================================
+        _NUMERO_PROPIO_BRUCE_880 = "6623531804"
+        _fix880_activado = False
+        for _campo_880 in ("whatsapp", "telefono_directo", "telefono"):
+            _val_880 = str(self.lead_data.get(_campo_880) or "")
+            _digitos_880 = re.sub(r'[^\d]', '', _val_880)
+            if _digitos_880.endswith(_NUMERO_PROPIO_BRUCE_880):
+                self.lead_data.pop(_campo_880, None)
+                _fix880_activado = True
+                print(f"  [FIX 880] Numero propio de Bruce detectado en '{_campo_880}' → eliminado, re-preguntando")
+                break
+        if _fix880_activado:
+            respuesta = "Disculpe, ese numero no lo capte bien. ¿Me lo puede repetir por favor?"
+
         _NOMBRE_BRUCE_877 = re.compile(r'^mi\s+nombre\s+es\s+bruce', re.IGNORECASE)
         if _NOMBRE_BRUCE_877.match(respuesta):
             _contacto_ya_877 = (self.lead_data.get('whatsapp') or self.lead_data.get('email')

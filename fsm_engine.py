@@ -296,6 +296,7 @@ class FSMContext:
     donde_anotar_preguntado: bool = False
     ultimo_fue_ofrecer_contacto: bool = False
     verificacion_consecutivas: int = 0  # FIX 866B: contador de verificacion_aqui_estoy consecutivos (anti-LOOP BRUCE2322)
+    identity_repetidas: int = 0         # FIX 878: contador de identificacion_nioval consecutivos (anti-loop ubicacion)
 
 
 # ============================================================
@@ -1270,6 +1271,16 @@ class FSMEngine:
             if transition.template_key == "pitch_encargado" and self.context.pitch_dado:
                 print(f"  [FIX 875] pitch ya dado -> pitch_encargado_corto")
                 return self._get_template("pitch_encargado_corto")
+
+            # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
+            # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
+            # Si identity_repetidas >= 2, pivotar a pedir_whatsapp_o_correo para avanzar la conv.
+            if transition.template_key == "identificacion_nioval":
+                self.context.identity_repetidas += 1
+                if self.context.identity_repetidas >= 2:
+                    print(f"  [FIX 878] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo")
+                    return self._get_template("pedir_whatsapp_o_correo")
+
             return self._get_template(transition.template_key)
 
         elif transition.action_type == ActionType.ACKNOWLEDGE:
