@@ -7449,6 +7449,39 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"  [FIX 873] WhatsApp re-pedido bloqueado (rechazo en historial) → correo")
 
         # ============================================================
+        # FIX 883: Bloquear re-pedido de correo si cliente ya rechazó en esta llamada
+        # BRUCE2549: Cliente rechazó correo pero Bruce lo pidió 4x seguidas (LOOP).
+        # Equivalente a FIX 873 pero para correo/email.
+        # ============================================================
+        _RECHAZA_CORREO_883 = re.compile(
+            r'(no\s+(?:tengo|tenemos|uso|usamos|manejo|manejamos|cuento\s+con|contamos\s+con|hay|tiene|tienen)\s+(?:correo|email|gmail|hotmail|yahoo|mail)|'  
+            r'(?:correo|email)\s+no|'
+            r'no[,.]?\s+(?:correo|email)\s+no|'
+            r'sin\s+(?:correo|email)|'
+            r'tampoco\s+(?:tengo|hay|tienen?|uso)\s+(?:correo|email)|'
+            r'no\s+(?:usamos|uso|manejo|manejamos)\s+(?:correo|email))',
+            re.IGNORECASE
+        )
+        _PIDE_CORREO_883 = re.compile(
+            r'correo\s+electr[oó]nico|correo\s+para\s+envi|correo\s+o\s+email|email\s+para|correo\s+electr',
+            re.IGNORECASE
+        )
+        if _PIDE_CORREO_883.search(respuesta) and not self.lead_data.get("sin_correo"):
+            _rechazo_previo_correo_883 = any(
+                _RECHAZA_CORREO_883.search(msg.get('content', ''))
+                for msg in self.conversation_history
+                if msg.get('role') == 'user'
+            )
+            if _rechazo_previo_correo_883:
+                self.lead_data["sin_correo"] = True
+                _ya_tiene_wp_883 = self.lead_data.get('whatsapp') and not self.lead_data.get('sin_whatsapp')
+                if _ya_tiene_wp_883:
+                    respuesta = "Perfecto, le envío la información al WhatsApp que me proporcionó. Muchas gracias."
+                else:
+                    respuesta = "Entendido. ¿Tendría un número de teléfono directo o celular para poderle contactar?"
+                print(f"  [FIX 883] Correo re-pedido bloqueado (rechazo en historial) → teléfono")
+
+        # ============================================================
         # FIX 877: Respuesta identidad concisa cuando contacto ya capturado
         # Auditoría 25/02: PREGUNTA_NOMBRE_INNECESARIA(4x) — Bruce dice "Mi nombre es Bruce,
         # le llamo de la marca NIOVAL..." con lista de productos DESPUÉS de capturar contacto.
@@ -9178,7 +9211,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             # FIX 740: BRUCE2311 - "Me pasas tus datos" = pide contacto de Bruce/Nioval
             "me pasas tus datos", "pasame tus datos", "me das tus datos",
             "dame tus datos", "tus datos por favor", "sus datos por favor",
-            "me pasa sus datos", "me da sus datos", "paseme sus datos"
+            "me pasa sus datos", "me da sus datos", "paseme sus datos",
+            # FIX 882: BRUCE2568 - cliente pide numero de NIOVAL para callback
+            "paseme un numero", "pasame un numero", "paseme su numero", "pasame su numero",
+            "un numero para contactar", "un numero para llamar",
+            "me da un numero", "me das un numero", "me puede dar un numero",
+            "para poder comunicarme", "para poder llamar", "para contactarlos"
         ]):
             print(f"[OK] FIX 510: Cliente pide contacto de NIOVAL - dando WhatsApp")
             return {
