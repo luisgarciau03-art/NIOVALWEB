@@ -7371,6 +7371,38 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     respuesta = respuesta.rstrip('.') + ". ¿Le envío nuestro catálogo por WhatsApp?"
                     print(f"  [FIX 871] Pivot ubicacion→catalogo añadido")
 
+        # ============================================================
+        # FIX 873: Bloquear re-pedido de WhatsApp si cliente ya rechazó en esta llamada
+        # BRUCE2549: Cliente dijo "No tengo WhatsApp" pero Bruce lo volvió a pedir turnos después.
+        # FIX 516 ya lo maneja con lead_data.sin_whatsapp, pero si el flag no se setea
+        # (ej. turn procesado directamente por GPT sin pasar por _clasificar_respuesta_cliente),
+        # este post-filter revisa conversation_history directamente como respaldo.
+        # ============================================================
+        _RECHAZA_WHATSAPP_873 = re.compile(
+            r'(no\s+(?:tengo|tenemos|uso|usamos|manejo|manejamos|cuento\s+con|contamos\s+con|hay|tiene|tienen)\s+(?:whatsapp|watsapp|wats\b|wasa)|'
+            r'(?:whatsapp|watsapp|wats\b|wasa)\s+no\b|'
+            r'no[,.]?\s+(?:whatsapp|watsapp|wats\b|wasa)\s+no|'
+            r'sin\s+(?:whatsapp|watsapp|wats\b|wasa)|'
+            r'aqu[ií]\s+no\s+hay\s+(?:whatsapp|watsapp|wats\b|wasa))',
+            re.IGNORECASE
+        )
+        _PIDE_WHATSAPP_873 = re.compile(r'whatsapp|wats?a?pp?', re.IGNORECASE)
+        if _PIDE_WHATSAPP_873.search(respuesta) and not self.lead_data.get("sin_whatsapp"):
+            # Buscar rechazo explícito de WhatsApp en historial de cliente
+            _rechazo_previo_873 = any(
+                _RECHAZA_WHATSAPP_873.search(msg.get('content', ''))
+                for msg in self.conversation_history
+                if msg.get('role') == 'user'
+            )
+            if _rechazo_previo_873:
+                self.lead_data["sin_whatsapp"] = True  # Sincronizar flag para FILTRO 1B
+                _ya_tiene_correo_873 = self.lead_data.get('correo') or self.lead_data.get('email')
+                if _ya_tiene_correo_873:
+                    respuesta = "Perfecto, le envío la información al correo que me proporcionó. Muchas gracias."
+                else:
+                    respuesta = "Entendido. ¿Me puede dar un correo electrónico para enviarle el catálogo?"
+                print(f"  [FIX 873] WhatsApp re-pedido bloqueado (rechazo en historial) → correo")
+
         return respuesta
 
     def iniciar_conversacion(self):
