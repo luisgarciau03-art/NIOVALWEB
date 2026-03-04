@@ -189,7 +189,11 @@ class BugDetector:
             # En replay (shadow mode) puede acumularse → excluir para evitar falso positivo.
             # BRUCE2322: "Si, aqui estoy. Digame." 6x = replay artifact, no bug de producción.
             _VERIFICATION_LOOP_EXEMPT = re.compile(
-                r'(aqui estoy|aquí estoy|sigo aqui|sigo aquí|si.*estoy|me escucha)',
+                r'(aqui estoy|aquí estoy|sigo aqui|sigo aquí|si.*estoy|me escucha|'
+                # FIX 869H: Identity re-statements are not loops
+                # BRUCE1975: "Mi nombre es Bruce, le llamo de NIOVAL" 3x = client keeps
+                # asking "¿Quién habla?" → response is correct, not a loop.
+                r'mi nombre es|le llamo de.{0,10}nioval|soy bruce)',
                 re.IGNORECASE
             )
             if len(tracker.respuestas_bruce) >= 3:
@@ -473,9 +477,20 @@ class ContentAnalyzer:
                     _filtered.append(r)
                 respuestas = _filtered
 
+            # FIX 869C: Excluir respuestas de identidad de la lista de preguntas.
+            # "Mi nombre es Bruce, le llamo de NIOVAL..." se repite cuando cliente
+            # pregunta "¿Quién habla?" varias veces → respuesta correcta, no repetición.
+            _IDENTITY_RESPONSE_869 = re.compile(
+                r'(mi nombre es|le llamo de|me llamo|soy bruce|le hablo de|'
+                r'somos distribuidores de productos ferreteros de guadalajara)',
+                re.IGNORECASE
+            )
             preguntas = []
             for r in respuestas:
                 if '?' in r and len(r) > 15:
+                    # FIX 869C: Skip identity re-statements
+                    if _IDENTITY_RESPONSE_869.search(r):
+                        continue
                     # Extraer la parte de la pregunta (despues del ultimo '.')
                     partes = r.split('.')
                     for p in partes:
@@ -506,8 +521,26 @@ class ContentAnalyzer:
                 if not matched and len(palabras) >= 2:
                     seen[preg] = (palabras, 1)
 
+            # FIX 869D: En conversaciones largas con cross-talk (cliente da hora de callback,
+            # Bruce pide número), las preguntas de contacto se repiten por FSM cross-talk.
+            # BRUCE2529: 18 turnos, cliente dice "después de las 3" y Bruce pide teléfono.
+            # Requiere >= 4 repeticiones (en vez de >= 2) para flaggear como bug real.
+            _is_long_conv = conv and len(conv) >= 14
+            _has_callback_crosstalk = False
+            if _is_long_conv and conv:
+                _CALLBACK_TIME_869 = re.compile(
+                    r'(despu[eé]s de las|a las \d|por la tarde|por la mañana|'
+                    r'hora.{0,10}(marcar|llamar)|pueden marcar|puedes marcar)',
+                    re.IGNORECASE
+                )
+                _callback_count = sum(1 for r, t in conv if r == 'cliente' and _CALLBACK_TIME_869.search(t))
+                _has_callback_crosstalk = _callback_count >= 2
+
             for preg, (ref_palabras, count) in seen.items():
-                if count >= 2:
+                _is_contact = len(ref_palabras & _CONTACT_WORDS_858) >= 1
+                # FIX 869D: callback cross-talk con >10 turnos → skip contact Qs entirely
+                _min_count = 99 if (_has_callback_crosstalk and _is_contact) else 2
+                if count >= _min_count:
                     bugs.append({
                         "tipo": "PREGUNTA_REPETIDA",
                         "severidad": MEDIO,
@@ -586,7 +619,13 @@ class ContentAnalyzer:
         """Detecta si Bruce repitio el pitch de nioval 2+ veces."""
         bugs = []
         try:
-            count = sum(1 for r in respuestas if ContentAnalyzer._PITCH_NIOVAL.search(r))
+            # FIX 869F: Exempt first Bruce response ONLY if it's a short greeting
+            # (not a full pitch). BRUCE2038: saludo "Hola, buen dia" is greeting → skip.
+            # But "Me comunico de nioval, trabajamos productos ferreteros" IS a pitch → count.
+            _resp_for_pitch = respuestas
+            if len(respuestas) > 1 and len(respuestas[0]) < 40 and not ContentAnalyzer._PITCH_NIOVAL.search(respuestas[0]):
+                _resp_for_pitch = respuestas[1:]
+            count = sum(1 for r in _resp_for_pitch if ContentAnalyzer._PITCH_NIOVAL.search(r))
             if count >= 2:
                 bugs.append({
                     "tipo": "PITCH_REPETIDO",
@@ -748,10 +787,36 @@ class ContentAnalyzer:
                 if not cliente_dice_no_aplica:
                     continue
 
+                # FIX 869E: Si cliente texto termina en coma/conector (frase incompleta),
+                # skip — el cliente aún no terminó de expresarse.
+                # BRUCE2491: "No, señor, está equivocado," → turno incompleto
+                _texto_stripped = texto.strip()
+                if _texto_stripped.endswith(',') or _texto_stripped.endswith(' y') or _texto_stripped.endswith(' pero'):
+                    print(f"  [FIX 869E] SKIP area_equivocada: frase incompleta ('{_texto_stripped[-20:]}')")
+                    continue
+
                 # Verificar si Bruce respondió DESPUÉS con algo que ignora el rechazo
                 for j in range(i + 1, len(conv)):
                     r2, t2 = conv[j]
                     if r2 == "bruce" and t2.strip():
+                        # FIX 869E: Si Bruce reconoce el error y NO sigue vendiendo,
+                        # no está ignorando el rechazo — respuesta apropiada.
+                        # BRUCE1897: "Entiendo, disculpe la molestia. ¿Me podría indicar
+                        # el teléfono de la sucursal correcta?" → Bruce SÍ entendió + redirect.
+                        # PERO: "Entiendo, ¿me podría dar su WhatsApp?" → sigue vendiendo = bug.
+                        _t2_lower_869 = t2.lower()
+                        _bruce_reconoce_869 = any(p in _t2_lower_869 for p in [
+                            'disculpe', 'disculpa', 'perdón', 'perdon',
+                            'lamento', 'comprendo',
+                        ])
+                        _bruce_redirect_869 = any(p in _t2_lower_869 for p in [
+                            'sucursal correcta', 'número correcto', 'numero correcto',
+                            'dirección correcta', 'direccion correcta',
+                        ])
+                        _bruce_still_selling = ContentAnalyzer._BRUCE_NO_ENTENDIO_RECHAZO.search(t2)
+                        if _bruce_reconoce_869 and (not _bruce_still_selling or _bruce_redirect_869):
+                            print(f"  [FIX 869E] SKIP area_equivocada: Bruce reconoce error sin seguir vendiendo")
+                            break
                         # ¿Bruce ignoró el rechazo y siguió vendiendo?
                         if ContentAnalyzer._BRUCE_NO_ENTENDIO_RECHAZO.search(t2):
                             bugs.append({
@@ -893,6 +958,17 @@ class ContentAnalyzer:
         try:
             if len(conv) < 2:
                 return bugs
+
+            # FIX 869I: Si Bruce ya dijo "espero" en la conversación, la transferencia
+            # FUE reconocida. Posteriores _TRANSFER_PATTERNS en texto STT-duplicado
+            # son artifacts, no nuevas solicitudes ignoradas.
+            # BRUCE1975: "permítame tantito" repetido por STT en turno posterior.
+            _bruce_ya_espero_869 = any(
+                r == 'bruce' and ContentAnalyzer._BRUCE_ESPERA_CORRECTO.search(t)
+                for r, t in conv
+            )
+            if _bruce_ya_espero_869:
+                return bugs  # Transfer was acknowledged
 
             for i, (role, texto) in enumerate(conv):
                 if role != "cliente" or not texto.strip():
@@ -1220,6 +1296,9 @@ class ContentAnalyzer:
                             'salió', 'salio', 'ya salió', 'ya salio',
                             'se fue', 'no ha llegado', 'no llego', 'no llegó',
                             'fue a comer', 'anda fuera', 'no viene',
+                            # FIX 869A: más variantes de encargado ausente/rechazo
+                            'no se quiso', 'no quiso', 'no quiere',
+                            'no tiene hora', 'no tiene horario',
                         ])
                         _bruce_pide_contacto_843 = (
                             'whatsapp' in t2_lower or
@@ -1255,6 +1334,9 @@ class ContentAnalyzer:
                             'no podemos manejar', 'no podemos vender',
                             'hablando a una de las sucursales', 'a una de las sucursales',
                             'nosotros somos las', 'nosotros somos de',
+                            # FIX 869B: quejas sobre la llamada (no son explicaciones que necesiten continuación)
+                            'hablando mucho', 'ya no queremos', 'no nos interesa',
+                            'ya no necesitamos',
                         ])
                         if _bruce_dice_despedida_864 and (_cliente_dijo_no_esta_772 or _cliente_no_negocio_864):
                             print(f"  [FIX 864] SKIP interrupcion: despedida apropiada tras no-está/área-equivocada")
@@ -1577,6 +1659,35 @@ class ContentAnalyzer:
                 # ¿El cliente hizo una pregunta directa?
                 if not ContentAnalyzer._PREGUNTA_DIRECTA_CLIENTE.search(texto):
                     continue
+
+                # FIX 869G: Si Bruce ya contestó la pregunta de identidad DESPUÉS de
+                # una pregunta anterior del mismo tipo, esta es una repetición STT → skip.
+                # BRUCE1914: Cliente repite "¿De qué empresa me habla?" (STT dup),
+                # Bruce ya contestó "NIOVAL, distribuidores" en turno anterior.
+                # Solo skip si: (1) hubo una identity Q anterior, (2) Bruce contestó después.
+                _is_identity_q_869 = bool(re.search(
+                    r'(qui[eé]n|de d[oó]nde|de qu[eé] empresa|qu[eé] marca)',
+                    texto, re.IGNORECASE
+                ))
+                if _is_identity_q_869:
+                    _seen_prior_identity_q = False
+                    _bruce_answered_after_prior = False
+                    for k in range(i):
+                        rk, tk = conv[k]
+                        if rk == 'cliente' and re.search(
+                            r'(qui[eé]n|de d[oó]nde|de qu[eé] empresa|qu[eé] marca)',
+                            tk, re.IGNORECASE
+                        ):
+                            _seen_prior_identity_q = True
+                        elif rk == 'bruce' and _seen_prior_identity_q:
+                            if any(p in tk.lower() for p in [
+                                'nioval', 'mi nombre es bruce', 'bruce de nioval',
+                                'distribuidores de productos ferreteros',
+                            ]):
+                                _bruce_answered_after_prior = True
+                                break
+                    if _bruce_answered_after_prior:
+                        continue  # Skip — already answered after a prior identity Q
 
                 # Buscar siguiente respuesta de Bruce
                 for j in range(i + 1, len(conv)):
