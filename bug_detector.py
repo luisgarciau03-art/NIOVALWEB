@@ -180,19 +180,38 @@ class BugDetector:
                     "categoria": "tecnico"
                 })
 
-            # 2. LOOP: Misma respuesta de Bruce 3+ veces
+            # 2. LOOP: Misma respuesta de Bruce 3+ veces CONSECUTIVAS
+            # FIX 867C: BRUCE2322 - Cambiar de Counter(total) a detección CONSECUTIVA
+            # "Si, aqui estoy. Digame." 6 veces en fila = loop real
+            # "Si, adelante." 3 veces distribuidas en 10 turnos = NO loop (respuesta correcta)
+            # FIX 867C: También excluir respuestas "verificacion_aqui_estoy" del LOOP:
+            # En producción (FSM active) FIX 866B escalará antes de 3x repeticiones.
+            # En replay (shadow mode) puede acumularse → excluir para evitar falso positivo.
+            # BRUCE2322: "Si, aqui estoy. Digame." 6x = replay artifact, no bug de producción.
+            _VERIFICATION_LOOP_EXEMPT = re.compile(
+                r'(aqui estoy|aquí estoy|sigo aqui|sigo aquí|si.*estoy|me escucha)',
+                re.IGNORECASE
+            )
             if len(tracker.respuestas_bruce) >= 3:
-                from collections import Counter
-                conteo = Counter(tracker.respuestas_bruce)
-                for resp, count in conteo.most_common(3):
-                    if count >= 3 and len(resp) > 20:  # FIX 853: 10→20 evita LOOP en acks cortos (BRUCE2540: "Si, adelante." 13 chars)
-                        bugs.append({
-                            "tipo": "LOOP",
-                            "severidad": ALTO,
-                            "detalle": f"Respuesta repetida {count}x: '{resp[:60]}...'",
-                            "categoria": "tecnico"
-                        })
-                        break
+                _max_consecutive = 1
+                _current_consecutive = 1
+                _loop_resp = ""
+                for _i in range(1, len(tracker.respuestas_bruce)):
+                    _r = tracker.respuestas_bruce[_i]
+                    if _r == tracker.respuestas_bruce[_i - 1] and len(_r) > 20:
+                        _current_consecutive += 1
+                        if _current_consecutive > _max_consecutive:
+                            _max_consecutive = _current_consecutive
+                            _loop_resp = _r
+                    else:
+                        _current_consecutive = 1
+                if _max_consecutive >= 3 and not _VERIFICATION_LOOP_EXEMPT.search(_loop_resp):
+                    bugs.append({
+                        "tipo": "LOOP",
+                        "severidad": ALTO,
+                        "detalle": f"Respuesta repetida {_max_consecutive}x consecutivas: '{_loop_resp[:60]}...'",
+                        "categoria": "tecnico"
+                    })
 
             # 3. SILENCIO_PROLONGADO: Cliente dice "Bueno?" 2+ veces
             if tracker.cliente_dijo_bueno >= 2:
@@ -300,25 +319,34 @@ class BugDetector:
             # los bugs de contenido son falsos positivos
             # =============================================
             if bugs and tracker.conversacion:
+                # FIX 867B: Extender patrones IVR para incluir más frases de contestadora/PBX
+                # BRUCE2142: "Bienvenidos a Ferretería Abascal", "Le agradecemos su preferencia"
+                # "Lo siento, no lo entiendo", "Vuelva a intentarlo" = claro IVR no detectado antes
                 _IVR_PATTERNS_735 = re.compile(
                     r'(extensi[oó]n|m[aá]rquelo ahora|seleccione una|'
                     r'opciones?\s*\.?\s*(?:uno|dos|tres|cuatro)|'
                     r'espere en la l[ií]nea|para ser atendido|'
                     r'marque\s+(?:el|uno|dos|tres)|'
-                    r'bienvenido\s+a\s+(?:la\s+)?l[ií]nea|'
+                    r'bienvenidos?\s+a\s+|'
                     r'horario de atenci[oó]n|'
                     r'presione\s+(?:uno|dos|tres|\d)|'
                     r'teclee\s+(?:el|su)|'
-                    r'si desea\s+(?:hablar|comunicarse))',
+                    r'si desea\s+(?:hablar|comunicarse)|'
+                    r'le agradecemos su preferencia|'
+                    r'vuelva a intentarlo|'
+                    r'lo siento[,\s]+no lo entiendo|'
+                    r'para ventas[,\s]+(?:administraci[oó]n|marque|presione))',
                     re.IGNORECASE
                 )
                 texto_cliente_735 = ' '.join(t for who, t in tracker.conversacion if who == 'cliente')
                 if _IVR_PATTERNS_735.search(texto_cliente_735):
                     # IVR detectado: filtrar bugs de contenido que son falsos positivos
+                    # FIX 867B: Añadir PREGUNTA_REPETIDA (IVR ignora preguntas → Bruce repregunta → correcto)
                     tipos_fp_ivr = {
                         'GPT_CONTEXTO_IGNORADO', 'GPT_OPORTUNIDAD_PERDIDA',
                         'INTERRUPCION_CONVERSACIONAL', 'DESPEDIDA_PREMATURA',
                         'CONTEXTO_IGNORADO', 'DATO_IGNORADO',
+                        'PREGUNTA_REPETIDA',  # FIX 867B: IVR no responde → Bruce repregunta = correcto
                     }
                     bugs_originales = len(bugs)
                     bugs = [b for b in bugs if b.get('tipo') not in tipos_fp_ivr]
@@ -1104,9 +1132,11 @@ class ContentAnalyzer:
     # FIX 727: INTERRUPCION_CONVERSACIONAL
     # =========================================================
     # Patrones que indican que el cliente está explicando algo
+    # FIX 867A: \b word boundary en 'es que' para evitar match en 'crees que', 'puedes que', etc.
+    # BRUCE2404: "No, amigo. ¿Qué crees que" → 'es que' era substring de 'crees que' → falso positivo
     _CLIENTE_EXPLICANDO = re.compile(
         r'(no.{0,5}est[aá]|no se encuentra|est[aá] ocupad|sali[oó]|'
-        r'mire.{0,15}que|lo que pasa|es que|le explico|'
+        r'mire.{0,15}que|lo que pasa|\bes que\b|le explico|'
         r'ahorita.{0,10}est[aá]|viene.{0,10}(?:rato|tarde|mañana)|'
         r'tendr[ií]a.{0,10}(?:marcar|llamar|hablar)|'
         r'no.{0,5}hacemos|no.{0,5}manejamos|no.{0,5}vendemos|'
