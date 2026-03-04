@@ -48,7 +48,7 @@ def extraer_conversaciones(log_text):
         wapp_match = re.search(r'WhatsApp synced: (\d+)', bloque)
         email_match = re.search(r'Email synced: ([\w.@+]+)', bloque)
         estado_match = re.search(
-            r'fsm=(\w+)\s+→\s+estado=(\w+)',
+            r'fsm=(\w+)\s+->\s+estado=(\w+)',
             bloque.split('ID BRUCE generado')[-1]
         )
 
@@ -173,7 +173,7 @@ def evaluar_naturalidad(turnos):
             continue
         sig = next(((r, t) for r, t in turnos[i+1:] if r == 'bruce'), None)
         if sig and len(sig[1]) < 15:
-            issues.append(f"Respuesta muy corta a pregunta: '{texto[:40]}' → '{sig[1]}'")
+            issues.append(f"Respuesta muy corta a pregunta: '{texto[:40]}' -> '{sig[1]}'")
 
     return positivos, issues
 
@@ -334,7 +334,7 @@ def generar_reporte(convs):
         for patron, ejemplos in patrones_prompt.items():
             print(f"    [{patron}] ({len(ejemplos)}x)")
             for ej in ejemplos[:2]:
-                print(f"      → {ej}")
+                print(f"      -> {ej}")
 
     # Recomendaciones de mejora
     print(f"\n  RECOMENDACIONES PRIORITARIAS:")

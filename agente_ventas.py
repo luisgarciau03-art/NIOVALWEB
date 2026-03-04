@@ -54,6 +54,29 @@ def _get_entiendo_870():
     return result
 
 
+# FIX 874: Alternativas a "Perfecto." para evitar repetición robótica
+# Auditoría 25/02: BRUCE2538 usó "Perfecto" 5x seguidas.
+# Patrón idéntico a FIX 870 — misma rotación cíclica.
+_ACK_PERFECTO_874 = [
+    "Perfecto.",
+    "Excelente.",
+    "Muy bien.",
+    "Genial.",
+    "Listo.",
+    "Entendido.",
+    "De acuerdo.",
+]
+_ack_perfecto_counter_874 = 0
+
+
+def _get_perfecto_874():
+    """FIX 874: Retorna alternativa a 'Perfecto.' con rotación cíclica."""
+    global _ack_perfecto_counter_874
+    result = _ACK_PERFECTO_874[_ack_perfecto_counter_874 % len(_ACK_PERFECTO_874)]
+    _ack_perfecto_counter_874 += 1
+    return result
+
+
 def _get_ack_769(digame=False):
     """FIX 769: Retorna acknowledgment formal con rotación."""
     global _ack_counter_769
@@ -7343,7 +7366,22 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 respuesta = _alt_870.rstrip('.')
             else:
                 respuesta = _alt_870 + " " + respuesta[len("Entiendo. "):]
-            print(f"  [FIX 870] Variante ack: '{_respuesta_original_870[:40]}' → '{respuesta[:40]}'")
+            print(f"  [FIX 870] Variante ack: '{_respuesta_original_870[:40]}' -> '{respuesta[:40]}'")
+
+        # ============================================================
+        # FIX 874: Variar acknowledgment "Perfecto." al inicio de respuesta
+        # Auditoría 25/02: BRUCE2538 usó "Perfecto" 5 veces seguidas → suena robótico.
+        # Mismo patrón que FIX 870 — rotación cíclica entre equivalentes naturales.
+        # No aplica si FIX 870 ya cambió la respuesta (evitar doble reemplazo).
+        # ============================================================
+        if respuesta.startswith("Perfecto. ") or respuesta == "Perfecto.":
+            _alt_874 = _get_perfecto_874()
+            _respuesta_original_874 = respuesta
+            if respuesta == "Perfecto.":
+                respuesta = _alt_874.rstrip('.')
+            else:
+                respuesta = _alt_874 + " " + respuesta[len("Perfecto. "):]
+            print(f"  [FIX 874] Variante ack: '{_respuesta_original_874[:40]}' -> '{respuesta[:40]}'")
 
         # ============================================================
         # FIX 871: Pivot a WhatsApp tras responder pregunta de ubicación 2+ veces

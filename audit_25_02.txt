@@ -1,0 +1,2109 @@
+======================================================================
+  AUDITORÍA CUALITATIVA - BRUCE W
+  57 conversaciones analizadas
+======================================================================
+
+----------------------------------------------------------------------
+  BRUCE2526 | Ferretería Inntrea
+  Turnos: 1 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Sería la Fragua. Si desea comunicarse a
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy corto (0 chars) - puede sonar frío
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2527 | Ferreteria Y Tlapaleria Grupo Maxi
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Sí.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Sí, está hablando con él.
+    C: sí estoy hablando con Sí, estoy hablando con él.
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2528 | Reparando mi casa
+  Turnos: 16 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buenos días.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no se encuentra,
+    B: Sí, adelante.
+    C: buenos días Buenos días.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: ¿Bueno? Bueno, le. Le digo que no se encuentra
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: ¿De qué es? ¿De dónde habla, perdón?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: Es que lo mismo lo me haría.
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: Casi ferretería no, no, Casi ferretería no. Nada. No lo tengo ahorita, la señorita, la encargada
+    B: Claro, digame por favor.
+    C: No lo tengo ahorita, la señorita, la encargada de dar los datos, este, hoy me vine a trabajar, está enfermo.
+    B: Si, digame el numero.
+    C: Bueno, le. digo que no se encuentra de qué es de dónde habla perdón ¿De qué es, de dónde habla perdón? casi fe
+    B: Adelante, le escucho.
+    C: " [2026-02-24 22:55:48] Respuesta vacía #1 [2026-02-24 22:55:48] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-24 22:55:53] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-24 22:55:53] Caché AUTO: d
+    C: " [2026-02-24 22:55:58] Respuesta vacía #2 [2026-02-24 22:55:58] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-24 22:56:03] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-24 22:56:03] Caché AUTO: d
+    C: " [2026-02-24 22:56:07] Respuesta vacía #3 [2026-02-24 22:56:07] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El teléfono es seis seis veintitrés cincuenta cincuenta y tres, dieciocho cero cuatro.
+    B: Claro, prosiga.
+    C: AI 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 16 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+
+----------------------------------------------------------------------
+  BRUCE2539 | Ferretería La Fragua Jurica
+  Turnos: 21 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola, buen día. ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Pues, ya tengo unos proveedores
+    C: Pues, ya tengo los proveedores, muchas gracias. Flores, muchas gracias.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: hola buen día qué tal buen día flores muchas gracias Flores, muchas gracias.
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: Ya tenemos proveedores, no estoy Ya tenemos proveedores, no estamos interesados. Ahí tenemos proveedores, no e
+    B: Entendido, no se preocupe. Le dejo nuestro numero por si mas adelante le interesa. Que tenga buen dia.
+    C: Ya tenemos proveedor Ya tienen proveedores y no estamos interesados. Hasta luego.
+    B: Entendido. ¿A qué hora me recomienda llamar para encontrarlo?
+    C: No estamos interesados
+    B: Entiendo. ¿Me podria proporcionar un WhatsApp o correo del encargado para enviarle nuestro catalogo?
+    C: ahí tenemos proveedores no estamos interesados Ahí tenemos proveedores, no estamos interesados. Dolores, no es
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: Que no estamos interesados, por ahora ya tenemos proveedores.
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: que no estamos interesados por ahora ya tenemos proveedores Que no estamos interesados, por ahora ya tenemos p
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: No, si quieres, pero ya tenemos la verdad, no te preocupes. Si quieres, pero ya tenemos alrededor, no te preoc
+    C: si quieres pero ya tenemos alrededor no te preocupes Si quieres, pero ya tenemos alrededor, no te preocupes. N
+    C: " [2026-02-25 18:17:27] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 18:1
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: No.
+    C: No.
+    C: " [2026-02-25 18:17:43] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 18:1
+    B: Entiendo. ¿Me podria proporcionar un WhatsApp o correo del encargado para enviarle nuestro catalogo?
+    C: " [2026-02-25 18:17:52] Respuesta vacía #1 [2026-02-25 18:17:52] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 18:17:57] Respuesta vacía #2 [2026-02-25 18:17:57] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 18:18:02] FIX 565: Bruce SILENCIOSO por 10.1s - fallback #1/2 [2026-02-25 18:18:02] Caché AUTO: 
+    C: " [2026-02-25 18:18:06] Respuesta vacía #3 [2026-02-25 18:18:06] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola, pues de nuevo. Hola hasta luego.
+    B: Muchas gracias por su tiempo. Que tenga excelente día.
+
+  ISSUES DETECTADOS:
+    ! Usa 'Perfecto' demasiadas veces (5x)
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2540 | Ferreterías Querétaro
+  Turnos: 18 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 18:18:55] Respuesta vacía #1 [2026-02-25 18:18:55] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Buen día. No es calle,
+    B: Entendido, prosiga.
+    C: No estaba, llegué como a las 4:00 de la tarde.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: buen día no está llega como a las 4:00 de la tarde No estaba, llegué como a las 4:00 de la tarde.
+    B: Perfecto, entonces lo intento a esa hora o me da un contacto directo para mandarle info de NIOVAL, ¿cuál prefi
+    C: Tienes donde anotar. Mándame el
+    C: si quieres marca las cuatro. Si quieres, marca a las 4:00.
+    B: Si, adelante.
+    C: tienes donde anotar si quieres marca a las 4:00 Si quieres, marca a las 4:00.
+    B: Claro, prosiga.
+    C: Si quieres marcar
+    B: Ya, dime el número o la extensión y listo.
+    C: Ya que esté él.
+    B: Órale, ¿cuál es el número donde lo localizamos o tienes otra forma de contactarlo?
+    C: cuatro ya que esté él si quieres marca a las 4:00 ya que esté él Si quieres marca a las 4:00 ya que esté él.
+    B: Si, lo escucho.
+    C: " [2026-02-25 18:20:12] FIX 565: Bruce SILENCIOSO por 76.7s - fallback #1/2 [2026-02-25 18:20:12] Caché AUTO: 
+    C: Si quieres, marca la Si quieres marca las cuatro. Si quieres, marca a las 4:00. Marca a las cuatro.
+    B: Entendido, prosiga.
+    C: si quieres marca a las 4:00 Si quieres, marca a las 4:00.
+    B: Perfecto, adelante.
+    C: " [2026-02-25 18:20:26] Respuesta vacía #1 [2026-02-25 18:20:26] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Marca a las cuatro,
+    C: Marca las cuatro. Marca a las 4:00.
+    B: Si, adelante.
+    C: marca a las 4:00 Marca a las 4:00.
+    B: Claro, prosiga.
+    C: " [2026-02-25 18:20:45] FIX 565: Bruce SILENCIOSO por 18.4s - fallback #2/2 [2026-02-25 18:20:45] Caché AUTO: 
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy corto (19 chars) - puede sonar frío
+    ! Respuesta muy corta a pregunta: '" [2026-02-25 18:20:26] Respuesta vacía ' -> 'Si, adelante.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2541 | Desconocido
+  Turnos: 7 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: qué tal buen día ¿Qué tal buen día?
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: ¿Ustedes deben al público? Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por
+    C: ¿Ustedes ven
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: ¿Por what wat ustedes venden al público? ¿Ustedes venden al público?
+    B: Sí, vendemos al público en general, pero somos distribuidores especializados en ferretería. Tenemos precios mu
+    C: " [2026-02-25 18:22:45] Respuesta vacía #1 [2026-02-25 18:22:45] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2543 | Ferreteria La Principal
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 22:19:51] Respuesta vacía #1 [2026-02-25 22:19:51] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Sí.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Este, híjole, ahorita no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Sí, sería, este, ventas.
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (51 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2544 | PLOMERIA Y FERRETERIA DON GATO SUCURSAL CORREGIDORA
+  Turnos: 10 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Sí. ¿Qué tal?
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, usted
+    C: ¿Y no gusta que te comunique y pase el correo?
+    B: Claro que sí, con gusto recibo el correo para poder enviarle información de nuestros productos y precios de NI
+    C: puerto y no gusta que te comuni te pase el correo Y no gusta que te comuni te pase el correo.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: " [2026-02-25 22:22:21] Respuesta vacía #1 [2026-02-25 22:22:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 22:22:26] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-25 22:22:26] Caché AUTO: d
+    C: " [2026-02-25 22:22:30] Respuesta vacía #2 [2026-02-25 22:22:30] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 22:22:36] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-25 22:22:36] Caché AUTO: d
+    C: " [2026-02-25 22:22:40] Respuesta vacía #3 [2026-02-25 22:22:40] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 22:22:44] Respuesta vacía #4 [2026-02-25 22:22:44] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2545 | FERRETERIA EL MARQUES
+  Turnos: 2 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Muy bien.
+    C: " [2026-02-25 23:01:25] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 23:0
+    B: Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. Manejamos mas de qui
+
+  ISSUES DETECTADOS:
+    ! Saludo muy largo (243 chars) - puede sonar a script
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2546 | DIFEQRO Distribuidor Ferretero de Queretaro
+  Turnos: 14 cliente | Estado: desconocido
+  Contacto: 4427180330
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Bueno?
+    B: Si, aqui estoy. Digame.
+    C: No, ahora no está, pero
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Ahora no está. Ajá.
+    B: Órale, ¿y cuándo puedo localizarlo o me deja un número para que le pase la información?
+    C: Es el cuarenta y cuatro, veintisiete. Ajá, te paso el número. Cuarenta y cuatro,
+    B: Sí, por favor, dígame el número.
+    C: Ajá, te paso el número. Cuarenta y cuatro, veintisiete. Ajá. Cuarenta y cuatro, veintisiete. Ajá, 4427. Diecio
+    B: Sí, por favor, dígame el número.
+    C: ¿Te lo repito?
+    B: Sí, claro, adelante, dime el número o correo y con gusto se lo paso al encargado.
+    C: Cuarenta y cuatro, veintisiete. Ok, te lo repito, por Ok. ¿Te lo repito por tercera vez?
+    B: Si, adelante.
+    C: Ok, cuarenta y cuatro, veintisiete.
+    B: Claro, prosiga.
+    C: Okay, 4427. Dieciocho
+    C: cero tres treinta y
+    C: 0336.
+    C: Hola. Bueno. ahora no está pero a a a ahora no está ajá A a a ahora no está ajá. es el 44 veintis te paso el n
+    B: Sí, por favor, dígame el número.
+    C: Ok. Cuarenta y cuatro, veintisiete dieciocho cero tres treinta y tres. Una máquina, no, creo que esté hablando
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Respuesta muy corta a pregunta: 'Cuarenta y cuatro, veintisiete. Ok, te l' -> 'Si, adelante.'
+    ! Captura tardía - tomó 14 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4427180330
+
+----------------------------------------------------------------------
+  BRUCE2547 | FERREMATERIALES VILLAS DEL SUR
+  Turnos: 10 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Sí, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Perdón.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Cinco
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: sí dígame Sí, dígame. Va.
+    B: Jeje, ¡ándale! ¿Cuál prefieres, WhatsApp o correo para pasarte los detalles de NIOVAL?
+    C: " [2026-02-25 23:07:02] Respuesta vacía #1 [2026-02-25 23:07:02] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:07] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-25 23:07:07] Caché AUTO: d
+    C: " [2026-02-25 23:07:11] Respuesta vacía #2 [2026-02-25 23:07:11] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:16] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-25 23:07:16] Caché AUTO: d
+    C: " [2026-02-25 23:07:20] Respuesta vacía #3 [2026-02-25 23:07:20] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:24] Respuesta vacía #4 [2026-02-25 23:07:24] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2545 | FERRETERIA EL MARQUES
+  Turnos: 2 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Muy bien.
+    C: " [2026-02-25 23:01:25] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 23:0
+    B: Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. Manejamos mas de qui
+
+  ISSUES DETECTADOS:
+    ! Saludo muy largo (243 chars) - puede sonar a script
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2546 | DIFEQRO Distribuidor Ferretero de Queretaro
+  Turnos: 14 cliente | Estado: desconocido
+  Contacto: 4427180330
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Bueno?
+    B: Si, aqui estoy. Digame.
+    C: No, ahora no está, pero
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Ahora no está. Ajá.
+    B: Órale, ¿y cuándo puedo localizarlo o me deja un número para que le pase la información?
+    C: Es el cuarenta y cuatro, veintisiete. Ajá, te paso el número. Cuarenta y cuatro,
+    B: Sí, por favor, dígame el número.
+    C: Ajá, te paso el número. Cuarenta y cuatro, veintisiete. Ajá. Cuarenta y cuatro, veintisiete. Ajá, 4427. Diecio
+    B: Sí, por favor, dígame el número.
+    C: ¿Te lo repito?
+    B: Sí, claro, adelante, dime el número o correo y con gusto se lo paso al encargado.
+    C: Cuarenta y cuatro, veintisiete. Ok, te lo repito, por Ok. ¿Te lo repito por tercera vez?
+    B: Si, adelante.
+    C: Ok, cuarenta y cuatro, veintisiete.
+    B: Claro, prosiga.
+    C: Okay, 4427. Dieciocho
+    C: cero tres treinta y
+    C: 0336.
+    C: Hola. Bueno. ahora no está pero a a a ahora no está ajá A a a ahora no está ajá. es el 44 veintis te paso el n
+    B: Sí, por favor, dígame el número.
+    C: Ok. Cuarenta y cuatro, veintisiete dieciocho cero tres treinta y tres. Una máquina, no, creo que esté hablando
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Respuesta muy corta a pregunta: 'Cuarenta y cuatro, veintisiete. Ok, te l' -> 'Si, adelante.'
+    ! Captura tardía - tomó 14 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4427180330
+
+----------------------------------------------------------------------
+  BRUCE2547 | FERREMATERIALES VILLAS DEL SUR
+  Turnos: 10 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Sí, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Perdón.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Cinco
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: sí dígame Sí, dígame. Va.
+    B: Jeje, ¡ándale! ¿Cuál prefieres, WhatsApp o correo para pasarte los detalles de NIOVAL?
+    C: " [2026-02-25 23:07:02] Respuesta vacía #1 [2026-02-25 23:07:02] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:07] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-25 23:07:07] Caché AUTO: d
+    C: " [2026-02-25 23:07:11] Respuesta vacía #2 [2026-02-25 23:07:11] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:16] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-25 23:07:16] Caché AUTO: d
+    C: " [2026-02-25 23:07:20] Respuesta vacía #3 [2026-02-25 23:07:20] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:24] Respuesta vacía #4 [2026-02-25 23:07:24] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2545 | FERRETERIA EL MARQUES
+  Turnos: 2 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Muy bien.
+    C: " [2026-02-25 23:01:25] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 23:0
+    B: Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros. Manejamos mas de qui
+
+  ISSUES DETECTADOS:
+    ! Saludo muy largo (243 chars) - puede sonar a script
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2546 | DIFEQRO Distribuidor Ferretero de Queretaro
+  Turnos: 14 cliente | Estado: desconocido
+  Contacto: 4427180330
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Bueno?
+    B: Si, aqui estoy. Digame.
+    C: No, ahora no está, pero
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Ahora no está. Ajá.
+    B: Órale, ¿y cuándo puedo localizarlo o me deja un número para que le pase la información?
+    C: Es el cuarenta y cuatro, veintisiete. Ajá, te paso el número. Cuarenta y cuatro,
+    B: Sí, por favor, dígame el número.
+    C: Ajá, te paso el número. Cuarenta y cuatro, veintisiete. Ajá. Cuarenta y cuatro, veintisiete. Ajá, 4427. Diecio
+    B: Sí, por favor, dígame el número.
+    C: ¿Te lo repito?
+    B: Sí, claro, adelante, dime el número o correo y con gusto se lo paso al encargado.
+    C: Cuarenta y cuatro, veintisiete. Ok, te lo repito, por Ok. ¿Te lo repito por tercera vez?
+    B: Si, adelante.
+    C: Ok, cuarenta y cuatro, veintisiete.
+    B: Claro, prosiga.
+    C: Okay, 4427. Dieciocho
+    C: cero tres treinta y
+    C: 0336.
+    C: Hola. Bueno. ahora no está pero a a a ahora no está ajá A a a ahora no está ajá. es el 44 veintis te paso el n
+    B: Sí, por favor, dígame el número.
+    C: Ok. Cuarenta y cuatro, veintisiete dieciocho cero tres treinta y tres. Una máquina, no, creo que esté hablando
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Respuesta muy corta a pregunta: 'Cuarenta y cuatro, veintisiete. Ok, te l' -> 'Si, adelante.'
+    ! Captura tardía - tomó 14 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4427180330
+
+----------------------------------------------------------------------
+  BRUCE2547 | TRUPER Distribuidor City Tools Ferreterías
+  Turnos: 15 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Sí, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Perdón.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Cinco
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: sí dígame Sí, dígame. Va.
+    B: Jeje, ¡ándale! ¿Cuál prefieres, WhatsApp o correo para pasarte los detalles de NIOVAL?
+    C: " [2026-02-25 23:07:02] Respuesta vacía #1 [2026-02-25 23:07:02] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:07] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-25 23:07:07] Caché AUTO: d
+    C: " [2026-02-25 23:07:11] Respuesta vacía #2 [2026-02-25 23:07:11] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:16] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-25 23:07:16] Caché AUTO: d
+    C: " [2026-02-25 23:07:20] Respuesta vacía #3 [2026-02-25 23:07:20] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:24] Respuesta vacía #4 [2026-02-25 23:07:24] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:07] FIX 565: Bruce SILENCIOSO por 5.1s - fallback #1/2 [2026-02-25 23:07:07] Caché AUTO: d
+    C: " [2026-02-25 23:07:11] Respuesta vacía #2 [2026-02-25 23:07:11] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:16] FIX 565: Bruce SILENCIOSO por 5.3s - fallback #2/2 [2026-02-25 23:07:16] Caché AUTO: d
+    C: " [2026-02-25 23:07:20] Respuesta vacía #3 [2026-02-25 23:07:20] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 23:07:24] Respuesta vacía #4 [2026-02-25 23:07:24] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2548 | Ferretería San Román San Roque
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola, buen día. ¿Qué tal? ¿Hola, buen día, qué tal?
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Bueno? Sí, soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp,
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+    OK Captura eficiente (4 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2549 | Ferreherramientas, S. A. De C. V.
+  Turnos: 11 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Yo soy el encargado.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Entiendo. ¿Tendra un WhatsApp donde le pueda enviar la informacion?
+    C: Es que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Solo tengo teléfono fijo. No tengo, sólo tengo teléfono fijo.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo correo electrónico.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo.
+    B: Entiendo. ¿Me podria dar un telefono fijo o directo entonces?
+    C: Sí, el teléfono fijo es
+    C: seis seis veintitrés cincuenta y tres, dieciocho cero
+    B: Si, adelante.
+    C: seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. Sí, el teléfono fijo es 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Usa 'Entiendo' demasiadas veces (6x)
+    ! Captura tardía - tomó 11 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No tengo WhatsApp,'
+    OK Correcto pivot tras rechazo: 'Es que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'No tengo.'
+    OK Correcto pivot tras rechazo: 'Solo tengo teléfono fijo. No tengo, sólo tengo tel'
+    OK Correcto pivot tras rechazo: 'No tengo correo electrónico.'
+    OK Correcto pivot tras rechazo: 'No tengo.'
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+
+----------------------------------------------------------------------
+  BRUCE2550 | Ferretería "Gaytan"
+  Turnos: 9 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-26 03:46:30] Respuesta vacía #1 [2026-02-26 03:46:30] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: No, no está,
+    B: Sí, adelante.
+    C: No está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está, tendría que llamar más tarde. Está tendría que llamar más tarde.
+    B: ¿Me pasas un teléfono o correo para contactarlo cuando esté? Así no pierdo tu tiempo.
+    C: Sí, el número es
+    C: Sí, el número es seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro.
+    C: Y el número es 6623531804.
+    C: oh no está llame más tarde está tendría que llamar más tarde Está tendría que llamar más tarde. y el número es
+    C: " [2026-02-26 03:47:17] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-26 03:4
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy corto (13 chars) - puede sonar frío
+
+  POSITIVOS:
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura normal (9 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2551 | Ferretería Los Correa
+  Turnos: 10 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Dónde, perdón?
+    B: Somos de Guadalajara y manejamos más de 15 categorías como cintas tapagoteras, grifería, herramientas y más. C
+    C: buen día dígame ¿Buen día, dígame? ¿De dónde perdón?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: ¿Okay, y de dónde me hablas?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: Tendrás Ok. ¿Y dónde se ubican?
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: okay y de dónde me hablas ¿Okay, y de dónde me hablas? tendrás y dónde se ubican ¿Y dónde se ubican?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: ¿Dónde se encuentran? ¿Y dónde se encuentran?
+    B: Estamos en Guadalajara, Jalisco, cerca del centro, para que pase a conocer nuestros productos cuando guste.
+    C: dónde se encuentran ¿Dónde se encuentran? ¿Y dónde se encuentran?
+    B: Estamos en Guadalajara, compa, bien cerquita del centro, para que se dé una vuelta cuando guste.
+    C: ¿Okay, puedes me enviarme el catálogo al WhatsApp?
+    B: Sí, por favor, dígame el número.
+    C: Es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Respuesta muy larga tras pedido de repetición (157 chars)
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+    OK Captura normal (10 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2548 | Ferretería San Román San Roque
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola, buen día. ¿Qué tal? ¿Hola, buen día, qué tal?
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Bueno? Sí, soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp,
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+    OK Captura eficiente (4 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2549 | Ferreherramientas, S. A. De C. V.
+  Turnos: 11 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Yo soy el encargado.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Entiendo. ¿Tendra un WhatsApp donde le pueda enviar la informacion?
+    C: Es que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Solo tengo teléfono fijo. No tengo, sólo tengo teléfono fijo.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo correo electrónico.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: No tengo.
+    B: Entiendo. ¿Me podria dar un telefono fijo o directo entonces?
+    C: Sí, el teléfono fijo es
+    C: seis seis veintitrés cincuenta y tres, dieciocho cero
+    B: Si, adelante.
+    C: seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. Sí, el teléfono fijo es 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Usa 'Entiendo' demasiadas veces (6x)
+    ! Captura tardía - tomó 11 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No tengo WhatsApp,'
+    OK Correcto pivot tras rechazo: 'Es que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'No tengo.'
+    OK Correcto pivot tras rechazo: 'Solo tengo teléfono fijo. No tengo, sólo tengo tel'
+    OK Correcto pivot tras rechazo: 'No tengo correo electrónico.'
+    OK Correcto pivot tras rechazo: 'No tengo.'
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+
+----------------------------------------------------------------------
+  BRUCE2550 | Ferretería "Gaytan"
+  Turnos: 9 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-26 03:46:30] Respuesta vacía #1 [2026-02-26 03:46:30] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: No, no está,
+    B: Sí, adelante.
+    C: No está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está, tendría que llamar más tarde. Está tendría que llamar más tarde.
+    B: ¿Me pasas un teléfono o correo para contactarlo cuando esté? Así no pierdo tu tiempo.
+    C: Sí, el número es
+    C: Sí, el número es seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro.
+    C: Y el número es 6623531804.
+    C: oh no está llame más tarde está tendría que llamar más tarde Está tendría que llamar más tarde. y el número es
+    C: " [2026-02-26 03:47:17] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-26 03:4
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy corto (13 chars) - puede sonar frío
+
+  POSITIVOS:
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura normal (9 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2551 | Ferreteria La Palma
+  Turnos: 10 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Dónde, perdón?
+    B: Somos de Guadalajara y manejamos más de 15 categorías como cintas tapagoteras, grifería, herramientas y más. C
+    C: buen día dígame ¿Buen día, dígame? ¿De dónde perdón?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: ¿Okay, y de dónde me hablas?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: Tendrás Ok. ¿Y dónde se ubican?
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: okay y de dónde me hablas ¿Okay, y de dónde me hablas? tendrás y dónde se ubican ¿Y dónde se ubican?
+    B: Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores de productos ferreteros de Guadalajara, 
+    C: ¿Dónde se encuentran? ¿Y dónde se encuentran?
+    B: Estamos en Guadalajara, Jalisco, cerca del centro, para que pase a conocer nuestros productos cuando guste.
+    C: dónde se encuentran ¿Dónde se encuentran? ¿Y dónde se encuentran?
+    B: Estamos en Guadalajara, compa, bien cerquita del centro, para que se dé una vuelta cuando guste.
+    C: ¿Okay, puedes me enviarme el catálogo al WhatsApp?
+    B: Sí, por favor, dígame el número.
+    C: Es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+
+  ISSUES DETECTADOS:
+    ! Respuesta muy larga tras pedido de repetición (157 chars)
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2529 | City Tools Ferreterías
+  Turnos: 19 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Qué tal buen día, dígame? No está, salió.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No, tendría que
+    C: No, tendría que esperar que regrese él.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: A las diez con
+    C: A las, después de las tres de la tarde. A las después de las 3:00 de la tarde.
+    B: Si, adelante.
+    C: Después de las tres de la tarde,
+    C: ¿Después de las tres de la tarde pueden marcar Después de las tres de la tarde pueden marcar. Tarde puedes mar
+    B: Claro, prosiga.
+    C: qué tal buen día dígame ¿Qué tal buen día, dígame? a las después de las 3:00 de la tarde A las después de las 
+    B: Si, lo escucho.
+    C: Después de las tres de la tarde puede marcar. Después de las 3:00 de la tarde puede marcar. ¿Aló?
+    B: Entendido, prosiga.
+    C: después de las 3:00 de la tarde puede marcar Después de las 3:00 de la tarde puede marcar. después de
+    C: De las tres de la tarde puede marcar Después de las 3:00 de la tarde puede marcar.
+    B: Perfecto, adelante.
+    C: después de las 3:00 de la tarde puede marcar Después de las 3:00 de la tarde puede marcar.
+    B: Si, adelante.
+    C: Después de las tres de la tarde puede Después de las tres de la tarde puede marcar. Después de las 3:00 de la 
+    B: Claro, prosiga.
+    C: Después de las tres de la tarde puede Después de las tres de la tarde puede marcar. Después de las 3:00 de la 
+    B: Si, lo escucho.
+    C: Después de las tres de la tarde.
+    B: Entendido, prosiga.
+    C: Las tres de la tarde?
+    B: No tengo claro a qué te refieres, pero si necesitas información sobre nuestros productos o precios, aquí estoy
+    C: Hasta luego.
+    C: Hasta luego.
+    B: Muchas gracias por su tiempo. Que tenga excelente dia. Hasta pronto.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2530 | Reparando mi casa
+  Turnos: 5 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 16:10:50] Respuesta vacía #1 [2026-02-25 16:10:50] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola. ¿Qué tal? ¿Qué tal, dígame? Soy yo, dígame.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp está bien.
+    B: Sí, por favor, dígame el número.
+    C: Por WhatsApp está bien. Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy largo (240 chars) - puede sonar a script
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura eficiente (5 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2531 | Ferretería La Fragua Jurica
+  Turnos: 26 cliente | Estado: desconocido
+  Contacto: 6666235318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: buen día dígame ¿Buen día, dígame?
+    B: ¡Buen día! Aquí estoy para ayudarte, ¿qué información necesitas sobre nuestros productos ferreteros?
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está disponible el encargado de compras. No, no está disponible el encargado de compras. Sí.
+    B: Está bien, si no hay forma de contactar al encargado, ¿me podrías dar un contacto alternativo para seguir en c
+    C: Sí.
+    B: Claro, digame por favor.
+    C: Dónde anotar. Sí, tienes donde anotar.
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: o no está disponible el encargado de compras O no está disponible el encargado de compras. sí tienes donde ano
+    C: " [2026-02-25 16:13:41] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Claro, prosiga.
+    C: El número es
+    C: El número es seis seis veintitrés veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 662353 diecio El número es 6623531804.
+    C: " [2026-02-25 16:13:57] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Si, lo escucho.
+    C: El número es
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:11] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Entendido, prosiga.
+    C: " [2026-02-25 16:14:16] Respuesta vacía #1 [2026-02-25 16:14:16] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 16:14:21] Respuesta vacía #2 [2026-02-25 16:14:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El número es seis seis
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 26 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6666235318
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | Ferreteria La Palma
+  Turnos: 1 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2529 | City Tools Ferreterías
+  Turnos: 19 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: ¿Qué tal buen día, dígame? No está, salió.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No, tendría que
+    C: No, tendría que esperar que regrese él.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: A las diez con
+    C: A las, después de las tres de la tarde. A las después de las 3:00 de la tarde.
+    B: Si, adelante.
+    C: Después de las tres de la tarde,
+    C: ¿Después de las tres de la tarde pueden marcar Después de las tres de la tarde pueden marcar. Tarde puedes mar
+    B: Claro, prosiga.
+    C: qué tal buen día dígame ¿Qué tal buen día, dígame? a las después de las 3:00 de la tarde A las después de las 
+    B: Si, lo escucho.
+    C: Después de las tres de la tarde puede marcar. Después de las 3:00 de la tarde puede marcar. ¿Aló?
+    B: Entendido, prosiga.
+    C: después de las 3:00 de la tarde puede marcar Después de las 3:00 de la tarde puede marcar. después de
+    C: De las tres de la tarde puede marcar Después de las 3:00 de la tarde puede marcar.
+    B: Perfecto, adelante.
+    C: después de las 3:00 de la tarde puede marcar Después de las 3:00 de la tarde puede marcar.
+    B: Si, adelante.
+    C: Después de las tres de la tarde puede Después de las tres de la tarde puede marcar. Después de las 3:00 de la 
+    B: Claro, prosiga.
+    C: Después de las tres de la tarde puede Después de las tres de la tarde puede marcar. Después de las 3:00 de la 
+    B: Si, lo escucho.
+    C: Después de las tres de la tarde.
+    B: Entendido, prosiga.
+    C: Las tres de la tarde?
+    B: No tengo claro a qué te refieres, pero si necesitas información sobre nuestros productos o precios, aquí estoy
+    C: Hasta luego.
+    C: Hasta luego.
+    B: Muchas gracias por su tiempo. Que tenga excelente dia. Hasta pronto.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2530 | Reparando mi casa
+  Turnos: 5 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 16:10:50] Respuesta vacía #1 [2026-02-25 16:10:50] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola. ¿Qué tal? ¿Qué tal, dígame? Soy yo, dígame.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp está bien.
+    B: Sí, por favor, dígame el número.
+    C: Por WhatsApp está bien. Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy largo (240 chars) - puede sonar a script
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura eficiente (5 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2531 | Ferretería La Fragua Jurica
+  Turnos: 26 cliente | Estado: desconocido
+  Contacto: 6666235318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: buen día dígame ¿Buen día, dígame?
+    B: ¡Buen día! Aquí estoy para ayudarte, ¿qué información necesitas sobre nuestros productos ferreteros?
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está disponible el encargado de compras. No, no está disponible el encargado de compras. Sí.
+    B: Está bien, si no hay forma de contactar al encargado, ¿me podrías dar un contacto alternativo para seguir en c
+    C: Sí.
+    B: Claro, digame por favor.
+    C: Dónde anotar. Sí, tienes donde anotar.
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: o no está disponible el encargado de compras O no está disponible el encargado de compras. sí tienes donde ano
+    C: " [2026-02-25 16:13:41] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Claro, prosiga.
+    C: El número es
+    C: El número es seis seis veintitrés veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 662353 diecio El número es 6623531804.
+    C: " [2026-02-25 16:13:57] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Si, lo escucho.
+    C: El número es
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:11] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Entendido, prosiga.
+    C: " [2026-02-25 16:14:16] Respuesta vacía #1 [2026-02-25 16:14:16] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 16:14:21] Respuesta vacía #2 [2026-02-25 16:14:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El número es seis seis
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 26 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6666235318
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | City Tools Ferreterías
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No no tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: WhatsApp. No tengo.
+    B: Claro, digame por favor.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo
+    B: Si, digame el numero.
+    C: No tengo.
+    B: Adelante, le escucho.
+    C: No, ya te dije que no
+    C: No, ya te dije que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: colombia Colombia. whatsapp WhatsApp. no tengo whatsapp No tengo WhatsApp. no ya te dije que no tengo whatsapp
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Sí, ¿tienes dónde Sí. ¿Tiene dónde anotar? Sí, tienes donde anotar.
+    C: Sí, el correo es Luis García u de uva, cero tres arroba Gmail punto com.
+    B: Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, digame por favor.'
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No no tengo'
+    OK Correcto pivot tras rechazo: 'No, ya te dije que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'colombia Colombia. whatsapp WhatsApp. no tengo wha'
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2530 | Reparando mi casa
+  Turnos: 5 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 16:10:50] Respuesta vacía #1 [2026-02-25 16:10:50] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola. ¿Qué tal? ¿Qué tal, dígame? Soy yo, dígame.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp está bien.
+    B: Sí, por favor, dígame el número.
+    C: Por WhatsApp está bien. Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy largo (240 chars) - puede sonar a script
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura eficiente (5 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2531 | Ferretería La Fragua Jurica
+  Turnos: 26 cliente | Estado: desconocido
+  Contacto: 6666235318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: buen día dígame ¿Buen día, dígame?
+    B: ¡Buen día! Aquí estoy para ayudarte, ¿qué información necesitas sobre nuestros productos ferreteros?
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está disponible el encargado de compras. No, no está disponible el encargado de compras. Sí.
+    B: Está bien, si no hay forma de contactar al encargado, ¿me podrías dar un contacto alternativo para seguir en c
+    C: Sí.
+    B: Claro, digame por favor.
+    C: Dónde anotar. Sí, tienes donde anotar.
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: o no está disponible el encargado de compras O no está disponible el encargado de compras. sí tienes donde ano
+    C: " [2026-02-25 16:13:41] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Claro, prosiga.
+    C: El número es
+    C: El número es seis seis veintitrés veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 662353 diecio El número es 6623531804.
+    C: " [2026-02-25 16:13:57] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Si, lo escucho.
+    C: El número es
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:11] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Entendido, prosiga.
+    C: " [2026-02-25 16:14:16] Respuesta vacía #1 [2026-02-25 16:14:16] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 16:14:21] Respuesta vacía #2 [2026-02-25 16:14:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El número es seis seis
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 26 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6666235318
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | City Tools Ferreterías
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No no tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: WhatsApp. No tengo.
+    B: Claro, digame por favor.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo
+    B: Si, digame el numero.
+    C: No tengo.
+    B: Adelante, le escucho.
+    C: No, ya te dije que no
+    C: No, ya te dije que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: colombia Colombia. whatsapp WhatsApp. no tengo whatsapp No tengo WhatsApp. no ya te dije que no tengo whatsapp
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Sí, ¿tienes dónde Sí. ¿Tiene dónde anotar? Sí, tienes donde anotar.
+    C: Sí, el correo es Luis García u de uva, cero tres arroba Gmail punto com.
+    B: Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, digame por favor.'
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No no tengo'
+    OK Correcto pivot tras rechazo: 'No, ya te dije que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'colombia Colombia. whatsapp WhatsApp. no tengo wha'
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2530 | Reparando mi casa
+  Turnos: 5 cliente | Estado: desconocido
+  Contacto: 6623535318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 16:10:50] Respuesta vacía #1 [2026-02-25 16:10:50] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola. ¿Qué tal? ¿Qué tal, dígame? Soy yo, dígame.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por WhatsApp está bien.
+    B: Sí, por favor, dígame el número.
+    C: Por WhatsApp está bien. Seis seis veintitrés cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Sí, por favor, dígame el número.
+    C: Seis seis veintitrés cincuenta y tres, cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy largo (240 chars) - puede sonar a script
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623535318
+    OK Captura eficiente (5 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2531 | Ferretería La Fragua Jurica
+  Turnos: 26 cliente | Estado: desconocido
+  Contacto: 6666235318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día, dígame.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: buen día dígame ¿Buen día, dígame?
+    B: ¡Buen día! Aquí estoy para ayudarte, ¿qué información necesitas sobre nuestros productos ferreteros?
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No está disponible el encargado de compras. No, no está disponible el encargado de compras. Sí.
+    B: Está bien, si no hay forma de contactar al encargado, ¿me podrías dar un contacto alternativo para seguir en c
+    C: Sí.
+    B: Claro, digame por favor.
+    C: Dónde anotar. Sí, tienes donde anotar.
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: o no está disponible el encargado de compras O no está disponible el encargado de compras. sí tienes donde ano
+    C: " [2026-02-25 16:13:41] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Claro, prosiga.
+    C: El número es
+    C: El número es seis seis veintitrés veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 662353 diecio El número es 6623531804.
+    C: " [2026-02-25 16:13:57] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Si, lo escucho.
+    C: El número es
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:11] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Entendido, prosiga.
+    C: " [2026-02-25 16:14:16] Respuesta vacía #1 [2026-02-25 16:14:16] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 16:14:21] Respuesta vacía #2 [2026-02-25 16:14:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El número es seis seis
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 26 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6666235318
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | Ferretería La Fragua Jurica
+  Turnos: 34 cliente | Estado: desconocido
+  Contacto: 6666235318
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No no tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: WhatsApp. No tengo.
+    B: Claro, digame por favor.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo
+    B: Si, digame el numero.
+    C: No tengo.
+    B: Adelante, le escucho.
+    C: No, ya te dije que no
+    C: No, ya te dije que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: colombia Colombia. whatsapp WhatsApp. no tengo whatsapp No tengo WhatsApp. no ya te dije que no tengo whatsapp
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Sí, ¿tienes dónde Sí. ¿Tiene dónde anotar? Sí, tienes donde anotar.
+    C: Sí, el correo es Luis García u de uva, cero tres arroba Gmail punto com.
+    B: Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+    C: Dónde anotar. Sí, tienes donde anotar.
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: o no está disponible el encargado de compras O no está disponible el encargado de compras. sí tienes donde ano
+    C: " [2026-02-25 16:13:41] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Claro, prosiga.
+    C: El número es
+    C: El número es seis seis veintitrés veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 662353 diecio El número es 6623531804.
+    C: " [2026-02-25 16:13:57] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Si, lo escucho.
+    C: El número es
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:11] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Entendido, prosiga.
+    C: " [2026-02-25 16:14:16] Respuesta vacía #1 [2026-02-25 16:14:16] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 16:14:21] Respuesta vacía #2 [2026-02-25 16:14:21] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: El número es seis seis
+    C: El número es seis seis veintitrés cincuenta y tres, dieciocho cero cuatro.
+    C: El número es 6623531804.
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, digame por favor.'
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Captura tardía - tomó 34 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No no tengo'
+    OK Correcto pivot tras rechazo: 'No, ya te dije que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'colombia Colombia. whatsapp WhatsApp. no tengo wha'
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6666235318
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | Ferreteria La Palma
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No no tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: WhatsApp. No tengo.
+    B: Claro, digame por favor.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo
+    B: Si, digame el numero.
+    C: No tengo.
+    B: Adelante, le escucho.
+    C: No, ya te dije que no
+    C: No, ya te dije que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: colombia Colombia. whatsapp WhatsApp. no tengo whatsapp No tengo WhatsApp. no ya te dije que no tengo whatsapp
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Sí, ¿tienes dónde Sí. ¿Tiene dónde anotar? Sí, tienes donde anotar.
+    C: Sí, el correo es Luis García u de uva, cero tres arroba Gmail punto com.
+    B: Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, digame por favor.'
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No no tengo'
+    OK Correcto pivot tras rechazo: 'No, ya te dije que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'colombia Colombia. whatsapp WhatsApp. no tengo wha'
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2534 | Ferretería La Fragua Jurica
+  Turnos: 15 cliente | Estado: desconocido
+  Contacto: 4004004004
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está, salió.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Tendrías que esperar que regrese,
+    C: Tendrías que esperar que regrese.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: Por la tarde, como a las cuatro
+    C: Por la tarde, como a las cuatro. Por la tarde, como a las 4:00.
+    B: Si, adelante.
+    C: Mire, pues,
+    C: Por la tarde, como la Por la tarde, como a las cuatro. La tarde, como a las 4:00.
+    B: Claro, prosiga.
+    C: qué tal buen día ¿Qué tal buen día? por la tarde como a las 4:00 Por la tarde, como a las 4:00. La tarde, como
+    B: Si, lo escucho.
+    C: Como en la tarde, en en la tarde como a las Como en la tarde, en en la tarde como a las cuatro. Como a la tard
+    B: Entendido, prosiga.
+    C: En la tarde como a las cuatro. En la tarde, como a las 4:00.
+    B: Perfecto, adelante.
+    C: ¿Puedes hablarle en la tarde como ¿Puedes hablarle en la tarde como a las cuatro? Puedes hablarle en la tarde 
+    B: Claro, aquí estoy para ayudarte cuando necesites. Si tienes preguntas sobre nuestros productos o precios, no d
+    C: como a la tarde en la tarde como a las 4:00 Como a la tarde en la tarde, como a las 4:00. puedes hablarle en l
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+    C: el número es 66 el número es 6623531804 El número es 6623531804.
+    C: " [2026-02-25 16:14:37] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 16:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Usa 'Perfecto' demasiadas veces (3x)
+    ! Captura tardía - tomó 15 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4004004004
+
+----------------------------------------------------------------------
+  BRUCE2532 | Ferreterías Querétaro
+  Turnos: 4 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, aquí aquí no es ferretería,
+    C: No, aquí aquí no es ferretería, es taller.
+    B: Disculpe la molestia, que tenga buen dia.
+    C: ¿Aló?
+    B: Que tenga excelente día, hasta luego.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2533 | Ferreteria La Palma
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No no tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: WhatsApp. No tengo.
+    B: Claro, digame por favor.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo
+    B: Si, digame el numero.
+    C: No tengo.
+    B: Adelante, le escucho.
+    C: No, ya te dije que no
+    C: No, ya te dije que no tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: colombia Colombia. whatsapp WhatsApp. no tengo whatsapp No tengo WhatsApp. no ya te dije que no tengo whatsapp
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Sí, ¿tienes dónde Sí. ¿Tiene dónde anotar? Sí, tienes donde anotar.
+    C: Sí, el correo es Luis García u de uva, cero tres arroba Gmail punto com.
+    B: Perfecto, ya tengo el correo registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, digame por favor.'
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No no tengo'
+    OK Correcto pivot tras rechazo: 'No, ya te dije que no tengo WhatsApp.'
+    OK Correcto pivot tras rechazo: 'colombia Colombia. whatsapp WhatsApp. no tengo wha'
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2534 | Ferreteria La Palma
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: 4004004004
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está, salió.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Tendrías que esperar que regrese,
+    C: Tendrías que esperar que regrese.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: Por la tarde, como a las cuatro
+    C: Por la tarde, como a las cuatro. Por la tarde, como a las 4:00.
+    B: Si, adelante.
+    C: Mire, pues,
+    C: Por la tarde, como la Por la tarde, como a las cuatro. La tarde, como a las 4:00.
+    B: Claro, prosiga.
+    C: qué tal buen día ¿Qué tal buen día? por la tarde como a las 4:00 Por la tarde, como a las 4:00. La tarde, como
+    B: Si, lo escucho.
+    C: Como en la tarde, en en la tarde como a las Como en la tarde, en en la tarde como a las cuatro. Como a la tard
+    B: Entendido, prosiga.
+    C: En la tarde como a las cuatro. En la tarde, como a las 4:00.
+    B: Perfecto, adelante.
+    C: ¿Puedes hablarle en la tarde como ¿Puedes hablarle en la tarde como a las cuatro? Puedes hablarle en la tarde 
+    B: Claro, aquí estoy para ayudarte cuando necesites. Si tienes preguntas sobre nuestros productos o precios, no d
+    C: como a la tarde en la tarde como a las 4:00 Como a la tarde en la tarde, como a las 4:00. puedes hablarle en l
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 13 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4004004004
+
+----------------------------------------------------------------------
+  BRUCE2535 | Ferreteria La Palma
+  Turnos: 8 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día. ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No, tendrías que esperar ya que
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: No, tendrías que esperar ya que regrese él. No tendrías que esperar ya que regrese él.
+    B: Claro, digame por favor.
+    C: No, espera a que llegue él, llegue como a las cuatro. Llegue a él, llega como a las 4:00.
+    B: Claro, prosiga.
+    C: No te puedo proporcionar información hasta que no esté No te puedo proporcionar información hasta que no esté 
+    B: Si, lo escucho.
+    C: No no te puedo pasar información hasta que no esté él. No, no te puedo pasar información hasta que no esté él.
+    B: Entendido, prosiga.
+    C: No te puedo pasar información hasta que no esté él.
+    B: Perfecto, adelante.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2534 | Ferreteria La Palma
+  Turnos: 13 cliente | Estado: desconocido
+  Contacto: 4004004004
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está, salió.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: Tendrías que esperar que regrese,
+    C: Tendrías que esperar que regrese.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: Por la tarde, como a las cuatro
+    C: Por la tarde, como a las cuatro. Por la tarde, como a las 4:00.
+    B: Si, adelante.
+    C: Mire, pues,
+    C: Por la tarde, como la Por la tarde, como a las cuatro. La tarde, como a las 4:00.
+    B: Claro, prosiga.
+    C: qué tal buen día ¿Qué tal buen día? por la tarde como a las 4:00 Por la tarde, como a las 4:00. La tarde, como
+    B: Si, lo escucho.
+    C: Como en la tarde, en en la tarde como a las Como en la tarde, en en la tarde como a las cuatro. Como a la tard
+    B: Entendido, prosiga.
+    C: En la tarde como a las cuatro. En la tarde, como a las 4:00.
+    B: Perfecto, adelante.
+    C: ¿Puedes hablarle en la tarde como ¿Puedes hablarle en la tarde como a las cuatro? Puedes hablarle en la tarde 
+    B: Claro, aquí estoy para ayudarte cuando necesites. Si tienes preguntas sobre nuestros productos o precios, no d
+    C: como a la tarde en la tarde como a las 4:00 Como a la tarde en la tarde, como a las 4:00. puedes hablarle en l
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Captura tardía - tomó 13 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 4004004004
+
+----------------------------------------------------------------------
+  BRUCE2535 | Ferreteria La Palma
+  Turnos: 8 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Buen día. ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No, tendrías que esperar ya que
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: No, tendrías que esperar ya que regrese él. No tendrías que esperar ya que regrese él.
+    B: Claro, digame por favor.
+    C: No, espera a que llegue él, llegue como a las cuatro. Llegue a él, llega como a las 4:00.
+    B: Claro, prosiga.
+    C: No te puedo proporcionar información hasta que no esté No te puedo proporcionar información hasta que no esté 
+    B: Si, lo escucho.
+    C: No no te puedo pasar información hasta que no esté él. No, no te puedo pasar información hasta que no esté él.
+    B: Entendido, prosiga.
+    C: No te puedo pasar información hasta que no esté él.
+    B: Perfecto, adelante.
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2536 | City Tools Ferreterías
+  Turnos: 9 cliente | Estado: desconocido
+  Contacto: 6620662355
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: No, no está.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: No, tendrías que esperar a que llegue él.
+    B: ¿A que hora me recomienda llamar para encontrar al encargado?
+    C: No tendrías que esperar a que llegue él.
+    B: Perfecto, le vuelvo a llamar mas tarde. Muchas gracias por su tiempo, que tenga excelente dia.
+    B: En NIOVAL manejamos más de 15 categorías: cintas tapagoteras, grifería, herramientas, candados, silicones, adh
+    C: okay está bien Okay está bien.
+    B: Si, digame el numero.
+    C: Ok, el número es seis seis veinte
+    C: Ok, el número es seis seis veintitrés cinco cincuenta y tres, dieciocho cero cuatro. 6623531804.
+    C: 6623531804 6623531804.
+    C: " [2026-02-25 18:11:56] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 18:1
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6620662355
+    OK Captura normal (9 turnos cliente)
+
+----------------------------------------------------------------------
+  BRUCE2538 | Reparando mi casa
+  Turnos: 16 cliente | Estado: desconocido
+  Contacto: 6623531804
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: qué tal buen día ¿Qué tal buen día?
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: Yo soy Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: No tengo WhatsApp,
+    B: Sí, adelante.
+    C: No tengo WhatsApp,
+    B: Claro, prosiga.
+    C: No tengo WhatsApp,
+    B: Sí, lo escucho.
+    C: No tengo
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: No tengo WhatsApp.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Tampoco tengo correo, solo te
+    C: Tampoco tengo correo, solo teléfono fijo.
+    B: Entiendo. ¿Me podria proporcionar un correo electronico entonces?
+    C: Tampoco tengo, solo teléfono
+    C: Tampoco tengo, solo teléfono fijo. Tampoco tengo sólo teléfono fijo.
+    B: Entiendo. ¿Me podria dar un telefono fijo o directo entonces?
+    C: ¿Te las
+    B: Claro, digame por favor.
+    C: El teléfono fijo es seis seis veintitrés cincuenta y tres, 662353. El teléfono es
+    C: El teléfono es seis seis veintitrés cincuenta cincuenta y tres, dieciocho cero cuatro.
+    B: Claro, prosiga.
+    C: AI 6623531804.
+    B: Perfecto, ya tengo el numero registrado. Le envio el catalogo en las proximas dos horas. Muchas gracias por su
+
+  ISSUES DETECTADOS:
+    ! Solo acknowledges rechazo sin pivot: 'Claro, prosiga.'
+    ! Usa 'Entiendo' demasiadas veces (3x)
+    ! Captura tardía - tomó 16 turnos del cliente
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Correcto pivot tras rechazo: 'No tengo'
+    OK Correcto pivot tras rechazo: 'No tengo WhatsApp.'
+    OK Respuestas concisas (ninguna >250 chars)
+    OK Contacto capturado: 6623531804
+
+----------------------------------------------------------------------
+  BRUCE2539 | Ferretería La Fragua Jurica
+  Turnos: 21 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: Hola, buen día. ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: Pues, ya tengo unos proveedores
+    C: Pues, ya tengo los proveedores, muchas gracias. Flores, muchas gracias.
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: hola buen día qué tal buen día flores muchas gracias Flores, muchas gracias.
+    B: Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle la 
+    C: Ya tenemos proveedores, no estoy Ya tenemos proveedores, no estamos interesados. Ahí tenemos proveedores, no e
+    B: Entendido, no se preocupe. Le dejo nuestro numero por si mas adelante le interesa. Que tenga buen dia.
+    C: Ya tenemos proveedor Ya tienen proveedores y no estamos interesados. Hasta luego.
+    B: Entendido. ¿A qué hora me recomienda llamar para encontrarlo?
+    C: No estamos interesados
+    B: Entiendo. ¿Me podria proporcionar un WhatsApp o correo del encargado para enviarle nuestro catalogo?
+    C: ahí tenemos proveedores no estamos interesados Ahí tenemos proveedores, no estamos interesados. Dolores, no es
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: Que no estamos interesados, por ahora ya tenemos proveedores.
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: que no estamos interesados por ahora ya tenemos proveedores Que no estamos interesados, por ahora ya tenemos p
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: No, si quieres, pero ya tenemos la verdad, no te preocupes. Si quieres, pero ya tenemos alrededor, no te preoc
+    C: si quieres pero ya tenemos alrededor no te preocupes Si quieres, pero ya tenemos alrededor, no te preocupes. N
+    C: " [2026-02-25 18:17:27] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 18:1
+    B: Perfecto. Muchos nos usan como segunda opción. ¿Le envío el catálogo como plan B?
+    C: No.
+    C: No.
+    C: " [2026-02-25 18:17:43] FIX 537: BRUCE1825 - Timeout pero HAY transcripción parcial acumulada [2026-02-25 18:1
+    B: Entiendo. ¿Me podria proporcionar un WhatsApp o correo del encargado para enviarle nuestro catalogo?
+    C: " [2026-02-25 18:17:52] Respuesta vacía #1 [2026-02-25 18:17:52] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 18:17:57] Respuesta vacía #2 [2026-02-25 18:17:57] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: " [2026-02-25 18:18:02] FIX 565: Bruce SILENCIOSO por 10.1s - fallback #1/2 [2026-02-25 18:18:02] Caché AUTO: 
+    C: " [2026-02-25 18:18:06] Respuesta vacía #3 [2026-02-25 18:18:06] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Hola, pues de nuevo. Hola hasta luego.
+    B: Muchas gracias por su tiempo. Que tenga excelente día.
+
+  ISSUES DETECTADOS:
+    ! Usa 'Perfecto' demasiadas veces (5x)
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2540 | Ferreterías Querétaro
+  Turnos: 18 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: " [2026-02-25 18:18:55] Respuesta vacía #1 [2026-02-25 18:18:55] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Buen día. No es calle,
+    B: Entendido, prosiga.
+    C: No estaba, llegué como a las 4:00 de la tarde.
+    B: Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo para enviarle el catalogo al encarg
+    C: buen día no está llega como a las 4:00 de la tarde No estaba, llegué como a las 4:00 de la tarde.
+    B: Perfecto, entonces lo intento a esa hora o me da un contacto directo para mandarle info de NIOVAL, ¿cuál prefi
+    C: Tienes donde anotar. Mándame el
+    C: si quieres marca las cuatro. Si quieres, marca a las 4:00.
+    B: Si, adelante.
+    C: tienes donde anotar si quieres marca a las 4:00 Si quieres, marca a las 4:00.
+    B: Claro, prosiga.
+    C: Si quieres marcar
+    B: Ya, dime el número o la extensión y listo.
+    C: Ya que esté él.
+    B: Órale, ¿cuál es el número donde lo localizamos o tienes otra forma de contactarlo?
+    C: cuatro ya que esté él si quieres marca a las 4:00 ya que esté él Si quieres marca a las 4:00 ya que esté él.
+    B: Si, lo escucho.
+    C: " [2026-02-25 18:20:12] FIX 565: Bruce SILENCIOSO por 76.7s - fallback #1/2 [2026-02-25 18:20:12] Caché AUTO: 
+    C: Si quieres, marca la Si quieres marca las cuatro. Si quieres, marca a las 4:00. Marca a las cuatro.
+    B: Entendido, prosiga.
+    C: si quieres marca a las 4:00 Si quieres, marca a las 4:00.
+    B: Perfecto, adelante.
+    C: " [2026-02-25 18:20:26] Respuesta vacía #1 [2026-02-25 18:20:26] [DIAGNÓSTICO] === DIAGNÓSTICO TRANSCRIPCIÓN V
+    C: Marca a las cuatro,
+    C: Marca las cuatro. Marca a las 4:00.
+    B: Si, adelante.
+    C: marca a las 4:00 Marca a las 4:00.
+    B: Claro, prosiga.
+    C: " [2026-02-25 18:20:45] FIX 565: Bruce SILENCIOSO por 18.4s - fallback #2/2 [2026-02-25 18:20:45] Caché AUTO: 
+
+  ISSUES DETECTADOS:
+    ! NO menciona NIOVAL en el primer turno
+    ! No pregunta por encargado en el saludo
+    ! Saludo muy corto (19 chars) - puede sonar frío
+    ! Respuesta muy corta a pregunta: '" [2026-02-25 18:20:26] Respuesta vacía ' -> 'Si, adelante.'
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Respuestas concisas (ninguna >250 chars)
+
+----------------------------------------------------------------------
+  BRUCE2541 | Desconocido
+  Turnos: 6 cliente | Estado: desconocido
+  Contacto: NINGUNO
+----------------------------------------------------------------------
+
+  CONVERSACIÓN:
+    C: ¿Qué tal? Buen día.
+    B: Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se 
+    C: qué tal buen día ¿Qué tal buen día?
+    B: ¿Se encontrara el encargado o encargada de compras?
+    C: ¿Ustedes deben al público? Soy yo.
+    B: Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. Manejamos cintas tapagoteras, gri
+    C: Por
+    C: ¿Ustedes ven
+    B: ¿Me podria proporcionar un WhatsApp para enviarle nuestro catalogo de productos?
+    C: ¿Por what wat ustedes venden al público? ¿Ustedes venden al público?
+    B: Sí, vendemos al público en general, pero somos distribuidores especializados en ferretería. Tenemos precios mu
+
+  ISSUES DETECTADOS:
+    ! Sin contacto capturado (estado: desconocido) - posible oportunidad perdida
+
+  POSITIVOS:
+    OK Menciona NIOVAL en el saludo
+    OK Pregunta por encargado/compras
+    OK Longitud de saludo adecuada (157 chars)
+    OK Respuestas concisas (ninguna >250 chars)
+
+======================================================================
+  RESUMEN
+======================================================================
+  Llamadas analizadas:     57
+  Contacto capturado:      25 (43%)
+  Sin contacto:            32
+  Issues de calidad:       98
+  Aspectos positivos:      265
+
+  PATRONES A MEJORAR EN PROMPT GPT:
+    [PREGUNTA_NOMBRE_INNECESARIA] (4x)
+      -> BRUCE2528: 'Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distr'
+      -> BRUCE2551: 'Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distr'
+    [INFO_NO_SOLICITADA] (9x)
+      -> BRUCE2549: 'Excelente. Le comento, somos NIOVAL, distribuidores de produ'
+      -> BRUCE2549: 'Excelente. Le comento, somos NIOVAL, distribuidores de produ'
+    [CATALOGO_POST_CAPTURA] (2x)
+      -> BRUCE2533: 'Perfecto, ya tengo el numero registrado. Le envio el catalog'
+      -> BRUCE2534: 'Perfecto, ya tengo el numero registrado. Le envio el catalog'
+
+  RECOMENDACIONES PRIORITARIAS:
+    1. Alta tasa de llamadas sin contacto - revisar estrategia de captura
+    2. Bruce da info de productos sin que le pregunten - simplificar pitch
+    3. Ofrece catálogo después de ya tenerlo - el prompt tiene lógica de re-oferta
+
