@@ -128,6 +128,7 @@ deepgram_ultima_final = {}  # call_sid -> {"timestamp": float, "texto": str, "es
 # Caso BRUCE1363: Cliente dijo "Ahorita no, jefe" DURANTE audio de Bruce, pero transcripción llegó tarde
 # Solución: Limpiar transcripciones que llegaron ANTES de que Bruce terminara de hablar
 bruce_audio_enviado_timestamp = {}  # call_sid -> timestamp cuando se envió el audio
+turno_inicio_timestamps = {}  # FIX 881: call_sid -> timestamp inicio de turno (para medir latencia total Bruce)
 
 # FIX 456: Tracking de transcripciones PARCIALES para detectar si cliente sigue hablando
 # Caso BRUCE1375: Bruce interrumpió porque recibió FINAL pero cliente seguía hablando (PARCIAL nueva)
@@ -1130,6 +1131,19 @@ def obtener_voice_id_llamada():
     return ELEVENLABS_VOICE_ID
 
 
+def _log_latencia_turno_881():
+    """FIX 881: Loguea latencia total del turno (STT + GPT + TTS). Meta: < 3.5s."""
+    try:
+        import time as _time
+        _cs = request.form.get('CallSid') or request.args.get('CallSid')
+        if _cs and _cs in turno_inicio_timestamps:
+            _lat = _time.time() - turno_inicio_timestamps[_cs]
+            _flag = "⚠️  LENTO" if _lat > 3.5 else "✓"
+            print(f" ⏱️  LATENCIA TURNO: {_lat:.2f}s {_flag}  (meta <3.5s)")
+    except Exception:
+        pass  # Fuera de contexto de request (startup, etc.)
+
+
 def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
     """
     Genera audio con ElevenLabs usando SOLO Multilingual v2 (mejor calidad)
@@ -1146,6 +1160,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
         if usar_cache_key and usar_cache_key in audio_cache:
             audio_files[audio_id] = audio_cache[usar_cache_key]
             print(f" Caché manual: {usar_cache_key} (0s delay)")
+            _log_latencia_turno_881()
             return audio_id
 
         # PASO 2: Detectar si tiene nombre y buscar plantilla correspondiente
@@ -1167,6 +1182,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                 if audio_compuesto:
                     audio_files[audio_id] = audio_compuesto
                     print(f" Audio compuesto listo (plantilla + nombre)")
+                    _log_latencia_turno_881()
                     return audio_id
                 else:
                     print(f" Error en audio compuesto, generando completo...")
@@ -1193,6 +1209,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
             if frase_key in audio_cache:
                 audio_files[audio_id] = audio_cache[frase_key]
                 print(f" Caché AUTO: {frase_key[:40]}... (0s delay)")
+                _log_latencia_turno_881()
                 return audio_id
 
         # PASO 4: Registrar frase para estadísticas (auto-genera caché si es frecuente)
@@ -1242,6 +1259,7 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                 # Guardar ruta del archivo
                 audio_files[audio_id] = temp_file.name
                 print(f" Audio en {(time.time() - inicio):.2f}s ({chunk_count} chunks, {modelo})")
+                _log_latencia_turno_881()
 
                 if intento > 1:
                     print(f" FIX 162A: Audio generado exitosamente en intento {intento}")
@@ -1911,6 +1929,10 @@ def procesar_respuesta():
     #   - 5s: Timeout absoluto (fallback completo)
     # FIX 534: Timeout progresivo - reducir timeouts si ya hubo timeouts previos
     import time
+
+    # FIX 881: Registrar inicio de turno para medir latencia total (STT + GPT + TTS)
+    if call_sid:
+        turno_inicio_timestamps[call_sid] = time.time()
 
     # FIX 534: Obtener contador de timeouts del agente para ajuste progresivo
     agente_temp = conversaciones_activas.get(call_sid)

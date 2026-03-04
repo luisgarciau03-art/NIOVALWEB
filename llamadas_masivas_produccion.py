@@ -382,11 +382,11 @@ def main():
 
             print("1. Ver estadísticas")
             print("2. Ejecutar 1 llamada (prueba)")
-            print("3. Ejecutar 2 llamadas (delay: 30s)")
-            print("4. Ejecutar 5 llamadas (delay: 30s)")
-            print("5. Ejecutar 10 llamadas (delay: 30s)")
-            print("6. Ejecutar 25 llamadas (delay: 30s)")
-            print("7. Ejecutar 50 llamadas (delay: 30s)")
+            print("3. Ejecutar 2 llamadas (delay: 10s)")
+            print("4. Ejecutar 5 llamadas (delay: 10s)")
+            print("5. Ejecutar 10 llamadas (delay: 10s)")
+            print("6. Ejecutar 25 llamadas (delay: 10s)")
+            print("7. Ejecutar 50 llamadas (delay: 10s)")
             print("8. Ejecutar cantidad personalizada")
             print("9. Iniciar monitor de logs (segundo plano)")
             print("0. Salir")
@@ -397,16 +397,16 @@ def main():
                 sistema.ver_estadisticas()
 
             elif opcion == "2":
-                sistema.ejecutar_llamadas(cantidad=1, delay_entre_llamadas=30, pedir_confirmacion=False)
+                sistema.ejecutar_llamadas(cantidad=1, delay_entre_llamadas=10, pedir_confirmacion=False)
 
             elif opcion == "3":
-                sistema.ejecutar_llamadas(cantidad=2, delay_entre_llamadas=30)
+                sistema.ejecutar_llamadas(cantidad=2, delay_entre_llamadas=10)
 
             elif opcion == "4":
-                sistema.ejecutar_llamadas(cantidad=5, delay_entre_llamadas=30)
+                sistema.ejecutar_llamadas(cantidad=5, delay_entre_llamadas=10)
 
             elif opcion == "5":
-                sistema.ejecutar_llamadas(cantidad=10, delay_entre_llamadas=30)
+                sistema.ejecutar_llamadas(cantidad=10, delay_entre_llamadas=10)
 
             elif opcion == "6":
                 # Iniciar monitor de logs automáticamente para 25+ llamadas
@@ -414,7 +414,7 @@ def main():
                 script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
                 print(f"\n Iniciando monitor de logs automáticamente...")
                 subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-                sistema.ejecutar_llamadas(cantidad=25, delay_entre_llamadas=30)
+                sistema.ejecutar_llamadas(cantidad=25, delay_entre_llamadas=10)
 
             elif opcion == "7":
                 confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
@@ -424,12 +424,12 @@ def main():
                     script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
                     print(f"\n Iniciando monitor de logs automáticamente...")
                     subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-                    sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=30)
+                    sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=10)
 
             elif opcion == "8":
                 try:
                     cantidad = int(input("¿Cuántas llamadas? "))
-                    delay = int(input("¿Delay entre llamadas (segundos)? [default: 30]: ") or "30")
+                    delay = int(input("¿Delay entre llamadas (segundos)? [default: 10]: ") or "10")
                     # Iniciar monitor de logs automáticamente si son 20+ llamadas
                     if cantidad >= 20:
                         import subprocess
