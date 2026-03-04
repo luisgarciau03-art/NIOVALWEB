@@ -31,6 +31,28 @@ _ACK_DIGAME_769 = [
 ]
 _ack_counter_769 = 0
 
+# FIX 870: Alternativas a "Entiendo." para evitar repetición robótica
+# BRUCE2549: Bruce dijo "Entiendo." 6x seguidas en templates FSM.
+# Rotar entre equivalentes naturales que suenan más humanos.
+_ACK_ENTIENDO_870 = [
+    "Entiendo.",
+    "Claro.",
+    "De acuerdo.",
+    "Está bien.",
+    "Perfecto.",
+    "Okay.",
+    "Entendido.",
+]
+_ack_entiendo_counter_870 = 0
+
+
+def _get_entiendo_870():
+    """FIX 870: Retorna alternativa a 'Entiendo.' con rotación cíclica."""
+    global _ack_entiendo_counter_870
+    result = _ACK_ENTIENDO_870[_ack_entiendo_counter_870 % len(_ACK_ENTIENDO_870)]
+    _ack_entiendo_counter_870 += 1
+    return result
+
 
 def _get_ack_769(digame=False):
     """FIX 769: Retorna acknowledgment formal con rotación."""
@@ -7307,6 +7329,47 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             else:
                 respuesta = "Disculpe, no le escuché bien. ¿Me puede repetir?"
             print(f"  Override FIX 684: '{respuesta}'")
+
+        # ============================================================
+        # FIX 870: Variar acknowledgment "Entiendo." al inicio de respuesta
+        # BRUCE2549: Bruce dijo "Entiendo." 6 veces seguidas → suena robótico.
+        # Reemplazar "Entiendo. " con alternativas cíclicas que suenan más naturales.
+        # Solo aplica cuando la respuesta EMPIEZA con "Entiendo." (no "Entiendo que...")
+        # ============================================================
+        if respuesta.startswith("Entiendo. ") or respuesta == "Entiendo.":
+            _alt_870 = _get_entiendo_870()
+            _respuesta_original_870 = respuesta
+            if respuesta == "Entiendo.":
+                respuesta = _alt_870.rstrip('.')
+            else:
+                respuesta = _alt_870 + " " + respuesta[len("Entiendo. "):]
+            print(f"  [FIX 870] Variante ack: '{_respuesta_original_870[:40]}' → '{respuesta[:40]}'")
+
+        # ============================================================
+        # FIX 871: Pivot a WhatsApp tras responder pregunta de ubicación 2+ veces
+        # BRUCE2551: Cliente preguntó "¿de dónde hablas?" 5 veces, Bruce respondió sin pivot.
+        # Si Bruce responde ubicación Y el historial muestra la misma Q antes → añadir pivot.
+        # ============================================================
+        _UBIC_CLIENTE_871 = re.compile(
+            r'd[oó]nde\s+(se\s+)?(?:ubican|encuentran|est[aá]n|habla[s]?|llama[s]?)',
+            re.IGNORECASE
+        )
+        _UBIC_BRUCE_871 = re.compile(
+            r'guadalajara|jalisco|estamos\s+en|nos\s+encontramos',
+            re.IGNORECASE
+        )
+        if _UBIC_BRUCE_871.search(respuesta):
+            # ¿El cliente ya preguntó por ubicación antes en esta conversación?
+            _ubic_pregs_previas = sum(
+                1 for msg in self.conversation_history
+                if msg.get('role') == 'user' and _UBIC_CLIENTE_871.search(msg.get('content', ''))
+            )
+            _ya_tiene_contacto = getattr(self, 'whatsapp_cliente', None) or getattr(self, 'correo_cliente', None)
+            if _ubic_pregs_previas >= 2 and not _ya_tiene_contacto:
+                # Añadir pivot a catálogo al final de la respuesta
+                if not any(p in respuesta.lower() for p in ['whatsapp', 'catalogo', 'catálogo', 'envio', 'envío']):
+                    respuesta = respuesta.rstrip('.') + ". ¿Le envío nuestro catálogo por WhatsApp?"
+                    print(f"  [FIX 871] Pivot ubicacion→catalogo añadido")
 
         return respuesta
 

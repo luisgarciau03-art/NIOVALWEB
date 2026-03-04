@@ -123,6 +123,12 @@ SI EL CLIENTE ESTÁ DANDO INFORMACIÓN (número, correo, nombre):
 - Usa palabras más simples
 - Si sigue sin entender, ofrece: "¿Prefiere que le llame en otro momento?"
 
+**SI CLIENTE PREGUNTA DÓNDE SE UBICAN 2+ VECES:**
+- Ya respondiste "Guadalajara, Jalisco" → NO lo repitas igual
+- Responde MÁS CORTO + inmediatamente ofrece el catálogo:
+  "Estamos en Guadalajara. ¿Le envío nuestro catálogo por WhatsApp para que lo revise?"
+- Esto convierte la pregunta en una oportunidad de captura de contacto
+
 ############################################################
 
 # IDENTIDAD Y ROL
