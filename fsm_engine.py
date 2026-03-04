@@ -1263,6 +1263,13 @@ class FSMEngine:
     def _execute(self, transition: Transition, texto: str, agente=None) -> Optional[str]:
         """Ejecuta la acción de la transición."""
         if transition.action_type == ActionType.TEMPLATE:
+            # FIX 875: pitch_encargado con pitch ya dado → usar versión corta (sin lista de productos)
+            # Auditoría 25/02: INFO_NO_SOLICITADA(9x) — Bruce repite descripción de productos
+            # cuando el encargado confirma presencia DESPUÉS de que pitch_inicial ya sonó.
+            # pitch_dado=True significa que pitch_inicial/pitch_persona_nueva ya fue usado → usar corto.
+            if transition.template_key == "pitch_encargado" and self.context.pitch_dado:
+                print(f"  [FIX 875] pitch ya dado -> pitch_encargado_corto")
+                return self._get_template("pitch_encargado_corto")
             return self._get_template(transition.template_key)
 
         elif transition.action_type == ActionType.ACKNOWLEDGE:

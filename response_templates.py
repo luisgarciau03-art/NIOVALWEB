@@ -35,6 +35,11 @@ TEMPLATES = {
         "quince categorias. "
         "¿Le gustaria recibir nuestro catalogo por WhatsApp o correo electronico?",
     ],
+    # FIX 875: Versión corta para cuando el pitch ya fue dado (evita INFO_NO_SOLICITADA)
+    # Auditoría 25/02: "Excelente. Le comento, somos NIOVAL..." 9x cuando pitch_inicial ya sonó
+    "pitch_encargado_corto": [
+        "Excelente. ¿Le gustaria recibir nuestro catalogo de productos por WhatsApp o correo electronico?",
+    ],
 
     # === IDENTIFICACIÓN ===
     "identificacion_nioval": [

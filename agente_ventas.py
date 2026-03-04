@@ -7115,13 +7115,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Si ya se prometió el catálogo y Bruce vuelve a ofrecer, convertir en despedida
         if self.catalogo_prometido:
             # Detectar si está volviendo a ofrecer catálogo
+            # FIX 876: Ampliado de preguntas (¿?) a statements — CATALOGO_POST_CAPTURA (2x auditoría)
             vuelve_a_ofrecer = any(frase in respuesta_lower for frase in [
                 '¿le gustaría recibirlo', '¿le gustaria recibirlo',
                 '¿le envío el catálogo', '¿le envio el catalogo',
-                '¿por whatsapp o correo', '¿whatsapp o correo'
+                '¿por whatsapp o correo', '¿whatsapp o correo',
+                # FIX 876: Statements de re-oferta (no solo preguntas)
+                'le envío el catálogo', 'le envio el catalogo',
+                'enviarle el catálogo', 'enviarle el catalogo',
+                'le mando el catálogo', 'le mando el catalogo',
+                'recibir nuestro catálogo', 'recibir nuestro catalogo',
+                'le gustaria recibir nuestro catalogo', 'le gustaría recibir nuestro catálogo',
             ])
             if vuelve_a_ofrecer:
-                print(f"   FIX 522: Ya se prometió catálogo - evitando repetir oferta")
+                print(f"   FIX 522/876: Ya se prometió catálogo - evitando repetir oferta")
                 respuesta = "Perfecto, entonces le envío el catálogo. Muchas gracias por su tiempo, que tenga excelente día."
 
         # ============================================================
@@ -7440,6 +7447,34 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 else:
                     respuesta = "Entendido. ¿Me puede dar un correo electrónico para enviarle el catálogo?"
                 print(f"  [FIX 873] WhatsApp re-pedido bloqueado (rechazo en historial) → correo")
+
+        # ============================================================
+        # FIX 877: Respuesta identidad concisa cuando contacto ya capturado
+        # Auditoría 25/02: PREGUNTA_NOMBRE_INNECESARIA(4x) — Bruce dice "Mi nombre es Bruce,
+        # le llamo de la marca NIOVAL..." con lista de productos DESPUÉS de capturar contacto.
+        # Si contacto ya capturado Y respuesta empieza con "Mi nombre es" → versión compacta.
+        # ============================================================
+        _NOMBRE_BRUCE_877 = re.compile(r'^mi\s+nombre\s+es\s+bruce', re.IGNORECASE)
+        if _NOMBRE_BRUCE_877.match(respuesta):
+            _contacto_ya_877 = (self.lead_data.get('whatsapp') or self.lead_data.get('email')
+                                or self.lead_data.get('telefono_directo'))
+            if _contacto_ya_877:
+                # Contacto capturado: solo confirmar identidad brevemente y cerrar
+                respuesta = "Le llamo de NIOVAL, distribuidores de ferretería en Guadalajara. Que tenga excelente día."
+                print(f"  [FIX 877] identificacion_nioval post-captura → versión compacta")
+            else:
+                # Sin contacto aún: dar identificación concisa pero sin lista de productos
+                _PRODUCTOS_877 = re.compile(
+                    r'\.\s*(Somos distribuidores.*|Manejamos.*|distribuimos.*)',
+                    re.IGNORECASE | re.DOTALL
+                )
+                _tiene_pregunta_877 = '?' in respuesta
+                if not _tiene_pregunta_877:
+                    # Respuesta de identificación pura sin pregunta → agregar pivot a encargado
+                    respuesta = re.sub(_PRODUCTOS_877, '.', respuesta)
+                    if not respuesta.rstrip().endswith('?'):
+                        respuesta = respuesta.rstrip('.') + ". ¿Se encuentra el encargado de compras?"
+                    print(f"  [FIX 877] identificacion sin contacto → añadido pivot encargado")
 
         return respuesta
 
