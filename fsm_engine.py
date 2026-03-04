@@ -1279,7 +1279,9 @@ class FSMEngine:
                 self.context.identity_repetidas += 1
                 if self.context.identity_repetidas >= 2:
                     print(f"  [FIX 878] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo")
-                    return self._get_template("pedir_whatsapp_o_correo")
+                    # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
+                    # pedir_whatsapp_o_correo breve tiene palabras distintas al primer pedido.
+                    return self._get_template("pedir_whatsapp_o_correo_breve")
 
             return self._get_template(transition.template_key)
 

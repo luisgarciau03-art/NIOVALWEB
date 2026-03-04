@@ -211,6 +211,11 @@ TEMPLATES = {
         "Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp "
         "o correo electronico para enviarle la informacion?",
     ],
+    # FIX 884: BRUCE2516 - Template breve para FIX 878 pivot (2do intento de identidad)
+    # Palabras distintas a pedir_whatsapp_o_correo para evitar PREGUNTA_REPETIDA.
+    "pedir_whatsapp_o_correo_breve": [
+        "¿Me puede facilitar su WhatsApp o un correo para enviarle el catalogo?",
+    ],
     "pitch_catalogo_whatsapp": [
         "Con mucho gusto. Manejamos una amplia linea de productos ferreteros de la "
         "marca NIOVAL. ¿Le puedo enviar nuestro catalogo por WhatsApp?",
