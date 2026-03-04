@@ -422,7 +422,7 @@ class ContentAnalyzer:
                 return bugs
 
             # --- 6. PREGUNTA_REPETIDA ---
-            bugs.extend(ContentAnalyzer._check_pregunta_repetida(respuestas))
+            bugs.extend(ContentAnalyzer._check_pregunta_repetida(respuestas, conv))
 
             # --- 7. DATO_IGNORADO ---
             bugs.extend(ContentAnalyzer._check_dato_ignorado(conv))
@@ -444,10 +444,35 @@ class ContentAnalyzer:
         return bugs
 
     @staticmethod
-    def _check_pregunta_repetida(respuestas: list) -> list:
+    def _check_pregunta_repetida(respuestas: list, conv: list = None) -> list:
         """Detecta si Bruce hizo la misma pregunta 2+ veces."""
         bugs = []
         try:
+            # FIX 868F: Si hay conversación disponible, deduplicar respuestas de Bruce
+            # SOLO cuando los mensajes de cliente precedentes también son duplicados (STT artifact).
+            # BRUCE1885: Cliente repite "no se encuentra, mañana a las 11" 2x → Bruce repite → no es bug real
+            if conv and len(conv) >= 4:
+                _filtered = []
+                _cliente_msgs = [t for r, t in conv if r == 'cliente']
+                _bruce_msgs = [t for r, t in conv if r == 'bruce']
+                for idx, r in enumerate(respuestas):
+                    if idx > 0 and r == respuestas[idx - 1]:
+                        # Respuesta idéntica a la anterior — verificar si cliente también repitió
+                        # bruce[idx] corresponde a client[idx-1] (primer bruce no tiene cliente previo)
+                        _c_idx = idx - 1       # client msg antes de este bruce
+                        _c_idx_prev = idx - 2  # client msg antes del bruce anterior
+                        if _c_idx >= 0 and _c_idx < len(_cliente_msgs) and _c_idx_prev >= 0 and _c_idx_prev < len(_cliente_msgs):
+                            _c1 = _cliente_msgs[_c_idx_prev]
+                            _c2 = _cliente_msgs[_c_idx]
+                            # Solo dedup si cliente dijo lo mismo (overlap > 80%)
+                            _w1 = set(re.findall(r'[a-záéíóúüñ]{4,}', _c1.lower()))
+                            _w2 = set(re.findall(r'[a-záéíóúüñ]{4,}', _c2.lower()))
+                            if _w1 and _w2 and len(_w1 & _w2) / max(len(_w1), len(_w2)) > 0.8:
+                                print(f"  [FIX 868F] SKIP pregunta dedup: cliente repitió → Bruce repitió")
+                                continue  # Skip this duplicate
+                    _filtered.append(r)
+                respuestas = _filtered
+
             preguntas = []
             for r in respuestas:
                 if '?' in r and len(r) > 15:
@@ -581,7 +606,11 @@ class ContentAnalyzer:
     _CONFIRMACION_DATO_862 = re.compile(
         r'(ya tengo (el (correo|numero|dato)|anotado)|'
         r'con gusto.{0,20}(le env[ií]o|le mando).{0,30}cat[aá]logo|'
-        r'(le env[ií]o|le mando).{0,30}cat[aá]logo.{0,20}sin problema)',
+        r'(le env[ií]o|le mando).{0,30}cat[aá]logo.{0,20}sin problema|'
+        # FIX 868D: pedir contacto para enviar catálogo = solicitud de canal, no nueva oferta
+        r'(pasar|proporcionar).{0,20}(whatsapp|correo|n[uú]mero).{0,20}(enviar|mandar)|'
+        r'(pasar|proporcionar).{0,20}(whatsapp|correo).{0,20}cat[aá]logo|'
+        r'le env[ií]o el cat[aá]logo.{0,10}(y|por))',
         re.IGNORECASE
     )
 
@@ -1180,9 +1209,17 @@ class ContentAnalyzer:
                         # cualquier dato de contacto, es flujo CORRECTO (no interrupción)
                         # "No, no está" → "¿WhatsApp o correo del encargado?" = respuesta apropiada
                         # FIX 843: Expandido - ya no requiere 'encargado' en texto de Bruce
-                        _cliente_dijo_no_esta_772 = any(p in texto_lower_727 for p in [
+                        # FIX 868G: normalizar puntuación para no_esta check
+                        # "No, está hablando" → "no está hablando" (comma removal)
+                        _texto_norm_868 = texto_lower_727.replace(',', ' ').replace('.', ' ')
+                        _texto_norm_868 = ' '.join(_texto_norm_868.split())  # normalize spaces
+                        _cliente_dijo_no_esta_772 = any(p in _texto_norm_868 for p in [
                             'no esta', 'no está', 'no se encuentra', 'no hay',
                             'no esta disponible', 'no está disponible',
+                            # FIX 868A: más variantes de encargado ausente
+                            'salió', 'salio', 'ya salió', 'ya salio',
+                            'se fue', 'no ha llegado', 'no llego', 'no llegó',
+                            'fue a comer', 'anda fuera', 'no viene',
                         ])
                         _bruce_pide_contacto_843 = (
                             'whatsapp' in t2_lower or
@@ -1209,9 +1246,26 @@ class ContentAnalyzer:
                             'usted está equivocado', 'se equivocó', 'se equivoco',
                             'número equivocado', 'numero equivocado', 'marcó equivocado',
                             'marco equivocado',
+                            # FIX 868B: variantes de área equivocada / no aplica
+                            'taller mecánico', 'taller mecanico',
+                            'aquí es un taller', 'aqui es un taller',
+                            'no es ferretería', 'no es ferreteria',
+                            'somos tienda de', 'somos tiendas de', 'somos tiendas que',
+                            'marca truper', 'solo vendemos', 'solo manejamos',
+                            'no podemos manejar', 'no podemos vender',
+                            'hablando a una de las sucursales', 'a una de las sucursales',
+                            'nosotros somos las', 'nosotros somos de',
                         ])
                         if _bruce_dice_despedida_864 and (_cliente_dijo_no_esta_772 or _cliente_no_negocio_864):
                             print(f"  [FIX 864] SKIP interrupcion: despedida apropiada tras no-está/área-equivocada")
+                            break  # Not a bug
+
+                        # FIX 868H: Si cliente dice señal de no-negocio/área-equivocada,
+                        # skip INTERRUPCION siempre (AREA_EQUIVOCADA lo detecta por separado)
+                        # BRUCE2016: "somos tiendas que" → Bruce pide WhatsApp = no es INTERRUPCION
+                        # BRUCE1730: "nosotros somos las" → idem
+                        if _cliente_no_negocio_864:
+                            print(f"  [FIX 868H] SKIP interrupcion: señal no-negocio → AREA_EQUIVOCADA lo maneja")
                             break  # Not a bug
 
                         # FIX 843: Excepción callback - Si Bruce confirma hora de callback, es respuesta correcta
@@ -1221,6 +1275,16 @@ class ContentAnalyzer:
                         )
                         if _bruce_confirma_callback_843:
                             print(f"  [FIX 843] SKIP interrupcion: Bruce confirma callback = flujo correcto")
+                            break  # Not a bug
+
+                        # FIX 868C: Si Bruce pregunta hora de callback (¿A qué hora...?), no es interrupción
+                        _bruce_pregunta_hora_868 = any(p in t2_lower for p in [
+                            'a que hora', 'a qué hora', 'hora me recomienda',
+                            'cuando regresa', 'cuando vuelve', 'cuando llega',
+                            'hora puedo llamar', 'hora puedo marcar',
+                        ])
+                        if _bruce_pregunta_hora_868:
+                            print(f"  [FIX 868C] SKIP interrupcion: Bruce pregunta hora callback")
                             break  # Not a bug
 
                         bruce_ignora = (
@@ -1448,6 +1512,19 @@ class ContentAnalyzer:
             # Verificar que Bruce respondio al menos 1 vez antes (sino es BRUCE_MUDO)
             bruce_respondio_alguna_vez = any(r == "bruce" and t.strip() for r, t in conv)
             if not bruce_respondio_alguna_vez:
+                return bugs
+
+            # FIX 868E: Si Bruce está esperando transferencia ("Claro, espero"), cliente
+            # hablando último es esperado (está buscando al encargado).
+            # BRUCE1817: "Buscando al encargado" → Bruce en silencio = correcto
+            _bruce_esperando_868 = any(
+                r == "bruce" and any(p in t.lower() for p in [
+                    'claro, espero', 'claro espero', 'por supuesto, espero',
+                    'perfecto, espero', 'si, espero', 'sí, espero',
+                ])
+                for r, t in conv
+            )
+            if _bruce_esperando_868:
                 return bugs
 
             bugs.append({
