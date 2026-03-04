@@ -547,8 +547,13 @@ class ContentAnalyzer:
 
     # FIX 862: Patrón de confirmación de dato capturado (confirmar_correo/confirmar_telefono)
     # "ya tengo el correo/numero registrado. Le envio el catalogo..." → NO es nueva oferta
+    # FIX 863B: Extender con confirmaciones GPT de catálogo (respuesta a cliente que pide catálogo)
+    # BRUCE2118: "Con gusto le envío nuestro catálogo completo." = respuesta, no nueva oferta
+    # "por WhatsApp le mando el catálogo sin problema" = confirmación de canal, no nueva oferta
     _CONFIRMACION_DATO_862 = re.compile(
-        r'ya tengo (el (correo|numero|dato)|anotado)',
+        r'(ya tengo (el (correo|numero|dato)|anotado)|'
+        r'con gusto.{0,20}(le env[ií]o|le mando).{0,30}cat[aá]logo|'
+        r'(le env[ií]o|le mando).{0,30}cat[aá]logo.{0,20}sin problema)',
         re.IGNORECASE
     )
 
@@ -713,10 +718,13 @@ class ContentAnalyzer:
     # (el "00" de la hora matcheaba como inicio de dictado de número)
     # FIX 847B+: También detectar múltiples grupos de 2+ dígitos separados por espacios/guiones
     # (teléfonos mexicanos tipo "33 12 34 56 78") que no tienen 3+ dígitos consecutivos
+    # FIX 863A: \b word boundaries en letras sueltas (a de, b de, ...) para evitar
+    # falsos positivos en palabras que terminan con esas letras: "nueve de" contiene "e de"
+    # BRUCE2352/2337: "a las nueve de la mañana" → "e de" matcheaba sin \b
     _DICTADO_PATTERNS = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
-        r'a de|b de|c de|d de|e de|f de|g de|'
+        r'\ba de\b|\bb de\b|\bc de\b|\bd de\b|\be de\b|\bf de\b|\bg de\b|'
         r'\bele\b|\beme\b|\bene\b|\bese\b|\berre\b|'
         r'doble (u|v|uve)|'
         r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
@@ -731,14 +739,17 @@ class ContentAnalyzer:
     # BRUCE2494: "nosotros no tenemos ese tipo de caso" → \bese\b matcheaba "ese" (pronombre)
     # Las letras sueltas son señal DÉBIL (confunden pronombres con deletreo)
     # Señales FUERTES: arroba, dominios, frases explícitas "mi número es", dígitos largos
+    # FIX 863A (cont.): También en FUERTE: \b en letras + (?<!no ) en 'estamos en'
+    # BRUCE2337: "no estamos en esto" → "estamos en" matcheaba (rechazo de negocio, no dictado)
+    # BRUCE2161: "estamos en México" = dirección real (todavía matchea: "no" no está antes)
     _DICTADO_PATTERNS_FUERTE = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
-        r'a de|b de|c de|d de|e de|f de|g de|'
+        r'\ba de\b|\bb de\b|\bc de\b|\bd de\b|\be de\b|\bf de\b|\bg de\b|'
         r'doble (u|v|uve)|'
         r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
         r'mi correo es|mi email es|mi nombre es|me llamo|'
-        r'la direcci[oó]n es|estamos en|la calle es|'
+        r'la direcci[oó]n es|(?<!no )estamos en|la calle es|'
         r'\d{3,}|(?:\d{2,}[\s\-]+){2,}\d{2,})',
         re.IGNORECASE
     )
@@ -806,7 +817,7 @@ class ContentAnalyzer:
         r'(esp[eé]r[ea]me|le paso|le comunico|se lo paso|ahorita.+viene|'
         r'd[eé]jeme.+(?:pasar|comunicar)|un momento.+(?:le paso|se lo paso)|'
         r'le transfiero|ahorita le paso|d[eé]jeme ver si est[aá]|'
-        r'voy a ver si est[aá]|ahorita viene|ya viene|espere un momento)',
+        r'voy a ver si est[aá]|ahorita viene|ya viene(?! hasta)|espere un momento)',
         re.IGNORECASE
     )
 
@@ -1154,6 +1165,23 @@ class ContentAnalyzer:
                         )
                         if _cliente_dijo_no_esta_772 and _bruce_pide_contacto_843:
                             print(f"  [FIX 843/772] SKIP interrupcion: 'no está' + pedir contacto = flujo correcto")
+                            break  # Not a bug
+
+                        # FIX 864: Si Bruce dice despedida Y cliente dijo señal de área equivocada/no negocio
+                        # → despedida APROPIADA (flujo correcto), no interrupción
+                        # BRUCE2366: cliente "usted está equivocado" → Bruce dice adiós = correcto
+                        # BRUCE2239: cliente "no está encargada" → Bruce dice adiós = correcto
+                        _bruce_dice_despedida_864 = bool(ContentAnalyzer._BRUCE_DESPEDIDA.search(t2))
+                        _cliente_no_negocio_864 = any(p in texto_lower_727 for p in [
+                            'no tengo negocio', 'no hay negocio', 'aqui no hay negocio',
+                            'no tenemos negocio', 'no tengo empresa', 'no hay empresa',
+                            'está equivocado', 'esta equivocado', 'estás equivocado',
+                            'usted está equivocado', 'se equivocó', 'se equivoco',
+                            'número equivocado', 'numero equivocado', 'marcó equivocado',
+                            'marco equivocado',
+                        ])
+                        if _bruce_dice_despedida_864 and (_cliente_dijo_no_esta_772 or _cliente_no_negocio_864):
+                            print(f"  [FIX 864] SKIP interrupcion: despedida apropiada tras no-está/área-equivocada")
                             break  # Not a bug
 
                         # FIX 843: Excepción callback - Si Bruce confirma hora de callback, es respuesta correcta

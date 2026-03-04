@@ -295,6 +295,7 @@ class FSMContext:
     tiempo_claro_espero: Optional[float] = None
     donde_anotar_preguntado: bool = False
     ultimo_fue_ofrecer_contacto: bool = False
+    verificacion_consecutivas: int = 0  # FIX 866B: contador de verificacion_aqui_estoy consecutivos (anti-LOOP BRUCE2322)
 
 
 # ============================================================
@@ -425,7 +426,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- No interés / rechazo definitivo ---
     no_interest = [
         'no me interesa', 'no nos interesa', 'no gracias', 'no estamos interesados',
-        'no hacemos compras', 'no compramos', 'no ocupamos', 'no necesitamos',
+        'no hacemos compras', 'no hacemos compra', 'no hacemos ningun tipo de compra',  # FIX 865: singular + variantes (BRUCE2255)
+        'no compramos', 'no ocupamos', 'no necesitamos',
         'no manejamos eso', 'aqui es un taller', 'no es ferreteria',
         'no joven', 'no muchacho', 'no senor', 'no senorita', 'no mijo',
         # FIX 854: "ya tengo proveedores" variantes (sincronizado con IntentClassifier FIX 844/850)
@@ -539,6 +541,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     another = [
         'otra sucursal', 'otro local', 'no es aqui', 'numero equivocado',
         'se equivoco', 'no es esta sucursal', 'otra ubicacion',
+        # FIX 866A: BRUCE2111 - "tienes que hablar a la sucursal de Sahuayo" → ANOTHER_BRANCH
+        'tienes que hablar a la sucursal', 'tiene que hablar a la sucursal',
+        'hablar a la sucursal', 'llamar a la sucursal', 'llame a la sucursal',
     ]
     if any(a in tn for a in another):
         return FSMIntent.ANOTHER_BRANCH
@@ -797,12 +802,22 @@ class FSMEngine:
         if _block_encargado_q and self.context.encargado_preguntado:
             # Ya preguntamos por encargado -> usar acknowledgment genérico
             _orig_template_860 = transition.template_key
+            self.context.verificacion_consecutivas += 1
+            # FIX 866B: BRUCE2322 - Anti-LOOP verificacion_aqui_estoy repetida post-transfer
+            # Después de 3+ usos consecutivos → ofrecer_contacto_bruce para salir del loop
+            if self.context.verificacion_consecutivas >= 3:
+                _veri_template = 'ofrecer_contacto_bruce'
+                _veri_state = FSMState.OFRECIENDO_CONTACTO
+                print(f"  [FIX 866B] verificacion_consecutivas={self.context.verificacion_consecutivas} >= 3 -> ofrecer_contacto_bruce (anti-LOOP)")
+            else:
+                _veri_template = 'verificacion_aqui_estoy'
+                _veri_state = transition.next_state
             transition = Transition(
-                next_state=transition.next_state,
+                next_state=_veri_state,
                 action_type=transition.action_type,
-                template_key='verificacion_aqui_estoy',
+                template_key=_veri_template,
             )
-            print(f"  [FIX 785/860] Encargado ya preguntado -> no repetir ({_orig_template_860}), usando verificacion")
+            print(f"  [FIX 785/860] Encargado ya preguntado -> no repetir ({_orig_template_860}), usando {_veri_template}")
 
         # FIX 855+856: BRUCE2522 - Anti-LOOP preguntas de producto repetidas
         # Cliente pregunta "¿Qué tipo de productos manejan?" 10+ veces → GPT genera misma respuesta → LOOP
@@ -1424,6 +1439,10 @@ class FSMEngine:
         """Actualiza contexto FSM tras transición."""
         self.context.turnos_bruce += 1
         self.context.ultimo_template = transition.template_key
+
+        # FIX 866B: Reset verificacion_consecutivas cuando intent no es VERIFICATION
+        if intent != FSMIntent.VERIFICATION:
+            self.context.verificacion_consecutivas = 0
 
         # Track pitch dado
         if transition.template_key in ('pitch_inicial', 'pitch_encargado',
