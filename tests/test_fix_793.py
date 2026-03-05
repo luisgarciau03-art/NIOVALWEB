@@ -95,7 +95,7 @@ class TestFix793BPreguntaIgnorada(unittest.TestCase):
         conv = _conv(
             ("bruce", "Me comunico de la marca NIOVAL."),
             ("cliente", "Aja"),
-            ("bruce", "Claro, digame el numero."),
+            ("bruce", "Le puedo enviar nuestro catalogo."),
             ("cliente", "¿Quién habla?"),
             ("bruce", "Si, adelante."),
         )

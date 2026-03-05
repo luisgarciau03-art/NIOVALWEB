@@ -49,7 +49,7 @@ class TestFix878IdentityRepetidas:
         assert "pedir_whatsapp_o_correo" not in calls
 
     def test_segunda_identificacion_pivota(self):
-        """Segunda vez (identity_repetidas >= 2) → pivot a pedir_whatsapp_o_correo."""
+        """Segunda vez (identity_repetidas == 2) → pivot a pedir_whatsapp_o_correo_breve."""
         from fsm_engine import FSMEngine, FSMContext, Transition, ActionType
         engine = FSMEngine.__new__(FSMEngine)
         engine.context = FSMContext()
@@ -64,11 +64,12 @@ class TestFix878IdentityRepetidas:
 
         result = engine._execute(t, "¿Y dónde se ubican?")
         assert engine.context.identity_repetidas == 2
-        assert "pedir_whatsapp_o_correo" in calls
-        assert result == "TEMPLATE:pedir_whatsapp_o_correo"
+        # FIX 884/885: Ahora usa template breve para evitar PREGUNTA_REPETIDA
+        assert "pedir_whatsapp_o_correo_breve" in calls
+        assert result == "TEMPLATE:pedir_whatsapp_o_correo_breve"
 
     def test_tercera_identificacion_pivota(self):
-        """Tercera y subsecuentes también pivota."""
+        """Tercera y subsecuentes → pedir_numero_directo_885."""
         from fsm_engine import FSMEngine, FSMContext, Transition, ActionType
         engine = FSMEngine.__new__(FSMEngine)
         engine.context = FSMContext()
@@ -83,7 +84,8 @@ class TestFix878IdentityRepetidas:
 
         result = engine._execute(t, "¿Dónde se encuentran?")
         assert engine.context.identity_repetidas == 3
-        assert "pedir_whatsapp_o_correo" in calls
+        # FIX 885B: 3er+ identity usa template distinto
+        assert "pedir_numero_directo_885" in calls
 
     def test_otros_templates_no_afectados(self):
         """FIX 878 solo intercepta identificacion_nioval, no otros."""

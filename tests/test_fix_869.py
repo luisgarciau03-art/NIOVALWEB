@@ -269,6 +269,7 @@ class TestFix869FPitchSaludoExempt:
             "Me comunico de NIOVAL, trabajamos productos ferreteros de Guadalajara.",
             "Me comunico de NIOVAL, somos distribuidores NIOVAL de productos ferreteros.",
             "¿Me da su WhatsApp?",
+            "Le puedo enviar nuestro catalogo sin compromiso.",
         ]
         bugs = ContentAnalyzer._check_pitch_repetido(respuestas)
         assert any(b["tipo"] == "PITCH_REPETIDO" for b in bugs)
@@ -279,6 +280,7 @@ class TestFix869FPitchSaludoExempt:
             "Buen día, le llamo para hablar con usted sobre una oportunidad interesante",
             "Me comunico de NIOVAL, trabajamos productos ferreteros de Guadalajara.",
             "Me comunico de NIOVAL, somos distribuidores NIOVAL de ferretería.",
+            "Que tenga excelente dia.",
         ]
         bugs = ContentAnalyzer._check_pitch_repetido(respuestas)
         assert any(b["tipo"] == "PITCH_REPETIDO" for b in bugs)

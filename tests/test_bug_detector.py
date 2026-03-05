@@ -239,6 +239,10 @@ class TestPitchRepetido:
         tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de la marca nioval, trabajamos productos ferreteros."})
         tracker.emit("CLIENTE_DICE", {"texto": "Ya me habia llamado"})
         tracker.emit("BRUCE_RESPONDE", {"texto": "Si, me comunico de la marca nioval, trabajamos productos ferreteros para su negocio."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Que productos manejan?"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Manejamos cintas, griferia, herramientas y mas."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Ok gracias"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Que tenga excelente dia."})
         bugs = ContentAnalyzer.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
         assert "PITCH_REPETIDO" in tipos
@@ -359,9 +363,14 @@ class TestBugDetectorIntegracion:
         # Bug tecnico: respuesta vacia
         tracker.emit("RESPUESTA_VACIA")
         tracker.emit("RESPUESTA_VACIA")
-        # Bug contenido: pitch repetido
+        # Bug contenido: pitch repetido (>3 resp para evitar FIX 886B exemption)
         tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de la marca nioval, trabajamos productos ferreteros."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Ah si?"})
         tracker.emit("BRUCE_RESPONDE", {"texto": "Somos la marca nioval, trabajamos productos ferreteros."})
+        tracker.emit("CLIENTE_DICE", {"texto": "Ok"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Le puedo enviar nuestro catalogo?"})
+        tracker.emit("CLIENTE_DICE", {"texto": "Bueno"})
+        tracker.emit("BRUCE_RESPONDE", {"texto": "Que tenga excelente dia."})
         bugs = BugDetector.analyze(tracker)
         categorias = set(b.get("categoria") for b in bugs)
         assert "tecnico" in categorias
