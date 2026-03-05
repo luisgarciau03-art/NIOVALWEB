@@ -459,9 +459,28 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no te puedo proporcionar', 'no uso whatsapp', 'no manejo whatsapp',
         'no tengo de eso', 'no puedo pasar informacion', 'no puedo dar informacion',
         'no te puedo pasar informacion', 'no le puedo pasar informacion',
+        # FIX 895: BRUCE2582 - "no me sé el WhatsApp" / "no conozco" no matcheaba
+        'no se el whatsapp', 'no me se el whatsapp', 'no se el correo',
+        'no me se el correo', 'no se el numero', 'no me se el numero',
+        'no conozco el whatsapp', 'no conozco el correo', 'no conozco el numero',
+        'no se el dato', 'no me se', 'no lo se', 'no se cual es', 'yo no se',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
+
+    # --- FIX 897: BRUCE2592 - Cliente pide contacto de BRUCE (contacto invertido) ---
+    # "Si gustas dejarme un numero y ya lo proporciono yo" = pide datos de Bruce
+    _pide_contacto_bruce_897 = [
+        'dejame un numero', 'dejarme un numero', 'dejame tu numero',
+        'dejarme tu numero', 'dame tu numero', 'dame tu telefono',
+        'pasame tu numero', 'pasame tu telefono', 'pasame tus datos',
+        'dame tus datos', 'dejame tus datos', 'me das tu numero',
+        'me dejas tu numero', 'me pasas tu numero', 'me pasas tus datos',
+        'dejame el numero', 'dame el numero', 'tu numero de telefono',
+        'si gustas dejarme', 'dejame un telefono',
+    ]
+    if any(p in tn for p in _pide_contacto_bruce_897):
+        return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
 
     # --- Oferta de dato ---
     offer_data = [
@@ -507,6 +526,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'permiteme', 'un momento', 'un momentito', 'un segundo',
         'dejeme ver', 'le comunico', 'se lo paso', 'se lo comunico',
         'ahorita le paso', 'ahorita se lo comunico',
+        # FIX 896: BRUCE2580 - Transfer en 3ra persona
+        'te comunican', 'te pasan', 'te transfieren', 'te paso',
+        'ahi te comunican', 'ahi te pasan', 'te van a pasar',
+        'te van a comunicar', 'lo comunico', 'lo paso',
     ]
     # Guard: NO es callback ("esperar a que regrese")
     # FIX 820: Expandido callback_guard con patrones de BRUCE2535
@@ -521,9 +544,22 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'esperar ya que', 'tendrias que esperar', 'tendria que esperar',
         'tienes que esperar', 'tiene que esperar', 'hay que esperar',
     ]
+    # FIX 894: BRUCE2604 - Guard de queja antes de TRANSFER
+    # "permítame, márcame a cada rato, ya se les dijo que no" → "permitame" matchea TRANSFER
+    # pero el cliente se está QUEJANDO, no transfiriendo
+    _complaint_guard_894 = [
+        'a cada rato', 'ya se les dijo', 'ya les dije', 'ya se lo dije',
+        'no nos interesa', 'no me interesa', 'dejen de llamar', 'dejen de marcar',
+        'ya no llamen', 'ya no marquen', 'estan molestando', 'molestando',
+        'ya basta', 'ya estuvo', 'ya cansan',
+    ]
+    _is_complaint_894 = any(c in tn for c in _complaint_guard_894)
     if any(c in tn for c in callback_guard):
         return FSMIntent.CALLBACK
     if any(t in tn for t in transfer):
+        # FIX 894: Si hay queja, NO es transfer - es NO_INTEREST
+        if _is_complaint_894:
+            return FSMIntent.NO_INTEREST
         return FSMIntent.TRANSFER
 
     # --- Callback ---
@@ -600,6 +636,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si gracias', 'ok gracias', 'perfecto', 'muy bien',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
+        # FIX 893: BRUCE2586/2576 - "Dígame"/"Sí dígame"/"Mande" en BUSCANDO_ENCARGADO
+        # cuando encargado ya fue preguntado = cliente dice "adelante, dime" = INTEREST
+        # Sin esto: CONFIRMATION → preguntar_encargado → re-pregunta → LOOP "Digame"/"Aqui estoy"
+        _digame_like_893 = {'digame', 'si digame', 'diga', 'mande', 'si mande', 'adelante'}
+        if (tn in _digame_like_893 and
+                state == FSMState.BUSCANDO_ENCARGADO and
+                context.encargado_preguntado):
+            return FSMIntent.INTEREST
         return FSMIntent.CONFIRMATION
 
     # --- Continuación (texto termina en conector) ---
@@ -800,6 +844,25 @@ class FSMEngine:
                     action_type=ActionType.TEMPLATE,
                     template_key='pedir_dato_contacto_892',
                 )
+
+        # FIX 897: BRUCE2592 - Contacto invertido (cliente pide datos de BRUCE)
+        # INTEREST de _pide_contacto_bruce_897 -> redirigir a ofrecer_contacto_bruce
+        if (intent == FSMIntent.INTEREST and
+                transition.template_key in ('pedir_whatsapp', 'preguntar_encargado', 'pitch_encargado')):
+            _tn_897 = _normalize(texto)
+            _pide_bruce_897 = [
+                'dejame un numero', 'dejarme un numero', 'dejame tu numero',
+                'dame tu numero', 'dame tu telefono', 'pasame tu numero',
+                'pasame tus datos', 'dame tus datos', 'me das tu numero',
+                'me dejas tu numero', 'me pasas tu numero', 'si gustas dejarme',
+            ]
+            if any(p in _tn_897 for p in _pide_bruce_897):
+                transition = Transition(
+                    next_state=FSMState.OFRECIENDO_CONTACTO,
+                    action_type=ActionType.TEMPLATE,
+                    template_key='ofrecer_contacto_bruce',
+                )
+                print(f'  [FIX 897] Contacto invertido detectado -> ofrecer_contacto_bruce')
 
         # FIX 785/860: BRUCE2492/2497/2462 - No repetir pregunta encargado si ya se preguntó
         # FIX 785: solo bloqueaba 'preguntar_encargado'

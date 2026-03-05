@@ -11675,7 +11675,7 @@ Ejemplo correcto:
 
             # 3. Limitar a últimos 12 mensajes (6 turnos completos user+assistant)
             # AUMENTADO de 6 a 12 para mejor memoria
-            MAX_MENSAJES_CONVERSACION = 12
+            MAX_MENSAJES_CONVERSACION = 20  # FIX 899: Expandido de 12 a 20 (10 turnos) para mejor contexto
             if len(mensajes_conversacion) > MAX_MENSAJES_CONVERSACION:
                 mensajes_conversacion = mensajes_conversacion[-MAX_MENSAJES_CONVERSACION:]
                 print(f"[WRENCH] FIX 68: Historial limitado a últimos {MAX_MENSAJES_CONVERSACION} mensajes")
@@ -13900,7 +13900,7 @@ Responde SOLO en este formato JSON:
         contexto_cliente = ""
         mensajes_bruce = [msg for msg in self.conversation_history if msg["role"] == "assistant"]
 
-        if len(mensajes_bruce) < 5:  # Solo primeros 5 turnos de Bruce
+        if len(mensajes_bruce) < 10:  # FIX 900: Expandido de 5 a 10 turnos (GPT perdia contexto del cliente)
             contexto_cliente = self._generar_contexto_cliente()
             if contexto_cliente:
                 contexto_cliente = "\n" + contexto_cliente + "\n"
@@ -14838,7 +14838,33 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
         contexto_dinamico = self._generar_contexto_dinamico()
 
         # Combinar prompt base + fase actual + contexto dinámico
-        return prompt_base + "\n".join(fase_actual) + contexto_dinamico
+        # FIX 898: Inyectar FSM flags en prompt GPT
+        contexto_fsm_898 = ""
+        if hasattr(self, "fsm") and self.fsm and hasattr(self.fsm, "context"):
+            ctx = self.fsm.context
+            flags = []
+            if ctx.encargado_preguntado:
+                flags.append("- Ya preguntaste por el encargado de compras (NO volver a preguntar)")
+            if ctx.encargado_es_interlocutor:
+                flags.append("- El cliente ES el encargado de compras (habla directamente con el)")
+            if ctx.pitch_dado:
+                flags.append("- Ya diste el pitch de NIOVAL (NO repetirlo)")
+            if ctx.whatsapp_ya_solicitado:
+                flags.append("- Ya pediste WhatsApp (NO volver a pedirlo)")
+            if hasattr(ctx, "canales_rechazados") and ctx.canales_rechazados:
+                rechazados = ", ".join(ctx.canales_rechazados)
+                flags.append(f"- Cliente RECHAZO estos canales: {rechazados} (NO insistir)")
+            if ctx.catalogo_prometido:
+                flags.append("- Ya prometiste enviar catalogo (NO ofrecerlo otra vez)")
+            if hasattr(ctx, "callback_confirmado") and ctx.callback_confirmado:
+                flags.append("- Ya se confirmo callback (NO preguntar hora otra vez)")
+            if flags:
+                contexto_fsm_898 = chr(10)*2 + "# ESTADO ACTUAL DE LA CONVERSACION (FSM)" + chr(10)
+                contexto_fsm_898 += "IMPORTANTE - Lo que YA hiciste en esta llamada:" + chr(10)
+                contexto_fsm_898 += chr(10).join(flags) + chr(10)
+                print(f"  [FIX 898] Inyectando {len(flags)} FSM flags en prompt GPT")
+
+        return prompt_base + chr(10).join(fase_actual) + contexto_dinamico + contexto_fsm_898
 
     def _guardar_backup_excel(self):
         """Guarda un respaldo en Excel local"""

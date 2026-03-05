@@ -195,8 +195,9 @@ def get_client_messages(conversation):
 # ============================================================
 
 class LogReplaySimulator:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, gpt_eval=False):
         self.verbose = verbose
+        self.gpt_eval = gpt_eval  # FIX 901: Ejecutar GPT eval como en produccion
         self.resultados = []
 
     def replay_call(self, bruce_id, conv_data, call_index=0, total_calls=0):
@@ -290,6 +291,17 @@ class LogReplaySimulator:
         # 5. Detectar bugs del replay
         duracion = time.time() - t0
         bugs_replay = BugDetector.analyze(tracker)
+
+        # FIX 901: GPT eval en replay (mismo detector que produccion)
+        if self.gpt_eval and len(tracker.respuestas_bruce) >= 2:
+            try:
+                from bug_detector import _evaluar_con_gpt
+                gpt_bugs = _evaluar_con_gpt(tracker)
+                if gpt_bugs:
+                    bugs_replay.extend(gpt_bugs)
+                    print(f"    [GPT EVAL] {len(gpt_bugs)} bug(s) detectado(s) por GPT")
+            except Exception as e:
+                print(f"    [GPT EVAL] Error: {e}")
 
         # 6. Comparar: original vs replay
         tipos_orig = set(b['tipo'] for b in bugs_original)
@@ -468,6 +480,7 @@ def main():
     parser.add_argument("--latest", "-n", type=int, help="Ultimas N llamadas")
     parser.add_argument("--bugs-only", action="store_true", help="Solo llamadas con bugs originales")
     parser.add_argument("--list", "-l", action="store_true", help="Listar llamadas disponibles")
+    parser.add_argument("--gpt-eval", action="store_true", help="FIX 901: Ejecutar GPT eval (mismo que produccion)")
     args = parser.parse_args()
 
     # Parse logs
@@ -498,7 +511,7 @@ def main():
         bugs_only = True
         print("(default: ultimas 5 llamadas con bugs)")
 
-    sim = LogReplaySimulator(verbose=args.verbose)
+    sim = LogReplaySimulator(verbose=args.verbose, gpt_eval=getattr(args, "gpt_eval", False))
     success = sim.run(
         conversations,
         bruce_ids=bruce_ids,
