@@ -489,6 +489,89 @@ ESCENARIOS = [
         ],
         "bugs_criticos": ["LOOP"],
     },
+    # ============================================================
+    # ESCENARIOS 26-30: STT GARBLED (texto distorsionado/duplicado)
+    # Simulan lo que Azure/Deepgram realmente produce en produccion
+    # ============================================================
+    {
+        "id": 26,
+        "nombre": "STT Garbled: Texto duplicado - frases repetidas",
+        "fix_target": "FIX 885",
+        "contacto": {"nombre_negocio": "Ferreteria Test STT", "telefono": "3312340007", "ciudad": "Guadalajara"},
+        "turnos": [
+            {"cliente": "Hola, buen dia. Que dice? Buenos dias. Si, con Hola, buen dia. Que dice? Buenos dias.",
+             "check_not": []},
+            {"cliente": "Si, si soy el encargado. Si, si soy el encargado de compras.",
+             "check_not": []},
+            {"cliente": "Si, mandalo por WhatsApp. Si, mandalo por WhatsApp por favor.",
+             "check_not": []},
+            {"cliente": "Es el 33 12 34 56 78",
+             "check_not": []},
+        ],
+        "bugs_criticos": ["LOOP", "PREGUNTA_REPETIDA"],
+    },
+    {
+        "id": 27,
+        "nombre": "STT Garbled: Encargado ausente con palabras distorsionadas",
+        "fix_target": "FIX 886",
+        "contacto": {"nombre_negocio": "Tlapaleria STT Test", "telefono": "3312340008", "ciudad": "Guadalajara"},
+        "turnos": [
+            {"cliente": "Bueno, si digame",
+             "check_not": []},
+            {"cliente": "Estan en sobra de comida, estan en sobra de comida, si gustas marcar mas",
+             "check_not": ["whatsapp", "WhatsApp"]},
+            # Turno 3: garbled pero con "en 1 hora" → callback detectado por FIX 882
+            {"cliente": "En una hora regresa el encargado",
+             "check_not": []},
+        ],
+        "bugs_criticos": ["LOOP", "GPT_LOGICA_ROTA"],
+    },
+    {
+        "id": 28,
+        "nombre": "STT Garbled: De parte de quien con eco",
+        "fix_target": "FIX 883+886",
+        "contacto": {"nombre_negocio": "Materiales STT", "telefono": "3312340009", "ciudad": "Guadalajara"},
+        "turnos": [
+            {"cliente": "Buenas tardes, digame.",
+             "check_not": []},
+            {"cliente": "Aja. De parte de quien, disculpe? De parte de quien me habla?",
+             "check_not": []},
+            # Manager absent → Bruce asks for alt contact (correct behavior)
+            {"cliente": "No, no esta. No, no esta el encargado.",
+             "check_not": []},
+        ],
+        "bugs_criticos": ["LOOP", "PREGUNTA_REPETIDA"],
+    },
+    {
+        "id": 29,
+        "nombre": "STT Garbled: Digame + fijese que no (negacion mezclada)",
+        "fix_target": "FIX 884B",
+        "contacto": {"nombre_negocio": "Herramientas STT", "telefono": "3312340010", "ciudad": "Guadalajara"},
+        "turnos": [
+            {"cliente": "Si, digame",
+             "check_not": []},
+            {"cliente": "Digame. Fijese que no. No tenemos negocio de ese tipo.",
+             "check_not": ["whatsapp", "WhatsApp"]},
+        ],
+        "bugs_criticos": ["GPT_LOGICA_ROTA"],
+    },
+    {
+        "id": 30,
+        "nombre": "STT Garbled: Numero con concatenacion de parciales",
+        "fix_target": "FIX 885",
+        "contacto": {"nombre_negocio": "Electrica STT", "telefono": "3312340011", "ciudad": "Guadalajara"},
+        "turnos": [
+            {"cliente": "Bueno",
+             "check_not": []},
+            {"cliente": "Si, yo mero soy. Si, yo mero.",
+             "check_not": []},
+            {"cliente": "Si claro, al WhatsApp",
+             "check_not": []},
+            {"cliente": "Permiteme un segundo. Es el seis catorce dos ochenta y seis. Permitame un segundo. Es el seis catorce dos ochenta y seis veintiuno.",
+             "check_not": []},
+        ],
+        "bugs_criticos": ["LOOP", "DICTADO_INTERRUMPIDO"],
+    },
 ]
 
 

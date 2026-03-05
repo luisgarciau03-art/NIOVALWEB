@@ -720,6 +720,48 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if tn in ('tardes', 'buenas', 'dias', 'noches'):
         return FSMIntent.VERIFICATION
 
+    # ============================================================
+    # FIX 886: Fuzzy matching para texto STT garbled
+    # ============================================================
+    # Produccion: Azure/Deepgram distorsiona palabras clave.
+    # Ejemplo: "sobra de comida" = "hora de comida" garbled por STT.
+    # Si llegamos aqui (UNKNOWN), intentar fuzzy match con patterns criticos.
+    # Solo se activa para textos > 10 chars (evitar false positives en textos cortos).
+    if len(tn) > 10:
+        _fuzzy_patterns_886 = [
+            # (pattern_words, intent, min_words_match)
+            # manager_absent: STT garble "hora"→"sobra", "salió"→"sali", etc.
+            (['hora', 'comida'], FSMIntent.MANAGER_ABSENT, 2),
+            (['no', 'encuentra'], FSMIntent.MANAGER_ABSENT, 2),
+            (['salio', 'comer'], FSMIntent.MANAGER_ABSENT, 2),
+            (['esta', 'ocupado'], FSMIntent.MANAGER_ABSENT, 2),
+            (['esta', 'ocupada'], FSMIntent.MANAGER_ABSENT, 2),
+            (['no', 'llego', 'todavia'], FSMIntent.MANAGER_ABSENT, 2),
+            # callback: "gustas marcar" garbled
+            (['gusta', 'marcar'], FSMIntent.CALLBACK, 2),
+            (['gusta', 'llamar'], FSMIntent.CALLBACK, 2),
+            (['llamar', 'hora'], FSMIntent.CALLBACK, 2),
+            (['marcar', 'hora'], FSMIntent.CALLBACK, 2),
+            # identity: "de parte de" garbled
+            (['parte', 'quien'], FSMIntent.IDENTITY, 2),
+            (['donde', 'llama'], FSMIntent.IDENTITY, 2),
+            # no_interest: "no nos interesa" garbled
+            (['no', 'interesa'], FSMIntent.NO_INTEREST, 2),
+            (['no', 'necesitamos'], FSMIntent.NO_INTEREST, 2),
+        ]
+        words_tn = set(tn.split())
+        for pattern_words, intent, min_match in _fuzzy_patterns_886:
+            matches = sum(1 for pw in pattern_words if pw in words_tn)
+            if matches >= min_match:
+                # Extra guard: callback/manager_absent solo en estados relevantes
+                if intent in (FSMIntent.CALLBACK, FSMIntent.MANAGER_ABSENT):
+                    if state not in (FSMState.BUSCANDO_ENCARGADO, FSMState.PITCH,
+                                     FSMState.ENCARGADO_AUSENTE, FSMState.ENCARGADO_PRESENTE,
+                                     FSMState.ESPERANDO_TRANSFERENCIA):
+                        continue
+                print(f"  [FIX 886] Fuzzy match: '{tn[:40]}' -> {intent.name} (words: {pattern_words})")
+                return intent
+
     return FSMIntent.UNKNOWN
 
 

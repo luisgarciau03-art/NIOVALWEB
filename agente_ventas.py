@@ -474,6 +474,75 @@ def convertir_numeros_escritos_a_digitos(texto: str) -> str:
     return texto_convertido
 
 
+# ============================================================
+# FIX 885: Limpieza de texto STT garbled/duplicado
+# ============================================================
+# Produccion muestra que Azure/Deepgram concatena transcripciones parciales
+# creando texto con frases duplicadas. Ejemplos reales:
+#   "Hola buen dia. Que dice? Buenos dias. Si, con Hola buen dia. Que dice?"
+#   "si gustas ellos es que ellos tienen ese Si gustas ellos..."
+#   "Permiteme un segundo. Es el seis catorce... Permitame un segundo. Es el seis catorce..."
+# Esta funcion limpia ANTES de que el FSM procese el texto.
+def _limpiar_stt_duplicados_885(texto: str) -> str:
+    """
+    FIX 885: Elimina frases duplicadas del texto STT.
+
+    Detecta cuando la misma frase (o muy similar) aparece 2+ veces
+    en la misma transcripcion concatenada y la reduce a una sola.
+
+    Returns:
+        Texto limpio sin duplicaciones.
+    """
+    if not texto or len(texto) < 30:
+        return texto  # Textos cortos no tienen duplicaciones
+
+    import re
+    from difflib import SequenceMatcher
+
+    # Separar por oraciones (., ?, !)
+    oraciones = re.split(r'(?<=[.?!])\s+', texto.strip())
+    if len(oraciones) < 2:
+        # Intentar separar por comas si no hay puntuacion
+        oraciones = [s.strip() for s in texto.split(',') if s.strip()]
+    if len(oraciones) < 2:
+        return texto
+
+    # Dedup: mantener solo oraciones unicas (similarity > 0.75 = duplicado)
+    resultado = []
+    for oracion in oraciones:
+        oracion = oracion.strip()
+        if not oracion or len(oracion) < 3:
+            continue
+        es_duplicado = False
+        for existente in resultado:
+            # Comparar normalizado (sin acentos, lowercase)
+            o_norm = oracion.lower().replace('.','').replace('?','').replace('!','').strip()
+            e_norm = existente.lower().replace('.','').replace('?','').replace('!','').strip()
+            if o_norm == e_norm:
+                es_duplicado = True
+                break
+            # Similarity check para variantes STT ("permiteme"/"permitame")
+            if len(o_norm) > 10 and len(e_norm) > 10:
+                ratio = SequenceMatcher(None, o_norm, e_norm).ratio()
+                if ratio > 0.75:
+                    es_duplicado = True
+                    # Mantener la version mas larga
+                    if len(oracion) > len(existente):
+                        resultado[resultado.index(existente)] = oracion
+                    break
+        if not es_duplicado:
+            resultado.append(oracion)
+
+    texto_limpio = '. '.join(resultado)
+    # Asegurar que no termine en ". ."
+    texto_limpio = re.sub(r'\.(\s*\.)+', '.', texto_limpio)
+
+    if texto_limpio != texto and len(texto_limpio) < len(texto):
+        print(f"  [FIX 885] STT dedup: '{texto[:60]}...' -> '{texto_limpio[:60]}...'")
+
+    return texto_limpio
+
+
 def detectar_numeros_en_grupos(texto: str) -> bool:
     """
     Detecta si el cliente está dando números en pares o grupos de 2-3 dígitos
@@ -9958,6 +10027,12 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 620A: Resetear flag de pausa intencional al inicio de cada turno
         self.pausa_intencional = False
 
+        # FIX 885: Limpiar texto STT duplicado/garbled ANTES de procesar
+        try:
+            respuesta_cliente = _limpiar_stt_duplicados_885(respuesta_cliente)
+        except Exception:
+            pass  # Si falla la limpieza, usar texto original
+
         # Agregar respuesta del cliente al historial
         self.conversation_history.append({
             "role": "user",
@@ -10002,8 +10077,13 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 # ============================================================
                 # BTE ENGINE - Solo cuando FSM no pudo resolver (fsm_result=None)
                 # FSM tiene mejor contexto (880+ FIXes), BTE maneja el resto.
+                # FIX 887: NO activar BTE si FSM esta en DESPEDIDA (la llamada debe terminar)
                 # ============================================================
-                if fsm_result is None:
+                _fsm_state_check_887 = getattr(self.fsm, 'state', None)
+                _is_despedida_887 = (_fsm_state_check_887 and
+                                      hasattr(_fsm_state_check_887, 'value') and
+                                      _fsm_state_check_887.value == 'despedida')
+                if fsm_result is None and not _is_despedida_887:
                     try:
                         from bte_engine import bte_engine
                         _fsm_intent_bte = getattr(self, '_last_fsm_intent', None)
