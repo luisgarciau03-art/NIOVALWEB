@@ -484,11 +484,12 @@ class TestMidSentenceDetection(unittest.TestCase):
     """FIX 4: Text ending in comma = CONTINUATION (mid-sentence)."""
 
     def test_comma_ending_short(self):
-        """Short text ending in comma → CONTINUATION."""
+        """Short text ending in comma with manager_absent → MANAGER_ABSENT (FIX 889)."""
         from fsm_engine import classify_intent, FSMIntent
         ctx = FSMContext()
+        # FIX 889: BRUCE2596 - "no se encuentra" with comma → MANAGER_ABSENT, not CONTINUATION
         intent = classify_intent("No, no se encuentra,", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.CONTINUATION)
+        self.assertEqual(intent, FSMIntent.MANAGER_ABSENT)
 
     def test_comma_ending_dictation(self):
         """Dictation mid-sentence with comma."""

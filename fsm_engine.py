@@ -346,10 +346,17 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- Mid-sentence: texto termina en coma = cliente sigue hablando ---
     # FIX 821: REJECT_DATA tiene prioridad sobre CONTINUATION
     # BRUCE2538: "No tengo WhatsApp," -> era CONTINUATION por la coma, debe ser REJECT_DATA
+    # FIX 889: MANAGER_ABSENT tiene prioridad sobre CONTINUATION
+    # BRUCE2596: "No se encuentra en este momento," -> era CONTINUATION, debe ser MANAGER_ABSENT
     _reject_quick_821 = ['no tengo', 'no puedo', 'tampoco tengo', 'solo tengo',
                           'no manejo', 'no uso', 'no le puedo', 'no te puedo']
+    _manager_absent_quick_889 = ['no se encuentra', 'no esta', 'salio', 'salieron',
+                                  'no vino', 'no llego', 'no viene', 'esta en su hora',
+                                  'hora de comida', 'fueron a comer', 'anda fuera']
     if tl.endswith(',') and len(tn) < 40:
-        if not any(r in tn for r in _reject_quick_821):
+        if any(m in tn for m in _manager_absent_quick_889):
+            pass  # FIX 889: fall through — será clasificado como MANAGER_ABSENT más abajo
+        elif not any(r in tn for r in _reject_quick_821):
             return FSMIntent.CONTINUATION
         # else: fall through — será clasificado como REJECT_DATA más abajo
 
@@ -512,8 +519,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
     # "No" a secas después de preguntar por encargado = MANAGER_ABSENT contextual
-    if tn in ('no', 'no fijese', 'no fijate', 'no senor', 'no senorita'):
+    # FIX 890: BRUCE2621 - "Dígame. Fíjese que no." → "fijese que no" = manager absent
+    if tn in ('no', 'no fijese', 'no fijate', 'no senor', 'no senorita',
+              'fijese que no', 'fijate que no', 'pues no', 'que no'):
         if context.encargado_preguntado and state == FSMState.BUSCANDO_ENCARGADO:
+            return FSMIntent.MANAGER_ABSENT
+    # FIX 890: "Dígame. Fíjese que no." combined → check for "fijese que no" in longer text
+    if 'fijese que no' in tn or 'fijate que no' in tn:
+        if state == FSMState.BUSCANDO_ENCARGADO:
             return FSMIntent.MANAGER_ABSENT
 
     # --- Encargado presente ("soy yo") ---
@@ -600,6 +613,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'area de compras esta en otro', 'compras esta en otro',
         'compras estan en otro', 'se comunica a una tienda',
         'esta comunicando a una tienda', 'comunicando a una sucursal',
+        # FIX 888: BRUCE2580 - "ahí te comunican a compras" / "comunicarte a matríz"
+        'comunican a compras', 'te comunican a', 'comunicarte a matri',
+        'comunicar a matri', 'comunicate a', 'habla a compras',
     ]
     if any(a in tn for a in another):
         return FSMIntent.ANOTHER_BRANCH
