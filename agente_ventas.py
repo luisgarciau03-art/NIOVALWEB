@@ -10004,6 +10004,14 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             except Exception as e:
                 print(f"  [FSM ERROR] {e} - fallthrough a logica existente")
 
+            # BTE: Guardar ultimo intent/state del FSM para que BTE los use
+            try:
+                if hasattr(self, 'fsm') and self.fsm:
+                    self._last_fsm_intent = getattr(self.fsm, '_last_intent', None)
+                    self._last_fsm_state = getattr(self.fsm, 'state', None)
+            except Exception:
+                pass
+
         # ============================================================
         # FIX 759B: BRUCE2427 - Re-introducción post-transferencia
         # Después de "Claro, espero", si persona nueva dice saludo genérico
@@ -11657,6 +11665,58 @@ Ejemplo correcto:
             self.conversation_history.append({"role": "assistant", "content": _narrow_792})
             self.turno_actual = getattr(self, 'turno_actual', 0) + 1
             return _narrow_792
+
+        # ============================================================
+        # BTE ENGINE - Bruce Templates Engine (reemplaza GPT libre)
+        # El 94% de respuestas se resuelven con templates.
+        # GPT solo se usa como fallback clasificador para el 6% restante.
+        # ============================================================
+        try:
+            from bte_engine import bte_engine
+            _fsm_intent_bte = getattr(self, '_last_fsm_intent', None)
+            _fsm_state_bte = getattr(self, '_last_fsm_state', None)
+            _lead_data_bte = getattr(self, 'lead_data', {}) or {}
+            _turno_bte = getattr(self, 'turno_actual', 0)
+
+            _bte_result = bte_engine.process(
+                texto_cliente=respuesta_cliente,
+                fsm_intent=_fsm_intent_bte,
+                fsm_state=_fsm_state_bte,
+                lead_data=_lead_data_bte,
+                conversation_history=self.conversation_history,
+                turno=_turno_bte,
+            )
+
+            if _bte_result is None:
+                # BTE no pudo resolver → intentar GPT fallback clasificador
+                _bte_accion = bte_engine.gpt_fallback_clasificar(
+                    texto_cliente=respuesta_cliente,
+                    conversation_history=self.conversation_history,
+                    lead_data=_lead_data_bte,
+                    openai_client=getattr(self, 'openai_client', None),
+                )
+                if _bte_accion:
+                    _bte_result = bte_engine.generar_respuesta(_bte_accion, {
+                        "canal": _lead_data_bte.get("canal_preferido", "WhatsApp"),
+                        "digitos": _lead_data_bte.get("digitos_capturados", "algunos"),
+                    })
+
+            if _bte_result:
+                print(f"\n  [BTE] Respuesta template (sin GPT): '{_bte_result[:80]}'")
+                self.conversation_history.append({"role": "assistant", "content": _bte_result})
+                self.turno_actual = getattr(self, 'turno_actual', 0) + 1
+                # Sync FSM si existe
+                try:
+                    self._sync_fsm_to_agent(respuesta_cliente, _bte_result)
+                except Exception:
+                    pass
+                return _bte_result
+            else:
+                print(f"  [BTE] No resuelto → fallthrough a GPT libre")
+        except ImportError:
+            print(f"  [BTE] bte_engine no disponible → GPT libre")
+        except Exception as e_bte:
+            print(f"  [BTE] Error: {e_bte} → GPT libre")
 
         # Generar respuesta con GPT-4o-mini (OPTIMIZADO para baja latencia)
         try:

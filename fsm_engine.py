@@ -747,6 +747,7 @@ class FSMEngine:
 
         # 1. Clasificar intent
         intent = classify_intent(texto, self.context, self.state)
+        self._last_intent = intent  # BTE: Exponer para que agente_ventas lo use
 
         # 1.5. Recovery: DESPEDIDA + CONFIRMATION cuando último fue ofrecer contacto
         if (self.state == FSMState.DESPEDIDA and
