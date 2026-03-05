@@ -38,7 +38,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agente_ventas import AgenteVentas
-from bug_detector import CallEventTracker, BugDetector
+from bug_detector import CallEventTracker, BugDetector, _evaluar_con_gpt
 
 
 # ============================================================
@@ -579,8 +579,9 @@ ESCENARIOS = [
 # Simulador
 # ============================================================
 class SimuladorE2E:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, gpt_eval=False):
         self.verbose = verbose
+        self.gpt_eval = gpt_eval
         self.resultados = []
 
     def run_scenario(self, escenario):
@@ -649,9 +650,20 @@ class SimuladorE2E:
                     if self.verbose:
                         print(f"    ** CHECK FAIL: {error_msg}")
 
-        # 5. Analizar bugs
+        # 5. Analizar bugs (rule-based siempre, GPT eval opcional)
         duracion = time.time() - t0
         bugs = BugDetector.analyze(tracker)
+
+        # FIX 892: GPT eval opcional para detectar bugs semánticos
+        gpt_eval_bugs = []
+        if self.gpt_eval:
+            # Forzar duración mínima para que GPT eval no se salte por "ultra-corta"
+            tracker.created_at = time.time() - 60
+            try:
+                gpt_eval_bugs = _evaluar_con_gpt(tracker)
+                bugs.extend(gpt_eval_bugs)
+            except Exception as e:
+                print(f"    [GPT EVAL ERROR] {e}")
 
         # 6. Filtrar bugs criticos que NO deberian aparecer
         bugs_criticos_encontrados = []
@@ -728,10 +740,21 @@ class SimuladorE2E:
             for tipo, count in bug_counts.most_common():
                 print(f"    {tipo}: {count}")
 
+        # GPT eval summary
+        if self.gpt_eval:
+            gpt_bugs = [b for r in self.resultados for b in r["bugs"] if b.get("categoria") == "gpt_eval"]
+            if gpt_bugs:
+                print(f"\n  GPT Eval bugs: {len(gpt_bugs)}")
+                for b in gpt_bugs:
+                    print(f"    [{b['severidad']}] {b['tipo']}: {b['detalle'][:80]}")
+            else:
+                print(f"\n  GPT Eval: 0 bugs detectados (OK)")
+
         # Costo estimado
         total_duracion = sum(r["duracion"] for r in self.resultados)
         print(f"\n  Tiempo total: {total_duracion:.1f}s")
-        print(f"  Costo estimado: ~${len(escenarios) * 0.01:.2f} USD (GPT-4.1-mini)")
+        gpt_cost = len(escenarios) * 0.02 if self.gpt_eval else 0
+        print(f"  Costo estimado: ~${len(escenarios) * 0.01 + gpt_cost:.2f} USD (GPT-4.1-mini)")
 
         return failed == 0
 
@@ -741,6 +764,7 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true", help="Mostrar respuestas completas")
     parser.add_argument("--scenario", "-s", type=int, help="Ejecutar solo escenario N")
     parser.add_argument("--list", "-l", action="store_true", help="Listar escenarios")
+    parser.add_argument("--gpt-eval", action="store_true", help="Ejecutar GPT eval post-llamada (detecta bugs semanticos)")
     args = parser.parse_args()
 
     if args.list:
@@ -749,7 +773,7 @@ def main():
             print(f"  [{e['id']}] {e['nombre']} ({e['fix_target']})")
         return
 
-    sim = SimuladorE2E(verbose=args.verbose)
+    sim = SimuladorE2E(verbose=args.verbose, gpt_eval=args.gpt_eval)
     success = sim.run_all(scenario_id=args.scenario)
     sys.exit(0 if success else 1)
 

@@ -366,11 +366,10 @@ class TestFix730SaludoFaltante(unittest.TestCase):
     """FIX 730: Detector _check_saludo_faltante."""
 
     def test_sin_saludo(self):
-        """Primer turno sin saludo → BUG."""
+        """FIX 892: SALUDO_FALTANTE desactivado (audio cache siempre reproduce saludo)."""
         respuestas = ["Le comento que manejamos productos ferreteros"]
         bugs = ContentAnalyzer._check_saludo_faltante(respuestas)
-        self.assertEqual(len(bugs), 1)
-        self.assertEqual(bugs[0]["tipo"], "SALUDO_FALTANTE")
+        self.assertEqual(len(bugs), 0)  # FIX 892: siempre retorna []
 
     def test_con_buenos_dias(self):
         """'Buenos días' → NO bug."""
@@ -436,6 +435,7 @@ class TestFix726a730EnAnalyze(unittest.TestCase):
         self.assertIn("CONTEXTO_IGNORADO", tipos)
 
     def test_saludo_faltante_en_analyze(self):
+        """FIX 892: SALUDO_FALTANTE desactivado (audio cache)."""
         tracker = CallEventTracker("test", "BRUCE_TEST")
         tracker.respuestas_bruce = ["Le comento que manejamos productos", "Que tenga buen día"]
         tracker.conversacion = [
@@ -445,7 +445,7 @@ class TestFix726a730EnAnalyze(unittest.TestCase):
         ]
         bugs = BugDetector.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
-        self.assertIn("SALUDO_FALTANTE", tipos)
+        self.assertNotIn("SALUDO_FALTANTE", tipos)  # FIX 892: desactivado
 
     def test_despedida_prematura_en_analyze(self):
         tracker = CallEventTracker("test", "BRUCE_TEST")

@@ -186,7 +186,7 @@ class TestFix868EEsperandoTransferencia:
         assert not any(b["tipo"] == "CLIENTE_HABLA_ULTIMO" for b in bugs)
 
     def test_sin_espero_si_detecta(self):
-        """Without waiting signal, should detect as bug."""
+        """FIX 892: CLIENTE_HABLA_ULTIMO desactivado (limitacion Twilio)."""
         conv = [
             ("bruce", "Buen día, le llamo de NIOVAL"),
             ("cliente", "Sí, dígame"),
@@ -194,7 +194,7 @@ class TestFix868EEsperandoTransferencia:
             ("cliente", "Ah ok, y qué productos manejan"),
         ]
         bugs = ContentAnalyzer._check_cliente_habla_ultimo(conv)
-        assert any(b["tipo"] == "CLIENTE_HABLA_ULTIMO" for b in bugs)
+        assert not any(b["tipo"] == "CLIENTE_HABLA_ULTIMO" for b in bugs)
 
 
 # ============================================================

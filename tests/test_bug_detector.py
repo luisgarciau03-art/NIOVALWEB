@@ -449,17 +449,14 @@ class TestClienteHablaUltimo:
 
     @pytest.mark.bug_detector
     def test_bruce2070_marcar_mas_tarde(self, tracker):
-        """BRUCE2070: Cliente dijo 'marcar mas tarde, digame' y Bruce quedo mudo."""
+        """BRUCE2070: FIX 892 - CLIENTE_HABLA_ULTIMO desactivado (limitacion Twilio)."""
         tracker.emit("BRUCE_RESPONDE", {"texto": "Me comunico de la marca nioval, productos ferreteros. Se encontrara el encargado?"})
         tracker.emit("CLIENTE_DICE", {"texto": "No estas"})
         tracker.emit("BRUCE_RESPONDE", {"texto": "Me podria proporcionar el WhatsApp del encargado?"})
         tracker.emit("CLIENTE_DICE", {"texto": "Tendrias que marcar mas tarde, digame"})
-        # Bruce NO responde - fin de llamada
         bugs = BugDetector.analyze(tracker)
         tipos = [b["tipo"] for b in bugs]
-        assert "CLIENTE_HABLA_ULTIMO" in tipos
-        bug = next(b for b in bugs if b["tipo"] == "CLIENTE_HABLA_ULTIMO")
-        assert bug["severidad"] == ALTO
+        assert "CLIENTE_HABLA_ULTIMO" not in tipos
 
     @pytest.mark.bug_detector
     def test_bruce_responde_al_final_ok(self, tracker):

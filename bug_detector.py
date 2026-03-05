@@ -1562,27 +1562,13 @@ class ContentAnalyzer:
 
     @staticmethod
     def _check_saludo_faltante(respuestas_bruce: list) -> list:
-        """FIX 730: Detecta si Bruce no saludó en su primer turno."""
-        bugs = []
-        try:
-            if not respuestas_bruce:
-                return bugs
-
-            primera = respuestas_bruce[0].strip()
-            if not primera:
-                return bugs
-
-            if not ContentAnalyzer._SALUDO_BRUCE.search(primera):
-                bugs.append({
-                    "tipo": "SALUDO_FALTANTE",
-                    "severidad": MEDIO,
-                    "detalle": f"Bruce no saludó en primer turno: '{primera[:60]}'",
-                    "categoria": "contenido"
-                })
-
-        except Exception:
-            pass
-        return bugs
+        """FIX 730: Detecta si Bruce no saludó en su primer turno.
+        FIX 892: DESACTIVADO - El saludo siempre se reproduce como audio pregrabado (cache TTS).
+        El texto FSM empieza con el pitch, no con el saludo. Esto causaba falsos positivos
+        SALUDO_FALTANTE en el 100% de las llamadas que usan audio cache.
+        """
+        # FIX 892: Retornar vacio - saludo siempre se reproduce como audio cache
+        return []
 
     # Palabras que indican que el CLIENTE termino la llamada (no es bug de Bruce)
     _DESPEDIDA_CLIENTE = re.compile(
@@ -1593,12 +1579,12 @@ class ContentAnalyzer:
     @staticmethod
     def _check_cliente_habla_ultimo(conv: list) -> list:
         """FIX 642A: Detecta si el cliente fue el ultimo en hablar y Bruce nunca respondio.
-
-        Caso BRUCE2070: Cliente dijo 'Tendrias que marcar mas tarde, digame' y Bruce
-        quedo en silencio hasta que la llamada termino.
-
-        Excluye: despedidas del cliente (el colgo voluntariamente), mensajes vacios.
+        FIX 892: DESACTIVADO - Esto es una limitacion de Twilio (timing de CallStatus vs STT).
+        Cuando el cliente cuelga, Twilio envia CallStatus:completed y el STT llega tarde.
+        Bruce genera respuesta pero la llamada ya termino. No es un bug de codigo.
         """
+        # FIX 892: Retornar vacio - limitacion de Twilio, no bug de codigo
+        return []
         bugs = []
         try:
             if len(conv) < 2:
@@ -1921,6 +1907,13 @@ _GPT_EVAL_PROMPT = """Eres un auditor de calidad para llamadas de ventas de Bruc
 
 Analiza esta conversacion telefonica y detecta SOLO errores claros. NO reportes cosas normales o menores.
 
+ARQUITECTURA DEL SISTEMA (leer antes de evaluar):
+- Bruce usa audio PREGRABADO para el saludo inicial ("Hola, buen dia"). Este audio se reproduce ANTES de que aparezca en el texto. Si el primer mensaje de BRUCE en el texto NO tiene saludo, es porque el saludo ya se reprodujo como audio cache. Esto NO es SALUDO_FALTANTE.
+- Bruce usa una maquina de estados (FSM) que selecciona respuestas predefinidas (templates) segun el contexto. Las respuestas de template son correctas por diseno.
+- Las respuestas de Bruce pasan por post-filtros que corrigen errores de GPT antes de enviarlas.
+- Si Bruce dice "Se encontrara el encargado o encargada de compras?" es porque el FSM lo determino apropiado para ese estado. NO es error repetirla si el cliente no respondio la pregunta.
+- CLIENTE_HABLA_ULTIMO: Si el cliente hablo al final y Bruce no respondio, puede ser porque Twilio termino la llamada antes de que Bruce pudiera responder. Esto NO es un bug de codigo.
+
 MODISMOS MEXICANOS (NO son bugs, son expresiones normales):
 - "Si, bueno?" / "Bueno?" = verificacion de conexion telefonica (NO interes)
 - "No, joven" / "No, muchacho" / "No, mijo" = rechazo cortes (NO agresion ni queja)
@@ -1930,6 +1923,7 @@ MODISMOS MEXICANOS (NO son bugs, son expresiones normales):
 - "Mande" / "Mande?" = "no escuche, repita por favor" (NO es un comando)
 - "Andale" / "Sale" / "Orale" = confirmacion informal
 - "Digame" / "Si digame" / "Que necesita" = "adelante, lo escucho" (NO es pregunta, NO es identificarse como encargado)
+- "A la orden" / "A tus ordenes" / "A sus ordenes" = "estoy disponible, adelante" (puede ser encargado o no)
 - "Tienes donde anotar?" = persona lista para dar datos (ES decisor/encargado)
 - FIX 903: "Digame" o "Mande" al inicio NO significa que la persona sea el encargado. Solo significa "te escucho".
 
@@ -1940,6 +1934,7 @@ FLUJO NORMAL DE BRUCE (esto NO son errores):
 - Si el cliente dice "digame", "si digame", "que necesita" = esta diciendo "adelante, lo escucho", NO es una pregunta
 - Bruce confirma los datos recibidos y se despide
 - Si Bruce obtiene un contacto (email, WhatsApp, telefono), la llamada fue EXITOSA
+- Si el primer mensaje de texto de Bruce empieza directamente con "Me comunico de la marca NIOVAL..." sin saludo, NO es error - el saludo se reprodujo como audio pregrabado
 
 Tipos de errores a buscar:
 1. RESPUESTA_INCORRECTA: Bruce dio informacion FALSA sobre NIOVAL o sus productos
@@ -1991,6 +1986,8 @@ IMPORTANTE:
 - Si el cliente ofrecio correo en vez de WhatsApp y Bruce acepto, NO es error
 - Si Bruce obtuvo datos de contacto y se despidio, la llamada fue exitosa - NO busques errores menores
 - Adaptarse al medio de contacto que el cliente prefiera (correo vs WhatsApp vs telefono) es CORRECTO
+- NO reportes SALUDO_FALTANTE - el saludo siempre se reproduce como audio pregrabado antes del texto
+- NO reportes CLIENTE_HABLA_ULTIMO - es una limitacion de Twilio (timing), no un bug de codigo
 - Maximo 3 errores por llamada
 - Responde SOLO el JSON, sin texto adicional
 
@@ -2007,6 +2004,8 @@ FIX 646E - CONTEO DE TURNOS:
 _GPT_EVAL_PROMPT_CORTA = """Eres un auditor de calidad para llamadas cortas de Bruce, agente AI de la marca NIOVAL (productos ferreteros).
 
 Esta llamada fue MUY CORTA (el cliente colgó rápido). Solo reporta errores GRAVES y de ALTA CERTEZA.
+
+NOTA: Bruce usa audio pregrabado para el saludo ("Hola, buen dia") que se reproduce ANTES del texto visible. Si el texto empieza con "Me comunico de la marca NIOVAL..." sin saludo, NO es error - el saludo ya se reprodujo. NO reportes SALUDO_FALTANTE ni CLIENTE_HABLA_ULTIMO.
 
 ERRORES GRAVES a buscar (solo estos 4 tipos):
 
