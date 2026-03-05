@@ -1913,6 +1913,8 @@ ARQUITECTURA DEL SISTEMA (leer antes de evaluar):
 - Las respuestas de Bruce pasan por post-filtros que corrigen errores de GPT antes de enviarlas.
 - Si Bruce dice "Se encontrara el encargado o encargada de compras?" es porque el FSM lo determino apropiado para ese estado. NO es error repetirla si el cliente no respondio la pregunta.
 - CLIENTE_HABLA_ULTIMO: Si el cliente hablo al final y Bruce no respondio, puede ser porque Twilio termino la llamada antes de que Bruce pudiera responder. Esto NO es un bug de codigo.
+- STT (speech-to-text) puede entregar transcripciones PARCIALES o cortadas. Si el texto del cliente parece incompleto ("Me podria dejar", "Si, que"), es porque el STT corto la frase. Bruce responde con lo que tiene disponible - esto NO es error.
+- Si el cliente dice ruido de fondo, musica, o texto sin sentido ("acuerdate de mi carino", sonidos de radio), Bruce correctamente repite su pregunta anterior. Esto NO es LOGICA_ROTA.
 
 MODISMOS MEXICANOS (NO son bugs, son expresiones normales):
 - "Si, bueno?" / "Bueno?" = verificacion de conexion telefonica (NO interes)
@@ -1931,23 +1933,31 @@ FLUJO NORMAL DE BRUCE (esto NO son errores):
 - Bruce se presenta, menciona NIOVAL y pregunta por el encargado de compras
 - Si el encargado no esta, Bruce pide WhatsApp del encargado para enviar catalogo
 - Si el cliente ofrece CORREO en vez de WhatsApp, Bruce acepta el correo. Esto es CORRECTO, no es "logica rota"
-- Si el cliente dice "digame", "si digame", "que necesita" = esta diciendo "adelante, lo escucho", NO es una pregunta
+- Si el cliente dice "digame", "si digame", "que necesita", "que deseaba", "en que se le ofrece", "en que le puedo servir" = esta diciendo "adelante, lo escucho", NO significa que sea el encargado/decisor
 - Bruce confirma los datos recibidos y se despide
-- Si Bruce obtiene un contacto (email, WhatsApp, telefono), la llamada fue EXITOSA
+- Si Bruce obtiene un contacto (email, WhatsApp, telefono), la llamada fue EXITOSA - NO busques errores menores en llamadas exitosas
 - Si el primer mensaje de texto de Bruce empieza directamente con "Me comunico de la marca NIOVAL..." sin saludo, NO es error - el saludo se reprodujo como audio pregrabado
+- Si el cliente dice "llega mas tarde"/"viene mas tarde"/"si llega mas", Bruce interpreta que el encargado NO esta. Esto es CORRECTO.
+- Si Bruce da pitch de productos ante pregunta del cliente ("que ofrece", "que vende"), esto es la respuesta CORRECTA
+- "Bueno, bueno?" / "Bueno?" en medio de la llamada = verificacion de conexion. Bruce responder "Si, aqui estoy" es CORRECTO
 
 Tipos de errores a buscar:
 1. RESPUESTA_INCORRECTA: Bruce dio informacion FALSA sobre NIOVAL o sus productos
 2. FUERA_DE_TEMA: Bruce hablo de algo completamente ajeno a NIOVAL/ferreteria
 3. TONO_INADECUADO: Bruce fue grosero, impaciente o poco profesional
-4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN LA MISMA LLAMADA
-5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa" o "enviame info" y Bruce NO le pidio contacto
+4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN UN TURNO ANTERIOR
+   FIX 893: Si Bruce PIDIO el dato primero y el cliente lo dio DESPUES, eso es correcto (pedir -> recibir -> confirmar). NO es "pedir algo que ya dieron".
+   FIX 893: Si Bruce repitio pregunta despues de ruido/silencio/texto sin sentido del cliente, es CORRECTO. Solo es LOGICA_ROTA si el cliente dio informacion clara y Bruce la ignoro.
+5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa, enviame info" y Bruce NO le pidio contacto
    FIX 750: "Si, bueno?", "Bueno?", "Si, bueno." son VERIFICACION DE CONEXION (= "Sigues ahi?"), NO interes. Ignorar como senal de interes.
+   FIX 893: "Que deseaba?", "En que se le ofrece?", "En que le puedo servir?", "Digame" son preguntas de CORTESIA, NO senales fuertes de interes/compra. Si Bruce dio el pitch de productos como respuesta, eso es CORRECTO.
+   FIX 893: Si el texto del cliente esta cortado/parcial (STT incompleto), Bruce NO puede adivinar lo que iba a decir. NO es oportunidad perdida.
 6. CONTEXTO_IGNORADO: Bruce trato al interlocutor como empleado/recepcionista cuando ERA el encargado/dueño.
    Senales de que el interlocutor ES el encargado/decisor:
    - "Yo soy el encargado/dueno", "Yo hago las compras", "Tienes donde anotar?" (= listo para dar datos, es decisor)
-   - "Que me ofreces?" / "Que venden?" (= interesado como comprador)
    - Ofrece directamente un dato de contacto personal
+   FIX 893: "Que deseaba?"/"Digame"/"En que se le ofrece?"/"Mande?" NO identifican a la persona como encargado. Solo significan "te escucho".
+   FIX 893: Solo marcar CONTEXTO_IGNORADO si el cliente dijo EXPLICITAMENTE "yo soy el encargado/dueno" y Bruce lo ignoro.
    Si Bruce responde con "le dejo recado al encargado" o "cuando regrese el encargado" a alguien que ES el encargado, es error GRAVE.
 7. RESPUESTA_INCOHERENTE: Bruce dio respuesta generica ("entiendo", "mmm") sin procesar la informacion del cliente.
    Ejemplo: Cliente dice algo especifico -> Bruce solo dice "Entiendo" y cambia de tema sin abordar lo dicho.
@@ -1988,6 +1998,8 @@ IMPORTANTE:
 - Adaptarse al medio de contacto que el cliente prefiera (correo vs WhatsApp vs telefono) es CORRECTO
 - NO reportes SALUDO_FALTANTE - el saludo siempre se reproduce como audio pregrabado antes del texto
 - NO reportes CLIENTE_HABLA_ULTIMO - es una limitacion de Twilio (timing), no un bug de codigo
+- FIX 893: Si la llamada termino con contacto capturado (email, WhatsApp, telefono) y despedida, fue EXITOSA. Retorna [] (sin errores).
+- FIX 893: Si Bruce repitio pregunta despues de ruido/silencio/timeout, NO es LOGICA_ROTA. Solo si el cliente dio info clara y Bruce la ignoro.
 - Maximo 3 errores por llamada
 - Responde SOLO el JSON, sin texto adicional
 
@@ -2007,6 +2019,10 @@ Esta llamada fue MUY CORTA (el cliente colgó rápido). Solo reporta errores GRA
 
 NOTA: Bruce usa audio pregrabado para el saludo ("Hola, buen dia") que se reproduce ANTES del texto visible. Si el texto empieza con "Me comunico de la marca NIOVAL..." sin saludo, NO es error - el saludo ya se reprodujo. NO reportes SALUDO_FALTANTE ni CLIENTE_HABLA_ULTIMO.
 
+NOTA 2: El STT (speech-to-text) puede entregar texto PARCIAL o cortado. Si el texto del cliente parece incompleto, Bruce responde con lo que tiene. Si el cliente dice ruido/musica de fondo, Bruce repite su pregunta. Ambos son comportamiento CORRECTO.
+
+NOTA 3: "Que deseaba?", "En que se le ofrece?", "Digame", "Mande?" son preguntas de CORTESIA mexicana, NO identifican a la persona como encargado/decisor.
+
 ERRORES GRAVES a buscar (solo estos 4 tipos):
 
 1. CONTEXTO_IGNORADO: Bruce trató al interlocutor como empleado/recepcionista cuando ERA el encargado/dueño.
@@ -2014,20 +2030,21 @@ ERRORES GRAVES a buscar (solo estos 4 tipos):
    - "Yo soy el encargado/dueño"
    - "Yo hago/me encargo de las compras"
    - "Tienes donde anotar?" (= listo para dar sus datos, es decisor)
-   - "Qué me ofreces?" / "Qué venden?" (= interesado como comprador)
    - Ofrece directamente un dato de contacto personal
+   FIX 893: "Que deseaba?"/"Digame"/"En que se le ofrece?" NO significan ser encargado. Solo marcar si dijo EXPLICITAMENTE "yo soy el encargado".
    Si Bruce responde con "le dejo recado al encargado" o "cuando regrese el encargado" a alguien que ES el encargado, es error GRAVE.
 
 2. RESPUESTA_INCOHERENTE: Bruce dio respuesta genérica ("entiendo", "mmm") sin procesar la información del cliente.
    Ejemplo: Cliente dice algo específico → Bruce solo dice "Entiendo" y cambia de tema sin abordar lo dicho.
    NO es error si "entiendo" va seguido de una acción relevante ("Entiendo. ¿Me podría dar su WhatsApp?").
 
-3. LOGICA_ROTA: Bruce pidió dato que el cliente YA proporcionó en el turno anterior.
+3. LOGICA_ROTA: Bruce pidió dato que el cliente YA proporcionó en un turno ANTERIOR.
+   FIX 893: Si Bruce pidió primero y cliente dio después → CORRECTO (no es bug). Si Bruce repitió tras ruido/silencio → CORRECTO.
 
-4. OPORTUNIDAD_PERDIDA: Cliente mostró interés claro o ofreció datos, y Bruce respondió con despedida o tema irrelevante.
-   FIX 750: BRUCE2321 - "Sí, bueno?", "¿Bueno?", "Sí, bueno." son VERIFICACION DE CONEXION en México (= "¿Sigues ahí?").
-   NO son expresiones de interés. Si cliente dijo "Sí, bueno?" y Bruce continuó con pregunta de contacto, eso es CORRECTO.
-   "No, joven" seguido de "Sí, bueno?" = cliente verificó conexión tras pausa, NO mostró interés.
+4. OPORTUNIDAD_PERDIDA: Cliente EXPLICITAMENTE dijo "si me interesa, enviame info" y Bruce NO le pidió contacto.
+   FIX 750: "Sí, bueno?", "¿Bueno?", "Sí, bueno." son VERIFICACION DE CONEXION (= "¿Sigues ahí?"). NO interes.
+   FIX 893: "Que deseaba?"/"En que se le ofrece?" son CORTESIA, no interes fuerte. Bruce dar pitch = CORRECTO.
+   FIX 893: Si texto del cliente esta cortado/parcial por STT, Bruce no puede adivinar. NO es oportunidad perdida.
 
 CONVERSACION:
 {conversacion}

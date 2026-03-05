@@ -286,7 +286,7 @@ class TestFix750GPTEvalFalsePositive(unittest.TestCase):
         import inspect
         source = inspect.getsource(bug_detector)
         # Find OPORTUNIDAD_PERDIDA in focused prompt section
-        idx_focused = source.find('OPORTUNIDAD_PERDIDA: Cliente mostró interés claro')
+        idx_focused = source.find('OPORTUNIDAD_PERDIDA: Cliente EXPLICITAMENTE dijo')
         section = source[idx_focused:idx_focused + 500]
         self.assertIn('FIX 750', section)
         self.assertIn('bueno', section.lower())
