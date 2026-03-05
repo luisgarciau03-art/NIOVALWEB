@@ -568,6 +568,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'despues', 'luego', 'vuelva a llamar', 'llame despues',
         'marque despues', 'regrese', 'vuelva', 'cuando llegue',
         'a las', 'en la tarde', 'en la manana', 'por la manana',
+        # FIX 902: BRUCE2596 - "si gusta hablar por ahi de las seis"
+        'por ahi de las', 'hablar por ahi de', 'gusta hablar',
+        'si gusta llamar', 'si gusta marcar',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -582,6 +585,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 866A: BRUCE2111 - "tienes que hablar a la sucursal de Sahuayo" → ANOTHER_BRANCH
         'tienes que hablar a la sucursal', 'tiene que hablar a la sucursal',
         'hablar a la sucursal', 'llamar a la sucursal', 'llame a la sucursal',
+        # FIX 904: BRUCE2585 - "el area de compras esta en otro [lado/edificio]"
+        'area de compras esta en otro', 'compras esta en otro',
+        'compras estan en otro', 'se comunica a una tienda',
+        'esta comunicando a una tienda', 'comunicando a una sucursal',
     ]
     if any(a in tn for a in another):
         return FSMIntent.ANOTHER_BRANCH

@@ -1929,8 +1929,9 @@ MODISMOS MEXICANOS (NO son bugs, son expresiones normales):
 - "Que cree" / "Fijese que" = introduccion a informacion (NO pregunta retórica)
 - "Mande" / "Mande?" = "no escuche, repita por favor" (NO es un comando)
 - "Andale" / "Sale" / "Orale" = confirmacion informal
-- "Digame" / "Si digame" / "Que necesita" = "adelante, lo escucho" (NO es pregunta)
+- "Digame" / "Si digame" / "Que necesita" = "adelante, lo escucho" (NO es pregunta, NO es identificarse como encargado)
 - "Tienes donde anotar?" = persona lista para dar datos (ES decisor/encargado)
+- FIX 903: "Digame" o "Mande" al inicio NO significa que la persona sea el encargado. Solo significa "te escucho".
 
 FLUJO NORMAL DE BRUCE (esto NO son errores):
 - Bruce se presenta, menciona NIOVAL y pregunta por el encargado de compras
@@ -1966,8 +1967,10 @@ FIX 664A - REGLAS CRITICAS PARA DETECTAR LOGICA_ROTA (reduce falsos positivos):
    - Si hubo ruido o cliente pidió que repita → Repetir es CORRECTO
 
 2. Bruce pidió dato que cliente YA proporcionó
-   IMPORTANTE: Verificar que el dato esté en el mensaje INMEDIATO anterior (turno previo)
+   IMPORTANTE: Verificar que el dato esté en un turno ANTERIOR al de Bruce que lo pide.
+   Si Bruce PIDIO el dato PRIMERO y el cliente lo dio DESPUES, eso es CORRECTO (no es bug).
    NO contar si el dato está en turnos anteriores pero NO en contexto reciente (>2 turnos atrás)
+   FIX 903: Verificar ORDEN TEMPORAL: Bruce pide → cliente da = CORRECTO. Cliente da → Bruce pide = BUG.
 
 3. Bruce ignoró información clave del cliente
    Ejemplo REAL: Cliente mencionó hora "9:00 AM" pero Bruce preguntó "¿A qué hora?"
@@ -2073,7 +2076,10 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         # FIX 735: Pre-filtro IVR - NO evaluar conversaciones con conmutador automático
         _IVR_735 = re.compile(
             r'(extensi[oó]n|m[aá]rquelo ahora|seleccione una|presione\s+(?:uno|dos|tres|\d)|'
-            r'espere en la l[ií]nea|para ser atendido)',
+            r'espere en la l[ií]nea|para ser atendido|'
+            # FIX 905: Buzón de voz
+            r'la persona con la que intent|graba? tu mensaje|deje su mensaje|despu[eé]s del tono|'
+            r'puedes colgar cuando hayas terminado)',
             re.IGNORECASE
         )
         texto_cliente_735 = ' '.join(t for who, t in tracker.conversacion if who == 'cliente')

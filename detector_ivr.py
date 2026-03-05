@@ -80,9 +80,16 @@ class DetectorIVR:
         # FIX 752: BRUCE2327 - Patrones DEFINITIVOS de buzón de voz
         # "Grabe su mensaje. Marque la tecla gato cuando termine." = buzón 100%
         "grabe su mensaje", "grabe tu mensaje", "grabe un mensaje",
+        "graba su mensaje", "graba tu mensaje", "graba un mensaje",
         "deje su mensaje", "deje tu mensaje", "deje un mensaje",
         "después del tono", "despues del tono",
         "marque la tecla gato", "tecla gato cuando termine",
+        # FIX 905: BRUCE2584 - "La persona con la que intentas comunicarte no está disponible"
+        "la persona con la que intentas comunicarte",
+        "la persona con la que intenta comunicarse",
+        "no esta disponible en este momento graba",
+        "no se encuentra disponible deje",
+        "puedes colgar cuando hayas terminado",
         # FIX 506: "bienvenido a" y "gracias por comunicarse" REMOVIDOS
         # porque negocios reales pueden usarlos como saludo
     ]
