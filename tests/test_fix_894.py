@@ -315,5 +315,69 @@ class TestFix894NoCollisions(unittest.TestCase):
         self.assertIsNotNone(intent)
 
 
+# ============================================================
+# TEST GROUP 7: FIX 895 - pitch_completo_894 escalation
+# ============================================================
+class TestFix895PitchEscalation(unittest.TestCase):
+    """FIX 895: BRUCE2643/2631 - pitch_completo_894 repeat → escalate."""
+
+    def test_first_what_offer_gives_pitch(self):
+        """First WHAT_OFFER gives full pitch."""
+        engine = FSMEngine()
+        engine.state = FSMState.SALUDO
+        engine.context.state = FSMState.SALUDO
+        resp = engine.process("que deseaba")
+        self.assertIn("NIOVAL", resp)
+        self.assertTrue(engine.context.pitch_dado)
+
+    def test_second_what_offer_pivots_to_contact(self):
+        """Second WHAT_OFFER (pitch already dado) → pedir contacto."""
+        engine = FSMEngine()
+        engine.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.pitch_dado = True
+        resp = engine.process("que deseaba")
+        self.assertNotIn("quince mil", resp.lower())
+        self.assertTrue("whatsapp" in resp.lower() or "correo" in resp.lower())
+
+    def test_third_what_offer_offers_bruce_number(self):
+        """Third WHAT_OFFER → ofrecer contacto Bruce."""
+        engine = FSMEngine()
+        engine.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.pitch_dado = True
+        engine.context._pitch_894_count = 1
+        resp = engine.process("que deseaba")
+        self.assertIn("numero", resp.lower())
+
+    def test_fourth_what_offer_farewell(self):
+        """Fourth WHAT_OFFER → despedida cortés."""
+        engine = FSMEngine()
+        engine.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.state = FSMState.ENCARGADO_AUSENTE
+        engine.context.pitch_dado = True
+        engine.context._pitch_894_count = 2
+        resp = engine.process("que deseaba")
+        self.assertIn("gracias", resp.lower())
+
+    def test_pitch_894_sets_pitch_dado(self):
+        """pitch_completo_894 must set pitch_dado=True."""
+        engine = FSMEngine()
+        engine.state = FSMState.SALUDO
+        engine.context.state = FSMState.SALUDO
+        self.assertFalse(engine.context.pitch_dado)
+        engine.process("que deseaba")
+        self.assertTrue(engine.context.pitch_dado)
+
+    def test_pitch_y_encargado_894_sets_encargado_preguntado(self):
+        """pitch_y_encargado_894 must set encargado_preguntado=True."""
+        engine = FSMEngine()
+        engine.state = FSMState.PITCH
+        engine.context.state = FSMState.PITCH
+        self.assertFalse(engine.context.encargado_preguntado)
+        engine.process("que deseaba")
+        self.assertTrue(engine.context.encargado_preguntado)
+
+
 if __name__ == '__main__':
     unittest.main()

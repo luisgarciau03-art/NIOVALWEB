@@ -1486,6 +1486,22 @@ class FSMEngine:
                 print(f"  [FIX 875] pitch ya dado -> pitch_encargado_corto")
                 return self._get_template("pitch_encargado_corto")
 
+            # FIX 895: pitch_completo_894/pitch_y_encargado_894 cuando pitch ya dado → pivot
+            # BRUCE2643/2631: WHAT_OFFER en ENCARGADO_AUSENTE repite pitch completo en loop
+            # Si pitch ya fue dado, el cliente ya sabe quiénes somos → pedir contacto directamente
+            if transition.template_key in ("pitch_completo_894", "pitch_y_encargado_894") and self.context.pitch_dado:
+                _pitch_894_count = getattr(self.context, '_pitch_894_count', 0) + 1
+                self.context._pitch_894_count = _pitch_894_count
+                if _pitch_894_count == 1:
+                    print(f"  [FIX 895] pitch_completo_894 pero pitch ya dado → pedir_whatsapp_o_correo")
+                    return self._get_template("pedir_whatsapp_o_correo")
+                elif _pitch_894_count == 2:
+                    print(f"  [FIX 895] pitch_completo_894 #{_pitch_894_count} → ofrecer_contacto_bruce")
+                    return self._get_template("ofrecer_contacto_bruce")
+                else:
+                    print(f"  [FIX 895] pitch_completo_894 #{_pitch_894_count} → despedida_cortes")
+                    return self._get_template("despedida_cortes")
+
             # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
             # Si identity_repetidas >= 2, pivotar a pedir_whatsapp_o_correo para avanzar la conv.
@@ -1685,7 +1701,8 @@ class FSMEngine:
         # Track pitch dado
         if transition.template_key in ('pitch_inicial', 'pitch_encargado',
                                         'pitch_persona_nueva', 'identificacion_pitch',
-                                        'repitch_encargado'):  # FIX 791
+                                        'repitch_encargado',  # FIX 791
+                                        'pitch_completo_894', 'pitch_y_encargado_894'):  # FIX 895
             self.context.pitch_dado = True
 
         # Track encargado preguntado
@@ -1695,7 +1712,8 @@ class FSMEngine:
         #   pitch_persona_nueva, pitch_encargado, repitch_encargado también preguntan
         if transition.template_key in ('preguntar_encargado', 'pitch_inicial',
                                        'identificacion_pitch', 'pitch_persona_nueva',
-                                       'pitch_encargado', 'repitch_encargado'):
+                                       'pitch_encargado', 'repitch_encargado',
+                                       'pitch_y_encargado_894'):  # FIX 895
             self.context.encargado_preguntado = True
 
         # Track encargado es interlocutor
