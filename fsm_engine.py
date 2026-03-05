@@ -257,6 +257,8 @@ class FSMIntent(Enum):
     CONTINUATION = "continuation"
     VERIFICATION = "verification"
     WRONG_NUMBER = "wrong_number"  # FIX 744: Area equivocada / no tengo negocio
+    IDENTITY_QUESTION = "identity_question"  # FIX 894: "de donde llama", "quien habla"
+    WHAT_OFFER = "what_offer"  # FIX 894: "que deseaba", "que ofrece", "en que se le ofrece"
     UNKNOWN = "unknown"
 
 
@@ -651,6 +653,19 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     _filler_exact_837 = ['mhm', 'mmm', 'aha', 'ajam']
     if tn in _filler_exact_837:
         return FSMIntent.VERIFICATION
+
+    # --- FIX 894: "Que deseaba" / "Que ofrece" → pitch directo ---
+    # NOTE: Identity questions (de donde llama, quien habla) already handled by
+    # IDENTITY intent at line 632. No need for separate IDENTITY_QUESTION.
+    # Estas son preguntas de cortesía que requieren pitch, no GPT_NARROW genérico
+    _what_offer_894 = [
+        'que deseaba', 'que desea', 'que ofrece', 'que ofrecen',
+        'que vende', 'que venden', 'en que se le ofrece', 'en que le puedo',
+        'que me ofrece', 'que nos ofrece', 'que producto', 'que tienen',
+        'de que se trata', 'para que es', 'a que se dedican',
+    ]
+    if any(q in tn for q in _what_offer_894):
+        return FSMIntent.WHAT_OFFER
 
     # --- Pregunta general ---
     question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
@@ -1165,6 +1180,9 @@ class FSMEngine:
         add(S.SALUDO, I.MANAGER_PRESENT, S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.SALUDO, I.MANAGER_ABSENT, S.ENCARGADO_AUSENTE, A.TEMPLATE, "pedir_contacto_alternativo")
         add(S.SALUDO, I.UNKNOWN,       S.PITCH, A.TEMPLATE, "pitch_inicial")
+        # FIX 894: New intents - identity question + what_offer
+        add(S.SALUDO, I.IDENTITY_QUESTION, S.PITCH, A.TEMPLATE, "identificacion_pitch")
+        add(S.SALUDO, I.WHAT_OFFER,        S.PITCH, A.TEMPLATE, "pitch_completo_894")
         # FIX 786: CONTINUATION - cliente sigue hablando, no interrumpir
         add(S.SALUDO, I.CONTINUATION,  S.SALUDO, A.NOOP, None)
 
@@ -1189,6 +1207,9 @@ class FSMEngine:
         add(S.PITCH, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.PITCH, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.PITCH, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        # FIX 894: New intents for PITCH
+        add(S.PITCH, I.IDENTITY_QUESTION, S.PITCH, A.TEMPLATE, "identificacion_nioval")
+        add(S.PITCH, I.WHAT_OFFER,        S.BUSCANDO_ENCARGADO, A.TEMPLATE, "pitch_y_encargado_894")
         # FIX 789A: UNKNOWN durante pitch -> GPT narrow con manejar_objecion
         # (antes: blindly avanzaba a preguntar_encargado)
         add(S.PITCH, I.UNKNOWN,        S.PITCH, A.GPT_NARROW, "manejar_objecion")
@@ -1211,6 +1232,9 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.CLOSED,          S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
         add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.BUSCANDO_ENCARGADO, I.VERIFICATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "verificacion_aqui_estoy")
+        # FIX 894: New intents for BUSCANDO_ENCARGADO
+        add(S.BUSCANDO_ENCARGADO, I.IDENTITY_QUESTION, S.BUSCANDO_ENCARGADO, A.TEMPLATE, "identificacion_nioval")
+        add(S.BUSCANDO_ENCARGADO, I.WHAT_OFFER,        S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_y_encargado_894")
         add(S.BUSCANDO_ENCARGADO, I.REJECT_DATA,     S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
         # FIX 754: Cliente dicta teléfono/email completo buscando encargado -> capturar
         add(S.BUSCANDO_ENCARGADO, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
@@ -1245,6 +1269,9 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.CLOSED,         S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
         add(S.ENCARGADO_PRESENTE, I.CALLBACK,       S.ENCARGADO_PRESENTE, A.TEMPLATE, "preguntar_hora_callback")
         add(S.ENCARGADO_PRESENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
+        # FIX 894: New intents for ENCARGADO_PRESENTE
+        add(S.ENCARGADO_PRESENTE, I.IDENTITY_QUESTION, S.ENCARGADO_PRESENTE, A.TEMPLATE, "identificacion_nioval")
+        add(S.ENCARGADO_PRESENTE, I.WHAT_OFFER,        S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_completo_894")
 
         # === ENCARGADO_AUSENTE ===
         add(S.ENCARGADO_AUSENTE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -1270,6 +1297,9 @@ class FSMEngine:
         # FIX 788: Gaps - IDENTITY, CLOSED
         add(S.ENCARGADO_AUSENTE, I.IDENTITY,      S.ENCARGADO_AUSENTE, A.TEMPLATE, "identificacion_nioval")
         add(S.ENCARGADO_AUSENTE, I.CLOSED,        S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
+        # FIX 894: New intents for ENCARGADO_AUSENTE
+        add(S.ENCARGADO_AUSENTE, I.IDENTITY_QUESTION, S.ENCARGADO_AUSENTE, A.TEMPLATE, "identificacion_nioval")
+        add(S.ENCARGADO_AUSENTE, I.WHAT_OFFER,        S.ENCARGADO_AUSENTE, A.TEMPLATE, "pitch_completo_894")
 
         # === ESPERANDO_TRANSFERENCIA ===
         add(S.ESPERANDO_TRANSFERENCIA, I.CONFIRMATION,    S.PITCH, A.TEMPLATE, "pitch_persona_nueva")
@@ -1292,6 +1322,9 @@ class FSMEngine:
         add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_COMPLETE_PHONE, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_telefono")
         add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_COMPLETE_EMAIL, S.CONTACTO_CAPTURADO, A.TEMPLATE, "confirmar_correo")
         add(S.ESPERANDO_TRANSFERENCIA, I.DICTATING_PARTIAL,        S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        # FIX 894: New intents for ESPERANDO_TRANSFERENCIA
+        add(S.ESPERANDO_TRANSFERENCIA, I.IDENTITY_QUESTION, S.PITCH, A.TEMPLATE, "identificacion_pitch")
+        add(S.ESPERANDO_TRANSFERENCIA, I.WHAT_OFFER,        S.PITCH, A.TEMPLATE, "pitch_completo_894")
 
         # === CAPTURANDO_CONTACTO ===
         add(S.CAPTURANDO_CONTACTO, I.OFFER_DATA,              S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -1309,6 +1342,9 @@ class FSMEngine:
         # FIX 788: Gaps - IDENTITY, WRONG_NUMBER
         add(S.CAPTURANDO_CONTACTO, I.IDENTITY,               S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
         add(S.CAPTURANDO_CONTACTO, I.WRONG_NUMBER,           S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
+        # FIX 894: New intents for CAPTURANDO_CONTACTO
+        add(S.CAPTURANDO_CONTACTO, I.IDENTITY_QUESTION, S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
+        add(S.CAPTURANDO_CONTACTO, I.WHAT_OFFER,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_completo_894")
         # FIX 797: En CAPTURANDO_CONTACTO, manejar intents de encargado (eco STT)
         # STT echo "no está" -> MANAGER_ABSENT -> sin transición -> UNKNOWN -> GPT "contacto alternativo"
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_ABSENT,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")

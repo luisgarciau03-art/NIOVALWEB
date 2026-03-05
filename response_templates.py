@@ -52,6 +52,20 @@ TEMPLATES = {
         "¿Se encontrara el encargado de compras?",
     ],
 
+    # === FIX 894: Templates para IDENTITY_QUESTION y WHAT_OFFER ===
+    # Evitan que GPT genere respuestas genéricas cuando cliente pregunta quién es Bruce
+    "pitch_completo_894": [
+        "Le comento, somos NIOVAL, distribuidores de productos ferreteros. "
+        "Manejamos mas de quince mil productos: cintas tapagoteras, griferia, "
+        "herramientas, candados, cerraduras y mucho mas. "
+        "¿Le gustaria que le envie la lista de precios?",
+    ],
+    "pitch_y_encargado_894": [
+        "Le comento, somos distribuidores de productos ferreteros con mas de "
+        "quince mil productos. Con gusto le puedo enviar nuestro catalogo. "
+        "¿Se encontrara el encargado o encargada de compras?",
+    ],
+
     # === ENCARGADO ===
     "preguntar_encargado": [
         "¿Se encontrara el encargado o encargada de compras?",

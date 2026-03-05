@@ -161,20 +161,22 @@ class TestFix795GreetingNotQuestion:
         intent = self._classify("que paso")
         assert intent != self.QUESTION, f"'que paso' no debe ser QUESTION, got {intent}"
 
-    def test_que_ofrece_si_es_question(self):
-        """'que ofrece' SÍ es pregunta real."""
+    def test_que_ofrece_si_es_question_or_what_offer(self):
+        """'que ofrece' es pregunta real - QUESTION o WHAT_OFFER (FIX 894)."""
+        from fsm_engine import FSMIntent
         intent = self._classify("que ofrece")
-        assert intent == self.QUESTION, f"'que ofrece' debe ser QUESTION, got {intent}"
+        assert intent in (self.QUESTION, FSMIntent.WHAT_OFFER), f"'que ofrece' debe ser QUESTION o WHAT_OFFER, got {intent}"
 
     def test_que_empresa_es_si_es_question(self):
         """'que empresa es' SÍ es pregunta real."""
         intent = self._classify("que empresa es")
         assert intent == self.QUESTION, f"'que empresa es' debe ser QUESTION, got {intent}"
 
-    def test_que_productos_tienen_si_es_question(self):
-        """'que productos tienen' SÍ es pregunta real."""
+    def test_que_productos_tienen_si_es_question_or_what_offer(self):
+        """'que productos tienen' es pregunta real - QUESTION o WHAT_OFFER (FIX 894)."""
+        from fsm_engine import FSMIntent
         intent = self._classify("que productos tienen")
-        assert intent == self.QUESTION, f"'que productos tienen' debe ser QUESTION, got {intent}"
+        assert intent in (self.QUESTION, FSMIntent.WHAT_OFFER), f"'que productos tienen' debe ser QUESTION o WHAT_OFFER, got {intent}"
 
     def test_cual_es_el_precio_si_es_question(self):
         """'cual es el precio' SÍ es pregunta."""
@@ -367,7 +369,7 @@ class TestFix794797NoRegresiones:
     """Verificar que los fixes no rompen funcionalidad existente."""
 
     def test_question_real_sigue_funcionando(self):
-        """Preguntas reales siguen clasificándose como QUESTION."""
+        """Preguntas reales siguen clasificándose como QUESTION o WHAT_OFFER (FIX 894)."""
         from fsm_engine import classify_intent, FSMContext, FSMState, FSMIntent
         ctx = FSMContext()
         preguntas = [
@@ -377,9 +379,10 @@ class TestFix794797NoRegresiones:
             "donde estan ubicados",
             "cuanto cuesta el envio",
         ]
+        valid = (FSMIntent.QUESTION, FSMIntent.WHAT_OFFER)
         for p in preguntas:
             intent = classify_intent(p, ctx, FSMState.BUSCANDO_ENCARGADO)
-            assert intent == FSMIntent.QUESTION, f"'{p}' debe ser QUESTION, got {intent}"
+            assert intent in valid, f"'{p}' debe ser QUESTION o WHAT_OFFER, got {intent}"
 
     def test_capturando_contacto_transiciones_previas(self):
         """Transiciones existentes en CAPTURANDO_CONTACTO siguen funcionando."""

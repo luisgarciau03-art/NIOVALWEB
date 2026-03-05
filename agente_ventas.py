@@ -2327,6 +2327,126 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # Si todas las validaciones pasan
         return True, ""
 
+    def _guardrail_pre_send(self, respuesta: str, texto_cliente: str) -> str:
+        """
+        FIX 894: Guardrail pre-send - última validación antes de enviar respuesta.
+        Captura errores comunes de GPT en <5ms (puro regex/lógica, sin API).
+
+        Checks:
+        1. No pedir dato ya capturado en lead_data
+        2. No preguntar por encargado cuando cliente lleva 2+ turnos enganchado
+        3. No dar respuesta genérica a pregunta directa del cliente
+        4. Truncar respuestas >200 chars en contextos simples
+        """
+        import re
+        resp_lower = respuesta.lower()
+        cliente_lower = texto_cliente.lower() if texto_cliente else ""
+        _sa = lambda t: t.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+        resp_norm = _sa(resp_lower)
+        original = respuesta
+
+        # ----------------------------------------------------------
+        # CHECK 1: No pedir dato ya capturado
+        # Si lead_data tiene WhatsApp/email Y GPT lo pide OTRA VEZ
+        # ----------------------------------------------------------
+        _ld = getattr(self, 'lead_data', {}) or {}
+        _tiene_wapp = bool(_ld.get('whatsapp'))
+        _tiene_email = bool(_ld.get('email'))
+        _tiene_tel = bool(_ld.get('telefono_contacto'))
+
+        _pide_contacto = any(w in resp_norm for w in [
+            'me podria proporcionar', 'me puede dar su', 'me podria dar',
+            'proporcionarme su whatsapp', 'proporcionarme su correo',
+            'numero de whatsapp', 'correo electronico para',
+        ])
+
+        if _pide_contacto and (_tiene_wapp or _tiene_email):
+            # Ya tenemos contacto → confirmar y avanzar
+            if _tiene_wapp:
+                respuesta = f"Ya tengo su WhatsApp registrado. Le envio el catalogo en las proximas horas. Muchas gracias por su tiempo."
+            elif _tiene_email:
+                respuesta = f"Ya tengo su correo registrado. Le envio el catalogo en las proximas horas. Muchas gracias por su tiempo."
+            print(f"[FIX 894] GUARDRAIL: GPT pidio contacto pero ya tenemos dato → confirmar")
+            print(f"   lead_data: wapp={_tiene_wapp} email={_tiene_email}")
+            print(f"   Original: '{original[:80]}'")
+            print(f"   Corregido: '{respuesta[:80]}'")
+            return respuesta
+
+        # ----------------------------------------------------------
+        # CHECK 2: No preguntar por encargado si cliente lleva 2+ turnos
+        # enganchado en la conversación (respondiendo preguntas sustantivas)
+        # ----------------------------------------------------------
+        _pregunta_encargado = any(w in resp_norm for w in [
+            'se encontrara el encargado', 'esta el encargado',
+            'se encuentra el encargado', 'encargado de compras',
+            'encargado o encargada',
+        ])
+
+        if _pregunta_encargado:
+            # Contar turnos donde cliente dio respuesta sustantiva (>10 chars, no "bueno?")
+            _turnos_cliente = [
+                m['content'] for m in self.conversation_history[-8:]
+                if m.get('role') == 'user' and len(m.get('content', '')) > 10
+            ]
+            _verificaciones = ['bueno', 'mande', 'si bueno', 'alo']
+            _turnos_sustantivos = [
+                t for t in _turnos_cliente
+                if not any(v in t.lower().strip().rstrip('?. ') for v in _verificaciones)
+            ]
+
+            # Si cliente ya respondió sustantivamente 2+ veces, no preguntar por encargado
+            if len(_turnos_sustantivos) >= 2:
+                # Cliente está enganchado → dar pitch en vez de preguntar por encargado
+                respuesta = "Le comento, manejamos mas de quince mil productos ferreteros: desde cintas tapagoteras hasta cerraduras y herramientas. Con gusto le envio la lista de precios. ¿Me podria proporcionar un WhatsApp o correo para enviarle la informacion?"
+                print(f"[FIX 894] GUARDRAIL: Cliente enganchado ({len(_turnos_sustantivos)} turnos sustantivos) → skip encargado, dar pitch+pedir contacto")
+                print(f"   Original: '{original[:80]}'")
+                return respuesta
+
+        # ----------------------------------------------------------
+        # CHECK 3: No dar "Si, aqui estoy. Digame." cuando cliente
+        # hizo pregunta directa (que deseaba, de donde llama, etc.)
+        # ----------------------------------------------------------
+        # Normalizar puntuación para comparación
+        import re as _re894
+        _resp_clean = _re894.sub(r'[.,!?;:]', '', resp_norm).strip()
+        _resp_clean = ' '.join(_resp_clean.split())  # colapsar espacios
+        _resp_es_digame = _resp_clean in [
+            'si aqui estoy digame', 'aqui estoy digame',
+            'si aqui estoy', 'digame',
+        ]
+
+        _cliente_pregunto = any(w in _sa(cliente_lower) for w in [
+            'que deseaba', 'que desea', 'que necesita', 'que ofrece',
+            'que vende', 'de donde llama', 'de donde habla',
+            'de que parte', 'quien habla', 'de parte de quien',
+            'en que le puedo', 'en que se le ofrece',
+        ])
+
+        if _resp_es_digame and _cliente_pregunto:
+            # Cliente hizo pregunta directa → dar pitch, no "aqui estoy"
+            respuesta = "Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos ferreteros con mas de quince mil productos. ¿Le interesaria que le envie nuestro catalogo?"
+            print(f"[FIX 894] GUARDRAIL: Cliente pregunto directamente, GPT iba a decir 'aqui estoy' → dar pitch")
+            print(f"   Cliente: '{texto_cliente[:60]}'")
+            return respuesta
+
+        # ----------------------------------------------------------
+        # CHECK 4: Truncar respuestas >200 chars ante inputs cortos
+        # Si cliente dijo <20 chars y GPT genera >200 → truncar a 1ra oración
+        # ----------------------------------------------------------
+        if len(texto_cliente or '') < 20 and len(respuesta) > 200:
+            # Buscar primera oración completa
+            _oraciones = re.split(r'(?<=[.!?])\s+', respuesta)
+            if len(_oraciones) > 1:
+                _primera = _oraciones[0]
+                # Solo truncar si la primera oración tiene sentido (>30 chars)
+                if len(_primera) > 30:
+                    print(f"[FIX 894] GUARDRAIL: Respuesta muy larga ({len(respuesta)} chars) ante input corto ({len(texto_cliente)} chars) → truncar")
+                    print(f"   Original ({len(respuesta)} chars): '{respuesta[:80]}...'")
+                    respuesta = _primera
+                    print(f"   Truncado ({len(respuesta)} chars): '{respuesta[:80]}'")
+
+        return respuesta
+
     def _filtrar_respuesta_post_gpt(self, respuesta: str, skip_fix_384: bool = False) -> str:
         """
         FIX 226: Filtro POST-GPT para forzar reglas que GPT no sigue consistentemente.
@@ -12062,6 +12182,16 @@ MAXIMA PRIORIDAD: Verifica el historial COMPLETO antes de generar tu respuesta."
             # FIX 226: FILTRO POST-GPT - Forzar reglas que GPT no sigue
             # ============================================================
             respuesta_agente = self._filtrar_respuesta_post_gpt(respuesta_agente, skip_fix_384)
+
+            # ============================================================
+            # FIX 894: GUARDRAIL PRE-SEND - Última validación antes de enviar
+            # Captura errores que post-filters no detectan:
+            # 1. Pedir dato ya capturado en lead_data
+            # 2. Preguntar por encargado cuando cliente está enganchado
+            # 3. Respuesta genérica que no responde la pregunta del cliente
+            # 4. Respuesta demasiado larga para un turno simple
+            # ============================================================
+            respuesta_agente = self._guardrail_pre_send(respuesta_agente, respuesta_cliente)
 
             # ============================================================
             # FIX 204: DETECTAR Y PREVENIR REPETICIONES IDÉNTICAS

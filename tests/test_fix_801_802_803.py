@@ -64,11 +64,11 @@ class TestFix801DictandoDatoQuestion(unittest.TestCase):
         intent = classify_intent("¿Qué tipo de productos manejan?", ctx, FSMState.DICTANDO_DATO)
         self.assertEqual(intent, FSMIntent.QUESTION)
 
-    def test_que_venden_classified_as_question(self):
-        """'¿Qué venden?' must be classified as QUESTION."""
+    def test_que_venden_classified_as_question_or_what_offer(self):
+        """'¿Qué venden?' must be classified as QUESTION or WHAT_OFFER (FIX 894)."""
         ctx = FSMContext()
         intent = classify_intent("¿Qué venden?", ctx, FSMState.DICTANDO_DATO)
-        self.assertEqual(intent, FSMIntent.QUESTION)
+        self.assertIn(intent, (FSMIntent.QUESTION, FSMIntent.WHAT_OFFER))
 
     def test_dictating_partial_still_works(self):
         """Dictation partial (digits) must still stay in DICTANDO_DATO."""

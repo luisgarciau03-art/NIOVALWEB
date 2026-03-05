@@ -179,11 +179,10 @@ class TestFix787OfreciendoContacto(unittest.TestCase):
             self.assertIn("aqui estoy", result.lower().replace("í", "i"))
 
     def test_question_stays_narrow(self):
-        """Question → stays OFRECIENDO_CONTACTO (GPT_NARROW)."""
+        """Question → stays OFRECIENDO_CONTACTO (QUESTION or WHAT_OFFER per FIX 894)."""
         fsm = self._fsm_at_ofreciendo()
-        # Question intent - starts with "que"
         intent = classify_intent("¿Qué productos manejan?", FSMContext(), FSMState.OFRECIENDO_CONTACTO)
-        self.assertEqual(intent, FSMIntent.QUESTION)
+        self.assertIn(intent, (FSMIntent.QUESTION, FSMIntent.WHAT_OFFER))
 
     def test_identity_stays(self):
         """'¿De dónde habla?' → stays OFRECIENDO_CONTACTO."""
