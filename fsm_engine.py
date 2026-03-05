@@ -297,6 +297,7 @@ class FSMContext:
     ultimo_fue_ofrecer_contacto: bool = False
     verificacion_consecutivas: int = 0  # FIX 866B: contador de verificacion_aqui_estoy consecutivos (anti-LOOP BRUCE2322)
     identity_repetidas: int = 0         # FIX 878: contador de identificacion_nioval consecutivos (anti-loop ubicacion)
+    encargado_ausente_veces: int = 0    # FIX 892A: tracker para pedir_contacto_alternativo duplicado
 
 
 # ============================================================
@@ -786,6 +787,20 @@ class FSMEngine:
             )
             print(f"  [FIX 839] Catálogo ya prometido -> despedida_cortes (sin repetir catálogo)")
 
+        # FIX 892A: BRUCE1975 - pedir_contacto_alternativo duplicado en FSM table
+        # PITCH→ENCARGADO_AUSENTE y ESPERANDO_TRANSFERENCIA→ENCARGADO_AUSENTE usan mismo template.
+        # En 2da entrada a ENCARGADO_AUSENTE usar template alternativo para evitar PREGUNTA_REPETIDA.
+        if (transition.template_key == 'pedir_contacto_alternativo' and
+                transition.next_state == FSMState.ENCARGADO_AUSENTE):
+            self.context.encargado_ausente_veces += 1
+            if self.context.encargado_ausente_veces >= 2:
+                print(f"  [FIX 892A] pedir_contacto_alternativo #{self.context.encargado_ausente_veces} → pedir_dato_contacto_892 (anti-PREGUNTA_REPETIDA)")
+                transition = Transition(
+                    next_state=FSMState.ENCARGADO_AUSENTE,
+                    action_type=ActionType.TEMPLATE,
+                    template_key='pedir_dato_contacto_892',
+                )
+
         # FIX 785/860: BRUCE2492/2497/2462 - No repetir pregunta encargado si ya se preguntó
         # FIX 785: solo bloqueaba 'preguntar_encargado'
         # FIX 860: extiende a pitch_inicial + identificacion_pitch
@@ -937,6 +952,11 @@ class FSMEngine:
 
         elif self.state == S.ENCARGADO_AUSENTE:
             if not ctx.canales_intentados:
+                # FIX 891: BRUCE1975 - Si FIX 878 ya pivotó (identity_repetidas >= 2),
+                # usar template alternativo para evitar PREGUNTA_REPETIDA con pedir_numero_directo_885.
+                if ctx.identity_repetidas >= 2:
+                    print(f"  [FIX 891] UNKNOWN en encargado_ausente + identity_repetidas={ctx.identity_repetidas} → pedir_telefono_directo_891")
+                    return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_telefono_directo_891")
                 return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
             elif ctx.callback_pedido:
                 return Transition(S.DESPEDIDA, A.TEMPLATE, "despedida_agradecimiento")
@@ -1278,10 +1298,14 @@ class FSMEngine:
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
                 if self.context.identity_repetidas >= 2:
-                    print(f"  [FIX 878] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo")
-                    # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
-                    # pedir_whatsapp_o_correo breve tiene palabras distintas al primer pedido.
-                    return self._get_template("pedir_whatsapp_o_correo_breve")
+                    if self.context.identity_repetidas == 2:
+                        print(f"  [FIX 878] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
+                        # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
+                        return self._get_template("pedir_whatsapp_o_correo_breve")
+                    else:
+                        print(f"  [FIX 878/885B] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
+                        # FIX 885B: BRUCE2551/1975 - 3er+ identity → template distinto para evitar PREGUNTA_REPETIDA
+                        return self._get_template("pedir_numero_directo_885")
 
             return self._get_template(transition.template_key)
 

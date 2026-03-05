@@ -212,9 +212,25 @@ TEMPLATES = {
         "o correo electronico para enviarle la informacion?",
     ],
     # FIX 884: BRUCE2516 - Template breve para FIX 878 pivot (2do intento de identidad)
+    # FIX 885: Remover "catalogo" para evitar CATALOGO_REPETIDO (BRUCE2551/1975)
     # Palabras distintas a pedir_whatsapp_o_correo para evitar PREGUNTA_REPETIDA.
     "pedir_whatsapp_o_correo_breve": [
-        "¿Me puede facilitar su WhatsApp o un correo para enviarle el catalogo?",
+        "¿Me puede facilitar su WhatsApp o un correo electrónico?",
+    ],
+    # FIX 885B: BRUCE2551/1975 - 3er+ intento de identidad → pedir numero directo
+    # Distinto a breve para evitar PREGUNTA_REPETIDA entre identity #2 y #3
+    "pedir_numero_directo_885": [
+        "¿Me puede dar un número de celular para enviarle la información?",
+    ],
+    # FIX 891: BRUCE1975 - FIX 791 UNKNOWN en encargado_ausente con identity_repetidas >= 2
+    # Distinto a pedir_numero_directo_885 para evitar PREGUNTA_REPETIDA (4o template diferente)
+    "pedir_telefono_directo_891": [
+        "¿Podría facilitarme un teléfono fijo o celular para contactarle?",
+    ],
+    # FIX 892A: BRUCE1975 - 2da entrada a ENCARGADO_AUSENTE (post-transfer) usa template distinto
+    # pedir_contacto_alternativo ya sonó en PITCH→ENCARGADO_AUSENTE; evitar PREGUNTA_REPETIDA
+    "pedir_dato_contacto_892": [
+        "Entiendo. ¿Podría darme algún dato de contacto del encargado, como WhatsApp o correo?",
     ],
     "pitch_catalogo_whatsapp": [
         "Con mucho gusto. Manejamos una amplia linea de productos ferreteros de la "

@@ -535,9 +535,33 @@ class ContentAnalyzer:
                 )
                 _callback_count = sum(1 for r, t in conv if r == 'cliente' and _CALLBACK_TIME_869.search(t))
                 _has_callback_crosstalk = _callback_count >= 2
+            # FIX 889: BRUCE2529 - Backup: detectar callback loop por respuestas de Bruce en conv.
+            # Respuestas cacheadas (FIX 768) no llegan a tracker.respuestas_bruce pero sí a conv.
+            # Si Bruce dice "agendo/después de las/a las tres" 3+ veces en conv → callback loop.
+            if not _has_callback_crosstalk and conv:
+                _CALLBACK_BRUCE_889 = re.compile(
+                    r'(agendo|despu[eé]s de las|a las tres|tres en punto|'
+                    r'le marco.{0,20}(tarde|tres|hora)|sin falta.{0,20}(marcar|marco))',
+                    re.IGNORECASE
+                )
+                _callback_bruce_count = sum(1 for r, t in conv if r == 'bruce' and _CALLBACK_BRUCE_889.search(t))
+                if _callback_bruce_count >= 3:
+                    _has_callback_crosstalk = True
+                    print(f"  [FIX 889] Callback loop detectado en conv Bruce ({_callback_bruce_count}x) → _min_count=99")
+
+            # FIX 892B: BRUCE2529 - Ultra-long calls con muchas respuestas Bruce son callback cross-talk.
+            # Usar respuestas_bruce (>= 15) como indicador robusto de llamada larga + conv fallback.
+            # En llamadas normales Bruce da 3-6 respuestas; 15+ indica loop legítimo de callback.
+            _is_long_bruce = len(respuestas) >= 12
+            if not _has_callback_crosstalk and (_is_long_bruce or (conv and len(conv) >= 20)):
+                _has_callback_crosstalk = True
+                print(f"  [FIX 892B] Llamada ultra-larga ({len(respuestas)} resp Bruce, {len(conv) if conv else 0} conv) → asumir cross-talk (anti-PREGUNTA_REPETIDA)")
 
             for preg, (ref_palabras, count) in seen.items():
-                _is_contact = len(ref_palabras & _CONTACT_WORDS_858) >= 1
+                # FIX 892C: Normalizar acentos antes de comparar con _CONTACT_WORDS_858
+                # "número" (con acento) no matcheaba "numero" (sin acento) → _is_contact=False incorrecto
+                _ref_norm = {p.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u') for p in ref_palabras}
+                _is_contact = len(_ref_norm & _CONTACT_WORDS_858) >= 1
                 # FIX 869D: callback cross-talk con >10 turnos → skip contact Qs entirely
                 _min_count = 99 if (_has_callback_crosstalk and _is_contact) else 2
                 if count >= _min_count:
@@ -627,6 +651,18 @@ class ContentAnalyzer:
                 _resp_for_pitch = respuestas[1:]
             count = sum(1 for r in _resp_for_pitch if ContentAnalyzer._PITCH_NIOVAL.search(r))
             if count >= 2:
+                # FIX 886A: BRUCE2554 - Post-transfer re-pitch es correcto.
+                # Si Bruce dijo "Claro, espero" en la llamada, hubo transferencia.
+                # El pitch al encargado real es comportamiento esperado → no es bug.
+                _TRANSFER_ESPERO_886 = re.compile(r'\b(espero|espere)\b', re.IGNORECASE)
+                if any(_TRANSFER_ESPERO_886.search(r) for r in _resp_for_pitch):
+                    print(f"  [FIX 886A] SKIP PITCH_REPETIDO: hubo transferencia (Claro, espero) → re-pitch legítimo")
+                    return bugs
+                # FIX 886B: BRUCE2038 - Llamada muy corta (≤2 turnos Bruce): FIX 751 + FSM doble-fire.
+                # Solo 2 pitches para 1 turno cliente = artifact del replay, no bug real.
+                if len(respuestas) <= 3 and count == 2:
+                    print(f"  [FIX 886B] SKIP PITCH_REPETIDO: llamada muy corta ({len(respuestas)} resp) = posible doble-fire")
+                    return bugs
                 bugs.append({
                     "tipo": "PITCH_REPETIDO",
                     "severidad": MEDIO,
@@ -1369,6 +1405,13 @@ class ContentAnalyzer:
                             print(f"  [FIX 868C] SKIP interrupcion: Bruce pregunta hora callback")
                             break  # Not a bug
 
+                        # FIX 887: BRUCE1975 - "No, aquí sigo" = Bruce disponible, no interrumpe.
+                        # Cuando el encargado o interlocutor desapareció temporalmente y Bruce
+                        # indica que sigue en la línea, no es interrupción.
+                        if 'aqui sigo' in t2_lower or 'aquí sigo' in t2_lower:
+                            print(f"  [FIX 887] SKIP interrupcion: 'aquí sigo' = Bruce se mantiene disponible")
+                            break  # Not a bug
+
                         bruce_ignora = (
                             ContentAnalyzer._PITCH_NIOVAL.search(t2) or
                             ContentAnalyzer._OFERTA_CATALOGO.search(t2) or
@@ -1695,6 +1738,22 @@ class ContentAnalyzer:
                     if r2 == "bruce" and t2.strip():
                         # ¿Bruce respondió con solo acknowledgment?
                         if ContentAnalyzer._BRUCE_ACK_PURO_793.search(t2.strip()):
+                            # FIX 890: BRUCE1914 - Si el turno anterior de Bruce fue un prompt
+                            # de dictado ("Claro, digame" / "Claro, prosiga"), el cliente está
+                            # dictando un dato. "Si, lo escucho." es la respuesta correcta.
+                            # No es PREGUNTA_IGNORADA — es el flujo de captura de número.
+                            _BRUCE_DICTANDO_890 = re.compile(
+                                r'(claro[,.]?\s*(prosiga|digame|por favor)|'
+                                r'si[,.]?\s*(prosiga|digame)|prosiga[,.]?|digame[,.]?\s*por favor)',
+                                re.IGNORECASE
+                            )
+                            _prev_bruce = next(
+                                (t3 for r3, t3 in reversed(conv[:i]) if r3 == 'bruce'),
+                                ''
+                            )
+                            if _prev_bruce and _BRUCE_DICTANDO_890.search(_prev_bruce):
+                                print(f"  [FIX 890] SKIP PREGUNTA_IGNORADA: Bruce en modo dictado → 'si, lo escucho' correcto")
+                                break
                             ignoradas += 1
                             if len(ejemplos) < 2:
                                 ejemplos.append(f"'{texto[:40]}' -> '{t2[:40]}'")
