@@ -534,6 +534,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'soy yo', 'yo soy', 'si soy', 'yo mero', 'yo soy el encargado',
         'yo soy la encargada', 'si yo soy', 'aqui yo', 'servidor',
         'yo me encargo', 'conmigo', 'a mi',
+        # FIX 891: BRUCE2605 - "a la orden" / "a tus ordenes" = encargado presente
+        'a la orden', 'a tus ordenes', 'a sus ordenes', 'a tu orden',
     ]
     if any(m in tn for m in manager_present):
         return FSMIntent.MANAGER_PRESENT
