@@ -39,35 +39,35 @@ class TestFix893DigameInterest(unittest.TestCase):
         self.assertEqual(intent, FSMIntent.CONFIRMATION)
 
     def test_digame_con_encargado_preguntado_es_interest(self):
-        """'Digame' despues de preguntar encargado -> INTEREST (no CONFIRMATION)."""
+        """FIX 884: 'Digame' despues de preguntar encargado -> MANAGER_PRESENT (da pitch)."""
         ctx = FSMContext()
         ctx.encargado_preguntado = True
         intent = classify_intent("Dígame.", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.INTEREST)
+        self.assertEqual(intent, FSMIntent.MANAGER_PRESENT)
 
     def test_si_digame_con_encargado_preguntado_es_interest(self):
         ctx = FSMContext()
         ctx.encargado_preguntado = True
         intent = classify_intent("Sí, dígame.", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.INTEREST)
+        self.assertEqual(intent, FSMIntent.MANAGER_PRESENT)
 
     def test_mande_con_encargado_preguntado_es_interest(self):
         ctx = FSMContext()
         ctx.encargado_preguntado = True
         intent = classify_intent("Mande.", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.INTEREST)
+        self.assertEqual(intent, FSMIntent.MANAGER_PRESENT)
 
     def test_adelante_con_encargado_preguntado_es_interest(self):
         ctx = FSMContext()
         ctx.encargado_preguntado = True
         intent = classify_intent("Adelante.", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.INTEREST)
+        self.assertEqual(intent, FSMIntent.MANAGER_PRESENT)
 
     def test_diga_con_encargado_preguntado_es_interest(self):
         ctx = FSMContext()
         ctx.encargado_preguntado = True
         intent = classify_intent("Diga.", ctx, FSMState.BUSCANDO_ENCARGADO)
-        self.assertEqual(intent, FSMIntent.INTEREST)
+        self.assertEqual(intent, FSMIntent.MANAGER_PRESENT)
 
     def test_si_claro_no_afectado(self):
         """'Si claro' NO es digame-like -> sigue siendo CONFIRMATION."""

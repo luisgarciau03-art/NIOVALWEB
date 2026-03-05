@@ -503,6 +503,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no viene hoy', 'esta de vacaciones', 'esta ocupado',
         'esta ocupada', 'esta comiendo', 'salio a comer',
         'no lo veo', 'todavia no llega', 'ya se fue',
+        # FIX 882: BRUCE2625 - "salieron" no matcheaba (solo "salio")
+        # BRUCE2630 - "no se encuentre" (subjuntivo) no matcheaba
+        'salieron', 'no se encuentre', 'anda fuera', 'no vino',
+        'hora de comida', 'fueron a comer', 'esta fuera',
+        'estan comiendo', 'esta en su hora', 'esta descansando',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -571,6 +576,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 902: BRUCE2596 - "si gusta hablar por ahi de las seis"
         'por ahi de las', 'hablar por ahi de', 'gusta hablar',
         'si gusta llamar', 'si gusta marcar',
+        # FIX 882: BRUCE2625 - "si gustas marcar en una hora, salieron"
+        # "en una hora" no matcheaba (solo "a las"), "si gustas" (tuteo) no matcheaba
+        'en una hora', 'en un rato', 'en un momento',
+        'si gustas llamar', 'si gustas marcar', 'gustas marcar',
+        'si gustas hablar', 'gustas llamar',
+        'marcar en una hora', 'llamar en una hora',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -602,6 +613,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     identity = [
         'quien habla', 'de donde', 'de que empresa', 'de que parte',
         'a donde llama', 'de donde llama', 'con quien hablo',
+        # FIX 883: BRUCE2630/2634 - "de parte de quién" no matcheaba
+        # Cliente pregunta procedencia → Bruce debe identificarse
+        'de parte de', 'de parte de quien', 'quien eres',
+        'como te llamas', 'como se llama', 'quien me habla',
+        'quien me llama', 'de que compania', 'de que marca',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
@@ -643,14 +659,16 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si gracias', 'ok gracias', 'perfecto', 'muy bien',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
-        # FIX 893: BRUCE2586/2576 - "Dígame"/"Sí dígame"/"Mande" en BUSCANDO_ENCARGADO
-        # cuando encargado ya fue preguntado = cliente dice "adelante, dime" = INTEREST
-        # Sin esto: CONFIRMATION → preguntar_encargado → re-pregunta → LOOP "Digame"/"Aqui estoy"
-        _digame_like_893 = {'digame', 'si digame', 'diga', 'mande', 'si mande', 'adelante'}
-        if (tn in _digame_like_893 and
+        # FIX 884 (reemplaza FIX 893): BRUCE2619 - "Dígame" en BUSCANDO_ENCARGADO
+        # FIX 893 original: dígame → INTEREST → salta a pedir WhatsApp (INCORRECTO)
+        # BRUCE2619: cliente dice "Dígame" queriendo escuchar, no expresar interés
+        # Corrección: dígame → MANAGER_PRESENT → da pitch (el que dice "dígame" ES el decisor)
+        # Esto evita: (1) re-preguntar encargado (LOOP) y (2) saltar a WhatsApp sin pitch
+        _digame_like_884 = {'digame', 'si digame', 'diga', 'mande', 'si mande', 'adelante'}
+        if (tn in _digame_like_884 and
                 state == FSMState.BUSCANDO_ENCARGADO and
                 context.encargado_preguntado):
-            return FSMIntent.INTEREST
+            return FSMIntent.MANAGER_PRESENT
         return FSMIntent.CONFIRMATION
 
     # --- Continuación (texto termina en conector) ---
@@ -659,11 +677,20 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Interés implícito ---
     interest = [
-        'me interesa', 'si me interesa', 'digame', 'cuenteme',
+        'me interesa', 'si me interesa', 'cuenteme',
         'a ver', 'que ofrece', 'que tiene',
     ]
+    # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
+    # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
+    # Pero cliente está RECHAZANDO. "digame" solo debe ser INTEREST como exact match, no substring.
+    interest_substring_guarded = ['digame']
     if any(i in tn for i in interest):
         return FSMIntent.INTEREST
+    # "digame" solo como interest si es exact match o no contiene negación
+    _negation_884 = ['no', 'fijese que no', 'no tengo', 'no puedo', 'no esta']
+    if any(i in tn for i in interest_substring_guarded):
+        if not any(n in tn for n in _negation_884):
+            return FSMIntent.INTEREST
 
     # --- FIX 824: "No tengo" corto sin canal = rechazo genérico ---
     # BRUCE2538: "No tengo" (2 palabras) -> UNKNOWN -> FIX 791 pide WhatsApp de nuevo
