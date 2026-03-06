@@ -112,17 +112,20 @@ class TestFix886FuzzyMatching(unittest.TestCase):
         self.assertNotEqual(result, FSMIntent.CALLBACK)
 
     def test_fuzzy_callback_state_guard(self):
-        """Fuzzy callback solo en estados relevantes."""
+        """Fuzzy callback solo en estados relevantes. FIX 935: DICTANDO_DATO now included."""
         ctx = FSMContext()
-        # In DICTANDO_DATO, fuzzy callback should NOT trigger
+        # FIX 935: DICTANDO_DATO is now in the callback state guard list
         result = classify_intent(
             "si gustas hablar en otra hora diferente por favor",
             ctx, FSMState.DICTANDO_DATO
         )
-        # Should NOT be callback (wrong state for fuzzy guard)
-        # But FIX 882 exact match 'si gustas hablar' is in callback with state guard
-        # DICTANDO_DATO is NOT in the callback state guard list at line 576
-        self.assertNotEqual(result, FSMIntent.CALLBACK)
+        self.assertEqual(result, FSMIntent.CALLBACK)
+        # But CONTACTO_CAPTURADO is still NOT in callback guard
+        result2 = classify_intent(
+            "si gustas hablar en otra hora diferente por favor",
+            ctx, FSMState.CONTACTO_CAPTURADO
+        )
+        self.assertNotEqual(result2, FSMIntent.CALLBACK)
 
     def test_fuzzy_identity_de_parte(self):
         """Fuzzy: 'parte' + 'quien' matches IDENTITY."""

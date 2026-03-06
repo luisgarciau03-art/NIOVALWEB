@@ -302,6 +302,10 @@ class FSMContext:
     encargado_ausente_veces: int = 0    # FIX 892A: tracker para pedir_contacto_alternativo duplicado
     templates_usados: set = field(default_factory=set)  # FIX 907: templates ya dichos para evitar PREGUNTA_REPETIDA
     template_repeat_count: int = 0     # FIX 910: contador de repeticiones para detectar LOOP
+    pedir_datos_count: int = 0         # FIX 909: contador de veces que Bruce pide datos (anti-LOOP)
+    confusion_count: int = 0           # FIX 918: contador de turnos confusos del cliente
+    ultima_respuesta_bruce: str = ""   # FIX 910: ultima respuesta para dedup
+    pitch_turno: int = 0              # FIX 919: turno en que se dio el pitch
 
 
 # ============================================================
@@ -362,6 +366,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
                                   'no puede atender', 'nadie que atienda', 'no atiende']
     if tl.endswith(',') and len(tn) < 40:
         if any(m in tn for m in _manager_absent_quick_889):
+            # FIX 930: BRUCE2550 - En SALUDO, "No, no está," con coma = cliente sigue hablando
+            # No interrumpir, dejar que termine de hablar (ej: "No, no está, tendría que llamar más tarde")
+            if state == FSMState.SALUDO:
+                return FSMIntent.CONTINUATION
             pass  # FIX 889: fall through — será clasificado como MANAGER_ABSENT más abajo
         elif not any(r in tn for r in _reject_quick_821):
             return FSMIntent.CONTINUATION
@@ -397,8 +405,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # FIX 780: Excluir frases con contexto temporal de dictado parcial
     # BRUCE2468: "llegan en una hora" -> "una" × 2 = num_words=2 -> falso DICTATING_PARTIAL
     # Palabras temporales junto a números no son dictado de teléfono
+    # FIX 931: Agregado 'las' para "marca a las 4:00" (BRUCE2540)
     _time_context = {'hora', 'horas', 'rato', 'minuto', 'minutos', 'momento', 'dia', 'dias',
-                     'semana', 'semanas', 'mes', 'meses', 'tarde', 'manana', 'noche'}
+                     'semana', 'semanas', 'mes', 'meses', 'tarde', 'manana', 'noche',
+                     'las', 'marca', 'marcar', 'llamar', 'llamame', 'marcame'}
     words = set(tn.split())
     has_time_context = bool(words & _time_context)
 
@@ -611,7 +621,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
                      FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
-                     FSMState.ENCARGADO_PRESENTE):
+                     FSMState.ENCARGADO_PRESENTE, FSMState.DICTANDO_DATO):  # FIX 935
             return FSMIntent.CALLBACK
 
     # --- Otra sucursal ---
@@ -936,6 +946,10 @@ class FSMEngine:
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback'):
             hora_detectada = self._detectar_hora_en_texto_784(texto)
+            # FIX 934: También usar hora pre-guardada de MANAGER_ABSENT previo
+            if not hora_detectada and self.context.callback_hora:
+                hora_detectada = self.context.callback_hora
+                print(f"  [FIX 934] Usando hora pre-guardada: '{hora_detectada}'")
             if hora_detectada:
                 # FIX 849: Anti-LOOP confirmar_callback - limitar a 1 confirmar_callback específico
                 # + 1 genérico; en el 3ro+ ceder a GPT para romper el loop
@@ -1280,16 +1294,66 @@ class FSMEngine:
             ns, ac, tpl = opciones[0]
             return Transition(ns, ac, tpl)
 
+        # FIX 909: Si ya pidió datos 3+ veces sin éxito, escalar a ofrecer contacto Bruce
+        if ctx.pedir_datos_count >= 3:
+            print(f"  [FIX 909] LOOP detectado: {ctx.pedir_datos_count} pedidos de datos sin exito -> ofrecer contacto Bruce")
+            if not _template_ya_dicho("ofrecer_contacto_bruce"):
+                _registrar_template("ofrecer_contacto_bruce")
+                return Transition(S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
+            else:
+                return Transition(S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+
+        # FIX 918: Detección de confusión - si cliente parece confundido, aclarar
+        tn = _normalize(texto)
+        # Only exact or near-exact matches to avoid false positives like "como le digo"
+        _confusion_918_exact = ['no entiendo', 'no le entendi', 'no entendi',
+                                'a que se refiere', 'de que se trata',
+                                'no se de que', 'no se de que me habla']
+        _confusion_918_substring = ['que quiere decir', 'que quieren decir', 'no comprendo']
+        _is_confused = (tn in _confusion_918_exact or
+                        any(c in tn for c in _confusion_918_substring) or
+                        any(tn.startswith(c) for c in _confusion_918_exact))
+        if _is_confused and len(tn) < 30:
+            ctx.confusion_count += 1
+            if ctx.confusion_count <= 2 and not _template_ya_dicho("aclarar_confusion"):
+                _registrar_template("aclarar_confusion")
+                print(f"  [FIX 918] Confusion detectada (#{ctx.confusion_count}): '{texto[:40]}' -> aclarar_confusion")
+                return Transition(self.state, A.TEMPLATE, "aclarar_confusion")
+
+        # FIX 933: BRUCE2457 - Texto STT incompleto/garbled = cliente sigue hablando
+        # "Pero yo le yo le he visto No, es que el yo no me lo" → incompleto (termina en "lo")
+        # Heuristic: si el texto es largo (>20 chars), tiene repeticiones STT, y termina sin
+        # puntuación ni patrón de cierre → probablemente incompleto, esperar más input
+        _ends_incomplete_933 = (
+            len(tn) > 20 and
+            not any(tn.endswith(p) for p in ('.', '?', '!', 'gracias', 'adios', 'bye')) and
+            (tn.count(' yo ') >= 2 or tn.count(' le ') >= 2 or  # STT stutter/repeat
+             tn.endswith(' lo') or tn.endswith(' el') or tn.endswith(' la') or
+             tn.endswith(' me') or tn.endswith(' le') or tn.endswith(' de') or
+             tn.endswith(' que') or tn.endswith(' no') or tn.endswith(' es'))
+        )
+        if _ends_incomplete_933:
+            print(f"  [FIX 933] Texto incompleto detectado: '{texto[:50]}...' -> NOOP (esperar)")
+            return Transition(self.state, A.NOOP, None)
+
+        # FIX 921: Rechazo ambiguo - "no" corto en estados tempranos = ambiguo
+        # ¿No está el encargado? ¿No le interesa? Aclarar antes de asumir
+        _ambiguous_no_921 = ('no', 'no no', 'mmm no', 'pues no')
+        if (tn in _ambiguous_no_921
+                and self.state in (S.SALUDO, S.PITCH)
+                and not ctx.encargado_preguntado
+                and not _template_ya_dicho("aclarar_rechazo_ambiguo")):
+            _registrar_template("aclarar_rechazo_ambiguo")
+            print(f"  [FIX 921] Rechazo ambiguo en {self.state.value}: '{texto}' -> aclarar_rechazo_ambiguo")
+            return Transition(self.state, A.TEMPLATE, "aclarar_rechazo_ambiguo")
+
         if self.state == S.PITCH:
-            return _seleccionar_template([
+            opciones_pitch = [x for x in [
                 (S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado") if not ctx.encargado_preguntado else None,
                 (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo") if not ctx.canales_intentados else None,
                 (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso"),
-            ].__class__([x for x in [
-                (S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado") if not ctx.encargado_preguntado else None,
-                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo") if not ctx.canales_intentados else None,
-                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso"),
-            ] if x is not None]))
+            ] if x is not None]
+            return _seleccionar_template(opciones_pitch)
 
         elif self.state == S.BUSCANDO_ENCARGADO:
             opciones = []
@@ -1335,11 +1399,26 @@ class FSMEngine:
                 return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_catalogo_whatsapp")
 
         elif self.state == S.CAPTURANDO_CONTACTO:
+            # FIX 909: Si ya pidió datos muchas veces, escalar
+            if ctx.pedir_datos_count >= 3:
+                print(f"  [FIX 909] CAPTURANDO_CONTACTO: {ctx.pedir_datos_count} pedidos -> ofrecer contacto Bruce")
+                return Transition(S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
             opciones = [
                 (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero"),
                 (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "no_escuche_repetir"),
             ]
             return _seleccionar_template(opciones)
+
+        elif self.state == S.ESPERANDO_TRANSFERENCIA:
+            # FIX 911: En espera de transferencia, confirmar presencia
+            return Transition(S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "verificacion_aqui_estoy")
+
+        elif self.state == S.OFRECIENDO_CONTACTO:
+            # FIX 922: Ofrecer dictar numero de Bruce directamente
+            if not _template_ya_dicho("dictar_numero_bruce"):
+                _registrar_template("dictar_numero_bruce")
+                return Transition(S.OFRECIENDO_CONTACTO, A.TEMPLATE, "dictar_numero_bruce")
+            return Transition(S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
 
         # Estados no mapeados -> None -> fallback a GPT_NARROW existente
         return None
@@ -1369,7 +1448,8 @@ class FSMEngine:
         add(S.SALUDO, I.VERIFICATION,  S.PITCH, A.TEMPLATE, "pitch_inicial")
         add(S.SALUDO, I.QUESTION,      S.PITCH, A.TEMPLATE, "identificacion_pitch")
         add(S.SALUDO, I.IDENTITY,      S.PITCH, A.TEMPLATE, "identificacion_pitch")
-        add(S.SALUDO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        # FIX 920: Explorar antes de despedida (OPORTUNIDAD_PERDIDA)
+        add(S.SALUDO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.SALUDO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.SALUDO, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.SALUDO, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -1514,7 +1594,8 @@ class FSMEngine:
         # → verificacion_aqui_estoy (no re-pitch con encargado question repetida)
         add(S.ESPERANDO_TRANSFERENCIA, I.VERIFICATION,    S.PITCH, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.ESPERANDO_TRANSFERENCIA, I.OFFER_DATA,      S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
-        add(S.ESPERANDO_TRANSFERENCIA, I.UNKNOWN,         S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
+        # FIX 929: BRUCE2576 - UNKNOWN durante espera → silencio (no BTE fallback que re-pregunta encargado)
+        add(S.ESPERANDO_TRANSFERENCIA, I.UNKNOWN,         S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "verificacion_aqui_estoy")
         # FIX 786: CONTINUATION - cliente sigue hablando durante espera
         add(S.ESPERANDO_TRANSFERENCIA, I.CONTINUATION,   S.ESPERANDO_TRANSFERENCIA, A.NOOP, None)
         # FIX 788: Gaps - NO_INTEREST, CALLBACK, DICTATING_*, WRONG_NUMBER
@@ -1560,6 +1641,8 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.CONTINUATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.DICTANDO_DATO, I.OFFER_DATA,               S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         add(S.DICTANDO_DATO, I.CONFIRMATION,             S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
+        # FIX 936: BRUCE2376 - "permíteme" (TRANSFER) en DICTANDO_DATO → esperar transferencia
+        add(S.DICTANDO_DATO, I.TRANSFER,                 S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
         add(S.DICTANDO_DATO, I.FAREWELL,                 S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
         # FIX 820: UNKNOWN durante dictado -> Claude decide (no fillers)
@@ -1680,6 +1763,59 @@ class FSMEngine:
     def _execute(self, transition: Transition, texto: str, agente=None) -> Optional[str]:
         """Ejecuta la acción de la transición."""
         if transition.action_type == ActionType.TEMPLATE:
+            # FIX 919: No pedir datos si no se ha dado el pitch todavia (TIMING_INCORRECTO)
+            # Si transicion va a CAPTURANDO_CONTACTO pero pitch no se dio, dar pitch primero
+            _pedir_datos_keys = ('pedir_whatsapp', 'pedir_correo', 'pedir_whatsapp_o_correo',
+                                 'pedir_whatsapp_o_correo_breve', 'pedir_contacto_alternativo')
+            if (transition.template_key in _pedir_datos_keys
+                    and not self.context.pitch_dado
+                    and self.context.turnos_bruce < 2):
+                print(f"  [FIX 919] TIMING: pitch no dado aun, dar valor antes de pedir datos")
+                return self._get_template("pitch_inicial")
+
+            # FIX 920: Explorar antes de despedida - si NO_INTEREST/FAREWELL en estado temprano
+            # y no se ha explorado alternativas, ofrecer algo antes de colgar
+            # Guard: No interceptar si ya estamos en DESPEDIDA (ya nos estamos despidiendo)
+            if (transition.template_key in ('despedida_no_interesa', 'despedida_cortes')
+                    and self.state != FSMState.DESPEDIDA
+                    and not getattr(self.context, 'pitch_dado', False)
+                    and getattr(self.context, 'turnos_bruce', 0) <= 3
+                    and "explorar_antes_despedida" not in getattr(self.context, 'templates_usados', set())):
+                self.context.templates_usados.add("explorar_antes_despedida")
+                print(f"  [FIX 920] Explorar antes de despedida (pitch no dado, turno {self.context.turnos_bruce})")
+                return self._get_template("explorar_antes_despedida")
+
+            # FIX 922: Captura mínima pre-despedida - si vamos a despedida con pitch dado pero sin datos
+            # Guard: Not in DESPEDIDA already, and only once
+            # FIX 939: No pedir datos si cliente dijo area equivocada / no hace compras
+            _tn_939 = _normalize(texto) if texto else ''
+            _area_equivocada_939 = any(p in _tn_939 for p in [
+                'no hacemos compra', 'no compramos', 'no hacemos ningun tipo de compra',
+                'no es ferreteria', 'no es aqui', 'aqui no es', 'numero equivocado',
+                'se equivoco', 'esta equivocado', 'area equivocada',
+            ])
+            if (transition.template_key in ('despedida_no_interesa', 'despedida_cortes')
+                    and self.state != FSMState.DESPEDIDA
+                    and getattr(self.context, 'pitch_dado', False)
+                    and not getattr(self.context, 'datos_capturados', {})
+                    and not getattr(self.context, 'catalogo_prometido', False)
+                    and getattr(self.context, 'pedir_datos_count', 0) == 0
+                    and not _area_equivocada_939
+                    and "captura_minima_pre_despedida" not in getattr(self.context, 'templates_usados', set())):
+                self.context.templates_usados.add("captura_minima_pre_despedida")
+                print(f"  [FIX 922] Captura minima pre-despedida (sin datos capturados)")
+                return self._get_template("captura_minima_pre_despedida")
+
+            # FIX 932: BRUCE2528 - dictar_numero_bruce repetido 2+ veces → despedida
+            # En OFRECIENDO_CONTACTO, UNKNOWN maps directly to dictar_numero_bruce (not GPT_NARROW)
+            # so _handle_unknown_stateful is never called. Manual anti-loop here.
+            if transition.template_key == "dictar_numero_bruce":
+                _dictar_count = getattr(self.context, '_dictar_numero_count', 0) + 1
+                self.context._dictar_numero_count = _dictar_count
+                if _dictar_count >= 2:
+                    print(f"  [FIX 932] dictar_numero_bruce #{_dictar_count} -> despedida_cortes (anti-LOOP)")
+                    return self._get_template("despedida_cortes")
+
             # FIX 875: pitch_encargado con pitch ya dado → usar versión corta (sin lista de productos)
             # Auditoría 25/02: INFO_NO_SOLICITADA(9x) — Bruce repite descripción de productos
             # cuando el encargado confirma presencia DESPUÉS de que pitch_inicial ya sonó.
@@ -1860,13 +1996,13 @@ class FSMEngine:
             return None  # Fallthrough a lógica existente
 
     def _build_fsm_context_820(self) -> str:
-        """FIX 820: Construye contexto FSM para inyectar en prompts narrow."""
+        """FIX 820/908: Construye contexto FSM para inyectar en prompts narrow."""
         ctx = self.context
         parts = [f"Estado: {self.state.value}"]
         if ctx.canales_rechazados:
-            parts.append(f"Canales rechazados por cliente: {', '.join(ctx.canales_rechazados)}")
+            parts.append(f"Canales rechazados por cliente: {', '.join(ctx.canales_rechazados)}. NO pedir estos canales")
         if ctx.datos_capturados:
-            parts.append(f"Datos ya capturados: {ctx.datos_capturados}")
+            parts.append(f"Datos ya capturados: {ctx.datos_capturados}. NO pedir estos datos de nuevo")
         if ctx.callback_pedido:
             parts.append(f"Callback solicitado: si")
         if ctx.callback_hora:
@@ -1875,6 +2011,11 @@ class FSMEngine:
             parts.append("El interlocutor ES el encargado de compras")
         if ctx.cliente_no_autorizado:
             parts.append("El cliente NO esta autorizado para dar datos")
+        # FIX 908: Contexto adicional para GPT
+        if not ctx.pitch_dado:
+            parts.append("IMPORTANTE: Aun NO se ha dado el pitch. Explica primero que es NIOVAL antes de pedir datos")
+        if ctx.pedir_datos_count >= 2:
+            parts.append(f"ATENCION: Ya se pidieron datos {ctx.pedir_datos_count} veces sin exito. Cambiar de tactica o despedirse")
         if ctx.catalogo_prometido:
             parts.append("Ya se prometio enviar catalogo")
         return "\n".join(parts)
@@ -1996,6 +2137,23 @@ class FSMEngine:
         if transition.template_key in ('pedir_whatsapp_o_correo', 'pedir_whatsapp', 'pedir_correo'):
             self.context.whatsapp_ya_solicitado = True
 
+        # FIX 909: Track pedidos de datos para detección de LOOP
+        _pedir_datos_templates = (
+            'pedir_whatsapp', 'pedir_correo', 'pedir_telefono',
+            'pedir_whatsapp_o_correo', 'pedir_whatsapp_o_correo_breve',
+            'pedir_alternativa_correo', 'pedir_alternativa_telefono',
+            'pedir_alternativa_whatsapp', 'pedir_contacto_alternativo',
+            'pedir_numero_directo_885', 'pedir_telefono_directo_891',
+            'pedir_dato_contacto_892', 'digame_numero',
+        )
+        if transition.template_key in _pedir_datos_templates:
+            self.context.pedir_datos_count += 1
+
+        # FIX 919: Track turno en que se dio el pitch
+        if transition.template_key in ('pitch_inicial', 'pitch_encargado',
+                                        'pitch_persona_nueva', 'pitch_completo_894'):
+            self.context.pitch_turno = self.context.turnos_bruce
+
         # Track claro_espero
         if transition.template_key == 'claro_espero':
             self.context.tiempo_claro_espero = time.time()
@@ -2016,6 +2174,16 @@ class FSMEngine:
             hora = self._detectar_hora_en_texto_784(texto)
             if hora:
                 self.context.callback_hora = hora
+
+        # FIX 934: BRUCE2625 - MANAGER_ABSENT que también contiene info de callback
+        # "Si gustas marcar en una hora, salieron" → classified as MANAGER_ABSENT
+        # pero la hora de callback está en el texto. Guardarla para uso futuro.
+        if intent == FSMIntent.MANAGER_ABSENT:
+            hora = self._detectar_hora_en_texto_784(texto)
+            if hora:
+                self.context.callback_hora = hora
+                self.context.callback_pedido = True
+                print(f"  [FIX 934] MANAGER_ABSENT con hora callback implícita: {hora}")
 
     # ----------------------------------------------------------
     # FIX 784: Detectar hora en texto (dígitos + palabras)
@@ -2059,11 +2227,23 @@ class FSMEngine:
                     hora_str += " de la noche"
                 return hora_str
 
-        # 3. Solo periodo: "en la mañana", "en la tarde" (sin hora específica)
+        # 3. FIX 934: Tiempos relativos: "en una hora", "en un rato", "en media hora"
+        if 'en una hora' in tn:
+            return "en una hora"
+        if 'en media hora' in tn:
+            return "en media hora"
+        if 'en un rato' in tn or 'al rato' in tn or 'ahorita no' in tn:
+            return "mas tarde"
+        if 'mas tarde' in tn or 'mas tardecito' in tn:
+            return "mas tarde"
+
+        # 3b. Solo periodo: "en la mañana", "en la tarde" (sin hora específica)
         if 'en la manana' in tn or 'por la manana' in tn:
             return "en la manana"
         if 'en la tarde' in tn or 'por la tarde' in tn:
             return "en la tarde"
+        if 'en la noche' in tn or 'por la noche' in tn:
+            return "en la noche"
 
         return None
 

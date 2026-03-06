@@ -41,11 +41,11 @@ class TestFix875PitchEncargadoCorto:
         assert "cintas tapagoteras" not in texto.lower()
         assert "griferia" not in texto.lower()
 
-    def test_template_pitch_encargado_tiene_lista(self):
-        """El template pitch_encargado (largo) sí tiene lista de productos."""
+    def test_template_pitch_encargado_tiene_nioval(self):
+        """El template pitch_encargado menciona NIOVAL y productos ferreteros."""
         from response_templates import TEMPLATES
         texto = TEMPLATES["pitch_encargado"][0]
-        assert "cintas tapagoteras" in texto.lower() or "griferia" in texto.lower()
+        assert "nioval" in texto.lower() or "ferretero" in texto.lower()
 
     def test_execute_pitch_encargado_sin_pitch_dado_usa_largo(self):
         """Cuando pitch_dado=False, _execute retorna pitch_encargado normal."""
@@ -95,11 +95,13 @@ class TestFix875PitchEncargadoCorto:
 
     def test_execute_otros_templates_no_afectados(self):
         """FIX 875 solo intercepta pitch_encargado, no otros templates."""
-        from fsm_engine import FSMEngine, FSMContext, Transition, ActionType
+        from fsm_engine import FSMEngine, FSMContext, FSMState, Transition, ActionType
 
         engine = FSMEngine.__new__(FSMEngine)
-        engine.context = FSMContext.__new__(FSMContext)
+        engine.context = FSMContext()
         engine.context.pitch_dado = True
+        engine.context.pedir_datos_count = 1  # FIX 922: Avoid captura_minima intercept
+        engine.state = FSMState.ENCARGADO_PRESENTE  # FIX 920/922: Need state for guards
 
         calls = []
         def fake_get_template(key):

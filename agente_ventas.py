@@ -15138,6 +15138,30 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                         elif dato_val == 'formal':
                             flags.append("- El cliente usa tono FORMAL (mantén profesionalismo, use usted)")
                 print(f"  [FIX 918] Inyectando {len(ctx.datos_capturados)} datos del cliente en prompt GPT")
+            # FIX 908: Guias de comportamiento contextual para GPT
+            if ctx.confusion_count > 0:
+                flags.append("- El cliente esta CONFUNDIDO. Responde de forma simple y clara, sin tecnicismos")
+            if ctx.pedir_datos_count >= 2 and not ctx.catalogo_prometido:
+                flags.append("- Ya pediste datos varias veces. Si el cliente no da datos, ofrece tu propio numero o despidete")
+
+            # FIX 925: Ejemplos de respuesta ideal (pocos, concretos)
+            ejemplos_925 = []
+            if not ctx.pitch_dado:
+                ejemplos_925.append(
+                    'Ejemplo BUENO: "Le llamo de NIOVAL, manejamos productos ferreteros a precios de fabrica. '
+                    '¿Se encontrara el encargado de compras?"')
+            if ctx.canales_rechazados:
+                canal_alt = "correo" if "whatsapp" in ctx.canales_rechazados else "WhatsApp"
+                ejemplos_925.append(
+                    f'Ejemplo BUENO: "Entiendo. ¿Y tendra un {canal_alt} donde le pueda enviar la informacion?"')
+            if ctx.encargado_es_interlocutor and not ctx.whatsapp_ya_solicitado:
+                ejemplos_925.append(
+                    'Ejemplo BUENO: "Perfecto, para enviarle nuestro catalogo ¿me podria dar un WhatsApp o correo?"')
+            if ejemplos_925:
+                flags.append("")
+                flags.append("# EJEMPLOS DE RESPUESTA IDEAL:")
+                flags.extend([f"- {e}" for e in ejemplos_925])
+
             if flags:
                 contexto_fsm_898 = chr(10)*2 + "# ESTADO ACTUAL DE LA CONVERSACION (FSM)" + chr(10)
                 contexto_fsm_898 += "IMPORTANTE - Lo que YA hiciste en esta llamada:" + chr(10)

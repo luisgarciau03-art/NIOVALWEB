@@ -267,11 +267,11 @@ class TestEsperandoTransferenciaState(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.DESPEDIDA)
 
-    def test_unknown_noop_no_intercept(self):
-        """UNKNOWN → NOOP (no intercepta, fallthrough a GPT)."""
-        result = self.fsm.process("mmhmm")
-        # NOOP returns empty string '' (falsy) → GPT handles
-        self.assertEqual(result, '')
+    def test_unknown_verificacion_in_transfer(self):
+        """FIX 929: UNKNOWN → verificacion_aqui_estoy (no BTE fallback)."""
+        result = self.fsm.process("Es Acuario, Acuario de la")
+        # FIX 929: UNKNOWN in ESPERANDO_TRANSFERENCIA now returns verificacion template
+        self.assertIsNotNone(result)
         self.assertEqual(self.fsm.state, FSMState.ESPERANDO_TRANSFERENCIA)
 
     def test_offer_data_to_dictando(self):

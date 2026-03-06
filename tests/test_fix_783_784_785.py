@@ -209,11 +209,15 @@ class TestFix784HoraEnPalabras(unittest.TestCase):
     def test_sin_hora_retorna_none(self):
         """Texto sin hora → None."""
         fsm = FSMEngine()
-        hora = fsm._detectar_hora_en_texto_784("No está, marque más tarde")
-        # "en la tarde" sin "a las X" debería devolver periodo genérico o None
-        # Depende de si queremos detectar "más tarde" como hora
-        # En este caso "mas tarde" no matchea "en la tarde" ni "por la tarde"
+        hora = fsm._detectar_hora_en_texto_784("No está, no sabemos cuándo regresa")
         self.assertIsNone(hora)
+
+    def test_mas_tarde_detecta_relativo(self):
+        """FIX 934: 'más tarde' → 'mas tarde' (tiempo relativo)."""
+        fsm = FSMEngine()
+        hora = fsm._detectar_hora_en_texto_784("No está, marque más tarde")
+        self.assertIsNotNone(hora)
+        self.assertEqual(hora, "mas tarde")
 
     def test_en_la_manana_sin_hora(self):
         """'en la mañana' sin hora específica → detecta periodo genérico."""

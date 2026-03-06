@@ -15,17 +15,17 @@ GPT narrow solo se usa para preguntas de producto y situaciones complejas.
 
 TEMPLATES = {
     # === PITCH / PRESENTACIÓN ===
-    # FIX 917: Multiples variantes para evitar FLUJO_ROBOTICO
+    # FIX 912: Pitch corto con beneficios, NO lista de categorias (anti FLUJO_ROBOTICO)
+    # FIX 924: Enfoque en valor, no en enumerar productos
     "pitch_inicial": [
         "Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos "
-        "ferreteros. Manejamos mas de quince categorias: cintas tapagoteras, griferia, "
-        "herramientas, candados y mucho mas. "
+        "ferreteros con precios muy competitivos y entrega directa. "
         "¿Se encontrara el encargado o encargada de compras?",
         "Le llamo de NIOVAL, somos distribuidores de productos ferreteros de "
-        "Guadalajara, Jalisco. Manejamos herramientas, griferia, cintas, "
-        "candados y muchas categorias mas. ¿Se encontrara el encargado de compras?",
+        "Guadalajara. Manejamos una linea muy completa a buenos precios. "
+        "¿Se encontrara el encargado de compras?",
         "Buenos dias, le hablo de NIOVAL. Somos proveedores de productos ferreteros "
-        "con mas de quince mil productos. ¿Podria hablar con el encargado de compras?",
+        "con precios de fabrica. ¿Podria hablar con el encargado de compras?",
     ],
     # FIX 846: Cambiado "Me comunico de la marca NIOVAL" → "Le llamo de parte de NIOVAL"
     # para evitar que _PITCH_NIOVAL matchee 2 veces (pitch_inicial + pitch_persona_nueva)
@@ -35,17 +35,16 @@ TEMPLATES = {
         "nuestros productos de ferreteria. "
         "¿Se encontrara el encargado o encargada de compras?",
     ],
-    # FIX 917: Multiples variantes para evitar FLUJO_ROBOTICO
+    # FIX 912: Pitch encargado corto con beneficios (anti FLUJO_ROBOTICO)
     "pitch_encargado": [
-        "Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. "
-        "Manejamos cintas tapagoteras, griferia, herramientas, candados y mas de "
-        "quince categorias. "
-        "¿Le gustaria recibir nuestro catalogo por WhatsApp o correo electronico?",
+        "Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros "
+        "con precios de fabrica y entrega directa. "
+        "¿Le gustaria recibir nuestro catalogo con lista de precios?",
         "Perfecto. Mire, somos NIOVAL de Guadalajara, manejamos una linea muy "
-        "completa de productos ferreteros. ¿Le interesaria que le envie nuestra "
-        "lista de precios?",
-        "Que bien. Somos distribuidores NIOVAL, manejamos herramientas, griferia, "
-        "cintas y muchos productos mas. ¿Le gustaria conocer nuestro catalogo?",
+        "completa de productos ferreteros a muy buenos precios. "
+        "¿Le interesaria que le envie nuestra lista de precios?",
+        "Que bien. Somos distribuidores NIOVAL con precios muy competitivos. "
+        "¿Le gustaria conocer nuestro catalogo?",
     ],
     # FIX 875: Versión corta para cuando el pitch ya fue dado (evita INFO_NO_SOLICITADA)
     # Auditoría 25/02: "Excelente. Le comento, somos NIOVAL..." 9x cuando pitch_inicial ya sonó
@@ -66,11 +65,11 @@ TEMPLATES = {
 
     # === FIX 894: Templates para IDENTITY_QUESTION y WHAT_OFFER ===
     # Evitan que GPT genere respuestas genéricas cuando cliente pregunta quién es Bruce
+    # FIX 912: Pitch corto con beneficios (anti FLUJO_ROBOTICO)
     "pitch_completo_894": [
-        "Le comento, somos NIOVAL, distribuidores de productos ferreteros. "
-        "Manejamos mas de quince mil productos: cintas tapagoteras, griferia, "
-        "herramientas, candados, cerraduras y mucho mas. "
-        "¿Le gustaria que le envie la lista de precios?",
+        "Le comento, somos NIOVAL, distribuidores de productos ferreteros con "
+        "precios de fabrica y entrega directa. "
+        "¿Le gustaria que le envie nuestra lista de precios?",
     ],
     "pitch_y_encargado_894": [
         "Le comento, somos distribuidores de productos ferreteros con mas de "
@@ -254,9 +253,12 @@ TEMPLATES = {
         "productos ferreteros de alta calidad. "
         "¿Me podria comunicar con el encargado de compras?",
     ],
+    # FIX 914: Removido filler "Perfecto, muchas gracias" (RESPUESTA_FILLER_INCOHERENTE)
     "pedir_whatsapp_o_correo": [
-        "Perfecto, muchas gracias. ¿Me podria proporcionar un numero de WhatsApp "
-        "o correo electronico para enviarle la informacion?",
+        "Con gusto le envio la informacion. ¿Me podria proporcionar un numero de "
+        "WhatsApp o correo electronico?",
+        "Para hacerle llegar nuestro catalogo, ¿me podria dar un WhatsApp "
+        "o correo electronico?",
     ],
     # FIX 884: BRUCE2516 - Template breve para FIX 878 pivot (2do intento de identidad)
     # FIX 885: Remover "catalogo" para evitar CATALOGO_REPETIDO (BRUCE2551/1975)
@@ -303,6 +305,32 @@ TEMPLATES = {
         "interrumpirle. Que tenga excelente dia.",
         "Disculpe la insistencia, no era nuestra intencion molestar. "
         "Que tenga muy buen dia.",
+    ],
+
+    # FIX 918: Template para confusion del cliente (SENTIMIENTO_NEGATIVO)
+    "aclarar_confusion": [
+        "Disculpe, le explico brevemente. Somos NIOVAL, distribuidores de productos "
+        "ferreteros. Le llamamos para ofrecerle nuestro catalogo con precios de fabrica.",
+        "Perdon por la confusion. Mi nombre es Bruce, le llamo de NIOVAL para "
+        "ofrecerle productos ferreteros a precios competitivos.",
+    ],
+
+    # FIX 920: Templates para explorar antes de despedida (OPORTUNIDAD_PERDIDA)
+    "explorar_antes_despedida": [
+        "Entiendo. ¿Habra algun horario mejor para llamarle?",
+        "Claro, no hay problema. ¿Le podria dejar mi numero por si mas adelante le interesa?",
+    ],
+
+    # FIX 921: Template para rechazo ambiguo (MANEJO_OBJECIONES)
+    "aclarar_rechazo_ambiguo": [
+        "Disculpe, ¿se refiere a que no esta el encargado o prefiere que no le llamemos?",
+        "Entiendo. ¿No se encuentra el encargado o no le interesa la informacion?",
+    ],
+
+    # FIX 922: Template pre-despedida para captura minima (CAPTURA_DATOS)
+    "captura_minima_pre_despedida": [
+        "Entendido. Antes de colgar, ¿me podria dar su nombre para la proxima ocasion?",
+        "Claro. ¿A que hora seria mejor momento para llamar?",
     ],
 
     # FIX 921: Template de catálogo sin compromiso mejorado
@@ -380,11 +408,11 @@ NARROW_PROMPTS = {
         "temperature": 0.3,
     },
 
-    # FIX 911/912/915: Mejorado con empatía, escucha activa y anti-fillers
+    # FIX 908/911/912/914/915/916: Mejorado con todas las reglas de auditoria
     "conversacion_libre": {
         "system": (
-            "Eres Bruce, vendedor de NIOVAL (productos ferreteros: cintas, griferia, "
-            "herramientas, candados). La conversacion esta en una situacion no estandar.\n"
+            "Eres Bruce, vendedor de NIOVAL (productos ferreteros). "
+            "La conversacion esta en una situacion no estandar.\n"
             "REGLAS ABSOLUTAS:\n"
             "1. Si cliente ya dijo un dato (nombre, telefono, correo, WhatsApp) "
             "en CUALQUIER turno anterior, NUNCA pedir ese dato de nuevo\n"
@@ -396,9 +424,14 @@ NARROW_PROMPTS = {
             "6. ESCUCHA ACTIVA: menciona algo ESPECIFICO que el cliente dijo\n"
             "7. EMPATIA: si el cliente suena frustrado, ocupado o confundido, "
             "reconocelo PRIMERO antes de continuar\n"
-            "8. NO uses fillers vacios como 'Claro, digame' sin contexto\n"
-            "9. Si el cliente ofrece hacer algo (pasar numero, dejar recado), "
+            "8. NO uses fillers vacios como 'Perfecto, muchas gracias' o 'Claro, digame' "
+            "cuando no hay nada que agradecer. Responde al contenido del cliente\n"
+            "9. Si el cliente ofrece hacer algo (pasar numero, dejar recado, enviar correo), "
             "ACEPTA y agradece, no ignores su oferta\n"
+            "10. Si el cliente pregunto algo, responde ESO primero, no cambies de tema\n"
+            "11. NO pidas datos si aun no explicaste que es NIOVAL ni que ofreces\n"
+            "12. Si el cliente parece confundido, explica brevemente quien eres y por que llamas\n"
+            "13. Si el cliente dijo 'no' de forma ambigua, pregunta a que se refiere\n"
             "Estado actual: {state}\n"
             "Contexto: {context_summary}"
         ),

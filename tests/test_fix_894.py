@@ -351,12 +351,17 @@ class TestFix895PitchEscalation(unittest.TestCase):
         self.assertIn("numero", resp.lower())
 
     def test_fourth_what_offer_farewell(self):
-        """Fourth WHAT_OFFER → despedida cortés."""
+        """Fourth WHAT_OFFER → despedida cortés (all escalation candidates exhausted)."""
         engine = FSMEngine()
         engine.state = FSMState.ENCARGADO_AUSENTE
         engine.context.state = FSMState.ENCARGADO_AUSENTE
         engine.context.pitch_dado = True
         engine.context._pitch_894_count = 2
+        # FIX 925: All escalation candidates already used
+        engine.context.templates_usados.update([
+            "pedir_whatsapp_o_correo", "pedir_whatsapp_o_correo_breve",
+            "ofrecer_contacto_bruce",
+        ])
         resp = engine.process("que deseaba")
         self.assertIn("gracias", resp.lower())
 

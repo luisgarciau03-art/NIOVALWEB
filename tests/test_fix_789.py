@@ -147,11 +147,13 @@ class TestFix789BCallbackHoraLoop(unittest.TestCase):
         # Client gives vague callback again
         result = fsm.process("Pues más tarde, no sé a qué hora.", agente=None)
         if result:
-            # Should use confirmar_callback_generico, NOT repeat hora question
+            # Should NOT repeat hora question
             self.assertNotIn("que hora", result.lower(),
                             f"Should NOT repeat hora question, got: {result}")
-            self.assertIn("vuelvo a llamar", result.lower(),
-                         f"Should use generic callback, got: {result}")
+            # FIX 934: "mas tarde" now detected as relative time → confirmar_callback
+            self.assertTrue(
+                'vuelvo a llamar' in result.lower() or 'marco' in result.lower() or 'mas tarde' in result.lower(),
+                f"Should confirm callback, got: {result}")
 
     def test_callback_with_hora_still_confirms(self):
         """CALLBACK with specific hora still uses confirmar_callback (FIX 784)."""

@@ -1349,6 +1349,13 @@ class ContentAnalyzer:
                             print(f"  [FIX 843/772] SKIP interrupcion: 'no está' + pedir contacto = flujo correcto")
                             break  # Not a bug
 
+                        # FIX 938: BRUCE2272 - Si cliente dice "no está" y Bruce da el pitch,
+                        # es flujo correcto (FIX 919 timing guard: dar valor antes de pedir datos)
+                        _bruce_da_pitch_938 = bool(ContentAnalyzer._PITCH_NIOVAL.search(t2))
+                        if _cliente_dijo_no_esta_772 and _bruce_da_pitch_938:
+                            print(f"  [FIX 938] SKIP interrupcion: 'no está' + Bruce da pitch = FIX 919 correcto")
+                            break  # Not a bug
+
                         # FIX 864: Si Bruce dice despedida Y cliente dijo señal de área equivocada/no negocio
                         # → despedida APROPIADA (flujo correcto), no interrupción
                         # BRUCE2366: cliente "usted está equivocado" → Bruce dice adiós = correcto

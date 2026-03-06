@@ -89,10 +89,13 @@ class TestFix878IdentityRepetidas:
 
     def test_otros_templates_no_afectados(self):
         """FIX 878 solo intercepta identificacion_nioval, no otros."""
-        from fsm_engine import FSMEngine, FSMContext, Transition, ActionType
+        from fsm_engine import FSMEngine, FSMContext, FSMState, Transition, ActionType
         engine = FSMEngine.__new__(FSMEngine)
         engine.context = FSMContext()
         engine.context.identity_repetidas = 5  # Muy alto
+        engine.context.pitch_dado = True        # FIX 919: Evitar que timing guard intercepte pedir_whatsapp
+        engine.context.pedir_datos_count = 1    # FIX 922: Avoid captura_minima intercept
+        engine.state = FSMState.ENCARGADO_PRESENTE  # FIX 920/922: Need state for guards
 
         calls = []
         engine._get_template = lambda k: calls.append(k) or f"TEMPLATE:{k}"

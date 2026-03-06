@@ -327,9 +327,9 @@ BTE_CATALOG = {
     "MANEJAR_CONFUSION": {
         "fase": "SITUACIONAL",
         "templates": [
-            "Disculpe, no escuche bien. Me puede repetir?",
-            "Perdone, no le entendi. Me lo podria repetir?",
-            "Disculpe, no capte bien. Podria repetirmelo?",
+            "Disculpe, le explico brevemente. Soy Bruce de NIOVAL, distribuidores de productos ferreteros. Le llamo para ofrecerle nuestro catalogo con precios de fabrica.",
+            "Perdon por la confusion. Le llamo de NIOVAL para ofrecerle productos ferreteros a precios competitivos.",
+            "Le aclaro, soy Bruce de la marca NIOVAL. Manejamos productos de ferreteria y le llamaba para ver si le interesa recibir nuestro catalogo.",
         ],
         "variables": [],
     },
