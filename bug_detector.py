@@ -441,7 +441,7 @@ class ContentAnalyzer:
             bugs.extend(ContentAnalyzer._check_pitch_repetido(respuestas))
 
             # --- 10. CATALOGO_REPETIDO ---
-            bugs.extend(ContentAnalyzer._check_catalogo_repetido(respuestas))
+            bugs.extend(ContentAnalyzer._check_catalogo_repetido(respuestas, conv))
 
             # Note: DATO_SIN_RESPUESTA (FIX 639D) se ejecuta desde BugDetector.analyze()
             # porque no requiere el minimo de 2 respuestas Bruce
@@ -693,11 +693,13 @@ class ContentAnalyzer:
     )
 
     @staticmethod
-    def _check_catalogo_repetido(respuestas: list) -> list:
+    def _check_catalogo_repetido(respuestas: list, conv: list = None) -> list:
         """Detecta si Bruce ofrecio catalogo 2+ veces.
 
         FIX 862: Excluye confirmaciones de dato capturado (confirmar_correo/confirmar_telefono)
         que contienen 'Le envio el catalogo' como promesa de envío, no nueva oferta.
+        FIX 921B: In long conversations (10+ messages), catalog may be mentioned
+        naturally at different stages (pitch + confirmation). Only flag if 3+.
         """
         bugs = []
         try:
@@ -708,7 +710,10 @@ class ContentAnalyzer:
                     if ContentAnalyzer._CONFIRMACION_DATO_862.search(r):
                         continue
                     count += 1
-            if count >= 2:
+            # FIX 921B: Long conversations need higher threshold
+            _conv_len = len(conv) if conv else 0
+            _threshold = 3 if _conv_len >= 10 else 2
+            if count >= _threshold:
                 bugs.append({
                     "tipo": "CATALOGO_REPETIDO",
                     "severidad": MEDIO,
@@ -1027,6 +1032,17 @@ class ContentAnalyzer:
                 if not ContentAnalyzer._TRANSFER_PATTERNS.search(texto):
                     continue
 
+                # FIX 917: "a ver si mañana ya viene" is speculative, not a transfer request
+                texto_l_917 = texto.lower()
+                _speculative_917 = any(p in texto_l_917 for p in [
+                    'a ver si', 'quien sabe si', 'no se cuando', 'no sé cuando',
+                    'no se si', 'no sé si', 'ojala', 'ojalá', 'tal vez',
+                    'no se cuando regresa', 'no sabe cuando',
+                ])
+                if _speculative_917:
+                    print(f"  [FIX 917] SKIP transfer: frase especulativa ('{texto[:50]}')")
+                    continue
+
                 # Buscar siguiente respuesta de Bruce
                 for j in range(i + 1, len(conv)):
                     r2, t2 = conv[j]
@@ -1170,14 +1186,16 @@ class ContentAnalyzer:
                 if not match:
                     continue
 
-                texto_l = texto.lower()
-                if 'whatsapp' in texto_l or 'wats' in texto_l:
+                # FIX 916: Only mark the SPECIFIC channel in the negation phrase as negated
+                # "No tengo WhatsApp pero mi correo es..." → only 'whatsapp' negated, NOT 'correo'
+                _negated_text = match.group(0).lower()
+                if 'whatsapp' in _negated_text or 'wats' in _negated_text:
                     datos_negados.add('whatsapp')
                     negacion_indices['whatsapp'] = i
-                if 'correo' in texto_l or 'email' in texto_l:
+                if 'correo' in _negated_text or 'email' in _negated_text:
                     datos_negados.add('correo')
                     negacion_indices['correo'] = i
-                if 'celular' in texto_l:
+                if 'celular' in _negated_text:
                     datos_negados.add('celular')
                     negacion_indices['celular'] = i
 
@@ -1196,8 +1214,15 @@ class ContentAnalyzer:
                         continue  # Bruce preguntó ANTES de la negación, OK
 
                     # ¿Bruce pide ese dato después de la negación?
+                    # FIX 916: Exclude confirmations ("ya tengo el correo") from being flagged
+                    _es_confirmacion_916 = any(p in texto_l for p in [
+                        'ya tengo', 'ya lo tengo', 'anotado', 'registrado', 'perfecto',
+                        'excelente', 'muy bien'
+                    ])
                     pide = False
-                    if dato == 'whatsapp' and ('whatsapp' in texto_l or 'wats' in texto_l):
+                    if _es_confirmacion_916:
+                        pass  # Bruce is confirming, not asking
+                    elif dato == 'whatsapp' and ('whatsapp' in texto_l or 'wats' in texto_l):
                         pide = True
                     elif dato == 'correo' and ('correo' in texto_l or 'email' in texto_l):
                         pide = True
@@ -2328,6 +2353,61 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
                 if 'marca' in detalle.lower() and ('propia' in detalle.lower() or 'nioval' in detalle.lower()):
                     print(f"[FIX 914] Filtrado FP: marca propia ya está en prompt, GPT variabilidad")
                     _es_fp = True
+
+            # FIX 920A: Encargado ausente - asking for alt contact IS correct behavior
+            if tipo == "LOGICA_ROTA" and not _es_fp:
+                _enc_ausente = any(p in _conv_lower for p in [
+                    'no esta', 'no está', 'se reporto enfermo', 'enfermo',
+                    'no se encuentra', 'no viene', 'no ha llegado',
+                    'salio', 'salió', 'se fue',
+                ])
+                _bruce_asks_alt = 'contacto' in detalle.lower() or 'alternativ' in detalle.lower()
+                if _enc_ausente and _bruce_asks_alt:
+                    print(f"[FIX 920A] Filtrado FP: encargado ausente + pedir contacto alt = correcto")
+                    _es_fp = True
+
+            # FIX 921A: Transfer in progress - Bruce template fires before/after transfer.
+            # GPT eval flags this incorrectly as "not recognizing encargado".
+            if tipo in ("LOGICA_ROTA", "CONTEXTO_IGNORADO") and not _es_fp:
+                _turno_921 = error.get("turno", 99)
+                if _turno_921 <= 3:
+                    _transfer_at_t2 = any(p in _conv_lower for p in [
+                        'se lo paso', 'le paso', 'ahorita se lo', 'ahorita te lo',
+                        'espereme', 'espere tantito', 'no cuelgues', 'no se retire',
+                        'le digo que le conteste', 'deje le digo',
+                    ])
+                    if _transfer_at_t2:
+                        print(f"[FIX 921A] Filtrado FP: transfer en progreso turno {_turno_921}")
+                        _es_fp = True
+
+            # FIX 921B: CATALOGO_REPETIDO in long conversations (5+ turns) is expected
+            if tipo == "CATALOGO_REPETIDO" and not _es_fp:
+                if len(tracker.conversacion) >= 10:  # 5+ turns = 10+ messages
+                    print(f"[FIX 921B] Filtrado FP: catalogo repetido en conversacion larga ({len(tracker.conversacion)} msgs)")
+                    _es_fp = True
+
+            # FIX 921C: "ya tiene catalogo" + "luego les marco" = client closing, not bug
+            if tipo == "LOGICA_ROTA" and not _es_fp:
+                if 'hora' in detalle.lower() and ('llamar' in detalle.lower() or 'recomienda' in detalle.lower()):
+                    _client_closing = any(p in _conv_lower for p in [
+                        'luego les marco', 'yo les marco', 'yo les llamo',
+                        'ya lo tengo', 'ya me mandaron', 'ya lo vi',
+                    ])
+                    if _client_closing:
+                        print(f"[FIX 921C] Filtrado FP: cliente cerrando (ya tiene catalogo/yo les marco)")
+                        _es_fp = True
+
+            # FIX 921D: TONO_INADECUADO for "jefe" - post-filter should catch it,
+            # but GPT eval may flag based on context not just word. Filter if
+            # Bruce's actual response doesn't contain "jefe" anymore.
+            if tipo == "TONO_INADECUADO" and not _es_fp:
+                if 'jefe' in detalle.lower():
+                    _bruce_has_jefe = any(
+                        'jefe' in t.lower() for r, t in tracker.conversacion if r == 'bruce'
+                    )
+                    if not _bruce_has_jefe:
+                        print(f"[FIX 921D] Filtrado FP: 'jefe' ya eliminado por post-filter")
+                        _es_fp = True
 
             # FIX 910B: INTERRUPCION_CONVERSACIONAL in text simulator is always FP
             # (no real audio interruption in text-to-text simulation)
