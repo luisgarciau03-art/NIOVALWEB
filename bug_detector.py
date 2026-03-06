@@ -1938,8 +1938,14 @@ FLUJO NORMAL DE BRUCE (esto NO son errores):
 - Si Bruce obtiene un contacto (email, WhatsApp, telefono), la llamada fue EXITOSA - NO busques errores menores en llamadas exitosas
 - Si el primer mensaje de texto de Bruce empieza directamente con "Me comunico de la marca NIOVAL..." sin saludo, NO es error - el saludo se reprodujo como audio pregrabado
 - Si el cliente dice "llega mas tarde"/"viene mas tarde"/"si llega mas", Bruce interpreta que el encargado NO esta. Esto es CORRECTO.
+- FIX 896: CALLBACK = Bruce pide hora para volver a llamar. Si el cliente dice "estan en hora de comida"/"marcar mas tarde"/"no esta" SIN dar hora, Bruce preguntar "¿A que hora me recomienda llamar?" es CORRECTO y esperado. NO es LOGICA_ROTA. Ejemplo:
+  CLIENTE: "Si gustas marcar mas tarde" → Bruce: "¿A que hora?" → CORRECTO (el cliente no dio hora)
+  CLIENTE: "A las 3" → Bruce: "¿A que hora?" → LOGICA_ROTA (el cliente YA dio la hora)
 - Si Bruce da pitch de productos ante pregunta del cliente ("que ofrece", "que vende"), esto es la respuesta CORRECTA
 - "Bueno, bueno?" / "Bueno?" en medio de la llamada = verificacion de conexion. Bruce responder "Si, aqui estoy" es CORRECTO
+- FIX 896: FLUJO CATALOGO-WHATSAPP: Bruce ofrece enviar catalogo/lista de precios → cliente acepta ("si, por WhatsApp") → Bruce pide el NUMERO de WhatsApp para enviarlo. Esto es CORRECTO, NO es LOGICA_ROTA. Bruce necesita el numero para enviar el catalogo.
+- FIX 896: STT GARBLED EN CALLBACKS: Si el texto del cliente parece sin sentido pero contiene palabras como "comida", "marcar", "tarde", "hora", probablemente el STT distorsiono "estan en hora de comida, si gustas marcar mas tarde". Bruce preguntar "a que hora le marco?" es CORRECTO.
+- FIX 896: FLUJO CALLBACK NORMAL: Si el cliente dice "llama mas tarde"/"marcar despues"/"no esta, regresa en un rato" SIN dar hora exacta, Bruce preguntar "¿A que hora me recomienda llamar?" es CORRECTO y esperado. Solo seria LOGICA_ROTA si el cliente YA DIO la hora exacta y Bruce pregunta de nuevo.
 
 Tipos de errores a buscar:
 1. RESPUESTA_INCORRECTA: Bruce dio informacion FALSA sobre NIOVAL o sus productos
@@ -1948,6 +1954,9 @@ Tipos de errores a buscar:
 4. LOGICA_ROTA: Bruce pidio un dato que el cliente YA le habia dado EN UN TURNO ANTERIOR
    FIX 893: Si Bruce PIDIO el dato primero y el cliente lo dio DESPUES, eso es correcto (pedir -> recibir -> confirmar). NO es "pedir algo que ya dieron".
    FIX 893: Si Bruce repitio pregunta despues de ruido/silencio/texto sin sentido del cliente, es CORRECTO. Solo es LOGICA_ROTA si el cliente dio informacion clara y Bruce la ignoro.
+   FIX 896: Si Bruce ofrece enviar catalogo y el cliente acepta por WhatsApp, Bruce DEBE pedir el numero de WhatsApp. Esto NO es "pedir dato ya dado" - el cliente acepto el CANAL pero no dio el NUMERO todavia.
+   FIX 896: Si el texto del cliente es incoherente/garbled (STT distorsionado) y Bruce pregunta algo razonable como hora de callback, NO es LOGICA_ROTA.
+   FIX 896: CALLBACK FLOW: Si el cliente dice "llama mas tarde"/"marcar despues"/"estan en hora de comida" SIN dar hora exacta, Bruce preguntar "¿A que hora me recomienda llamar?" es CORRECTO (necesita la hora). Solo es LOGICA_ROTA si el cliente YA DIO la hora exacta y Bruce pregunta de nuevo.
 5. OPORTUNIDAD_PERDIDA: Cliente dijo explicitamente "si me interesa, enviame info" y Bruce NO le pidio contacto
    FIX 750: "Si, bueno?", "Bueno?", "Si, bueno." son VERIFICACION DE CONEXION (= "Sigues ahi?"), NO interes. Ignorar como senal de interes.
    FIX 893: "Que deseaba?", "En que se le ofrece?", "En que le puedo servir?", "Digame" son preguntas de CORTESIA, NO senales fuertes de interes/compra. Si Bruce dio el pitch de productos como respuesta, eso es CORRECTO.
@@ -2040,6 +2049,9 @@ ERRORES GRAVES a buscar (solo estos 4 tipos):
 
 3. LOGICA_ROTA: Bruce pidió dato que el cliente YA proporcionó en un turno ANTERIOR.
    FIX 893: Si Bruce pidió primero y cliente dio después → CORRECTO (no es bug). Si Bruce repitió tras ruido/silencio → CORRECTO.
+   FIX 896: Si Bruce ofrece catalogo y cliente acepta por WhatsApp → Bruce pide el NUMERO de WhatsApp = CORRECTO (el cliente acepto el canal, no dio el numero aun).
+   FIX 896: Si texto del cliente es garbled/incoherente (STT distorsionado) y Bruce pregunta hora de callback → CORRECTO.
+   FIX 896: Si cliente dice "llama mas tarde"/"estan en hora de comida" SIN dar hora exacta → Bruce preguntar "¿A que hora?" es CORRECTO. Solo es bug si cliente YA DIO la hora.
 
 4. OPORTUNIDAD_PERDIDA: Cliente EXPLICITAMENTE dijo "si me interesa, enviame info" y Bruce NO le pidió contacto.
    FIX 750: "Sí, bueno?", "¿Bueno?", "Sí, bueno." son VERIFICACION DE CONEXION (= "¿Sigues ahí?"). NO interes.
@@ -2059,6 +2071,7 @@ REGLAS ESTRICTAS:
 - Si tienes DUDA, NO reportes (mejor no reportar que falso positivo)
 - Si Bruce se despidió tras rechazo del cliente, NO es error
 - Si la llamada fue normal (pitch → encargado → catálogo → despedida), NO reportes nada
+- FIX 896: pitch → oferta catalogo por WhatsApp → cliente acepta → Bruce pide numero = CORRECTO (necesita el numero para enviar)
 - Al indicar turno N, cuenta SOLO mensajes de BRUCE (no del cliente)
 - Maximo 2 errores por llamada corta
 - Responde SOLO el JSON, sin texto adicional"""
@@ -2187,7 +2200,58 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
         if not isinstance(errores, list):
             return bugs
 
-        for error in errores[:max_errores]:  # FIX 713A: max_errores según tipo
+        # FIX 896: Post-filter GPT eval false positives
+        _conv_lower = conversacion_texto.lower()
+        _errores_filtrados = []
+        for error in errores:
+            tipo = error.get("tipo", "")
+            detalle = error.get("detalle", "").lower()
+            _es_fp = False
+
+            # FIX 896A: Callback flow - "¿A que hora?" tras "llama mas tarde" NO es LOGICA_ROTA
+            if tipo == "LOGICA_ROTA" and "hora" in detalle:
+                _callback_phrases = ['marcar mas', 'llama mas tarde', 'hora de comida',
+                                     'sobra de comida', 'no esta', 'no se encuentra',
+                                     'regresa', 'viene mas tarde', 'sale a comer']
+                if any(p in _conv_lower for p in _callback_phrases):
+                    # Verify client didn't already give exact time BEFORE Bruce asked
+                    _hora_regex = re.compile(r'\b(?:a las |las )?\d{1,2}(?::\d{2})?\b')
+                    _bruce_pregunto_hora = False
+                    _cliente_dio_hora_antes = False
+                    for role, texto in tracker.conversacion:
+                        if role == "bruce" and "hora" in texto.lower() and "?" in texto:
+                            _bruce_pregunto_hora = True
+                        elif role == "cliente" and _hora_regex.search(texto) and not _bruce_pregunto_hora:
+                            _cliente_dio_hora_antes = True
+                    if not _cliente_dio_hora_antes:
+                        print(f"[FIX 896A] Filtrado FP: callback flow correcto (Bruce pidio hora, cliente no la habia dado)")
+                        _es_fp = True
+
+            # FIX 896B: Catalog-WhatsApp flow - pedir numero tras aceptar canal NO es LOGICA_ROTA
+            if tipo == "LOGICA_ROTA" and ("whatsapp" in detalle or "correo" in detalle):
+                _acepto_canal = re.search(r'(?:si|claro|por)\s*(?:,\s*)?(?:por\s+)?(?:whatsapp|correo|email)', _conv_lower)
+                if _acepto_canal and ("catalogo" in _conv_lower or "lista de precios" in _conv_lower):
+                    print(f"[FIX 896B] Filtrado FP: catalog channel flow (cliente acepto canal, Bruce pide numero)")
+                    _es_fp = True
+
+            # FIX 896C: Llamada exitosa - contacto capturado + despedida = NO bugs LOGICA_ROTA
+            if tipo == "LOGICA_ROTA" and not _es_fp:
+                _contacto_capturado = any(
+                    'ya tengo' in t.lower() or 'registrado' in t.lower() or 'anotado' in t.lower()
+                    for r, t in tracker.conversacion if r == 'bruce'
+                )
+                _despedida = any(
+                    'gracias por su tiempo' in t.lower() or 'excelente dia' in t.lower() or 'hasta pronto' in t.lower()
+                    for r, t in tracker.conversacion if r == 'bruce'
+                )
+                if _contacto_capturado and _despedida:
+                    print(f"[FIX 896C] Filtrado FP: llamada exitosa (contacto capturado + despedida)")
+                    _es_fp = True
+
+            if not _es_fp:
+                _errores_filtrados.append(error)
+
+        for error in _errores_filtrados[:max_errores]:  # FIX 713A: max_errores según tipo
             tipo = error.get("tipo", "DESCONOCIDO")
             severidad = error.get("severidad", MEDIO)
             if severidad not in (CRITICO, ALTO, MEDIO):

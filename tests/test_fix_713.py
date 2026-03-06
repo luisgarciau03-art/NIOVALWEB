@@ -235,7 +235,7 @@ class TestFix713EnCodigo:
             source = f.read()
         assert "max_errores = 2" in source
         assert "max_errores = 3" in source
-        assert "errores[:max_errores]" in source
+        assert "_errores_filtrados[:max_errores]" in source  # FIX 896: renamed after post-filter
 
 
 # ============================================================
