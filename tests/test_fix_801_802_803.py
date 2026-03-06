@@ -198,8 +198,8 @@ class TestFix803ProsigaNotContinue(unittest.TestCase):
         self.assertIn("prosiga", all_text)
 
     def test_aja_si_count(self):
-        """aja_si must have exactly 5 variants."""
-        self.assertEqual(len(TEMPLATES["aja_si"]), 5)
+        """aja_si must have at least 5 variants (FIX 906E: +2 naturales)."""
+        self.assertGreaterEqual(len(TEMPLATES["aja_si"]), 5)
 
     def test_aja_digame_unchanged(self):
         """aja_digame templates should not be affected."""

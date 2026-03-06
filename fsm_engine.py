@@ -400,7 +400,21 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Dictado: dígitos numéricos ---
     digits = re.findall(r'\d', texto)
-    num_words = sum(1 for w in tn.split() if w in _NUMS_ESP)
+    # FIX 907: Compound number words (veintinueve, treinta, cuarenta) represent 2 digits
+    # "tres tres doce treinta cuarenta cero uno veintinueve" = 10 digits, not 8 words
+    _COMPOUND_2DIGIT = {
+        'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+        'dieciseis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte',
+        'veintiuno', 'veintidos', 'veintitres', 'veinticuatro', 'veinticinco',
+        'veintiseis', 'veintisiete', 'veintiocho', 'veintinueve',
+        'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa',
+    }
+    num_words = 0
+    for w in tn.split():
+        if w in _COMPOUND_2DIGIT:
+            num_words += 2  # These represent 2 digits each
+        elif w in _NUMS_ESP:
+            num_words += 1  # Single digit words (cero-nueve)
 
     # FIX 780: Excluir frases con contexto temporal de dictado parcial
     # BRUCE2468: "llegan en una hora" -> "una" × 2 = num_words=2 -> falso DICTATING_PARTIAL
@@ -445,6 +459,17 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'area equivocada', 'departamento equivocado',
         'no es conmigo', ' no soy yo', 'no, no soy yo', 'no es mi departamento',
         'marco equivocado', 'llamo equivocado',
+        # FIX 908: Giro equivocado - negocio no es ferreteria
+        'aqui es un restaurante', 'somos restaurante', 'es un restaurante',
+        'aqui es una tienda de', 'somos tienda de abarrotes', 'vendemos abarrotes',
+        'puras cosas de abarrotes', 'nada de ferreteria',
+        'aqui no vendemos ferreteria', 'no vendemos ferreteria',
+        'aqui es una farmacia', 'somos farmacia', 'es una farmacia',
+        'aqui es una papeleria', 'somos papeleria', 'es una papeleria',
+        'aqui es una carniceria', 'somos carniceria',
+        'aqui es una verduleria', 'aqui vendemos comida',
+        'no es ferreteria esto', 'esto no es ferreteria',
+        'aqui no manejamos nada de eso', 'no es nuestro giro',
     ]
     if any(w in tn for w in wrong_number):
         return FSMIntent.WRONG_NUMBER
@@ -488,6 +513,16 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no me se el correo', 'no se el numero', 'no me se el numero',
         'no conozco el whatsapp', 'no conozco el correo', 'no conozco el numero',
         'no se el dato', 'no me se', 'no lo se', 'no se cual es', 'yo no se',
+        # FIX 909: Rechazo indirecto de canal (auditoria Claude: DATO_NEGADO_REINSISTIDO)
+        'no tengo datos', 'no tengo datos en el celular', 'no me llegan los whats',
+        'no lo uso', 'no lo usamos', 'no usa whatsapp', 'no usa correo',
+        'no lo manejo', 'no lo manejamos', 'no usamos whatsapp', 'no usamos correo',
+        'es de la vieja escuela', 'no sabe de eso', 'no le sabe a eso',
+        'no tiene whatsapp', 'no tiene correo', 'no tiene celular',
+        'no tiene de eso', 'el patron no usa', 'el dueno no usa',
+        'no reviso correos', 'no revisa correos', 'no checa correos',
+        'no checo correos', 'nunca revisa', 'no le llegan',
+        'no tenemos internet', 'no hay internet', 'no hay senal',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -558,6 +593,15 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'a la orden', 'a tus ordenes', 'a sus ordenes', 'a tu orden',
     ]
     if any(m in tn for m in manager_present):
+        # FIX 906: Si también hay callback, priorizar callback
+        # Ej: "si soy pero marqueme el lunes" = CALLBACK, no MANAGER_PRESENT
+        _has_callback_906 = any(c in tn for c in [
+            'marqueme', 'llameme', 'marque el', 'llame el',
+            'mas tarde', 'despues', 'luego', 'otro dia',
+            'la proxima', 'no puedo ahorita', 'ando ocupado',
+        ])
+        if _has_callback_906:
+            return FSMIntent.CALLBACK
         return FSMIntent.MANAGER_PRESENT
 
     # --- Transfer (espere en línea) ---
@@ -583,6 +627,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 820: BRUCE2535 "esperar ya que regrese"
         'esperar ya que', 'tendrias que esperar', 'tendria que esperar',
         'tienes que esperar', 'tiene que esperar', 'hay que esperar',
+        # FIX 906: Callback con dias de la semana
+        'marqueme el lunes', 'marqueme el martes', 'marqueme el miercoles',
+        'marqueme el jueves', 'marqueme el viernes',
+        'llameme el lunes', 'llameme el martes', 'llameme el miercoles',
+        'llameme el jueves', 'llameme el viernes',
+        'marque el lunes', 'marque el martes', 'marque el miercoles',
     ]
     # FIX 894: BRUCE2604 - Guard de queja antes de TRANSFER
     # "permítame, márcame a cada rato, ya se les dijo que no" → "permitame" matchea TRANSFER
@@ -888,6 +938,14 @@ class FSMEngine:
             'ya me llamaron', 'dejen de llamar', 'otra vez', 'ya no me llamen',
             'estoy ocupado', 'no tengo tiempo', 'estoy en junta', 'ahorita no puedo',
             'no me interesa para nada', 'ya les dije que no',
+            # FIX 906: Variaciones reales de queja detectadas en simulador masivo
+            'dejenos de llamar', 'dejenos de marcar', 'dejenos de estar llamando',
+            'dejen de estar llamando', 'dejen de estar marcando',
+            'a cada rato', 'nos tienen hartos', 'me tienen harto',
+            'ya no nos llamen', 'ya no nos marquen', 'ya no queremos que nos llamen',
+            'ya no le llamen', 'ya no le marquen', 'ya no la molesten', 'ya no lo molesten',
+            'ya no le esten llamando', 'ya no le esten marcando',
+            'ya basta', 'ya estuvo', 'ya cansan', 'estan molestando',
         ]
         if any(f in _texto_lower for f in _frustracion_signals):
             # Cliente frustrado -> responder con empatía, no con script
@@ -895,10 +953,37 @@ class FSMEngine:
                 print(f"  [FIX 920] Frustración detectada: cliente ocupado -> ofrecer rellamar")
                 self.state = FSMState.DESPEDIDA
                 return self._get_template("despedida_ocupado_920")
-            elif 'ya me llamaron' in _texto_lower or 'otra vez' in _texto_lower or 'dejen de llamar' in _texto_lower:
-                print(f"  [FIX 920] Frustración detectada: llamadas repetidas -> disculparse")
+            else:
+                # FIX 906: Cualquier otra frustración (quejas, hartos, etc.) -> disculparse
+                print(f"  [FIX 920/906] Frustración detectada: queja/llamadas repetidas -> disculparse")
                 self.state = FSMState.DESPEDIDA
                 return self._get_template("despedida_ya_llamaron_920")
+
+        # 1.2 FIX 906: Detección de IVR/buzón por texto (simulador no pasa por detector_ivr)
+        _buzon_ivr_signals = [
+            'el numero que usted marco', 'numero que marco no existe',
+            'ha sido cancelado', 'fuera de servicio', 'no esta disponible',
+            'deje su mensaje despues del tono', 'deje su mensaje',
+            'la persona que llama no esta disponible',
+            'la persona con la que intentas comunicarte',
+            'para ventas marque', 'para soporte marque', 'marque uno',
+            'bienvenido a empresa', 'menu principal', 'extension',
+        ]
+        if any(b in _texto_lower for b in _buzon_ivr_signals):
+            print(f"  [FIX 906] Buzón/IVR detectado por texto -> colgar")
+            self.state = FSMState.DESPEDIDA
+            return ""  # Silencio = colgar
+
+        # 1.3 FIX 906: Detección de situaciones sensibles (fallecimiento, cierre)
+        _situacion_sensible = [
+            'fallecio', 'fallecido', 'murio', 'se murio', 'ya no vive',
+            'cerramos el negocio', 'ya cerramos', 'cerro la tienda',
+            'ya no existe el negocio', 'quebro', 'ya no abrimos',
+        ]
+        if any(s in _texto_lower for s in _situacion_sensible):
+            print(f"  [FIX 906] Situación sensible detectada -> despedida empática")
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("despedida_sensible_906")
 
         # 1.5. Recovery: DESPEDIDA + CONFIRMATION cuando último fue ofrecer contacto
         if (self.state == FSMState.DESPEDIDA and
@@ -2263,7 +2348,8 @@ class FSMEngine:
         # Parseamos el texto aquí para incluirlo en rechazados ANTES de elegir alternativa.
         if texto:
             tn834 = _normalize(texto)
-            if 'whatsapp' in tn834:
+            # FIX 909: Expanded channel detection from text
+            if 'whatsapp' in tn834 or 'whats' in tn834:
                 rechazados.add('whatsapp')
             if 'correo' in tn834 or 'email' in tn834 or 'mail' in tn834:
                 rechazados.add('correo')
@@ -2272,7 +2358,30 @@ class FSMEngine:
                 _reject_words_834 = ['no tengo', 'tampoco', 'no manejo', 'no uso', 'no cuento']
                 if any(r in tn834 for r in _reject_words_834):
                     rechazados.add('telefono')
-            print(f"  [FIX 834] REJECT_DATA: rechazados pre-parse={rechazados} texto='{texto[:60]}'")
+            # FIX 909: Si dice "no tengo datos" o "no me llegan" sin especificar canal,
+            # inferir que rechaza el canal que Bruce acaba de pedir
+            _generic_reject_909 = ['no tengo datos', 'no me llegan', 'no lo uso',
+                                    'no lo usamos', 'no usa', 'no lo manejo', 'no lo manejamos',
+                                    'no tiene de eso', 'es de la vieja escuela',
+                                    'no reviso correos', 'no revisa correos',
+                                    'no checa correos', 'nunca revisa',
+                                    'no tenemos internet', 'no hay internet']
+            if any(g in tn834 for g in _generic_reject_909):
+                # Inferir canal del contexto: que pidio Bruce en ultimo turno
+                if self.context.canal_solicitado:
+                    rechazados.add(self.context.canal_solicitado)
+                    print(f"  [FIX 909] Rechazo generico -> inferido canal={self.context.canal_solicitado}")
+                else:
+                    # Si no hay canal_solicitado, inferir del ultimo template de Bruce
+                    _ult_bruce = ''
+                    for _m909 in reversed(getattr(self.context, '_historial_bruce', [])):
+                        _ult_bruce = _m909.lower()
+                        break
+                    if 'whatsapp' in _ult_bruce:
+                        rechazados.add('whatsapp')
+                    elif 'correo' in _ult_bruce:
+                        rechazados.add('correo')
+            print(f"  [FIX 834+909] REJECT_DATA: rechazados pre-parse={rechazados} texto='{texto[:60]}'")
 
         S = FSMState
         A = ActionType

@@ -126,40 +126,47 @@ TEMPLATES = {
     # === DICTADO / ACKNOWLEDGMENT ===
     # FIX 769: Variantes formales con rotación (evitar repetición)
     # FIX 803: "continue" → "prosiga" (TTS pronunciaba como portugués)
+    # FIX 906E: Variantes mas naturales (audit Claude: "suena robotico")
     "aja_si": [
         "Si, adelante.",
         "Claro, prosiga.",
         "Si, lo escucho.",
         "Entendido, prosiga.",
         "Perfecto, adelante.",
+        "Aja, digame.",
+        "Si, le escucho.",
     ],
     "aja_digame": [
         "Claro, digame.",
         "Si, adelante, digame.",
         "Perfecto, digame.",
         "Entendido, digame.",
+        "Aja, digame por favor.",
     ],
 
     # === CONFIRMACIÓN DE DATO CAPTURADO ===
     # FIX 914: Cierre con recapitulación de siguiente paso
+    # FIX 906E: Incluir confirmacion del dato recibido + que se envia + cuando + contacto retorno
     "confirmar_telefono": [
-        "Perfecto, ya tengo el numero registrado. Le envio el catalogo con "
-        "lista de precios en las proximas dos horas. Si tiene alguna duda, "
-        "con gusto me puede contactar. Muchas gracias por su tiempo.",
-        "Excelente, ya quedo anotado. En breve le envio toda la informacion "
-        "de nuestros productos. Muchas gracias, que tenga excelente dia.",
+        "Perfecto, ya tengo su numero. Le envio el catalogo con "
+        "lista de precios en las proximas horas. Si tiene alguna duda, "
+        "me puede escribir a ese mismo numero. Muchas gracias por su tiempo.",
+        "Excelente, quedo registrado. En breve le envio toda la informacion "
+        "de nuestros productos con precios. Muchas gracias, que tenga excelente dia.",
+        "Muy bien, ya lo tengo anotado. Le envio el catalogo en un momento. "
+        "Si necesita algo mas, con gusto le atendemos. Que tenga buen dia.",
     ],
     "confirmar_correo": [
-        "Perfecto, ya tengo el correo registrado. Le envio el catalogo con "
-        "lista de precios en las proximas dos horas. Si tiene alguna duda, "
-        "con gusto me puede contactar. Muchas gracias por su tiempo.",
-        "Excelente, ya quedo anotado el correo. En breve le envio toda la "
-        "informacion. Muchas gracias, que tenga excelente dia.",
+        "Perfecto, ya tengo el correo. Le envio el catalogo con "
+        "lista de precios en las proximas horas. Si tiene alguna duda, "
+        "me puede escribir. Muchas gracias por su tiempo.",
+        "Excelente, quedo registrado el correo. En breve le envio toda la "
+        "informacion con precios. Muchas gracias, que tenga excelente dia.",
     ],
     "confirmar_dato_generico": [
-        "Perfecto, ya lo tengo anotado. Le envio el catalogo en las proximas "
-        "dos horas. Si tiene alguna pregunta, estamos para servirle. "
-        "Muchas gracias por su tiempo.",
+        "Perfecto, ya lo tengo anotado. Le envio el catalogo con lista "
+        "de precios en las proximas horas. Si tiene alguna pregunta, "
+        "estamos para servirle. Muchas gracias por su tiempo.",
     ],
 
     # === OFRECER CONTACTO DE BRUCE ===
@@ -307,6 +314,14 @@ TEMPLATES = {
         "Que tenga muy buen dia.",
     ],
 
+    # FIX 906: Template empatico para situaciones sensibles (fallecimiento, cierre)
+    "despedida_sensible_906": [
+        "Lamento mucho escuchar eso. Le ofrezco mis condolencias. "
+        "Disculpe la molestia, que tenga buen dia.",
+        "Lo siento mucho, de verdad. Disculpe la llamada, no era mi intencion "
+        "molestar en este momento. Que tenga buen dia.",
+    ],
+
     # FIX 918: Template para confusion del cliente (SENTIMIENTO_NEGATIVO)
     "aclarar_confusion": [
         "Disculpe, le explico brevemente. Somos NIOVAL, distribuidores de productos "
@@ -354,11 +369,13 @@ NARROW_PROMPTS = {
         "system": (
             "Eres Bruce, vendedor de NIOVAL (productos ferreteros de Guadalajara). "
             "El cliente hizo una pregunta sobre productos, precios o la empresa. "
-            "Responde en 1-2 oraciones, mexicano coloquial. "
+            "Responde en 1-2 oraciones, mexicano coloquial pero profesional. "
             "Productos: cintas tapagoteras, griferia, herramientas, candados, "
             "silicones, adhesivos, cerraduras, y mas de 15 categorias. "
-            "REGLAS: NO preguntes nada, solo responde la pregunta. "
+            "Hacemos envios a toda la Republica Mexicana. "
+            "REGLAS: Responde la pregunta PRIMERO, luego ofrece enviar catalogo. "
             "NO repitas informacion que ya dijiste. "
+            "SIEMPRE usa 'usted' (le envio, su numero), NUNCA 'tu'. "
             "Si no sabes un precio exacto, di 'con gusto le envio la lista de precios'."
         ),
         "max_tokens": 80,
@@ -401,17 +418,22 @@ NARROW_PROMPTS = {
     "confirmar_dato_dictado": {
         "system": (
             "El cliente acaba de dictar un dato de contacto (telefono, email, nombre). "
-            "Confirma el dato recibido y despidete prometiendo el catalogo. "
-            "1-2 oraciones, mexicano coloquial."
+            "REGLAS:\n"
+            "1. Confirma el dato recibido (menciona el numero/correo que te dieron)\n"
+            "2. Di QUE le vas a enviar ('el catalogo con lista de precios')\n"
+            "3. Di CUANDO ('en las proximas horas')\n"
+            "4. Ofrece contacto de retorno ('si tiene dudas, me puede escribir')\n"
+            "5. SIEMPRE usa 'usted' (le envio, su numero), NUNCA 'tu'\n"
+            "2-3 oraciones, mexicano coloquial pero profesional."
         ),
-        "max_tokens": 60,
+        "max_tokens": 80,
         "temperature": 0.3,
     },
 
-    # FIX 908/911/912/914/915/916: Mejorado con todas las reglas de auditoria
+    # FIX 908/911/912/914/915/916/906F: Mejorado con todas las reglas de auditoria
     "conversacion_libre": {
         "system": (
-            "Eres Bruce, vendedor de NIOVAL (productos ferreteros). "
+            "Eres Bruce, vendedor de NIOVAL (productos ferreteros de Guadalajara). "
             "La conversacion esta en una situacion no estandar.\n"
             "REGLAS ABSOLUTAS:\n"
             "1. Si cliente ya dijo un dato (nombre, telefono, correo, WhatsApp) "
@@ -419,7 +441,7 @@ NARROW_PROMPTS = {
             "2. Si cliente rechazo un canal ('no tengo WhatsApp', 'no tengo correo'), "
             "NO pedir ese canal. Ofrecer alternativa distinta\n"
             "3. Si encargado no esta, pedir contacto alternativo\n"
-            "4. Maximo 2 oraciones, mexicano coloquial\n"
+            "4. Maximo 2 oraciones, mexicano coloquial pero profesional\n"
             "5. NO repetir frases que Bruce ya dijo en turnos anteriores\n"
             "6. ESCUCHA ACTIVA: menciona algo ESPECIFICO que el cliente dijo\n"
             "7. EMPATIA: si el cliente suena frustrado, ocupado o confundido, "
@@ -432,6 +454,9 @@ NARROW_PROMPTS = {
             "11. NO pidas datos si aun no explicaste que es NIOVAL ni que ofreces\n"
             "12. Si el cliente parece confundido, explica brevemente quien eres y por que llamas\n"
             "13. Si el cliente dijo 'no' de forma ambigua, pregunta a que se refiere\n"
+            "14. SIEMPRE usa 'usted' (le envio, su numero). NUNCA tutees al cliente\n"
+            "15. Al confirmar un dato, REPITE el numero/correo que te dieron\n"
+            "16. Al despedirte, di QUE envias, CUANDO, y ofrece contacto de retorno\n"
             "Estado actual: {state}\n"
             "Contexto: {context_summary}"
         ),

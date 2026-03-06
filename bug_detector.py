@@ -112,6 +112,7 @@ class CallEventTracker:
         self.respuestas_bruce = []
         self.textos_cliente = []
         self.conversacion = []  # FIX 637: Lista ordenada [("bruce", txt), ("cliente", txt)]
+        self.simulador_texto = False  # FIX 910C: Flag para skip INTERRUPCION en simulador texto
         self.patrones_invalidados = 0
         self.respuestas_vacias = 0
         self.cliente_dijo_bueno = 0
@@ -288,8 +289,10 @@ class BugDetector:
             bugs.extend(filler_gpt_bugs)
 
             # FIX 727: INTERRUPCION_CONVERSACIONAL - Bruce corta al cliente mientras explica
-            interrupcion_bugs = ContentAnalyzer._check_interrupcion_conversacional(tracker.conversacion)
-            bugs.extend(interrupcion_bugs)
+            # FIX 910C: Skip in text simulator (no real audio interruption)
+            if not getattr(tracker, 'simulador_texto', False):
+                interrupcion_bugs = ContentAnalyzer._check_interrupcion_conversacional(tracker.conversacion)
+                bugs.extend(interrupcion_bugs)
 
             # FIX 793B: PREGUNTA_IGNORADA - Cliente pregunta y Bruce solo da acknowledgment
             pregunta_bugs = ContentAnalyzer._check_pregunta_ignorada(tracker.conversacion)
@@ -2240,6 +2243,30 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
                 if _acepto_canal and ("catalogo" in _conv_lower or "lista de precios" in _conv_lower):
                     print(f"[FIX 896B] Filtrado FP: catalog channel flow (cliente acepto canal, Bruce pide numero)")
                     _es_fp = True
+
+            # FIX 910A: Encargado recognition at turn 2 - Bruce's saludo asks for encargado,
+            # client says "si soy" in turn 1, GPT eval flags turn 2 as not recognizing.
+            # This is FP because FSM correctly transitions to encargado_presente.
+            if tipo in ("LOGICA_ROTA", "CONTEXTO_IGNORADO") and not _es_fp:
+                _enc_fp_phrases = ['encargado', 'se identificó', 'no reconoció']
+                if any(p in detalle for p in _enc_fp_phrases):
+                    _turno_num = error.get("turno", 99)
+                    if _turno_num <= 2:
+                        # At turn 2, Bruce's saludo just asked for encargado - FP
+                        _cliente_confirmo = any(
+                            p in _conv_lower for p in ['si soy', 'yo soy', 'yo mero', 'a sus ordenes',
+                                                        'si, yo', 'el encargado soy yo', 'servidor',
+                                                        'el dueno', 'el dueño', 'si soy yo']
+                        )
+                        if _cliente_confirmo:
+                            print(f"[FIX 910A] Filtrado FP: encargado recognition turno {_turno_num} (FSM ya transiciono)")
+                            _es_fp = True
+
+            # FIX 910B: INTERRUPCION_CONVERSACIONAL in text simulator is always FP
+            # (no real audio interruption in text-to-text simulation)
+            if tipo == "INTERRUPCION_CONVERSACIONAL" and not _es_fp:
+                print(f"[FIX 910B] Filtrado FP: interrupcion conversacional en simulador texto")
+                _es_fp = True
 
             # FIX 896C: Llamada exitosa - contacto capturado + despedida = NO bugs LOGICA_ROTA
             if tipo == "LOGICA_ROTA" and not _es_fp:

@@ -52,7 +52,7 @@ class TestFlowHappyPath(unittest.TestCase):
         r5 = self.fsm.process("3312345678")
         self.assertIsNotNone(r5)
         self.assertEqual(self.fsm.state, FSMState.CONTACTO_CAPTURADO)
-        self.assertIn("registrado", r5.lower())
+        self.assertTrue(any(w in r5.lower() for w in ['registrado', 'anotado', 'ya tengo']))
 
         # Turno 6: Despedida
         r6 = self.fsm.process("Gracias, igualmente")

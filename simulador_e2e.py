@@ -609,6 +609,7 @@ class SimuladorE2E:
             bruce_id=f"SIM{eid:04d}",
             telefono=escenario["contacto"].get("telefono", ""),
         )
+        tracker.simulador_texto = True  # FIX 910C: Skip INTERRUPCION in text sim
 
         # 3. Saludo inicial de Bruce
         try:

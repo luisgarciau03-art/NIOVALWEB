@@ -2495,6 +2495,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             'sí, dígame', 'si, digame', 'entendido, continue', 'entendido, continúe',
             'perfecto, adelante', 'sí, lo escucho', 'si, lo escucho',
             'adelante', 'continúe', 'continue', 'le escucho',
+            # FIX 906A: Mas fillers detectados en auditoria Claude
+            'claro, prosiga', 'claro, digame', 'perfecto, digame',
+            'entendido, prosiga', 'entendido, digame',
+            'si, prosiga', 'sí, prosiga',
         ]
         _resp_strip_810 = respuesta_lower.strip().rstrip('.')
         _es_filler_810 = _resp_strip_810 in _fillers_gpt_810
@@ -2517,11 +2521,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     respuesta = "Entiendo que no se encuentra. ¿Me podría proporcionar un WhatsApp o correo para enviarle el catálogo al encargado?"
                     print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (encargado no está)")
                     filtro_aplicado = True
-                # Caso 2: Cliente dictó número/dato
-                elif any(p in _uc_810 for p in ['seis', 'siete', 'ocho', 'nueve', 'arroba', '@', 'gmail']):
+                # FIX 906A: Caso 2 mejorado - Cliente dictó número COMPLETO (7+ dígitos)
+                # "Si, adelante" cuando el número ya está completo es incoherente
+                elif any(p in _uc_810 for p in ['seis', 'siete', 'ocho', 'nueve', 'arroba', '@', 'gmail',
+                                                 'cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco']):
                     _nums_810 = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
-                                 'diez','veinte','treinta','cuarenta','cincuenta']
-                    if sum(1 for n in _nums_810 if n in _uc_810) >= 3 or re.search(r'\d{3,}', _uc_810):
+                                 'diez','once','doce','trece','catorce','quince',
+                                 'dieciseis','diecisiete','dieciocho','diecinueve',
+                                 'veinte','veintiuno','veintidos','veintitres','veinticuatro','veinticinco',
+                                 'treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa']
+                    _digit_count_810 = sum(1 for n in _nums_810 if n in _uc_810)
+                    _digit_nums_810 = len(re.findall(r'\d', _uc_810))
+                    _total_digits_810 = _digit_count_810 + _digit_nums_810
+                    if _total_digits_810 >= 7 or re.search(r'\d{7,}', _uc_810):
+                        # Número COMPLETO - confirmar con el número
+                        _extracted_810 = re.findall(r'\d+', _uc_810)
+                        _num_str_810 = ''.join(_extracted_810) if _extracted_810 else ''
+                        if len(_num_str_810) >= 10:
+                            respuesta = f"Perfecto, ya tengo el numero {_num_str_810[:3]}-{_num_str_810[3:7]}-{_num_str_810[7:]}. Le envio el catalogo en las proximas horas. Muchas gracias."
+                        else:
+                            respuesta = "Perfecto, ya lo tengo registrado. Le envio el catalogo en un momento. Muchas gracias."
+                        print(f"[OK] FIX 906A: Filler GPT '{_resp_strip_810}' → confirmar numero completo ({_total_digits_810} digitos)")
+                        filtro_aplicado = True
+                    elif _total_digits_810 >= 3:
                         respuesta = "Perfecto, ya lo tengo registrado. Muchas gracias."
                         print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (dato dictado)")
                         filtro_aplicado = True
@@ -2530,9 +2552,53 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     respuesta = "Entiendo, muchas gracias por la información. ¿Habría otra persona con quien pudiera comunicarme?"
                     print(f"[OK] FIX 810B: Filler GPT '{_resp_strip_810}' → override (cliente explicó)")
                     filtro_aplicado = True
+                # FIX 906A: Caso 4 - Cliente hizo pregunta directa
+                elif any(p in _uc_810 for p in ['que venden', 'que ofrecen', 'que es nioval', 'que productos',
+                                                  'de donde', 'quien llama', 'quien habla', 'que me ofrece']):
+                    respuesta = "Le comento, somos NIOVAL, distribuidores de productos ferreteros con precios de fabrica y entrega directa. ¿Le interesaria recibir nuestro catalogo?"
+                    print(f"[OK] FIX 906A: Filler GPT '{_resp_strip_810}' → override (pregunta directa)")
+                    filtro_aplicado = True
+                # FIX 906A: Caso 5 - Cliente muestra interes ("si me interesa", "mande el catalogo")
+                elif any(p in _uc_810 for p in ['si me interesa', 'si, me interesa', 'mandeme', 'envieme',
+                                                  'si quiero', 'si claro', 'mandelo', 'envielo',
+                                                  'me interesa', 'si me gustaria']):
+                    respuesta = "Excelente. ¿Me podria proporcionar un numero de WhatsApp o correo electronico para enviarle el catalogo?"
+                    print(f"[OK] FIX 906A: Filler GPT '{_resp_strip_810}' → override (cliente interesado)")
+                    filtro_aplicado = True
 
                 if filtro_aplicado:
                     respuesta_lower = respuesta.lower()
+
+        # ============================================================
+        # FIX 906C: Anti-tuteo post-filter
+        # Auditoria Claude detectó 6 GPT_TONO_INADECUADO: Bruce cambia de "usted" a "tú"
+        # ("ya te envío", "le eches un ojo", "quieres que te mande")
+        # SIEMPRE usar "usted" en contexto mexicano empresarial
+        # ============================================================
+        if not filtro_aplicado:
+            _tuteo_patterns_906c = [
+                (r'\bte\s+(?:envío|envio|mando|paso|comparto)\b', 'le'),
+                (r'\bte\s+(?:llamo|marco|contacto|busco)\b', 'le'),
+                (r'\b(?:le|para que)\s+eches\b', ' le de'),
+                (r'\bquieres\s+que\b', 'quiere que'),
+                (r'\btienes\s+(?:donde|algún|algun|un)\b', 'tiene'),
+                (r'\bpuedes\s+(?:darme|mandarme|enviarme|pasarme)\b', 'puede'),
+                (r'\bnecesitas\b', 'necesita'),
+                (r'\bte\s+(?:parece|interesa|gustaría|gustaria|conviene)\b', 'le'),
+                (r'\btú\b', 'usted'),
+                (r'\btu\s+(?:número|numero|correo|whatsapp|teléfono|telefono|nombre|negocio|empresa)\b', 'su'),
+                (r'\bdime\b', 'dígame'),
+                (r'\bmándame\b', 'mándeme'),
+                (r'\bpásame\b', 'páseme'),
+            ]
+            _tuteo_found_906c = False
+            for _pat, _repl in _tuteo_patterns_906c:
+                if re.search(_pat, respuesta_lower):
+                    respuesta = re.sub(_pat, _repl, respuesta, flags=re.IGNORECASE)
+                    _tuteo_found_906c = True
+            if _tuteo_found_906c:
+                respuesta_lower = respuesta.lower()
+                print(f"[OK] FIX 906C: Anti-tuteo aplicado → '{respuesta[:80]}'")
 
         # ============================================================
         # FIX 816: OFERTA_POST_DESPEDIDA prevention
@@ -15144,6 +15210,32 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             if ctx.pedir_datos_count >= 2 and not ctx.catalogo_prometido:
                 flags.append("- Ya pediste datos varias veces. Si el cliente no da datos, ofrece tu propio numero o despidete")
 
+            # FIX 906D: Turno actual del cliente para contexto GPT
+            _ult_cliente_906d = ""
+            for _m906 in reversed(self.conversation_history):
+                if _m906['role'] == 'user':
+                    _ult_cliente_906d = _m906.get('content', '')
+                    break
+            if _ult_cliente_906d:
+                _uc_906 = _ult_cliente_906d.lower().replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')
+                # Detectar pregunta del cliente
+                if any(p in _uc_906 for p in ['que venden', 'que ofrecen', 'que productos', 'que manejan',
+                                               'de donde', 'quien llama', 'quien habla', 'que me ofrece',
+                                               'como funciona', 'cuanto cuesta', 'tienen envio']):
+                    flags.append("- El cliente ACABA DE HACER UNA PREGUNTA. RESPONDE su pregunta PRIMERO, luego continua")
+                # Detectar interes del cliente
+                if any(p in _uc_906 for p in ['me interesa', 'si quiero', 'mandeme', 'envieme', 'si claro',
+                                               'si por favor', 'adelante', 'mandelo', 'como le hago']):
+                    flags.append("- El cliente MOSTRO INTERES. Aprovecha para pedir datos de contacto inmediatamente")
+                # Detectar cliente ocupado
+                if any(p in _uc_906 for p in ['estoy ocupado', 'ahorita no', 'no tengo tiempo', 'estoy en',
+                                               'tengo clientes', 'ando en el mostrador']):
+                    flags.append("- El cliente ESTA OCUPADO. Se breve y empatico, ofrece llamar en otro momento")
+                # Detectar rechazo suave
+                if any(p in _uc_906 for p in ['ya tenemos proveedor', 'ya estamos surtidos',
+                                               'por el momento no', 'ahorita no necesitamos']):
+                    flags.append("- El cliente tiene OBJECION. Respeta su postura, ofrece catalogo sin compromiso")
+
             # FIX 925: Ejemplos de respuesta ideal (pocos, concretos)
             ejemplos_925 = []
             if not ctx.pitch_dado:
@@ -15157,6 +15249,11 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
             if ctx.encargado_es_interlocutor and not ctx.whatsapp_ya_solicitado:
                 ejemplos_925.append(
                     'Ejemplo BUENO: "Perfecto, para enviarle nuestro catalogo ¿me podria dar un WhatsApp o correo?"')
+            # FIX 906D: Ejemplo de cierre con confirmacion de dato
+            if ctx.whatsapp_ya_solicitado or ctx.catalogo_prometido:
+                ejemplos_925.append(
+                    'Ejemplo BUENO cierre: "Perfecto, ya tengo el numero. Le envio el catalogo con lista de precios '
+                    'en las proximas horas. Si tiene alguna duda me puede escribir. Muchas gracias por su tiempo."')
             if ejemplos_925:
                 flags.append("")
                 flags.append("# EJEMPLOS DE RESPUESTA IDEAL:")
