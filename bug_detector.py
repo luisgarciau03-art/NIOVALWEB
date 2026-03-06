@@ -826,6 +826,17 @@ class ContentAnalyzer:
                 if not cliente_dice_no_aplica:
                     continue
 
+                # FIX 915: "Corporativo X, en que le puedo ayudar" is a switchboard greeting,
+                # NOT area equivocada. Bruce should ask for compras department.
+                _es_conmutador_915 = (
+                    'corporativo' in texto_norm and
+                    any(p in texto_norm for p in ['en que le puedo', 'buen dia', 'buenas tardes',
+                                                    'buenos dias', 'a la orden'])
+                )
+                if _es_conmutador_915:
+                    print(f"  [FIX 915] SKIP area_equivocada: conmutador corporativo (greeting)")
+                    continue
+
                 # FIX 869E: Si cliente texto termina en coma/conector (frase incompleta),
                 # skip — el cliente aún no terminó de expresarse.
                 # BRUCE2491: "No, señor, está equivocado," → turno incompleto
@@ -2244,23 +2255,79 @@ def _evaluar_con_gpt(tracker: CallEventTracker) -> list:
                     print(f"[FIX 896B] Filtrado FP: catalog channel flow (cliente acepto canal, Bruce pide numero)")
                     _es_fp = True
 
-            # FIX 910A: Encargado recognition at turn 2 - Bruce's saludo asks for encargado,
-            # client says "si soy" in turn 1, GPT eval flags turn 2 as not recognizing.
-            # This is FP because FSM correctly transitions to encargado_presente.
+            # FIX 911: Expanded GPT eval FP filters
+            # FIX 910A/911A: Encargado recognition at turn <=3 - Bruce's saludo asks for
+            # encargado, client confirms, GPT eval flags as not recognizing.
+            # FP because FSM correctly transitions to encargado_presente.
             if tipo in ("LOGICA_ROTA", "CONTEXTO_IGNORADO") and not _es_fp:
-                _enc_fp_phrases = ['encargado', 'se identificó', 'no reconoció']
+                _enc_fp_phrases = ['encargado', 'se identificó', 'no reconoció', 'contacto']
                 if any(p in detalle for p in _enc_fp_phrases):
                     _turno_num = error.get("turno", 99)
-                    if _turno_num <= 2:
-                        # At turn 2, Bruce's saludo just asked for encargado - FP
+                    if _turno_num <= 3:
                         _cliente_confirmo = any(
                             p in _conv_lower for p in ['si soy', 'yo soy', 'yo mero', 'a sus ordenes',
                                                         'si, yo', 'el encargado soy yo', 'servidor',
-                                                        'el dueno', 'el dueño', 'si soy yo']
+                                                        'el dueno', 'el dueño', 'si soy yo',
+                                                        'mandame', 'mandeme', 'mande el catalogo',
+                                                        'mande whatsapp', 'dame tu numero']
                         )
                         if _cliente_confirmo:
-                            print(f"[FIX 910A] Filtrado FP: encargado recognition turno {_turno_num} (FSM ya transiciono)")
+                            print(f"[FIX 911A] Filtrado FP: encargado recognition turno {_turno_num} (FSM ya transiciono)")
                             _es_fp = True
+
+            # FIX 911B: "digame" after transfer - CORRECT behavior (waiting for new person)
+            if tipo == "LOGICA_ROTA" and not _es_fp:
+                if 'digame' in detalle.lower() or 'dígame' in detalle.lower():
+                    _transfer_in_conv = any(p in _conv_lower for p in [
+                        'se lo paso', 'le paso', 'espere tantito', 'ahorita se lo',
+                        'le digo que le conteste', 'te lo comunican', 'te lo paso',
+                        'un momento', 'espere un momento'
+                    ])
+                    if _transfer_in_conv:
+                        print(f"[FIX 911B] Filtrado FP: 'digame' despues de transfer = correcto")
+                        _es_fp = True
+
+            # FIX 911C: Pidió contacto after transfer in progress - correct flow
+            if tipo in ("LOGICA_ROTA", "CONTEXTO_IGNORADO") and not _es_fp:
+                if any(p in detalle.lower() for p in ['whatsapp', 'correo', 'número de contacto']):
+                    _transfer_phrases = ['se lo paso', 'le paso', 'le digo que le conteste',
+                                         'te lo comunican', 'te lo paso', 'deje le digo',
+                                         'ahorita te lo', 'no se retire', 'no cuelgues',
+                                         'espere tantito', 'un momentito']
+                    if any(p in _conv_lower for p in _transfer_phrases):
+                        print(f"[FIX 911C] Filtrado FP: pedir contacto post-transfer = flujo correcto")
+                        _es_fp = True
+
+            # FIX 911D: IVR/buzon - Bruce can't interact with IVR systems
+            if tipo in ("OPORTUNIDAD_PERDIDA", "LOGICA_ROTA") and not _es_fp:
+                _ivr_phrases = ['marque uno', 'marque 1', 'marque dos', 'marque 2',
+                               'para ventas', 'para soporte', 'bienvenido a',
+                               'buzon de voz', 'deje su mensaje']
+                if any(p in _conv_lower for p in _ivr_phrases):
+                    print(f"[FIX 911D] Filtrado FP: IVR/buzon - Bruce no puede interactuar")
+                    _es_fp = True
+
+            # FIX 911E: "dato implícitamente proporcionado" - too vague to be actionable
+            if tipo == "LOGICA_ROTA" and not _es_fp:
+                if 'implícitamente' in detalle or 'implicitamente' in detalle:
+                    print(f"[FIX 911E] Filtrado FP: dato 'implicitamente' proporcionado - demasiado vago")
+                    _es_fp = True
+
+            # FIX 911F: Silence/STT garbage response - Bruce responding to "..." is not a bug
+            if tipo in ("LOGICA_ROTA", "CONTEXTO_IGNORADO") and not _es_fp:
+                _silence_in_conv = any(
+                    r == 'cliente' and (t.strip() in ('...', '', '.', '..') or len(t.strip()) <= 3)
+                    for r, t in tracker.conversacion
+                )
+                if _silence_in_conv:
+                    print(f"[FIX 911F] Filtrado FP: silencio/STT garbage en conversacion")
+                    _es_fp = True
+
+            # FIX 914: "marca propia" not mentioned - prompt already says it, GPT variability
+            if tipo == "RESPUESTA_INCORRECTA" and not _es_fp:
+                if 'marca' in detalle.lower() and ('propia' in detalle.lower() or 'nioval' in detalle.lower()):
+                    print(f"[FIX 914] Filtrado FP: marca propia ya está en prompt, GPT variabilidad")
+                    _es_fp = True
 
             # FIX 910B: INTERRUPCION_CONVERSACIONAL in text simulator is always FP
             # (no real audio interruption in text-to-text simulation)

@@ -2601,6 +2601,33 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 print(f"[OK] FIX 906C: Anti-tuteo aplicado → '{respuesta[:80]}'")
 
         # ============================================================
+        # FIX 912: Anti-jefe + anti-informal post-filter
+        # GPT eval #45: "jefe" considered unprofessional
+        # GPT eval #58: "chamba quede al cien" too informal
+        # ============================================================
+        # FIX 912: Always run (tone fix, not response replacement)
+        if True:
+            _informal_patterns_912 = [
+                (r'\bjefe\b', 'señor'),
+                (r'\bpatrón\b', 'señor'),
+                (r'\bpatron\b', 'señor'),
+                (r'\bchamba\b', 'trabajo'),
+                (r'\bal cien\b', 'de la mejor manera'),
+                (r'\bchido\b', 'excelente'),
+                (r'\bneta\b', 'verdad'),
+                (r'\bórale\b', 'perfecto'),
+                (r'\borale\b', 'perfecto'),
+            ]
+            _informal_found_912 = False
+            for _pat, _repl in _informal_patterns_912:
+                if re.search(_pat, respuesta_lower):
+                    respuesta = re.sub(_pat, _repl, respuesta, flags=re.IGNORECASE)
+                    _informal_found_912 = True
+            if _informal_found_912:
+                respuesta_lower = respuesta.lower()
+                print(f"[OK] FIX 912: Anti-informal aplicado -> '{respuesta[:80]}'")
+
+        # ============================================================
         # FIX 816: OFERTA_POST_DESPEDIDA prevention
         # Bug detector marca cuando Bruce ofrece catálogo/pitch DESPUÉS de haberse despedido
         # 95 instancias en audit masivo - sin prevención previa
@@ -15209,6 +15236,18 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                 flags.append("- El cliente esta CONFUNDIDO. Responde de forma simple y clara, sin tecnicismos")
             if ctx.pedir_datos_count >= 2 and not ctx.catalogo_prometido:
                 flags.append("- Ya pediste datos varias veces. Si el cliente no da datos, ofrece tu propio numero o despidete")
+
+            # FIX 913: Inject lead_data captured values into prompt
+            # Prevents GPT from re-asking for data already captured
+            _lead_913 = getattr(self, 'lead_data', {})
+            if _lead_913.get('whatsapp'):
+                flags.append(f"- DATO YA CAPTURADO: WhatsApp={_lead_913['whatsapp']} (NO volver a pedir, CONFIRMAR y cerrar)")
+            if _lead_913.get('email'):
+                flags.append(f"- DATO YA CAPTURADO: Correo={_lead_913['email']} (NO volver a pedir, CONFIRMAR y cerrar)")
+            if _lead_913.get('telefono_fijo'):
+                flags.append(f"- DATO YA CAPTURADO: Telefono={_lead_913['telefono_fijo']} (NO volver a pedir)")
+            if _lead_913.get('nombre_contacto'):
+                flags.append(f"- DATO YA CAPTURADO: Nombre={_lead_913['nombre_contacto']} (usa su nombre)")
 
             # FIX 906D: Turno actual del cliente para contexto GPT
             _ult_cliente_906d = ""

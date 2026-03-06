@@ -28,7 +28,7 @@ class TestFix910AEncargadoFP(unittest.TestCase):
         from bug_detector import _evaluar_con_gpt
         source = inspect.getsource(_evaluar_con_gpt)
         self.assertIn('_turno_num', source)
-        self.assertIn('<= 2', source)
+        self.assertIn('<= 3', source)
 
     def test_fp_filter_checks_cliente_confirmo(self):
         """FP filter should check if client confirmed being encargado."""
