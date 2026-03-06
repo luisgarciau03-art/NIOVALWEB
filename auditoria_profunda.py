@@ -367,7 +367,7 @@ def replay_llamada(bruce_id, conv_data, verbose=False, gpt_eval=False):
 
 
 # ============================================================
-# 3B. EVALUADOR AGRESIVO GPT-4o (Opcion A+B+C combinadas)
+# 3B. EVALUADOR AGRESIVO Claude Sonnet (Opcion A+B+C combinadas)
 # ============================================================
 
 _EVAL_AGRESIVO_PROMPT = """Eres un AUDITOR IMPLACABLE de calidad para llamadas de ventas telefónicas. Tu estándar de referencia es un VENDEDOR ESTRELLA humano con 15 años de experiencia en ventas B2B en México. CUALQUIER desviación de ese estándar es un problema.
@@ -501,25 +501,29 @@ Responde SOLO en JSON:
   "resumen": "2-3 frases evaluando la llamada con honestidad brutal"
 }}
 
-REGLAS ESTRICTAS:
+REGLAS ULTRA-ESTRICTAS:
 - score_total = promedio de las 8 dimensiones
-- BUSCA PROBLEMAS ACTIVAMENTE. Si no encuentras al menos 1, estás siendo demasiado suave
-- Severidad CRITICO: afecta directamente la conversión (pierde la venta)
-- Severidad ALTO: el cliente lo nota y afecta su percepción
-- Severidad MEDIO: mejorable pero no critico
+- BUSCA PROBLEMAS ACTIVAMENTE. Si no encuentras al menos 2, estás siendo demasiado suave
+- Un score de 5 significa "mediocre". Un 7 es "aceptable". Solo un 9+ es "bueno"
+- Severidad CRITICO: afecta directamente la conversión (pierde la venta o irrita al cliente)
+- Severidad ALTO: el cliente lo nota y afecta su percepción de profesionalismo
+- Severidad MEDIO: mejorable, un vendedor estrella no lo haría así
 - Si la llamada fue REALMENTE buena (score >= 9), problemas puede tener solo MEDIOs
-- Si el cliente colgó rápido (1-2 turnos), evalúa si Bruce pudo haber evitado que colgara
+- Si el cliente colgó rápido (1-2 turnos), ANALIZA POR QUÉ colgó — ¿Bruce pudo evitarlo?
 - Máximo 10 problemas por llamada
-- Para RESPUESTA_IDEAL, evalúa MÍNIMO los 3 turnos más importantes de Bruce
-- NO seas condescendiente. Un score de 7 significa "aceptable, nada más"
-- Responde SOLO el JSON, sin texto adicional"""
+- Para RESPUESTA_IDEAL, evalúa CADA turno de Bruce sin excepción
+- NO seas condescendiente. Imagina que tu BONO depende de encontrar TODOS los problemas
+- Si Bruce suena como script/robot en CUALQUIER turno, es FLUJO_ROBOTICO
+- Si Bruce no menciona NADA de lo que dijo el cliente, es FALTA de ESCUCHA_ACTIVA
+- Compara CADA respuesta de Bruce con lo que diría un vendedor humano con 15 años de experiencia
+- Responde SOLO el JSON, sin texto antes ni después"""
 
 
 def evaluar_agresivo(resultado, verbose=False):
-    """Evaluacion agresiva GPT-4o con scoring + comparativa + sentimiento."""
+    """Evaluacion agresiva Claude Sonnet 4.6 con scoring + comparativa + sentimiento."""
     try:
-        import openai
-        api_key = os.environ.get("OPENAI_API_KEY", "")
+        import anthropic
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
             return None
 
@@ -539,27 +543,35 @@ def evaluar_agresivo(resultado, verbose=False):
 
         conversacion_texto = "\n".join(lineas)
 
-        client = openai.OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{
-                "role": "system",
-                "content": _EVAL_AGRESIVO_PROMPT.format(
-                    conversacion=conversacion_texto,
-                    estado=resultado['estado'],
-                    contacto='SI' if resultado['contacto'] else 'NO',
-                )
-            }],
-            temperature=0,
-            max_tokens=2000,
-            timeout=30,
+        prompt_content = _EVAL_AGRESIVO_PROMPT.format(
+            conversacion=conversacion_texto,
+            estado=resultado['estado'],
+            contacto='SI' if resultado['contacto'] else 'NO',
         )
 
-        texto = response.choices[0].message.content.strip()
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=4096,
+            temperature=0,
+            messages=[{
+                "role": "user",
+                "content": prompt_content
+            }],
+        )
+
+        texto = response.content[0].text.strip()
+        # Extraer JSON de markdown code blocks si aplica
         if texto.startswith("```"):
             texto = texto.split("```")[1]
             if texto.startswith("json"):
                 texto = texto[4:]
+        # Buscar JSON en el texto si no empieza con {
+        if not texto.strip().startswith("{"):
+            import re as _re
+            _json_match = _re.search(r'\{[\s\S]*\}', texto)
+            if _json_match:
+                texto = _json_match.group(0)
 
         eval_data = json.loads(texto)
 
@@ -567,7 +579,7 @@ def evaluar_agresivo(resultado, verbose=False):
             scores = eval_data.get('scores', {})
             total = eval_data.get('score_total', 0)
             problemas = eval_data.get('problemas', [])
-            print(f"      [GPT-4o ULTRA] Score: {total:.1f}/10")
+            print(f"      [CLAUDE ULTRA] Score: {total:.1f}/10")
             print(f"        Nat:{scores.get('naturalidad', '?')} "
                   f"Eff:{scores.get('efectividad_ventas', '?')} "
                   f"Obj:{scores.get('manejo_objeciones', '?')} "
@@ -592,7 +604,7 @@ def evaluar_agresivo(resultado, verbose=False):
 
     except Exception as e:
         if verbose:
-            print(f"      [GPT-4o ERROR] {e}")
+            print(f"      [CLAUDE ERROR] {e}")
         return None
 
 
@@ -610,7 +622,7 @@ def reportar_bugs_a_sistema(resultado, eval_agresivo=None):
     for bug in resultado.get('bugs_replay', []):
         bugs_a_reportar.append(bug)
 
-    # 2. Bugs del evaluador agresivo GPT-4o
+    # 2. Bugs del evaluador agresivo Claude Sonnet
     if eval_agresivo:
         for problema in eval_agresivo.get('problemas', []):
             # Reportar CRITICO y ALTO siempre, MEDIO si score total < 6
@@ -765,7 +777,7 @@ def analisis_cruzado(resultados):
     # Top 10 bugs priorizados
     top_bugs = sorted(bug_priority.items(), key=lambda x: x[1], reverse=True)[:10]
 
-    # --- Scores GPT-4o (si hay) ---
+    # --- Scores Claude Sonnet (si hay) ---
     scores_detail = defaultdict(list)
     for r in resultados:
         eval_data = r.get('eval_agresivo')
@@ -861,9 +873,9 @@ def generar_reporte(resultados, analisis, gpt_eval=False):
             frase_short = frase[:60]
             print(f"    ({count}x) \"{frase_short}\"")
 
-    # --- Scores GPT-4o ---
+    # --- Scores Claude Sonnet ---
     if analisis.get('scores_promedio'):
-        print(f"\n  SCORES DE CALIDAD GPT-4o ULTRA (promedio)")
+        print(f"\n  SCORES DE CALIDAD Claude Sonnet ULTRA (promedio)")
         print(f"  {'─' * 50}")
         for dim, avg in sorted(analisis['scores_promedio'].items()):
             bar = '#' * int(avg) + '.' * (10 - int(avg))
@@ -1043,7 +1055,7 @@ def main():
     parser = argparse.ArgumentParser(description='Auditoria Profunda - Pipeline unificado')
     parser.add_argument('--sin-descargar', action='store_true', help='No descargar logs nuevos')
     parser.add_argument('--gpt-eval', action='store_true', help='Incluir GPT eval mini (~$0.03/llamada)')
-    parser.add_argument('--agresivo', action='store_true', help='Evaluador GPT-4o agresivo: scoring + comparativa + sentimiento (~$0.15/llamada)')
+    parser.add_argument('--agresivo', action='store_true', help='Evaluador Claude Sonnet agresivo: scoring + comparativa + sentimiento (~$0.15/llamada)')
     parser.add_argument('--reportar-bugs', action='store_true', help='Reportar bugs al sistema /bugs de produccion')
     parser.add_argument('--ultimas', type=int, default=None, help='Solo ultimas N llamadas')
     parser.add_argument('--bruce', type=str, default=None, help='Auditar llamada especifica')
@@ -1095,7 +1107,7 @@ def main():
         print(f"  [GPT EVAL mini] Costo estimado: ~${costo_est:.2f} USD ({len(conversaciones)} llamadas)")
     if args.agresivo:
         costo_agr = len(conversaciones) * 0.15
-        print(f"  [GPT-4o AGRESIVO] Costo estimado: ~${costo_agr:.2f} USD ({len(conversaciones)} llamadas)")
+        print(f"  [Claude Sonnet AGRESIVO] Costo estimado: ~${costo_agr:.2f} USD ({len(conversaciones)} llamadas)")
 
     resultados = []
     t0 = time.time()
@@ -1128,9 +1140,9 @@ def main():
     elapsed = time.time() - t0
     print(f"\n  [OK] {len(resultados)} llamadas procesadas en {elapsed:.1f}s")
 
-    # 3B. Evaluador agresivo GPT-4o (si --agresivo)
+    # 3B. Evaluador agresivo Claude Sonnet (si --agresivo)
     if args.agresivo:
-        print(f"\n[4/{n_pasos}] EVALUADOR AGRESIVO GPT-4o (scoring + comparativa + sentimiento)...")
+        print(f"\n[4/{n_pasos}] EVALUADOR AGRESIVO Claude Sonnet (scoring + comparativa + sentimiento)...")
         eval_count = 0
         eval_bugs_total = 0
         scores_all = []
@@ -1141,7 +1153,7 @@ def main():
                 continue
 
             if not args.verbose:
-                sys.stdout.write(f"\r  [{i}/{len(resultados)}] {resultado['bruce_id']} - Evaluando GPT-4o...   ")
+                sys.stdout.write(f"\r  [{i}/{len(resultados)}] {resultado['bruce_id']} - Evaluando Claude Sonnet...   ")
                 sys.stdout.flush()
 
             eval_data = evaluar_agresivo(resultado, verbose=args.verbose)
@@ -1164,13 +1176,13 @@ def main():
                 if args.reportar_bugs:
                     reportar_bugs_a_sistema(resultado, eval_data)
 
-            # Rate limit GPT-4o
+            # Rate limit Claude Sonnet
             time.sleep(0.3)
 
         avg_score = sum(scores_all) / len(scores_all) if scores_all else 0
-        print(f"\n  [OK] {eval_count} llamadas evaluadas con GPT-4o")
+        print(f"\n  [OK] {eval_count} llamadas evaluadas con Claude Sonnet")
         print(f"  [SCORE] Promedio calidad: {avg_score:.1f}/10")
-        print(f"  [BUGS] {eval_bugs_total} problemas detectados por GPT-4o")
+        print(f"  [BUGS] {eval_bugs_total} problemas detectados por Claude Sonnet")
 
     # Reportar bugs rule-based al sistema /bugs (si --reportar-bugs y no --agresivo)
     if args.reportar_bugs and not args.agresivo:

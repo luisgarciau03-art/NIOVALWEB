@@ -300,6 +300,8 @@ class FSMContext:
     verificacion_consecutivas: int = 0  # FIX 866B: contador de verificacion_aqui_estoy consecutivos (anti-LOOP BRUCE2322)
     identity_repetidas: int = 0         # FIX 878: contador de identificacion_nioval consecutivos (anti-loop ubicacion)
     encargado_ausente_veces: int = 0    # FIX 892A: tracker para pedir_contacto_alternativo duplicado
+    templates_usados: set = field(default_factory=set)  # FIX 907: templates ya dichos para evitar PREGUNTA_REPETIDA
+    template_repeat_count: int = 0     # FIX 910: contador de repeticiones para detectar LOOP
 
 
 # ============================================================
@@ -709,9 +711,19 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.CONTINUATION
 
     # --- Interés implícito ---
+    # FIX 919: Expandido con señales sutiles de interés
     interest = [
-        'me interesa', 'si me interesa', 'cuenteme',
-        'a ver', 'que ofrece', 'que tiene',
+        'me interesa', 'si me interesa', 'cuenteme', 'cuentame',
+        'a ver', 'que ofrece', 'que ofrecen', 'que tiene', 'que tienen',
+        'mandame', 'mandeme', 'enviame', 'envieme', 'pasame',
+        'como le hago', 'como funciona', 'que precio', 'que precios',
+        'cuanto cuesta', 'cuanto sale', 'que descuento', 'que promocion',
+        'suena bien', 'suena interesante', 'esta interesante',
+        'si claro', 'por supuesto', 'como no', 'va que va',
+        'mandalo', 'mandelo', 'envialo', 'envielo',
+        'si por favor', 'si porfavor', 'adelante pues',
+        'que marcas', 'que productos', 'que categorias',
+        'quiero ver', 'me gustaria ver', 'me gustaria conocer',
     ]
     # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
     # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
@@ -850,6 +862,27 @@ class FSMEngine:
         # 1. Clasificar intent
         intent = classify_intent(texto, self.context, self.state)
         self._last_intent = intent  # BTE: Exponer para que agente_ventas lo use
+
+        # 1.05 FIX 918: Extraer datos mencionados por el cliente cada turno
+        self._extraer_datos_cliente(texto)
+
+        # 1.1 FIX 920: Detección de frustración/sentimiento negativo pre-respuesta
+        _texto_lower = texto.lower()
+        _frustracion_signals = [
+            'ya me llamaron', 'dejen de llamar', 'otra vez', 'ya no me llamen',
+            'estoy ocupado', 'no tengo tiempo', 'estoy en junta', 'ahorita no puedo',
+            'no me interesa para nada', 'ya les dije que no',
+        ]
+        if any(f in _texto_lower for f in _frustracion_signals):
+            # Cliente frustrado -> responder con empatía, no con script
+            if 'ocupado' in _texto_lower or 'tiempo' in _texto_lower or 'junta' in _texto_lower or 'no puedo' in _texto_lower:
+                print(f"  [FIX 920] Frustración detectada: cliente ocupado -> ofrecer rellamar")
+                self.state = FSMState.DESPEDIDA
+                return self._get_template("despedida_ocupado_920")
+            elif 'ya me llamaron' in _texto_lower or 'otra vez' in _texto_lower or 'dejen de llamar' in _texto_lower:
+                print(f"  [FIX 920] Frustración detectada: llamadas repetidas -> disculparse")
+                self.state = FSMState.DESPEDIDA
+                return self._get_template("despedida_ya_llamaron_920")
 
         # 1.5. Recovery: DESPEDIDA + CONFIRMATION cuando último fue ofrecer contacto
         if (self.state == FSMState.DESPEDIDA and
@@ -1051,6 +1084,36 @@ class FSMEngine:
                 print(f"  [FSM SHADOW] state={self.state.value} intent={intent.value} -> GUARDS FAILED (fallthrough)")
             return None
 
+        # 4B. FIX 908: Guard de despedida prematura
+        # No despedir si: estamos en pitch/buscando_encargado, turnos < 2, y no hay rechazo firme
+        if (transition.next_state == FSMState.DESPEDIDA
+                and self.state in (FSMState.PITCH, FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_PRESENTE)
+                and self.context.turnos_bruce < 2
+                and intent not in (FSMIntent.NO_INTEREST, FSMIntent.FAREWELL, FSMIntent.WRONG_NUMBER,
+                                  FSMIntent.ANOTHER_BRANCH, FSMIntent.CLOSED)):
+            print(f"  [FIX 908] Guard despedida prematura: turnos={self.context.turnos_bruce} state={self.state.value} -> continuar conversacion")
+            # En vez de despedir, intentar ofrecer catalogo
+            transition = Transition(
+                next_state=self.state,
+                action_type=ActionType.TEMPLATE,
+                template_key="ofrecer_catalogo_sin_compromiso",
+            )
+
+        # 4C. FIX 924: Guard de datos faltantes antes de despedida
+        # Si estamos en estados avanzados y no capturamos ningun dato, intentar una ultima vez
+        if (transition.next_state == FSMState.DESPEDIDA
+                and self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO)
+                and intent == FSMIntent.FAREWELL
+                and not self.context.whatsapp_ya_solicitado
+                and not self.context.catalogo_prometido
+                and self.context.turnos_bruce >= 2):
+            print(f"  [FIX 924] Guard datos faltantes: encargado presente pero sin datos -> ofrecer catalogo")
+            transition = Transition(
+                next_state=FSMState.CAPTURANDO_CONTACTO,
+                action_type=ActionType.TEMPLATE,
+                template_key="ofrecer_catalogo_sin_compromiso",
+            )
+
         # 5. Ejecutar acción
         response = self._execute(transition, texto, agente)
 
@@ -1091,6 +1154,87 @@ class FSMEngine:
         return response
 
     # ----------------------------------------------------------
+    # FIX 918: Extracción de datos mencionados por el cliente
+    # ----------------------------------------------------------
+    def _extraer_datos_cliente(self, texto: str):
+        """FIX 918: Extrae datos que el cliente menciona y los guarda en datos_capturados.
+
+        Detecta: tipo de negocio, nombre del encargado, relación previa, productos que manejan.
+        Estos datos se inyectan en el prompt GPT para que Bruce no los ignore.
+        """
+        tn = texto.lower().strip()
+
+        # Tipo de negocio
+        tipos_negocio = {
+            'ferreteria': 'ferretería', 'taller': 'taller', 'papeleria': 'papelería',
+            'tienda': 'tienda', 'abarrotes': 'abarrotes', 'refaccionaria': 'refaccionaria',
+            'electrica': 'eléctrica', 'plomeria': 'plomería', 'construccion': 'construcción',
+            'materiales': 'materiales', 'herreria': 'herrería', 'cerrajeria': 'cerrajería',
+            'muebleria': 'mueblería', 'dulceria': 'dulcería', 'farmacia': 'farmacia',
+            'restaurante': 'restaurante', 'hotel': 'hotel', 'escuela': 'escuela',
+            'fabrica': 'fábrica', 'tlapaleria': 'tlapalería', 'tornilleria': 'tornillería',
+        }
+        for key, display in tipos_negocio.items():
+            if key in tn and 'tipo_negocio' not in self.context.datos_capturados:
+                self.context.datos_capturados['tipo_negocio'] = display
+                print(f"  [FIX 918] Dato extraído: tipo_negocio={display}")
+                break
+
+        # Relación previa con NIOVAL
+        relacion_previa = [
+            'ya nos conocemos', 'ya les compre', 'ya les compré', 'ya he comprado',
+            'ya soy cliente', 'ya nos han llamado', 'ya conozco', 'ya los conozco',
+            'ya trabaje con ustedes', 'ya trabajé con ustedes', 'si los conozco',
+        ]
+        for frase in relacion_previa:
+            if frase in tn and 'relacion_previa' not in self.context.datos_capturados:
+                self.context.datos_capturados['relacion_previa'] = 'cliente_existente'
+                print(f"  [FIX 918] Dato extraído: relacion_previa=cliente_existente")
+                break
+
+        # Productos que manejan/buscan
+        productos = [
+            'herramienta', 'tornillo', 'clavo', 'pintura', 'cable', 'tubo',
+            'llave', 'candado', 'cerradura', 'foco', 'lampara', 'lámpara',
+            'cinta', 'pegamento', 'soldadura', 'taladro', 'sierra',
+        ]
+        for prod in productos:
+            if prod in tn and 'producto_mencionado' not in self.context.datos_capturados:
+                self.context.datos_capturados['producto_mencionado'] = prod
+                print(f"  [FIX 918] Dato extraído: producto_mencionado={prod}")
+                break
+
+        # Nombre del encargado (cuando dicen "soy [nombre]" o "habla [nombre]")
+        import re
+        match_nombre = re.search(r'(?:soy|habla|me llamo|mi nombre es)\s+([A-Za-záéíóúñÁÉÍÓÚÑ]{3,})', texto)
+        if match_nombre and 'nombre_encargado' not in self.context.datos_capturados:
+            nombre = match_nombre.group(1).capitalize()
+            # Filtrar palabras que NO son nombres
+            _no_nombres = {'el', 'la', 'los', 'las', 'del', 'que', 'con', 'para', 'por', 'encargado', 'encargada', 'dueno', 'dueño'}
+            if nombre.lower() not in _no_nombres and len(nombre) >= 3:
+                self.context.datos_capturados['nombre_encargado'] = nombre
+                print(f"  [FIX 918] Dato extraído: nombre_encargado={nombre}")
+
+        # FIX 923: Detectar tono del cliente (informal vs formal)
+        _informal_markers = [
+            'orale', 'va que va', 'chido', 'simon', 'nel', 'neta', 'mano',
+            'compa', 'carnal', 'wey', 'guey', 'nomas', 'pos', 'pues si',
+            'arre', 'sale', 'jalo', 'va pues', 'andale', 'hijole',
+        ]
+        _formal_markers = [
+            'por favor', 'disculpe', 'seria tan amable', 'con su permiso',
+            'le agradezco', 'buenas tardes', 'buenos dias', 'buenas noches',
+            'tenga usted', 'estaria interesado',
+        ]
+        if 'tono_cliente' not in self.context.datos_capturados:
+            if any(m in tn for m in _informal_markers):
+                self.context.datos_capturados['tono_cliente'] = 'informal'
+                print(f"  [FIX 923] Tono detectado: informal")
+            elif any(m in tn for m in _formal_markers):
+                self.context.datos_capturados['tono_cliente'] = 'formal'
+                print(f"  [FIX 923] Tono detectado: formal")
+
+    # ----------------------------------------------------------
     # FIX 791: Selección stateful de template para UNKNOWN
     # ----------------------------------------------------------
     def _handle_unknown_stateful(self, texto: str) -> Optional[Transition]:
@@ -1099,51 +1243,97 @@ class FSMEngine:
         Reemplaza GPT_NARROW en 90%+ de casos UNKNOWN.
         Retorna Transition con template o None para fallback a GPT_NARROW.
         Actualiza context flags para evitar loops por template repetido.
+        FIX 907: Verifica si template ya se dijo para evitar PREGUNTA_REPETIDA.
+        FIX 910: Contador de repeticiones para evitar LOOP.
         """
         S = FSMState
         A = ActionType
         ctx = self.context
 
+        def _template_ya_dicho(template_key: str) -> bool:
+            """FIX 907: Verifica si este template ya se usó en la conversación."""
+            return template_key in ctx.templates_usados
+
+        def _registrar_template(template_key: str):
+            """FIX 907/910: Registra template usado y cuenta repeticiones."""
+            ctx.templates_usados.add(template_key)
+            ctx.template_repeat_count = ctx.template_repeat_count + 1
+
+        def _seleccionar_template(opciones: list) -> Optional[Transition]:
+            """FIX 907: Selecciona el primer template NO usado de la lista.
+            FIX 910: Si todos usados (>= 3 repeticiones), escalar a GPT o despedida."""
+            for next_state, action, tpl in opciones:
+                if not _template_ya_dicho(tpl):
+                    _registrar_template(tpl)
+                    return Transition(next_state, action, tpl)
+            # FIX 910: Todos los templates ya se dijeron -> LOOP detectado
+            if ctx.template_repeat_count >= 3:
+                print(f"  [FIX 910] LOOP detectado: {ctx.template_repeat_count} templates repetidos -> escalar a GPT")
+                return None  # Fallback a GPT_NARROW
+            # Usar el primero como fallback
+            ns, ac, tpl = opciones[0]
+            return Transition(ns, ac, tpl)
+
         if self.state == S.PITCH:
-            # PITCH+UNKNOWN: cliente responde vago al pitch
-            # Flags se actualizan via _update_context() existente (lines 1204-1213)
-            if not ctx.encargado_preguntado:
-                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
-            elif not ctx.canales_intentados:
-                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
-            else:
-                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso")
+            return _seleccionar_template([
+                (S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado") if not ctx.encargado_preguntado else None,
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo") if not ctx.canales_intentados else None,
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso"),
+            ].__class__([x for x in [
+                (S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado") if not ctx.encargado_preguntado else None,
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo") if not ctx.canales_intentados else None,
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "ofrecer_catalogo_sin_compromiso"),
+            ] if x is not None]))
 
         elif self.state == S.BUSCANDO_ENCARGADO:
-            # Flags se actualizan via _update_context() existente
+            opciones = []
             if not ctx.pitch_dado:
-                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "repitch_encargado")
-            elif ctx.encargado_preguntado:
-                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
+                opciones.append((S.BUSCANDO_ENCARGADO, A.TEMPLATE, "repitch_encargado"))
+            if ctx.encargado_preguntado:
+                opciones.append((S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo"))
+                opciones.append((S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo_breve"))
             else:
-                return Transition(S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+                opciones.append((S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado"))
+            if not opciones:
+                opciones.append((S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado"))
+            return _seleccionar_template(opciones)
 
         elif self.state == S.ENCARGADO_AUSENTE:
             if not ctx.canales_intentados:
-                # FIX 891: BRUCE1975 - Si FIX 878 ya pivotó (identity_repetidas >= 2),
-                # usar template alternativo para evitar PREGUNTA_REPETIDA con pedir_numero_directo_885.
                 if ctx.identity_repetidas >= 2:
                     print(f"  [FIX 891] UNKNOWN en encargado_ausente + identity_repetidas={ctx.identity_repetidas} → pedir_telefono_directo_891")
                     return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_telefono_directo_891")
-                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
+                opciones = [
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo"),
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo_breve"),
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_numero_directo_885"),
+                ]
+                return _seleccionar_template(opciones)
             elif ctx.callback_pedido:
                 return Transition(S.DESPEDIDA, A.TEMPLATE, "despedida_agradecimiento")
             else:
-                return Transition(S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_horario_encargado")
+                opciones = [
+                    (S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_horario_encargado"),
+                    (S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce"),
+                ]
+                return _seleccionar_template(opciones)
 
         elif self.state == S.ENCARGADO_PRESENTE:
             if not ctx.canales_intentados:
-                return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+                opciones = [
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp"),
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo_breve"),
+                ]
+                return _seleccionar_template(opciones)
             else:
                 return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_catalogo_whatsapp")
 
         elif self.state == S.CAPTURANDO_CONTACTO:
-            return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
+            opciones = [
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero"),
+                (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "no_escuche_repetir"),
+            ]
+            return _seleccionar_template(opciones)
 
         # Estados no mapeados -> None -> fallback a GPT_NARROW existente
         return None
@@ -1230,7 +1420,9 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.WRONG_NUMBER,    S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         add(S.BUSCANDO_ENCARGADO, I.ANOTHER_BRANCH,  S.DESPEDIDA, A.TEMPLATE, "despedida_otra_sucursal")
         add(S.BUSCANDO_ENCARGADO, I.CLOSED,          S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
-        add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
+        # FIX 916: INTEREST en BUSCANDO_ENCARGADO -> dar pitch primero, NO saltar a pedir WhatsApp
+        # Antes: saltaba directo a pedir_whatsapp sin generar interes real
+        add(S.BUSCANDO_ENCARGADO, I.INTEREST,        S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.BUSCANDO_ENCARGADO, I.VERIFICATION,    S.BUSCANDO_ENCARGADO, A.TEMPLATE, "verificacion_aqui_estoy")
         # FIX 894: New intents for BUSCANDO_ENCARGADO
         add(S.BUSCANDO_ENCARGADO, I.IDENTITY_QUESTION, S.BUSCANDO_ENCARGADO, A.TEMPLATE, "identificacion_nioval")
@@ -1245,6 +1437,8 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.CONTINUATION,  S.BUSCANDO_ENCARGADO, A.NOOP, None)
 
         # === ENCARGADO_PRESENTE ===
+        # FIX 916B: Solo pedir WhatsApp si ya se dio pitch completo
+        # Si pitch no se dio, dar pitch primero (evita TIMING_INCORRECTO)
         add(S.ENCARGADO_PRESENTE, I.CONFIRMATION,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.ENCARGADO_PRESENTE, I.INTEREST,      S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp")
         add(S.ENCARGADO_PRESENTE, I.QUESTION,      S.ENCARGADO_PRESENTE, A.GPT_NARROW, "responder_pregunta_producto")
@@ -1537,17 +1731,32 @@ class FSMEngine:
     # Template lookup
     # ----------------------------------------------------------
     def _get_template(self, key: str) -> str:
-        """Obtiene template por key. Rota variantes para evitar repetición."""
+        """Obtiene template por key. Rota variantes para evitar repetición.
+        FIX 907: Registra templates usados para detección de PREGUNTA_REPETIDA.
+        FIX 909: Si template ya se usó, intenta variante distinta."""
         templates = TEMPLATES.get(key)
         if not templates:
             return ""
-        # FIX 769: Rotar variantes si hay más de una
+
+        # FIX 909: Si este template ya se usó y hay variantes, usar otra
         if len(templates) > 1:
-            idx = getattr(self, '_template_counter', 0)
-            response = templates[idx % len(templates)]
-            self._template_counter = idx + 1
+            # Intentar variante no usada
+            for i, t in enumerate(templates):
+                t_key = f"{key}_{i}"
+                if t_key not in self.context.templates_usados:
+                    response = t
+                    self.context.templates_usados.add(t_key)
+                    break
+            else:
+                # Todas usadas, rotar normalmente
+                idx = getattr(self, '_template_counter', 0)
+                response = templates[idx % len(templates)]
+                self._template_counter = idx + 1
         else:
             response = templates[0]
+
+        # FIX 907: Registrar template usado
+        self.context.templates_usados.add(key)
 
         # Variable substitution
         if '{hora}' in response:

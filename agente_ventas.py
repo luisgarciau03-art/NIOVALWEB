@@ -15121,6 +15121,23 @@ Despedida: "Muchas gracias por su tiempo{f', señor/señora {nombre}' if nombre 
                 flags.append("- Ya prometiste enviar catalogo (NO ofrecerlo otra vez)")
             if hasattr(ctx, "callback_confirmado") and ctx.callback_confirmado:
                 flags.append("- Ya se confirmo callback (NO preguntar hora otra vez)")
+            # FIX 918: Inyectar datos capturados del cliente en prompt GPT
+            if ctx.datos_capturados:
+                for dato_key, dato_val in ctx.datos_capturados.items():
+                    if dato_key == 'tipo_negocio':
+                        flags.append(f"- El negocio del cliente es: {dato_val} (USA esta info para personalizar)")
+                    elif dato_key == 'relacion_previa':
+                        flags.append("- El cliente YA CONOCE a NIOVAL (no repitas el pitch completo, referencia la relacion)")
+                    elif dato_key == 'producto_mencionado':
+                        flags.append(f"- El cliente mencionó interés en: {dato_val} (enfoca la conversacion en eso)")
+                    elif dato_key == 'nombre_encargado':
+                        flags.append(f"- El encargado se llama: {dato_val} (puedes usar su nombre con moderacion)")
+                    elif dato_key == 'tono_cliente':
+                        if dato_val == 'informal':
+                            flags.append("- El cliente usa tono INFORMAL (adapta tu lenguaje: mas coloquial, cercano)")
+                        elif dato_val == 'formal':
+                            flags.append("- El cliente usa tono FORMAL (mantén profesionalismo, use usted)")
+                print(f"  [FIX 918] Inyectando {len(ctx.datos_capturados)} datos del cliente en prompt GPT")
             if flags:
                 contexto_fsm_898 = chr(10)*2 + "# ESTADO ACTUAL DE LA CONVERSACION (FSM)" + chr(10)
                 contexto_fsm_898 += "IMPORTANTE - Lo que YA hiciste en esta llamada:" + chr(10)

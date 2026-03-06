@@ -15,11 +15,17 @@ GPT narrow solo se usa para preguntas de producto y situaciones complejas.
 
 TEMPLATES = {
     # === PITCH / PRESENTACIÓN ===
+    # FIX 917: Multiples variantes para evitar FLUJO_ROBOTICO
     "pitch_inicial": [
         "Le comento, me comunico de la marca NIOVAL. Somos distribuidores de productos "
         "ferreteros. Manejamos mas de quince categorias: cintas tapagoteras, griferia, "
         "herramientas, candados y mucho mas. "
         "¿Se encontrara el encargado o encargada de compras?",
+        "Le llamo de NIOVAL, somos distribuidores de productos ferreteros de "
+        "Guadalajara, Jalisco. Manejamos herramientas, griferia, cintas, "
+        "candados y muchas categorias mas. ¿Se encontrara el encargado de compras?",
+        "Buenos dias, le hablo de NIOVAL. Somos proveedores de productos ferreteros "
+        "con mas de quince mil productos. ¿Podria hablar con el encargado de compras?",
     ],
     # FIX 846: Cambiado "Me comunico de la marca NIOVAL" → "Le llamo de parte de NIOVAL"
     # para evitar que _PITCH_NIOVAL matchee 2 veces (pitch_inicial + pitch_persona_nueva)
@@ -29,11 +35,17 @@ TEMPLATES = {
         "nuestros productos de ferreteria. "
         "¿Se encontrara el encargado o encargada de compras?",
     ],
+    # FIX 917: Multiples variantes para evitar FLUJO_ROBOTICO
     "pitch_encargado": [
         "Excelente. Le comento, somos NIOVAL, distribuidores de productos ferreteros. "
         "Manejamos cintas tapagoteras, griferia, herramientas, candados y mas de "
         "quince categorias. "
         "¿Le gustaria recibir nuestro catalogo por WhatsApp o correo electronico?",
+        "Perfecto. Mire, somos NIOVAL de Guadalajara, manejamos una linea muy "
+        "completa de productos ferreteros. ¿Le interesaria que le envie nuestra "
+        "lista de precios?",
+        "Que bien. Somos distribuidores NIOVAL, manejamos herramientas, griferia, "
+        "cintas y muchos productos mas. ¿Le gustaria conocer nuestro catalogo?",
     ],
     # FIX 875: Versión corta para cuando el pitch ya fue dado (evita INFO_NO_SOLICITADA)
     # Auditoría 25/02: "Excelente. Le comento, somos NIOVAL..." 9x cuando pitch_inicial ya sonó
@@ -83,20 +95,28 @@ TEMPLATES = {
     "pedir_telefono": [
         "¿Me podria dar un telefono fijo o directo del encargado?",
     ],
+    # FIX 911: Variantes empáticas para rechazos de canal
     "pedir_alternativa_correo": [
-        "Entiendo. ¿Me podria proporcionar un correo electronico entonces?",
+        "Entiendo, no se preocupe. ¿Me podria dar un correo electronico entonces?",
+        "Claro, sin problema. ¿Habra un correo electronico donde le pueda enviar la informacion?",
     ],
     "pedir_alternativa_telefono": [
-        "Entiendo. ¿Me podria dar un telefono fijo o directo entonces?",
+        "Entiendo, no hay problema. ¿Me podria dar un telefono fijo o directo entonces?",
+        "Claro. ¿Tendra un numero de telefono donde le pueda contactar?",
     ],
     "pedir_alternativa_whatsapp": [
         "Entiendo. ¿Tendra un WhatsApp donde le pueda enviar la informacion?",
+        "Claro. ¿Habra un numero de WhatsApp para enviarle los detalles?",
     ],
     # FIX 841: Removida mención de "catálogo" para evitar CATALOGO_REPETIDO
-    # (confirmar_telefono/correo ya incluye la promesa del catálogo)
+    # FIX 911: Variantes empáticas con reflejo del cliente
     "pedir_contacto_alternativo": [
         "Entiendo que no se encuentra. ¿Me podria proporcionar un WhatsApp o correo "
         "del encargado?",
+        "No se preocupe, entiendo que no esta disponible. ¿Habra algun WhatsApp o "
+        "correo donde pueda enviarle la informacion?",
+        "Claro, no hay problema. ¿Me podria facilitar algun medio de contacto "
+        "del encargado para hacerle llegar nuestra informacion?",
     ],
     "digame_numero": [
         "Claro, digame por favor.",
@@ -122,17 +142,25 @@ TEMPLATES = {
     ],
 
     # === CONFIRMACIÓN DE DATO CAPTURADO ===
+    # FIX 914: Cierre con recapitulación de siguiente paso
     "confirmar_telefono": [
-        "Perfecto, ya tengo el numero registrado. Le envio el catalogo en las "
-        "proximas dos horas. Muchas gracias por su tiempo.",
+        "Perfecto, ya tengo el numero registrado. Le envio el catalogo con "
+        "lista de precios en las proximas dos horas. Si tiene alguna duda, "
+        "con gusto me puede contactar. Muchas gracias por su tiempo.",
+        "Excelente, ya quedo anotado. En breve le envio toda la informacion "
+        "de nuestros productos. Muchas gracias, que tenga excelente dia.",
     ],
     "confirmar_correo": [
-        "Perfecto, ya tengo el correo registrado. Le envio el catalogo en las "
-        "proximas dos horas. Muchas gracias por su tiempo.",
+        "Perfecto, ya tengo el correo registrado. Le envio el catalogo con "
+        "lista de precios en las proximas dos horas. Si tiene alguna duda, "
+        "con gusto me puede contactar. Muchas gracias por su tiempo.",
+        "Excelente, ya quedo anotado el correo. En breve le envio toda la "
+        "informacion. Muchas gracias, que tenga excelente dia.",
     ],
     "confirmar_dato_generico": [
         "Perfecto, ya lo tengo anotado. Le envio el catalogo en las proximas "
-        "dos horas. Muchas gracias por su tiempo.",
+        "dos horas. Si tiene alguna pregunta, estamos para servirle. "
+        "Muchas gracias por su tiempo.",
     ],
 
     # === OFRECER CONTACTO DE BRUCE ===
@@ -166,12 +194,17 @@ TEMPLATES = {
     ],
 
     # === DESPEDIDAS ===
+    # FIX 911/914: Variantes de despedida con empatía
     "despedida_cortes": [
         "Muchas gracias por su tiempo. Que tenga excelente dia. Hasta pronto.",
+        "Le agradezco mucho su atencion. Que tenga muy buen dia.",
+        "Muchas gracias, fue un gusto. Que le vaya muy bien.",
     ],
     "despedida_no_interesa": [
         "Entendido, no se preocupe. Le dejo nuestro numero por si mas adelante "
         "le interesa. Que tenga buen dia.",
+        "Claro, lo entiendo perfectamente. Si en algun momento necesita productos "
+        "ferreteros, con gusto le atendemos. Que tenga buen dia.",
     ],
     "despedida_otra_sucursal": [
         "Entiendo, disculpe la molestia. ¿Me podria indicar el telefono de la "
@@ -254,12 +287,30 @@ TEMPLATES = {
         "Entiendo, no se preocupe. ¿Hay algun horario en el que pueda encontrar "
         "al encargado de compras?",
     ],
+    "despedida_agradecimiento": [
+        "Claro que si. Le agradezco mucho su tiempo. Que tenga excelente dia.",
+    ],
+
+    # FIX 920: Templates empáticos para frustración detectada
+    "despedida_ocupado_920": [
+        "Entiendo perfectamente que esta ocupado. Le pido una disculpa por la "
+        "interrupcion. Si gusta, le puedo marcar en otro momento. Que tenga buen dia.",
+        "Disculpe la molestia, entiendo que no es buen momento. "
+        "¿Le marco mas tarde o prefiere que le envie la informacion por otro medio?",
+    ],
+    "despedida_ya_llamaron_920": [
+        "Le ofrezco una disculpa por las molestias. Tomo nota para no volver a "
+        "interrumpirle. Que tenga excelente dia.",
+        "Disculpe la insistencia, no era nuestra intencion molestar. "
+        "Que tenga muy buen dia.",
+    ],
+
+    # FIX 921: Template de catálogo sin compromiso mejorado
     "ofrecer_catalogo_sin_compromiso": [
         "Claro, le comento. Somos distribuidores de NIOVAL. "
         "¿Le interesa recibir nuestro catalogo sin compromiso?",
-    ],
-    "despedida_agradecimiento": [
-        "Claro que si. Le agradezco mucho su tiempo. Que tenga excelente dia.",
+        "Mire, sin compromiso le puedo enviar nuestra lista de precios "
+        "para que la revise con calma. ¿Le interesaria?",
     ],
 }
 
@@ -297,13 +348,23 @@ NARROW_PROMPTS = {
         "temperature": 0.3,
     },
 
+    # FIX 913: Mejor manejo de objeciones con técnicas de reencuadre
+    # FIX 911: Instrucciones de empatía específicas
+    # FIX 915: Instrucciones de escucha activa
     "manejar_objecion": {
         "system": (
             "Eres Bruce, vendedor de NIOVAL (productos ferreteros). "
-            "El cliente expreso una objecion o duda. Responde con empatia "
-            "en 1-2 oraciones. NO insistas si el rechazo es firme. "
-            "Si hay duda, ofrece enviar catalogo sin compromiso. "
-            "Mexicano coloquial."
+            "El cliente expreso una objecion o duda.\n"
+            "REGLAS DE EMPATIA (FIX 911):\n"
+            "1. PRIMERO reconoce lo que el cliente dijo usando SUS palabras\n"
+            "2. Muestra comprension genuina ('entiendo su situacion', 'tiene razon')\n"
+            "3. Si esta ocupado: ofrece llamar en otro momento\n"
+            "4. Si no le interesa: respeta sin insistir, ofrece dejar numero\n"
+            "5. Si tiene dudas: ofrece catalogo sin compromiso\n"
+            "REGLAS DE ESCUCHA ACTIVA (FIX 915):\n"
+            "- Menciona algo ESPECIFICO que el cliente dijo (no respuestas genericas)\n"
+            "- Si el cliente pregunto algo, responde ESO primero\n"
+            "Maximo 2 oraciones. Mexicano coloquial. NO insistas si rechazo firme."
         ),
         "max_tokens": 80,
         "temperature": 0.5,
@@ -319,18 +380,25 @@ NARROW_PROMPTS = {
         "temperature": 0.3,
     },
 
+    # FIX 911/912/915: Mejorado con empatía, escucha activa y anti-fillers
     "conversacion_libre": {
         "system": (
             "Eres Bruce, vendedor de NIOVAL (productos ferreteros: cintas, griferia, "
-            "herramientas, candados). La conversacion esta en una situacion no estandar. "
+            "herramientas, candados). La conversacion esta en una situacion no estandar.\n"
             "REGLAS ABSOLUTAS:\n"
             "1. Si cliente ya dijo un dato (nombre, telefono, correo, WhatsApp) "
             "en CUALQUIER turno anterior, NUNCA pedir ese dato de nuevo\n"
             "2. Si cliente rechazo un canal ('no tengo WhatsApp', 'no tengo correo'), "
             "NO pedir ese canal. Ofrecer alternativa distinta\n"
-            "3. Si encargado no esta, pedir contacto alternativo (WhatsApp, correo o telefono)\n"
+            "3. Si encargado no esta, pedir contacto alternativo\n"
             "4. Maximo 2 oraciones, mexicano coloquial\n"
             "5. NO repetir frases que Bruce ya dijo en turnos anteriores\n"
+            "6. ESCUCHA ACTIVA: menciona algo ESPECIFICO que el cliente dijo\n"
+            "7. EMPATIA: si el cliente suena frustrado, ocupado o confundido, "
+            "reconocelo PRIMERO antes de continuar\n"
+            "8. NO uses fillers vacios como 'Claro, digame' sin contexto\n"
+            "9. Si el cliente ofrece hacer algo (pasar numero, dejar recado), "
+            "ACEPTA y agradece, no ignores su oferta\n"
             "Estado actual: {state}\n"
             "Contexto: {context_summary}"
         ),
