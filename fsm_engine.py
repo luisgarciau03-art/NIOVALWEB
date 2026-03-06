@@ -354,9 +354,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # BRUCE2596: "No se encuentra en este momento," -> era CONTINUATION, debe ser MANAGER_ABSENT
     _reject_quick_821 = ['no tengo', 'no puedo', 'tampoco tengo', 'solo tengo',
                           'no manejo', 'no uso', 'no le puedo', 'no te puedo']
+    # FIX 926: Expandido con "no hay nadie", "andan fueras", "no nos puede atender"
     _manager_absent_quick_889 = ['no se encuentra', 'no esta', 'salio', 'salieron',
                                   'no vino', 'no llego', 'no viene', 'esta en su hora',
-                                  'hora de comida', 'fueron a comer', 'anda fuera']
+                                  'hora de comida', 'fueron a comer', 'anda fuera', 'andan fuera',
+                                  'no hay nadie', 'no hay quien', 'no nos puede atender',
+                                  'no puede atender', 'nadie que atienda', 'no atiende']
     if tl.endswith(',') and len(tn) < 40:
         if any(m in tn for m in _manager_absent_quick_889):
             pass  # FIX 889: fall through — será clasificado como MANAGER_ABSENT más abajo
@@ -519,6 +522,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'salieron', 'no se encuentre', 'anda fuera', 'no vino',
         'hora de comida', 'fueron a comer', 'esta fuera',
         'estan comiendo', 'esta en su hora', 'esta descansando',
+        # FIX 926: BRUCE1825 - "no hay nadie" no se detectaba
+        'no hay nadie', 'no hay quien', 'nadie que atienda',
+        'no nos puede atender', 'no puede atender', 'andan fuera',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -1488,6 +1494,8 @@ class FSMEngine:
         add(S.ENCARGADO_AUSENTE, I.UNKNOWN,        S.ENCARGADO_AUSENTE, A.GPT_NARROW, "conversacion_libre")
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.ENCARGADO_AUSENTE, I.CONTINUATION,  S.ENCARGADO_AUSENTE, A.NOOP, None)
+        # FIX 926: Cliente repite "no está" en ENCARGADO_AUSENTE -> ofrecer contacto bruce
+        add(S.ENCARGADO_AUSENTE, I.MANAGER_ABSENT, S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
         # FIX 788: Gaps - IDENTITY, CLOSED
         add(S.ENCARGADO_AUSENTE, I.IDENTITY,      S.ENCARGADO_AUSENTE, A.TEMPLATE, "identificacion_nioval")
         add(S.ENCARGADO_AUSENTE, I.CLOSED,        S.DESPEDIDA, A.TEMPLATE, "despedida_cerrado")
@@ -1686,15 +1694,20 @@ class FSMEngine:
             if transition.template_key in ("pitch_completo_894", "pitch_y_encargado_894") and self.context.pitch_dado:
                 _pitch_894_count = getattr(self.context, '_pitch_894_count', 0) + 1
                 self.context._pitch_894_count = _pitch_894_count
-                if _pitch_894_count == 1:
-                    print(f"  [FIX 895] pitch_completo_894 pero pitch ya dado → pedir_whatsapp_o_correo")
-                    return self._get_template("pedir_whatsapp_o_correo")
-                elif _pitch_894_count == 2:
-                    print(f"  [FIX 895] pitch_completo_894 #{_pitch_894_count} → ofrecer_contacto_bruce")
-                    return self._get_template("ofrecer_contacto_bruce")
-                else:
-                    print(f"  [FIX 895] pitch_completo_894 #{_pitch_894_count} → despedida_cortes")
-                    return self._get_template("despedida_cortes")
+                # FIX 925: Escalar progresivamente sin repetir templates ya dichos
+                _candidates_925 = [
+                    "pedir_whatsapp_o_correo",
+                    "pedir_whatsapp_o_correo_breve",
+                    "ofrecer_contacto_bruce",
+                    "despedida_cortes",
+                ]
+                _selected_925 = "despedida_cortes"  # fallback
+                for c in _candidates_925:
+                    if c not in self.context.templates_usados:
+                        _selected_925 = c
+                        break
+                print(f"  [FIX 925] pitch_completo_894 #{_pitch_894_count} → {_selected_925} (anti-repeticion)")
+                return self._get_template(_selected_925)
 
             # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
