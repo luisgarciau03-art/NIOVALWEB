@@ -561,6 +561,143 @@ _make(16, 7, "FIX938-MEJ02: tienen_descuentos_es_pregunta",
     bugs_criticos=["GPT_LOGICA_ROTA"],
 )
 
+# --- Grupo 17: STT noise injection ---
+# Simula transcripciones ruidosas de Azure/Deepgram para validar robustez
+# Patrones reales de ruido STT observados en produccion:
+#   - Saludos de recepcionista capturados como primer turno
+#   - Palabras repetidas por eco/compresor de audio
+#   - Parciales de email sin dominio completo
+#   - Numeros dictados con pausas / fillers
+#   - Frases IVR capturadas antes de que el humano hable
+
+# 17-01: Recepcionista contesta con frase completa (WHAT_OFFER noise)
+_make(17, 1, "STT-noise: recepcionista_saludo_completo",
+    {"nombre_negocio": "Ferreteria El Clavo", "telefono": "3312170001", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Ferreteria el clavo buenas tardes en que le puedo ayudar", "check_not": []},
+        {"cliente": "Si, el es el encargado, un momento", "check_not": []},
+        {"cliente": "Si, bueno, soy yo", "check_not": []},
+        {"cliente": "Si, claro, mandelo al WhatsApp", "check_not": []},
+        {"cliente": "Es el 3312345678", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# 17-02: STT duplica palabras por eco de audio
+_make(17, 2, "STT-noise: palabras_duplicadas_eco",
+    {"nombre_negocio": "Ferreteria La Llave", "telefono": "3312170002", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno bueno", "check_not": []},
+        {"cliente": "Si si soy yo el encargado", "check_not": []},
+        {"cliente": "Claro claro, por favor mandelo al WhatsApp", "check_not": []},
+        {"cliente": "Tres tres uno dos tres cuatro cinco seis siete ocho", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "DATO_NEGADO_REINSISTIDO"],
+)
+
+# 17-03: Fillers + respuesta real mezclada
+_make(17, 3, "STT-noise: filler_mezclado_con_respuesta",
+    {"nombre_negocio": "Ferreteria Don Memo", "telefono": "3312170003", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Mhmm este a ver si soy yo el que atiende", "check_not": []},
+        {"cliente": "Uhh a ver este si, por el WhatsApp esta bien", "check_not": []},
+        {"cliente": "Este este el numero es el 3398761234", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# 17-04: Email parcial sin dominio (FIX 939) - solo arroba + proveedor, sin "punto com"
+# Bruce NO debe confirmar email incompleto
+_make(17, 4, "STT-noise: email_parcial_sin_dominio",
+    {"nombre_negocio": "Ferreteria Test Email", "telefono": "3312170004", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si, soy el encargado", "check_not": []},
+        {"cliente": "Si claro, por correo", "check_not": []},
+        {"cliente": "Es ferreteria arroba gmail", "check_not": ["perfecto", "listo", "confirmado"]},
+        {"cliente": "Punto com", "check_not": []},
+    ],
+    bugs_criticos=["DICTADO_INTERRUMPIDO", "GPT_LOGICA_ROTA"],
+)
+
+# 17-05: Respuesta de solo filler/silencio - Bruce debe pedir aclaracion, no crashear
+_make(17, 5, "STT-noise: respuesta_solo_filler",
+    {"nombre_negocio": "Ferreteria Los Pinos", "telefono": "3312170005", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Mm", "check_not": []},
+        {"cliente": "Si", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "3345001122", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# 17-06: Ruido IVR antes de respuesta humana
+_make(17, 6, "STT-noise: ivr_ruido_antes_de_humano",
+    {"nombre_negocio": "Ferreteria Industrial", "telefono": "3312170006", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Para continuar en espanol marque uno", "check_not": []},
+        {"cliente": "Bueno buenas tardes", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Por el WhatsApp esta bien", "check_not": []},
+        {"cliente": "El 3356781234", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# 17-07: Canal rechazado con ruido - "este no no tengo WhatsApp pues"
+_make(17, 7, "STT-noise: canal_rechazado_con_ruido",
+    {"nombre_negocio": "Ferreteria San Juan", "telefono": "3312170007", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo el encargado", "check_not": []},
+        {"cliente": "Este no pues no tengo WhatsApp la verdad", "check_not": []},
+        {"cliente": "Tampoco tengo correo electronico", "check_not": ["WhatsApp"]},
+        {"cliente": "El telefono es el 3312170007", "check_not": []},
+    ],
+    bugs_criticos=["DATO_NEGADO_REINSISTIDO"],
+)
+
+# 17-08: Numero de telefono dictado con separaciones/ruido
+_make(17, 8, "STT-noise: numero_dictado_con_separaciones",
+    {"nombre_negocio": "Ferreteria El Tornillo", "telefono": "3312170008", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "Si, mandeme la informacion al WhatsApp", "check_not": []},
+        {"cliente": "El numero es... tres tres... uno dos... tres cuatro... cinco seis", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# 17-09: Transcripcion con nombre del negocio capturado al inicio (recepcionista)
+_make(17, 9, "STT-noise: nombre_negocio_como_primer_turno",
+    {"nombre_negocio": "Materiales del Norte", "telefono": "3312170009", "ciudad": "Monterrey"},
+    [
+        {"cliente": "Materiales del norte buenas tardes", "check_not": []},
+        {"cliente": "Si el encargado soy yo", "check_not": []},
+        {"cliente": "Orale si mandelo al correo", "check_not": []},
+        {"cliente": "Es compras arroba materialdelnorte punto com", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "DICTADO_INTERRUMPIDO"],
+)
+
+# 17-10: Respuesta ambigua corta + aclaracion posterior
+_make(17, 10, "STT-noise: respuesta_ambigua_luego_aclara",
+    {"nombre_negocio": "Ferreteria Central", "telefono": "3312170010", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si", "check_not": []},
+        {"cliente": "Este", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "Si al WhatsApp mandeme el catalogo", "check_not": []},
+        {"cliente": "3312170010", "check_not": []},
+    ],
+    bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
 # ============================================================
 # Runner de escenarios OOS
 # ============================================================
