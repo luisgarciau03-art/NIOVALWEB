@@ -390,7 +390,24 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- FIX 781: Email completo ANTES de dictado (email con números no es dictado parcial) ---
     # BRUCE2472: "Ferrebillas seis cuatro arroba gmail punto com" tiene num_words=4
     # Sin este check, se clasifica como DICTATING_PARTIAL y nunca llega a email detection
-    if '@' in texto or ('arroba' in tn and ('punto' in tn or 'gmail' in tn or 'hotmail' in tn)):
+    # FIX 939: Requerir sufijo de dominio ("punto com/mx/net") para declarar email COMPLETO
+    # Antes: 'arroba' + 'gmail' era suficiente → "arroba gmail" (incompleto) → COMPLETE_EMAIL
+    # Después: se requiere también el sufijo para evitar confirmación prematura
+    _email_providers_939 = ['gmail', 'hotmail', 'yahoo', 'outlook', 'prodigy']
+    _email_suffixes_939 = ['punto com', 'punto net', 'punto mx', 'punto org']
+    _has_literal_email_939 = '@' in texto and '.' in (texto.split('@')[-1] if '@' in texto else '')
+    _has_voiced_email_939 = (
+        'arroba' in tn and
+        any(p in tn for p in _email_providers_939) and
+        any(s in tn for s in _email_suffixes_939)
+    )
+    if _has_literal_email_939 or _has_voiced_email_939:
+        return FSMIntent.DICTATING_COMPLETE_EMAIL
+
+    # FIX 939B: En DICTANDO_DATO, "punto com/mx/net" = parte final del correo
+    # que ya se estaba dictando → clasificar como COMPLETO para confirmar el correo
+    _email_final_parts_939 = ['punto com', 'punto net', 'punto mx', 'punto org']
+    if state == FSMState.DICTANDO_DATO and any(s in tn for s in _email_final_parts_939):
         return FSMIntent.DICTATING_COMPLETE_EMAIL
 
     # --- FIX 781: Email parcial ANTES de dictado ---
@@ -489,6 +506,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ya tenemos unos proveedores', 'ya tenemos varios proveedores',
         'tengo mis proveedores', 'tenemos nuestros proveedores',
         'contamos con proveedores', 'ya contamos con proveedor',
+        # FIX 938: OOS audit V2 - rechazos firmes no detectados como NO_INTEREST
+        'estamos bien', 'estamos bien con lo que tenemos', 'estamos bien surtidos',
+        'esta bien como estamos', 'estamos bien asi', 'estamos bien gracias',
+        'no muchas gracias', 'no gracias ya', 'no necesito nada',
+        'no necesitamos nada', 'no nos hace falta',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -633,6 +655,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'llameme el lunes', 'llameme el martes', 'llameme el miercoles',
         'llameme el jueves', 'llameme el viernes',
         'marque el lunes', 'marque el martes', 'marque el miercoles',
+        # FIX 938: OOS audit V2 - "marca al rato" / "llama al rato" no detectados
+        'marca al rato', 'llama al rato', 'llamame al rato',
+        'marqueme al rato', 'marcame al rato', 'llame al rato',
     ]
     # FIX 894: BRUCE2604 - Guard de queja antes de TRANSFER
     # "permítame, márcame a cada rato, ya se les dijo que no" → "permitame" matchea TRANSFER
@@ -671,7 +696,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
                      FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
-                     FSMState.ENCARGADO_PRESENTE, FSMState.DICTANDO_DATO):  # FIX 935
+                     FSMState.ENCARGADO_PRESENTE, FSMState.DICTANDO_DATO,
+                     FSMState.CAPTURANDO_CONTACTO):  # FIX 935 + FIX 938
             return FSMIntent.CALLBACK
 
     # --- Otra sucursal ---
@@ -775,6 +801,25 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # --- Continuación (texto termina en conector) ---
     if tn.endswith(' y') or tn.endswith(' o') or tn.endswith(' pero'):
         return FSMIntent.CONTINUATION
+
+    # --- Preguntas implícitas (FIX 938 MEJ-02) ---
+    # Frases afirmativas que funcionan como preguntas sobre productos/empresa
+    # No empiezan con question_markers pero requieren respuesta informativa
+    implicit_questions = [
+        'tienen descuentos', 'tienen descuento', 'manejan descuento',
+        'tienen sucursal', 'tienen tienda', 'tienen local',
+        'trabajan con credito', 'manejan credito', 'dan credito',
+        'manejan herramienta', 'tienen herramienta', 'trabajan herramienta',
+        'son distribuidores', 'son mayoristas', 'son fabricantes',
+        'de donde son', 'de donde me', 'de que ciudad', 'de donde llaman',
+        'cuantos productos', 'cuantas categorias',
+        'en que se especializan', 'que tipo de productos',
+        'tiempo de entrega', 'el tiempo de entrega', 'los tiempos de entrega',
+        'catalogo en papel', 'prefiero catalogo en papel',
+        'tienen pagina', 'tienen pagina web', 'tienen catalogo fisico',
+    ]
+    if any(q in tn for q in implicit_questions):
+        return FSMIntent.QUESTION
 
     # --- Interés implícito ---
     # FIX 919: Expandido con señales sutiles de interés
@@ -1026,6 +1071,19 @@ class FSMEngine:
                 print(f"  [FIX 791] UNKNOWN->template stateful: {stateful.template_key} "
                       f"(estado={self.state.value})")
             # else: fallback a GPT_NARROW original (sin cambio)
+
+        # FIX 938-C: OOS audit V2 - Si ya estamos hablando con el encargado y pide callback,
+        # usar template "directo" en vez de "¿A qué hora para encontrar al encargado?"
+        if (intent == FSMIntent.CALLBACK and
+                transition.template_key == 'preguntar_hora_callback' and
+                self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.DICTANDO_DATO)):
+            transition = Transition(
+                next_state=transition.next_state,
+                action_type=transition.action_type,
+                template_key='preguntar_hora_callback_directo',
+            )
+            print(f"  [FIX 938-C] Encargado presente + callback -> preguntar_hora_callback_directo")
 
         # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
         if (intent == FSMIntent.CALLBACK and
@@ -1454,6 +1512,20 @@ class FSMEngine:
             return _seleccionar_template(opciones)
 
         elif self.state == S.ENCARGADO_AUSENTE:
+            # FIX 938-I: OOS audit V2 - Cliente ofrece dejar recado
+            # "Yo le dejo el recado" / "Le aviso" / "Le digo que llamo" → aceptar + pedir WA
+            _recado_patterns_938 = [
+                'dejo el recado', 'le aviso', 'le digo que llamo',
+                'le paso el recado', 'darle razon', 'puedo darle razon',
+                'le doy razon', 'yo le aviso', 'le comento',
+                'le digo que llamo', 'le menciono',
+            ]
+            if (any(r in tn for r in _recado_patterns_938) and
+                    not _template_ya_dicho("aceptar_recado_pedir_wa")):
+                _registrar_template("aceptar_recado_pedir_wa")
+                print(f"  [FIX 938-I] Oferta de recado detectada: '{texto[:40]}' -> aceptar_recado_pedir_wa")
+                return Transition(S.ENCARGADO_AUSENTE, A.TEMPLATE, "aceptar_recado_pedir_wa")
+
             if not ctx.canales_intentados:
                 if ctx.identity_repetidas >= 2:
                     print(f"  [FIX 891] UNKNOWN en encargado_ausente + identity_repetidas={ctx.identity_repetidas} → pedir_telefono_directo_891")
@@ -1879,6 +1951,12 @@ class FSMEngine:
                 'no es ferreteria', 'no es aqui', 'aqui no es', 'numero equivocado',
                 'se equivoco', 'esta equivocado', 'area equivocada',
             ])
+            # FIX 938-D: OOS audit V2 - No pedir datos si cliente expresó rechazo firme
+            _rechazo_firme_938 = any(r in _tn_939 for r in [
+                'no me interesa', 'no nos interesa', 'no gracias', 'no necesitamos',
+                'no necesito nada', 'no nos hace falta', 'estamos bien',
+                'no por favor', 'no muchas gracias',
+            ])
             if (transition.template_key in ('despedida_no_interesa', 'despedida_cortes')
                     and self.state != FSMState.DESPEDIDA
                     and getattr(self.context, 'pitch_dado', False)
@@ -1886,6 +1964,7 @@ class FSMEngine:
                     and not getattr(self.context, 'catalogo_prometido', False)
                     and getattr(self.context, 'pedir_datos_count', 0) == 0
                     and not _area_equivocada_939
+                    and not _rechazo_firme_938
                     and "captura_minima_pre_despedida" not in getattr(self.context, 'templates_usados', set())):
                 self.context.templates_usados.add("captura_minima_pre_despedida")
                 print(f"  [FIX 922] Captura minima pre-despedida (sin datos capturados)")

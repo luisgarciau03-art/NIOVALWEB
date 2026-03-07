@@ -117,6 +117,14 @@ TEMPLATES = {
         "Claro, no hay problema. ¿Me podria facilitar algun medio de contacto "
         "del encargado para hacerle llegar nuestra informacion?",
     ],
+    # FIX 938-F: OOS audit V2 - Aceptar oferta de recado + pedir contacto del encargado
+    "aceptar_recado_pedir_wa": [
+        "Muchas gracias. Si es posible, le agradeceria que le comentara que somos NIOVAL, "
+        "distribuidores de ferreteria. ¿Habria un WhatsApp o correo del encargado para "
+        "enviarle la informacion directamente?",
+        "Con mucho gusto. Si tiene oportunidad, le comenta que llamo NIOVAL. "
+        "¿Tendra el WhatsApp o correo del encargado para enviarle nuestro catalogo?",
+    ],
     "digame_numero": [
         "Claro, digame por favor.",
         "Si, digame el numero.",
@@ -189,6 +197,12 @@ TEMPLATES = {
     # === CALLBACK ===
     "preguntar_hora_callback": [
         "¿A que hora me recomienda llamar para encontrar al encargado?",
+    ],
+    # FIX 938-E: OOS audit V2 - Template para callback cuando encargado ya esta presente
+    "preguntar_hora_callback_directo": [
+        "¿A que hora seria buen momento para marcarle?",
+        "¿Cuando le puedo marcar para hablar con mas calma?",
+        "Claro, con gusto. ¿A que hora le queda mejor?",
     ],
     "confirmar_callback": [
         "Perfecto, le marco {hora}. Muchas gracias por su tiempo, que tenga "
@@ -343,9 +357,10 @@ TEMPLATES = {
     ],
 
     # FIX 922: Template pre-despedida para captura minima (CAPTURA_DATOS)
+    # FIX 938-D: OOS audit V2 - Templates menos invasivos (no pedir nombre después de pitch)
     "captura_minima_pre_despedida": [
-        "Entendido. Antes de colgar, ¿me podria dar su nombre para la proxima ocasion?",
-        "Claro. ¿A que hora seria mejor momento para llamar?",
+        "¿A que hora seria buen momento para llamarle otro dia?",
+        "Claro, no hay problema. Le dejo nuestro numero por si mas adelante le interesa.",
     ],
 
     # FIX 921: Template de catálogo sin compromiso mejorado
@@ -373,12 +388,21 @@ NARROW_PROMPTS = {
             "Productos: cintas tapagoteras, griferia, herramientas, candados, "
             "silicones, adhesivos, cerraduras, y mas de 15 categorias. "
             "Hacemos envios a toda la Republica Mexicana. "
+            "RESPUESTAS CANONICAS (FIX 938-H):\n"
+            "- Si preguntan descuentos: 'Si, manejamos descuentos por volumen, "
+            "se los detallo en la lista de precios.'\n"
+            "- Si preguntan credito: 'Manejamos credito con clientes frecuentes, "
+            "podemos platicar los terminos.'\n"
+            "- Si preguntan sucursal/ubicacion: 'Estamos en Guadalajara y hacemos "
+            "envios a toda la republica.'\n"
+            "- Si preguntan tiempo de entrega: 'Generalmente de 2 a 5 dias habiles "
+            "dependiendo de su ubicacion.'\n"
             "REGLAS: Responde la pregunta PRIMERO, luego ofrece enviar catalogo. "
             "NO repitas informacion que ya dijiste. "
             "SIEMPRE usa 'usted' (le envio, su numero), NUNCA 'tu'. "
             "Si no sabes un precio exacto, di 'con gusto le envio la lista de precios'."
         ),
-        "max_tokens": 80,
+        "max_tokens": 100,
         "temperature": 0.5,
     },
 
@@ -457,6 +481,13 @@ NARROW_PROMPTS = {
             "14. SIEMPRE usa 'usted' (le envio, su numero). NUNCA tutees al cliente\n"
             "15. Al confirmar un dato, REPITE el numero/correo que te dieron\n"
             "16. Al despedirte, di QUE envias, CUANDO, y ofrece contacto de retorno\n"
+            "17. 'Claro, digame' es SOLO para cuando el cliente va a dictar un numero "
+            "o correo. NUNCA uses 'Claro, digame' como respuesta a una pregunta ni a "
+            "una afirmacion\n"
+            "18. Si el cliente dice 'marca al rato', 'llama despues' o similar, "
+            "responde 'Perfecto, le marco mas tarde' o similar — NO digas 'Claro, digame'\n"
+            "19. Si el cliente ofrece dejar un recado, acepta con gratitud y pide "
+            "el WhatsApp o correo del encargado con palabras DISTINTAS a las ya usadas\n"
             "Estado actual: {state}\n"
             "Contexto: {context_summary}"
         ),
