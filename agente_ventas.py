@@ -2720,6 +2720,30 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     filtro_aplicado = True
 
         # ============================================================
+        # FIX 927: CONFIRMACION_FALSA - Bruce dice "le envío el catálogo" / "ya lo tengo anotado"
+        # sin haber capturado ningún dato de contacto en lead_data
+        # Evita confundir al cliente con confirmaciones vacías
+        # ============================================================
+        if not filtro_aplicado:
+            _confirma_envio_927 = any(p in respuesta_lower for p in [
+                'le envío el catálogo', 'le envio el catalogo',
+                'le mando el catálogo', 'le mando el catalogo',
+                'ya lo tengo anotado', 'ya tengo anotado',
+                'le llega el catálogo', 'le llega el catalogo',
+                'le llega hoy', 'le llega de inmediato',
+                'le llega en breve', 'le llega ahora',
+            ])
+            if _confirma_envio_927:
+                _tiene_dato_927 = bool(
+                    self.lead_data.get('whatsapp') or self.lead_data.get('email')
+                )
+                if not _tiene_dato_927:
+                    print(f"[FIX 927] CONFIRMACION_FALSA bloqueada - no hay dato capturado en lead_data")
+                    respuesta = "Claro, me podría proporcionar su WhatsApp o correo para enviarle el catálogo?"
+                    respuesta_lower = respuesta.lower()
+                    filtro_aplicado = True
+
+        # ============================================================
         # FIX 615B: BRUCE2030 - NO repetir números de teléfono en voz
         # GPT a veces repite el número completo (ej: "+526623531804")
         # El TTS lo lee con acento extranjero y suena mal

@@ -314,6 +314,10 @@ class BugDetector:
             dato_bugs = ContentAnalyzer._check_dato_sin_respuesta(tracker.conversacion)
             bugs.extend(dato_bugs)
 
+            # FIX 926: NO_DA_DATOS_RECADO - recepcionista pide datos NIOVAL y Bruce no los da
+            recado_bugs = ContentAnalyzer._check_no_da_datos_recado(tracker.conversacion)
+            bugs.extend(recado_bugs)
+
             # FIX 642A: CLIENTE_HABLA_ULTIMO - cliente hablo al final y Bruce nunca respondio
             # Solo si DATO_SIN_RESPUESTA no lo cubrio ya (evitar doble reporte)
             if not dato_bugs:
@@ -688,7 +692,11 @@ class ContentAnalyzer:
         # FIX 868D: pedir contacto para enviar catálogo = solicitud de canal, no nueva oferta
         r'(pasar|proporcionar).{0,20}(whatsapp|correo|n[uú]mero).{0,20}(enviar|mandar)|'
         r'(pasar|proporcionar).{0,20}(whatsapp|correo).{0,20}cat[aá]logo|'
-        r'le env[ií]o el cat[aá]logo.{0,10}(y|por))',
+        r'le env[ií]o el cat[aá]logo.{0,10}(y|por)|'
+        # FIX 928A: confirmaciones post-dato — "le envío/mando el catálogo ahora/hoy/en breve/con lista"
+        r'(le env[ií]o|le mando) (el|nuestro) cat[aá]logo.{0,5}(ahora|hoy|en breve|de inmediato|con lista|en las|en este|ya)|'
+        r'le llega.{0,30}(cat[aá]logo|hoy|de inmediato|ahora|en breve)|'
+        r'(anotado|registrado).{0,30}(le env[ií]o|le mando|le llega))',
         re.IGNORECASE
     )
 
@@ -774,6 +782,69 @@ class ContentAnalyzer:
         return bugs
 
     # =========================================================
+    # FIX 926: NO_DA_DATOS_RECADO
+    # Recepcionista pide datos de Bruce (nombre/número) para dejar recado,
+    # pero Bruce no los proporciona → bug de flujo
+    # =========================================================
+    _RECADO_PIDE_DATOS_BRUCE = re.compile(
+        r'(d[eé]me\s+(su\s+)?(nombre|n[uú]mero|tel[eé]fono|celular|whatsapp)|'
+        r'(su\s+)?(nombre\s+y\s+n[uú]mero|n[uú]mero\s+y\s+nombre)|'
+        r'para\s+pasarle\s+el\s+recado|'
+        r'para\s+(el\s+)?recado\s+necesito|'
+        r'usted\s+es\s+quien\s+(debe\s+)?dar\s+(los\s+)?datos|'
+        r'd[eé]me\s+sus\s+datos|'
+        r'su\s+n[uú]mero\s+(de\s+)?(tel[eé]fono|contacto|empresa)|'
+        r'cu[aá]l\s+es\s+su\s+n[uú]mero|'
+        r'de\s+d[oó]nde\s+(nos?\s+)?llama|'
+        r'(para\s+)?pasarle\s+el\s+dato\s+al\s+(jefe|encargado|due[nñ]o)|'
+        r'usted\s+d[eé]me\s+su|'
+        r'yo\s+(le\s+)?pregunt[ao]\s+a\s+usted)',
+        re.IGNORECASE
+    )
+
+    _BRUCE_DA_DATOS_NIOVAL = re.compile(
+        r'(nioval|6\s*6\s*2|ventas.{0,10}nioval|'
+        r'nuestro\s+(whatsapp|n[uú]mero|tel[eé]fono)\s+es|'
+        r'puede\s+contactarnos|'
+        r'mi\s+nombre\s+es\s+bruce|soy\s+bruce)',
+        re.IGNORECASE
+    )
+
+    @staticmethod
+    def _check_no_da_datos_recado(conv: list) -> list:
+        """FIX 926: Detecta cuando recepcionista pide datos de Bruce para recado
+        y Bruce NO los proporciona (se despide o ignora la petición)."""
+        bugs = []
+        try:
+            if len(conv) < 3:
+                return bugs
+            for i, (role, texto) in enumerate(conv):
+                if role != 'cliente':
+                    continue
+                if not ContentAnalyzer._RECADO_PIDE_DATOS_BRUCE.search(texto):
+                    continue
+                # Buscar siguiente respuesta de Bruce
+                for j in range(i + 1, min(i + 3, len(conv))):
+                    r2, t2 = conv[j]
+                    if r2 != 'bruce' or not t2.strip():
+                        continue
+                    # ¿Bruce dio sus datos de contacto NIOVAL?
+                    if ContentAnalyzer._BRUCE_DA_DATOS_NIOVAL.search(t2):
+                        break  # Correcto: Bruce dio sus datos
+                    # ¿Bruce se despidió SIN dar datos?
+                    if ContentAnalyzer._BRUCE_DESPEDIDA.search(t2):
+                        bugs.append({
+                            'tipo': 'NO_DA_DATOS_RECADO',
+                            'severidad': ALTO,
+                            'detalle': f"Recepcionista pidió datos de Bruce ('{texto[:60]}') pero Bruce se despidió sin darlos",
+                            'categoria': 'contenido'
+                        })
+                    break
+        except Exception:
+            pass
+        return bugs
+
+    # =========================================================
     # FIX 716: AREA_EQUIVOCADA / NO_MANEJA_FERRETERIA
     # =========================================================
     # FIX 716+720: Patrones de área equivocada / no aplica
@@ -786,7 +857,7 @@ class ContentAnalyzer:
         'no tenemos ferreteria', 'no trabajamos ferreteria',
         'area equivocada', 'departamento equivocado',
         'numero equivocado', 'se equivoco de numero',
-        'corporativo', 'oficinas corporativas',
+        'somos corporativo', 'oficinas corporativas', 'llama a corporativo',
         'no es mi area', 'no me corresponde',
         'no es el area', 'llamo al lugar equivocado',
         'no hacemos eso', 'no manejamos eso',
@@ -919,6 +990,8 @@ class ContentAnalyzer:
     # FIX 863A (cont.): También en FUERTE: \b en letras + (?<!no ) en 'estamos en'
     # BRUCE2337: "no estamos en esto" → "estamos en" matcheaba (rechazo de negocio, no dictado)
     # BRUCE2161: "estamos en México" = dirección real (todavía matchea: "no" no está antes)
+    # FIX 928C: Restringir "estamos en" — solo aplica si sigue algo con dígitos o palabras de calle
+    # evita FP: "estamos en proceso", "estamos en periodo", "estamos en cierre" → no son dictados
     _DICTADO_PATTERNS_FUERTE = re.compile(
         r'(arroba|@|guion bajo|guion medio|punto com|punto net|punto mx|'
         r'hotmail|gmail|yahoo|outlook|prodigy|'
@@ -926,7 +999,7 @@ class ContentAnalyzer:
         r'doble (u|v|uve)|'
         r'mi whatsapp es|mi n[uú]mero es|mi celular es|mi tel[eé]fono es|'
         r'mi correo es|mi email es|mi nombre es|me llamo|'
-        r'la direcci[oó]n es|(?<!no )estamos en|la calle es|'
+        r'la direcci[oó]n es|(?<!no )estamos en (calle|av|avenida|bulevar|blvd|\d)|la calle es|'
         r'\d{3,}|(?:\d{2,}[\s\-]+){2,}\d{2,})',
         re.IGNORECASE
     )
@@ -938,13 +1011,16 @@ class ContentAnalyzer:
     )
 
     # FIX 718+720: Confirmaciones de Bruce que indican que SÍ procesó el dato
+    # FIX 928B: Agregar "le llega", "llega hoy/ahora/de inmediato" como confirmaciones válidas
     _BRUCE_CONFIRMA_DATO = re.compile(
         r'(perfecto.*lo tengo|lo anot[eé]|le env[ií]o el cat[aá]logo|'
         r'perfecto.*env[ií]o|perfecto.*catalogo|listo.*anot|'
         r'anotado|recibido|entendido.*env|ya lo tengo|'
         r'registrado|tom[eé] nota|correcto.*lo tengo|'
         r'excelente.*dato|muy bien.*anot|perfecto.*dato|'
-        r'le mando|se lo env[ií]o)',
+        r'le mando|se lo env[ií]o|'
+        r'le llega|llega hoy|llega de inmediato|llega ahora|llega en breve|'
+        r'le env[ií]o el cat[aá]logo|le mando el cat[aá]logo)',
         re.IGNORECASE
     )
 
