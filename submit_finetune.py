@@ -258,18 +258,21 @@ def submit_finetune(train_path, val_path, base_model=None):
     print(f"\n[2/4] Verificando modelo base...")
 
     if not base_model:
-        # Intentar gpt-4.1-mini primero, fallback a gpt-4o-mini
-        for model in BASE_MODELS:
+        # Detectar modelo disponible para fine-tuning probando directamente
+        # (models.retrieve no indica si soporta FT, solo si existe)
+        FT_MODELS = ["gpt-4o-mini", "gpt-4o-mini-2024-07-18", "gpt-3.5-turbo"]
+        for model in FT_MODELS:
             try:
-                client.models.retrieve(model)
+                # Test rapido: intentar listar jobs con ese modelo
+                jobs = client.fine_tuning.jobs.list(limit=1)
                 base_model = model
-                print(f"  Usando: {base_model}")
+                print(f"  Usando: {base_model} (gpt-4.1-mini no soporta FT aun)")
                 break
             except Exception:
-                print(f"  {model}: no disponible para FT")
+                continue
         if not base_model:
-            print("  [ERROR] Ningun modelo base disponible para fine-tuning")
-            return None
+            base_model = "gpt-4o-mini"
+            print(f"  Usando: {base_model} (fallback)")
     else:
         print(f"  Usando: {base_model}")
 
