@@ -2590,6 +2590,9 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 (r'\bdime\b', 'dígame'),
                 (r'\bmándame\b', 'mándeme'),
                 (r'\bpásame\b', 'páseme'),
+                (r'\bte\s+comento\b', 'le comento'),
+                (r'\bte\s+explico\b', 'le explico'),
+                (r'\bte\s+cuento\b', 'le cuento'),
             ]
             _tuteo_found_906c = False
             for _pat, _repl in _tuteo_patterns_906c:
@@ -2661,6 +2664,58 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     print(f"  Despedida previa: '{_ultimo_bruce_816[:60]}'")
                     print(f"  Oferta bloqueada: '{respuesta[:60]}'")
                     respuesta = "Que tenga excelente día, hasta luego."
+                    respuesta_lower = respuesta.lower()
+                    filtro_aplicado = True
+
+        # ============================================================
+        # FIX 923: DESPEDIDA_PREMATURA - Bruce se despide cuando cliente hace pregunta activa
+        # Conv 10 auditoria: encargado pregunta "¿Qué traes de NIOVAL?" y Bruce dice "Que tenga buen día"
+        # ============================================================
+        if not filtro_aplicado:
+            _es_despedida_923 = any(p in respuesta_lower for p in [
+                'que tenga buen dia', 'que tenga buen día', 'que tenga excelente',
+                'hasta luego', 'que le vaya bien', 'fue un gusto', 'gracias por su tiempo',
+                'le agradezco mucho su atenci', 'muchas gracias, fue un gusto',
+            ])
+            if _es_despedida_923:
+                _ultimo_cliente_923 = ''
+                for _m923 in reversed(self.conversation_history):
+                    if _m923['role'] == 'user':
+                        _ultimo_cliente_923 = _m923.get('content', '')
+                        break
+                _cliente_pregunta_923 = (
+                    '?' in _ultimo_cliente_923 or
+                    any(p in _ultimo_cliente_923.lower() for p in [
+                        'qué traes', 'que traes', 'qué trae', 'que trae',
+                        'qué me ofrece', 'que me ofrece', 'qué se ofrece', 'que se ofrece',
+                        'qué tienen', 'que tienen', 'qué venden', 'que venden',
+                        'dígame', 'digame', 'cuénteme', 'cuenteme',
+                        'qué me dice', 'que me dice', 'de qué se trata', 'de que se trata',
+                    ])
+                )
+                _tiene_dato_923 = bool(self.lead_data.get('whatsapp') or self.lead_data.get('email'))
+                if _cliente_pregunta_923 and not _tiene_dato_923:
+                    print(f"[FIX 923] DESPEDIDA_PREMATURA bloqueada - cliente preguntó activamente")
+                    print(f"  Cliente: '{_ultimo_cliente_923[:60]}'")
+                    respuesta = "Le comento que distribuimos productos ferreteros: cintas tapagoteras, grifería, herramientas y candados. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo?"
+                    respuesta_lower = respuesta.lower()
+                    filtro_aplicado = True
+
+        # ============================================================
+        # FIX 924: DATOS_NIOVAL_INAPROPIADOS - Bruce da su propio WhatsApp/correo
+        # cuando ya capturó el dato del cliente o cuando debería pedir el del cliente
+        # Conv 2 auditoria: después de confirmar WhatsApp cliente, Bruce da datos de NIOVAL
+        # ============================================================
+        if not filtro_aplicado:
+            _da_datos_nioval_924 = any(p in respuesta_lower for p in [
+                'nuestro whatsapp es', 'nuestro whatsapp:', '662, 415', '662 415',
+                'ventas arroba nioval', 'ventas@nioval',
+            ])
+            if _da_datos_nioval_924:
+                _tiene_dato_924 = bool(self.lead_data.get('whatsapp') or self.lead_data.get('email'))
+                if _tiene_dato_924:
+                    print(f"[FIX 924] DATOS_NIOVAL_INAPROPIADOS bloqueados - contacto ya capturado")
+                    respuesta = "Perfecto, ya tengo su contacto. Le envío el catálogo en las próximas horas. Muchas gracias."
                     respuesta_lower = respuesta.lower()
                     filtro_aplicado = True
 
@@ -9218,6 +9273,38 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             }
 
         # FIX 558: SOLICITUD_CALLBACK movido ANTES de CLIENTE_ES_ENCARGADO (ver arriba)
+
+        # ================================================================
+        # FIX 925: RECEPCIONISTA PIDE DATOS DE BRUCE para recado al encargado
+        # Conv 13+17 auditoria: recepcionista dice "dígame su nombre y número"
+        # Bruce se despedía sin dar sus datos → encargado nunca recibe recado
+        # ================================================================
+        _pide_datos_bruce_925 = any(p in texto_lower for p in [
+            'dígame su nombre', 'digame su nombre',
+            'cuál es su nombre', 'cual es su nombre',
+            'su nombre y número', 'su nombre y numero',
+            'su nombre y teléfono', 'su nombre y telefono',
+            'nombre y número', 'nombre y numero',
+            'nombre y teléfono', 'nombre y telefono',
+            'déjeme su nombre', 'dejeme su nombre',
+            'me da su nombre', 'me deja su nombre',
+            'para pasarle el recado', 'para el recado',
+            'le paso el recado', 'pasarle el mensaje',
+        ])
+        if _pide_datos_bruce_925:
+            # Solo aplica si estamos en contexto de encargado ausente
+            _en_contexto_ausente_925 = self.estado_conversacion in [
+                EstadoConversacion.ENCARGADO_NO_ESTA,
+                EstadoConversacion.PRESENTACION,
+                EstadoConversacion.BUSCANDO_ENCARGADO,
+            ] or any(p in texto_lower for p in ['recado', 'encargado', 'cuando llegue', 'cuando regrese'])
+            if _en_contexto_ausente_925:
+                print(f"[FIX 925] Recepcionista PIDE DATOS DE BRUCE para recado: '{texto_cliente[:50]}'")
+                return {
+                    "tipo": "DAR_DATOS_BRUCE_PARA_RECADO",
+                    "respuesta": "Soy Bruce, de NIOVAL. Puede contactarnos al WhatsApp 6 6 2, 4 1 5, 1 9 9 7 o al correo ventas arroba nioval punto com.",
+                    "accion": "DAR_CONTACTO_BRUCE"
+                }
 
         # FIX 513 BRUCE1585 + FIX 528 BRUCE1704: Confirma mismo número / Este número
         # Caso: "Este número, ya te confirmo si sí" → Bruce no respondió
