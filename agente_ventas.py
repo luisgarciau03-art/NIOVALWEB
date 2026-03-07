@@ -8849,7 +8849,16 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
             "llame más tarde", "llame mas tarde",
             "llámeme más tarde", "llameme mas tarde",
             "puede llamar más tarde", "puede llamar mas tarde",
-            "puede marcar más tarde", "puede marcar mas tarde"
+            "puede marcar más tarde", "puede marcar mas tarde",
+            # FIX 922: llámame luego/después (imperativo del cliente)
+            "llámame luego", "llamame luego",
+            "llámame después", "llamame despues",
+            "llámame más tarde", "llamame mas tarde",
+            "me llamas luego", "me marcas luego",
+            "me llamas después", "me marcas despues",
+            "me llamas más tarde", "me marcas mas tarde",
+            "llama luego", "marca luego",
+            "llama después", "llama despues"
         ]) and not any(neg in texto_lower for neg in ["no vuelva", "no llame", "no marque"]):
             print(f"[OK] FIX 532/558: SOLICITUD CALLBACK AL MISMO NÚMERO: '{texto_cliente[:50]}'")
             return {
