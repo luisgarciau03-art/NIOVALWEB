@@ -757,6 +757,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'que vende', 'que venden', 'en que se le ofrece', 'en que le puedo',
         'que me ofrece', 'que nos ofrece', 'que producto', 'que tienen',
         'de que se trata', 'para que es', 'a que se dedican',
+        # FIX 940: BRUCE2665 - recepcionista "¿En qué podemos ayudarle?"
+        # GPT respondía como comprador en vez de dar el pitch de ventas
+        'en que podemos ayudarle', 'en que le podemos ayudar',
+        'como le podemos ayudar', 'como le puedo ayudar',
+        'en que le puedo servir', 'en que le podemos servir',
+        'podemos ayudarle', 'puedo ayudarle', 'diga usted',
     ]
     if any(q in tn for q in _what_offer_894):
         return FSMIntent.WHAT_OFFER
