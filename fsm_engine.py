@@ -579,6 +579,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no quiero dar mis datos', 'no quiero dar el numero', 'no quiero dar datos',
         'no quiero proporcionar', 'no voy a dar', 'no te voy a dar',
         'no me gusta dar datos', 'no acostumbramos dar', 'no acostumbramos pasar',
+        # FIX 989: Variantes "no sé/recuerdo mi número de WhatsApp"
+        'no se mi numero de whatsapp', 'no me se mi numero de whatsapp',
+        'no se mi whatsapp', 'no se mi correo', 'no recuerdo mi numero',
+        'no me acuerdo del numero', 'no me acuerdo del whatsapp',
+        'no me acuerdo del correo', 'no recuerdo el numero',
+        'no recuerdo cual es', 'no me recuerdo',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -603,6 +609,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'le puedo dar', 'te puedo proporcionar', 'le puedo proporcionar',
         'te puedo pasar', 'anota', 'apunta', 'si gusta anotar',
         'tiene donde anotar', 'yo le doy el correo', 'por correo',
+        # FIX 989: "anotemelo"/"apúntelo" = cliente listo para dar dato → OFFER_DATA
+        'anotemelo', 'anoteme', 'apuntelo', 'apuntame',
         'te mando', 'le mando', 'mi correo es', 'mi whatsapp es',
         'mi numero es', 'el numero es', 'el correo es',
         'mandelo por whatsapp', 'por whatsapp', 'mandalo por whatsapp',
