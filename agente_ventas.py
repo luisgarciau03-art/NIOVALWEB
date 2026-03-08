@@ -10427,6 +10427,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         except Exception:
             pass  # Si falla la limpieza, usar texto original
 
+        # FIX 976: "Mi wats es el mismo número que le marco" → usar número del caller
+        try:
+            _rc_lower_976 = respuesta_cliente.lower()
+            _mismo_num_signals_976 = [
+                'mismo numero que le marco', 'mismo número que le marco',
+                'mismo numero que le marque', 'mismo número que le marqé',
+                # NOTE: 'ese mismo numero'/'este mismo numero' REMOVED (FIX 976 FP)
+                # — demasiado amplio: "confirme ese mismo número" también matchea
+                'el mismo que le llame', 'el mismo que le llamé',
+                'el numero desde el que le', 'el número desde el que le',
+                'desde el que le marco', 'desde el que le llamé',
+                'mismo numero de llamada', 'numero de donde le llamo',
+            ]
+            if any(s in _rc_lower_976 for s in _mismo_num_signals_976):
+                _tel_976 = (self.lead_data.get('whatsapp') or
+                            self.lead_data.get('telefono') or
+                            getattr(self, 'numero_cliente', None))
+                if _tel_976:
+                    import re as _re976
+                    _tel_clean_976 = _re976.sub(r'\D', '', str(_tel_976))
+                    if len(_tel_clean_976) >= 8:
+                        print(f"  [FIX 976] 'Mismo numero' detectado → usando telefono caller: {_tel_clean_976}")
+                        respuesta_cliente = _tel_clean_976
+        except Exception:
+            pass
+
         # Agregar respuesta del cliente al historial
         self.conversation_history.append({
             "role": "user",
