@@ -1,0 +1,141 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/a2817e5d-9a0b-46da-917b-6064485eb99a/vol_l0g5e90oxfl2oi40
+Starting Container
+ FIX 212: deepgram-sdk importado correctamente
+
+ FIX 212: Inicializando módulo Deepgram...
+ FIX 212: Deepgram configurado correctamente
+   API Key: 2a3f666dd2...1848
+ FIX 212: Deepgram configurado correctamente
+   API Key: 2a3f666dd2...1848
+ FIX 212: Deepgram configurado y listo
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+[MODO] OpenAI Directo (Produccion)
+ FIX 212: Flask-Sock inicializado para WebSocket
+   Spreadsheet abierto: TABLERO DE NIOVAL
+   Hoja encontrada: Bruce
+ Conectado a: Bruce
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: Bruce FORMS
+ Conectado a spreadsheet de resultados: Bruce FORMS
+   Usando credenciales desde variable de entorno
+   Autenticado correctamente con Google Sheets
+   Spreadsheet abierto: Llamadas Nioval
+   Hoja encontrada: LOGS
+ Conectado a hoja LOGS para registro de conversaciones
+ Último ID BRUCE: BRUCE1529
+ Google Sheets Managers inicializados
+ WhatsApp Validator inicializado
+ FIX 173: Verificando credenciales de Twilio...
+    TWILIO_ACCOUNT_SID encontrado: ACddf2b7fa...c9dc
+    TWILIO_AUTH_TOKEN encontrado: d43c8501...2480
+    TWILIO_PHONE_NUMBER: +523321014486
+ FIX 272.2: 500 llamadas en historial cargadas
+ FIX 272.9: 5000 logs cargados
+ FIX 403: Captura de logs activada - TODOS los prints se guardarán en buffer
+ FIX 272: 785 calificaciones cargadas
+[2026-01-27 21:55:40] [SISTEMA] Servidor iniciando...
+
+============================================================
+ SERVIDOR DE LLAMADAS NIOVAL
+============================================================
+
+ SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)
+============================================================
+
+ Endpoints disponibles:
+  POST /iniciar-llamada            - Inicia una llamada individual
+  POST /llamadas-masivas           - Inicia múltiples llamadas
+  GET  /status/<call_sid>          - Estado de una llamada
+  GET  /stats                      - Ver estadísticas de caché
+  POST /generate-cache             - Generar audios manualmente
+  GET  /diagnostico-persistencia   - Diagnosticar volumen persistente
+  WS   /media-stream               - FIX 212: WebSocket para Deepgram
+
+ URLs de acceso:
+   Estadísticas: https://nioval-webhook-server-production.up.railway.app/stats
+   Diagnóstico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia
+
+ FIX 79: Despedida cálida activa (deja puerta abierta)
+ FIX 81: Debug de detección de Truper activo
+ FIX 212: Deepgram ACTIVO - Transcripción en tiempo real
+   WebSocket: /media-stream
+
+  Asegúrate de configurar Twilio en .env
+============================================================
+
+ Cargando caché desde disco...
+   Cargado desde disco: timeout
+   Cargado desde disco: error
+   Cargado desde disco: pensando
+   Cargado desde disco: saludo_inicial
+   Cargado desde disco: despedida_1
+   Cargado desde disco: despedida_2
+   Cargado desde disco: hola,_qué_tal,_muy_buenas_tardes._me_comunico
+   Cargado desde disco: perfecto,_¿con_quién_tengo_el_gusto_de_hablar?
+   Cargado desde disco: muy_buenas_tardes._agradezco_tu_ayuda,_pero_preferiría
+   Cargado desde disco: no_hay_problema._si_surge_alguna_duda_o
+   Cargado desde disco: claro,_estaré_disponible_cuando_me_necesites._¡hasta_luego!
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_puedo
+   Cargado desde disco: perfecto,_muchas_gracias._intentaré_comunicarme_con_el_encargado
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?_así_podré
+   Cargado desde disco: entiendo,_¿podría_ayudarme_a_comunicarlo_cuando_tenga_la
+   Cargado desde disco: ¿me_lo_podría_comunicar_por_favor?
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_darme_un
+   Cargado desde disco: claro,_estaría_muy_agradecido._¿cuál_es_el_contacto
+   Cargado desde disco: gracias_por_proporcionarme_el_número._me_comunicaré_con
+   Cargado desde disco: perfecto,_¿me_podrías_proporcionar_su_contacto,_por_favor?
+   Cargado desde disco: claro,_estoy_listo_para_anotar._¿cuál_es_el
+   Cargado desde disco: gracias_por_la_información._la_anotaré._¿te_gustaría
+   Cargado desde disco: perfecto,_por_favor,_¿me_puedes_proporcionar_su_contacto?
+   Cargado desde disco: gracias_por_el_contacto._me_pondré_en_comunicación
+   Cargado desde disco: de_nada,_que_tenga_un_excelente_día._si
+   Cargado desde disco: perfecto,_por_favor,_compárteme_su_contacto_para_poder
+   Cargado desde disco: gracias_por_proporcionarme_el_número._¿me_podrías_decir
+   Cargado desde disco: a_ti,_que_tengas_un_excelente_día._¡hasta
+   Cargado desde disco: perfecto,_le_agradecería_mucho_que_me_compartiera_su
+   Cargado desde disco: muchas_gracias_por_el_contacto._me_aseguraré_de
+   Cargado desde disco: así_es,_todo_en_orden._agradezco_mucho_su
+   Cargado desde disco: entiendo,_¿me_podría_proporcionar_el_contacto_del_encargado
+   Cargado desde disco: claro,_por_favor._estoy_listo_para_anotar.
+   Cargado desde disco: perfecto,_he_anotado_el_número._muchas_gracias_por
+   Cargado desde disco: gracias_a_usted,_que_tenga_un_excelente_día.
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿podría_indicarme_un
+   Cargado desde disco: claro,_le_agradecería_mucho_si_me_pudiera_pasar
+   Cargado desde disco: sí,_tengo_donde_anotar._por_favor,_compártame_el
+   Cargado desde disco: muchas_gracias_por_el_número._me_aseguraré_de
+   Cargado desde disco: gracias_a_usted._que_tenga_un_excelente_día,
+   Cargado desde disco: claro,_sería_de_gran_ayuda._por_favor,_¿me
+   Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podrías_repetirme_el
+   Cargado desde disco: entiendo,_gracias_por_la_información._¿me_podría_comunicar
+   Cargado desde disco: claro,_me_encantaría_tener_su_número_para_poder
+   Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_¿podría_repetirme_el
+   Cargado desde disco: gracias_por_la_información._sin_embargo,_parece_que
+   Cargado desde disco: parece_que_aún_no_tengo_el_número_completo.
+   Cargado desde disco: gracias,_pero_el_número_que_me_proporcionó_parece
+   Cargado desde disco: perfecto,_gracias_por_la_información._¿me_puede_confirmar
+   Cargado desde disco: entiendo,_gracias_por_decírmelo._¿me_podría_comunicar_con
+   Cargado desde disco: perfecto,_el_número_es_66_23_53_41
+   Cargado desde disco: entiendo,_muchas_gracias_por_tu_tiempo._si_en
+   Cargado desde disco: gracias_por_el_contacto._sin_embargo,_parece_que
+   Cargado desde disco: entiendo._como_ya_habíamos_hablado_antes,_me_gustaría
+   Cargado desde disco: parece_que_el_número_todavía_no_es_claro.
+   Cargado desde disco: perfecto,_tomaré_en_cuenta_esa_indicación._muchas_gracias
+   Cargado desde disco: parece_que_aún_no_tengo_el_número_correcto.
+   Cargado desde disco: gracias_por_tu_ayuda._sin_embargo,_parece_que
+   Cargado desde disco: parece_que_aún_no_es_el_número_correcto,
+   Cargado desde disco: hola,_muy_buenas_tardes._mi_nombre_es_bruce
+   Cargado desde disco: claro,_me_comunicaré_al_número_que_me_proporcionó.
+   Cargado desde disco: entiendo._si_me_proporciona_un_correo_electrónico,_puedo
+   Cargado desde disco: claro,_por_favor._mi_número_es_seis_seis
+   Cargado desde disco: sí,_por_favor._sería_muy_útil_para_poder
+   Cargado desde disco: gracias_por_el_número._¿podrías_proporcionarme_el_resto
+   Cargado desde disco: perfecto,_muchas_gracias._me_comunicaré_con_él._si
+   Cargado desde disco: si_tienes_alguna_pregunta_o_necesitas_información_sobre

@@ -1,0 +1,254 @@
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 451: Transcripción FINAL recibida
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+💬 CLIENTE DIJO: ""
+[2026-01-23 22:37:43] [CLIENTE] BRUCE1396 - CLIENTE DIJO: ""
+⚠️ Respuesta vacía #1
+🎙️ Bruce pedirá que le repitan (intento #1)
+🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+   Mensaje: 'Disculpa, no te escuché bien, ¿me puedes repetir?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #1
+📦 Caché AUTO: disculpa,_no_te_escuché_bien,_¿me_puedes... (0s delay)
+✅ Bruce pidió que le repitan
+✅ Bruce pidió que le repitan (Record)
+100.64.0.4 - - [23/Jan/2026 22:37:43] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.4 - - [23/Jan/2026 22:37:43] "GET /audio/repeticion_CA74d9a121882878aac1db696e1d3bfca6_1 HTTP/1.1" 200 -
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CA74d9a121882878aac1db696e1d3bfca6
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE54eeb7740cd8018d06f721948549dda5'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Es correcto.'
+   [1] 'Es correcto.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: 'Es correcto.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: 'Es correcto.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Es correcto."
+[2026-01-23 22:37:47] [CLIENTE] BRUCE1396 - CLIENTE DIJO: "Es correcto."
+📝 LOG registrado: CLIENT... | Es correcto....
+   🚨 FIX 244: Frase corta (2 palabras) después de hablar
+
+⚠️ FIX 286: CLIENTE REPITIENDO - probablemente terminó de deletrear
+   Repitiendo: 'Es correcto.'
+   Historial: ['Es correcto.', 'Es correcto.']
+
+🔄 FIX 244: Concatenando transcripciones parciales
+   [0] 'Es correcto.'
+   [1] 'Es correcto.'
+   ✅ FIX 244: Frase completa: 'Es correcto. Es correcto. Es correcto.'
+🔍 FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=4, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Es correcto. Es correcto. Es correcto.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Es correcto. Es correcto. Es correcto.'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+✅ FIX 201: Cliente dijo 'Es correcto. Es correcto. Es correcto.' después de la segunda parte. NO se repetirá la introducción.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Perfecto, lo tengo anotado como 221-442-61-55, ¿es correcto?
+   USER: Es correcto. Es correcto. Es correcto.
+🔍 FIX 102 DEBUG: result = respuesta_CA74d9a121882878aac1db696e1d3bfca6_37, type = <class 'str'>
+🤖 BRUCE DICE: "Disculpe, ¿me podría proporcionar su número de WhatsApp o correo electrónico para enviarle el catálogo?"
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (15 palabras)
+📦 Caché AUTO: disculpe,_¿me_podría_proporcionar_su_núm... (0s delay)
+   Bruce iba a decir: "Perfecto, le enviaré el catálogo a ese WhatsApp. Muchas grac..."
+🚫 FIX 295/300: FILTRO ACTIVADO - Bruce dice 'ya lo tengo' pero NO tiene contacto
+   Respuesta corregida: "Disculpe, ¿me podría proporcionar su número de WhatsApp o correo electrónico para enviarle el catálogo?"
+   WhatsApp capturado: 
+   Email capturado: 
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 0 dígitos
+   Dígitos extraídos: 
+   Mensaje completo: "es correcto. es correcto. es correcto...."
+
+[2026-01-23 22:37:49] [BRUCE] BRUCE1396 DICE: "Disculpe, ¿me podría proporcionar su número de WhatsApp o correo electrónico para enviarle el catálogo?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Disculpe, ¿me podría proporcionar su número de Wha...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #6)
+🧹 FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Es correcto.']
+100.64.0.9 - - [23/Jan/2026 22:37:49] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.7 - - [23/Jan/2026 22:37:49] "GET /audio/respuesta_CA74d9a121882878aac1db696e1d3bfca6_37 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+📝 FIX 212: [PARCIAL] 'Es correcto.'
+📝 FIX 212: [FINAL] 'Es correcto.' (latencia: 58349ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA74d9a121882878aac1db696e1d3bfca6: 'Es correcto.'
+⏹️ FIX 212: MediaStream detenido - CallSid: CA74d9a121882878aac1db696e1d3bfca6
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CA74d9a121882878aac1db696e1d3bfca6
+📝 FIX 212: [FINAL] '¿Número de WhatsApp, por' (latencia: 61019ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CA74d9a121882878aac1db696e1d3bfca6: '¿Número de WhatsApp, por'
+
+📞 STATUS CALLBACK - Llamada CA74d9a121...
+   Estado: completed
+   Duración: 62s
+[2026-01-23 22:37:53] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 62s
+   💬 Cliente colgó - detectado por status callback (12 mensajes)
+   📝 Clasificado como 'Colgó' (sin datos capturados)
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 63 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA74d9a121882878aac1db696e1d3bfca6
+🔌 FIX 212: WebSocket cerrado - CallSid: CA74d9a121882878aac1db696e1d3bfca6
+
+100.64.0.12 - - [23/Jan/2026 22:37:53] "GET /media-stream HTTP/1.1" 200 -
+📊 Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Medio
+   Opinión de Bruce: Bruce podría haber mostrado más entusiasmo al presentar los productos y ofrecer información adicional que pudiera captar mejor el interés del cliente. Además, debería haber insistido en obtener el correo electrónico o WhatsApp de manera más persuasiva.
+📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3545...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 63
+  → Nivel de interés: Medio
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mostrado más entusiasmo al pres...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1396
+✅ Resultado guardado exitosamente en fila 3545
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1735
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Llamada guardada desde status callback
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.9 - - [23/Jan/2026 22:37:55] "GET /status-callback?Called=%2B522222711142&ToState=Pue.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+23+Jan+2026+22:37:52+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA74d9a121882878aac1db696e1d3bfca6&To=%2B522222711142&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Amozoc&CallStatus=completed&Duration=2&From=%2B523321014486&CallDuration=62&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Amozoc&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Pue.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA74d9a121882878aac1db696e1d3bfca6
+   RecordingSid: RE530b5eee387e1c1610ec66c23d9679bd
+   Status: completed
+   Duración: 61 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE530b5eee387e1c1610ec66c23d9679bd
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1396
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.8 - - [23/Jan/2026 22:37:57] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE530b5eee387e1c1610ec66c23d9679bd&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE530b5eee387e1c1610ec66c23d9679bd&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA74d9a121882878aac1db696e1d3bfca6&RecordingStartTime=Fri,+23+Jan+2026+22:36:52+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=61 HTTP/1.1" 200 -
+100.64.0.6 - - [23/Jan/2026 22:38:15] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.6 - - [23/Jan/2026 22:38:19] "GET /escuchar-grabacion/RE4e2b0bcc9dc7ac2bddffbaf898a09df2 HTTP/1.1" 200 -
+100.64.0.6 - - [23/Jan/2026 22:38:19] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +522222161805, Negocio: Ferretería "El Martillo"
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +522222161805
+🔍 DEBUG 5: Llamada Twilio creada - SID: CA8137ffb962fc1b8df37eedb6db32e07d
+[2026-01-23 22:38:24] [LLAMADA] N/A - LLAMADA INICIADA a +522222161805 (Ferretería "El Martillo")
+📋 Contacto completo guardado para Call SID CA8137ffb9... (fila 1738)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.9 - - [23/Jan/2026 22:38:24] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CA8137ffb9...
+   Estado: failed
+   Duración: 0s
+[2026-01-23 22:38:25] [LLAMADA] LLAMADA TERMINADA - Estado: failed, Duración: 0s
+   ⚠️ Llamada fallida - Estado: failed
+   📋 Fila 1738: Ferretería "El Martillo" - +522222161805
+   ⚠️ SIP Response Code: 404
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 0 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada se vio afectada por un fallo técnico, lo que impidió establecer una conexión efectiva con el cliente. Debería haberse verificado la calidad de la conexión antes de iniciar la conversación.
+📝 Conclusión ya determinada: FALLO TECNICO (no recalcular)
+⭐ Bruce se autoevaluó: 3/10
+  → Pregunta 3: No (Bruce)
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+
+📝 Guardando resultado en fila 3546...
+  → Estado de ánimo: Negativo
+✅ Resultados guardados en 'Respuestas de formulario 1'
+  → Estado: Fallo Tecnico
+  → Opinión Bruce: La llamada se vio afectada por un fallo técnico, l...
+  → Nivel de interés: Bajo
+

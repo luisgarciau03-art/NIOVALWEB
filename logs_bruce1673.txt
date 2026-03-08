@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title> Logs BRUCE1673</title>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 { color: #4CAF50; }
+                .nav { margin-bottom: 20px; }
+                .nav a { color: #4CAF50; margin-right: 20px; text-decoration: none; }
+                .nav a:hover { text-decoration: underline; }
+                .stats { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+                .log-container {
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .log-line {
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+                .log-line:hover { background: #21262d; }
+                .log-bruce { color: #58a6ff; }
+                .log-cliente { color: #f0883e; }
+                .log-llamada { color: #a371f7; }
+                .log-error { color: #f85149; }
+                .log-exito { color: #3fb950; }
+            </style>
+        </head>
+        <body>
+            <h1> Logs de BRUCE1673</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id=1673&formato=json" target="_blank"> JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> 29 |
+                <strong>BRUCE ID:</strong> 1673
+            </div>
+            <div class="log-container">
+        <div class="log-line log-error">[2026-01-28 21:16:17] ID BRUCE generado: BRUCE1673</div><div class="log-line log-cliente">[2026-01-28 21:16:26] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "Bueno, sí me escucha"</div><div class="log-line log-cliente">[2026-01-28 21:16:26] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "Bueno, sí me escucha"</div><div class="log-line log-bruce">[2026-01-28 21:16:26] [BRUCE] BRUCE1673 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"</div><div class="log-line log-bruce">[2026-01-28 21:16:26] [BRUCE] BRUCE1673 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"</div><div class="log-line log-cliente">[2026-01-28 21:16:39] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "No, en este momento no se encuentra, es un solo hoyo de comida. No, en este momento no se encuentra, está en 0 hoyo de comida."</div><div class="log-line log-cliente">[2026-01-28 21:16:39] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "No, en este momento no se encuentra, es un solo hoyo de comida. No, en este momento no se encuentra, está en 0 hoyo de comida."</div><div class="log-line log-bruce">[2026-01-28 21:16:39] [BRUCE] BRUCE1673 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"</div><div class="log-line log-bruce">[2026-01-28 21:16:39] [BRUCE] BRUCE1673 DICE: "Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?"</div><div class="log-line log-cliente">[2026-01-28 21:16:49] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "No, sería hasta que ella"</div><div class="log-line log-cliente">[2026-01-28 21:16:49] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "No, sería hasta que ella"</div><div class="log-line log-cliente">[2026-01-28 21:16:51] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "regrese alrededor de las 4"</div><div class="log-line log-cliente">[2026-01-28 21:16:51] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "regrese alrededor de las 4"</div><div class="log-line log-bruce">[2026-01-28 21:16:55] [BRUCE] BRUCE1673 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"</div><div class="log-line log-bruce">[2026-01-28 21:16:55] [BRUCE] BRUCE1673 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"</div><div class="log-line log-cliente">[2026-01-28 21:17:05] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "Nos gustaría llamar a esta línea,"</div><div class="log-line log-cliente">[2026-01-28 21:17:05] [CLIENTE] BRUCE1673 - CLIENTE DIJO: "Nos gustaría llamar a esta línea,"</div><div class="log-line log-bruce">[2026-01-28 21:17:05] [BRUCE] BRUCE1673 - ESPERANDO EN SILENCIO (FIX 498)</div><div class="log-line log-bruce">[2026-01-28 21:17:05] [BRUCE] BRUCE1673 - ESPERANDO EN SILENCIO (FIX 498)</div><div class="log-line log-cliente">[2026-01-28 21:17:14] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-01-28 21:17:14] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-01-28 21:17:22] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-01-28 21:17:22] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-01-28 21:17:31] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-01-28 21:17:31] [CLIENTE] BRUCE1673 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-01-28 21:17:31] → ID BRUCE: BRUCE1673</div><div class="log-line log-error">[2026-01-28 21:17:32] FIX 272: Grabación asociada a BRUCE1673</div><div class="log-line log-error">[2026-01-28 21:17:33] → ID BRUCE: BRUCE1673</div><div class="log-line log-error">[2026-01-28 21:17:35] → ID BRUCE: BRUCE1673</div>
+            </div>
+        </body>
+        </html>
+        

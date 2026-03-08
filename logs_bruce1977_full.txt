@@ -1,0 +1,341 @@
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526622603888
+ DEBUG 5: Llamada Twilio creada - SID: CA6ea48abf5c2c272dab1876a956d5e822
+[2026-02-06 19:28:58] [LLAMADA] N/A - LLAMADA INICIADA a +526622603888 (Herrajes del Pacífico)
+ Contacto completo guardado para Call SID CA6ea48abf... (fila 20)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.12 - - [06/Feb/2026 19:28:58] "POST /iniciar-llamada HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1977
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.11 - - [06/Feb/2026 19:29:11] "GET /webhook-voz?Called=%2B526622603888&ToState=Son.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&To=%2B526622603888&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   StreamSid: MZ71311f0955afcf2d0447a7f66e9b7c62
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Intentando ElevenLabs Scribe (primario)...
+ FIX 540: Conectando a ElevenLabs Scribe para CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+100.64.0.4 - - [06/Feb/2026 19:29:12] "GET /audio/inicial_CA6ea48abf5c2c272dab1876a956d5e822 HTTP/1.1" 200 -
+ FIX 540: Conexión ElevenLabs Scribe abierta - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Sesión iniciada - modelo: unknown
+ FIX 540: ElevenLabs Scribe conectado para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: ElevenLabs Scribe conectado para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: Deepgram conectado para CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Deepgram conectado como FALLBACK para CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: SISTEMA DUAL ACTIVO - ElevenLabs (primario) + Deepgram (fallback)
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3f9f605eb4948ab93af6be0f37268b30'
+   Digits: timeout
+ FIX 212: [PARCIAL] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+    FIX 532: PARCIAL termina con puntuación '.' - parece COMPLETA
+    FIX 532: PARCIAL 'no se encuentra' es respuesta común COMPLETA
+    FIX 532: PARCIAL corta (3 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'no se encuentra.'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+ FIX 212: [PARCIAL] 'No se encuentra.'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'No se encuentra.'
+    FIX 469: Usando transcripción única: 'No se encuentra.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "No se encuentra."
+[2026-02-06 19:29:25] [CLIENTE] BRUCE1977 - CLIENTE DIJO: "No se encuentra."
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 20ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+ FIX 214: Grabación fragmento completed - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3f9f605eb4948ab93af6be0f37268b30
+100.64.0.5 - - [06/Feb/2026 19:29:24] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 212: [FINAL] 'No se encuentra.' (latencia: 18ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No se encuentra.'
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 18ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ LOG registrado: CLIENT... | No se encuentra....
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[EMOJI] FIX 339/417/425: Estado → ENCARGADO_NO_ESTA
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'No se encuentra.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+[EMOJI] FIX 216: Detectada NEGACIÓN - NO es transferencia
+   Respuesta cliente: 'No se encuentra.'
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Hola, buen dia
+   USER: No se encuentra.
+[EMOJI]  FIX 491: max_tokens dinámico = 100 (basado en complejidad)
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_2' desde caché
+ FIX 540: [PARCIAL] 'No se encuentra' (latencia: 15ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra'
+   FIX 519: Patrón guardado 'encuentra....' (count=1, cat=PIDE_CONTACTO)
+   FIX 583: Frase corta (3 palabras) - ignorando detección de repetición
+
+[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'no se encuentra.'
+
+[EMOJI] FIX 311b: FILTRO ACTIVADO - Encargado no está, pedir número ANTES de catálogo
+   Cliente dijo: "no se encuentra...."
+   Bruce iba a ofrecer catálogo: "Entiendo que no está disponible. ¿Le gustaría que le envíe e..."
+   Respuesta corregida: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (11 palabras)
+ Caché AUTO: entiendo._¿me_podría_proporcionar_el_núm... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA6ea48abf5c2c272dab1876a956d5e822_15, type = <class 'str'>
+ BRUCE DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[2026-02-06 19:29:26] [BRUCE] BRUCE1977 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | Entiendo. ¿Me podría proporcionar el número direct...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+100.64.0.4 - - [06/Feb/2026 19:29:27] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.8 - - [06/Feb/2026 19:29:27] "GET /audio_cache/pensando_2 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra.' (latencia: 6ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra.'
+ FIX 314: Saludo detectado en INTERIM: '¿Bueno?' - Pre-cargando respuesta...
+ FIX 314: Audio segunda_parte_saludo YA está en cache - respuesta será instantánea
+ FIX 212: [PARCIAL] '¿Bueno?'
+ FIX 212: [FINAL] '¿Bueno?' (latencia: 23ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: '¿Bueno?'
+100.64.0.9 - - [06/Feb/2026 19:29:28] "GET /audio/respuesta_CA6ea48abf5c2c272dab1876a956d5e822_15 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 17ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 12ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 13ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 25ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Hola?' (latencia: 22ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Hola?'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE4121be0012d0a75160dc76d846d3b39d'
+   Digits: timeout
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 540: [PARCIAL] 'No se encuentra. ¿Bueno? No, no lo' (latencia: 7ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. ¿Bueno? No, no lo'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+ FIX 212: [PARCIAL] 'No, no lo puedo' FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+    FIX 532: PARCIAL termina con puntuación '?' - parece COMPLETA
+    FIX 542: PARCIAL tiene palabra de continuación - ESPERANDO más texto
+
+ FIX 212: [PARCIAL] 'No, no lo puedo'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+    FIX 532: PARCIAL corta (4 palabras) sin conectores - parece COMPLETA
+ FIX 532: Usando PARCIAL completa INMEDIATAMENTE: 'no, no lo puedo'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 14ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 3ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 8ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'No, no lo podemos pasar.'
+    FIX 469: Usando transcripción única: 'No, no lo podemos pasar.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "No, no lo podemos pasar."
+[2026-02-06 19:29:37] [CLIENTE] BRUCE1977 - CLIENTE DIJO: "No, no lo podemos pasar."
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ LOG registrado: CLIENT... | No, no lo podemos pasar....
+ FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Usando GPT con instrucción de nexo en lugar de caché
+   Cliente dijo: 'No, no lo podemos pasar.' mientras Bruce hablaba segunda parte
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'No, no lo podemos pasar.'
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+[EMOJI] FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Entiendo. ¿Me podría proporcionar el número directo del enca...
+   USER: No, no lo podemos pasar.
+[EMOJI]  FIX 491: max_tokens dinámico = 100 (basado en complejidad)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ GPT+Audio procesando - reproduciendo tono de pensando...
+ Bruce dice (voz Bruce): 'pensando_1' desde caché
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 10ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 23ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 19ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 522: GPT timeout después de 5s (reducido de 10s)
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 9ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [PARCIAL] 'No, no lo podemos pasar.'
+ FIX 212: [FINAL] 'No, no lo podemos pasar.' (latencia: 23ms)
+ FIX 540.2: Transcripción Deepgram ya existe (de ElevenLabs), ignorando: 'No, no lo podemos pasar.'
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 1ms)
+100.64.0.3 - - [06/Feb/2026 19:29:42] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [06/Feb/2026 19:29:42] "GET /audio_cache/pensando_1 HTTP/1.1" 200 -
+ FIX 540: [PARCIAL] 'No se encuentra. Bueno. No, no lo podemos pasar.' (latencia: 11ms)
+ FIX 540: [PARCIAL ElevenLabs] 'No se encuentra. Bueno. No, no lo podemos pasar.'
+ FIX 212: MediaStream detenido - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 540: Conexión ElevenLabs cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   Status: None, Mensaje: None
+
+ STATUS CALLBACK - Llamada CA6ea48abf...
+   Estado: completed
+   Duración: 33s
+[2026-02-06 19:29:43] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 33s
+    Cliente colgó - detectado por status callback (5 mensajes)
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 32 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+[EMOJI] FIX 311: FILTRO ACTIVADO - Cliente niega número del encargado, ofrecer catálogo
+   Bruce pidió número del encargado y cliente dijo: "no se encuentra. no, no lo podemos pasar."
+   Respuesta corregida: "Entiendo, no hay problema. ¿Le gustaría que le envíe nuestro catálogo por WhatsApp o correo para que lo revise el encargado cuando regrese?"
+[OK] FIX 226-394: Filtro post-GPT aplicado exitosamente
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (23 palabras)
+ Caché AUTO: entiendo,_no_hay_problema._¿le_gustaría_... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA6ea48abf5c2c272dab1876a956d5e822_16, type = <class 'str'>
+
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+ FIX 212: WebSocket cerrado - CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+100.64.0.11 - - [06/Feb/2026 19:29:44] "GET /media-stream HTTP/1.1" 200 -
+[EMOJI] FIX 163: GPT tardó 7.1s - agregando frase de relleno: 'Déjeme ver eso con calma...'
+   FIX 519: Patrón guardado 'no, podemos pasar....' (count=1, cat=PIDE_CONTACTO)
+
+[EMOJI]  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'no se encuentra. no, no lo podemos pasar.'
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado establecer una conexión más personal o preguntar por el mejor momento para volver a llamar. Esto podría haber aumentado las posibilidades de obtener información de contacto o una futura conversación.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 4615...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 32
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce podría haber intentado establecer una conexi...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1977
+ Resultado guardado exitosamente en fila 4615
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 20
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+ FIX 543: Llamada terminó sin contacto - revisando 1 transcripciones pendientes
+   Texto completo: 'No, no lo podemos pasar....'
+ FIX 543: No se encontró contacto en transcripciones pendientes
+100.64.0.7 - - [06/Feb/2026 19:29:46] "GET /status-callback?Called=%2B526622603888&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Fri,+06+Feb+2026+19:29:43+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&To=%2B526622603888&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=33&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA6ea48abf5c2c272dab1876a956d5e822
+   RecordingSid: RE23a46d8b0d061ce8a92f960ab53ccfaf
+   Status: completed
+   Duración: 30 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23a46d8b0d061ce8a92f960ab53ccfaf
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1977
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.3 - - [06/Feb/2026 19:29:47] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE23a46d8b0d061ce8a92f960ab53ccfaf&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE23a46d8b0d061ce8a92f960ab53ccfaf&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA6ea48abf5c2c272dab1876a956d5e822&RecordingStartTime=Fri,+06+Feb+2026+19:29:13+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=30 HTTP/1.1" 200 -
+100.64.0.7 - - [06/Feb/2026 19:34:03] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.7 - - [06/Feb/2026 19:34:06] "GET /escuchar-grabacion/RE23a46d8b0d061ce8a92f960ab53ccfaf HTTP/1.1" 200 -
+100.64.0.2 - - [06/Feb/2026 19:35:17] "GET /info-cache HTTP/1.1" 200 -

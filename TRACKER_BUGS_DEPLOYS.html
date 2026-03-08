@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bruce W - Tracker Bugs & Deploys</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .impact {
+            font-weight: bold;
+        }
+
+        .impact-high {
+            color: #28a745;
+        }
+
+        .impact-medium {
+            color: #ffc107;
+        }
+
+        .impact-low {
+            color: #6c757d;
+        }
+
+        .bug-list {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .notes {
+            font-style: italic;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Bruce W - Tracker Bugs & Deploys</h1>
+            <div class="subtitle">Sistema de Monitoreo de Correcciones y Deploys</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number">27</div>
+                <div class="label">Total Deploys</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">66</div>
+                <div class="label">Bugs Eliminados</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">322</div>
+                <div class="label">Tests Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">-78%</div>
+                <div class="label">Reducción Bugs</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar por FIX, bugs, tipo...">
+
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterTable('all')">Todos</button>
+                <button class="filter-btn" onclick="filterTable('high')">Impacto Alto</button>
+                <button class="filter-btn" onclick="filterTable('medium')">Impacto Medio</button>
+                <button class="filter-btn" onclick="filterTable('low')">Impacto Bajo</button>
+                <button class="filter-btn" onclick="filterTable('recent')">Últimos 7 días</button>
+            </div>
+
+            <table id="deploysTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">FIX ▼</th>
+                        <th onclick="sortTable(1)">Fecha</th>
+                        <th onclick="sortTable(2)">Commit</th>
+                        <th onclick="sortTable(3)">Tipo Bug</th>
+                        <th onclick="sortTable(4)">Bugs Eliminados</th>
+                        <th onclick="sortTable(5)">Impacto %</th>
+                        <th onclick="sortTable(6)">Tests</th>
+                        <th onclick="sortTable(7)">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- FIX 670-672 (2026-02-11) -->
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 672</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>c11ee35</code></td>
+                        <td><span class="badge badge-info">PREGUNTA_REPETIDA</span></td>
+                        <td>
+                            <strong>5 bugs</strong>
+                            <div class="bug-list">BRUCE2143, 2142, 2138, 2128, 2114</div>
+                            <div class="notes">Threshold desalineado: >= 3 → >= 2</div>
+                        </td>
+                        <td class="impact impact-high">8.3%</td>
+                        <td>322 (+17)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 671</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>5c4391f</code></td>
+                        <td><span class="badge badge-info">CATALOGO_REPETIDO</span></td>
+                        <td>
+                            <strong>6 bugs</strong>
+                            <div class="bug-list">BRUCE2157, 2143, 2142, 2135, 2128, 2118</div>
+                            <div class="notes">Threshold desalineado: >= 2 → >= 1</div>
+                        </td>
+                        <td class="impact impact-high">10%</td>
+                        <td>305 (+15)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <tr data-impact="low" data-date="2026-02-11">
+                        <td><strong>FIX 670</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>137bb9f</code></td>
+                        <td><span class="badge badge-info">CLIENTE_HABLA_ULTIMO</span></td>
+                        <td>
+                            <strong>1 bug</strong>
+                            <div class="bug-list">BRUCE2173</div>
+                            <div class="notes">Números dictados en palabras no detectados</div>
+                        </td>
+                        <td class="impact impact-low">1.7%</td>
+                        <td>290 (+10)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 667-669 (2026-02-11) -->
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 667-669</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>1e77851</code></td>
+                        <td><span class="badge badge-danger">GPT_LOGICA_ROTA</span></td>
+                        <td>
+                            <strong>3 bugs</strong>
+                            <div class="bug-list">BRUCE2171, 2173, 2163</div>
+                            <div class="notes">Post-filters anti-repetición GPT (arquitectura dual)</div>
+                        </td>
+                        <td class="impact impact-high">5%</td>
+                        <td>280 (+25)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 664-666 (2026-02-11) -->
+                    <tr data-impact="medium" data-date="2026-02-11">
+                        <td><strong>FIX 664-666</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>b35e741</code></td>
+                        <td><span class="badge badge-warning">GPT_EVAL (False Positives)</span></td>
+                        <td>
+                            <strong>6 bugs</strong>
+                            <div class="bug-list">BRUCE2162, 2153, 2161</div>
+                            <div class="notes">Anti-falsos positivos + hora ya mencionada</div>
+                        </td>
+                        <td class="impact impact-medium">10%</td>
+                        <td>255 (+21)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 662-663 (2026-02-11) -->
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 662-663</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>a0cd29d</code></td>
+                        <td><span class="badge badge-info">TIMEOUT STT</span></td>
+                        <td>
+                            <strong>1 bug</strong>
+                            <div class="bug-list">BRUCE2144</div>
+                            <div class="notes">Timeout 1.5s→2.0s + Azure fallback real</div>
+                        </td>
+                        <td class="impact impact-medium">1.7%</td>
+                        <td>234 (+16)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 658-661 (2026-02-11) -->
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 658-661</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>84858f0</code></td>
+                        <td><span class="badge badge-danger">GPT_LOGICA_ROTA</span></td>
+                        <td>
+                            <strong>10 bugs</strong>
+                            <div class="bug-list">BRUCE2143, 2142 (múltiples)</div>
+                            <div class="notes">Negaciones cortas + contador catálogo + pitch obligatorio</div>
+                        </td>
+                        <td class="impact impact-high">16.7%</td>
+                        <td>218 (+18)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 651-653 (2026-02-11) -->
+                    <tr data-impact="medium" data-date="2026-02-11">
+                        <td><strong>FIX 651-653</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>a9eb6cc</code></td>
+                        <td><span class="badge badge-warning">GPT_TONO / OPORTUNIDAD / RESPUESTA</span></td>
+                        <td>
+                            <strong>3 bugs</strong>
+                            <div class="bug-list">Tono inadecuado (timeout) + Oportunidad perdida + Respuesta incorrecta</div>
+                        </td>
+                        <td class="impact impact-medium">5%</td>
+                        <td>184 (+15)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- FIX 646-647 (2026-02-11) -->
+                    <tr data-impact="high" data-date="2026-02-11">
+                        <td><strong>FIX 646-647</strong></td>
+                        <td>2026-02-11</td>
+                        <td><code>b3fab3c</code></td>
+                        <td><span class="badge badge-danger">GPT_LOGICA_ROTA</span></td>
+                        <td>
+                            <strong>13 bugs</strong>
+                            <div class="bug-list">69% eran GPT_LOGICA_ROTA (Bruce repite preguntas)</div>
+                            <div class="notes">GPT anti-repetición reglas sistema</div>
+                        </td>
+                        <td class="impact impact-high">21.7%</td>
+                        <td>169 (+12)</td>
+                        <td><span class="badge badge-success">✅ Deployed</span></td>
+                    </tr>
+
+                    <!-- Placeholder para bugs pendientes -->
+                    <tr data-impact="medium" data-date="2026-02-11">
+                        <td><strong>FIX 673</strong></td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><span class="badge badge-warning">PITCH_REPETIDO</span></td>
+                        <td>
+                            <strong>2 bugs (pendiente)</strong>
+                            <div class="bug-list">BRUCE2182, 2118</div>
+                            <div class="notes">En evaluación - esperar 24-48h post-FIX 670-672</div>
+                        </td>
+                        <td class="impact impact-low">3.3%</td>
+                        <td>-</td>
+                        <td><span class="badge badge-warning">⏳ Pendiente</span></td>
+                    </tr>
+
+                    <tr data-impact="medium" data-date="2026-02-11">
+                        <td><strong>FIX 674+</strong></td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><span class="badge badge-warning">GPT_FUERA_DE_TEMA</span></td>
+                        <td>
+                            <strong>5 bugs (pendiente)</strong>
+                            <div class="bug-list">4 MANEJO_CONFUSION + 1 OTROS</div>
+                            <div class="notes">Necesitan logs específicos para análisis</div>
+                        </td>
+                        <td class="impact impact-medium">8.3%</td>
+                        <td>-</td>
+                        <td><span class="badge badge-warning">⏳ Pendiente</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p><strong>Bruce W - Agente de Ventas AI</strong> | Deploy: Railway | Stack: Python, Twilio, ElevenLabs, Azure Speech, GPT-4o</p>
+            <p>Última actualización: 2026-02-11 | Total bugs base: 60 → Bugs actuales proyectados: 30-35 (-42% a -50%)</p>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const table = document.getElementById('deploysTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+
+                if (text.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+
+        // Filter functionality
+        function filterTable(filter) {
+            const table = document.getElementById('deploysTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            // Update button states
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const impact = row.getAttribute('data-impact');
+                const date = row.getAttribute('data-date');
+
+                let show = false;
+
+                if (filter === 'all') {
+                    show = true;
+                } else if (filter === 'high' && impact === 'high') {
+                    show = true;
+                } else if (filter === 'medium' && impact === 'medium') {
+                    show = true;
+                } else if (filter === 'low' && impact === 'low') {
+                    show = true;
+                } else if (filter === 'recent' && date === '2026-02-11') {
+                    show = true;
+                }
+
+                row.style.display = show ? '' : 'none';
+            }
+        }
+
+        // Sort table
+        let sortDirection = true;
+        function sortTable(columnIndex) {
+            const table = document.getElementById('deploysTable');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = Array.from(tbody.getElementsByTagName('tr'));
+
+            rows.sort((a, b) => {
+                const aValue = a.getElementsByTagName('td')[columnIndex].textContent;
+                const bValue = b.getElementsByTagName('td')[columnIndex].textContent;
+
+                if (sortDirection) {
+                    return aValue.localeCompare(bValue);
+                } else {
+                    return bValue.localeCompare(aValue);
+                }
+            });
+
+            sortDirection = !sortDirection;
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+</body>
+</html>

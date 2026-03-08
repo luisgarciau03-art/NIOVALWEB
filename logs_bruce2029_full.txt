@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title> Logs BRUCE2029</title>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 { color: #4CAF50; }
+                .nav { margin-bottom: 20px; }
+                .nav a { color: #4CAF50; margin-right: 20px; text-decoration: none; }
+                .nav a:hover { text-decoration: underline; }
+                .stats { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+                .log-container {
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .log-line {
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+                .log-line:hover { background: #21262d; }
+                .log-bruce { color: #58a6ff; }
+                .log-cliente { color: #f0883e; }
+                .log-llamada { color: #a371f7; }
+                .log-error { color: #f85149; }
+                .log-exito { color: #3fb950; }
+            </style>
+        </head>
+        <body>
+            <h1> Logs de BRUCE2029</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id=2029&formato=json" target="_blank"> JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> 66 |
+                <strong>BRUCE ID:</strong> 2029
+            </div>
+            <div class="log-container">
+        <div class="log-line log-error">[2026-02-09 02:08:27] ID BRUCE generado: BRUCE2029</div><div class="log-line log-cliente">[2026-02-09 02:08:32] [CLIENTE] BRUCE2029 - CLIENTE DIJO: "¿Qué tal? Buen día."</div><div class="log-line log-bruce">[2026-02-09 02:08:32] [BRUCE] BRUCE2029 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"</div><div class="log-line log-cliente">[2026-02-09 02:08:43] [CLIENTE] BRUCE2029 - CLIENTE DIJO: "Sí, no, bueno,"</div><div class="log-line log-bruce">[2026-02-09 02:08:44] [BRUCE] BRUCE2029 DICE: "Disculpe, ¿me puede repetir eso último?" (FIX 577: fallback speech real)</div><div class="log-line log-cliente">[2026-02-09 02:08:52] [CLIENTE] BRUCE2029 - CLIENTE DIJO: "Sí, no, bueno, no, no es cierto, se lo voy a comer. Sí, no, bueno, no, no es cierto, salió a comer."</div><div class="log-line log-bruce">[2026-02-09 02:08:54] [BRUCE] BRUCE2029 DICE: "Disculpe, tiene razón. ¿Me confirma el WhatsApp del encargado para enviarle el catálogo?"</div><div class="log-line log-cliente">[2026-02-09 02:09:01] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Timeouts Deepgram previos: 1</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Respuestas vacías consecutivas: 1</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Azure buffer: 4 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Azure últimas 3: ['sí no bueno no no es cierto salió a comer', 'Sí, no, bueno, no, no es cierto, salió a comer.', 'Salió a comer.']</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Azure última: 'Salió a comer.' (len=14)</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Azure Transcriber: audio_chunks=1642, transcripts=8, finals=3</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Deepgram Transcriber: audio_chunks=1642, transcripts=9, finals=3</div><div class="log-line log-error">[2026-02-09 02:09:01] [DIAGNÓSTICO] BRUCE2029 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-cliente">[2026-02-09 02:09:06] [CLIENTE] BRUCE2029 - CLIENTE DIJO: "No, un estrés para No necesitaría esperar que vuelva."</div><div class="log-line log-bruce">[2026-02-09 02:09:08] [BRUCE] BRUCE2029 DICE: "Claro, espero."</div><div class="log-line log-cliente">[2026-02-09 02:09:12] [CLIENTE] BRUCE2029 - CLIENTE DIJO: "¿Necesitas esperar que vuelva?"</div><div class="log-line log-bruce">[2026-02-09 02:09:14] [BRUCE] BRUCE2029 DICE: "Claro, espero."</div><div class="log-line log-cliente">[2026-02-09 02:09:20] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-09 02:09:23] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Timeouts Deepgram previos: 3</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Respuestas vacías consecutivas: 1</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Azure buffer: 6 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Azure últimas 3: ['no necesitaría esperar que vuelva', 'No necesitaría esperar que vuelva.', '¿Necesitas esperar que vuelva?']</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Azure última: '¿Necesitas esperar que vuelva?' (len=30)</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Azure Transcriber: audio_chunks=2753, transcripts=15, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Deepgram Transcriber: audio_chunks=2754, transcripts=13, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:23] [DIAGNÓSTICO] BRUCE2029 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-cliente">[2026-02-09 02:09:28] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Timeouts Deepgram previos: 4</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Respuestas vacías consecutivas: 2</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Azure buffer: 6 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Azure últimas 3: ['no necesitaría esperar que vuelva', 'No necesitaría esperar que vuelva.', '¿Necesitas esperar que vuelva?']</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Azure última: '¿Necesitas esperar que vuelva?' (len=30)</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Azure Transcriber: audio_chunks=2968, transcripts=16, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Deepgram Transcriber: audio_chunks=2968, transcripts=13, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:28] [DIAGNÓSTICO] BRUCE2029 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-cliente">[2026-02-09 02:09:32] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-09 02:09:36] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Timeouts Deepgram previos: 6</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Respuestas vacías consecutivas: 3</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Azure buffer: 6 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Azure últimas 3: ['no necesitaría esperar que vuelva', 'No necesitaría esperar que vuelva.', '¿Necesitas esperar que vuelva?']</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Azure última: '¿Necesitas esperar que vuelva?' (len=30)</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Azure Transcriber: audio_chunks=3389, transcripts=19, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Azure Estado: is_connected=True</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Deepgram Transcriber: audio_chunks=3389, transcripts=13, finals=5</div><div class="log-line log-error">[2026-02-09 02:09:36] [DIAGNÓSTICO] BRUCE2029 - Deepgram Estado: is_connected=True, has_connection=True</div><div class="log-line log-error">[2026-02-09 02:09:38] → ID BRUCE: BRUCE2029</div><div class="log-line log-cliente">[2026-02-09 02:09:40] [CLIENTE] BRUCE2029 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-09 02:09:40] [DIAGNÓSTICO] BRUCE2029 - Timeouts Deepgram previos: 7</div><div class="log-line log-error">[2026-02-09 02:09:40] [DIAGNÓSTICO] BRUCE2029 - Respuestas vacías consecutivas: 4</div><div class="log-line log-error">[2026-02-09 02:09:40] [DIAGNÓSTICO] BRUCE2029 - Deepgram buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:40] [DIAGNÓSTICO] BRUCE2029 - Azure buffer: 0 transcripciones</div><div class="log-line log-error">[2026-02-09 02:09:40] [DIAGNÓSTICO] BRUCE2029 - Deepgram Transcriber: NO ENCONTRADO (problema crítico)</div><div class="log-line log-error">[2026-02-09 02:09:41] → ID BRUCE: BRUCE2029</div><div class="log-line log-error">[2026-02-09 02:09:43] FIX 272: Grabación asociada a BRUCE2029</div>
+            </div>
+        </body>
+        </html>
+        

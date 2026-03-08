@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title> Logs BRUCE1671</title>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 { color: #4CAF50; }
+                .nav { margin-bottom: 20px; }
+                .nav a { color: #4CAF50; margin-right: 20px; text-decoration: none; }
+                .nav a:hover { text-decoration: underline; }
+                .stats { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+                .log-container {
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .log-line {
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+                .log-line:hover { background: #21262d; }
+                .log-bruce { color: #58a6ff; }
+                .log-cliente { color: #f0883e; }
+                .log-llamada { color: #a371f7; }
+                .log-error { color: #f85149; }
+                .log-exito { color: #3fb950; }
+            </style>
+        </head>
+        <body>
+            <h1> Logs de BRUCE1671</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id=1671&formato=json" target="_blank"> JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> 16 |
+                <strong>BRUCE ID:</strong> 1671
+            </div>
+            <div class="log-container">
+        <div class="log-line log-error">[2026-01-28 21:12:13] ID BRUCE generado: BRUCE1671</div><div class="log-line log-cliente">[2026-01-28 21:12:21] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "A sus órdenes, buenas tardes. No, la"</div><div class="log-line log-cliente">[2026-01-28 21:12:21] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "A sus órdenes, buenas tardes. No, la"</div><div class="log-line log-bruce">[2026-01-28 21:12:21] [BRUCE] BRUCE1671 DICE: "Perfecto. Le llamo para ofrecerle nuestro catálogo de productos ferreteros NIOVAL. ¿Le gustaría recibirlo por WhatsApp o correo?"</div><div class="log-line log-bruce">[2026-01-28 21:12:21] [BRUCE] BRUCE1671 DICE: "Perfecto. Le llamo para ofrecerle nuestro catálogo de productos ferreteros NIOVAL. ¿Le gustaría recibirlo por WhatsApp o correo?"</div><div class="log-line log-cliente">[2026-01-28 21:12:32] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "Sí, un"</div><div class="log-line log-cliente">[2026-01-28 21:12:32] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "Sí, un"</div><div class="log-line log-cliente">[2026-01-28 21:12:34] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "una lista de precios?"</div><div class="log-line log-cliente">[2026-01-28 21:12:34] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "una lista de precios?"</div><div class="log-line log-bruce">[2026-01-28 21:12:34] [BRUCE] BRUCE1671 - ESPERANDO EN SILENCIO (FIX 498)</div><div class="log-line log-bruce">[2026-01-28 21:12:34] [BRUCE] BRUCE1671 - ESPERANDO EN SILENCIO (FIX 498)</div><div class="log-line log-cliente">[2026-01-28 21:12:46] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "¿O cómo, perdón? ¿Bueno?"</div><div class="log-line log-cliente">[2026-01-28 21:12:46] [CLIENTE] BRUCE1671 - CLIENTE DIJO: "¿O cómo, perdón? ¿Bueno?"</div><div class="log-line log-error">[2026-01-28 21:12:49] → ID BRUCE: BRUCE1671</div><div class="log-line log-error">[2026-01-28 21:12:51] FIX 272: Grabación asociada a BRUCE1671</div><div class="log-line log-error">[2026-01-28 21:12:54] → ID BRUCE: BRUCE1671</div>
+            </div>
+        </body>
+        </html>
+        

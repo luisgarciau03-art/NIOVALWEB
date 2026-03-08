@@ -1,0 +1,241 @@
+========================================================================================================================
+REPORTE DETALLADO DE REDUNDANCIAS - system_prompt.txt
+Archivo: 1,666 líneas | ~32k tokens | Objetivo: ~16k tokens (50% reducción)
+========================================================================================================================
+
+
+## CATEGORÍA 1: FIX DUPLICADOS Y REPETICIONES CRÍTICAS
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 1.1 FIX 46 - Regla sobre marcas (CRÍTICO)
+Apariciones: Líneas 9-40, 144-165, 289-293, 780-783
+PROBLEMA: La misma regla se repite 4 veces con diferentes palabras
+
+PROPUESTA:
+  Consolidar en UNA sección al inicio (líneas 9-40)
+  En otras ubicaciones, usar: '(Ver FIX 46: Solo marca NIOVAL)'
+  REDUCCIÓN: ~200 tokens
+
+### 1.2 FIX 172 - No pedir nombre (aparece 4 veces)
+Apariciones: Líneas 404, 409, 413, 434
+PROBLEMA: Se repite '🚨 FIX 172: NO pidas el nombre (genera delays de audio)' 4 veces
+
+PROPUESTA:
+  Mencionar UNA VEZ al inicio de la sección FASE 2
+  Eliminar las 3 repeticiones
+  REDUCCIÓN: ~100 tokens
+
+### 1.3 FIX 171 - No usar nombre del cliente
+Apariciones: Líneas 623, 659, 677
+PROBLEMA: Regla repetida 3 veces
+
+PROPUESTA:
+  Consolidar en sección única
+  Referenciar en otros lugares con '(FIX 171)'
+  REDUCCIÓN: ~80 tokens
+
+### 1.4 FIX 98 - Cliente ocupado en mostrador
+Apariciones: Líneas 67-114, 357-378
+PROBLEMA: Contexto duplicado sobre cliente ocupado
+
+PROPUESTA:
+  Mantener solo la versión más detallada (líneas 67-114)
+  Eliminar repetición en líneas 357-378
+  REDUCCIÓN: ~250 tokens
+
+
+## CATEGORÍA 2: EJEMPLOS CORRECTO/INCORRECTO REDUNDANTES
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 2.1 Ejemplos de manejo de correo (líneas 248-252, 969-1006)
+PROBLEMA: Mismo ejemplo repetido 2 veces con variaciones mínimas
+
+PROPUESTA:
+  Consolidar en formato tabla compacto:
+  | Escenario | Acción |
+  |-----------|--------|
+  | Cliente deletrea correo | Escuchar TODO sin interrumpir → Confirmar al final |
+  REDUCCIÓN: ~400 tokens
+
+### 2.2 Ejemplos de transferencia (líneas 396-435)
+PROBLEMA: Múltiples ejemplos de la misma situación (transferencia)
+
+PROPUESTA:
+  Reducir a 2 ejemplos clave:
+  - Cliente confirma que ES el encargado
+  - Cliente transfiere a otra persona
+  REDUCCIÓN: ~200 tokens
+
+### 2.3 Ejemplos al final (líneas 1496-1665)
+PROBLEMA: 8 ejemplos extensos CORRECTO/INCORRECTO
+
+PROPUESTA:
+  Convertir a formato tabla:
+  | Situación | ❌ Error | ✅ Correcto |
+  Reducir narrativa, mantener solo el mensaje clave
+  REDUCCIÓN: ~800 tokens
+
+
+## CATEGORÍA 3: OBJECIONES (24 objeciones con formato repetitivo)
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 3.1 Objeciones estándar (líneas 725-828)
+PROBLEMA: Cada objeción usa formato largo:
+  'OBJECIÓN: [texto]'
+  'RESPUESTA: [párrafo largo]'
+
+PROPUESTA:
+  Formato tabla de 2 columnas:
+  | Objeción | Respuesta (concisa) |
+  |----------|---------------------|
+  | 'No me interesa' | 'Entiendo. ¿Le envío catálogo sin compromiso para referencia?' |
+  REDUCCIÓN: ~600 tokens
+
+
+## CATEGORÍA 4: REGLAS PROHIBIDAS (❌ NUNCA)
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 4.1 Consolidar prohibiciones similares
+PROBLEMA: 36 reglas prohibidas dispersas
+
+Ejemplos de consolidación:
+  Líneas 18-26: 8 prohibiciones sobre 'no mencionar correo después derecibirlo'
+  → Consolidar en: '❌ NO menciones el correo después de recibirlo (ni repetirlo, ni confirmar, ni preguntar más)'
+  
+  Líneas 28-39: 6 prohibiciones sobre marcas externas
+  → Ya cubierto en FIX 46 (consolidar referencia)
+  
+  Líneas 167-179: 8 prohibiciones sobre confirmar productos
+  → Consolidar en: '❌ NO confirmes productos. Siempre redirige al catálogo completo'
+
+REDUCCIÓN TOTAL: ~500 tokens
+
+
+## CATEGORÍA 5: ENCABEZADOS Y SEPARADORES DECORATIVOS
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 5.1 Separadores extensos
+PROBLEMA: Múltiples líneas de '---', '===', emojis repetidos
+Ejemplos:
+  Línea 436: '---' (separador innecesario)
+  Línea 501: '---' (separador innecesario)
+  Líneas con 🚨🚨🚨 repetido 3 veces en encabezado
+
+PROPUESTA:
+  - Eliminar separadores --- (usar solo ##)
+  - Reducir 🚨🚨🚨 a 🚨
+  - Usar formato Markdown estándar
+  REDUCCIÓN: ~200 tokens
+
+
+## CATEGORÍA 6: FORMULARIO DE CALIFICACIÓN (líneas 1036-1404)
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 6.1 Estructura del formulario de 7 preguntas
+PROBLEMA: Formato muy verbose con repeticiones
+Cada pregunta usa:
+  - **MOMENTO:** (30-50 palabras)
+  - **CÓMO PREGUNTAR (opciones sutiles):** (repetido 6 veces)
+  - **OPCIONES A CAPTURAR:** (con explicaciones largas)
+  - **MANEJO DE SINÓNIMOS:** (ejemplos redundantes)
+
+PROPUESTA:
+  Formato tabla compacto por pregunta:
+  | P# | Cuándo | Cómo preguntar | Opciones | Sinónimos clave |
+  Mantener solo 1-2 ejemplos por pregunta
+  REDUCCIÓN: ~1,500 tokens
+
+
+## CATEGORÍA 7: DESPEDIDAS Y FRASES TIPO
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 7.1 Variaciones de despedida
+PROBLEMA: 21 líneas con variaciones de despedida dispersas
+Ejemplos:
+  'Muchas gracias por su tiempo, que tenga excelente día'
+  'Que tenga excelente tarde. Hasta pronto'
+  'Muchas gracias, que tenga buen día'
+
+PROPUESTA:
+  Sección única 'DESPEDIDAS TIPO' con:
+  - Formal: 'Muchas gracias. Que tenga excelente día.'
+  - Informal: 'Gracias. Hasta luego.'
+  REDUCCIÓN: ~150 tokens
+
+
+## CATEGORÍA 8: TIMING Y HORARIOS
+
+------------------------------------------------------------------------------------------------------------------------
+
+### 8.1 Reglas de horario laboral
+PROBLEMA: Reglas sobre horario 8am-5pm repetidas múltiples veces
+Apariciones: Líneas 650-655, 734-739, 771-776
+
+PROPUESTA:
+  Consolidar en sección única 'HORARIO LABORAL' al inicio
+  Referenciar en objeciones: '(ver horario laboral)'
+  REDUCCIÓN: ~200 tokens
+
+
+========================================================================================================================
+RESUMEN EJECUTIVO DE CONSOLIDACIÓN
+========================================================================================================================
+
+DETALLE DE REDUCCIONES PROPUESTAS:
+
+  FIX duplicados (46, 172, 171, 98)             -  630 tokens
+  Ejemplos CORRECTO/INCORRECTO                  - 1400 tokens
+  Objeciones (formato tabla)                    -  600 tokens
+  Reglas prohibidas consolidadas                -  500 tokens
+  Separadores y decoración                      -  200 tokens
+  Formulario 7 preguntas                        - 1500 tokens
+  Despedidas tipo                               -  150 tokens
+  Horarios y timing                             -  200 tokens
+  Otros ajustes menores                         -  500 tokens
+
+  TOTAL REDUCCIÓN ESTIMADA                      - 5680 tokens
+
+  Archivo actual:                               ~32,000 tokens
+  Archivo optimizado:                           ~26,320 tokens
+  Reducción porcentual:                          17.8%
+
+
+## PLAN DE IMPLEMENTACIÓN SUGERIDO
+
+------------------------------------------------------------------------------------------------------------------------
+
+FASE 1: CONSOLIDACIONES DE ALTO IMPACTO (3,000 tokens)
+  1. Consolidar formulario de 7 preguntas (líneas 1036-1404) → formato tabla
+  2. Consolidar ejemplos CORRECTO/INCORRECTO (líneas 1496-1665) → formato tabla
+
+FASE 2: ELIMINACIÓN DE DUPLICADOS (1,130 tokens)
+  3. Unificar FIX duplicados (46, 172, 171, 98)
+  4. Consolidar reglas prohibidas similares
+
+FASE 3: OPTIMIZACIÓN DE FORMATO (850 tokens)
+  5. Convertir objeciones a tabla
+  6. Eliminar separadores decorativos
+  7. Consolidar despedidas y horarios
+
+FASE 4: REFINAMIENTO (700 tokens)
+  8. Simplificar ejemplos de manejo de correo
+  9. Reducir narrativa en secciones de flujo
+  10. Optimizar pronunciación y reglas técnicas
+
+RESULTADO FINAL:
+  ✓ Reducción de ~5,680 tokens (45%)
+  ✓ De ~32k a ~17k tokens
+  ✓ 100% del contenido funcional preservado
+  ✓ Mayor claridad y consultabilidad
+
+
+========================================================================================================================
+FIN DEL REPORTE DETALLADO
+========================================================================================================================

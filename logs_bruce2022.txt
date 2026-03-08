@@ -1,0 +1,10 @@
+                <tr data-call-id="BRUCE2022" data-estado="sin_calificar" class="">
+                    <td><a href="/logs/api?bruce_id=2022" target="_blank" style="color: #4CAF50; text-decoration: none;" title="Ver logs de esta llamada"><strong>BRUCE2022</strong> </a></td>
+                                    onclick="setSemaforo('BRUCE2022', 'verde', this)" title="Bueno">
+                                    onclick="setSemaforo('BRUCE2022', 'amarillo', this)" title="Medio">
+                                    onclick="setSemaforo('BRUCE2022', 'rojo', this)" title="Malo">
+                                    onclick="setSemaforo('BRUCE2022', 'naranja', this)" title="Buzón">
+                                    onclick="setSemaforo('BRUCE2022', 'azul', this)" title="Contestadora">
+                                  onchange="setNotas('BRUCE2022', this.value)"
+                                   onchange="setSolucionado('BRUCE2022', this.checked)">
+                        <span class="semaforo-guardado" data-call-id="BRUCE2022">

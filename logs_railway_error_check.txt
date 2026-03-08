@@ -1,0 +1,200 @@
+  → Pregunta 3: No (Bruce)
+   Fila: 2
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada fallida guardada: Numero Invalido
+100.64.0.6 - - [08/Feb/2026 20:38:14] "GET /status-callback?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sun,+08+Feb+2026+20:38:12+%2B0000&CallbackSource=call-progress-events&SipResponseCode=500&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAae7d8525a77f9058b25b6d2e0d2549c5&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=failed&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.10 - - [08/Feb/2026 21:06:18] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.11 - - [08/Feb/2026 21:06:48] "GET /logs/api HTTP/1.1" 200 -
+100.64.0.8 - - [08/Feb/2026 21:07:16] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.9 - - [08/Feb/2026 21:07:19] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.8 - - [08/Feb/2026 21:07:48] "GET /logs/api HTTP/1.1" 200 -
+100.64.0.4 - - [08/Feb/2026 21:08:02] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.2 - - [08/Feb/2026 21:08:03] "[31m[1mPOST /historial-llamadas/guardar HTTP/1.1[0m" 400 -
+100.64.0.4 - - [08/Feb/2026 21:08:21] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [08/Feb/2026 21:09:23] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.7 - - [08/Feb/2026 21:10:25] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [08/Feb/2026 21:12:26] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.12 - - [08/Feb/2026 21:13:28] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.9 - - [08/Feb/2026 21:14:30] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.5 - - [08/Feb/2026 21:15:32] "GET /info-cache HTTP/1.1" 200 -
+100.64.0.6 - - [08/Feb/2026 21:17:33] "GET /info-cache HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526623531804, Negocio: Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526623531804
+ DEBUG 5: Llamada Twilio creada - SID: CAcecbeae3d687b908a1ca03b493ef97a7
+[2026-02-08 21:17:58] [LLAMADA] N/A - LLAMADA INICIADA a +526623531804 (Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO)
+ Contacto completo guardado para Call SID CAcecbeae3... (fila 2)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.6 - - [08/Feb/2026 21:17:58] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+
+ STATUS CALLBACK - Llamada CAcecbeae3...
+   Estado: failed
+   Duración: 0s
+[2026-02-08 21:18:11] [LLAMADA] LLAMADA TERMINADA - Estado: failed, Duración: 0s
+    Llamada fallida - Estado: failed
+    Fila 2: Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO - +526623531804
+    SIP Response Code: 500
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 0 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no fue efectiva debido a que el número proporcionado era inválido. Bruce podría haber verificado la información de contacto antes de realizar la llamada para evitar perder tiempo y recursos.
+[EMOJI] Conclusión ya determinada: NUMERO INVALIDO (no recalcular)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 1228...
+  → Pregunta 3: No (Bruce)
+   Fila: 2
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Numero Invalido
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: La llamada no fue efectiva debido a que el número ...
+  → Calificación Bruce: 3/10
+ Resultado guardado exitosamente en fila 1228
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada fallida guardada: Numero Invalido
+100.64.0.7 - - [08/Feb/2026 21:18:13] "GET /status-callback?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sun,+08+Feb+2026+21:18:10+%2B0000&CallbackSource=call-progress-events&SipResponseCode=500&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAcecbeae3d687b908a1ca03b493ef97a7&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=failed&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +526623531804, Negocio: Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +526623531804
+ DEBUG 5: Llamada Twilio creada - SID: CAc603a9f6b4557f8967265994ee89dcaa
+[2026-02-08 21:25:33] [LLAMADA] N/A - LLAMADA INICIADA a +526623531804 (Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO)
+ Contacto completo guardado para Call SID CAc603a9f6... (fila 2)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.5 - - [08/Feb/2026 21:25:33] "POST /iniciar-llamada HTTP/1.1" 200 -
+
+ STATUS CALLBACK - Llamada CAc603a9f6...
+   Estado: failed
+   Duración: 0s
+[2026-02-08 21:25:46] [LLAMADA] LLAMADA TERMINADA - Estado: failed, Duración: 0s
+    Llamada fallida - Estado: failed
+    Fila 2: Ferreteria Y Materiales De Construcción Del Yaqui- ARENA Y GRAVA ESCOMBRO - +526623531804
+    SIP Response Code: 500
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 0 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no fue efectiva debido a que el número proporcionado es inválido. Bruce debería haber verificado la información de contacto antes de finalizar la llamada para evitar frustraciones.
+[EMOJI] Conclusión ya determinada: NUMERO INVALIDO (no recalcular)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+
+ Guardando resultado en fila 1229...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Numero Invalido
+  → Nivel de interés: Bajo
+============================================================
+
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: La llamada no fue efectiva debido a que el número ...
+  → Calificación Bruce: 3/10
+ Resultado guardado exitosamente en fila 1229
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+   Email capturado: 
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+   Fila: 2
+   WhatsApp capturado: 
+
+   Referencia capturada: 
+============================================================
+
+    Llamada fallida guardada: Numero Invalido
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+100.64.0.4 - - [08/Feb/2026 21:25:48] "GET /status-callback?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sun,+08+Feb+2026+21:25:46+%2B0000&CallbackSource=call-progress-events&SipResponseCode=500&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAc603a9f6b4557f8967265994ee89dcaa&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=failed&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.12 - - [08/Feb/2026 21:26:25] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.12 - - [08/Feb/2026 21:26:40] "GET /logs/api?bruce_id=2025&formato=json HTTP/1.1" 200 -

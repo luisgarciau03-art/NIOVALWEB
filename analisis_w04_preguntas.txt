@@ -1,0 +1,162 @@
+================================================================================
+ANÁLISIS DE PREGUNTAS FRECUENTES - LOG MASIVO
+================================================================================
+
+Total de mensajes del cliente analizados: 24
+Preguntas procesadas (>10 caracteres): 24
+
+--------------------------------------------------------------------------------
+CATEGORÍAS DETECTADAS (ordenadas por frecuencia):
+--------------------------------------------------------------------------------
+
+Preguntas sobre MARCAS: 5 veces
+  - "qué marca escala disculpe la que manejan no la había escuchado"
+  - "oc qué marcas reconocidas manejan"
+  - "oc qué marcas manejas"
+  ... y 2 más
+
+Preguntas sobre QUÉ NECESITA/OFRECE: 4 veces
+  - "sí soy yo dígame"
+  - "sí qué necesitaban"
+  - "qué es lo que se le ofrece"
+  ... y 1 más
+
+Preguntas sobre UBICACIÓN: 4 veces
+  - "de don bueno en dónde está ubicada su fábrica disculpa"
+  - "sí también bueno ustedes son distribuidores ustedes fabrican aquí en méxico o fabrican en algún otro lado o de dónde son sus productos"
+  - "oc sí pero dónde están ubicados ustedes"
+  ... y 1 más
+
+Preguntas sobre PRODUCTOS que manejan: 3 veces
+  - "qué marca escala disculpe la que manejan no la había escuchado"
+  - "ok una pregunta qué productos tú permanecen ustedes"
+  - "sí pero bueno qué productos además de esos manejan"
+
+Preguntas sobre CRÉDITO: 2 veces
+  - "bueno ustedes cómo se manejan tiene el maneja líneas de crédito o o qué nos pueden ofrecer"
+  - "sí este también en la línea de crédito cómo la manejan o cómo sería el proceso para la línea de crédito para dar el alta"
+
+Preguntas sobre CHAPAS específicas: 2 veces
+  - "claro mándamelo al whatsapp pero de chapas qué marcas manejan disculpan"
+  - "sí pero te pregunto usted manejan chapas ya que las chapas son interesantes para nosotros"
+
+Preguntas sobre SELLADORES/SILICONES: 2 veces
+  - "ok bueno mira nosotros somos una ferretería mediana trabajamos ahora sí lo que son con selladores silicón productos pues también por ahí de ferretería brochas y demás no sé si ustedes lleguen a manejar silicones o algunos selladores"
+  - "oc qué marca de selladores manejas"
+
+Preguntas sobre IDENTIFICACIÓN (quién habla): 0 veces
+
+================================================================================
+CACHÉ SUGERIDO PARA respuestas_cache.json:
+================================================================================
+{
+  "que_marcas": {
+    "patrones": [
+      "qué marcas",
+      "que marcas",
+      "cuáles marcas",
+      "cuales marcas",
+      "qué marca",
+      "que marca",
+      "cuál marca",
+      "cual marca",
+      "marcas maneja",
+      "marcas tienen",
+      "marcas reconocidas",
+      "marca propia",
+      "de qué marca",
+      "de que marca"
+    ],
+    "respuesta": "Manejamos la marca NIOVAL, que es nuestra marca propia. Al ser marca propia ofrecemos mejores precios. ¿Se encuentra el encargado de compras para platicarle más a detalle?"
+  },
+  "que_necesita": {
+    "patrones": [
+      "qué necesita",
+      "que necesita",
+      "qué necesitaban",
+      "que necesitaban",
+      "qué se le ofrece",
+      "que se le ofrece",
+      "qué ofrece",
+      "que ofrece",
+      "dígame",
+      "digame",
+      "qué necesito",
+      "que necesito"
+    ],
+    "respuesta": "Mi nombre es Bruce W, le llamo de NIOVAL. Somos distribuidores especializados en productos de ferretería. Queremos ofrecerle información sobre nuestros productos. ¿Se encuentra el encargado de compras?"
+  },
+  "de_donde_habla": {
+    "patrones": [
+      "de dónde",
+      "de donde",
+      "dónde están",
+      "donde están",
+      "ubicados",
+      "ubicación",
+      "dónde está",
+      "donde esta",
+      "de qué ciudad",
+      "de que ciudad",
+      "de dónde son",
+      "de donde son"
+    ],
+    "respuesta": "Estamos ubicados en Guadalajara, Jalisco, pero hacemos envíos a toda la República Mexicana. ¿Se encuentra el encargado de compras?"
+  },
+  "que_productos": {
+    "patrones": [
+      "qué productos",
+      "que productos",
+      "qué maneja",
+      "que maneja",
+      "qué vende",
+      "que vende",
+      "productos manejan",
+      "qué ofrece",
+      "que ofrece"
+    ],
+    "respuesta": "Distribuimos productos de ferretería: cinta para goteras, griferías, herramientas, candados y más de 15 categorías. ¿Se encuentra el encargado de compras?"
+  },
+  "linea_credito": {
+    "patrones": [
+      "línea de crédito",
+      "linea de credito",
+      "crédito",
+      "credito",
+      "cómo se manejan",
+      "como se manejan",
+      "qué nos pueden ofrecer",
+      "que nos pueden ofrecer"
+    ],
+    "respuesta": "Sí, ofrecemos línea de crédito para clientes recurrentes. También aceptamos pago con tarjeta sin comisión y ofrecemos envío gratis desde cinco mil pesos. ¿Le gustaría que le envíe más información por WhatsApp?"
+  },
+  "selladores_silicones": {
+    "patrones": [
+      "selladores",
+      "silicones",
+      "silicón",
+      "silicon",
+      "manejan selladores",
+      "manejan silicones"
+    ],
+    "respuesta": "Déjeme validarlo con mi compañero y le confirmo en el catálogo completo. Manejamos más de 15 categorías de ferretería. ¿Le envío el catálogo por WhatsApp para que vea todo lo disponible?"
+  },
+  "chapas": {
+    "patrones": [
+      "chapas",
+      "manejan chapas",
+      "qué chapas",
+      "que chapas",
+      "modelos de chapas"
+    ],
+    "respuesta": "Déjeme validarlo en nuestro catálogo actualizado. Contamos con varias opciones de chapas. ¿Le envío el catálogo completo por WhatsApp para que vea todos los modelos disponibles?"
+  }
+}
+Traceback (most recent call last):
+  File "C:\Users\PC 1\AgenteVentas\analisis_log_masivo.py", line 209, in <module>
+    print("\n\u2705 Archivo generado: cache_sugerido.json")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 2: character maps to <undefined>

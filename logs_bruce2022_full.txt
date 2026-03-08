@@ -1,0 +1,57 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title> Logs BRUCE2022</title>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    background: #1a1a2e;
+                    color: #eee;
+                    margin: 0;
+                    padding: 20px;
+                }
+                h1 { color: #4CAF50; }
+                .nav { margin-bottom: 20px; }
+                .nav a { color: #4CAF50; margin-right: 20px; text-decoration: none; }
+                .nav a:hover { text-decoration: underline; }
+                .stats { background: #16213e; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+                .log-container {
+                    background: #0d1117;
+                    border-radius: 10px;
+                    padding: 15px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                .log-line {
+                    padding: 5px 10px;
+                    border-bottom: 1px solid #21262d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+                .log-line:hover { background: #21262d; }
+                .log-bruce { color: #58a6ff; }
+                .log-cliente { color: #f0883e; }
+                .log-llamada { color: #a371f7; }
+                .log-error { color: #f85149; }
+                .log-exito { color: #3fb950; }
+            </style>
+        </head>
+        <body>
+            <h1> Logs de BRUCE2022</h1>
+            <div class="nav">
+                <a href="/historial-llamadas">← Volver al Historial</a>
+                <a href="/logs"> Dashboard</a>
+                <a href="/logs/api?bruce_id=2022&formato=json" target="_blank"> JSON</a>
+            </div>
+            <div class="stats">
+                <strong>Total logs encontrados:</strong> 20 |
+                <strong>BRUCE ID:</strong> 2022
+            </div>
+            <div class="log-container">
+        <div class="log-line log-error">[2026-02-08 19:53:50] ID BRUCE generado: BRUCE2022</div><div class="log-line log-cliente">[2026-02-08 19:53:55] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:53:55] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-bruce">[2026-02-08 19:53:55] [BRUCE] BRUCE2022 DICE: "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?" (FIX 408: timeout #2)</div><div class="log-line log-bruce">[2026-02-08 19:53:55] [BRUCE] BRUCE2022 DICE: "Me comunico de la marca NIOVAL, más que nada quería brindar información de nuestros productos ferreteros, ¿se encontrará el encargado o encargada de compras?" (FIX 408: timeout #2)</div><div class="log-line log-cliente">[2026-02-08 19:54:05] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:05] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:09] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:09] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:13] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:13] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:18] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:18] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:22] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:22] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-08 19:54:25] → ID BRUCE: BRUCE2022</div><div class="log-line log-cliente">[2026-02-08 19:54:26] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-cliente">[2026-02-08 19:54:26] [CLIENTE] BRUCE2022 - CLIENTE DIJO: ""</div><div class="log-line log-error">[2026-02-08 19:54:27] → ID BRUCE: BRUCE2022</div><div class="log-line log-error">[2026-02-08 19:54:29] FIX 272: Grabación asociada a BRUCE2022</div>
+            </div>
+        </body>
+        </html>
+        

@@ -1,0 +1,11 @@
+# Configuración de Nixpacks para Railway
+# FIX 212: Forzar instalación de deepgram-sdk
+
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt --no-cache-dir"]
+
+[start]
+cmd = "python servidor_llamadas.py"

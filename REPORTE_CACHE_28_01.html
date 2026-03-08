@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Cache Bruce - 28/01/2026 19:58</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+        }
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0,212,255,0.5);
+        }
+        .stat-label {
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0,212,255,0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(0,212,255,0.2);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background: #00c853; color: #fff; }
+        .badge-warning { background: #ff9800; color: #000; }
+        .badge-info { background: #00d4ff; color: #000; }
+        .footer {
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .text-truncate {
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .status-ok { color: #00c853; }
+        .status-warn { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reporte Cache Bruce</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">1062</div>
+                <div class="stat-label">Audios en Cache</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1456</div>
+                <div class="stat-label">Frases Registradas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">Umbral Minimo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">106.1</div>
+                <div class="stat-label">Tamano (MB)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Top Frases en Cache (Railway)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Frase</th>
+                        <th>Usos</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="text-truncate">Perfecto, ya lo tengo registrado. Le llegará el catálogo en ...</td>
+                        <td><span class="badge badge-info">50x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="text-truncate">Perfecto, ya lo tengo anotado. Le llegará el catálogo en las...</td>
+                        <td><span class="badge badge-info">9x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="text-truncate">¿Le gustaría que le envíe el catálogo por WhatsApp?...</td>
+                        <td><span class="badge badge-info">5x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="text-truncate">¿Le gustaría recibir el catálogo por WhatsApp o correo elect...</td>
+                        <td><span class="badge badge-info">5x</span></td>
+                        <td><span class="badge badge-warning">Pendiente</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="text-truncate">Manejamos productos de ferretería como griferías, herramient...</td>
+                        <td><span class="badge badge-info">4x</span></td>
+                        <td><span class="badge badge-warning">Pendiente</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="text-truncate">Hola, qué tal, muy buenas tardes. Me comunico de la empresa ...</td>
+                        <td><span class="badge badge-info">3x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td class="text-truncate">Entendido. ¿Me podría proporcionar su número de WhatsApp par...</td>
+                        <td><span class="badge badge-info">3x</span></td>
+                        <td><span class="badge badge-warning">Pendiente</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td class="text-truncate">Perfecto, ¿con quién tengo el gusto de hablar?...</td>
+                        <td><span class="badge badge-info">2x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="text-truncate">Muy buenas tardes. Mi nombre es Bruce W, le llamo de NIOVAL ...</td>
+                        <td><span class="badge badge-info">2x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="text-truncate">Entendido. Si necesitas algo más en el futuro, no dudes en c...</td>
+                        <td><span class="badge badge-info">2x</span></td>
+                        <td><span class="badge badge-success">En Cache</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Frases Frecuentes Hoy (28/01)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Frase</th>
+                        <th>Usos Hoy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="text-truncate">Me comunico de la marca nioval, más que nada quería brindar ...</td>
+                        <td><span class="badge badge-info">40x</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="text-truncate">Entiendo. ¿Me podría proporcionar el WhatsApp del encargado ...</td>
+                        <td><span class="badge badge-info">15x</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="text-truncate">Disculpe, no alcancé a escucharle bien, ¿me podría repetir?...</td>
+                        <td><span class="badge badge-info">10x</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="text-truncate">Perfecto. Le llamo para ofrecerle nuestro catálogo de produc...</td>
+                        <td><span class="badge badge-info">6x</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="text-truncate">Hola, buen día....</td>
+                        <td><span class="badge badge-info">5x</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="text-truncate">Sí, por favor, dígame el número....</td>
+                        <td><span class="badge badge-info">3x</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td class="text-truncate">Entiendo. ¿Me podría proporcionar el número directo del enca...</td>
+                        <td><span class="badge badge-info">3x</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td class="text-truncate">Entendido. ¿A qué hora me recomienda llamar para encontrarlo...</td>
+                        <td><span class="badge badge-info">3x</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="text-truncate">Claro. ¿Se encontrará el encargado o encargada de compras pa...</td>
+                        <td><span class="badge badge-info">2x</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="text-truncate">Perfecto, ya lo tengo anotado. Le llegará el catálogo en las...</td>
+                        <td><span class="badge badge-info">2x</span></td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td class="text-truncate">Me comunico de la marca NIOVAL, quería brindar información s...</td>
+                        <td><span class="badge badge-info">1x</span></td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td class="text-truncate">Entiendo que no tiene el contacto. ¿Podría decirme a qué hor...</td>
+                        <td><span class="badge badge-info">1x</span></td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td class="text-truncate">Ajá, déjeme ver... Me comunico de NIOVAL, más que nada querí...</td>
+                        <td><span class="badge badge-info">1x</span></td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td class="text-truncate">Claro, espero....</td>
+                        <td><span class="badge badge-info">1x</span></td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td class="text-truncate">Perfecto. ¿Me confirma su número de WhatsApp?...</td>
+                        <td><span class="badge badge-info">1x</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Archivos de Audio Recientes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Archivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="text-truncate">qué_tal,_le_llamo_de_la_marca_nioval_812f04bc92bc.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="text-truncate">entiendo._¿podría_aclarar_qué_aspecto_del_convenio_no_dfa114d3759a.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="text-truncate">despedida_1_32b93d3a6fff.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="text-truncate">un_momento_lo_reviso_f93a9a48335a.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="text-truncate">¿le_gustaría_que_le_envíe_nuestro_catálogo_por_85d6763c5ef5.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="text-truncate">sí,_por_favor,_dígame_el_correo._5333466bee52.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td class="text-truncate">perfecto,_me_gustaría_ofrecerle_nuestro_catálogo_de_productos_d0166e7452bd.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td class="text-truncate">entiendo,_(name)._estoy_contactándolo_para_ofrecerle_una_propuesta_57926669961f.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="text-truncate">entiendo_que_la_situación_puede_ser_complicada._estoy_b25a75daca09.mp3</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="text-truncate">entendido,_gracias_por_su_tiempo._que_tenga_un_39edda554fff.mp3</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>Generado automaticamente - 28/01/2026 19:58:03</p>
+            <p>Bruce W - Sistema de Llamadas Automatizadas</p>
+        </div>
+    </div>
+</body>
+</html>

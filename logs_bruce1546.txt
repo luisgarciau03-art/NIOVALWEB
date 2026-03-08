@@ -1,0 +1,500 @@
+  → Duración: 21
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado obtener un mejor cont...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1550
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA7e7ad6a03bdff1f92b9ab83f9161b673
+   CallStatus: completed
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3c00027eab7b71ad63d1de2542eb8adf'
+   Digits: timeout
+ Resultado guardado exitosamente en fila 3829
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 2057
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.7 - - [27/Jan/2026 22:53:41] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+[2026-01-27 22:53:41] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 24s
+ STATUS CALLBACK - Llamada CA7e7ad6a0...
+   Estado: completed
+   Duración: 24s
+    FIX 207: Llamada registrada en dashboard
+100.64.0.5 - - [27/Jan/2026 22:53:41] "GET /status-callback?Called=%2B524448733323&ToState=Slp.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+27+Jan+2026+22:53:41+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA7e7ad6a03bdff1f92b9ab83f9161b673&To=%2B524448733323&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=San+Luis+Potosi&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=24&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=San+Luis+Potosi&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Slp.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA7e7ad6a03bdff1f92b9ab83f9161b673
+ FIX 212: WebSocket cerrado - CallSid: CA7e7ad6a03bdff1f92b9ab83f9161b673
+100.64.0.4 - - [27/Jan/2026 22:53:41] "GET /media-stream HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:53:43] "GET /logs HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA7e7ad6a03bdff1f92b9ab83f9161b673
+   RecordingSid: REc3fdd5d6edc4c9eb93e839e3cf17661c
+   Status: completed
+   Duración: 21 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REc3fdd5d6edc4c9eb93e839e3cf17661c
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1550
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.10 - - [27/Jan/2026 22:53:45] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=REc3fdd5d6edc4c9eb93e839e3cf17661c&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REc3fdd5d6edc4c9eb93e839e3cf17661c&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA7e7ad6a03bdff1f92b9ab83f9161b673&RecordingStartTime=Tue,+27+Jan+2026+22:53:19+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=21 HTTP/1.1" 200 -
+  Recuperaciones de error:  0
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ Llamada YA terminada - Estado: completed
+ Cliente colgó o llamada desconectada
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 29 segundos
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado obtener un mejor contacto o programar una llamada futura en lugar de dejar la conversación sin información adicional. Esto podría haber aumentado las posibilidades de seguimiento.
+[EMOJI] FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+  → ID BRUCE: BRUCE1550
+
+ Guardando resultado en fila 3830...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: BUZON
+  → Resultado: NEGADO
+  → Estado: Buzon
+  → Duración: 29
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado obtener un mejor cont...
+  → Calificación Bruce: 3/10
+ Resultado guardado exitosamente en fila 3830
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 2057
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.4 - - [27/Jan/2026 22:53:48] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:53:59] "GET /logs HTTP/1.1" 200 -
+100.64.0.5 - - [27/Jan/2026 22:54:01] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.5 - - [27/Jan/2026 22:54:04] "GET /escuchar-grabacion/REc3fdd5d6edc4c9eb93e839e3cf17661c HTTP/1.1" 200 -
+100.64.0.5 - - [27/Jan/2026 22:54:04] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+ FIX 272: 1 calificaciones guardadas
+100.64.0.5 - - [27/Jan/2026 22:54:08] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+100.64.0.5 - - [27/Jan/2026 22:54:09] "GET /historial-llamadas HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +524446812629, Negocio: Comercial Cubílete
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +524446812629
+ DEBUG 5: Llamada Twilio creada - SID: CAb1f30c8ff23dafae9d38ad450d9da848
+[2026-01-27 22:54:12] [LLAMADA] N/A - LLAMADA INICIADA a +524446812629 (Comercial Cubílete)
+ Contacto completo guardado para Call SID CAb1f30c8f... (fila 2058)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.4 - - [27/Jan/2026 22:54:12] "POST /iniciar-llamada HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:54:14] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:54:30] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:54:45] "GET /logs HTTP/1.1" 200 -
+
+ STATUS CALLBACK - Llamada CAb1f30c8f...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-27 22:55:07] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+    Buzón detectado por CallStatus: no-answer (no-answer)
+ Intento de buzón #1 registrado para fila 2058
+    Intento de buzón #1 registrado
+    FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)
+100.64.0.2 - - [27/Jan/2026 22:55:08] "GET /status-callback?Called=%2B524446812629&ToState=Slp.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+27+Jan+2026+22:55:07+%2B0000&CallbackSource=call-progress-events&SipResponseCode=487&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAb1f30c8ff23dafae9d38ad450d9da848&To=%2B524446812629&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=San+Luis+Potosi&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=San+Luis+Potosi&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Slp.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:55:15] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:55:30] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:55:45] "GET /logs HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +524448900056, Negocio: Ferremateriales Progreso
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +524448900056
+ DEBUG 5: Llamada Twilio creada - SID: CA3e5a7c49c9e672c7f010205d99f85adb
+[2026-01-27 22:55:48] [LLAMADA] N/A - LLAMADA INICIADA a +524448900056 (Ferremateriales Progreso)
+ Contacto completo guardado para Call SID CA3e5a7c49... (fila 2060)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.8 - - [27/Jan/2026 22:55:48] "POST /iniciar-llamada HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:56:02] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:56:17] "GET /logs HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1551
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.10 - - [27/Jan/2026 22:56:27] "GET /webhook-voz?Called=%2B524448900056&ToState=Slp.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA3e5a7c49c9e672c7f010205d99f85adb&To=%2B524448900056&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zaragoza&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zaragoza&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Slp.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+100.64.0.5 - - [27/Jan/2026 22:56:28] "GET /audio/inicial_CA3e5a7c49c9e672c7f010205d99f85adb HTTP/1.1" 200 -
+
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: MediaStream conectado
+ FIX 212: MediaStream iniciado
+   StreamSid: MZ21d4a597829caa3e8d22f862da327b5e
+   CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 212: Deepgram conectado para CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 212: Deepgram conectado para CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 212: [PARCIAL] 'Después el tono,'
+ FIX 212: [PARCIAL] 'Después el tono,'
+ FIX 212: [PARCIAL] 'Después el tono,'
+ FIX 212: [PARCIAL] 'Después el tono,'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REa8afe54fd45d0bedd3818810c04ba0c3'
+   Digits: timeout
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a'
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a grabarlo, presione'
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a grabarlo, presione'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a grabarlo, presione el símbolo de'
+ FIX 212: [PARCIAL] 'Después el tono. Si requiere volver a grabarlo, presione el símbolo de'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 214: Grabación fragmento completed - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REa8afe54fd45d0bedd3818810c04ba0c3
+100.64.0.4 - - [27/Jan/2026 22:56:32] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'Después el tono. Si requiere volver a grabarlo, presione el símbolo' (latencia: 16ms)
+ FIX 212: Transcripción FINAL Deepgram para CA3e5a7c49c9e672c7f010205d99f85adb: 'Después el tono. Si requiere volver a grabarlo, presione el símbolo'
+ FIX 212: [PARCIAL] 'de número y es'
+ FIX 212: [PARCIAL] 'de número y es'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+100.64.0.7 - - [27/Jan/2026 22:56:33] "GET /logs HTTP/1.1" 200 -
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'de número y espere indicaciones.'
+ FIX 212: [PARCIAL] 'de número y espere indicaciones.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y es'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'de número y espere indicación.'
+ FIX 212: [PARCIAL] 'de número y espere indicación.'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de número y espere indicación.'
+   Esperando más transcripciones...
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Después el tono. Si requiere volver a grabarlo, presione el símbolo de'
+   [1] 'Después el tono. Si requiere volver a grabarlo, presione el símbolo'
+    FIX 469: Concatenando 1 partes: 'Después el tono. Si requiere volver a grabarlo, presione el símbolo de'
+ FIX 109: Operadora/IVR detectada por contenido del SpeechResult
+   Mensaje: 'Después el tono. Si requiere volver a grabarlo, presione el símbolo de...'
+ Marcando como OPERADORA
+ Estado actualizado: Operadora/IVR detectada
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 9 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 212: [PARCIAL] 'de número y espere indicaciones.'
+ FIX 212: [PARCIAL] 'de número y espere indicaciones.'
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: La llamada no parece haber generado interés por parte del cliente, ya que no se capturaron datos de contacto. Bruce podría haber hecho preguntas más específicas para entender mejor las necesidades del cliente y fomentar una conversación más activa.
+[EMOJI] FIX 177: Conclusión temporal 'OPERADORA' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+ FIX 212: [FINAL] 'de número y espere indicaciones.' (latencia: 17ms)
+ FIX 212: Transcripción FINAL Deepgram para CA3e5a7c49c9e672c7f010205d99f85adb: 'de número y espere indicaciones.'
+
+ Guardando resultado en fila 3831...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Operadora
+  → Duración: 9
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: La llamada no parece haber generado interés por pa...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1551
+ Resultado guardado exitosamente en fila 3831
+[OK] Resultados guardados en 'Bruce FORMS'
+
+   Fila: 2060
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+   WhatsApp capturado: 
+============================================================
+   Referencia capturada: 
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+
+============================================================
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+   Email capturado: 
+
+100.64.0.2 - - [27/Jan/2026 22:56:37] "POST /procesar-respuesta HTTP/1.1" 200 -
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+    FIX 207: Llamada registrada en dashboard
+100.64.0.3 - - [27/Jan/2026 22:56:42] "GET /status-callback?Called=%2B524448900056&ToState=Slp.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+27+Jan+2026+22:56:41+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA3e5a7c49c9e672c7f010205d99f85adb&To=%2B524448900056&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Zaragoza&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=15&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Zaragoza&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Slp.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ FIX 212: MediaStream detenido - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+
+ STATUS CALLBACK - Llamada CA3e5a7c49...
+   Estado: completed
+   Duración: 15s
+[2026-01-27 22:56:42] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 15s
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+ FIX 212: WebSocket cerrado - CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+100.64.0.5 - - [27/Jan/2026 22:56:42] "GET /media-stream HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA3e5a7c49c9e672c7f010205d99f85adb
+   RecordingSid: RE3c5a5b3eba72c2aad44e95cf5147b230
+   Status: completed
+   Duración: 14 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3c5a5b3eba72c2aad44e95cf5147b230
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1551
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.11 - - [27/Jan/2026 22:56:46] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE3c5a5b3eba72c2aad44e95cf5147b230&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE3c5a5b3eba72c2aad44e95cf5147b230&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA3e5a7c49c9e672c7f010205d99f85adb&RecordingStartTime=Tue,+27+Jan+2026+22:56:28+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=14 HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:56:56] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:57:11] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:57:26] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:57:41] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:57:56] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:58:11] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:58:27] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:58:42] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:58:57] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:59:12] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:59:27] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:59:43] "GET /logs HTTP/1.1" 200 -
+100.64.0.9 - - [27/Jan/2026 22:59:56] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 22:59:58] "GET /logs HTTP/1.1" 200 -
+ FIX 272: 1 calificaciones guardadas
+100.64.0.9 - - [27/Jan/2026 23:00:01] "POST /historial-llamadas/guardar HTTP/1.1" 200 -
+100.64.0.9 - - [27/Jan/2026 23:00:03] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:00:13] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:00:28] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:00:43] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:00:58] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:01:14] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:01:29] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:01:44] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:01:59] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:02:14] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:02:30] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:02:45] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:03:00] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:03:15] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:03:30] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:03:46] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:04:01] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:04:16] "GET /logs HTTP/1.1" 200 -
+100.64.0.7 - - [27/Jan/2026 23:04:31] "GET /logs HTTP/1.1" 200 -

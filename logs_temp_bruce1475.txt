@@ -1,0 +1,500 @@
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Rodrigo'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Rodrigo'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Rodrigo'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'Rodrigo Rodrigo'
+   Esperando más transcripciones...
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo punto'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo punto'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba'
+
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Es Rodrigo'
+   [1] 'Rodrigo Rodrigo 0.28 arroba'
+    FIX 469: Concatenando 2 partes: 'Es Rodrigo Rodrigo Rodrigo 0.28 arroba'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Es Rodrigo Rodrigo Rodrigo 0.28 arroba"
+[2026-01-25 16:36:33] [CLIENTE] BRUCE1475 - CLIENTE DIJO: "Es Rodrigo Rodrigo Rodrigo 0.28 arroba"
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+ LOG registrado: CLIENT... | Es Rodrigo Rodrigo Rodrigo 0.28 arroba...
+
+ FIX 265: CLIENTE DELETREANDO EMAIL (incompleto)
+   Transcripción parcial: 'Es Rodrigo Rodrigo Rodrigo 0.28 arroba'
+   tiene_arroba: True, tiene_punto: True, tiene_dominio: False
+    FIX 265: Esperando que termine el email con timeout de 5s...
+100.64.0.6 - - [25/Jan/2026 16:36:34] "POST /procesar-respuesta HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+ FIX 212: [PARCIAL] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE683daf990f36846dbaf91566a45a05e5'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [FINAL] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.' (latencia: 54251ms)
+ FIX 212: Transcripción FINAL Deepgram para CA333cb14088abc880c166dec16aaa1f3d: 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+   [1] 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+    FIX 469: Concatenando 1 partes: 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Rodrigo Rodrigo 0.28 arroba Hotmail punto com."
+[2026-01-25 16:36:40] [CLIENTE] BRUCE1475 - CLIENTE DIJO: "Rodrigo Rodrigo 0.28 arroba Hotmail punto com."
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+
+    FIX 253: Cliente deletreando email (detectado: ['arroba', 'punto', 'hotmail'])
+ LOG registrado: CLIENT... | Rodrigo Rodrigo 0.28 arroba Hotmail punto com....
+    FIX 265: Email parece completo - procesar normalmente
+
+ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'Rodrigo Rodrigo 0.28 arroba Hotmail punto com.'
+   Tiempo hablando: 11.7s
+   Palabras dichas: 7 (historial: 7)
+    FIX 244/395/442: Esperando continuación con timeout de 2.5s...
+100.64.0.7 - - [25/Jan/2026 16:36:41] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE1b861ae0605ef937a96f4dd7a9041566'
+   Digits: timeout
+   Mensaje: 'Disculpa, no te escuché bien, ¿me puedes repetir?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #1
+ Caché AUTO: disculpa,_no_te_escuché_bien,_¿me_puedes... (0s delay)
+ Bruce pidió que le repitan
+ Bruce pidió que le repitan (Record)
+100.64.0.10 - - [25/Jan/2026 16:36:47] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.6 - - [25/Jan/2026 16:36:47] "GET /audio/repeticion_CA333cb14088abc880c166dec16aaa1f3d_1 HTTP/1.1" 200 -
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: ""
+[2026-01-25 16:36:47] [CLIENTE] BRUCE1475 - CLIENTE DIJO: ""
+ Respuesta vacía #1
+ Bruce pedirá que le repitan (intento #1)
+ FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+
+ DEBUG - Parámetros Twilio (POST):
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0aec09a18a83263dd032e2e7d77f9411'
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   Digits: timeout
+   CallStatus: in-progress
+   AnsweredBy: 
+ FIX 212: [PARCIAL] 'Rodrigo punto'
+ FIX 212: [PARCIAL] 'Rodrigo punto'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+[2026-01-25 16:36:55] [CLIENTE] BRUCE1475 - CLIENTE DIJO: "Rodrigo 0.28 arroba Hotmail"
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Rodrigo 0.28 arroba Hotmail'
+    FIX 469: Usando transcripción única: 'Rodrigo 0.28 arroba Hotmail'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Rodrigo 0.28 arroba Hotmail"
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Rodrigo 0.28 arroba Hotmail'
+ FIX 212: [PARCIAL] 'Rodrigo 0.28 arroba Hotmail'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'Rodrigo 0.28 arroba Hotmail punto com.' (latencia: 75130ms)
+ FIX 212: Transcripción FINAL Deepgram para CA333cb14088abc880c166dec16aaa1f3d: 'Rodrigo 0.28 arroba Hotmail punto com.'
+ LOG registrado: CLIENT... | Rodrigo 0.28 arroba Hotmail...
+    FIX 265: Email parece completo - procesar normalmente
+    FIX 253: Cliente deletreando email (detectado: ['arroba', 'hotmail'])
+
+ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'Rodrigo 0.28 arroba Hotmail'
+   Tiempo hablando: 26.9s
+   Palabras dichas: 4 (historial: 7)
+    FIX 244/395/442: Esperando continuación con timeout de 2.5s...
+100.64.0.6 - - [25/Jan/2026 16:36:56] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5b59065149daa88fecdc2e6995e173c1'
+   Digits: timeout
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+ FIX 451: Transcripción FINAL recibida
+
+ FIX 469: Timeout pero hay 1 transcripciones acumuladas
+   [0] 'Rodrigo 0.28 arroba Hotmail punto com.'
+    FIX 469: Usando transcripción única: 'Rodrigo 0.28 arroba Hotmail punto com.'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+    FIX 265: Email parece completo - procesar normalmente
+   Palabras dichas: 6 (historial: 7)
+
+    FIX 253: Cliente deletreando email (detectado: ['arroba', 'punto', 'hotmail'])
+
+    FIX 244/395/442: Esperando continuación con timeout de 2.5s...
+ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+100.64.0.6 - - [25/Jan/2026 16:37:02] "POST /procesar-respuesta HTTP/1.1" 200 -
+   Transcripción parcial: 'Rodrigo 0.28 arroba Hotmail punto com.'
+   Tiempo hablando: 33.6s
+ CLIENTE DIJO: "Rodrigo 0.28 arroba Hotmail punto com."
+[2026-01-25 16:37:02] [CLIENTE] BRUCE1475 - CLIENTE DIJO: "Rodrigo 0.28 arroba Hotmail punto com."
+ LOG registrado: CLIENT... | Rodrigo 0.28 arroba Hotmail punto com....
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE91e836849e2207dff03fb7ef410d2c15'
+   Digits: timeout
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: ""
+[2026-01-25 16:37:09] [CLIENTE] BRUCE1475 - CLIENTE DIJO: ""
+ Caché AUTO: perdón,_no_logré_escucharte,_¿me_lo_repi... (0s delay)
+ Respuesta vacía #2
+ Bruce pidió que le repitan
+ Bruce pedirá que le repitan (intento #2)
+ FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+ Bruce pidió que le repitan (Record)
+   Mensaje: 'Perdón, no logré escucharte, ¿me lo repites por favor?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #2
+100.64.0.2 - - [25/Jan/2026 16:37:09] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.9 - - [25/Jan/2026 16:37:09] "GET /audio/repeticion_CA333cb14088abc880c166dec16aaa1f3d_2 HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE6705669ded3270e00dbf53eeaee27db7'
+   Digits: timeout
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: ""
+[2026-01-25 16:37:17] [CLIENTE] BRUCE1475 - CLIENTE DIJO: ""
+ Respuesta vacía #3
+ Detectadas 3 respuestas vacías consecutivas
+ Cliente probablemente colgó o no responde
+ Estado actualizado: Cliente colgó (3 silencios, sin datos)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 98 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+  Interrupciones evitadas:  0
+INTERACCIONES:
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3691...
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Medio
+   Opinión de Bruce: Bruce podría haber mostrado más empatía al reconocer que el encargado no estaba disponible. Además, podría haber intentado obtener más información sobre las necesidades del cliente para aumentar el interés en los productos ofrecidos.
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 98
+  → Nivel de interés: Medio
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mostrado más empatía al reconoc...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1475
+ Resultado guardado exitosamente en fila 3691
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1756
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.6 - - [25/Jan/2026 16:37:20] "POST /procesar-respuesta HTTP/1.1" 200 -
+ FIX 212: MediaStream detenido - CallSid: CA333cb14088abc880c166dec16aaa1f3d
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   Digits: timeout
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE6705669ded3270e00dbf53eeaee27db7'
+ STATUS CALLBACK - Llamada CA333cb140...
+   Estado: completed
+   Duración: 102s
+[2026-01-25 16:37:20] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 102s
+    FIX 207: Llamada registrada en dashboard
+100.64.0.4 - - [25/Jan/2026 16:37:20] "GET /status-callback?Called=%2B526623531804&ToState=Son.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sun,+25+Jan+2026+16:37:20+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA333cb14088abc880c166dec16aaa1f3d&To=%2B526623531804&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Hermosillo&CallStatus=completed&Duration=2&From=%2B523321014486&CallDuration=102&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Hermosillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Son.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA333cb14088abc880c166dec16aaa1f3d
+ FIX 212: WebSocket cerrado - CallSid: CA333cb14088abc880c166dec16aaa1f3d
+100.64.0.5 - - [25/Jan/2026 16:37:21] "GET /media-stream HTTP/1.1" 200 -
+100.64.0.4 - - [25/Jan/2026 16:37:25] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE90269f690239bdc362edef6d9e1e980b&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE90269f690239bdc362edef6d9e1e980b&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA333cb14088abc880c166dec16aaa1f3d&RecordingStartTime=Sun,+25+Jan+2026+16:35:41+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=91 HTTP/1.1" 200 -
+    FIX 272: Historial actualizado con URL de grabación
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA333cb14088abc880c166dec16aaa1f3d
+   RecordingSid: RE90269f690239bdc362edef6d9e1e980b
+   Status: completed
+   Duración: 91 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE90269f690239bdc362edef6d9e1e980b
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1475
+INTERACCIONES:
+============================================================
+  Interrupciones evitadas:  0
+  Transcripciones correctas: 0/0 (0.0%)
+
+
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: ""
+[2026-01-25 16:37:25] [CLIENTE] BRUCE1475 - CLIENTE DIJO: ""
+ Respuesta vacía #4
+ Detectadas 3 respuestas vacías consecutivas
+ Cliente probablemente colgó o no responde
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 106 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+   Opinión de Bruce: Bruce podría haber intentado establecer una conexión más personal o preguntar sobre las necesidades específicas del cliente antes de solicitar el contacto del encargado. Esto podría haber aumentado el interés del cliente en la conversación.
+[EMOJI] FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Medio
+
+ Guardando resultado en fila 3692...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 106
+  → Nivel de interés: Medio
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado establecer una conexi...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1475
+ Resultado guardado exitosamente en fila 3692
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+
+   Fila: 1756
+100.64.0.11 - - [25/Jan/2026 16:37:28] "POST /procesar-respuesta HTTP/1.1" 200 -
+   WhatsApp capturado: 
+100.64.0.3 - - [25/Jan/2026 16:37:30] "GET /diagnostico-persistencia HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:37:30] "GET /logs HTTP/1.1" 200 -
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+============================================================
+100.64.0.3 - - [25/Jan/2026 16:37:32] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:37:33] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:37:33] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:37:34] "GET /historial-llamadas HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:37:45] "GET /logs HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:38:01] "GET /logs HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:38:16] "GET /logs HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:38:31] "GET /logs HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:38:46] "GET /logs HTTP/1.1" 200 -
+100.64.0.3 - - [25/Jan/2026 16:39:01] "GET /logs HTTP/1.1" 200 -

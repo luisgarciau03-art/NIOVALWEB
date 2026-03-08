@@ -1,0 +1,500 @@
+📝 FIX 212: [PARCIAL] 'No, ahí, pues, a lo mejor viene más tarde,'
+🎵 Primer chunk en 2.97s
+✅ Audio en 2.98s (86 chunks, eleven_multilingual_v2)
+🔍 FIX 102 DEBUG: result = respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_7, type = <class 'str'>
+🤖 BRUCE DICE: "Entiendo que no tiene el número. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise cuando tenga tiempo?"
+📝 FIX 212: [FINAL] 'No, ahí, pues, a lo mejor viene más tarde.' (latencia: 28630ms)
+[2026-01-24 18:41:13] [BRUCE] BRUCE1433 DICE: "Entiendo que no tiene el número. ¿Le gustaría que le envíe el catálogo por WhatsApp para que lo revise cuando tenga tiempo?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'No, ahí, pues, a lo mejor viene más tarde.'
+📝 LOG registrado: BRUCE... | Entiendo que no tiene el número. ¿Le gustaría que ...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #4)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['No, ahí, pues, a lo mejor viene más tarde,', 'No, ahí, pues, a lo mejor viene más tarde.']
+100.64.0.9 - - [24/Jan/2026 18:41:14] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.7 - - [24/Jan/2026 18:41:14] "GET /audio_cache/pensando_3 HTTP/1.1" 200 -
+100.64.0.4 - - [24/Jan/2026 18:41:15] "GET /audio/respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_7 HTTP/1.1" 200 -
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REd24b4e43d9e7d433ea3e36af0485a76a'
+   Digits: timeout
+📝 FIX 212: [PARCIAL] 'Pues ahí mejor cuando'
+📝 FIX 212: [PARCIAL] 'Pues ahí mejor cuando'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga,'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+   Esperando más transcripciones...
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+✅ FIX 451: Transcripción FINAL recibida
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+📝 FIX 212: [FINAL] 'Porque' (latencia: 39942ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'Porque'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga,'
+   Esperando más transcripciones...
+✅ FIX 451: Transcripción FINAL recibida
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga,'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga,'
+⚠️ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'ahí mejor cuando venga el el dueño, oiga,'
+   Esperando más transcripciones...
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga,'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga,'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega."
+[2026-01-24 18:41:27] [CLIENTE] BRUCE1433 - CLIENTE DIJO: "Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega."
+   ✅ FIX 469: Concatenando 2 partes: 'Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+   ⚠️ FIX 465: Frase termina en COMA - cliente sigue hablando
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+   ✅ FIX 465: Nueva transcripción más larga recibida
+
+⚠️ FIX 469: Timeout pero hay 2 transcripciones acumuladas
+   [0] 'Pues ahí mejor cuando'
+   [1] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 LOG registrado: CLIENT... | Pues ahí mejor cuando ahí mejor cuando venga el el...
+🔍 FIX 121 DEBUG: len(conversation_history)=8, mensajes_usuario=3, es_primera_respuesta=False
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega'
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+   ASSISTANT: Entiendo que no tiene el número. ¿Le gustaría que le envíe e...
+   USER: Pues ahí mejor cuando ahí mejor cuando venga el el dueño, oi...
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'ues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+
+🔢 FIX 245 DEBUG: Cliente dio número con 0 dígitos
+   Dígitos extraídos: 
+   Mensaje completo: "pues ahí mejor cuando ahí mejor cuando venga el el dueño, oiga, al al rato llega..."
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (20 palabras)
+📦 Caché AUTO: entiendo_que_está_ocupado._¿le_gustaría_... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_8, type = <class 'str'>
+🤖 BRUCE DICE: "Entiendo que está ocupado. ¿Le gustaría que le envíe el catálogo por WhatsApp o correo para revisarlo cuando tenga tiempo?"
+[2026-01-24 18:41:28] [BRUCE] BRUCE1433 DICE: "Entiendo que está ocupado. ¿Le gustaría que le envíe el catálogo por WhatsApp o correo para revisarlo cuando tenga tiempo?"
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 FIX 212: [FINAL] 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.' (latencia: 43853ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.'
+📝 FIX 212: [PARCIAL] 'Ahí habla'
+📝 LOG registrado: BRUCE... | Entiendo que está ocupado. ¿Le gustaría que le env...
+🎯 FIX 214: Usando Record + Deepgram (mensaje #5)
+🧹 FIX 455: Limpiando 2 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['ahí mejor cuando venga el el dueño, oiga, al al rato llega.', 'ahí mejor cuando venga el el dueño, oiga, al al rato llega.']
+100.64.0.7 - - [24/Jan/2026 18:41:28] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.8 - - [24/Jan/2026 18:41:28] "GET /audio/respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_8 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Ahí habla usted.'
+📝 FIX 212: [PARCIAL] 'Ahí habla usted.'
+📝 FIX 212: [PARCIAL] 'Ahí habla usted.'
+📝 FIX 212: [PARCIAL] 'Ahí habla usted.'
+📝 FIX 212: [PARCIAL] 'Ahí habla usted con Se'
+📝 FIX 212: [PARCIAL] 'Ahí habla usted con Se'
+📝 FIX 212: [FINAL] 'Ahí habla usted con Sí.' (latencia: 46624ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'Ahí habla usted con Sí.'
+📝 FIX 212: [PARCIAL] 'Bueno,'
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5ae5eddd529354e4a24cdc4373cdb0cb'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+📝 FIX 212: [PARCIAL] 'Bueno, sí, puede sí.'
+📝 FIX 212: [PARCIAL] 'Bueno, sí, puede sí.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.65s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.70s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.75s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.80s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.85s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.90s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.95s/1.0s)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'Bueno, si puede, sí.'
+   [0] 'Ahí habla usted con Se'
+💬 CLIENTE DIJO: "Ahí habla usted con Se Ahí habla usted con Sí."
+   [1] 'Ahí habla usted con Sí.'
+[2026-01-24 18:41:36] [CLIENTE] BRUCE1433 - CLIENTE DIJO: "Ahí habla usted con Se Ahí habla usted con Sí."
+   🧹 FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+   🔄 FIX 248: Concatenando 2 partes únicas: 'Ahí habla usted con Se Ahí habla usted con Sí.'
+📝 FIX 212: [FINAL] 'Bueno, si puede, sí.' (latencia: 52087ms)
+
+   🟢 Deepgram: 'Ahí habla usted con Se Ahí habla usted con Sí.'
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (1.00s/1.0s)
+⚠️ FIX 451: Usando transcripción PARCIAL después de esperar 1.0s por FINAL
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+🚀 FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+🚨 FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+🚀 FIX 121: INICIANDO respuesta desde caché de segunda parte...
+⚠️ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Ahí habla usted con Se Ahí habla usted con Sí.' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+
+🙂 FIX 386: Sentimiento detectado
+   Emoción: INTERES
+   Score: 0.60
+   Clasificación: positivo
+🔍 FIX 81 DEBUG: Verificando objeciones en: 'Ahí habla usted con Se Ahí habla usted con Sí.'
+📝 LOG registrado: CLIENT... | Ahí habla usted con Se Ahí habla usted con Sí....
+🔍 FIX 121 DEBUG: len(conversation_history)=10, mensajes_usuario=4, es_primera_respuesta=False
+✅ FIX 201: Se activó la segunda parte del saludo. No se repetirá.
+
+📝 FIX 68: Últimos 2 mensajes en historial:
+✅ FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+   ASSISTANT: Entiendo que está ocupado. ¿Le gustaría que le envíe el catá...
+   USER: Ahí habla usted con Se Ahí habla usted con Sí.
+✅ FIX 226-394: Filtro post-GPT aplicado exitosamente
+🎵 FIX 98: Generando audio con ElevenLabs VOZ BRUCE (7 palabras)
+📦 Caché AUTO: sí,_lo_escucho._adelante_con_el_dato.... (0s delay)
+🔍 FIX 102 DEBUG: result = respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_9, type = <class 'str'>
+🤖 BRUCE DICE: "Sí, lo escucho. Adelante con el dato."
+⏭️  FIX 418: Saltando FIX 384 - Estado crítico: encargado_no_esta
+   GPT debe manejar con contexto de estado
+   Cliente dijo: 'el dueño, oiga, al al rato llega. ahí habla usted con se ahí habla usted con sí.'
+
+🚫 FIX 263B/280: FILTRO ACTIVADO - Bruce repitiendo pregunta
+   Patrón repetido: 'por\s+whatsapp\s+o\s+correo'
+   Bruce iba a decir: "Perfecto. ¿Le gustaría recibir el catálogo por WhatsApp o correo electrónico?..."
+   ⚠️ FIX 430: NO tengo contacto capturado - NO decir 'ya lo tengo'
+   Respuesta corregida: "Sí, lo escucho. Adelante con el dato."
+
+✋ FIX 398: Frase ambigua detectada - NO es confirmación
+   Frase: 'ahí habla usted con se ahí habla usted con sí.'
+
+[2026-01-24 18:41:38] [BRUCE] BRUCE1433 DICE: "Sí, lo escucho. Adelante con el dato."
+🎵 FIX 97: Audio ElevenLabs (generado en paralelo)
+📝 LOG registrado: BRUCE... | Sí, lo escucho. Adelante con el dato....
+🎯 FIX 214: Usando Record + Deepgram (mensaje #6)
+🧹 FIX 455: Limpiando 1 transcripciones acumuladas ANTES de enviar audio
+   Contenido descartado: ['Bueno, si puede, sí.']
+100.64.0.2 - - [24/Jan/2026 18:41:38] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.3 - - [24/Jan/2026 18:41:38] "GET /audio/respuesta_CAb727c433fde0d4661b25ff3eda6e9f39_9 HTTP/1.1" 200 -
+📝 FIX 212: [PARCIAL] 'Sí, está bien.'
+📝 FIX 212: [PARCIAL] 'Sí, está bien.'
+   AnsweredBy: 
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   SpeechResult: ''
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   CallStatus: in-progress
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/REedd4c8b2d312e0b4c1f284285489a680'
+   Digits: timeout
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.50s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.55s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/1.0s)
+📝 FIX 212: [FINAL] 'Sí, está bien.' (latencia: 57444ms)
+📝 FIX 212: Transcripción FINAL Deepgram para CAb727c433fde0d4661b25ff3eda6e9f39: 'Sí, está bien.'
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.35s/1.0s)
+✅ FIX 451: Transcripción FINAL recibida
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.60s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.40s/1.0s)
+⏳ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.45s/1.0s)
+✅ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+⚠️ FIX 239/242/248: 2 transcripciones acumuladas
+   [0] 'Sí, está bien.'
+   [1] 'Sí, está bien.'
+   🧹 FIX 248: Después de eliminar duplicados: 1 transcripciones únicas
+   ✅ FIX 248: Una sola transcripción única: 'Sí, está bien.'
+
+🎙️ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 1.0s)
+   🟢 Deepgram: 'Sí, está bien.'
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+💬 CLIENTE DIJO: "Sí, está bien."
+[2026-01-24 18:41:42] [CLIENTE] BRUCE1433 - CLIENTE DIJO: "Sí, está bien."
+📝 LOG registrado: CLIENT... | Sí, está bien....
+   🚨 FIX 244: Habló rápido (1.7s) - probablemente sigue hablando
+
+⏸️ FIX 244: CLIENTE HABLANDO PAUSADAMENTE - esperando que termine
+   Transcripción parcial: 'Sí, está bien.'
+   Tiempo hablando: 1.7s
+   Palabras dichas: 3 (historial: 3)
+   ✅ FIX 244/395/442: Esperando continuación con timeout de 1.5s...
+100.64.0.5 - - [24/Jan/2026 18:41:42] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5166d953154d39055bd7a262dddb054f'
+   Digits: timeout
+⏹️ FIX 212: MediaStream detenido - CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+🔴 FIX 212: Conexión Deepgram cerrada - CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+
+🔍 DEBUG - Parámetros Twilio (POST):
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   CallStatus: completed
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5166d953154d39055bd7a262dddb054f'
+   Digits: timeout
+100.64.0.10 - - [24/Jan/2026 18:41:46] "GET /media-stream HTTP/1.1" 200 -
+✅ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+🔌 FIX 212: WebSocket cerrado - CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+
+📞 STATUS CALLBACK - Llamada CAb727c433...
+   Estado: completed
+   Duración: 63s
+[2026-01-24 18:41:46] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 63s
+   💬 Cliente colgó - detectado por status callback (12 mensajes)
+   📝 Clasificado como 'Colgó' (sin datos capturados)
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 63 segundos
+📝 Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+📝 Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+📝 Pregunta 5 inferida: No (Bruce) - rechazó muestra
+📝 Pregunta 6 inferida: No (Bruce) - rechazó fecha
+
+📊 Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber intentado establecer una mejor conexión con el cliente al hacer preguntas más abiertas sobre sus necesidades. Además, ofrecer un seguimiento más claro podría haber mantenido el interés del cliente.
+📝 FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+⭐ Bruce se autoevaluó: 3/10
+
+📝 Guardando resultado en fila 3624...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 63
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber intentado establecer una mejor ...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1433
+✅ Resultado guardado exitosamente en fila 3624
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1803
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+   ✅ Llamada guardada desde status callback
+   📊 FIX 207: Llamada registrada en dashboard
+100.64.0.8 - - [24/Jan/2026 18:41:48] "GET /status-callback?Called=%2B526184559004&ToState=Dgo.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+18:41:46+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAb727c433fde0d4661b25ff3eda6e9f39&To=%2B526184559004&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Durango&CallStatus=completed&Duration=2&From=%2B523321014486&CallDuration=63&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Durango&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Dgo.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+✅ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+💬 CLIENTE DIJO: ""
+
+[2026-01-24 18:41:48] [CLIENTE] BRUCE1433 - CLIENTE DIJO: ""
+⚠️ Respuesta vacía #1
+🎙️ Bruce pedirá que le repitan (intento #1)
+🚨 FIX 152: REPRODUCIENDO MENSAJE DE REPETICIÓN
+   Mensaje: 'Disculpa, no te escuché bien, ¿me puedes repetir?'
+   Razón: Timeout expiró sin respuesta del cliente
+   Intento: #1
+📦 Caché AUTO: disculpa,_no_te_escuché_bien,_¿me_puedes... (0s delay)
+✅ Bruce pidió que le repitan
+✅ Bruce pidió que le repitan (Record)
+100.64.0.4 - - [24/Jan/2026 18:41:48] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+🎬 FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CAb727c433fde0d4661b25ff3eda6e9f39
+   RecordingSid: RE59be00139188d2dd3dac4a7beaef4254
+   Status: completed
+   Duración: 60 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE59be00139188d2dd3dac4a7beaef4254
+   ✅ URL guardada en lead_data del agente
+   ✅ FIX 272: Grabación asociada a BRUCE1433
+   ✅ FIX 272: Historial actualizado con URL de grabación
+100.64.0.7 - - [24/Jan/2026 18:41:50] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE59be00139188d2dd3dac4a7beaef4254&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE59be00139188d2dd3dac4a7beaef4254&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CAb727c433fde0d4661b25ff3eda6e9f39&RecordingStartTime=Sat,+24+Jan+2026+18:40:45+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=60 HTTP/1.1" 200 -
+⚠️ FIX 401: Deepgram no respondió en 5.0s
+   ❌ Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+📞 Llamada YA terminada - Estado: completed
+💬 Cliente colgó o llamada desconectada
+📊 Guardando resultados en 'Respuestas de formulario 1'...
+⏱️ Duración de la llamada: 67 segundos
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber mostrado más empatía y adaptarse mejor a la situación del cliente. Ofrecer una opción más clara para el seguimiento podría haber aumentado el interés del cliente.
+📝 FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+📝 Conclusión determinada: Nulo (NEGADO)
+  → Pregunta 5: No (Bruce)
+⭐ Bruce se autoevaluó: 3/10
+
+  → Pregunta 6: No (Bruce)
+📝 Guardando resultado en fila 3625...
+
+  → Pregunta 3: No (Bruce)
+  → Columna J: No apto
+📊 Análisis de la llamada:
+  → Pregunta 4: No (Bruce)
+  → Resultado: NEGADO
+  → Estado: Colgo
+   Estado de ánimo: Neutral
+  → Duración: 67
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mostrado más empatía y adaptars...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1433
+✅ Resultado guardado exitosamente en fila 3625
+✅ Resultados guardados en 'Respuestas de formulario 1'
+
+============================================================
+📋 ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+📝 Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1803
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+⚠️ No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+✅ GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.5 - - [24/Jan/2026 18:41:52] "POST /procesar-respuesta HTTP/1.1" 200 -
+🔍 DEBUG 2: JSON parseado correctamente
+🔍 DEBUG 3: Datos extraídos - Tel: +526188184960, Negocio: FERRETERÍA Y MATERIALES HERMANOS AYALA
+🚫 FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+🔍 DEBUG 4: Iniciando llamada Twilio a +526188184960
+🔍 DEBUG 5: Llamada Twilio creada - SID: CAe6ed8e265269b6964213cd3f050a546f
+[2026-01-24 18:42:18] [LLAMADA] N/A - LLAMADA INICIADA a +526188184960 (FERRETERÍA Y MATERIALES HERMANOS AYALA)
+📋 Contacto completo guardado para Call SID CAe6ed8e26... (fila 1804)
+🔍 DEBUG 6: Retornando respuesta exitosa
+100.64.0.6 - - [24/Jan/2026 18:42:18] "POST /iniciar-llamada HTTP/1.1" 200 -
+📞 Intento de buzón #1 registrado para fila 1804
+   📞 Intento de buzón #1 registrado
+   🚫 FIX 179: Primer intento de buzón pero reintentos DESHABILITADOS (llamadas masivas)
+100.64.0.11 - - [24/Jan/2026 18:43:13] "GET /status-callback?Called=%2B526188184960&ToState=Dgo.&CallerCountry=MX&Direction=outbound-api&Timestamp=Sat,+24+Jan+2026+18:43:13+%2B0000&CallbackSource=call-progress-events&SipResponseCode=487&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CAe6ed8e265269b6964213cd3f050a546f&To=%2B526188184960&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Durango&CallStatus=no-answer&Duration=0&From=%2B523321014486&CallDuration=0&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Durango&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Dgo.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+📞 STATUS CALLBACK - Llamada CAe6ed8e26...
+   Estado: no-answer
+   Duración: 0s
+[2026-01-24 18:43:13] [LLAMADA] LLAMADA TERMINADA - Estado: no-answer, Duración: 0s
+   📞 Buzón detectado por CallStatus: no-answer (no-answer)

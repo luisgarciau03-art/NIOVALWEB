@@ -1,0 +1,17 @@
+🆔 ID BRUCE generado: BRUCE1227
+[2026-01-22 19:23:20] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Bueno, buenos días."
+[2026-01-22 19:23:21] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Bueno, buenas tardes. Dígame."
+[2026-01-22 19:23:23] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Bueno, buenas tardes. Dígame."
+[2026-01-22 19:23:23] [BRUCE] BRUCE1227 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-22 19:23:32] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Bueno, buenas tardes. Dígame."
+[2026-01-22 19:23:34] [BRUCE] BRUCE1227 DICE: "Perfecto. ¿Hay algo más en lo que le pueda ayudar?"
+[2026-01-22 19:23:38] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "No, no está en el trabajo. No, no están cerrados."
+[2026-01-22 19:23:40] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "No, muchas gracias."
+[2026-01-22 19:23:41] [BRUCE] BRUCE1227 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[2026-01-22 19:23:48] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "No, muchas gracias."
+[2026-01-22 19:23:49] [BRUCE] BRUCE1227 DICE: "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico para que lo revise cuando tenga oportunidad?"
+[2026-01-22 19:23:54] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Por el momento, está fuera de servicio."
+[2026-01-22 19:23:55] [BRUCE] BRUCE1227 DICE: "Disculpe las molestias, parece que hay un error con el número. Que tenga buen día."
+[2026-01-22 19:24:00] [CLIENTE] BRUCE1227 - CLIENTE DIJO: "Ah, sí, está bien, muchísimas gracias."
+[2026-01-22 19:24:00] [BRUCE] BRUCE1227 DICE: "Disculpe las molestias, parece que hay un error con el número. Que tenga buen día."
+   ✅ FIX 272: Grabación asociada a BRUCE1227

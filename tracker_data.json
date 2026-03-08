@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2026-02-11T23:59:00",
+    "total_bugs_base": 60,
+    "total_bugs_current": 48,
+    "total_deploys": 4,
+    "total_tests": 322
+  },
+  "deploys": [
+    {
+      "fix": "FIX 672",
+      "date": "2026-02-11",
+      "commit": "c11ee35",
+      "bug_type": "PREGUNTA_REPETIDA",
+      "bugs_eliminated": 5,
+      "bug_ids": ["BRUCE2143", "BRUCE2142", "BRUCE2138", "BRUCE2128", "BRUCE2114"],
+      "impact_percent": 8.3,
+      "tests": 322,
+      "tests_added": 17,
+      "notes": "Threshold desalineado: >= 3 → >= 2. Bug detector marca con 2 preguntas, FIX 493 bloqueaba 3ra pregunta.",
+      "status": "deployed",
+      "frequency_history": {
+        "2026-02-11": 5,
+        "total": 5
+      }
+    },
+    {
+      "fix": "FIX 671",
+      "date": "2026-02-11",
+      "commit": "5c4391f",
+      "bug_type": "CATALOGO_REPETIDO",
+      "bugs_eliminated": 6,
+      "bug_ids": ["BRUCE2157", "BRUCE2143", "BRUCE2142", "BRUCE2135", "BRUCE2128", "BRUCE2118"],
+      "impact_percent": 10.0,
+      "tests": 305,
+      "tests_added": 15,
+      "notes": "Threshold desalineado: >= 2 → >= 1. Bug detector marca con 2 ofertas, FIX 659 bloqueaba 3ra oferta.",
+      "status": "deployed",
+      "frequency_history": {
+        "2026-02-11": 6,
+        "total": 6
+      }
+    },
+    {
+      "fix": "FIX 670",
+      "date": "2026-02-11",
+      "commit": "137bb9f",
+      "bug_type": "CLIENTE_HABLA_ULTIMO",
+      "bugs_eliminated": 1,
+      "bug_ids": ["BRUCE2173"],
+      "impact_percent": 1.7,
+      "tests": 290,
+      "tests_added": 10,
+      "notes": "Números dictados en palabras no detectados. FIX 512 solo detecta dígitos numéricos.",
+      "status": "deployed",
+      "frequency_history": {
+        "2026-02-11": 1,
+        "total": 1
+      }
+    },
+    {
+      "fix": "FIX 667-669",
+      "date": "2026-02-11",
+      "commit": "1e77851",
+      "bug_type": "GPT_LOGICA_ROTA",
+      "bugs_eliminated": 3,
+      "bug_ids": ["BRUCE2171", "BRUCE2173", "BRUCE2163"],
+      "impact_percent": 5.0,
+      "tests": 280,
+      "tests_added": 25,
+      "notes": "Post-filters anti-repetición GPT. Arquitectura dual: System prompt + post-filters forzosos.",
+      "status": "deployed",
+      "frequency_history": {
+        "2026-02-11": 3,
+        "total": 3
+      }
+    }
+  ],
+  "pending_bugs": [
+    {
+      "bug_type": "PITCH_REPETIDO",
+      "count": 2,
+      "bug_ids": ["BRUCE2182", "BRUCE2118"],
+      "impact_percent": 3.3,
+      "status": "pending_analysis",
+      "notes": "En evaluación - esperar 24-48h post-FIX 670-672",
+      "frequency_history": {
+        "2026-02-11": 2,
+        "total": 2
+      }
+    },
+    {
+      "bug_type": "GPT_FUERA_DE_TEMA",
+      "count": 5,
+      "bug_ids": [],
+      "impact_percent": 8.3,
+      "status": "needs_logs",
+      "notes": "4 MANEJO_CONFUSION + 1 OTROS. Necesitan logs específicos para análisis.",
+      "frequency_history": {
+        "2026-02-11": 5,
+        "total": 5
+      }
+    },
+    {
+      "bug_type": "GPT_LOGICA_ROTA",
+      "count": 21,
+      "bug_ids": [],
+      "impact_percent": 35.0,
+      "status": "monitoring",
+      "notes": "Mayoría pre-FIX 667-669. Esperamos reducción de 35% → <5% post-deploy.",
+      "frequency_history": {
+        "2026-02-11": 21,
+        "total": 21
+      }
+    }
+  ],
+  "bug_frequency": {
+    "PREGUNTA_REPETIDA": {
+      "total_occurrences": 5,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "fixed_672",
+      "history": [
+        {"date": "2026-02-11", "count": 5}
+      ]
+    },
+    "CATALOGO_REPETIDO": {
+      "total_occurrences": 6,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "fixed_671",
+      "history": [
+        {"date": "2026-02-11", "count": 6}
+      ]
+    },
+    "CLIENTE_HABLA_ULTIMO": {
+      "total_occurrences": 8,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "partial_fix_670",
+      "history": [
+        {"date": "2026-02-11", "count": 8}
+      ]
+    },
+    "GPT_LOGICA_ROTA": {
+      "total_occurrences": 21,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "partial_fix_667_669",
+      "history": [
+        {"date": "2026-02-11", "count": 21}
+      ]
+    },
+    "PITCH_REPETIDO": {
+      "total_occurrences": 2,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "pending_fix_673",
+      "history": [
+        {"date": "2026-02-11", "count": 2}
+      ]
+    },
+    "GPT_FUERA_DE_TEMA": {
+      "total_occurrences": 10,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "partial_fix_650_651",
+      "history": [
+        {"date": "2026-02-11", "count": 10}
+      ]
+    },
+    "BRUCE_MUDO": {
+      "total_occurrences": 3,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "infrastructure",
+      "history": [
+        {"date": "2026-02-11", "count": 3}
+      ]
+    },
+    "GPT_TONO_INADECUADO": {
+      "total_occurrences": 3,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "partial_fix_651",
+      "history": [
+        {"date": "2026-02-11", "count": 3}
+      ]
+    },
+    "GPT_OPORTUNIDAD_PERDIDA": {
+      "total_occurrences": 2,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "partial_fix_652",
+      "history": [
+        {"date": "2026-02-11", "count": 2}
+      ]
+    },
+    "GPT_RESPUESTA_INCORRECTA": {
+      "total_occurrences": 1,
+      "last_seen": "2026-02-11",
+      "first_seen": "2026-02-11",
+      "status": "fixed_653",
+      "history": [
+        {"date": "2026-02-11", "count": 1}
+      ]
+    }
+  }
+}

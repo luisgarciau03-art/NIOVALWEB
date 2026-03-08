@@ -1,0 +1,8 @@
+error: unexpected argument '--limit' found
+
+  tip: to pass '--limit' as a value, use '-- --limit'
+
+Usage: railway.exe logs --service <SERVICE> [DEPLOYMENT_ID]
+
+For more information, try '--help'.
+

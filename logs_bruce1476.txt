@@ -1,0 +1,8 @@
+{"level":"info","message":" ID BRUCE generado: BRUCE1476","timestamp":"2026-01-25T16:52:32.199071185Z"}
+{"timestamp":"2026-01-25T16:52:36.551267126Z","message":"[2026-01-25 16:52:32] [CLIENTE] BRUCE1476 - CLIENTE DIJO: \"Hola, buen día. Dígame.\"","level":"info"}
+{"timestamp":"2026-01-25T16:52:40.510250680Z","message":"[2026-01-25 16:52:40] [BRUCE] BRUCE1476 DICE: \"Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?\"","level":"info"}
+{"message":"[2026-01-25 16:52:56] [CLIENTE] BRUCE1476 - CLIENTE DIJO: \"No está, llega más tarde.\"","timestamp":"2026-01-25T16:52:58.109446620Z","level":"info"}
+{"message":"[2026-01-25 16:52:59] [BRUCE] BRUCE1476 DICE: \"Entiendo. ¿Me podría proporcionar el WhatsApp del encargado para enviarle el catálogo?\"","timestamp":"2026-01-25T16:53:00.107180557Z","level":"info"}
+{"level":"info","message":"[2026-01-25 16:53:12] [CLIENTE] BRUCE1476 - CLIENTE DIJO: \"Entonces, ¿puedo pasar Te puedo pasar el correo.\"","timestamp":"2026-01-25T16:53:13.817143212Z"}
+{"message":"[2026-01-25 16:53:27] [CLIENTE] BRUCE1476 - CLIENTE DIJO: \"\"","timestamp":"2026-01-25T16:53:28.127661947Z","level":"info"}
+{"timestamp":"2026-01-25T16:53:34.477356715Z","level":"info","message":"[2026-01-25 16:53:33] [CLIENTE] BRUCE1476 - CLIENTE DIJO: \"Por correo, por correo.\""}

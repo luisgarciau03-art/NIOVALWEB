@@ -1,0 +1,1368 @@
+================================================================================
+RAILWAY DEPLOYMENT LOGS - Audit Post Modular
+Deployment ID: 1c562e6c-7d3b-48d8-b9d5-f5231066ee30
+Status: SUCCESS
+Created: 2026-02-06T01:24:13.651Z
+Updated: 2026-02-06T01:31:01.049Z
+Total log entries: 1359
+================================================================================
+
+[2026-02-06T01:26:28.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:27:00.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:27:33.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:28:07.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:28:46.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:29:33.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:30:36.000000000Z] [info] Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/2b50866a-ab31-4f96-ac15-399c2ebff251/vol_l0g5e90oxfl2oi40
+[2026-02-06T01:30:59.000000000Z] [info] Starting Container
+[2026-02-06T01:31:05.205432794Z] [info] [MODO] OpenAI Directo (Produccion)
+[2026-02-06T01:31:05.205445771Z] [info]  FIX 212: Flask-Sock inicializado para WebSocket
+[2026-02-06T01:31:05.205454619Z] [info]  FIX 212: deepgram-sdk importado correctamente
+[2026-02-06T01:31:05.205461862Z] [info] 
+[2026-02-06T01:31:05.205469314Z] [info]  FIX 212: Inicializando mÃ³dulo Deepgram...
+[2026-02-06T01:31:05.205475665Z] [info]  FIX 212: Deepgram configurado correctamente
+[2026-02-06T01:31:05.205482592Z] [info]    API Key: 2a3f666dd2...1848
+[2026-02-06T01:31:05.205489698Z] [info]  FIX 212: Deepgram configurado correctamente
+[2026-02-06T01:31:05.205495831Z] [info]    API Key: 2a3f666dd2...1848
+[2026-02-06T01:31:05.205503887Z] [info]  FIX 212: Deepgram configurado y listo
+[2026-02-06T01:31:05.205510048Z] [info]  FIX 540: ElevenLabs Scribe configurado y listo
+[2026-02-06T01:31:05.205516473Z] [info]    API Key: sk_f425418...3093
+[2026-02-06T01:31:05.205523259Z] [info] 
+[2026-02-06T01:31:05.205529869Z] [info]  FIX 540: Inicializando mÃ³dulo ElevenLabs Scribe...
+[2026-02-06T01:31:05.205538537Z] [info]  FIX 540: ElevenLabs Scribe configurado como STT PRIMARIO
+[2026-02-06T01:31:05.205681163Z] [info]     Deepgram serÃ¡ usado como FALLBACK
+[2026-02-06T01:31:05.205688301Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:31:05.205695230Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:31:05.208974294Z] [info]    Spreadsheet abierto: TABLERO DE NIOVAL
+[2026-02-06T01:31:05.208993263Z] [info]    Hoja encontrada: Bruce
+[2026-02-06T01:31:05.209002884Z] [info]  Conectado a: Bruce
+[2026-02-06T01:31:05.209010488Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:31:05.209017421Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:31:05.209024633Z] [info]    Spreadsheet abierto: Llamadas Nioval
+[2026-02-06T01:31:05.209031732Z] [info]    Hoja encontrada: Bruce FORMS
+[2026-02-06T01:31:06.662754392Z] [info]  Conectado a spreadsheet de resultados: Bruce FORMS
+[2026-02-06T01:31:06.662760235Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:31:06.662766379Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:31:06.662772565Z] [info]    Spreadsheet abierto: Llamadas Nioval
+[2026-02-06T01:31:06.662799754Z] [info]    Hoja encontrada: LOGS
+[2026-02-06T01:31:06.662807819Z] [info]  Conectado a hoja LOGS para registro de conversaciones
+[2026-02-06T01:31:06.662813986Z] [info]  Ãšltimo ID BRUCE: BRUCE1941
+[2026-02-06T01:31:06.662820518Z] [info]  Google Sheets Managers inicializados
+[2026-02-06T01:31:06.662827115Z] [info]  WhatsApp Validator inicializado
+[2026-02-06T01:31:06.662833652Z] [info]  FIX 519: Cache de patrones inicializado (0 patrones guardados)
+[2026-02-06T01:31:06.662841243Z] [info]  FIX 519: Cache de Patrones Aprendidos inicializado
+[2026-02-06T01:31:06.662848713Z] [info]  FIX 173: Verificando credenciales de Twilio...
+[2026-02-06T01:31:06.662855191Z] [info]     TWILIO_ACCOUNT_SID encontrado: ACddf2b7fa...c9dc
+[2026-02-06T01:31:06.662862392Z] [info]     TWILIO_AUTH_TOKEN encontrado: d43c8501...2480
+[2026-02-06T01:31:06.662868533Z] [info]     TWILIO_PHONE_NUMBER: +523321014486
+[2026-02-06T01:31:06.662874676Z] [info]  FIX 272.2: 500 llamadas en historial cargadas
+[2026-02-06T01:31:06.662880860Z] [info]  FIX 272.9: 5000 logs cargados
+[2026-02-06T01:31:06.662887295Z] [info]  FIX 403: Captura de logs activada - TODOS los prints se guardarÃ¡n en buffer
+[2026-02-06T01:31:06.662894182Z] [info]  FIX 272: 1165 calificaciones cargadas
+[2026-02-06T01:31:06.662900944Z] [info] [2026-02-06 01:31:06] [SISTEMA] Servidor iniciando...
+[2026-02-06T01:31:06.662907927Z] [info] 
+[2026-02-06T01:31:08.096079545Z] [info] ============================================================
+[2026-02-06T01:31:08.096095652Z] [info]  SERVIDOR DE LLAMADAS NIOVAL
+[2026-02-06T01:31:08.096104792Z] [info] ============================================================
+[2026-02-06T01:31:08.096114548Z] [info] 
+[2026-02-06T01:31:08.096123619Z] [info]  SERVIDOR BRUCE W - VERSION FIX 81 (DEBUG ACTIVO)
+[2026-02-06T01:31:08.096132234Z] [info] ============================================================
+[2026-02-06T01:31:08.096141583Z] [info] 
+[2026-02-06T01:31:08.096151280Z] [info]  Endpoints disponibles:
+[2026-02-06T01:31:08.096166368Z] [info]   POST /iniciar-llamada            - Inicia una llamada individual
+[2026-02-06T01:31:08.096175698Z] [info]   POST /llamadas-masivas           - Inicia mÃºltiples llamadas
+[2026-02-06T01:31:08.096185170Z] [info]   GET  /status/<call_sid>          - Estado de una llamada
+[2026-02-06T01:31:08.096194052Z] [info]   GET  /stats                      - Ver estadÃ­sticas de cachÃ©
+[2026-02-06T01:31:08.096204666Z] [info]   POST /generate-cache             - Generar audios manualmente
+[2026-02-06T01:31:08.096213818Z] [info]   GET  /diagnostico-persistencia   - Diagnosticar volumen persistente
+[2026-02-06T01:31:08.096224384Z] [info]   WS   /media-stream               - FIX 212: WebSocket para Deepgram
+[2026-02-06T01:31:08.096237887Z] [info] 
+[2026-02-06T01:31:08.096246468Z] [info]  URLs de acceso:
+[2026-02-06T01:31:08.096255205Z] [info]    EstadÃ­sticas: https://nioval-webhook-server-production.up.railway.app/stats
+[2026-02-06T01:31:09.267571921Z] [info]    DiagnÃ³stico Persistencia: https://nioval-webhook-server-production.up.railway.app/diagnostico-persistencia
+[2026-02-06T01:31:09.267578396Z] [info] 
+[2026-02-06T01:31:09.267587969Z] [info]  FIX 79: Despedida cÃ¡lida activa (deja puerta abierta)
+[2026-02-06T01:31:09.267594044Z] [info]  FIX 81: Debug de detecciÃ³n de Truper activo
+[2026-02-06T01:31:09.267601100Z] [info]  FIX 212: Deepgram ACTIVO - TranscripciÃ³n en tiempo real
+[2026-02-06T01:31:09.267607881Z] [info]    WebSocket: /media-stream
+[2026-02-06T01:31:09.267614228Z] [info] 
+[2026-02-06T01:31:09.267619548Z] [info]   AsegÃºrate de configurar Twilio en .env
+[2026-02-06T01:31:09.267625456Z] [info] ============================================================
+[2026-02-06T01:31:09.267631971Z] [info] 
+[2026-02-06T01:31:09.267639199Z] [info]  Cargando cachÃ© desde disco...
+[2026-02-06T01:31:09.267647572Z] [info]    Cargado desde disco: timeout
+[2026-02-06T01:31:09.267654813Z] [info]    Cargado desde disco: error
+[2026-02-06T01:31:09.267661109Z] [info]    Cargado desde disco: pensando
+[2026-02-06T01:31:09.267666784Z] [info]    Cargado desde disco: saludo_inicial
+[2026-02-06T01:31:09.267671726Z] [info]    Cargado desde disco: despedida_1
+[2026-02-06T01:31:09.267676799Z] [info]    Cargado desde disco: despedida_2
+[2026-02-06T01:31:09.267681762Z] [info]    Cargado desde disco: hola,_quÃ©_tal,_muy_buenas_tardes._me_comunico
+[2026-02-06T01:31:10.594406509Z] [info]    Cargado desde disco: perfecto,_Â¿con_quiÃ©n_tengo_el_gusto_de_hablar?
+[2026-02-06T01:31:10.594413449Z] [info]    Cargado desde disco: muy_buenas_tardes._agradezco_tu_ayuda,_pero_preferirÃ­a
+[2026-02-06T01:31:10.594420395Z] [info]    Cargado desde disco: no_hay_problema._si_surge_alguna_duda_o
+[2026-02-06T01:31:10.594427367Z] [info]    Cargado desde disco: claro,_estarÃ©_disponible_cuando_me_necesites._Â¡hasta_luego!
+[2026-02-06T01:31:10.594434609Z] [info]    Cargado desde disco: Â¿me_lo_podrÃ­a_comunicar_por_favor?_asÃ­_puedo
+[2026-02-06T01:31:10.594441482Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._intentarÃ©_comunicarme_con_el_encargado
+[2026-02-06T01:31:10.594448322Z] [info]    Cargado desde disco: Â¿me_lo_podrÃ­a_comunicar_por_favor?_asÃ­_podrÃ©
+[2026-02-06T01:31:10.594455517Z] [info]    Cargado desde disco: entiendo,_Â¿podrÃ­a_ayudarme_a_comunicarlo_cuando_tenga_la
+[2026-02-06T01:31:10.594462107Z] [info]    Cargado desde disco: Â¿me_lo_podrÃ­a_comunicar_por_favor?
+[2026-02-06T01:31:10.594470589Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿podrÃ­a_darme_un
+[2026-02-06T01:31:10.594478325Z] [info]    Cargado desde disco: claro,_estarÃ­a_muy_agradecido._Â¿cuÃ¡l_es_el_contacto
+[2026-02-06T01:31:10.594485898Z] [info]    Cargado desde disco: gracias_por_proporcionarme_el_nÃºmero._me_comunicarÃ©_con
+[2026-02-06T01:31:10.594492587Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­as_proporcionar_su_contacto,_por_favor?
+[2026-02-06T01:31:11.539585179Z] [info]    Cargado desde disco: claro,_estoy_listo_para_anotar._Â¿cuÃ¡l_es_el
+[2026-02-06T01:31:11.539589557Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._la_anotarÃ©._Â¿te_gustarÃ­a
+[2026-02-06T01:31:11.539594028Z] [info]    Cargado desde disco: perfecto,_por_favor,_Â¿me_puedes_proporcionar_su_contacto?
+[2026-02-06T01:31:11.539599036Z] [info]    Cargado desde disco: gracias_por_el_contacto._me_pondrÃ©_en_comunicaciÃ³n
+[2026-02-06T01:31:11.539606022Z] [info]    Cargado desde disco: de_nada,_que_tenga_un_excelente_dÃ­a._si
+[2026-02-06T01:31:11.539617477Z] [info]    Cargado desde disco: perfecto,_por_favor,_compÃ¡rteme_su_contacto_para_poder
+[2026-02-06T01:31:11.539624904Z] [info]    Cargado desde disco: gracias_por_proporcionarme_el_nÃºmero._Â¿me_podrÃ­as_decir
+[2026-02-06T01:31:11.539631433Z] [info]    Cargado desde disco: a_ti,_que_tengas_un_excelente_dÃ­a._Â¡hasta
+[2026-02-06T01:31:11.539638078Z] [info]    Cargado desde disco: perfecto,_le_agradecerÃ­a_mucho_que_me_compartiera_su
+[2026-02-06T01:31:11.539644952Z] [info]    Cargado desde disco: muchas_gracias_por_el_contacto._me_asegurarÃ©_de
+[2026-02-06T01:31:11.539652587Z] [info]    Cargado desde disco: asÃ­_es,_todo_en_orden._agradezco_mucho_su
+[2026-02-06T01:31:11.539659342Z] [info]    Cargado desde disco: entiendo,_Â¿me_podrÃ­a_proporcionar_el_contacto_del_encargado
+[2026-02-06T01:31:11.539665721Z] [info]    Cargado desde disco: claro,_por_favor._estoy_listo_para_anotar.
+[2026-02-06T01:31:11.539670585Z] [info]    Cargado desde disco: perfecto,_he_anotado_el_nÃºmero._muchas_gracias_por
+[2026-02-06T01:31:11.539675368Z] [info]    Cargado desde disco: gracias_a_usted,_que_tenga_un_excelente_dÃ­a.
+[2026-02-06T01:31:11.539680950Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿podrÃ­a_indicarme_un
+[2026-02-06T01:31:12.424305869Z] [info]    Cargado desde disco: claro,_le_agradecerÃ­a_mucho_si_me_pudiera_pasar
+[2026-02-06T01:31:12.424312985Z] [info]    Cargado desde disco: sÃ­,_tengo_donde_anotar._por_favor,_compÃ¡rtame_el
+[2026-02-06T01:31:12.424319688Z] [info]    Cargado desde disco: muchas_gracias_por_el_nÃºmero._me_asegurarÃ©_de
+[2026-02-06T01:31:12.424326803Z] [info]    Cargado desde disco: gracias_a_usted._que_tenga_un_excelente_dÃ­a,
+[2026-02-06T01:31:12.424332745Z] [info]    Cargado desde disco: claro,_serÃ­a_de_gran_ayuda._por_favor,_Â¿me
+[2026-02-06T01:31:12.424338894Z] [info]    Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_Â¿podrÃ­as_repetirme_el
+[2026-02-06T01:31:12.424345533Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿me_podrÃ­a_comunicar
+[2026-02-06T01:31:12.424352038Z] [info]    Cargado desde disco: claro,_me_encantarÃ­a_tener_su_nÃºmero_para_poder
+[2026-02-06T01:31:12.424358279Z] [info]    Cargado desde disco: para_asegurarme_de_anotarlo_correctamente,_Â¿podrÃ­a_repetirme_el
+[2026-02-06T01:31:12.424365444Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._sin_embargo,_parece_que
+[2026-02-06T01:31:12.424371187Z] [info]    Cargado desde disco: parece_que_aÃºn_no_tengo_el_nÃºmero_completo.
+[2026-02-06T01:31:12.424378558Z] [info]    Cargado desde disco: gracias,_pero_el_nÃºmero_que_me_proporcionÃ³_parece
+[2026-02-06T01:31:12.424390313Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._Â¿me_puede_confirmar
+[2026-02-06T01:31:12.424397687Z] [info]    Cargado desde disco: entiendo,_gracias_por_decÃ­rmelo._Â¿me_podrÃ­a_comunicar_con
+[2026-02-06T01:31:12.424404428Z] [info]    Cargado desde disco: claro,_me_comunicarÃ©_al_nÃºmero_que_me_proporcionÃ³.
+[2026-02-06T01:31:12.424410606Z] [info]    Cargado desde disco: entiendo._si_me_proporciona_un_correo_electrÃ³nico,_puedo
+[2026-02-06T01:31:12.428351270Z] [info]    Cargado desde disco: claro,_por_favor._mi_nÃºmero_es_seis_seis
+[2026-02-06T01:31:12.428356871Z] [info]    Cargado desde disco: sÃ­,_por_favor._serÃ­a_muy_Ãºtil_para_poder
+[2026-02-06T01:31:12.428362383Z] [info]    Cargado desde disco: gracias_por_el_nÃºmero._Â¿podrÃ­as_proporcionarme_el_resto
+[2026-02-06T01:31:12.428368205Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._me_comunicarÃ©_con_Ã©l._si
+[2026-02-06T01:31:12.428373744Z] [info]    Cargado desde disco: si_tienes_alguna_pregunta_o_necesitas_informaciÃ³n_sobre
+[2026-02-06T01:31:12.428380264Z] [info]    Cargado desde disco: entiendo,_muchas_gracias_por_tu_tiempo._si_en
+[2026-02-06T01:31:12.428387552Z] [info]    Cargado desde disco: entiendo._como_ya_habÃ­amos_hablado_antes,_me_gustarÃ­a
+[2026-02-06T01:31:12.428393081Z] [info]    Cargado desde disco: perfecto,_tomarÃ©_en_cuenta_esa_indicaciÃ³n._muchas_gracias
+[2026-02-06T01:31:12.428399109Z] [info]    Cargado desde disco: gracias_por_el_contacto._sin_embargo,_parece_que
+[2026-02-06T01:31:12.428405157Z] [info]    Cargado desde disco: parece_que_el_nÃºmero_todavÃ­a_no_es_claro.
+[2026-02-06T01:31:12.428410302Z] [info]    Cargado desde disco: parece_que_aÃºn_no_tengo_el_nÃºmero_correcto.
+[2026-02-06T01:31:12.428419136Z] [info]    Cargado desde disco: gracias_por_tu_ayuda._sin_embargo,_parece_que
+[2026-02-06T01:31:12.428425010Z] [info]    Cargado desde disco: parece_que_aÃºn_no_es_el_nÃºmero_correcto,
+[2026-02-06T01:31:12.428432107Z] [info]    Cargado desde disco: hola,_muy_buenas_tardes._mi_nombre_es_bruce
+[2026-02-06T01:31:12.428438376Z] [info]    Cargado desde disco: perfecto,_el_nÃºmero_es_66_23_53_41
+[2026-02-06T01:31:12.428444098Z] [info]    Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo,_tengo_dos_opciones:
+[2026-02-06T01:31:12.428449766Z] [info]    Cargado desde disco: excelente,_muchas_gracias_por_confirmar._Â¿hay_algÃºn_otro
+[2026-02-06T01:31:12.430856410Z] [info]    Cargado desde disco: entiendo,_gracias_por_su_respuesta._Â¿podrÃ­a_indicarme_si
+[2026-02-06T01:31:12.430868928Z] [info]    Cargado desde disco: claro,_me_gustarÃ­a_tener_el_contacto._por_favor,
+[2026-02-06T01:31:12.430878530Z] [info]    Cargado desde disco: perfecto,_estoy_listo_para_anotarlo._Â¿cuÃ¡l_es_el
+[2026-02-06T01:31:12.430886818Z] [info]    Cargado desde disco: claro,_el_nÃºmero_es_seis_seis_dos_tres,
+[2026-02-06T01:31:12.430896605Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._Â¿me_podrÃ­a_indicar_si_me
+[2026-02-06T01:31:12.430908378Z] [info]    Cargado desde disco: excelente,_gracias_por_la_informaciÃ³n._Â¿con_quiÃ©n_tengo
+[2026-02-06T01:31:12.430909734Z] [info]    Cargado desde disco: perfecto,_Â¿con_quiÃ©n_tengo_el_gusto?
+[2026-02-06T01:31:12.430920991Z] [info]    Cargado desde disco: excelente,_luis._contamos_con_una_amplia_gama_de
+[2026-02-06T01:31:12.430928678Z] [info]    Cargado desde disco: claro,_(name)._puedo_enviarle_un_catÃ¡logo_con_nuestra
+[2026-02-06T01:31:12.430941402Z] [info]    Cargado desde disco: perfecto,_(name)._necesito_que_me_confirme_el_nÃºmero
+[2026-02-06T01:31:12.430948257Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_indicarme_un_horario_en_el_que
+[2026-02-06T01:31:12.430953248Z] [info]    Cargado desde disco: entiendo,_muchas_gracias_por_su_tiempo._si_en
+[2026-02-06T01:31:12.430959993Z] [info]    Cargado desde disco: claro,_le_agradecerÃ­a_mucho._Â¿cuÃ¡l_es_el_contacto
+[2026-02-06T01:31:12.430968736Z] [info]    Cargado desde disco: sÃ­,_tengo_donde_anotar._estoy_listo_para_recibir
+[2026-02-06T01:31:12.430975181Z] [info]    Cargado desde disco: perfecto,_ya_lo_anotÃ©._Â¿hay_algo_mÃ¡s_en
+[2026-02-06T01:31:12.430981512Z] [info]    Cargado desde disco: muy_bien,_muchas_gracias_por_tu_tiempo._si
+[2026-02-06T01:31:12.435878992Z] [info]    Cargado desde disco: sÃ­,_me_pasÃ³_un_nuevo_nÃºmero_de_contacto.
+[2026-02-06T01:31:12.435887497Z] [info]    Cargado desde disco: claro,_le_agradecerÃ­a_mucho_si_me_pudiera_proporcionar
+[2026-02-06T01:31:12.435895946Z] [info]    Cargado desde disco: sÃ­,_tengo_donde_anotar._por_favor,_compÃ¡rteme_el
+[2026-02-06T01:31:12.435902720Z] [info]    Cargado desde disco: muchas_gracias_por_la_confirmaciÃ³n._ahora,_para_continuar,
+[2026-02-06T01:31:12.435904831Z] [info]    Cargado desde disco: claro,_el_nÃºmero_es_seis_seis,_dos_tres,
+[2026-02-06T01:31:12.435906530Z] [info]    Cargado desde disco: entiendo,_parece_que_no_hay_respuesta._para_continuar,
+[2026-02-06T01:31:12.435913403Z] [info]    Cargado desde disco: excelente,_muchas_gracias_por_la_confirmaciÃ³n._Â¿hay_algo
+[2026-02-06T01:31:12.435918096Z] [info]    Cargado desde disco: entendido,_llamarÃ©_por_la_maÃ±ana._si_necesita_algo
+[2026-02-06T01:31:12.435929308Z] [info]    Cargado desde disco: entiendo_perfectamente._para_poder_contactarlo_mÃ¡s_adelante,_tengo
+[2026-02-06T01:31:12.435935470Z] [info]    Cargado desde disco: claro,_le_agradecerÃ­a_mucho_que_me_pasara_su
+[2026-02-06T01:31:12.435943589Z] [info]    Cargado desde disco: mucho_gusto,_(name)._estoy_aquÃ­_para_ofrecerle_nuestras
+[2026-02-06T01:31:12.435950473Z] [info]    Cargado desde disco: entiendo,_(name)._Â¿podrÃ­as_comunicarme_con_rodrigo,_por_favor?
+[2026-02-06T01:31:12.435957066Z] [info]    Cargado desde disco: de_nada,_que_tengas_un_excelente_dÃ­a._Â¡hasta
+[2026-02-06T01:31:12.435958342Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._voy_a_comunicarme
+[2026-02-06T01:31:12.435974927Z] [info]    Cargado desde disco: parece_que_no_hay_respuesta._si_desea,_puede
+[2026-02-06T01:31:12.435983493Z] [info]    Cargado desde disco: perfecto,_por_favor_compÃ¡rtame_su_nÃºmero_de_contacto.
+[2026-02-06T01:31:12.439604663Z] [info]    Cargado desde disco: parece_que_no_hay_respuesta._si_necesita_ayuda
+[2026-02-06T01:31:12.439612651Z] [info]    Cargado desde disco: mi_nombre_es_bruce_w,_le_llamo_de
+[2026-02-06T01:31:12.439613408Z] [info]    Cargado desde disco: muchas_gracias,_luis._soy_bruce_w_de_nioval.
+[2026-02-06T01:31:12.439618470Z] [info]    Cargado desde disco: entiendo,_si_no_estÃ¡_disponible,_tengo_dos_opciones:
+[2026-02-06T01:31:12.439623391Z] [info]    Cargado desde disco: parece_que_no_hay_respuesta._si_necesita_mÃ¡s
+[2026-02-06T01:31:12.439628522Z] [info]    Cargado desde disco: muy_buenas_tardes._mi_nombre_es_bruce_w,
+[2026-02-06T01:31:12.439638766Z] [info]    Cargado desde disco: parece_que_no_hay_respuesta_en_este_momento.
+[2026-02-06T01:31:12.439650849Z] [info]    Cargado desde disco: parece_que_aÃºn_no_hay_respuesta._si_desea,
+[2026-02-06T01:31:12.439659267Z] [info]    Cargado desde disco: parece_que_no_hay_actividad_en_este_momento.
+[2026-02-06T01:31:12.439669981Z] [info]    Cargado desde disco: hablamos_desde_guadalajara,_jalisco._somos_distribuidores_especializados_en
+[2026-02-06T01:31:12.439670359Z] [info]    Cargado desde disco: perfecto,_gracias_por_confirmarlo._procederÃ©_a_enviarle_el
+[2026-02-06T01:31:12.439680044Z] [info]    Cargado desde disco: la_marca_es_nioval._nos_especializamos_en_ofrecer
+[2026-02-06T01:31:12.439681210Z] [info]    Cargado desde disco: entendido,_gracias_por_su_tiempo._si_necesita_algo
+[2026-02-06T01:31:12.439689818Z] [info]    Cargado desde disco: si_necesita_algo_mÃ¡s_o_tiene_alguna_pregunta,
+[2026-02-06T01:31:12.439690381Z] [info]    Cargado desde disco: entiendo_que_no_hay_respuesta_en_este_momento.
+[2026-02-06T01:31:12.439697303Z] [info]    Cargado desde disco: entiendo_que_pueda_estar_ocupado._si_necesita_contactarme
+[2026-02-06T01:31:12.445916438Z] [info]    Cargado desde disco: perfecto,_el_nÃºmero_es_sesenta_y_seis,_veintitrÃ©s,
+[2026-02-06T01:31:12.445928957Z] [info]    Cargado desde disco: muchas_gracias._Â¿cÃ³mo_puedo_ayudarle_hoy_con_nuestros
+[2026-02-06T01:31:12.445936406Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._estarÃ©_al_pendiente_de_la
+[2026-02-06T01:31:12.445944616Z] [info]    Cargado desde disco: entendido._si_necesitas_algo_mÃ¡s_en_el_futuro,
+[2026-02-06T01:31:12.445951482Z] [info]    Cargado desde disco: claro,_aquÃ­_estarÃ©.
+[2026-02-06T01:31:12.446285189Z] [info]    Cargado desde disco: perfecto,_Â¿me_lo_podrÃ­a_comunicar_por_favor?
+[2026-02-06T01:31:12.446290358Z] [info]    Cargado desde disco: Â¡muchas_gracias!_estoy_aquÃ­_esperando.
+[2026-02-06T01:31:12.446295563Z] [info]    Cargado desde disco: excelente._actualmente_tenemos_una_promociÃ³n_para_el_primer
+[2026-02-06T01:31:12.446299559Z] [info]    Cargado desde disco: si_necesitas_algo_especÃ­fico_o_tienes_alguna_pregunta
+[2026-02-06T01:31:12.446303706Z] [info]    Cargado desde disco: claro,_ofrecemos_una_amplia_gama_de_productos_de
+[2026-02-06T01:31:12.446308331Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­as_proporcionar_tu_nÃºmero_de_whatsapp
+[2026-02-06T01:31:12.446313519Z] [info]    Cargado desde disco: sÃ­,_tengo_donde_anotar._por_favor,_indÃ­came_el
+[2026-02-06T01:31:12.446317903Z] [info]    Cargado desde disco: entendido,_te_enviarÃ©_el_catÃ¡logo_al_mismo_nÃºmero.
+[2026-02-06T01:31:12.446322258Z] [info]    Cargado desde disco: estÃ¡_bien,_si_necesitas_algo_mÃ¡s_en_el
+[2026-02-06T01:31:12.446327594Z] [info]    Cargado desde disco: claro,_por_favor,_compÃ¡rtame_su_contacto._estoy_aquÃ­
+[2026-02-06T01:31:12.452158648Z] [info]    Cargado desde disco: muy_buenas_tardes,_mi_nombre_es_bruce_w,
+[2026-02-06T01:31:12.452167753Z] [info]    Cargado desde disco: mucho_gusto,_(name)._estoy_aquÃ­_para_platicarle_sobre
+[2026-02-06T01:31:12.452175408Z] [info]    Cargado desde disco: claro,_(name)._uno_de_nuestros_productos_estrella_es
+[2026-02-06T01:31:12.452181708Z] [info]    Cargado desde disco: me_gustarÃ­a_comentarte_sobre_la_cinta_para_goteras,
+[2026-02-06T01:31:12.452366685Z] [info]    Cargado desde disco: perfecto,_voy_a_enviar_un_catÃ¡logo_de_la
+[2026-02-06T01:31:12.452381021Z] [info]    Cargado desde disco: entendido,_voy_a_enviar_el_catÃ¡logo_al_mismo
+[2026-02-06T01:31:12.452390583Z] [info]    Cargado desde disco: claro,_comprendo._si_necesitas_informaciÃ³n_sobre_algÃºn_producto
+[2026-02-06T01:31:12.454513421Z] [info]    Cargado desde disco: perfecto,_si_necesitas_algo_mÃ¡s_o_tienes_alguna
+[2026-02-06T01:31:12.454524678Z] [info]    Cargado desde disco: con_gusto,_estoy_listo_para_enviar_el_catÃ¡logo.
+[2026-02-06T01:31:12.454532422Z] [info]    Cargado desde disco: Â¿hay_algo_mÃ¡s_en_lo_que_pueda_ayudarte
+[2026-02-06T01:31:12.454538350Z] [info]    Cargado desde disco: perfecto,_estoy_listo.
+[2026-02-06T01:31:12.454545658Z] [info]    Cargado desde disco: muchas_gracias._estarÃ©_en_contacto_con_Ã©l._Â¿hay
+[2026-02-06T01:31:12.454553029Z] [info]    Cargado desde disco: entiendo,_muchas_gracias_por_su_tiempo._si_necesita
+[2026-02-06T01:31:12.454569282Z] [info]    Cargado desde disco: muchas_gracias._Â¿me_podrÃ­a_decir_su_nombre_para
+[2026-02-06T01:31:12.454577035Z] [info]    Cargado desde disco: excelente,_muchas_gracias_luis._dÃ©jeme_comentarle_que_estamos
+[2026-02-06T01:31:12.454584165Z] [info]    Cargado desde disco: perfecto,_eso_ayuda_mucho._Â¿actualmente_trabajan_con_varios
+[2026-02-06T01:31:12.454591939Z] [info]    Cargado desde disco: entendido._una_Ãºltima_pregunta:_Â¿sabe_si_actualmente_tienen
+[2026-02-06T01:31:12.454599634Z] [info]    Cargado desde disco: perfecto,_aprecio_mucho_toda_la_informaciÃ³n._me_comunicarÃ©
+[2026-02-06T01:31:12.455508584Z] [info]    Cargado desde disco: perfecto,_el_nÃºmero_es_66_23_53_55
+[2026-02-06T01:31:12.455520650Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._solo_para_confirmar,_Â¿podrÃ­a
+[2026-02-06T01:31:12.455528642Z] [info]    Cargado desde disco: entiendo,_pero_necesito_el_nÃºmero_completo_de_diez
+[2026-02-06T01:31:12.455535667Z] [info]    Cargado desde disco: perfecto,_entonces_el_nÃºmero_completo_es_seis,_seis,
+[2026-02-06T01:31:12.455542447Z] [info]    Cargado desde disco: excelente,_muchas_gracias_carlos._dÃ©jeme_comentarle_que_estamos
+[2026-02-06T01:31:12.455549903Z] [info]    Cargado desde disco: no_hay_problema,_carlos._aprecio_mucho_toda_la
+[2026-02-06T01:31:12.455557742Z] [info]    Cargado desde disco: me_refiero_al_encargado_de_compras_o_a
+[2026-02-06T01:31:12.455565409Z] [info]    Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_de
+[2026-02-06T01:31:12.455573240Z] [info]    Cargado desde disco: sÃ­,_adelante_por_favor.
+[2026-02-06T01:31:12.455586233Z] [info]    Cargado desde disco: le_hablo_de_nioval,_somos_distribuidores_especializados_en
+[2026-02-06T01:31:12.455592272Z] [info]    Cargado desde disco: le_llamo_para_ofrecerle_informaciÃ³n_sobre_nuestros_productos
+[2026-02-06T01:31:12.455598699Z] [info]    Cargado desde disco: Â¿bueno?_muy_buenas_tardes,_Â¿con_quiÃ©n_tengo_el
+[2026-02-06T01:31:12.455604335Z] [info]    Cargado desde disco: muy_buenas_tardes,_luis._mi_nombre_es_bruce
+[2026-02-06T01:31:12.455644137Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_indicar_el_horario_en_el
+[2026-02-06T01:31:12.455774372Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._Â¿me_podrÃ­a_comentar_quÃ©
+[2026-02-06T01:31:12.455784450Z] [info]    Cargado desde disco: hola_luis,_muy_buenas_tardes._soy_bruce_w
+[2026-02-06T01:31:12.455794861Z] [info]    Cargado desde disco: Â¡perfecto!_gracias_por_el_contacto._si_necesita_informaciÃ³n
+[2026-02-06T01:31:12.463302431Z] [info]    Cargado desde disco: excelente,_muchas_gracias._Â¿me_podrÃ­a_decir_su_nombre
+[2026-02-06T01:31:12.463307546Z] [info]    Cargado desde disco: perfecto,_muchas_gracias_carlos._dÃ©jeme_comentarle_que_estamos
+[2026-02-06T01:31:12.463311564Z] [info]    Cargado desde disco: entendido,_eso_ayuda_mucho._Â¿actualmente_trabajan_con_varios
+[2026-02-06T01:31:12.463316545Z] [info]    Cargado desde disco: mucho_gusto,_(name)._soy_bruce_w_de_nioval.
+[2026-02-06T01:31:12.463321701Z] [info]    Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w
+[2026-02-06T01:31:12.463325499Z] [info]    Cargado desde disco: me_alegra_escuchar_eso._estoy_aquÃ­_para_hablar
+[2026-02-06T01:31:12.463329548Z] [info]    Cargado desde disco: perfecto,_(name)._Â¿actualmente_trabajan_con_varios_proveedores_o
+[2026-02-06T01:31:12.463333259Z] [info]    Cargado desde disco: entiendo_que_la_situaciÃ³n_puede_ser_complicada._estoy
+[2026-02-06T01:31:12.463337040Z] [info]    Cargado desde disco: gracias,_(name)._para_poder_ayudarles_mejor,_Â¿me_podrÃ­as
+[2026-02-06T01:31:12.463341944Z] [info]    Cargado desde disco: hola,_(name)._como_le_habÃ­a_comentado_la_vez
+[2026-02-06T01:31:12.463347056Z] [info]    Cargado desde disco: parece_que_se_ha_cortado_la_llamada._si
+[2026-02-06T01:31:12.463351094Z] [info]    Cargado desde disco: hola,_quÃ©_tal,_muy_buenas_tardes._mi_nombre
+[2026-02-06T01:31:12.463356070Z] [info]    Cargado desde disco: perfecto,_(name)._como_le_habÃ­a_comentado_la_vez
+[2026-02-06T01:31:12.463364543Z] [info]    Cargado desde disco: entiendo,_(name)._ademÃ¡s,_Â¿podrÃ­a_decirme_aproximadamente_quÃ©_tamaÃ±o
+[2026-02-06T01:31:12.463368498Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._ofrecemos_una_amplia_gama_de
+[2026-02-06T01:31:12.463372530Z] [info]    Cargado desde disco: perfecto,_(name)._por_favor,_Â¿me_podrÃ­as_proporcionar_tu
+[2026-02-06T01:31:12.466409062Z] [info]    Cargado desde disco: claro,_Â¿me_podrÃ­a_indicar_un_horario_en_el
+[2026-02-06T01:31:12.466415064Z] [info]    Cargado desde disco: entiendo._para_facilitar_el_contacto,_Â¿me_podrÃ­a_proporcionar
+[2026-02-06T01:31:12.466419893Z] [info]    Cargado desde disco: comprendo._agradezco_su_respuesta._Â¿hay_algÃºn_otro_dato
+[2026-02-06T01:31:12.466461625Z] [info]    Cargado desde disco: asÃ­_es,_manejamos_precios_competitivos_y_promociones_atractivas.
+[2026-02-06T01:31:12.466475387Z] [info]    Cargado desde disco: perfecto,_para_poder_enviarle_la_cotizaciÃ³n,_Â¿me_podrÃ­a
+[2026-02-06T01:31:12.466482765Z] [info]    Cargado desde disco: excelente_elecciÃ³n._le_enviarÃ©_una_cotizaciÃ³n_con_los
+[2026-02-06T01:31:12.466493859Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._enviarÃ©_la_cotizaciÃ³n
+[2026-02-06T01:31:12.466504101Z] [info]    Cargado desde disco: entiendo_perfectamente._agradezco_su_tiempo._si_en_algÃºn
+[2026-02-06T01:31:12.466505918Z] [info]    Cargado desde disco: excelente._le_enviarÃ©_el_mensaje_ahora_mismo._si
+[2026-02-06T01:31:12.466515879Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿actualmente_trabajan_con
+[2026-02-06T01:31:12.466516362Z] [info]    Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w_de
+[2026-02-06T01:31:12.466527618Z] [info]    Cargado desde disco: perfecto,_(name)._una_Ãºltima_pregunta:_Â¿sabe_si_actualmente
+[2026-02-06T01:31:12.466535266Z] [info]    Cargado desde disco: claro,_vendemos_varios_productos_de_ferreterÃ­a._algunos_ejemplos
+[2026-02-06T01:31:12.466549008Z] [info]    Cargado desde disco: gracias,_(name)._enviarÃ©_la_cotizaciÃ³n_a_tu_correo
+[2026-02-06T01:31:12.466568155Z] [info]    Cargado desde disco: perfecto,_puedo_enviarle_nuestro_catÃ¡logo_por_whatsapp_para
+[2026-02-06T01:31:12.466577737Z] [info]    Cargado desde disco: perfecto,_estoy_listo._Â¿me_podrÃ­a_decir_su_nombre
+[2026-02-06T01:31:12.470622760Z] [info]    Cargado desde disco: perfecto,_(name)._enviarÃ©_el_catÃ¡logo_y_la_presentaciÃ³n
+[2026-02-06T01:31:12.470626955Z] [info]    Cargado desde disco: claro,_(name)._espero_su_comunicaciÃ³n._si_necesitan_algo
+[2026-02-06T01:31:12.470630777Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_hablar_con
+[2026-02-06T01:31:12.470635208Z] [info]    Cargado desde disco: el_mÃ­nimo_de_compra_con_nosotros_es_de
+[2026-02-06T01:31:12.470639210Z] [info]    Cargado desde disco: perfecto,_necesito_que_me_proporciones_tu_nÃºmero_de
+[2026-02-06T01:31:12.470643491Z] [info]    Cargado desde disco: gracias._sin_embargo,_el_nÃºmero_que_me_proporcionas
+[2026-02-06T01:31:12.470649393Z] [info]    Cargado desde disco: perfecto,_pero_necesito_saber_su_nombre_para_mencionarlo
+[2026-02-06T01:31:12.470654275Z] [info]    Cargado desde disco: claro,_con_gusto_le_enviarÃ©_informaciÃ³n_sobre_griferÃ­as.
+[2026-02-06T01:31:12.470659596Z] [info]    Cargado desde disco: claro,_(name)._puedo_enviarte_el_catÃ¡logo_por_correo.
+[2026-02-06T01:31:12.470665251Z] [info]    Cargado desde disco: entiendo,_(name)._agradezco_la_informaciÃ³n._Â¿podrÃ­a_decirme_aproximadamente
+[2026-02-06T01:31:12.470670041Z] [info]    Cargado desde disco: perfecto,_(name)._aprecio_su_tiempo_y_la_informaciÃ³n.
+[2026-02-06T01:31:12.470674694Z] [info]    Cargado desde disco: entiendo,_(name)._entonces,_para_conocer_mejor_sus_necesidades,
+[2026-02-06T01:31:12.470679613Z] [info]    Cargado desde disco: entiendo,_gracias_por_su_tiempo._que_tenga_un
+[2026-02-06T01:31:12.470684952Z] [info]    Cargado desde disco: nosotros_manejamos_una_variedad_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:12.470690652Z] [info]    Cargado desde disco: entiendo,_gracias._para_poder_prepararle_una_mejor_propuesta
+[2026-02-06T01:31:12.470696408Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._Â¿ademÃ¡s_de_griferÃ­as,_quÃ©
+[2026-02-06T01:31:12.474215368Z] [info]    Cargado desde disco: le_llamo_para_ofrecerle_una_propuesta_comercial_sobre
+[2026-02-06T01:31:12.474235558Z] [info]    Cargado desde disco: Â¡perfecto!_muchas_gracias._estoy_listo_para_hablar_con
+[2026-02-06T01:31:12.474240556Z] [info]    Cargado desde disco: entendido,_le_enviarÃ©_el_catÃ¡logo_de_inmediato._estoy
+[2026-02-06T01:31:12.474252315Z] [info]    Cargado desde disco: muy_buenas_tardes,_Â¿con_quiÃ©n_tengo_el_gusto?
+[2026-02-06T01:31:12.474255175Z] [info]    Cargado desde disco: el_motivo_de_mi_llamada_es_muy_breve:
+[2026-02-06T01:31:12.474269148Z] [info]    Cargado desde disco: perfecto,_(name)._disculpe,_no_alcancÃ©_a_captar_el
+[2026-02-06T01:31:12.474271917Z] [info]    Cargado desde disco: somos_de_guadalajara._envÃ­amos_a_toda_la_repÃºblica.
+[2026-02-06T01:31:12.474272360Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_de_griferÃ­as._y
+[2026-02-06T01:31:12.474283197Z] [info]    Cargado desde disco: perfecto,_(name)._te_enviarÃ©_nuestro_catÃ¡logo_digital_completo
+[2026-02-06T01:31:12.474283795Z] [info]    Cargado desde disco: Â¿con_quiÃ©n_tengo_el_gusto?
+[2026-02-06T01:31:12.474291840Z] [info]    Cargado desde disco: entiendo,_(name)._para_prepararme_mejor_para_la_cita,
+[2026-02-06T01:31:12.474294573Z] [info]    Cargado desde disco: entiendo,_(name)._enviarÃ©_el_catÃ¡logo_al_correo_yahir
+[2026-02-06T01:31:12.474296463Z] [info]    Cargado desde disco: disculpe,_no_alcancÃ©_a_captar_el_correo_completo.
+[2026-02-06T01:31:12.474305151Z] [info]    Cargado desde disco: perfecto,_(name)._enviarÃ©_el_catÃ¡logo_a_tu_correo
+[2026-02-06T01:31:12.474308164Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_con_todos_nuestros
+[2026-02-06T01:31:12.474314536Z] [info]    Cargado desde disco: gracias_a_ti,_pero._que_tengas_un_excelente
+[2026-02-06T01:31:12.474323052Z] [info]    Cargado desde disco: perfecto,_mi_nombre_es_bruce_w._le_llamo
+[2026-02-06T01:31:12.477816788Z] [info]    Cargado desde disco: [el_cliente_colgÃ³_la_llamada]
+[2026-02-06T01:31:12.477828492Z] [info]    Cargado desde disco: disculpa,_no_alcancÃ©_a_captar_el_correo_completo.
+[2026-02-06T01:31:12.477836024Z] [info]    Cargado desde disco: mucho_gusto,_(name)._le_llamo_de_nioval,_somos
+[2026-02-06T01:31:12.477842789Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._estoy_en_espera.
+[2026-02-06T01:31:12.477851767Z] [info]    Cargado desde disco: hola,_Â¿bueno?_muy_buenas_tardes._Â¿con_quiÃ©n_tengo
+[2026-02-06T01:31:12.477861649Z] [info]    Cargado desde disco: entiendo,_muchas_gracias._estoy_en_espera.
+[2026-02-06T01:31:12.477869142Z] [info]    Cargado desde disco: perfecto,_(name)._le_llamo_de_nioval,_somos_distribuidores
+[2026-02-06T01:31:12.477876395Z] [info]    Cargado desde disco: entiendo,_(name)._estoy_contactÃ¡ndolo_para_ofrecerle_una_propuesta
+[2026-02-06T01:31:12.477884372Z] [info]    Cargado desde disco: gracias,_(name)._Â¿y_quÃ©_tamaÃ±o_de_negocio_tienen?
+[2026-02-06T01:31:12.477892556Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._Â¿en_quÃ©_horario
+[2026-02-06T01:31:12.477899627Z] [info]    Cargado desde disco: claro,_con_gusto_te_enviarÃ©_el_catÃ¡logo._disculpa,
+[2026-02-06T01:31:12.478075879Z] [info]    Cargado desde disco: gracias,_(name)._dÃ©jame_comentarte_que_estamos_muy_interesados
+[2026-02-06T01:31:12.478084578Z] [info]    Cargado desde disco: entiendo,_(name)._en_nioval_ofrecemos_una_variedad_de
+[2026-02-06T01:31:12.478094810Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._Â¿y_actualmente_trabajan
+[2026-02-06T01:31:12.478104217Z] [info]    Cargado desde disco: entendido,_gracias_por_la_informaciÃ³n._una_Ãºltima_pregunta:
+[2026-02-06T01:31:12.478115236Z] [info]    Cargado desde disco: claro,_puedo_enviarle_un_catÃ¡logo_con_nuestra_variedad
+[2026-02-06T01:31:12.478123126Z] [info]    Cargado desde disco: perfecto,_por_favor_proporciÃ³neme_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:12.483431489Z] [info]    Cargado desde disco: entendido,_gracias_por_la_informaciÃ³n._Â¿actualmente_trabajan_con
+[2026-02-06T01:31:12.483442928Z] [info]    Cargado desde disco: disculpe,_solo_alcancÃ©_a_captar_332101._Â¿me_podrÃ­a
+[2026-02-06T01:31:12.483450512Z] [info]    Cargado desde disco: perfecto,_gracias._una_Ãºltima_pregunta:_Â¿saben_si_actualmente
+[2026-02-06T01:31:12.483456831Z] [info]    Cargado desde disco: claro,_con_gusto_te_enviarÃ©_el_catÃ¡logo._Â¿te
+[2026-02-06T01:31:12.483463890Z] [info]    Cargado desde disco: mucho_gusto,_(name)._mi_nombre_es_bruce_w.
+[2026-02-06T01:31:12.483472618Z] [info]    Cargado desde disco: gracias,_(name)._una_Ãºltima_pregunta:_Â¿sabes_si_actualmente
+[2026-02-06T01:31:12.483478264Z] [info]    Cargado desde disco: perfecto,_(name)._mi_nombre_es_bruce_w,_le
+[2026-02-06T01:31:12.483484555Z] [info]    Cargado desde disco: perfecto,_aprecio_mucho_toda_la_informaciÃ³n._le_enviarÃ©
+[2026-02-06T01:31:12.483490982Z] [info]    Cargado desde disco: de_nada,_estoy_para_servirle._que_tenga_un
+[2026-02-06T01:31:12.483498046Z] [info]    Cargado desde disco: entiendo,_(name)._aprecio_la_informaciÃ³n._Â¿en_quÃ©_horario
+[2026-02-06T01:31:12.483503887Z] [info]    Cargado desde disco: claro,_ahorita._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:12.483509472Z] [info]    Cargado desde disco: excelente,_ahorita._en_las_prÃ³ximas_2_horas_le
+[2026-02-06T01:31:12.483515404Z] [info]    Cargado desde disco: perfecto,_ahorita._envÃ­o_el_catÃ¡logo_y_la_informaciÃ³n
+[2026-02-06T01:31:12.483520566Z] [info]    Cargado desde disco: entiendo,_(name)._aprecio_la_aclaraciÃ³n._para_poder_contactarlos,
+[2026-02-06T01:31:12.483527585Z] [info]    Cargado desde disco: entiendo,_(name)._si_no_es_posible_enviar_la
+[2026-02-06T01:31:12.489587244Z] [info]    Cargado desde disco: ofrecemos_productos_de_ferreterÃ­a_como_cinta_para_goteras
+[2026-02-06T01:31:12.489602744Z] [info]    Cargado desde disco: Â¿hay_algo_mÃ¡s_en_lo_que_pueda_ayudarle?
+[2026-02-06T01:31:12.489612277Z] [info]    Cargado desde disco: claro,_con_gusto_le_envÃ­o_el_catÃ¡logo._por
+[2026-02-06T01:31:12.489622992Z] [info]    Cargado desde disco: entiendo,_lo_enviarÃ©_por_correo._solo_necesito_su
+[2026-02-06T01:31:12.489631241Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_por_whatsapp._Â¿me
+[2026-02-06T01:31:12.489639283Z] [info]    Cargado desde disco: gracias_por_el_nÃºmero._en_un_momento_le
+[2026-02-06T01:31:12.489734107Z] [info]    Cargado desde disco: de_nada,_es_un_placer_ayudarle._que_tenga
+[2026-02-06T01:31:12.489747677Z] [info]    Cargado desde disco: le_llamo_de_nioval,_somos_distribuidores_especializados_en
+[2026-02-06T01:31:12.489755514Z] [info]    Cargado desde disco: estamos_ofreciendo_productos_de_ferreterÃ­a_que_podrÃ­an_ser
+[2026-02-06T01:31:12.489761705Z] [info]    Cargado desde disco: mucho_gusto,_(name)._estoy_llamando_de_nioval,_somos
+[2026-02-06T01:31:12.489768560Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._Â¿actualmente_trabajan_con_varios_proveedores
+[2026-02-06T01:31:12.489775006Z] [info]    Cargado desde disco: entiendo,_(name)._en_nioval_manejamos_una_variedad_de
+[2026-02-06T01:31:12.489781365Z] [info]    Cargado desde disco: perfecto,_estoy_listo_para_enviarte_el_catÃ¡logo._por
+[2026-02-06T01:31:12.489788198Z] [info]    Cargado desde disco: claro,_por_favor_confÃ­rmame_el_nÃºmero_de_whatsapp
+[2026-02-06T01:31:12.489794305Z] [info]    Cargado desde disco: excelente,_muchas_gracias._Â¿con_quiÃ©n_tengo_el_gusto?
+[2026-02-06T01:31:12.489800891Z] [info]    Cargado desde disco: perfecto,_(name)._dÃ©jame_comentarte_que_estamos_muy_interesados
+[2026-02-06T01:31:12.489807924Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._me_gustarÃ­a_enviarle
+[2026-02-06T01:31:12.501743642Z] [info]    Cargado desde disco: disculpe,_solo_alcancÃ©_a_captar_parte_del_nÃºmero.
+[2026-02-06T01:31:12.501749268Z] [info]    Cargado desde disco: entiendo,_(name)._si_necesita_algo_mÃ¡s,_aquÃ­_estarÃ©.
+[2026-02-06T01:31:12.501755299Z] [info]    Cargado desde disco: entendido,_estarÃ©_a_la_espera.
+[2026-02-06T01:31:12.501761050Z] [info]    Cargado desde disco: asÃ­_es,_manejamos_una_amplia_gama_de_productos
+[2026-02-06T01:31:12.501767018Z] [info]    Cargado desde disco: entiendo,_gracias._tambiÃ©n_me_gustarÃ­a_saber_si_actualmente
+[2026-02-06T01:31:12.501772748Z] [info]    Cargado desde disco: me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital_completo_con
+[2026-02-06T01:31:12.501780046Z] [info]    Cargado desde disco: disculpe_las_molestias,_parece_que_hay_un_error
+[2026-02-06T01:31:12.501785811Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_la_transferencia.
+[2026-02-06T01:31:12.501792068Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._Â¿me_podrÃ­a_decir_su_nombre
+[2026-02-06T01:31:12.501798313Z] [info]    Cargado desde disco: 
+[2026-02-06T01:31:12.501805314Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_aclaraciÃ³n._una_Ãºltima_pregunta:
+[2026-02-06T01:31:12.501811238Z] [info]    Cargado desde disco: entiendo,_gracias_por_su_respuesta._mi_nÃºmero_es
+[2026-02-06T01:31:12.501816934Z] [info]    Cargado desde disco: tiene_razÃ³n,_discÃºlpeme._mi_nÃºmero_es_seis_seis
+[2026-02-06T01:31:12.501828025Z] [info]    Cargado desde disco: claro,_tÃ³mese_su_tiempo._estoy_aquÃ­_para_ayudarle.
+[2026-02-06T01:31:12.501834090Z] [info]    Cargado desde disco: perfecto,_el_nÃºmero_es_seis_seis_dos,_cuatro
+[2026-02-06T01:31:12.501840002Z] [info]    Cargado desde disco: excelente,_mira._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:12.509382085Z] [info]    Cargado desde disco: las_griferÃ­as_mÃ¡s_econÃ³micas_suelen_tener_cuerpos_de
+[2026-02-06T01:31:12.509397106Z] [info]    Cargado desde disco: Â¿puedo_preguntarte_si_tienen_alguna_necesidad_inmediata_de
+[2026-02-06T01:31:12.509400632Z] [info]    Cargado desde disco: sÃ­,_tenemos_griferÃ­as_de_acero_inoxidable._son_muy
+[2026-02-06T01:31:12.509410329Z] [info]    Cargado desde disco: Â¿te_gustarÃ­a_que_te_envÃ­e_un_catÃ¡logo_por
+[2026-02-06T01:31:12.509410799Z] [info]    Cargado desde disco: entiendo,_gracias._Â¿podrÃ­as_compartir_quÃ©_tipo_de_productos
+[2026-02-06T01:31:12.509418665Z] [info]    Cargado desde disco: entiendo,_eso_suena_interesante._en_nioval_contamos_con
+[2026-02-06T01:31:12.509419520Z] [info]    Cargado desde disco: si_tienes_alguna_pregunta_adicional_o_necesitas_mÃ¡s
+[2026-02-06T01:31:12.509433248Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n,_juan._en_nioval_manejamos
+[2026-02-06T01:31:12.509433992Z] [info]    Cargado desde disco: claro,_podemos_platicar_sobre_los_diferentes_tipos_de
+[2026-02-06T01:31:12.509438225Z] [info]    Cargado desde disco: a_ti_por_tu_tiempo._si_necesitas_algo
+[2026-02-06T01:31:12.509444067Z] [info]    Cargado desde disco: claro,_tal._Â¿cuÃ¡l_es_su_pregunta?
+[2026-02-06T01:31:12.509451864Z] [info]    Cargado desde disco: manejamos_varias_calidades_en_griferÃ­as,_desde_opciones_econÃ³micas
+[2026-02-06T01:31:12.509463236Z] [info]    Cargado desde disco: tiene_razÃ³n,_discÃºlpeme._agradezco_su_tiempo_y_quedo
+[2026-02-06T01:31:12.509463321Z] [info]    Cargado desde disco: si_necesita_algo_mÃ¡s_en_el_futuro,_no
+[2026-02-06T01:31:12.509471650Z] [info]    Cargado desde disco: asÃ­_es,_siempre_hay_que_agradecer._si_en
+[2026-02-06T01:31:12.509478979Z] [info]    Cargado desde disco: excelente,_jair._dÃ©jame_comentarte_que_estamos_muy_interesados
+[2026-02-06T01:31:12.513316207Z] [info]    Cargado desde disco: entiendo,_(name)._aprecio_la_aclaraciÃ³n._si_en_algÃºn
+[2026-02-06T01:31:12.513327306Z] [info]    Cargado desde disco: claro,_(name)._aprecio_su_claridad_y_respeto_su
+[2026-02-06T01:31:12.513334959Z] [info]    Cargado desde disco: gracias,_(name)._aprecio_su_tiempo._estarÃ©_disponible_para
+[2026-02-06T01:31:12.513347930Z] [info]    Cargado desde disco: perfecto,_tal._en_las_prÃ³ximas_2_horas_le
+[2026-02-06T01:31:12.513355746Z] [info]    Cargado desde disco: muchas_gracias_por_su_tiempo,_tal._que_tenga
+[2026-02-06T01:31:12.513369929Z] [info]    Cargado desde disco: nosotros_manejamos_una_amplia_variedad_de_productos_de
+[2026-02-06T01:31:12.513385078Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿podrÃ­as_decirme_en
+[2026-02-06T01:31:12.513397890Z] [info]    Cargado desde disco: entiendo,_(name)._eso_ayuda_mucho._Â¿podrÃ­a_decirme_aproximadamente
+[2026-02-06T01:31:12.513401098Z] [info]    Cargado desde disco: perfecto,_agendarÃ©_la_llamada_para_maÃ±ana_a_partir
+[2026-02-06T01:31:12.513407468Z] [info]    Cargado desde disco: claro,_tÃ³mese_su_tiempo._estoy_aquÃ­_esperando.
+[2026-02-06T01:31:12.513409274Z] [info]    Cargado desde disco: comprendo,_mira._es_un_proceso_importante_para_seleccionar
+[2026-02-06T01:31:12.513412348Z] [info]    Cargado desde disco: gracias._Â¿me_podrÃ­as_confirmar_el_nÃºmero_completo,_por
+[2026-02-06T01:31:12.513419785Z] [info]    Cargado desde disco: Â¿hola?_Â¿con_quiÃ©n_tengo_el_gusto?
+[2026-02-06T01:31:12.513424354Z] [info]    Cargado desde disco: perfecto,_gracias._enviarÃ©_el_catÃ¡logo_por_whatsapp_al
+[2026-02-06T01:31:12.513433185Z] [info]    Cargado desde disco: me_alegra_escuchar_eso._como_le_mencionÃ©,_me
+[2026-02-06T01:31:12.513434319Z] [info]    Cargado desde disco: claro,_estarÃ©_enviando_el_catÃ¡logo_en_un_momento.
+[2026-02-06T01:31:12.518589579Z] [info]    Cargado desde disco: entiendo_perfectamente._perfecto,_estoy_listo._Â¿me_podrÃ­a_proporcionar
+[2026-02-06T01:31:12.518595560Z] [info]    Cargado desde disco: excelente,_muchas_gracias,_jair._dÃ©jame_comentarte_que_estamos
+[2026-02-06T01:31:12.518601848Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._solo_una_Ãºltima
+[2026-02-06T01:31:12.518608079Z] [info]    Cargado desde disco: entendido._me_comunicarÃ©_con_el_encargado_en_el
+[2026-02-06T01:31:12.518614692Z] [info]    Cargado desde disco: sÃ­,_asÃ­_es._somos_distribuidores_de_productos_de
+[2026-02-06T01:31:12.518620588Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._Â¿podrÃ­as_decirme_aproximadamente
+[2026-02-06T01:31:12.518625936Z] [info]    Cargado desde disco: solo_para_preparar_una_mejor_propuesta_que_se
+[2026-02-06T01:31:12.518632997Z] [info]    Cargado desde disco: perfecto,_eso_ayuda_mucho._para_poder_contactar_al
+[2026-02-06T01:31:12.518637807Z] [info]    Cargado desde disco: Â¡que_tenga_un_excelente_dÃ­a!
+[2026-02-06T01:31:12.518642572Z] [info]    Cargado desde disco: en_nioval_ofrecemos_una_amplia_variedad_de_productos
+[2026-02-06T01:31:12.518647656Z] [info]    Cargado desde disco: actualmente_no_tenemos_distribuidores_en_sonora,_lo_que
+[2026-02-06T01:31:12.518652978Z] [info]    Cargado desde disco: realizamos_envÃ­os_a_toda_la_repÃºblica_desde_guadalajara.
+[2026-02-06T01:31:12.518660313Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._para_ofrecerles_una
+[2026-02-06T01:31:12.518666604Z] [info]    Cargado desde disco: ofrecemos_una_amplia_variedad_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:12.518706207Z] [info]    Cargado desde disco: entendido._me_parece_excelente_que_podamos_agendar_un
+[2026-02-06T01:31:12.518712986Z] [info]    Cargado desde disco: excelente,_muchas_gracias._para_preparar_una_mejor_propuesta
+[2026-02-06T01:31:12.518719191Z] [info]    Cargado desde disco: entiendo._Â¿actualmente_trabajan_con_varios_proveedores_o_tienen
+[2026-02-06T01:31:12.525790089Z] [info]    Cargado desde disco: entiendo,_gracias._dÃ©jame_comentarte_que_estamos_muy_interesados
+[2026-02-06T01:31:12.525793837Z] [info]    Cargado desde disco: mucho_gusto,_(name)._estoy_aquÃ­_para_ofrecerle_una
+[2026-02-06T01:31:12.525798885Z] [info]    Cargado desde disco: perfecto,_estoy_listo_para_enviarle_nuestro_catÃ¡logo._Â¿me
+[2026-02-06T01:31:12.525803830Z] [info]    Cargado desde disco: excelente,_muchas_gracias._le_enviarÃ©_el_catÃ¡logo_a
+[2026-02-06T01:31:12.525807723Z] [info]    Cargado desde disco: perfecto,_eso_me_ayuda_mucho._me_comunicarÃ©_con
+[2026-02-06T01:31:12.525812912Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._estoy_listo_para_recibirlo.
+[2026-02-06T01:31:12.525818258Z] [info]    Cargado desde disco: mucho_gusto,_(name)._le_comento_que_somos_distribuidores
+[2026-02-06T01:31:12.525822887Z] [info]    Cargado desde disco: entiendo,_(name)._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:12.525827127Z] [info]    Cargado desde disco: gracias,_(name)._en_las_prÃ³ximas_2_horas_le
+[2026-02-06T01:31:12.525831496Z] [info]    Cargado desde disco: muchas_gracias_por_su_tiempo,_jair._que_tenga
+[2026-02-06T01:31:12.525836677Z] [info]    Cargado desde disco: mucho_gusto,_(name)._estoy_aquÃ­_para_ofrecerle_nuestros
+[2026-02-06T01:31:12.525841717Z] [info]    Cargado desde disco: entendido._Â¿sabe_si_actualmente_tienen_alguna_necesidad_inmediata
+[2026-02-06T01:31:12.525847017Z] [info]    Cargado desde disco: manejamos_una_variedad_de_productos_de_ferreterÃ­a,_incluyendo
+[2026-02-06T01:31:12.525851540Z] [info]    Cargado desde disco: entiendo,_pero_actualmente_no_contamos_con_productos_especÃ­ficos
+[2026-02-06T01:31:12.525855515Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._sÃ­,_manejamos_chapas
+[2026-02-06T01:31:12.532272258Z] [info]    Cargado desde disco: nuestra_fÃ¡brica_principal_estÃ¡_ubicada_en_guadalajara._esto
+[2026-02-06T01:31:12.532388583Z] [info]    Cargado desde disco: lamentablemente,_no_contamos_con_productos_especÃ­ficos_de_chiapas.
+[2026-02-06T01:31:12.532396502Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_un_catÃ¡logo_con_nuestras_chapas
+[2026-02-06T01:31:12.532404027Z] [info]    Cargado desde disco: excelente,_muchas_gracias._para_prepararle_una_mejor_propuesta,
+[2026-02-06T01:31:12.532411330Z] [info]    Cargado desde disco: perfecto,_tomarÃ©_nota_sobre_las_chapas._Â¿actualmente_trabajan
+[2026-02-06T01:31:12.532420139Z] [info]    Cargado desde disco: entendido,_le_agradezco_la_informaciÃ³n._una_Ãºltima_pregunta:
+[2026-02-06T01:31:12.532428399Z] [info]    Cargado desde disco: claro,_le_enviarÃ©_el_catÃ¡logo_a_su_nÃºmero
+[2026-02-06T01:31:12.532436278Z] [info]    Cargado desde disco: como_le_habÃ­a_comentado_la_vez_pasada,_me
+[2026-02-06T01:31:12.532447756Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._Â¿me_lo_podrÃ­a_comunicar_por
+[2026-02-06T01:31:12.532455567Z] [info]    Cargado desde disco: claro,_estoy_listo._espero_su_transferencia.
+[2026-02-06T01:31:12.532462643Z] [info]    Cargado desde disco: perfecto,_(name)._me_comunico_de_nioval_sobre_una
+[2026-02-06T01:31:12.532470637Z] [info]    Cargado desde disco: manejamos_una_amplia_variedad_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:12.532478510Z] [info]    Cargado desde disco: entiendo,_eso_es_muy_comÃºn._nuestros_precios_son
+[2026-02-06T01:31:12.532506639Z] [info]    Cargado desde disco: nuestros_productos_son_de_marcas_nacionales_y_distribuimos
+[2026-02-06T01:31:12.537030124Z] [info]    Cargado desde disco: claro,_con_gusto_le_enviarÃ©_nuestro_catÃ¡logo._Â¿le
+[2026-02-06T01:31:12.537041320Z] [info]    Cargado desde disco: perfecto,_lo_enviarÃ©_a_este_nÃºmero_de_inmediato.
+[2026-02-06T01:31:12.537048632Z] [info]    Cargado desde disco: perfecto,_(name)._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:12.537056282Z] [info]    Cargado desde disco: excelente,_entonces._en_las_prÃ³ximas_dos_horas_le
+[2026-02-06T01:31:12.537068296Z] [info]    Cargado desde disco: mi_nombre_es_bruce_w._muchas_gracias_por
+[2026-02-06T01:31:12.537075034Z] [info]    Cargado desde disco: entiendo,_(name)._entonces,_Â¿actualmente_trabajan_con_varios_proveedores
+[2026-02-06T01:31:12.537081404Z] [info]    Cargado desde disco: manejamos_una_variedad_de_productos_de_ferreterÃ­a,_entre
+[2026-02-06T01:31:12.537087852Z] [info]    Cargado desde disco: entiendo,_(name)._ademÃ¡s_de_la_cinta_para_goteras
+[2026-02-06T01:31:12.537094100Z] [info]    Cargado desde disco: perfecto,_(name)._le_enviarÃ©_nuestro_catÃ¡logo_digital_completo
+[2026-02-06T01:31:12.537100898Z] [info]    Cargado desde disco: excelente,_bueno._voy_a_enviarlo_a_este_nÃºmero
+[2026-02-06T01:31:12.537126391Z] [info]    Cargado desde disco: de_nada,_bueno._estoy_aquÃ­_para_ayudar._Â¡que
+[2026-02-06T01:31:12.537133578Z] [info]    Cargado desde disco: excelente,_muchas_gracias._Â¿podrÃ­as_comunicarme_con_Ã©l,_por
+[2026-02-06T01:31:12.537140526Z] [info]    Cargado desde disco: perfecto,_estarÃ©_en_espera._gracias.
+[2026-02-06T01:31:12.537148335Z] [info]    Cargado desde disco: claro,_manejamos_una_variedad_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:12.537154944Z] [info]    Cargado desde disco: perfecto,_con_gusto_le_enviarÃ©_nuestro_catÃ¡logo._para
+[2026-02-06T01:31:12.537316778Z] [info]    Cargado desde disco: competimos_con_marcas_reconocidas_en_el_mercado,_ofreciendo
+[2026-02-06T01:31:12.537322316Z] [info]    Cargado desde disco: compitamos_con_marcas_como_dura_y_lamosa_en
+[2026-02-06T01:31:12.537327245Z] [info]    Cargado desde disco: entendemos_la_importancia_de_la_calidad._nuestros_envÃ­os
+[2026-02-06T01:31:14.292517724Z] [info]    Cargado desde disco: entiendo,_muchas_gracias_por_la_informaciÃ³n._una_Ãºltima
+[2026-02-06T01:31:14.292525646Z] [info]    Cargado desde disco: claro,_ofrecemos_precios_competitivos_y_productos_de_buena
+[2026-02-06T01:31:14.292533111Z] [info]    Cargado desde disco: claro,_comprendo_que_la_calidad_es_fundamental._ofrecemos
+[2026-02-06T01:31:14.292540598Z] [info]    Cargado desde disco: perfecto._por_favor,_proporciÃ³neme_su_direcciÃ³n_completa_para
+[2026-02-06T01:31:14.292547410Z] [info]    Cargado desde disco: claro,_le_enviarÃ©_el_catÃ¡logo_por_whatsapp._Â¿me
+[2026-02-06T01:31:14.292553821Z] [info]    Cargado desde disco: excelente,_le_enviarÃ©_el_catÃ¡logo_y_algunas_sugerencias
+[2026-02-06T01:31:14.292560879Z] [info]    Cargado desde disco: a_usted,_que_tenga_un_excelente_dÃ­a._estarÃ©
+[2026-02-06T01:31:14.292567883Z] [info]    Cargado desde disco: sÃ­,_manejamos_herrajes_tambiÃ©n._puedo_enviarle_un_catÃ¡logo
+[2026-02-06T01:31:14.292574401Z] [info]    Cargado desde disco: excelente,_herrajes._en_las_prÃ³ximas_2_horas_le
+[2026-02-06T01:31:14.292580822Z] [info]    Cargado desde disco: le_llamo_para_presentarles_una_propuesta_comercial_de
+[2026-02-06T01:31:14.292587821Z] [info]    Cargado desde disco: perfecto,_Â¿con_quiÃ©n_tengo_el_gusto?_le_comento
+[2026-02-06T01:31:14.292595969Z] [info]    Cargado desde disco: entiendo,_manejan_una_amplia_gama_de_productos._Â¿quÃ©
+[2026-02-06T01:31:14.292602506Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._Â¿actualmente_trabajan_con_varios
+[2026-02-06T01:31:14.292608706Z] [info]    Cargado desde disco: de_nada,_que._si_necesitas_algo_en_el
+[2026-02-06T01:31:14.292615215Z] [info]    Cargado desde disco: gracias,_[nombre]._dÃ©jeme_comentarle_que_estamos_muy_interesados
+[2026-02-06T01:31:16.037364955Z] [info]    Cargado desde disco: la_informaciÃ³n_me_ayudarÃ¡_a_preparar_una_propuesta
+[2026-02-06T01:31:16.037377372Z] [info]    Cargado desde disco: disculpe,_jair._no_alcancÃ©_a_captar_el_correo
+[2026-02-06T01:31:16.037384468Z] [info]    Cargado desde disco: disculpe,_entonces._por_favor,_deletrÃ©elo_letra_por_letra
+[2026-02-06T01:31:16.037392665Z] [info]    Cargado desde disco: entendido,_entonces._Â¿cuÃ¡l_es_la_siguiente_letra?
+[2026-02-06T01:31:16.037399875Z] [info]    Cargado desde disco: perfecto,_(name)._Â¿quÃ©_sigue_despuÃ©s_de_
+[2026-02-06T01:31:16.037407243Z] [info]    Cargado desde disco: disculpe,_entonces._Â¿me_lo_podrÃ­a_deletrear_letra_por
+[2026-02-06T01:31:16.037414960Z] [info]    Cargado desde disco: entiendo,_(name)._Â¿podrÃ­a_continuar_con_el_resto_del
+[2026-02-06T01:31:16.037422315Z] [info]    Cargado desde disco: gracias,_(name)._Â¿podrÃ­a_darme_mÃ¡s_letras_del_correo?
+[2026-02-06T01:31:16.037431525Z] [info]    Cargado desde disco: perfecto,_(name)._el_correo_que_me_proporcionÃ³_es:
+[2026-02-06T01:31:16.037438711Z] [info]    Cargado desde disco: Â¿podrÃ­a_confirmarme_si_el_correo_es_correcto?
+[2026-02-06T01:31:16.037446949Z] [info]    Cargado desde disco: excelente,_entonces._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:16.037454241Z] [info]    Cargado desde disco: disculpe,_tiene_razÃ³n._le_enviarÃ©_el_catÃ¡logo_al
+[2026-02-06T01:31:16.037461649Z] [info]    Cargado desde disco: de_nada,_entonces._estoy_aquÃ­_para_ayudar._Â¡que
+[2026-02-06T01:31:16.037471061Z] [info]    Cargado desde disco: excelente,_gracias._le_enviarÃ©_el_catÃ¡logo_a_ese
+[2026-02-06T01:31:17.678115002Z] [info]    Cargado desde disco: claro,_entiendo_perfectamente._le_enviarÃ©_toda_la_informaciÃ³n
+[2026-02-06T01:31:17.678119685Z] [info]    Cargado desde disco: entiendo,_tardes._el_motivo_de_mi_llamada_es
+[2026-02-06T01:31:17.678126867Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n,_tardes._solo_para_confirmar,
+[2026-02-06T01:31:17.678131454Z] [info]    Cargado desde disco: perfecto,_tardes._agradezco_su_ayuda._me_gustarÃ­a_enviarle
+[2026-02-06T01:31:17.678136312Z] [info]    Cargado desde disco: entiendo,_tardes._Â¿podrÃ­a_indicarme_su_correo_electrÃ³nico_para
+[2026-02-06T01:31:17.678141325Z] [info]    Cargado desde disco: estÃ¡_bien,_tardes._quedo_pendiente_para_contactar_a
+[2026-02-06T01:31:17.678146486Z] [info]    Cargado desde disco: adiÃ³s,_tardes._que_tenga_un_excelente_dÃ­a.
+[2026-02-06T01:31:17.678151583Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._ofrecemos_una_variedad
+[2026-02-06T01:31:17.678156452Z] [info]    Cargado desde disco: hola,_quÃ©_tal,_muy_buen_dÃ­a._me_comunico
+[2026-02-06T01:31:17.678161376Z] [info]    Cargado desde disco: el_nÃºmero_que_tengo_es_27_06_11
+[2026-02-06T01:31:17.678168579Z] [info]    Cargado desde disco: perfecto,_el_nÃºmero_es_33_27_06_11
+[2026-02-06T01:31:17.678565436Z] [info]    Cargado desde disco: hola,_quÃ©_tal,_muy_buen_dÃ­a._mi_nombre
+[2026-02-06T01:31:17.678585284Z] [info]    Cargado desde disco: Â¿bueno?_muy_buen_dÃ­a,_Â¿con_quiÃ©n_tengo_el
+[2026-02-06T01:31:17.678592408Z] [info]    Cargado desde disco: Â¿hola?_muy_buen_dÃ­a,_Â¿con_quiÃ©n_tengo_el
+[2026-02-06T01:31:17.678601522Z] [info]    Cargado desde disco: entiendo_perfectamente._disculpe,_no_alcancÃ©_a_captar_el
+[2026-02-06T01:31:17.678608465Z] [info]    Cargado desde disco: muy_buen_dÃ­a._mi_nombre_es_bruce_w,
+[2026-02-06T01:31:19.303674509Z] [info]    Cargado desde disco: excelente,_muchas_gracias._para_poder_prepararle_una_mejor
+[2026-02-06T01:31:19.303680992Z] [info]    Cargado desde disco: entiendo_perfectamente._Â¿actualmente_trabajan_con_varios_proveedores_o
+[2026-02-06T01:31:19.303687169Z] [info]    Cargado desde disco: perfecto,_gracias._mi_nombre_es_bruce_w,_le
+[2026-02-06T01:31:19.303693461Z] [info]    Cargado desde disco: entiendo,_pero_para_poder_ayudarle_mejor,_Â¿me_puede
+[2026-02-06T01:31:19.303700567Z] [info]    Cargado desde disco: ofrecemos_una_amplia_gama_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:19.304239651Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_proporcionar_su_nombre_para_poder
+[2026-02-06T01:31:19.304246261Z] [info]    Cargado desde disco: pensando_1
+[2026-02-06T01:31:19.304251450Z] [info]    Cargado desde disco: pensando_2
+[2026-02-06T01:31:19.304257397Z] [info]    Cargado desde disco: pensando_3
+[2026-02-06T01:31:19.304262113Z] [info]    Cargado desde disco: pensando_4
+[2026-02-06T01:31:19.304266698Z] [info]    Cargado desde disco: pensando_5
+[2026-02-06T01:31:19.304278590Z] [info]    Cargado desde disco: pensando_6
+[2026-02-06T01:31:19.304283888Z] [info]    Cargado desde disco: pensando_7
+[2026-02-06T01:31:19.304288899Z] [info]    Cargado desde disco: pensando_8
+[2026-02-06T01:31:19.304295158Z] [info]    Cargado desde disco: manejamos_la_marca_nioval,_que_es_nuestra_marca
+[2026-02-06T01:31:19.304299863Z] [info]    Cargado desde disco: estamos_ubicados_en_guadalajara,_jalisco,_pero_hacemos_envÃ­os
+[2026-02-06T01:31:19.304304863Z] [info]    Cargado desde disco: distribuimos_productos_de_ferreterÃ­a:_cinta_para_goteras,_griferÃ­as,
+[2026-02-06T01:31:20.981970878Z] [info]    Cargado desde disco: respuesta_cache_de_donde_habla
+[2026-02-06T01:31:20.981985535Z] [info]    Cargado desde disco: respuesta_cache_que_vende
+[2026-02-06T01:31:20.981993369Z] [info]    Cargado desde disco: respuesta_cache_que_marcas
+[2026-02-06T01:31:20.982000345Z] [info]    Cargado desde disco: respuesta_cache_quien_habla
+[2026-02-06T01:31:20.982007164Z] [info]    Cargado desde disco: respuesta_cache_que_necesita
+[2026-02-06T01:31:20.982014161Z] [info]    Cargado desde disco: respuesta_cache_que_productos
+[2026-02-06T01:31:20.982020490Z] [info]    Cargado desde disco: respuesta_cache_linea_credito
+[2026-02-06T01:31:20.982027175Z] [info]    Cargado desde disco: respuesta_cache_selladores_silicones
+[2026-02-06T01:31:20.982033386Z] [info]    Cargado desde disco: respuesta_cache_chapas
+[2026-02-06T01:31:20.982039952Z] [info]    Cargado desde disco: respuesta_cache_visitar_fabrica
+[2026-02-06T01:31:20.982045885Z] [info]    Cargado desde disco: respuesta_cache_fabrican_mexico
+[2026-02-06T01:31:20.982051523Z] [info]    Cargado desde disco: entiendo,_(name)._Â¿actualmente_trabajan_con_varios_proveedores_o
+[2026-02-06T01:31:20.982057850Z] [info]    Cargado desde disco: despedida_objecion
+[2026-02-06T01:31:20.982064043Z] [info]    Cargado desde disco: saludo_inicial_encargado
+[2026-02-06T01:31:20.982070040Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_comunicar_con_el_encargado_de
+[2026-02-06T01:31:20.982078939Z] [info]    Cargado desde disco: entendido._Â¿me_puede_dar_su_nÃºmero_directo_o
+[2026-02-06T01:31:20.982084777Z] [info]    Cargado desde disco: disculpa,_no_te_escuchÃ©_bien,_Â¿me_puedes_repetir?
+[2026-02-06T01:31:22.291825366Z] [info]    Cargado desde disco: perfecto,_excelente._por_favor,_adelante_con_el_correo.
+[2026-02-06T01:31:22.292436822Z] [info]    Cargado desde disco: hola,_muy_buen_dÃ­a._mi_nombre_es_bruce
+[2026-02-06T01:31:22.292444848Z] [info]    Cargado desde disco: perfecto,_anotado:_luis_garcÃ­a_u_de_uva_03@gmail.com.
+[2026-02-06T01:31:22.292451330Z] [info]    Cargado desde disco: muy_buen_dÃ­a._le_llamo_de_nioval_sobre
+[2026-02-06T01:31:22.292458162Z] [info]    Cargado desde disco: hola,_buen_dia
+[2026-02-06T01:31:22.292470403Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval,_mÃ¡s_que
+[2026-02-06T01:31:22.292477128Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval,_querÃ­a_brindar
+[2026-02-06T01:31:22.292499280Z] [info]    Cargado desde disco: segunda_parte_saludo
+[2026-02-06T01:31:22.294855867Z] [info]    Cargado desde disco: entendido._Â¿me_podrÃ­a_proporcionar_un_nÃºmero_de_whatsapp
+[2026-02-06T01:31:22.294870691Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval,_mas_queda
+[2026-02-06T01:31:22.294880145Z] [info]    Cargado desde disco: perfecto,_(name)._me_comunico_de_la_marca_nioval
+[2026-02-06T01:31:22.294888524Z] [info]    Cargado desde disco: confirmacion_presencia
+[2026-02-06T01:31:22.294896722Z] [info]    Cargado desde disco: perfecto,_ya_lo_tengo_anotado._le_llegarÃ¡_el
+[2026-02-06T01:31:22.294905273Z] [info]    Cargado desde disco: perfecto,_adelante_por_favor.
+[2026-02-06T01:31:22.294913788Z] [info]    Cargado desde disco: perfecto,_estoy_listo_para_anotarlo._Â¿cuÃ¡l_es_su
+[2026-02-06T01:31:22.294922222Z] [info]    Cargado desde disco: perfecto,_excelente._por_favor,_repÃ­tame_el_correo.
+[2026-02-06T01:31:22.294929465Z] [info]    Cargado desde disco: tiene_razÃ³n,_discÃºlpeme._deje_verifico_el_nÃºmero_que
+[2026-02-06T01:31:22.294938864Z] [info]    Cargado desde disco: dejeme_ver
+[2026-02-06T01:31:23.384568495Z] [info]    Cargado desde disco: un_momento_lo_reviso
+[2026-02-06T01:31:23.384575657Z] [info]    Cargado desde disco: permitame_verificar
+[2026-02-06T01:31:23.384582590Z] [info]    Cargado desde disco: dejeme_consultarlo
+[2026-02-06T01:31:23.384589120Z] [info]    Cargado desde disco: un_segundito_verifico
+[2026-02-06T01:31:23.384595740Z] [info]    Cargado desde disco: dejeme_checar
+[2026-02-06T01:31:23.384602336Z] [info]    Cargado desde disco: reviso_toda_informacion
+[2026-02-06T01:31:23.384608607Z] [info]    Cargado desde disco: verifico_detalles
+[2026-02-06T01:31:23.384614364Z] [info]    Cargado desde disco: consulto_con_cuidado
+[2026-02-06T01:31:23.384620243Z] [info]    Cargado desde disco: veo_todos_detalles
+[2026-02-06T01:31:23.384626745Z] [info]    Cargado desde disco: claro,_tÃ³mese_su_tiempo._estoy_aquÃ­_para_ayudarle
+[2026-02-06T01:31:23.384632970Z] [info]    Cargado desde disco: hola,_buen_dÃ­a._me_comunico_de_la_marca
+[2026-02-06T01:31:23.384639066Z] [info]    Cargado desde disco: claro,_espero.
+[2026-02-06T01:31:23.384644852Z] [info]    Cargado desde disco: claro_espero
+[2026-02-06T01:31:23.384653485Z] [info]    Cargado desde disco: perfecto,_(name)._me_comunico_de_la_marca_nioval,
+[2026-02-06T01:31:23.384659468Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:23.384665891Z] [info]    Cargado desde disco: perfecto._Â¿le_gustarÃ­a_recibir_el_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:23.384671252Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval_para_ofrecerle
+[2026-02-06T01:31:23.387704791Z] [info]    Cargado desde disco: un_momento
+[2026-02-06T01:31:23.387710761Z] [info]    Cargado desde disco: lo_reviso
+[2026-02-06T01:31:23.387718554Z] [info]    Cargado desde disco: despedida_simple
+[2026-02-06T01:31:23.387724636Z] [info]    Cargado desde disco: dejeme_ver_con_calma
+[2026-02-06T01:31:24.798717824Z] [info]    Cargado desde disco: entiendo_perfecto._por_si_en_el_futuro_necesitan
+[2026-02-06T01:31:24.798723347Z] [info]    Cargado desde disco: Â¿se_encuentra_el_encargado_o_encargada_de_compras?
+[2026-02-06T01:31:24.798728321Z] [info]    Cargado desde disco: entendido._Â¿me_podrÃ­a_proporcionar_el_correo_para_enviarle
+[2026-02-06T01:31:24.798733568Z] [info]    Cargado desde disco: respuesta_cache_presencia_aqui
+[2026-02-06T01:31:24.798738847Z] [info]    Cargado desde disco: respuesta_cache_presencia_escucho
+[2026-02-06T01:31:24.798744962Z] [info]    Cargado desde disco: respuesta_cache_presencia_ayudo
+[2026-02-06T01:31:24.798750339Z] [info]    Cargado desde disco: respuesta_cache_presencia_digame
+[2026-02-06T01:31:24.798757054Z] [info]    Cargado desde disco: entiendo,_Â¿prefiere_recibir_el_catÃ¡logo_por_whatsapp_o
+[2026-02-06T01:31:24.798765928Z] [info]    Cargado desde disco: entiendo,_si_no_estÃ¡_interesado_en_el_catÃ¡logo,
+[2026-02-06T01:31:24.798775453Z] [info]    Cargado desde disco: Â¡claro!_manejamos_productos_de_ferreterÃ­a_como_griferÃ­a,_herramientas
+[2026-02-06T01:31:24.798781652Z] [info]    Cargado desde disco: entendido,_enviarÃ©_el_catÃ¡logo_a_este_nÃºmero._le
+[2026-02-06T01:31:24.798786581Z] [info]    Cargado desde disco: Â¡sÃ­!_manejamos_productos_de_ferreterÃ­a_en_varias_categorÃ­as,
+[2026-02-06T01:31:24.798792535Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_comunicar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:24.798799016Z] [info]    Cargado desde disco: perfecto,_lo_enviarÃ©_al_mismo_nÃºmero._recibirÃ¡_el
+[2026-02-06T01:31:24.798805435Z] [info]    Cargado desde disco: Â¿estÃ¡_disponible_el_encargado_o_encargada_de_compras?
+[2026-02-06T01:31:24.798813507Z] [info]    Cargado desde disco: ofrecemos_una_variedad_de_productos_de_ferreterÃ­a,_como
+[2026-02-06T01:31:24.798820527Z] [info]    Cargado desde disco: Â¡sÃ­!_manejamos_griferÃ­a,_herramientas_y_cintas._por_ejemplo,
+[2026-02-06T01:31:26.610370590Z] [info]    Cargado desde disco: excelente,_le_enviarÃ©_el_catÃ¡logo_por_whatsapp_a
+[2026-02-06T01:31:26.610374216Z] [info]    Cargado desde disco: Â¡gracias!_me_alegra_comunicarme_contigo._soy_bruce_w
+[2026-02-06T01:31:26.610381238Z] [info]    Cargado desde disco: parece_que_hay_un_malentendido._me_comunico_de
+[2026-02-06T01:31:26.610390086Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp_o
+[2026-02-06T01:31:26.610398176Z] [info]    Cargado desde disco: disculpe,_tuve_un_problema_tÃ©cnico._Â¿podrÃ­a_repetir_lo
+[2026-02-06T01:31:26.610400537Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_ocupado._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:26.610406582Z] [info]    Cargado desde disco: entiendo,_es_importante_respetar_esos_tiempos._el_motivo
+[2026-02-06T01:31:26.610421192Z] [info]    Cargado desde disco: Â¿bueno?_buenos_dÃ­as._me_comunico_de_la_marca
+[2026-02-06T01:31:26.610433214Z] [info]    Cargado desde disco: perfecto,_Â¿me_puede_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:26.610439608Z] [info]    Cargado desde disco: claro,_puedo_enviarle_el_catÃ¡logo_completo_por_correo.
+[2026-02-06T01:31:26.610553616Z] [info]    Cargado desde disco: manejamos_griferÃ­as,_herramientas_y_cintas._por_ejemplo,_tenemos
+[2026-02-06T01:31:26.610560293Z] [info]    Cargado desde disco: manejamos_varias_cintas,_incluyendo_la_cinta_para_goteras,
+[2026-02-06T01:31:26.610567084Z] [info]    Cargado desde disco: manejamos_cintas_como_la_cinta_para_goteras,_cintas
+[2026-02-06T01:31:26.610577288Z] [info]    Cargado desde disco: manejamos_productos_de_ferreterÃ­a,_como_griferÃ­as,_herramientas_y
+[2026-02-06T01:31:26.610583831Z] [info]    Cargado desde disco: claro,_Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:26.610590488Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_confirmar_el_nÃºmero?
+[2026-02-06T01:31:28.318904554Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_ocupado._Â¿le_gustarÃ­a_recibir_el
+[2026-02-06T01:31:28.318913838Z] [info]    Cargado desde disco: entendido._si_necesita_informaciÃ³n_en_el_futuro,_no
+[2026-02-06T01:31:28.318921043Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_que_le_envÃ­e_el_catÃ¡logo_por
+[2026-02-06T01:31:28.318928710Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._Â¿me_podrÃ­a_comunicar_con_el
+[2026-02-06T01:31:28.318935184Z] [info]    Cargado desde disco: entiendo,_Â¿me_podrÃ­a_comunicar_con_el_encargado_de
+[2026-02-06T01:31:28.318941797Z] [info]    Cargado desde disco: entiendo._si_prefiere,_puedo_enviarle_informaciÃ³n_por_correo
+[2026-02-06T01:31:28.318947943Z] [info]    Cargado desde disco: entiendo,_pero_me_gustarÃ­a_enfocarme_en_nuestros_productos
+[2026-02-06T01:31:28.318954694Z] [info]    Cargado desde disco: Â¡sÃ­!_manejamos_una_amplia_variedad_de_productos_de
+[2026-02-06T01:31:28.318961330Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_recibir_el_catÃ¡logo_completo_por_whatsapp?
+[2026-02-06T01:31:28.319052958Z] [info]    Cargado desde disco: entiendo_que_estÃ¡s_ocupado._Â¿te_gustarÃ­a_que_te
+[2026-02-06T01:31:28.319090479Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._me_comunico_de
+[2026-02-06T01:31:28.319102902Z] [info]    Cargado desde disco: Â¿bueno?_buenas_tardes._me_comunico_de_la_marca
+[2026-02-06T01:31:28.319110300Z] [info]    Cargado desde disco: entiendo_que_no_tiene_tiempo._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:28.319121232Z] [info]    Cargado desde disco: entendido._Â¿le_gustarÃ­a_recibir_el_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:28.319131513Z] [info]    Cargado desde disco: sÃ­,_por_favor,_deletrÃ©elo.
+[2026-02-06T01:31:28.319139105Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_mencionando_instalaciones_elÃ©ctricas._me_gustarÃ­a
+[2026-02-06T01:31:29.830088776Z] [info]    Cargado desde disco: manejamos_productos_de_ferreterÃ­a_como_griferÃ­as,_herramientas,_cintas
+[2026-02-06T01:31:29.830096826Z] [info]    Cargado desde disco: claro,_por_favor_proporcione_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:29.830102618Z] [info]    Cargado desde disco: entiendo,_Â¿me_podrÃ­a_proporcionar_el_correo_electrÃ³nico_para
+[2026-02-06T01:31:29.830108214Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_confirmar_el_correo_completo?
+[2026-02-06T01:31:29.830115046Z] [info]    Cargado desde disco: me_comunico_para_ofrecerle_informaciÃ³n_sobre_nuestros_productos
+[2026-02-06T01:31:29.830121811Z] [info]    Cargado desde disco: entendido._Â¿me_podrÃ­a_proporcionar_el_correo_electrÃ³nico_para
+[2026-02-06T01:31:29.830130261Z] [info]    Cargado desde disco: perfecto._ofrecemos_una_variedad_de_productos_de_ferreterÃ­a,
+[2026-02-06T01:31:29.830136782Z] [info]    Cargado desde disco: Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_para_enviarle
+[2026-02-06T01:31:29.830145058Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_a_este_nÃºmero.
+[2026-02-06T01:31:29.830152494Z] [info]    Cargado desde disco: entiendo,_pero_me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:29.830159611Z] [info]    Cargado desde disco: comprendo,_no_hay_problema._Â¿tiene_un_correo_electrÃ³nico
+[2026-02-06T01:31:29.830166015Z] [info]    Cargado desde disco: perfecto,_tengo_anotado_el_correo._enviarÃ©_el_catÃ¡logo
+[2026-02-06T01:31:29.830172060Z] [info]    Cargado desde disco: Â¡de_nada!_estoy_aquÃ­_para_ayudar._si_tiene
+[2026-02-06T01:31:29.830179449Z] [info]    Cargado desde disco: claro,_le_dejo_mi_contacto_por_si_cambia
+[2026-02-06T01:31:29.830186778Z] [info]    Cargado desde disco: perfecto,_entiendo._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital
+[2026-02-06T01:31:29.830194171Z] [info]    Cargado desde disco: entiendo._de_todos_modos,_me_gustarÃ­a_enviarle_nuestro
+[2026-02-06T01:31:31.439528478Z] [info]    Cargado desde disco: Â¡hasta_luego!_que_tenga_un_excelente_dÃ­a.
+[2026-02-06T01:31:31.439532547Z] [info]    Cargado desde disco: Â¿estÃ¡_disponible_el_encargado_de_compras?
+[2026-02-06T01:31:31.439536786Z] [info]    Cargado desde disco: manejamos_un_catÃ¡logo_de_productos_de_ferreterÃ­a,_incluyendo
+[2026-02-06T01:31:31.439541204Z] [info]    Cargado desde disco: solo_querÃ­a_ofrecerle_informaciÃ³n_sobre_nuestros_productos_de
+[2026-02-06T01:31:31.439545361Z] [info]    Cargado desde disco: claro,_pero_necesito_saber_si_prefiere_recibir_el
+[2026-02-06T01:31:31.439549605Z] [info]    Cargado desde disco: perfecto,_enviarÃ©_el_catÃ¡logo_a_este_nÃºmero._gracias
+[2026-02-06T01:31:31.439554447Z] [info]    Cargado desde disco: Â¡sÃ­!_griferÃ­a_es_nuestra_categorÃ­a_principal_con_34
+[2026-02-06T01:31:31.439559103Z] [info]    Cargado desde disco: perfecto._Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:31.439563419Z] [info]    Cargado desde disco: entendido,_pero_necesito_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:31.439569506Z] [info]    Cargado desde disco: perfecto,_lo_enviarÃ©_a_este_nÃºmero._le_llegarÃ¡
+[2026-02-06T01:31:31.439574035Z] [info]    Cargado desde disco: Â¿podrÃ­a_darme_el_nÃºmero_completo,_por_favor?
+[2026-02-06T01:31:31.439578041Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_que_le_envÃ­e_informaciÃ³n_sobre_nuestros
+[2026-02-06T01:31:31.439582148Z] [info]    Cargado desde disco: entendido._si_me_proporciona_el_nÃºmero_de_whatsapp,
+[2026-02-06T01:31:31.439586227Z] [info]    Cargado desde disco: entendido._Â¿me_podrÃ­a_proporcionar_el_nÃºmero_de_whatsapp
+[2026-02-06T01:31:31.439591073Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_proporcionar_el_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:31.439597840Z] [info]    Cargado desde disco: entendido._Â¿le_gustarÃ­a_recibir_informaciÃ³n_sobre_nuestros_productos
+[2026-02-06T01:31:32.797725221Z] [info]    Cargado desde disco: entiendo._Â¿hay_un_mejor_momento_para_llamar_y
+[2026-02-06T01:31:32.797737227Z] [info]    Cargado desde disco: disculpe_la_insistencia._Â¿hay_algÃºn_momento_mÃ¡s_conveniente
+[2026-02-06T01:31:32.797747108Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_confirmarme_si_estÃ¡_el_encargado_o
+[2026-02-06T01:31:32.797780186Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_confirmar_si_estÃ¡_el_encargado_de
+[2026-02-06T01:31:32.797788179Z] [info]    Cargado desde disco: gracias_por_su_tiempo._que_tenga_un_excelente
+[2026-02-06T01:31:32.797795924Z] [info]    Cargado desde disco: entiendo,_le_puedo_enviar_informaciÃ³n_por_whatsapp._Â¿cuÃ¡l
+[2026-02-06T01:31:32.797806136Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval,_especializada_en
+[2026-02-06T01:31:32.797813693Z] [info]    Cargado desde disco: sÃ­,_por_favor._puede_proporcionarme_el_correo_o
+[2026-02-06T01:31:32.797820725Z] [info]    Cargado desde disco: sÃ­,_por_favor,_adelante_con_el_deletreo_del
+[2026-02-06T01:31:32.797827990Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._entiendo_que_estÃ¡_ocupado._Â¿le
+[2026-02-06T01:31:32.797846745Z] [info]    Cargado desde disco: parece_que_estÃ¡_ocupado._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:32.797848318Z] [info]    Cargado desde disco: entiendo._estoy_buscando_hablar_con_el_encargado_de
+[2026-02-06T01:31:32.797856225Z] [info]    Cargado desde disco: excelente._Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:32.797863175Z] [info]    Cargado desde disco: entiendo_que_estÃ¡n_enfocados_en_otra_Ã¡rea._Â¿le
+[2026-02-06T01:31:32.797865465Z] [info]    Cargado desde disco: entiendo_que_prefiere_por_whatsapp._Â¿cuÃ¡l_es_su
+[2026-02-06T01:31:32.797873346Z] [info]    Cargado desde disco: perfecto._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:34.082080273Z] [info]    Cargado desde disco: respuesta_cache_no_interesa
+[2026-02-06T01:31:34.082119748Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_que_le_envÃ­e_el_catÃ¡logo
+[2026-02-06T01:31:34.082131291Z] [info]    Cargado desde disco: entiendo,_Â¿hay_un_mejor_momento_para_llamar_y
+[2026-02-06T01:31:34.082139049Z] [info]    Cargado desde disco: entiendo_que_puede_estar_ocupado._si_prefiere,_puedo
+[2026-02-06T01:31:34.082146406Z] [info]    Cargado desde disco: entiendo_la_confusiÃ³n._me_comunico_de_nioval_para
+[2026-02-06T01:31:34.082173633Z] [info]    Cargado desde disco: entiendo._me_comunico_de_la_marca_nioval_para
+[2026-02-06T01:31:34.082181060Z] [info]    Cargado desde disco: entendido,_gracias_por_su_tiempo._que_tenga_un
+[2026-02-06T01:31:34.082200142Z] [info]    Cargado desde disco: entendido._Â¿le_gustarÃ­a_recibir_el_catÃ¡logo_de_nuestros
+[2026-02-06T01:31:34.082201174Z] [info]    Cargado desde disco: respuesta_cache_whatsapp_si
+[2026-02-06T01:31:34.082219126Z] [info]    Cargado desde disco: respuesta_cache_correo_si
+[2026-02-06T01:31:34.082220748Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp_o
+[2026-02-06T01:31:34.082227203Z] [info]    Cargado desde disco: entiendo_que_estÃ¡n_en_un_proceso_de_cierre.
+[2026-02-06T01:31:34.082239641Z] [info]    Cargado desde disco: respuesta_cache_encargado_si
+[2026-02-06T01:31:34.082246478Z] [info]    Cargado desde disco: entiendo._en_nioval_manejamos_productos_de_ferreterÃ­a,_como
+[2026-02-06T01:31:34.082253939Z] [info]    Cargado desde disco: respuesta_cache_encargado_no
+[2026-02-06T01:31:35.340498038Z] [info]    Cargado desde disco: gracias_por_su_tiempo._si_necesita_algo_mÃ¡s
+[2026-02-06T01:31:35.340519722Z] [info]    Cargado desde disco: hola,_soy_representante_de_la_marca_nioval._quisiera
+[2026-02-06T01:31:35.340551223Z] [info]    Cargado desde disco: respuesta_cache_ocupado
+[2026-02-06T01:31:35.340561909Z] [info]    Cargado desde disco: entiendo._en_nioval_manejamos_productos_de_ferreterÃ­a_que
+[2026-02-06T01:31:35.340573203Z] [info]    Cargado desde disco: entiendo._me_comunico_de_la_marca_nioval,_mÃ¡s
+[2026-02-06T01:31:35.340582175Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._que_tenga_un_excelente_dÃ­a.
+[2026-02-06T01:31:35.340591157Z] [info]    Cargado desde disco: entendido._le_enviarÃ©_nuestro_catÃ¡logo_a_ventas_arroba
+[2026-02-06T01:31:35.340628609Z] [info]    Cargado desde disco: entiendo_que_estÃ¡n_ocupados_con_la_nueva_sucursal.
+[2026-02-06T01:31:35.340638334Z] [info]    Cargado desde disco: claro,_Â¿me_podrÃ­a_proporcionar_un_nÃºmero_de_whatsapp
+[2026-02-06T01:31:35.340645909Z] [info]    Cargado desde disco: perfecto._enviarÃ©_el_catÃ¡logo_al_whatsapp_de_abigail.
+[2026-02-06T01:31:35.340653310Z] [info]    Cargado desde disco: entiendo._enviarÃ©_el_catÃ¡logo_al_whatsapp_de_abigail
+[2026-02-06T01:31:35.340660666Z] [info]    Cargado desde disco: entiendo._aunque_no_manejamos_cobre_directamente,_sÃ­_ofrecemos
+[2026-02-06T01:31:35.340667960Z] [info]    Cargado desde disco: perfecto,_ya_tengo_el_nÃºmero_anotado._enviarÃ©_el
+[2026-02-06T01:31:35.340674855Z] [info]    Cargado desde disco: Â¡hasta_luego!_si_necesita_algo_mÃ¡s,_no_dude
+[2026-02-06T01:31:35.340681611Z] [info]    Cargado desde disco: entiendo_que_estÃ¡n_ocupados._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:35.340689012Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_proporcionar_su_correo_electrÃ³nico_para
+[2026-02-06T01:31:36.223736593Z] [info]    Cargado desde disco: de_nada._que_tenga_un_excelente_dÃ­a._Â¡hasta
+[2026-02-06T01:31:36.223746261Z] [info]    Cargado desde disco: sÃ­,_le_escucho._Â¿me_podrÃ­a_proporcionar_un_nÃºmero
+[2026-02-06T01:31:36.223763706Z] [info]    Cargado desde disco: claro,_tengo_donde_anotar._Â¿cuÃ¡l_es_su_nÃºmero
+[2026-02-06T01:31:36.223770166Z] [info]    Cargado desde disco: gracias._enviarÃ©_el_catÃ¡logo_a_ese_nÃºmero_de
+[2026-02-06T01:31:36.223805643Z] [info]    Cargado desde disco: entendido._enviarÃ©_el_catÃ¡logo_Ãºnicamente_al_correo_que
+[2026-02-06T01:31:36.223842373Z] [info]    Cargado desde disco: claro,_Â¿puedo_tomar_nota_de_lo_que_necesite?
+[2026-02-06T01:31:36.223856005Z] [info]    Cargado desde disco: perfecto,_ya_lo_tengo_anotado._Â¿me_gustarÃ­a_enviarle
+[2026-02-06T01:31:36.223867297Z] [info]    Cargado desde disco: entiendo,_le_enviarÃ©_el_catÃ¡logo_completo_a_su
+[2026-02-06T01:31:36.223873568Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_en_el_transcurso
+[2026-02-06T01:31:36.223926588Z] [info]    Cargado desde disco: perfecto._Â¿me_podrÃ­a_proporcionar_un_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.223931242Z] [info]    Cargado desde disco: claro,_Â¿cuÃ¡l_es_su_correo_electrÃ³nico?
+[2026-02-06T01:31:36.223936366Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._perfecto,_gracias._enviarÃ©_el_catÃ¡logo
+[2026-02-06T01:31:36.223945634Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._enviarÃ©_el_catÃ¡logo_a
+[2026-02-06T01:31:36.223946242Z] [info]    Cargado desde disco: perfecto,_he_anotado_su_correo._le_enviarÃ©_el
+[2026-02-06T01:31:36.223958240Z] [info]    Cargado desde disco: gracias_a_usted._si_necesita_algo_mÃ¡s_en
+[2026-02-06T01:31:36.223965038Z] [info]    Cargado desde disco: gracias_por_compartir_el_correo._le_enviarÃ©_el
+[2026-02-06T01:31:36.223974951Z] [info]    Cargado desde disco: entendido._Â¿me_puede_proporcionar_su_correo_electrÃ³nico_para
+[2026-02-06T01:31:36.227925080Z] [info]    Cargado desde disco: claro,_con_gusto_espero.
+[2026-02-06T01:31:36.227961198Z] [info]    Cargado desde disco: por_supuesto,_tÃ³mese_su_tiempo._si_prefiere,_puedo
+[2026-02-06T01:31:36.227968829Z] [info]    Cargado desde disco: entiendo,_parece_que_usted_es_el_encargado._Â¿le
+[2026-02-06T01:31:36.227976360Z] [info]    Cargado desde disco: entiendo,_parece_que_hay_una_confusiÃ³n._Â¿desea_que
+[2026-02-06T01:31:36.227981870Z] [info]    Cargado desde disco: Â¿me_escucha?_estoy_aquÃ­_para_ayudarle.
+[2026-02-06T01:31:36.227987879Z] [info]    Cargado desde disco: perdÃ³n,_no_logrÃ©_escucharte,_Â¿me_lo_repites_por
+[2026-02-06T01:31:36.227994767Z] [info]    Cargado desde disco: Â¿prefiere_que_le_envÃ­e_el_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:36.228004252Z] [info]    Cargado desde disco: perfecto._Â¿le_gustarÃ­a_que_le_enviara_el_catÃ¡logo
+[2026-02-06T01:31:36.228004296Z] [info]    Cargado desde disco: entiendo,_enviarÃ©_la_informaciÃ³n_por_whatsapp_y_tambiÃ©n
+[2026-02-06T01:31:36.228012365Z] [info]    Cargado desde disco: sÃ­,_le_escucho._Â¿se_encuentra_el_encargado_o
+[2026-02-06T01:31:36.228014894Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_aclarar_quÃ©_aspecto_del_convenio_no
+[2026-02-06T01:31:36.228021216Z] [info]    Cargado desde disco: Â¡hola!_muy_buen_dÃ­a,_Â¿con_quiÃ©n_tengo_el
+[2026-02-06T01:31:36.228024138Z] [info]    Cargado desde disco: entiendo._si_necesita_informaciÃ³n_en_el_futuro,_no
+[2026-02-06T01:31:36.228028686Z] [info]    Cargado desde disco: disculpe,_Â¿me_decÃ­a_algo?_estoy_aquÃ­_para_ayudarle.
+[2026-02-06T01:31:36.228034947Z] [info]    Cargado desde disco: perfecto,_dÃ­game_el_nÃºmero_y_lo_anoto_para
+[2026-02-06T01:31:36.228036443Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_comunicar_con_el_encargado_de_compras,
+[2026-02-06T01:31:36.228043680Z] [info]    Cargado desde disco: parece_que_el_nÃºmero_estÃ¡_incompleto._Â¿podrÃ­a_confirmarme
+[2026-02-06T01:31:36.228058462Z] [info]    Cargado desde disco: sÃ­,_Â¿me_escucha?_le_llamo_de_la_marca
+[2026-02-06T01:31:36.228155816Z] [info]    Cargado desde disco: perfecto,_tengo_realizadosporlacomunidaddeamara.org._Â¿cuÃ¡l_es_la_primera_parte
+[2026-02-06T01:31:36.228162452Z] [info]    Cargado desde disco: parece_que_hay_un_malentendido._Â¿me_podrÃ­a_confirmar
+[2026-02-06T01:31:36.228169593Z] [info]    Cargado desde disco: entiendo_que_hay_confusiÃ³n._me_comunico_de_nioval,
+[2026-02-06T01:31:36.228176083Z] [info]    Cargado desde disco: Â¿podrÃ­a_confirmarme_si_hay_alguien_disponible_para_hablar
+[2026-02-06T01:31:36.228182559Z] [info]    Cargado desde disco: entendido._por_favor,_adelante_con_el_correo.
+[2026-02-06T01:31:36.228188632Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_el_correo_electrÃ³nico_donde_puedo
+[2026-02-06T01:31:36.228195755Z] [info]    Cargado desde disco: perfecto._entonces,_el_correo_es_almacÃ©n_de_ernesto.
+[2026-02-06T01:31:36.228205474Z] [info]    Cargado desde disco: disculpa_la_repeticiÃ³n._me_gustarÃ­a_saber_si_serÃ­a
+[2026-02-06T01:31:36.228211866Z] [info]    Cargado desde disco: hola,_buenos_dÃ­as._estoy_llamando_para_ver_si
+[2026-02-06T01:31:36.228218010Z] [info]    Cargado desde disco: entiendo,_Â¿me_podrÃ­a_proporcionar_el_correo_electrÃ³nico_completo
+[2026-02-06T01:31:36.228223955Z] [info]    Cargado desde disco: estÃ¡_bien,_respeto_su_decisiÃ³n._si_en_el
+[2026-02-06T01:31:36.228230335Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._Â¿bueno?_buenos_dÃ­as._me_comunico
+[2026-02-06T01:31:36.228236988Z] [info]    Cargado desde disco: entiendo._perfecto,_Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por
+[2026-02-06T01:31:36.228243759Z] [info]    Cargado desde disco: comprendo._entonces,_Â¿hay_un_mejor_momento_para_llamar
+[2026-02-06T01:31:36.228251404Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._entendido._perfecto,_le_enviarÃ©_el
+[2026-02-06T01:31:36.228257927Z] [info]    Cargado desde disco: entendido,_muchas_gracias._le_enviarÃ©_el_catÃ¡logo_al
+[2026-02-06T01:31:36.228266399Z] [info]    Cargado desde disco: entendido,_le_enviarÃ©_la_informaciÃ³n_por_whatsapp._Â¿me
+[2026-02-06T01:31:36.230939319Z] [info]    Cargado desde disco: actualmente_no_manejamos_mÃ¡quinas,_pero_ofrecemos_una_variedad
+[2026-02-06T01:31:36.230952653Z] [info]    Cargado desde disco: Â¿cuÃ¡l_es_su_whatsapp_para_enviarle_el_catÃ¡logo?
+[2026-02-06T01:31:36.231701057Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._si_lo_prefiere,_puedo
+[2026-02-06T01:31:36.231705959Z] [info]    Cargado desde disco: entiendo,_perfecto._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por
+[2026-02-06T01:31:36.231711212Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_que_le_envÃ­e_nuestro_catÃ¡logo
+[2026-02-06T01:31:36.231716834Z] [info]    Cargado desde disco: comprendo,_parece_que_estÃ¡_ocupado._Â¿quiere_que_le
+[2026-02-06T01:31:36.231722379Z] [info]    Cargado desde disco: entiendo._Â¿estÃ¡_buscando_alguna_opciÃ³n_especÃ­fica_de_ese
+[2026-02-06T01:31:36.231731240Z] [info]    Cargado desde disco: comprendo._Â¿le_gustarÃ­a_que_le_enviara_el_catÃ¡logo
+[2026-02-06T01:31:36.231736847Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_de_productos
+[2026-02-06T01:31:36.231742213Z] [info]    Cargado desde disco: gracias_por_su_correo._le_enviarÃ©_el_catÃ¡logo
+[2026-02-06T01:31:36.231763483Z] [info]    Cargado desde disco: le_enviarÃ©_el_catÃ¡logo_completo_por_correo_a
+[2026-02-06T01:31:36.231769231Z] [info]    Cargado desde disco: de_nada._si_necesita_algo_mÃ¡s_en_el
+[2026-02-06T01:31:36.231774514Z] [info]    Cargado desde disco: entiendo._como_le_habÃ­a_comentado_la_vez_pasada,
+[2026-02-06T01:31:36.231788873Z] [info]    Cargado desde disco: comprendo._si_le_interesa,_puedo_enviarle_el_catÃ¡logo
+[2026-02-06T01:31:36.231795572Z] [info]    Cargado desde disco: claro,_me_comunico_de_la_marca_nioval._Â¿le
+[2026-02-06T01:31:36.231802102Z] [info]    Cargado desde disco: me_comunico_de_nioval,_distribuidores_de_productos_de
+[2026-02-06T01:31:36.235405292Z] [info]    Cargado desde disco: entiendo._Â¿prefiere_que_le_envÃ­e_el_catÃ¡logo_por
+[2026-02-06T01:31:36.235410938Z] [info]    Cargado desde disco: perfecto,_muchas_gracias._Â¿me_podrÃ­a_proporcionar_un_nÃºmero
+[2026-02-06T01:31:36.235416824Z] [info]    Cargado desde disco: perfecto,_ya_lo_tengo_registrado._le_llegarÃ¡_el
+[2026-02-06T01:31:36.235422549Z] [info]    Cargado desde disco: sÃ­,_buen_dÃ­a._soy_bruce_de_la_marca
+[2026-02-06T01:31:36.235428162Z] [info]    Cargado desde disco: entiendo,_no_se_preocupe._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.235434666Z] [info]    Cargado desde disco: perfecto._mi_nombre_es_bruce_w,_soy_asesor
+[2026-02-06T01:31:36.235441124Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_recibir_el_catÃ¡logo_de_nuestros_productos
+[2026-02-06T01:31:36.235446827Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_compartir_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.235452522Z] [info]    Cargado desde disco: Â¿me_puede_proporcionar_su_nÃºmero_de_whatsapp?
+[2026-02-06T01:31:36.235458406Z] [info]    Cargado desde disco: perfecto,_le_enviarÃ©_el_catÃ¡logo_a_ese_nÃºmero.
+[2026-02-06T01:31:36.235464610Z] [info]    Cargado desde disco: entiendo,_ya_tengo_su_nÃºmero._le_enviarÃ©_el
+[2026-02-06T01:31:36.235470426Z] [info]    Cargado desde disco: estÃ¡_bien._enviarÃ©_el_catÃ¡logo_a_su_whatsapp.
+[2026-02-06T01:31:36.235476033Z] [info]    Cargado desde disco: entendido._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:36.235483323Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._mientras_espero,_Â¿le_gustarÃ­a
+[2026-02-06T01:31:36.235489566Z] [info]    Cargado desde disco: entiendo,_parece_que_estÃ¡n_ocupados._si_lo_prefieren,
+[2026-02-06T01:31:36.235495591Z] [info]    Cargado desde disco: de_nada._si_en_el_futuro_necesita_algo,
+[2026-02-06T01:31:36.235501849Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.240822158Z] [info]    Cargado desde disco: entiendo._para_enviarle_el_catÃ¡logo_por_correo,_necesito
+[2026-02-06T01:31:36.240830393Z] [info]    Cargado desde disco: perfecto._Â¿hay_algo_mÃ¡s_en_lo_que_le
+[2026-02-06T01:31:36.240836780Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_de_productos_por
+[2026-02-06T01:31:36.240887137Z] [info]    Cargado desde disco: entendido._Â¿me_puede_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.240895635Z] [info]    Cargado desde disco: perfecto,_lo_tengo_anotado_como_614-104-27-17,_Â¿es_correcto?
+[2026-02-06T01:31:36.240922366Z] [info]    Cargado desde disco: entiendo,_parece_que_estÃ¡_ocupado_en_este_momento.
+[2026-02-06T01:31:36.240930278Z] [info]    Cargado desde disco: hola,_gracias_por_responder._quisiera_saber_cÃ³mo_puedo
+[2026-02-06T01:31:36.240936681Z] [info]    Cargado desde disco: perfecto._manejamos_griferÃ­a,_cintas,_herramientas_y_mÃ¡s._Â¿le
+[2026-02-06T01:31:36.240942724Z] [info]    Cargado desde disco: excelente._por_favor,_Â¿podrÃ­a_proporcionarme_su_direcciÃ³n_de
+[2026-02-06T01:31:36.240953631Z] [info]    Cargado desde disco: disculpe,_me_puede_repetir_el_nÃºmero_completo?_creo
+[2026-02-06T01:31:36.240961577Z] [info]    Cargado desde disco: gracias._enviarÃ©_el_catÃ¡logo_a_su_whatsapp_en
+[2026-02-06T01:31:36.240969903Z] [info]    Cargado desde disco: Â¿me_puede_confirmar_si_el_nÃºmero_es_614-104-27-17?
+[2026-02-06T01:31:36.240976299Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_ocupado._quisiera_ofrecerle_informaciÃ³n_sobre
+[2026-02-06T01:31:36.240983913Z] [info]    Cargado desde disco: parece_que_no_hemos_podido_conectarnos_correctamente._si
+[2026-02-06T01:31:36.240990932Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:36.246881770Z] [info]    Cargado desde disco: Â¿hay_algo_mÃ¡s_en_lo_que_le_pueda
+[2026-02-06T01:31:36.246889268Z] [info]    Cargado desde disco: Â¿tiene_alguna_duda_sobre_el_catÃ¡logo?_estoy_para
+[2026-02-06T01:31:36.246897461Z] [info]    Cargado desde disco: comprendo._si_en_algÃºn_momento_necesita_informaciÃ³n_sobre
+[2026-02-06T01:31:36.246905456Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_1_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.246913392Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_que_le_envÃ­e_nuestro_catÃ¡logo_por
+[2026-02-06T01:31:36.246921390Z] [info]    Cargado desde disco: claro,_dÃ­game_su_correo_electrÃ³nico_por_favor.
+[2026-02-06T01:31:36.246928584Z] [info]    Cargado desde disco: Â¡excelente!_Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.246935072Z] [info]    Cargado desde disco: perfecto._Â¿me_puede_compartir_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.246942622Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_4_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.246950194Z] [info]    Cargado desde disco: entiendo,_pero_necesito_el_nÃºmero_completo_de_10
+[2026-02-06T01:31:36.247126443Z] [info]    Cargado desde disco: disculpe,_no_he_podido_captar_el_nÃºmero._Â¿podrÃ­a
+[2026-02-06T01:31:36.247141831Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_2_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.247157865Z] [info]    Cargado desde disco: soy_bruce,_me_comunico_de_la_empresa_nioval,
+[2026-02-06T01:31:36.247164836Z] [info]    Cargado desde disco: entiendo,_puede_ser_complicado._no_quiero_incomodarlo_mÃ¡s.
+[2026-02-06T01:31:36.250433918Z] [info]    Cargado desde disco: disculpe,_parece_que_hubo_un_error._si_necesita
+[2026-02-06T01:31:36.250438234Z] [info]    Cargado desde disco: parece_que_hay_algo_de_confusiÃ³n._si_tiene
+[2026-02-06T01:31:36.250444037Z] [info]    Cargado desde disco: entiendo._me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital_completo
+[2026-02-06T01:31:36.250448501Z] [info]    Cargado desde disco: manejamos_una_variedad_de_productos_de_ferreterÃ­a,_como
+[2026-02-06T01:31:36.250452689Z] [info]    Cargado desde disco: entiendo,_manejamos_griferÃ­as,_cintas_para_goteras_y_herramientas.
+[2026-02-06T01:31:36.250456930Z] [info]    Cargado desde disco: entiendo._aunque_no_maneje_ferreterÃ­a,_le_puedo_enviar
+[2026-02-06T01:31:36.250462212Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_3_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.250466848Z] [info]    Cargado desde disco: gracias,_pero_aÃºn_faltan_algunos_dÃ­gitos._Â¿me_podrÃ­a
+[2026-02-06T01:31:36.250472386Z] [info]    Cargado desde disco: perfecto._entonces,_Â¿me_puede_proporcionar_su_correo_electrÃ³nico
+[2026-02-06T01:31:36.250478331Z] [info]    Cargado desde disco: entiendo,_pero_parece_que_me_falta_un_dÃ­gito.
+[2026-02-06T01:31:36.250483587Z] [info]    Cargado desde disco: entiendo_su_decisiÃ³n._si_en_algÃºn_momento_cambian
+[2026-02-06T01:31:36.250489209Z] [info]    Cargado desde disco: entiendo._Â¿cuÃ¡l_es_su_whatsapp_para_enviarle_el
+[2026-02-06T01:31:36.250493388Z] [info]    Cargado desde disco: claro,_puedo_enviarle_el_catÃ¡logo_por_correo._Â¿cuÃ¡l
+[2026-02-06T01:31:36.250498093Z] [info]    Cargado desde disco: entiendo,_le_enviarÃ©_el_catÃ¡logo_por_correo._Â¿cuÃ¡l
+[2026-02-06T01:31:36.250502694Z] [info]    Cargado desde disco: perfecto,_Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:36.250507369Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_que_le_enviara_nuestro_catÃ¡logo
+[2026-02-06T01:31:36.253634158Z] [info]    Cargado desde disco: entiendo,_parece_que_ha_habido_una_confusiÃ³n._si
+[2026-02-06T01:31:36.253640499Z] [info]    Cargado desde disco: respuesta_cache_no_puede_decidir
+[2026-02-06T01:31:36.253650098Z] [info]    Cargado desde disco: respuesta_cache_saludo_inicial
+[2026-02-06T01:31:36.253656132Z] [info]    Cargado desde disco: respuesta_cache_no_vende_ferreteria
+[2026-02-06T01:31:36.253662321Z] [info]    Cargado desde disco: respuesta_cache_pasando_llamada
+[2026-02-06T01:31:36.253671391Z] [info]    Cargado desde disco: respuesta_cache_llamar_otro_momento
+[2026-02-06T01:31:36.253676441Z] [info]    Cargado desde disco: Â¿me_escucha?
+[2026-02-06T01:31:36.253682830Z] [info]    Cargado desde disco: entendido._le_enviarÃ©_el_catÃ¡logo_por_whatsapp._Â¿cuÃ¡l
+[2026-02-06T01:31:36.253686956Z] [info]    Cargado desde disco: sÃ­,_dÃ­game.
+[2026-02-06T01:31:36.253691267Z] [info]    Cargado desde disco: asÃ­_es,_le_enviarÃ©_el_catÃ¡logo_a_este
+[2026-02-06T01:31:36.253695710Z] [info]    Cargado desde disco: entendido._Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.253699821Z] [info]    Cargado desde disco: perfecto,_lo_enviarÃ©_a_este_nÃºmero._le_mandarÃ©
+[2026-02-06T01:31:36.253705433Z] [info]    Cargado desde disco: estÃ¡_bien,_gracias_por_su_tiempo._si_en
+[2026-02-06T01:31:36.253710824Z] [info]    Cargado desde disco: llamo_de_una_empresa_que_provee_productos_ferreteros
+[2026-02-06T01:31:36.253715026Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_proporcionarme_su_correo_electrÃ³nico_para_enviarle
+[2026-02-06T01:31:36.253722880Z] [info]    Cargado desde disco: claro,_por_favor_dÃ­game_su_correo_electrÃ³nico_y
+[2026-02-06T01:31:36.253729666Z] [info]    Cargado desde disco: entiendo,_estoy_listo_para_recibir_su_correo.
+[2026-02-06T01:31:36.253734223Z] [info]    Cargado desde disco: perfecto,_Â¿cuÃ¡l_es_el_correo_electrÃ³nico_al_que
+[2026-02-06T01:31:36.261423089Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_proporcionarme_el_dominio_del_correo,_por
+[2026-02-06T01:31:36.261534245Z] [info]    Cargado desde disco: respuesta_cache_llamar_dia_especifico
+[2026-02-06T01:31:36.261545744Z] [info]    Cargado desde disco: perfecto,_espero_su_respuesta.
+[2026-02-06T01:31:36.261557511Z] [info]    Cargado desde disco: sÃ­,_lo_escucho._adelante_con_el_dato.
+[2026-02-06T01:31:36.261563736Z] [info]    Cargado desde disco: entiendo,_espero_su_respuesta.
+[2026-02-06T01:31:36.261572866Z] [info]    Cargado desde disco: respuesta_cache_confirma_este_numero
+[2026-02-06T01:31:36.261580382Z] [info]    Cargado desde disco: respuesta_cache_compras_en_oficinas
+[2026-02-06T01:31:36.261588149Z] [info]    Cargado desde disco: Â¿podrÃ­a_proporcionarme_su_nÃºmero_de_whatsapp_para_enviarle
+[2026-02-06T01:31:36.261597219Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_6_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.261604410Z] [info]    Cargado desde disco: de_nada._si_tiene_alguna_otra_pregunta_o
+[2026-02-06T01:31:36.261611714Z] [info]    Cargado desde disco: entiendo._si_en_algÃºn_momento_le_interesa_conocer
+[2026-02-06T01:31:36.261618656Z] [info]    Cargado desde disco: comprendo._si_necesita_informaciÃ³n_en_el_futuro_sobre
+[2026-02-06T01:31:36.261625754Z] [info]    Cargado desde disco: perfecto,_dÃ­game_su_nÃºmero_por_favor.
+[2026-02-06T01:31:36.261637222Z] [info]    Cargado desde disco: entiendo._Â¿prefiere_que_le_llame_en_otro_momento
+[2026-02-06T01:31:36.261645087Z] [info]    Cargado desde disco: disculpe,_parece_que_hubo_un_problema_de_comunicaciÃ³n.
+[2026-02-06T01:31:36.261651390Z] [info]    Cargado desde disco: entiendo._si_necesita_algo_mÃ¡s_en_el_futuro,
+[2026-02-06T01:31:36.261657742Z] [info]    Cargado desde disco: perfecto,_muchas_gracias_por_la_informaciÃ³n._le_marco
+[2026-02-06T01:31:36.261720426Z] [info]    Cargado desde disco: Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_o_correo
+[2026-02-06T01:31:36.261844257Z] [info]    Cargado desde disco: claro,_el_nÃºmero_es_seis_seis_dos,_cuatro
+[2026-02-06T01:31:36.261854146Z] [info]    Cargado desde disco: claro._Â¿se_encontrarÃ¡_el_encargado_o_encargada_de
+[2026-02-06T01:31:36.261861342Z] [info]    Cargado desde disco: entiendo,_disculpa_por_la_confusiÃ³n._en_ese_caso,
+[2026-02-06T01:31:36.261869355Z] [info]    Cargado desde disco: perfecto,_gracias_por_aclararlo._me_gustarÃ­a_enviarle_nuestro
+[2026-02-06T01:31:36.261960591Z] [info]    Cargado desde disco: le_hablo_de_nuestro_catÃ¡logo_de_productos_de
+[2026-02-06T01:31:36.261967737Z] [info]    Cargado desde disco: excelente._Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp_o
+[2026-02-06T01:31:36.261974436Z] [info]    Cargado desde disco: respuesta_cache_ofrece_proporcionar
+[2026-02-06T01:31:36.261982602Z] [info]    Cargado desde disco: disculpe,_soy_de_la_marca_nioval._Â¿con_quiÃ©n
+[2026-02-06T01:31:36.261989780Z] [info]    Cargado desde disco: entendido._Â¿le_gustarÃ­a_que_le_envÃ­e_el_catÃ¡logo
+[2026-02-06T01:31:36.261996708Z] [info]    Cargado desde disco: entiendo._si_necesita_informaciÃ³n_sobre_nuestros_productos_de
+[2026-02-06T01:31:36.264292854Z] [info]    Cargado desde disco: entiendo._Â¿podrÃ­a_indicarme_si_tiene_un_correo_electrÃ³nico
+[2026-02-06T01:31:36.264305747Z] [info]    Cargado desde disco: comprendo._aunque_no_tengan_personal,_me_gustarÃ­a_compartir
+[2026-02-06T01:31:36.264313715Z] [info]    Cargado desde disco: entiendo,_dejarÃ©_un_mensaje_para_el_encargado_o
+[2026-02-06T01:31:36.264322253Z] [info]    Cargado desde disco: respuesta_cache_cliente_pide_whatsapp
+[2026-02-06T01:31:36.264328907Z] [info]    Cargado desde disco: disculpe,_pero_no_tengo_informaciÃ³n_sobre_nÃºmeros_de
+[2026-02-06T01:31:36.264335783Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_buscando_informaciÃ³n_sobre_extensiones_telefÃ³nicas
+[2026-02-06T01:31:36.264341733Z] [info]    Cargado desde disco: entiendo._me_comunico_de_la_marca_nioval,_querÃ­a
+[2026-02-06T01:31:36.268068810Z] [info]    Cargado desde disco: respuesta_cache_numero_equivocado
+[2026-02-06T01:31:36.268074279Z] [info]    Cargado desde disco: claro,_le_puedo_enviar_el_catÃ¡logo_completo._Â¿cuÃ¡l
+[2026-02-06T01:31:36.268079866Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_correo_electrÃ³nico_para_enviarle
+[2026-02-06T01:31:36.268085922Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._si_hay_un
+[2026-02-06T01:31:36.268091534Z] [info]    Cargado desde disco: entiendo,_disculpe_la_confusiÃ³n._si_este_nÃºmero_es
+[2026-02-06T01:31:36.268097431Z] [info]    Cargado desde disco: no_hay_problema,_tÃ³mese_su_tiempo._si_necesita
+[2026-02-06T01:31:36.268102899Z] [info]    Cargado desde disco: entiendo._Â¿me_podrÃ­a_proporcionar_el_nÃºmero_directo_del
+[2026-02-06T01:31:36.268110234Z] [info]    Cargado desde disco: perfecto,_anotado._le_llamo_entonces_en_ese_horario.
+[2026-02-06T01:31:36.268117404Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._perfecto._Â¿le_gustarÃ­a_recibir_nuestro
+[2026-02-06T01:31:36.268125004Z] [info]    Cargado desde disco: entiendo,_gracias_por_proporcionar_el_nÃºmero._me_asegurarÃ©
+[2026-02-06T01:31:36.268137459Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._Â¿le_gustarÃ­a_que_llame
+[2026-02-06T01:31:36.268145790Z] [info]    Cargado desde disco: entiendo_que_no_requieren_en_este_momento._si
+[2026-02-06T01:31:36.268152376Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.268162930Z] [info]    Cargado desde disco: claro,_estarÃ©_pendiente._si_necesita_informaciÃ³n_sobre_nuestros
+[2026-02-06T01:31:36.268169053Z] [info]    Cargado desde disco: perfecto._Â¿me_podrÃ­a_proporcionar_el_nÃºmero_directo_del
+[2026-02-06T01:31:36.270269856Z] [info]    Cargado desde disco: entiendo_que_puede_ser_complicado._si_prefiere,_puedo
+[2026-02-06T01:31:36.270285755Z] [info]    Cargado desde disco: mis_disculpas,_parece_que_captÃ©_algunos_dÃ­gitos_de
+[2026-02-06T01:31:36.270289306Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval._querÃ­a_brindar
+[2026-02-06T01:31:36.270333921Z] [info]    Cargado desde disco: Â¿hay_algo_mÃ¡s_en_lo_que_pueda_ayudarle
+[2026-02-06T01:31:36.270336425Z] [info]    Cargado desde disco: entiendo,_puede_ser_complicado_a_veces._Â¿podrÃ­a_decirme
+[2026-02-06T01:31:36.270354206Z] [info]    Cargado desde disco: entiendo,_si_lo_prefiere_puedo_tomar_nota_de
+[2026-02-06T01:31:36.270358555Z] [info]    Cargado desde disco: perfecto,_lo_tengo_anotado_como_961-121-03-22,_Â¿es_correcto?
+[2026-02-06T01:31:36.270369705Z] [info]    Cargado desde disco: disculpe,_parece_que_todavÃ­a_no_tengo_el_nÃºmero
+[2026-02-06T01:31:36.270370714Z] [info]    Cargado desde disco: sÃ­,_me_escucha._puede_dejarme_su_nÃºmero_de
+[2026-02-06T01:31:36.270387021Z] [info]    Cargado desde disco: disculpe,_soy_representante_de_la_marca_nioval._quisiera
+[2026-02-06T01:31:36.270388619Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_nÃºmero_de_whatsapp?
+[2026-02-06T01:31:36.270391780Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_8_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.270400760Z] [info]    Cargado desde disco: entiendo_que_me_estÃ¡_diciendo_"7_29",_pero
+[2026-02-06T01:31:36.270401241Z] [info]    Cargado desde disco: entiendo,_gracias._me_comunico_de_nioval_para_ofrecer
+[2026-02-06T01:31:36.270413165Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_5_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.270416530Z] [info]    Cargado desde disco: entendido._Â¿me_podrÃ­a_proporcionar_el_nÃºmero_de_contacto,
+[2026-02-06T01:31:36.276302517Z] [info]    Cargado desde disco: perfecto,_me_gustarÃ­a_ofrecerle_nuestro_catÃ¡logo_de_productos
+[2026-02-06T01:31:36.276310176Z] [info]    Cargado desde disco: entiendo,_parece_que_estÃ¡_ocupado._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.276317367Z] [info]    Cargado desde disco: sÃ­,_puedo_enviarle_el_catÃ¡logo_por_correo_electrÃ³nico.
+[2026-02-06T01:31:36.276323869Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.276330865Z] [info]    Cargado desde disco: entiendo_que_estÃ¡_tratando_de_confirmar_el_nÃºmero.
+[2026-02-06T01:31:36.276337895Z] [info]    Cargado desde disco: parece_que_hay_un_poco_de_confusiÃ³n_con
+[2026-02-06T01:31:36.276344678Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_9_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.276351750Z] [info]    Cargado desde disco: perfecto._Â¿le_gustarÃ­a_recibir_informaciÃ³n_sobre_nuestros_productos
+[2026-02-06T01:31:36.276358729Z] [info]    Cargado desde disco: quÃ©_tal,_le_llamo_de_la_marca_nioval
+[2026-02-06T01:31:36.276361700Z] [info]    Cargado desde disco: entiendo._Â¿hay_un_mejor_momento_para_que_lo
+[2026-02-06T01:31:36.276367821Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_el_correo_electrÃ³nico_al_que
+[2026-02-06T01:31:36.276370651Z] [info]    Cargado desde disco: entiendo,_gracias_por_su_tiempo._si_necesita_informaciÃ³n
+[2026-02-06T01:31:36.276376751Z] [info]    Cargado desde disco: perfecto._Â¿me_confirma_su_nÃºmero_de_whatsapp_para
+[2026-02-06T01:31:36.276380002Z] [info]    Cargado desde disco: perfecto._Â¿me_lo_podrÃ­a_comunicar_por_favor?
+[2026-02-06T01:31:36.276384251Z] [info]    Cargado desde disco: claro,_le_puedo_enviar_el_catÃ¡logo_por_whatsapp.
+[2026-02-06T01:31:36.276389355Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_aclarar_a_quÃ©_nÃºmeros_se_refiere?
+[2026-02-06T01:31:36.276392846Z] [info]    Cargado desde disco: disculpe,_solo_escuchÃ©_7_dÃ­gitos._Â¿me_puede_repetir
+[2026-02-06T01:31:36.276400804Z] [info]    Cargado desde disco: le_llamo_de_la_marca_nioval,_productos_de
+[2026-02-06T01:31:36.276401335Z] [info]    Cargado desde disco: entiendo._Â¿me_podrÃ­a_proporcionar_un_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.276410704Z] [info]    Cargado desde disco: entiendo,_quizÃ¡s_hubo_un_malentendido._Â¿podrÃ­a_indicar_otro
+[2026-02-06T01:31:36.276411181Z] [info]    Cargado desde disco: entendido._si_tiene_alguna_otra_consulta_o_necesita
+[2026-02-06T01:31:36.276418588Z] [info]    Cargado desde disco: entiendo_que_no_manejan_otras_marcas._Â¿le_gustarÃ­a
+[2026-02-06T01:31:36.276425591Z] [info]    Cargado desde disco: entiendo._Â¿a_quÃ©_hora_puedo_llamar_para_contactarlo?
+[2026-02-06T01:31:36.276426960Z] [info]    Cargado desde disco: sucursal_jurica_agradece_su_llamada._si_desea_ser
+[2026-02-06T01:31:36.276435582Z] [info]    Cargado desde disco: sÃ­,_puedo_enviarle_la_informaciÃ³n_por_correo._Â¿cuÃ¡l
+[2026-02-06T01:31:36.276435815Z] [info]    Cargado desde disco: entiendo._si_no_tiene_autorizaciÃ³n_para_enviar_el
+[2026-02-06T01:31:36.279383595Z] [info]    Cargado desde disco: entiendo_que_no_se_encuentra._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.279399661Z] [info]    Cargado desde disco: Â¿cuÃ¡l_es_el_nÃºmero?
+[2026-02-06T01:31:36.279409105Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_confirmar_el_nÃºmero_para_que_pueda
+[2026-02-06T01:31:36.279417315Z] [info]    Cargado desde disco: Â¿me_podrÃ­a_proporcionar_el_nÃºmero_para_que_pueda
+[2026-02-06T01:31:36.279425541Z] [info]    Cargado desde disco: entiendo,_parece_que_hubo_un_malentendido._si_desea
+[2026-02-06T01:31:36.279434805Z] [info]    Cargado desde disco: perfecto._Â¿se_encontrarÃ¡_el_encargado_o_encargada_de
+[2026-02-06T01:31:36.279442597Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._si_necesita_algo
+[2026-02-06T01:31:36.281297112Z] [info]    Cargado desde disco: entiendo,_parece_que_hubo_un_malentendido._Â¿hay_algo
+[2026-02-06T01:31:36.281304744Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval,_y_querÃ­a
+[2026-02-06T01:31:36.281311975Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._entiendo_que_estamos
+[2026-02-06T01:31:36.281318439Z] [info]    Cargado desde disco: entiendo._quedo_pendiente_para_mÃ¡s_tarde._si_desea,
+[2026-02-06T01:31:36.281325335Z] [info]    Cargado desde disco: entendido._Â¿prefiere_recibir_el_catÃ¡logo_por_whatsapp_o
+[2026-02-06T01:31:36.281332296Z] [info]    Cargado desde disco: claro,_Â¿me_puede_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.281339460Z] [info]    Cargado desde disco: mi_nombre_es_bruce,_me_comunico_de_parte
+[2026-02-06T01:31:36.281346960Z] [info]    Cargado desde disco: me_comunico_de_parte_de_la_marca_nioval,
+[2026-02-06T01:31:36.281353699Z] [info]    Cargado desde disco: hola,_buenos_dÃ­as._disculpe_la_confusiÃ³n_anterior._soy
+[2026-02-06T01:31:36.281360857Z] [info]    Cargado desde disco: Â¿le_gustarÃ­a_que_le_envÃ­e_el_catÃ¡logo_completo
+[2026-02-06T01:31:36.281367693Z] [info]    Cargado desde disco: comprendo._Â¿hay_algÃºn_momento_mejor_para_que_le
+[2026-02-06T01:31:36.281375168Z] [info]    Cargado desde disco: claro,_disculpe_la_confusiÃ³n._soy_[tu_nombre]_de
+[2026-02-06T01:31:36.281384242Z] [info]    Cargado desde disco: Â¿me_puede_proporcionar_su_correo_electrÃ³nico_para_enviarle
+[2026-02-06T01:31:36.281392014Z] [info]    Cargado desde disco: disculpe_por_la_confusiÃ³n._manejamos_nioval,_que_es
+[2026-02-06T01:31:36.281399205Z] [info]    Cargado desde disco: entiendo._me_gustarÃ­a_ofrecerle_informaciÃ³n_sobre_nuestros_productos
+[2026-02-06T01:31:36.287826783Z] [info]    Cargado desde disco: entiendo._Â¿le_gustarÃ­a_que_le_envÃ­e_informaciÃ³n_sobre
+[2026-02-06T01:31:36.287833319Z] [info]    Cargado desde disco: entiendo,_estÃ¡_ocupado._como_le_habÃ­a_comentado_la
+[2026-02-06T01:31:36.287840102Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._puede_enviarme_un_whatsapp
+[2026-02-06T01:31:36.287846585Z] [info]    Cargado desde disco: claro,_por_favor_compÃ¡rtame_el_nÃºmero_para_enviarle
+[2026-02-06T01:31:36.287853152Z] [info]    Cargado desde disco: sÃ­,_este_nÃºmero_tiene_whatsapp._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.287862327Z] [info]    Cargado desde disco: entiendo,_voy_a_enviarlo_por_whatsapp._solo_necesito
+[2026-02-06T01:31:36.287875694Z] [info]    Cargado desde disco: perfecto._Â¿me_puede_indicar_su_nombre_para_personalizar
+[2026-02-06T01:31:36.287882131Z] [info]    Cargado desde disco: perfecto,_voy_a_enviar_el_catÃ¡logo_a_luis
+[2026-02-06T01:31:36.287888584Z] [info]    Cargado desde disco: entendido,_enviarÃ©_el_catÃ¡logo_a_luis_gerardo_por
+[2026-02-06T01:31:36.287894502Z] [info]    Cargado desde disco: hola,_estoy_buscando_a_la_persona_encargada_de
+[2026-02-06T01:31:36.287903706Z] [info]    Cargado desde disco: disculpe,_Â¿me_podrÃ­a_proporcionar_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.287909892Z] [info]    Cargado desde disco: entiendo,_como_le_habÃ­a_comentado_la_vez_pasada,
+[2026-02-06T01:31:36.287916011Z] [info]    Cargado desde disco: hola,_quÃ©_tal._como_le_habÃ­a_comentado_la
+[2026-02-06T01:31:36.287922430Z] [info]    Cargado desde disco: entendido,_no_hay_problema._si_necesita_que_le
+[2026-02-06T01:31:36.287928325Z] [info]    Cargado desde disco: claro,_por_favor_compÃ¡rtame_su_nÃºmero_de_whatsapp
+[2026-02-06T01:31:36.287935077Z] [info]    Cargado desde disco: entiendo._perfecto._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por
+[2026-02-06T01:31:36.287941677Z] [info]    Cargado desde disco: claro,_somos_de_la_marca_nioval._manejamos_productos
+[2026-02-06T01:31:36.293797543Z] [info]    Cargado desde disco: disculpe_si_no_me_he_explicado_bien._me
+[2026-02-06T01:31:36.293821600Z] [info]    Cargado desde disco: le_agradezco_su_paciencia._Â¿le_gustarÃ­a_saber_mÃ¡s
+[2026-02-06T01:31:36.293832442Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.293832980Z] [info]    Cargado desde disco: sÃ­,_por_favor,_adelante_con_el_dictado.
+[2026-02-06T01:31:36.293841163Z] [info]    Cargado desde disco: entiendo,_gracias_por_informarme._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.293845070Z] [info]    Cargado desde disco: buenos_dÃ­as._si_estÃ¡_ocupado,_puedo_llamarle_en
+[2026-02-06T01:31:36.293851856Z] [info]    Cargado desde disco: disculpe,_me_comunico_de_la_marca_nioval._estoy
+[2026-02-06T01:31:36.293857105Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._Â¡claro!_manejamos_griferÃ­a,_cintas,_herramientas
+[2026-02-06T01:31:36.293865228Z] [info]    Cargado desde disco: entiendo._si_en_el_futuro_necesita_algo_de
+[2026-02-06T01:31:36.293871628Z] [info]    Cargado desde disco: entiendo._actualmente_no_manejamos_ese_tipo_de_producto,
+[2026-02-06T01:31:36.293883477Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.293901874Z] [info]    Cargado desde disco: claro,_Â¿prefiere_recibir_el_catÃ¡logo_por_whatsapp_o
+[2026-02-06T01:31:36.293902372Z] [info]    Cargado desde disco: entendido._entonces,_le_envÃ­o_el_catÃ¡logo_para_que
+[2026-02-06T01:31:36.293917444Z] [info]    Cargado desde disco: entiendo._Â¿me_puede_proporcionar_el_nÃºmero_del_encargado
+[2026-02-06T01:31:36.293928471Z] [info]    Cargado desde disco: perfecto,_dÃ­game_el_correo_y_lo_anoto.
+[2026-02-06T01:31:36.293939611Z] [info]    Cargado desde disco: entiendo._Â¿me_puede_proporcionar_su_correo_electrÃ³nico_para
+[2026-02-06T01:31:36.293968387Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_aclaraciÃ³n._Â¿podrÃ­a_indicarme_si
+[2026-02-06T01:31:36.301199548Z] [info]    Cargado desde disco: parece_que_hay_un_poco_de_confusiÃ³n._si
+[2026-02-06T01:31:36.301203365Z] [info]    Cargado desde disco: por_supuesto,_tÃ³mese_su_tiempo._si_necesita_que
+[2026-02-06T01:31:36.301206998Z] [info]    Cargado desde disco: claro._manejamos_productos_de_ferreterÃ­a:_griferÃ­a,_cintas,_herramientas.
+[2026-02-06T01:31:36.301210857Z] [info]    Cargado desde disco: entiendo,_parece_que_hay_un_poco_de_confusiÃ³n.
+[2026-02-06T01:31:36.301214511Z] [info]    Cargado desde disco: entiendo,_entonces_permÃ­tame_corregir._me_encantarÃ­a_enviarle_informaciÃ³n
+[2026-02-06T01:31:36.301219315Z] [info]    Cargado desde disco: perfecto,_Â¿me_podrÃ­a_comunicar_con_el_encargado_o
+[2026-02-06T01:31:36.301223293Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_whatsapp_para_enviarle_el
+[2026-02-06T01:31:36.301227031Z] [info]    Cargado desde disco: entiendo._Â¿me_podrÃ­a_proporcionar_el_nÃºmero_de_las
+[2026-02-06T01:31:36.301230815Z] [info]    Cargado desde disco: entiendo,_parece_que_estÃ¡_buscando_informaciÃ³n_especÃ­fica._si
+[2026-02-06T01:31:36.301234735Z] [info]    Cargado desde disco: claro,_me_alegra_hablar_contigo._nosotros_distribuimos_productos
+[2026-02-06T01:31:36.301238501Z] [info]    Cargado desde disco: disculpe_las_molestias._le_agradezco_su_tiempo._que
+[2026-02-06T01:31:36.301242125Z] [info]    Cargado desde disco: manejamos_productos_de_ferreterÃ­a,_incluyendo_griferÃ­as,_cintas_y
+[2026-02-06T01:31:36.301246537Z] [info]    Cargado desde disco: claro,_me_gustarÃ­a_enviarle_nuestro_catÃ¡logo_digital_completo
+[2026-02-06T01:31:36.301250414Z] [info]    Cargado desde disco: perfecto,_Â¿cuÃ¡l_es_su_correo_electrÃ³nico_para_enviarle
+[2026-02-06T01:31:36.301254240Z] [info]    Cargado desde disco: entiendo._Â¿cuÃ¡l_es_su_correo_electrÃ³nico_para_enviarle
+[2026-02-06T01:31:36.303870271Z] [info]    Cargado desde disco: parece_que_no_he_entendido_bien._Â¿podrÃ­as_confirmar
+[2026-02-06T01:31:36.303881840Z] [info]    Cargado desde disco: parece_que_hay_alguna_confusiÃ³n._si_puedes,_Â¿podrÃ­as
+[2026-02-06T01:31:36.303889206Z] [info]    Cargado desde disco: entiendo,_quizÃ¡s_en_este_momento_no_sea_conveniente.
+[2026-02-06T01:31:36.303895902Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_sigo._Â¿me_puede_escuchar_bien?
+[2026-02-06T01:31:36.303902435Z] [info]    Cargado desde disco: perfecto,_gracias_por_confirmarlo._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.303909954Z] [info]    Cargado desde disco: gracias_por_la_informaciÃ³n._necesitarÃ­a_un_nÃºmero_completo
+[2026-02-06T01:31:36.303916464Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._si_en_algÃºn_momento
+[2026-02-06T01:31:36.303922850Z] [info]    Cargado desde disco: entiendo_que_el_telÃ©fono_es_solo_para_pedidos.
+[2026-02-06T01:31:36.303929154Z] [info]    Cargado desde disco: claro,_Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por_whatsapp
+[2026-02-06T01:31:36.303937425Z] [info]    Cargado desde disco: perfecto,_adelante_con_el_nÃºmero_cuando_estÃ©_listo
+[2026-02-06T01:31:36.303944100Z] [info]    Cargado desde disco: entiendo,_no_se_preocupe._si_prefiere,_puedo_llamar
+[2026-02-06T01:31:36.303950956Z] [info]    Cargado desde disco: disculpe,_no_alcancÃ©_a_escucharle_bien,_Â¿me_podrÃ­a
+[2026-02-06T01:31:36.303957571Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval_para_ofrecer
+[2026-02-06T01:31:36.303964171Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._podrÃ­a_volver_a_comunicarme
+[2026-02-06T01:31:36.303971173Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._puedo_intentar_comunicarme_mÃ¡s
+[2026-02-06T01:31:36.303978999Z] [info]    Cargado desde disco: entiendo,_espero_en_silencio.
+[2026-02-06T01:31:36.303985901Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._Â¿le_parece_bien_si
+[2026-02-06T01:31:36.303992589Z] [info]    Cargado desde disco: entiendo,_no_se_preocupe._si_prefiere,_puedo_intentar
+[2026-02-06T01:31:36.307222798Z] [info]    Cargado desde disco: hola,_como_le_habÃ­a_comentado_la_vez_pasada,
+[2026-02-06T01:31:36.307240783Z] [info]    Cargado desde disco: entiendo._si_en_algÃºn_momento_necesita_informaciÃ³n_sobre
+[2026-02-06T01:31:36.307256497Z] [info]    Cargado desde disco: entiendo,_parece_que_estÃ¡_buscando_al_encargado._quedo
+[2026-02-06T01:31:36.307271867Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval_para_brindar
+[2026-02-06T01:31:36.307284324Z] [info]    Cargado desde disco: entiendo,_esperarÃ©_mientras_lo_buscan.
+[2026-02-06T01:31:36.307297756Z] [info]    Cargado desde disco: todo_bien,_gracias._me_comunico_de_nioval_para
+[2026-02-06T01:31:36.307309078Z] [info]    Cargado desde disco: entiendo,_no_hay_problema._le_agradezco_su_tiempo.
+[2026-02-06T01:31:36.307322225Z] [info]    Cargado desde disco: entiendo,_gracias_por_su_atenciÃ³n._ademÃ¡s_de_griferÃ­a
+[2026-02-06T01:31:36.307333754Z] [info]    Cargado desde disco: manejamos_griferÃ­a,_cintas_y_herramientas._Â¿le_gustarÃ­a_recibir
+[2026-02-06T01:31:36.307347899Z] [info]    Cargado desde disco: manejamos_griferÃ­a,_cintas,_herramientas_y_mÃ¡s_productos_de
+[2026-02-06T01:31:36.307358519Z] [info]    Cargado desde disco: me_comunico_de_la_marca_nioval._mÃ¡s_que
+[2026-02-06T01:31:36.307487875Z] [info]    Cargado desde disco: entiendo._si_puede,_por_favor_compÃ¡rtame_el_nÃºmero
+[2026-02-06T01:31:36.307497638Z] [info]    Cargado desde disco: mi_nÃºmero_es_seis_seis_dos,_cuatro_uno
+[2026-02-06T01:31:36.307503674Z] [info]    Cargado desde disco: mis_disculpas_por_la_confusiÃ³n._si_necesita_mÃ¡s
+[2026-02-06T01:31:36.307513917Z] [info]    Cargado desde disco: claro,_le_envÃ­o_el_catÃ¡logo_a_este_nÃºmero.
+[2026-02-06T01:31:36.310228968Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._perfecto,_Â¿me_lo
+[2026-02-06T01:31:36.310241177Z] [info]    Cargado desde disco: Â¿me_escucha?_le_preguntaba_si_se_encuentra_el
+[2026-02-06T01:31:36.310253705Z] [info]    Cargado desde disco: claro,_le_envÃ­o_el_catÃ¡logo_a_ese_correo.
+[2026-02-06T01:31:36.310260234Z] [info]    Cargado desde disco: sÃ­,_le_llamo_de_la_marca_nioval._Â¿se
+[2026-02-06T01:31:36.310268478Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_correo_electrÃ³nico_para_que
+[2026-02-06T01:31:36.310275993Z] [info]    Cargado desde disco: entiendo,_pero_no_he_recibido_su_correo_electrÃ³nico.
+[2026-02-06T01:31:36.310303461Z] [info]    Cargado desde disco: manejamos_la_marca_nioval,_que_es_nuestra_propia
+[2026-02-06T01:31:36.310309688Z] [info]    Cargado desde disco: entiendo,_pero_para_avanzar,_Â¿me_podrÃ­a_indicar_si
+[2026-02-06T01:31:36.310315957Z] [info]    Cargado desde disco: entendido._Â¿a_quÃ©_hora_serÃ­a_mejor_que_llame?
+[2026-02-06T01:31:36.310324016Z] [info]    Cargado desde disco: gracias_por_su_tiempo._Â¡que_tenga_un_buen
+[2026-02-06T01:31:36.310334689Z] [info]    Cargado desde disco: claro,_manejamos_productos_de_ferreterÃ­a_como_griferÃ­as,_cintas
+[2026-02-06T01:31:36.310336620Z] [info]    Cargado desde disco: perfecto,_lo_tengo_anotado_como_342-109-76-01,_Â¿es_correcto?
+[2026-02-06T01:31:36.310354284Z] [info]    Cargado desde disco: entiendo,_gracias_por_atenderme._solo_querÃ­a_informarle_sobre
+[2026-02-06T01:31:36.310366117Z] [info]    Cargado desde disco: perfecto,_quedo_a_la_espera_de_su_contacto
+[2026-02-06T01:31:36.312671929Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._claro,_me_comunico
+[2026-02-06T01:31:36.312688453Z] [info]    Cargado desde disco: claro,_le_envÃ­o_el_catÃ¡logo_a_la_direcciÃ³n
+[2026-02-06T01:31:36.312700056Z] [info]    Cargado desde disco: entiendo_que_no_tiene_el_nÃºmero._Â¿le_gustarÃ­a
+[2026-02-06T01:31:36.312710362Z] [info]    Cargado desde disco: entiendo,_gracias_por_la_informaciÃ³n._volverÃ©_a_intentar
+[2026-02-06T01:31:36.312748410Z] [info]    Cargado desde disco: claro,_le_envÃ­o_el_catÃ¡logo_a_este_whatsapp
+[2026-02-06T01:31:36.312756674Z] [info]    Cargado desde disco: claro,_entiendo._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo_por
+[2026-02-06T01:31:36.312765593Z] [info]    Cargado desde disco: entiendo,_disculpe_la_molestia._Â¿le_gustarÃ­a_que_le
+[2026-02-06T01:31:36.312779237Z] [info]    Cargado desde disco: claro,_le_envÃ­o_el_catÃ¡logo_a_este_whatsapp.
+[2026-02-06T01:31:36.312788698Z] [info]    Cargado desde disco: entiendo,_espero_un_momento.
+[2026-02-06T01:31:36.312796917Z] [info]    Cargado desde disco: disculpe,_parece_que_ha_habido_una_confusiÃ³n._le
+[2026-02-06T01:31:36.312805845Z] [info]    Cargado desde disco: entiendo._aÃºn_asÃ­,_le_puedo_enviar_el_catÃ¡logo
+[2026-02-06T01:31:36.312813760Z] [info]    Cargado desde disco: entendido,_espero_su_informaciÃ³n.
+[2026-02-06T01:31:36.312822807Z] [info]    Cargado desde disco: perfecto,_lo_tengo_anotado_como_221-442-61-55,_Â¿es_correcto?
+[2026-02-06T01:31:36.312831953Z] [info]    Cargado desde disco: disculpe,_este,_tiene_toda_la_razÃ³n._le_hablaba
+[2026-02-06T01:31:36.317428167Z] [info]    Cargado desde disco: entiendo._Â¿me_podrÃ­a_proporcionar_el_whatsapp_del_encargado
+[2026-02-06T01:31:36.317433436Z] [info]    Cargado desde disco: perfecto,_le_llamo_a_las_4_entonces._muchas
+[2026-02-06T01:31:36.317438266Z] [info]    Cargado desde disco: perfecto._Â¿cuÃ¡l_es_su_correo_electrÃ³nico?
+[2026-02-06T01:31:36.317442564Z] [info]    Cargado desde disco: sÃ­,_por_favor,_dÃ­game_el_correo.
+[2026-02-06T01:31:36.317447286Z] [info]    Cargado desde disco: perfecto._le_llamo_para_ofrecerle_nuestro_catÃ¡logo_de
+[2026-02-06T01:31:36.317455262Z] [info]    Cargado desde disco: distribuimos_productos_de_ferreterÃ­a:_cintas_tapagoteras,_griferÃ­a,_herramientas,
+[2026-02-06T01:31:36.317461848Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._le_espero.
+[2026-02-06T01:31:36.317467554Z] [info]    Cargado desde disco: hola,_buen_dÃ­a.
+[2026-02-06T01:31:36.317473697Z] [info]    Cargado desde disco: disculpe,_tiene_razÃ³n._Â¿me_confirma_el_whatsapp_del
+[2026-02-06T01:31:36.317665918Z] [info]    Cargado desde disco: llamo_de_una_empresa_que_se_especializa_en
+[2026-02-06T01:31:36.317673589Z] [info]    Cargado desde disco: entiendo_que_no_estÃ¡_disponible._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.317683665Z] [info]    Cargado desde disco: perfecto._adelante,_lo_escucho.
+[2026-02-06T01:31:36.317689793Z] [info]    Cargado desde disco: gracias_por_su_tiempo._Â¡hasta_luego!
+[2026-02-06T01:31:36.317695550Z] [info]    Cargado desde disco: manejamos_griferÃ­a_como_llaves_mezcladoras_y_grifos,_cintas
+[2026-02-06T01:31:36.317727614Z] [info]    Cargado desde disco: me_comunico_de_nioval,_mÃ¡s_que_nada_querÃ­a
+[2026-02-06T01:31:36.322583905Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._perfecto._Â¿a_quÃ©_hora_serÃ­a
+[2026-02-06T01:31:36.322592175Z] [info]    Cargado desde disco: perfecto,_mucho_gusto._Â¿le_gustarÃ­a_recibir_nuestro_catÃ¡logo
+[2026-02-06T01:31:36.322598610Z] [info]    Cargado desde disco: sÃ­,_por_favor,_dÃ­game_el_nÃºmero.
+[2026-02-06T01:31:36.322604523Z] [info]    Cargado desde disco: entiendo_perfectamente,_no_se_preocupe._si_gusta_le
+[2026-02-06T01:31:36.322610949Z] [info]    Cargado desde disco: perfecto._Â¿me_confirma_su_nÃºmero_de_whatsapp?
+[2026-02-06T01:31:36.322618081Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._me_comunico_de_la_marca
+[2026-02-06T01:31:36.322625157Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._entiendo_que_no
+[2026-02-06T01:31:36.322631505Z] [info]    Cargado desde disco: perfecto,_le_marco_el_viernes._Â¿a_quÃ©_hora
+[2026-02-06T01:31:36.322637973Z] [info]    Cargado desde disco: mi_nombre_es_bruce,_me_comunico_de_la
+[2026-02-06T01:31:36.322643202Z] [info]    Cargado desde disco: me_comunico_de_nioval_para_ofrecer_informaciÃ³n_sobre
+[2026-02-06T01:31:36.322647389Z] [info]    Cargado desde disco: claro,_con_gusto._Â¿me_confirma_su_nÃºmero_de
+[2026-02-06T01:31:36.322651695Z] [info]    Cargado desde disco: gracias_por_el_nÃºmero._le_enviarÃ©_la_informaciÃ³n
+[2026-02-06T01:31:36.322657002Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._me_comunico_de
+[2026-02-06T01:31:36.322661670Z] [info]    Cargado desde disco: perfecto,_le_envÃ­o_el_catÃ¡logo_a_este_nÃºmero.
+[2026-02-06T01:31:36.322666304Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._Â¿bueno?_buenos_dÃ­as.
+[2026-02-06T01:31:36.322670544Z] [info]    Cargado desde disco: entiendo_perfectamente._Â¿me_podrÃ­a_indicar_cuÃ¡ndo_estÃ¡_el
+[2026-02-06T01:31:36.322675252Z] [info]    Cargado desde disco: perfecto,_gracias_por_la_informaciÃ³n._Â¿le_gustarÃ­a_que
+[2026-02-06T01:31:36.326445646Z] [info]    Cargado desde disco: auto_perfecto_le_llamo_para_ofrecer
+[2026-02-06T01:31:36.326460721Z] [info]    Cargado desde disco: auto_s_por_favor_dgame_el_nmero
+[2026-02-06T01:31:36.326471116Z] [info]    Cargado desde disco: auto_entendido_a_qu_hora_me_recomie
+[2026-02-06T01:31:36.326635064Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._entiendo._entonces,_estarÃ©_pendiente_para
+[2026-02-06T01:31:36.326643061Z] [info]    Cargado desde disco: entiendo_que_no_tiene_el_contacto._Â¿podrÃ­a_decirme
+[2026-02-06T01:31:36.326651651Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._me_comunico_de_nioval,_mÃ¡s
+[2026-02-06T01:31:36.326660764Z] [info]    Cargado desde disco: entendido._Â¿a_quÃ©_hora_me_recomienda_llamar_para
+[2026-02-06T01:31:36.326669998Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._Â¿me_comunica_con_el_encargado
+[2026-02-06T01:31:36.326677811Z] [info]    Cargado desde disco: me_comunico_de_nioval,_querÃ­a_brindar_informaciÃ³n_sobre
+[2026-02-06T01:31:36.326685388Z] [info]    Cargado desde disco: dÃ©jeme_ver_eso_con_calma..._perfecto,_le_envÃ­o
+[2026-02-06T01:31:36.326695089Z] [info]    Cargado desde disco: entiendo_perfectamente._le_agradezco_su_tiempo._que_tenga
+[2026-02-06T01:31:36.326702691Z] [info]    Cargado desde disco: Â¿a_quÃ©_hora_serÃ­a_mejor_que_llame?
+[2026-02-06T01:31:36.326711876Z] [info]    Cargado desde disco: claro,_nuestro_whatsapp_es_6_6_2_4
+[2026-02-06T01:31:36.326720393Z] [info]    Cargado desde disco: perfecto,_le_envÃ­o_el_catÃ¡logo_a_este_nÃºmero
+[2026-02-06T01:31:36.326728857Z] [info]    Cargado desde disco: auto_me_comunico_de_la_marca_nioval
+[2026-02-06T01:31:36.326737403Z] [info]    Cargado desde disco: auto_entiendo_me_podra_proporcionar
+[2026-02-06T01:31:36.326748990Z] [info]    Cargado desde disco: auto_disculpe_no_alcanc_a_escucharl
+[2026-02-06T01:31:37.064143423Z] [info]    Cargado desde disco: auto_claro_se_encontrar_el_encargad
+[2026-02-06T01:31:37.064149174Z] [info]    Cargado desde disco: auto_perfecto_ya_lo_tengo_anotado_l
+[2026-02-06T01:31:37.064292130Z] [info]    Cargado desde disco: proporcionar_whatsapp_catalogo
+[2026-02-06T01:31:37.064299294Z] [info]    Cargado desde disco: tomese_tiempo
+[2026-02-06T01:31:37.064305865Z] [info]    Cargado desde disco: proveedor_fijo_despedida
+[2026-02-06T01:31:37.064313181Z] [info]    Cargado desde disco: cual_whatsapp_catalogo
+[2026-02-06T01:31:37.064320130Z] [info]    Cargado desde disco: saludo_buen_dia
+[2026-02-06T01:31:37.064326896Z] [info]    Cargado desde disco: buscar_encargado_compras
+[2026-02-06T01:31:37.064334944Z] [info]    Cargado desde disco: proporcionar_numero
+[2026-02-06T01:31:37.064349521Z] [info]    Cargado desde disco: catalogo_whatsapp_correo
+[2026-02-06T01:31:37.064357790Z] [info]    Cargado desde disco: productos_ferreteria
+[2026-02-06T01:31:37.064365608Z] [info]    Cargado desde disco: ocupado_catalogo
+[2026-02-06T01:31:37.064373079Z] [info]    Cargado desde disco: recibir_catalogo_whatsapp
+[2026-02-06T01:31:37.064379940Z] [info]    Cargado desde disco: productos_ferreteria_completo
+[2026-02-06T01:31:37.064388266Z] [info]    Cargado desde disco: proporcionar_whatsapp
+[2026-02-06T01:31:37.064395092Z] [info]    Cargado desde disco: recibir_catalogo_generico
+[2026-02-06T01:31:37.064401996Z] [info]    Cargado desde disco: productos_ferreteria_detallado
+[2026-02-06T01:31:37.071851948Z] [info]    Cargado desde disco: despedida_excelente_dia
+[2026-02-06T01:31:37.071869608Z] [info]    Cargado desde disco: comunicar_por_favor
+[2026-02-06T01:31:37.071880452Z] [info]    Cargado desde disco: proporcionar_contacto
+[2026-02-06T01:31:37.071889232Z] [info]    Cargado desde disco: algo_mas_ayudar
+[2026-02-06T01:31:37.071895915Z] [info]    Cargado desde disco: de_nada_despedida
+[2026-02-06T01:31:37.072423729Z] [info]    Cargado desde disco: de_nada_corto
+[2026-02-06T01:31:37.072433468Z] [info]    Cargado desde disco: volver_a_llamar
+[2026-02-06T01:31:37.072442576Z] [info]    Cargado desde disco: proporcionar_contacto_ayuda
+[2026-02-06T01:31:37.072452423Z] [info]    Cargado desde disco: sin_respuesta_ayuda
+[2026-02-06T01:31:37.072460677Z] [info]    Cargado desde disco: ayuda_pregunta
+[2026-02-06T01:31:37.072469219Z] [info]    Cargado desde disco: compartir_numero
+[2026-02-06T01:31:37.072477340Z] [info]    Cargado desde disco: gracias_numero
+[2026-02-06T01:31:37.072509921Z] [info]    Cargado desde disco: sin_preguntas_despedida
+[2026-02-06T01:31:37.072519363Z] [info]    Cargado desde disco: enviar_catalogo_algo_mas
+[2026-02-06T01:31:37.072529639Z] [info]    Cargado desde disco: tener_numero_contacto
+[2026-02-06T01:31:37.072539054Z] [info]    Cargado desde disco: gracias_compartir_numero
+[2026-02-06T01:31:37.072548059Z] [info]    Cargado desde disco: agendar_seguimiento
+[2026-02-06T01:31:37.072557509Z] [info]    Cargado desde disco: horario_contactar
+[2026-02-06T01:31:37.072565639Z] [info]    Cargado desde disco: contactar_manana
+[2026-02-06T01:31:37.072572971Z] [info]    Cargado desde disco: volver_llamar_momento
+[2026-02-06T01:31:37.072580319Z] [info]    Cargado desde disco: lamento_sin_contacto
+[2026-02-06T01:31:37.072588540Z] [info]    Cargado desde disco: saludo_encargado
+[2026-02-06T01:31:37.072596965Z] [info]    Cargado desde disco: enviar_whatsapp_dudas
+[2026-02-06T01:31:37.072611983Z] [info]    Cargado desde disco: llega_catalogo_gracias
+[2026-02-06T01:31:37.072620494Z] [info]    Cargado desde disco: envio_catalogo_cotizo
+[2026-02-06T01:31:37.072628861Z] [info]    Cargado desde disco: ocupado_catalogo_tiempo
+[2026-02-06T01:31:37.072637985Z] [info]    Cargado desde disco: numero_whatsapp_info
+[2026-02-06T01:31:37.072646419Z] [info]    Cargado desde disco: gracias_envio_whatsapp
+[2026-02-06T01:31:37.076469457Z] [info]    Cargado desde disco: confirma_whatsapp
+[2026-02-06T01:31:37.076481255Z] [info]    Cargado desde disco: envio_ahorita_dudas
+[2026-02-06T01:31:37.076505368Z] [info]    Cargado desde disco: gracias_tiempo_catalogo
+[2026-02-06T01:31:37.076514150Z] [info]    Cargado desde disco: reciba_productos_interesa
+[2026-02-06T01:31:37.076522129Z] [info]    Cargado desde disco: quedamos_contacto_dia
+[2026-02-06T01:31:37.076529543Z] [info]    Cargado desde disco: aqui_servirle_luego
+[2026-02-06T01:31:37.076536696Z] [info]    Cargado desde disco: registrado_catalogo_breve
+[2026-02-06T01:31:37.076544594Z] [info]    Cargado desde disco: perfecto,_le_envÃ­o_el_catÃ¡logo_a_este_whatsapp.
+[2026-02-06T01:31:37.076553067Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._Â¿me_decÃ­a?
+[2026-02-06T01:31:37.076560293Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._llevo_anotados_4_dÃ­gitos._Â¿me
+[2026-02-06T01:31:37.076567974Z] [info]    Cargado desde disco: entiendo,_no_se_preocupe._Â¿me_permite_dejarle_mi
+[2026-02-06T01:31:37.076573395Z] [info]    Cargado desde disco: Â¿me_permite_dejarle_el_nÃºmero_para_que_el
+[2026-02-06T01:31:37.076578887Z] [info]    Cargado desde disco: Â¿me_escucha?_parece_que_hay_interferencia
+[2026-02-06T01:31:37.076584282Z] [info]    Cargado desde disco: perfecto,_llevo_anotados_8_dÃ­gitos._Â¿me_puede_dar
+[2026-02-06T01:31:37.076591222Z] [info]    Cargado desde disco: perfecto,_tengo_anotado_722_363_83_71._le
+[2026-02-06T01:31:37.076601840Z] [info]    Cargado desde disco: entendido._Â¿me_puede_dar_un_correo_electrÃ³nico_para
+[2026-02-06T01:31:37.076608656Z] [info]    Cargado desde disco: perfecto,_(name)._espero_entonces_hasta_que_puedas_continuar
+[2026-02-06T01:31:37.076618552Z] [info]    Cargado desde disco: perfecto._Â¿tiene_dÃ³nde_anotar?
+[2026-02-06T01:31:37.076626088Z] [info]    Cargado desde disco: el_nÃºmero_es_6_6_2_4_1
+[2026-02-06T01:31:37.078159916Z] [info]    Cargado desde disco: perfecto,_tengo_anotado_452_112_51_71._le
+[2026-02-06T01:31:37.078166635Z] [info]    Cargado desde disco: estamos_en_guadalajara,_pero_hacemos_envÃ­os_a_toda
+[2026-02-06T01:31:37.078173403Z] [info]    Cargado desde disco: dÃ©jeme_revisar_bien_toda_la_informaciÃ³n..._entendido._Â¿me
+[2026-02-06T01:31:37.078179983Z] [info]    Cargado desde disco: no_se_preocupe,_tomo_mi_tiempo._estoy_aquÃ­
+[2026-02-06T01:31:37.078186878Z] [info]    Cargado desde disco: claro,_no_hay_problema._me_gustarÃ­a_enviarle_nuestro
+[2026-02-06T01:31:37.078193765Z] [info]    Cargado desde disco: entiendo,_Â¿le_parece_bien_si_le_envÃ­o_la
+[2026-02-06T01:31:37.078200613Z] [info]    Cargado desde disco: perfecto,_le_llamo_a_las_10_entonces._muchas
+[2026-02-06T01:31:37.078207957Z] [info]    Cargado desde disco: perfecto,_tengo_anotado_108_109_10_11._le
+[2026-02-06T01:31:37.078215613Z] [info]    Cargado desde disco: [no_decir_nada_-_esperar_siguiente_mensaje]
+[2026-02-06T01:31:37.078223282Z] [info]    Cargado desde disco: perfecto,_le_llamo_a_las_3_entonces._muchas
+[2026-02-06T01:31:37.078230070Z] [info]    Cargado desde disco: disculpe,_no_escuchÃ©_bien._Â¿me_puede_repetir_su
+[2026-02-06T01:31:37.078236387Z] [info]    Cargado desde disco: entiendo,_Â¿me_puede_confirmar_si_hay_alguien_disponible
+[2026-02-06T01:31:37.078243258Z] [info]    Cargado desde disco: entiendo,_disculpe_la_molestia._Â¿a_quÃ©_hora_puedo
+[2026-02-06T01:31:37.078250828Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._llevo_anotados_1_dÃ­gitos._Â¿me
+[2026-02-06T01:31:37.078259329Z] [info]    Cargado desde disco: perfecto,_tengo_anotado_160_123_45_67._le
+[2026-02-06T01:31:37.078266037Z] [info]    Cargado desde disco: Â¿ese_es_su_nÃºmero_de_whatsapp?_Â¿puedo_enviarle
+[2026-02-06T01:31:37.078273715Z] [info]    Cargado desde disco: claro,_estoy_listo_para_anotarlo.
+[2026-02-06T01:31:37.086682225Z] [info]    Cargado desde disco: dÃ©jeme_revisar_bien_toda_la_informaciÃ³n..._entiendo._me
+[2026-02-06T01:31:37.086701451Z] [info]    Cargado desde disco: Â¿a_quÃ©_hora_serÃ­a_mejor_que_le_llame?
+[2026-02-06T01:31:37.086712219Z] [info]    Cargado desde disco: entiendo_que_es_difÃ­cil_localizarlo._Â¿me_podrÃ­a_proporcionar
+[2026-02-06T01:31:37.086723800Z] [info]    Cargado desde disco: disculpe,_Â¿me_puede_repetir_eso_Ãºltimo?
+[2026-02-06T01:31:37.086734439Z] [info]  1153 audios cargados desde cachÃ© persistente
+[2026-02-06T01:31:37.086742876Z] [info] 
+[2026-02-06T01:31:37.086858923Z] [info]    Cargado desde disco: disculpe,_no_le_escuchÃ©_bien._Â¿me_puede_repetir?
+[2026-02-06T01:31:37.086869200Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._tengo_anotado_345-340-34-03,_Â¿es_correcto?
+[2026-02-06T01:31:37.086878989Z] [info]    Cargado desde disco: sÃ­,_aquÃ­_estoy._llevo_anotados_3_dÃ­gitos._Â¿me
+[2026-02-06T01:31:37.086887789Z] [info]    Cargado desde disco: parece_que_tenemos_problemas_de_conexiÃ³n._Â¿prefiere_que
+[2026-02-06T01:31:37.086897534Z] [info]    Cargado desde disco: ajÃ¡,_dÃ©jeme_ver..._entendido._Â¿me_podrÃ­a_proporcionar_un
+[2026-02-06T01:31:37.086907312Z] [info]    Cargado desde disco: muchas_gracias_por_su_tiempo._que_tenga_excelente
+[2026-02-06T01:31:37.086918947Z] [info]    Cargado desde disco: perfecto,_entonces_le_envÃ­o_el_catÃ¡logo._muchas_gracias
+[2026-02-06T01:31:37.086930213Z] [info]    Cargado desde disco: disculpe,_Â¿me_puede_repetir?
+[2026-02-06T01:31:37.087799860Z] [info]  1497 estadÃ­sticas de frases cargadas desde disco
+[2026-02-06T01:31:37.087810795Z] [info] 
+[2026-02-06T01:31:37.087817600Z] [info]  2233 preguntas frecuentes cargadas desde disco
+[2026-02-06T01:31:37.087823679Z] [info] 
+[2026-02-06T01:31:37.087829790Z] [info]  FIX 64: respuestas_cache.json ya estÃ¡ actualizado (9 categorÃ­as)
+[2026-02-06T01:31:37.098510574Z] [info] 
+[2026-02-06T01:31:37.098519437Z] [info]  9 respuestas personalizadas cargadas desde disco
+[2026-02-06T01:31:37.098525568Z] [info]  TOTAL de categorÃ­as en cachÃ©: 32
+[2026-02-06T01:31:37.098541221Z] [info] 
+[2026-02-06T01:31:37.098559104Z] [info]  Pre-generando cachÃ© de audios con Multilingual v2...
+[2026-02-06T01:31:37.098568349Z] [info]  Agregando 32 respuestas cacheadas al pre-generado...
+[2026-02-06T01:31:37.098577332Z] [info]    Omitido: error (ya existe en cache)
+[2026-02-06T01:31:37.098585938Z] [info]    Omitido: confirmacion_presencia (ya existe en cache)
+[2026-02-06T01:31:37.098594361Z] [info]    Omitido: pensando_1 (ya existe en cache)
+[2026-02-06T01:31:37.098604836Z] [info]    Omitido: pensando_2 (ya existe en cache)
+[2026-02-06T01:31:37.098614676Z] [info]    Omitido: pensando_3 (ya existe en cache)
+[2026-02-06T01:31:37.098625245Z] [info]    Omitido: pensando_4 (ya existe en cache)
+[2026-02-06T01:31:37.098635593Z] [info]    Omitido: pensando_5 (ya existe en cache)
+[2026-02-06T01:31:37.098645652Z] [info]    Omitido: pensando_6 (ya existe en cache)
+[2026-02-06T01:31:37.098656550Z] [info]    Omitido: pensando_7 (ya existe en cache)
+[2026-02-06T01:31:37.098666403Z] [info]    Omitido: pensando_8 (ya existe en cache)
+[2026-02-06T01:31:37.098676588Z] [info]    Omitido: saludo_inicial (ya existe en cache)
+[2026-02-06T01:31:37.098687250Z] [info]    Omitido: saludo_inicial_encargado (ya existe en cache)
+[2026-02-06T01:31:37.105706501Z] [info]    Omitido: despedida_1 (ya existe en cache)
+[2026-02-06T01:31:37.105712143Z] [info]    Omitido: respuesta_cache_encargado_si (ya existe en cache)
+[2026-02-06T01:31:37.105716699Z] [info]    Omitido: despedida_2 (ya existe en cache)
+[2026-02-06T01:31:37.105724245Z] [info]    Omitido: despedida_objecion (ya existe en cache)
+[2026-02-06T01:31:37.105727460Z] [info]    Omitido: respuesta_cache_confirma_este_numero (ya existe en cache)
+[2026-02-06T01:31:37.105735244Z] [info]    Omitido: segunda_parte_saludo (ya existe en cache)
+[2026-02-06T01:31:37.105743929Z] [info]    Omitido: respuesta_cache_de_donde_habla (ya existe en cache)
+[2026-02-06T01:31:37.105749074Z] [info]    Omitido: respuesta_cache_saludo_inicial (ya existe en cache)
+[2026-02-06T01:31:37.105752867Z] [info]    Omitido: respuesta_cache_que_vende (ya existe en cache)
+[2026-02-06T01:31:37.105759089Z] [info]    Omitido: respuesta_cache_presencia_aqui (ya existe en cache)
+[2026-02-06T01:31:37.105763948Z] [info]    Omitido: respuesta_cache_que_marcas (ya existe en cache)
+[2026-02-06T01:31:37.105768979Z] [info]    Omitido: respuesta_cache_presencia_escucho (ya existe en cache)
+[2026-02-06T01:31:37.105773045Z] [info]    Omitido: respuesta_cache_quien_habla (ya existe en cache)
+[2026-02-06T01:31:37.105778729Z] [info]    Omitido: respuesta_cache_presencia_ayudo (ya existe en cache)
+[2026-02-06T01:31:37.105786297Z] [info]    Omitido: respuesta_cache_presencia_digame (ya existe en cache)
+[2026-02-06T01:31:37.110401939Z] [info]    Omitido: respuesta_cache_pasando_llamada (ya existe en cache)
+[2026-02-06T01:31:37.110415508Z] [info]    Omitido: respuesta_cache_encargado_no (ya existe en cache)
+[2026-02-06T01:31:37.110427408Z] [info]    Omitido: respuesta_cache_correo_si (ya existe en cache)
+[2026-02-06T01:31:37.110428204Z] [info]    Omitido: respuesta_cache_llamar_otro_momento (ya existe en cache)
+[2026-02-06T01:31:37.110443607Z] [info]    Omitido: respuesta_cache_ofrece_proporcionar (ya existe en cache)
+[2026-02-06T01:31:37.110468795Z] [info]    Omitido: respuesta_cache_llamar_dia_especifico (ya existe en cache)
+[2026-02-06T01:31:37.110479768Z] [info]    Omitido: respuesta_cache_ocupado (ya existe en cache)
+[2026-02-06T01:31:37.110480387Z] [info]    Omitido: respuesta_cache_no_puede_decidir (ya existe en cache)
+[2026-02-06T01:31:37.110491414Z] [info]    Omitido: respuesta_cache_whatsapp_si (ya existe en cache)
+[2026-02-06T01:31:37.110513778Z] [info]    Omitido: respuesta_cache_no_vende_ferreteria (ya existe en cache)
+[2026-02-06T01:31:37.110523687Z] [info]    Omitido: respuesta_cache_cliente_pide_whatsapp (ya existe en cache)
+[2026-02-06T01:31:37.110525969Z] [info]    Omitido: respuesta_cache_numero_equivocado (ya existe en cache)
+[2026-02-06T01:31:37.110535005Z] [info]    Omitido: respuesta_cache_compras_en_oficinas (ya existe en cache)
+[2026-02-06T01:31:37.110720284Z] [info]    Omitido: respuesta_cache_no_interesa (ya existe en cache)
+[2026-02-06T01:31:37.115255652Z] [info]    â€¢ Directorio: audio_cache
+[2026-02-06T01:31:37.115269153Z] [info]    â€¢ Ruta absoluta: /app/audio_cache
+[2026-02-06T01:31:37.115283942Z] [info]    â€¢ Auto-cachÃ© despuÃ©s de 1 usos
+[2026-02-06T01:31:37.115301288Z] [info] 
+[2026-02-06T01:31:37.115315574Z] [info]  * Serving Flask app 'servidor_llamadas'
+[2026-02-06T01:31:37.115322335Z] [info]  * Debug mode: off
+[2026-02-06T01:31:37.115329557Z] [error] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+[2026-02-06T01:31:37.115337367Z] [error]  * Running on all addresses (0.0.0.0)
+[2026-02-06T01:31:37.115412160Z] [info]    Omitido: respuesta_cache_que_necesita (ya existe en cache)
+[2026-02-06T01:31:37.115419937Z] [info]    Omitido: respuesta_cache_que_productos (ya existe en cache)
+[2026-02-06T01:31:37.115427748Z] [info]    Omitido: respuesta_cache_linea_credito (ya existe en cache)
+[2026-02-06T01:31:37.115436425Z] [info]    Omitido: respuesta_cache_selladores_silicones (ya existe en cache)
+[2026-02-06T01:31:37.115445455Z] [info]    Omitido: respuesta_cache_chapas (ya existe en cache)
+[2026-02-06T01:31:37.115453244Z] [info]    Omitido: respuesta_cache_visitar_fabrica (ya existe en cache)
+[2026-02-06T01:31:37.115461156Z] [info]    Omitido: respuesta_cache_fabrican_mexico (ya existe en cache)
+[2026-02-06T01:31:37.115469378Z] [info]  CachÃ© completo: 1153 audios pre-generados
+[2026-02-06T01:31:37.115477116Z] [info] 
+[2026-02-06T01:31:37.115484103Z] [info] 
+[2026-02-06T01:31:37.115492028Z] [info]  EstadÃ­sticas de cachÃ©:
+[2026-02-06T01:31:37.115501061Z] [info]    â€¢ Audios en cachÃ©: 1153
+[2026-02-06T01:31:37.119288069Z] [info]  FIX 270: Telegram Bot 2 notificado
+[2026-02-06T01:31:37.119324846Z] [error]  * Running on http://127.0.0.1:5000
+[2026-02-06T01:31:37.119331472Z] [error]  * Running on http://10.157.75.175:5000
+[2026-02-06T01:31:37.119337757Z] [error] [33mPress CTRL+C to quit[0m
+[2026-02-06T01:31:37.119343677Z] [info]  FIX 270: Telegram Bot 1 notificado
+[2026-02-06T01:33:01.276376466Z] [error] 100.64.0.2 - - [06/Feb/2026 01:32:59] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:33:32.092568615Z] [error] 100.64.0.3 - - [06/Feb/2026 01:33:30] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:34:34.563633086Z] [error] 100.64.0.4 - - [06/Feb/2026 01:34:30] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:35:14.764334232Z] [info]  FIX 212: Deepgram configurado correctamente
+[2026-02-06T01:35:14.764351167Z] [info]    API Key: 2a3f666dd2...1848
+[2026-02-06T01:35:14.764351288Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:35:14.764358188Z] [info]  FIX 212: Deepgram configurado y listo
+[2026-02-06T01:35:14.764366307Z] [info]    Spreadsheet abierto: Llamadas Nioval
+[2026-02-06T01:35:14.764366426Z] [info]  FIX 540: ElevenLabs Scribe configurado como STT PRIMARIO
+[2026-02-06T01:35:14.764372334Z] [info]     Deepgram serÃ¡ usado como FALLBACK
+[2026-02-06T01:35:14.764377635Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:35:14.764381767Z] [info]    Hoja encontrada: Bruce FORMS
+[2026-02-06T01:35:14.764387513Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:35:14.764406890Z] [info]    Spreadsheet abierto: TABLERO DE NIOVAL
+[2026-02-06T01:35:14.764408633Z] [info]  Conectado a spreadsheet de resultados: Bruce FORMS
+[2026-02-06T01:35:14.764417869Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:35:14.764419994Z] [info]    Hoja encontrada: Bruce
+[2026-02-06T01:35:14.764423184Z] [info]    Autenticado correctamente con Google Sheets
+[2026-02-06T01:35:14.764429658Z] [info]  Conectado a: Bruce
+[2026-02-06T01:35:14.764436622Z] [info]    Usando credenciales desde variable de entorno
+[2026-02-06T01:35:14.764480278Z] [error] 100.64.0.4 - - [06/Feb/2026 01:35:10] "GET /version HTTP/1.1" 200 -
+[2026-02-06T01:35:14.764512655Z] [info]  FIX 212: Flask-Sock inicializado para WebSocket
+[2026-02-06T01:35:16.112579411Z] [info]    Spreadsheet abierto: Llamadas Nioval
+[2026-02-06T01:35:16.112587094Z] [info]    Hoja encontrada: LOGS
+[2026-02-06T01:35:16.112593591Z] [info]  Conectado a hoja LOGS para registro de conversaciones
+[2026-02-06T01:35:16.112627411Z] [info]     TWILIO_ACCOUNT_SID encontrado: ACddf2b7fa...c9dc
+[2026-02-06T01:35:16.112648700Z] [info]     TWILIO_AUTH_TOKEN encontrado: d43c8501...2480
+[2026-02-06T01:35:16.112660262Z] [info]  Ãšltimo ID BRUCE: BRUCE1941
+[2026-02-06T01:35:16.112660558Z] [info]     TWILIO_PHONE_NUMBER: +523321014486
+[2026-02-06T01:35:16.112668558Z] [info]  FIX 272.2: 500 llamadas en historial cargadas
+[2026-02-06T01:35:16.112677088Z] [info]  FIX 272.9: 5000 logs cargados
+[2026-02-06T01:35:16.112691178Z] [info]  FIX 403: Captura de logs activada - TODOS los prints se guardarÃ¡n en buffer
+[2026-02-06T01:35:16.112692337Z] [info]  Google Sheets Managers inicializados
+[2026-02-06T01:35:16.112709891Z] [info]  WhatsApp Validator inicializado
+[2026-02-06T01:35:16.112723618Z] [info]  FIX 519: Cache de patrones inicializado (0 patrones guardados)
+[2026-02-06T01:35:16.112730071Z] [info]  FIX 272: 1165 calificaciones cargadas
+[2026-02-06T01:35:16.112740877Z] [info]  FIX 519: Cache de Patrones Aprendidos inicializado
+[2026-02-06T01:35:16.112744294Z] [error] 100.64.0.4 - - [06/Feb/2026 01:35:15] "GET /stats HTTP/1.1" 200 -
+[2026-02-06T01:35:16.112755838Z] [info]  FIX 173: Verificando credenciales de Twilio...
+[2026-02-06T01:35:36.341694427Z] [error] 100.64.0.5 - - [06/Feb/2026 01:35:31] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:37:40.914374860Z] [error] 100.64.0.2 - - [06/Feb/2026 01:37:32] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:38:33.550922815Z] [error] 100.64.0.3 - - [06/Feb/2026 01:38:33] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:39:34.531233327Z] [error] 100.64.0.6 - - [06/Feb/2026 01:39:34] "GET /info-cache HTTP/1.1" 200 -
+[2026-02-06T01:40:36.434764997Z] [error] 100.64.0.7 - - [06/Feb/2026 01:40:35] "GET /info-cache HTTP/1.1" 200 -

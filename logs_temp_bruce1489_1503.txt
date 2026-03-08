@@ -1,0 +1,500 @@
+ FIX 212: Transcripción FINAL Deepgram para CA49b3fded83cf1be7587c78480c685716: 'Obviamente tiene su tocino y le ponen mayor'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 3 transcripciones acumuladas
+   [0] 'Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra'
+   [1] 'Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra,'
+   [2] 'Obviamente tiene su tocino y le ponen mayor'
+    FIX 248: Después de eliminar duplicados: 3 transcripciones únicas
+    FIX 248: Concatenando 3 partes únicas: 'Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra, Obviamente tiene su tocino y le ponen mayor'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 3.2s)
+   🟢 Deepgram: 'Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra, Obviamente tiene su tocino y le ponen mayor'
+    FIX 408: Reseteando contador de timeouts (era 1)
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra, Obviamente tiene su tocino y le ponen mayor"
+[2026-01-27 20:34:14] [CLIENTE] BRUCE1507 - CLIENTE DIJO: "Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra, Obviamente tiene su tocino y le ponen mayor"
+ FIX 212: MediaStream detenido - CallSid: CA49b3fded83cf1be7587c78480c685716
+ FIX 212: Conexión Deepgram cerrada - CallSid: CA49b3fded83cf1be7587c78480c685716
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA49b3fded83cf1be7587c78480c685716
+   CallStatus: completed
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE1aeb46381a19e302dfb3f5a0237243c5'
+   Digits: timeout
+ LOG registrado: CLIENT... | Mira, si un día no te gusta Estos son los hot dog ...
+ FIX 121 DEBUG: len(conversation_history)=4, mensajes_usuario=1, es_primera_respuesta=False
+ FIX 314: Saludo YA detectado en INTERIM - usando respuesta pre-cargada
+   Respuesta será instantánea (0s delay)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+ FIX 121: INICIANDO respuesta desde caché de segunda parte...
+ FIX 131: Cliente interrumpió en 2do mensaje - NO usar caché
+   Cliente dijo: 'Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mira, Julieanoche, gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra, Obviamente tiene su tocino y le ponen mayor' mientras Bruce hablaba segunda parte
+   Usando GPT con instrucción de nexo en lugar de caché
+[EMOJI] FIX 491: No hay patrón/cache - Usando GPT (latencia ~3.5s)
+[WARN] FIX 129: Posible error Whisper detectado: patrón conocido
+[OK] FIX 198 NIVEL 3: Error leve → interpretar intención y continuar
+[DEBUG] FIX 81 DEBUG: Verificando objeciones en: 'Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve '
+[OK] FIX 81 DEBUG: NO se detectó objeción terminal. Continuando conversación normal.
+
+[EMOJI] FIX 305: EXCEPCIÓN EN GPT [EMOJI]
+   Error: AttributeError: 'AgenteVentas' object has no attribute 'nombre_encargado'
+   Traceback completo:
+Traceback (most recent call last):
+  File "/app/agente_ventas.py", line 7125, in procesar_respuesta
+    prompt_optimizado = self._construir_prompt_dinamico()
+  File "/app/agente_ventas.py", line 9973, in _construir_prompt_dinamico
+    contexto_dinamico = self._generar_contexto_dinamico()
+  File "/app/agente_ventas.py", line 634, in _generar_contexto_dinamico
+    nombre_enc = self.nombre_encargado if self.nombre_encargado else "NO CAPTURADO"
+                                          ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AgenteVentas' object has no attribute 'nombre_encargado'
+   Último mensaje del cliente: Mira, si un día no te gusta Estos son los hot dog más monstruosos, si es que ve nada más la barra Mi
+   Historial tiene 6 mensajes
+ FIX 98: Generando audio con ElevenLabs VOZ BRUCE (10 palabras)
+ Caché AUTO: ¿le_gustaría_recibir_nuestro_catálogo_po... (0s delay)
+ FIX 102 DEBUG: result = respuesta_CA49b3fded83cf1be7587c78480c685716_77, type = <class 'str'>
+ BRUCE DICE: "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+ STATUS CALLBACK - Llamada CA49b3fded...
+   Estado: completed
+   Duración: 17s
+[2026-01-27 20:34:14] [LLAMADA] LLAMADA TERMINADA - Estado: completed, Duración: 17s
+    Cliente colgó - detectado por status callback (6 mensajes)
+
+    Clasificado como 'Colgó' (sin datos capturados)
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+[EMOJI] Duración de la llamada: 16 segundos
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+[2026-01-27 20:34:14] [BRUCE] BRUCE1507 DICE: "¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+ FIX 97: Audio ElevenLabs (generado en paralelo)
+ LOG registrado: BRUCE... | ¿Le gustaría recibir nuestro catálogo por WhatsApp...
+ FIX 214: Usando Record + Deepgram (mensaje #2)
+100.64.0.12 - - [27/Jan/2026 20:34:14] "POST /procesar-respuesta HTTP/1.1" 200 -
+
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 212: Conexión Deepgram cerrada correctamente - CallSid: CA49b3fded83cf1be7587c78480c685716
+ FIX 212: WebSocket cerrado - CallSid: CA49b3fded83cf1be7587c78480c685716
+100.64.0.5 - - [27/Jan/2026 20:34:14] "GET /media-stream HTTP/1.1" 200 -
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber mejorado la llamada asegurándose de captar mejor la atención del cliente desde el inicio. Además, sería útil hacer preguntas más específicas para guiar la conversación y mantener el interés del cliente.
+[EMOJI] FIX 177: Conclusión temporal 'Colgo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3757...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 16
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mejorado la llamada asegurándos...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1507
+ Resultado guardado exitosamente en fila 3757
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1949
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+    Llamada guardada desde status callback
+    FIX 207: Llamada registrada en dashboard
+100.64.0.8 - - [27/Jan/2026 20:34:17] "GET /status-callback?Called=%2B526144921393&ToState=Chih.&CallerCountry=MX&Direction=outbound-api&Timestamp=Tue,+27+Jan+2026+20:34:14+%2B0000&CallbackSource=call-progress-events&SipResponseCode=200&CallerState=Jal.&ToZip=&SequenceNumber=0&CallSid=CA49b3fded83cf1be7587c78480c685716&To=%2B526144921393&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Chihuahua&CallStatus=completed&Duration=1&From=%2B523321014486&CallDuration=17&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Chihuahua&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Chih.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+
+ FIX 267: GRABACIÓN COMPLETA DE LLAMADA
+   CallSid: CA49b3fded83cf1be7587c78480c685716
+   RecordingSid: RE5ee6ca23c99603f3f0772ef29892682b
+   Status: completed
+   Duración: 14 segundos
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5ee6ca23c99603f3f0772ef29892682b
+    URL guardada en lead_data del agente
+    FIX 272: Grabación asociada a BRUCE1507
+    FIX 272: Historial actualizado con URL de grabación
+100.64.0.11 - - [27/Jan/2026 20:34:18] "GET /grabacion-llamada-completa?RecordingSource=StartCallRecordingTwiML&RecordingTrack=both&RecordingSid=RE5ee6ca23c99603f3f0772ef29892682b&RecordingUrl=https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE5ee6ca23c99603f3f0772ef29892682b&RecordingStatus=completed&RecordingChannels=2&ErrorCode=0&CallSid=CA49b3fded83cf1be7587c78480c685716&RecordingStartTime=Tue,+27+Jan+2026+20:33:59+%2B0000&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&RecordingDuration=14 HTTP/1.1" 200 -
+ FIX 401: Deepgram no respondió en 5.0s
+    Whisper DESHABILITADO - esperando siguiente intento con Deepgram
+ Llamada YA terminada - Estado: completed
+ Cliente colgó o llamada desconectada
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 21 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  0
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Neutral
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce podría haber mejorado la llamada asegurándose de captar mejor la atención del cliente desde el principio. Además, debería haber hecho preguntas más específicas para entender mejor las necesidades del cliente.
+[EMOJI] FIX 177: Conclusión temporal 'Nulo' - recalculando con datos capturados...
+[EMOJI] Conclusión determinada: Nulo (NEGADO)
+[EMOJI] Bruce se autoevaluó: 3/10
+
+ Guardando resultado en fila 3758...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: No apto
+  → Resultado: NEGADO
+  → Estado: Colgo
+  → Duración: 21
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Neutral
+  → Opinión Bruce: Bruce podría haber mejorado la llamada asegurándos...
+  → Calificación Bruce: 3/10
+  → ID BRUCE: BRUCE1507
+ Resultado guardado exitosamente en fila 3758
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1949
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.4 - - [27/Jan/2026 20:34:21] "POST /procesar-respuesta HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:23] "GET /logs/view HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:23] "GET /logs HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:24] "GET /logs HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:33] "GET /logs/view HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:39] "GET /logs HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:39] "GET /logs HTTP/1.1" 200 -
+100.64.0.11 - - [27/Jan/2026 20:34:43] "GET /logs/view HTTP/1.1" 200 -
+ DEBUG 2: JSON parseado correctamente
+ DEBUG 3: Datos extraídos - Tel: +528444123400, Negocio: Ferretería Sieber
+ FIX 179: Reintentos automáticos DESHABILITADOS para esta llamada
+ DEBUG 4: Iniciando llamada Twilio a +528444123400
+ DEBUG 5: Llamada Twilio creada - SID: CA780ef536dcd52434453f961338983eef
+[2026-01-27 20:34:46] [LLAMADA] N/A - LLAMADA INICIADA a +528444123400 (Ferretería Sieber)
+ Contacto completo guardado para Call SID CA780ef536... (fila 1951)
+ DEBUG 6: Retornando respuesta exitosa
+100.64.0.11 - - [27/Jan/2026 20:34:46] "POST /iniciar-llamada HTTP/1.1" 200 -
+100.64.0.10 - - [27/Jan/2026 20:34:48] "GET /escuchar-grabacion/REbc608c12f913b527c8be9ea7bd17cf37 HTTP/1.1" 200 -
+ ID BRUCE generado: BRUCE1508
+    FIX 214: Usando Record + Deepgram (sin Speech Recognition de Twilio)
+100.64.0.2 - - [27/Jan/2026 20:34:52] "GET /webhook-voz?Called=%2B528444123400&ToState=Coah.&CallerCountry=MX&Direction=outbound-api&CallerState=Jal.&ToZip=&CallSid=CA780ef536dcd52434453f961338983eef&To=%2B528444123400&CallerZip=&ToCountry=MX&CalledZip=&ApiVersion=2010-04-01&CalledCity=Saltillo&CallStatus=in-progress&From=%2B523321014486&AccountSid=ACddf2b7fafcc4714be7cc3437b905c9dc&CalledCountry=MX&CallerCity=Zapopan&ToCity=Saltillo&FromCountry=MX&Caller=%2B523321014486&FromCity=Zapopan&CalledState=Coah.&FromZip=&FromState=Jal. HTTP/1.1" 200 -
+ LOG registrado: BRUCE... | Hola, buen dia...
+ FIX 114: Saludo corto 'Hola, buen dia' desde caché (0s delay, voz Bruce)
+ FIX 212: Iniciando MediaStream para Deepgram
+   WebSocket URL: wss://nioval-webhook-server-production.up.railway.app/media-stream
+    FIX 271: Grabación asíncrona de llamada completa iniciada
+ FIX 222: Iniciando conexión Deepgram...
+   Opciones: model=nova-2, language=es-419, encoding=mulaw
+100.64.0.12 - - [27/Jan/2026 20:34:53] "GET /audio/inicial_CA780ef536dcd52434453f961338983eef HTTP/1.1" 200 -
+
+100.64.0.11 - - [27/Jan/2026 20:34:53] "GET /logs/view HTTP/1.1" 200 -
+   StreamSid: MZ66125d932de84830f08c002fe45f9bee
+ FIX 212: Nueva conexión WebSocket /media-stream
+🟢 FIX 212: Conexión Deepgram abierta - CallSid: CA780ef536dcd52434453f961338983eef
+🟢 FIX 212: MediaStream conectado
+ FIX 212: Deepgram conectado para CallSid: CA780ef536dcd52434453f961338983eef
+ FIX 212: MediaStream iniciado
+ FIX 212: Deepgram conectado para CA780ef536dcd52434453f961338983eef
+   CallSid: CA780ef536dcd52434453f961338983eef
+100.64.0.11 - - [27/Jan/2026 20:34:54] "GET /logs HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Conoce el número'
+ FIX 212: [PARCIAL] 'Conoce el número'
+100.64.0.11 - - [27/Jan/2026 20:34:55] "GET /logs HTTP/1.1" 200 -
+
+ DEBUG - Parámetros Twilio (POST):
+   CallSid: CA780ef536dcd52434453f961338983eef
+   CallStatus: in-progress
+   AnsweredBy: 
+   SpeechResult: ''
+   RecordingUrl: 'https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0d9ea26f334ed33dc640a98db0b72325'
+   Digits: timeout
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+100.64.0.11 - - [27/Jan/2026 20:34:55] "GET /logs/api?bruce_id=1492 HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Conoce el número de extensión'
+ FIX 212: [PARCIAL] 'Conoce el número de extensión'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [PARCIAL] 'Conoce el número de extensión marque ahora,'
+ FIX 212: [PARCIAL] 'Conoce el número de extensión marque ahora,'
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+    FIX 465: Frase termina en COMA - cliente sigue hablando
+ FIX 212: [PARCIAL] 'Conoce el número de extensión marque ahora,'
+ FIX 212: [PARCIAL] 'Conoce el número de extensión marque ahora,'
+ FIX 214: Grabación fragmento completed - CallSid: CA780ef536dcd52434453f961338983eef
+   URL: https://api.twilio.com/2010-04-01/Accounts/ACddf2b7fafcc4714be7cc3437b905c9dc/Recordings/RE0d9ea26f334ed33dc640a98db0b72325
+100.64.0.10 - - [27/Jan/2026 20:34:57] "POST /grabacion-status HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] 'Conoce el número de extensión, marque ahora, de lo contrario, se'
+ FIX 212: [PARCIAL] 'Conoce el número de extensión, marque ahora, de lo contrario, se'
+ FIX 212: [FINAL] 'Conoce el número de extensión marque ahora,' (latencia: 16ms)
+ FIX 212: Transcripción FINAL Deepgram para CA780ef536dcd52434453f961338983eef: 'Conoce el número de extensión marque ahora,'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+ FIX 212: [PARCIAL] 'de lo contrario, seleccione una de'
+ FIX 212: [PARCIAL] 'de lo contrario, seleccione una de'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.05s/0.3s)
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de'
+   Esperando más transcripciones...
+ FIX 451: Transcripción FINAL recibida
+ FIX 212: [PARCIAL] 'de lo contrario, seleccione una de las siguientes opciones'
+ FIX 212: [PARCIAL] 'de lo contrario, seleccione una de las siguientes opciones'
+ FIX 456: PARCIAL nueva detectada - cliente sigue hablando: 'de lo contrario, seleccione una de las siguientes opciones'
+   Esperando más transcripciones...
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.10s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.15s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.20s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.25s/0.3s)
+ FIX 451: Solo PARCIAL disponible, esperando FINAL... (0.30s/0.3s)
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 451: Usando transcripción PARCIAL después de esperar 0.3s por FINAL
+ FIX 212: [FINAL] 'de lo contrario, seleccione una de las siguientes opciones.' (latencia: 8ms)
+ FIX 212: Transcripción FINAL Deepgram para CA780ef536dcd52434453f961338983eef: 'de lo contrario, seleccione una de las siguientes opciones.'
+ FIX 451: Transcripción FINAL recibida
+ FIX 456: No hay PARCIALES nuevas después de 0.35s - cliente terminó de hablar
+ FIX 239/242/248: 3 transcripciones acumuladas
+   [0] 'Conoce el número de extensión, marque ahora, de lo contrario, se'
+   [1] 'de lo contrario, seleccione una de las siguientes opciones'
+   [2] 'de lo contrario, seleccione una de las siguientes opciones.'
+    FIX 248: Después de eliminar duplicados: 2 transcripciones únicas
+    FIX 248: Concatenando 2 partes únicas: 'Conoce el número de extensión, marque ahora, de lo contrario, se de lo contrario, seleccione una de las siguientes opciones'
+
+ FIX 212: USANDO TRANSCRIPCIÓN DEEPGRAM (esperó 5.2s)
+   🟢 Deepgram: 'Conoce el número de extensión, marque ahora, de lo contrario, se de lo contrario, seleccione una de las siguientes opciones'
+ FIX 195: CallStatus válido ('in-progress' o vacío) - procesando transcripción
+
+ CLIENTE DIJO: "Conoce el número de extensión, marque ahora, de lo contrario, se de lo contrario, seleccione una de las siguientes opciones"
+[2026-01-27 20:35:00] [CLIENTE] BRUCE1508 - CLIENTE DIJO: "Conoce el número de extensión, marque ahora, de lo contrario, se de lo contrario, seleccione una de las siguientes opciones"
+ LOG registrado: CLIENT... | Conoce el número de extensión, marque ahora, de lo...
+ FIX 121 DEBUG: len(conversation_history)=2, mensajes_usuario=0, es_primera_respuesta=True
+[EMOJI] Bruce se autoevaluó: 5/10
+100.64.0.11 - - [27/Jan/2026 20:35:03] "GET /logs/view HTTP/1.1" 200 -
+
+[EMOJI] Análisis de la llamada:
+   Estado de ánimo: Negativo
+   Nivel de interés: Bajo
+   Opinión de Bruce: Bruce debería haber intentado conectar con el cliente de manera más efectiva, ya que la llamada se desvió rápidamente a un sistema IVR. Sería útil confirmar si el cliente está disponible para hablar antes de iniciar la conversación.
+[EMOJI] Conclusión ya determinada: IVR/Contestadora automática (no recalcular)
+ FIX 71: CACHE DESHABILITADO TEMPORALMENTE - Usando solo GPT con contexto completo
+   Razón: Cache causaba loops y respuestas sin contexto
+   [DEBUG] FIX 477: DETECTADO deletreo de correo - Cliente probablemente sigue dictando
+   [PAUSE]  FIX 477: Cliente dando información PARCIAL - NO interrumpir (retornando None)
+   → Bruce esperará a que cliente termine de dictar
+ FIX 304: respuesta_texto es None (IVR detectado) - saliendo del thread
+ BRUCE DICE: "None"
+ FIX 304: respuesta_agente es None (IVR/contestadora detectada) - COLGANDO
+[2026-01-27 20:35:01] [BRUCE] BRUCE1508 - IVR/CONTESTADORA DETECTADA - COLGANDO
+[EMOJI] Guardando resultados en 'Bruce FORMS'...
+[EMOJI] Duración de la llamada: 9 segundos
+
+============================================================
+MÉTRICAS DE LLAMADA (FIX 482)
+============================================================
+
+TIMING PROMEDIO:
+  Transcripción (Deepgram): 0.00s
+  Procesamiento (GPT-4o):   0.00s
+  Audio (ElevenLabs):       0.00s
+  Total por turno:          0.00s
+
+CALIDAD:
+  Preguntas respondidas:    0/0 (0.0%)
+  Transcripciones correctas: 0/0 (0.0%)
+
+INTERACCIONES:
+  Interrupciones evitadas:  1
+  Repeticiones cliente:     0
+  Recuperaciones de error:  0
+  Respuestas vacías bloqueadas: 0
+============================================================
+
+[EMOJI] Pregunta 3 inferida: No (Bruce) - no dio WhatsApp
+[EMOJI] Pregunta 4 inferida: No (Bruce) - rechazó pedido inicial
+[EMOJI] Pregunta 5 inferida: No (Bruce) - rechazó muestra
+[EMOJI] Pregunta 6 inferida: No (Bruce) - rechazó fecha
+ FIX 212: [PARCIAL] '1, sucursal centro.'
+ FIX 212: [PARCIAL] '1, sucursal centro.'
+ FIX 212: [FINAL] '1, sucursal centro.' (latencia: 6ms)
+ FIX 212: Transcripción FINAL Deepgram para CA780ef536dcd52434453f961338983eef: '1, sucursal centro.'
+
+ Guardando resultado en fila 3759...
+  → Pregunta 3: No (Bruce)
+  → Pregunta 4: No (Bruce)
+  → Pregunta 5: No (Bruce)
+  → Pregunta 6: No (Bruce)
+  → Columna J: IVR/Contestadora automática
+  → Resultado: 
+  → Estado: Respondio
+  → Duración: 9
+  → Nivel de interés: Bajo
+  → Estado de ánimo: Negativo
+  → Opinión Bruce: Bruce debería haber intentado conectar con el clie...
+  → Calificación Bruce: 5/10
+  → ID BRUCE: BRUCE1508
+ Resultado guardado exitosamente en fila 3759
+[OK] Resultados guardados en 'Bruce FORMS'
+
+============================================================
+[EMOJI] ACTUALIZACIONES EN LISTA DE CONTACTOS
+============================================================
+
+[EMOJI] Verificando actualización en LISTA DE CONTACTOS...
+   Fila: 1951
+   WhatsApp capturado: 
+   Referencia capturada: 
+   Email capturado: 
+[WARN] No se capturó WhatsApp ni referencia - no se actualiza columna E
+
+============================================================
+[OK] GUARDADO COMPLETO - Todos los datos procesados
+============================================================
+
+100.64.0.12 - - [27/Jan/2026 20:35:04] "POST /procesar-respuesta HTTP/1.1" 200 -
+ FIX 212: [PARCIAL] '2, sucursal La Torre.'
+ FIX 212: [PARCIAL] '2, sucursal La Torre.'

@@ -1,0 +1,9 @@
+🆔 ID BRUCE generado: BRUCE1352
+[2026-01-23 17:56:17] [BRUCE] BRUCE1352 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-23 17:56:17] [CLIENTE] BRUCE1352 - CLIENTE DIJO: "¿Sí? California, buen día."
+[2026-01-23 17:56:26] [CLIENTE] BRUCE1352 - CLIENTE DIJO: "California, buen día."
+[2026-01-23 17:56:28] [BRUCE] BRUCE1352 DICE: "Sí, le llamo de la marca NIOVAL. ¿Se encuentra el encargado de compras?"
+[2026-01-23 17:56:33] [CLIENTE] BRUCE1352 - CLIENTE DIJO: "No, no se encuentra, no sé si gustes marcarle o mandarle un correo."
+[2026-01-23 17:56:35] [BRUCE] BRUCE1352 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+  → ID BRUCE: BRUCE1352
+   ✅ FIX 272: Grabación asociada a BRUCE1352

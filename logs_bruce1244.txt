@@ -1,0 +1,12 @@
+🆔 ID BRUCE generado: BRUCE1244
+[2026-01-22 20:25:09] [CLIENTE] BRUCE1244 - CLIENTE DIJO: "Buenas."
+[2026-01-22 20:25:09] [BRUCE] BRUCE1244 DICE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+[2026-01-22 20:25:19] [CLIENTE] BRUCE1244 - CLIENTE DIJO: "¿Bueno?"
+[2026-01-22 20:25:20] [BRUCE] BRUCE1244 DICE: "Claro. Manejamos productos de ferretería: grifería, cintas, herramientas. ¿Le envío el catálogo completo?"
+[2026-01-22 20:25:28] [CLIENTE] BRUCE1244 - CLIENTE DIJO: "No, no, está No, no estaban saliendo de comer."
+[2026-01-22 20:25:30] [BRUCE] BRUCE1244 DICE: "Entiendo. ¿Me podría proporcionar el número directo del encargado para contactarlo?"
+[2026-01-22 20:25:36] [CLIENTE] BRUCE1244 - CLIENTE DIJO: "Si gusta,"
+[2026-01-22 20:25:37] [BRUCE] BRUCE1244 DICE: "Perfecto. ¿Le gustaría recibir nuestro catálogo por WhatsApp o correo electrónico?"
+  → ID BRUCE: BRUCE1244
+   ✅ FIX 272: Grabación asociada a BRUCE1244
+  → ID BRUCE: BRUCE1244

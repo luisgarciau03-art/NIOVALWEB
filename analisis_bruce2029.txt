@@ -1,0 +1,61 @@
+# ANÁLISIS BRUCE2029 - PROBLEMAS CRÍTICOS
+
+## Conversación Completa:
+
+1. [02:08:32] CLIENTE: "¿Qué tal? Buen día."
+   BRUCE: "Me comunico de la marca nioval, más que nada quería brindar informacion de nuestros productos ferreteros, ¿Se encontrara el encargado o encargada de compras?"
+
+2. [02:08:43] CLIENTE: "Sí, no, bueno,"
+   [02:08:44] BRUCE: "Disculpe, ¿me puede repetir eso último?" (FIX 577: fallback)
+
+3. [02:08:52] CLIENTE: "Sí, no, bueno, no, no es cierto, salió a comer."
+   [02:08:54] BRUCE: "Disculpe, tiene razón. ¿Me confirma el WhatsApp del encargado para enviarle el catálogo?"
+   
+   ⚠️ PROBLEMA #1: Bruce NO entendió "salió a comer"
+   - Azure transcribió correctamente: 'Salió a comer.'
+   - Bruce debió preguntar "¿A qué hora regresa?" o "¿Prefiere que llame más tarde?"
+   - En lugar de eso, pidió WhatsApp cuando encargado NO está disponible
+
+4. [02:09:01] CLIENTE: "" (vacío - silencio)
+   - Azure buffer: ['Salió a comer.']
+
+5. [02:09:06] CLIENTE: "No, un estrés para No necesitaría esperar que vuelva."
+   [02:09:08] BRUCE: "Claro, espero."
+   
+   ⚠️ PROBLEMA #2: Bruce entró en "modo espera" sin necesidad
+   - Cliente dijo: "NO necesitaría esperar"
+   - Bruce interpretó: "Claro, espero" (ignoró la negación "NO")
+
+6. [02:09:12] CLIENTE: "¿Necesitas esperar que vuelva?"
+   [02:09:14] BRUCE: "Claro, espero."
+   
+   ⚠️ PROBLEMA #3: Bruce repitió "espero" sin sentido
+   - Cliente está preguntando SI debe esperar (esperando un NO)
+   - Bruce repite la misma respuesta incoherente
+
+7. [02:09:20-02:09:40] Múltiples silencios → Cuelgan
+
+## DIAGNÓSTICO:
+
+### Problema #1: Patrón "ENCARGADO_SALIO" no existe o no funciona
+- Frase: "salió a comer"
+- Debería detectarse como: TEMPORAL_NO_DISPONIBLE
+- Respuesta esperada: "¿A qué hora regresa?" o "¿Puedo llamar más tarde?"
+- Respuesta real: Pide WhatsApp (incoherente)
+
+### Problema #2: Negación NO detectada ("NO necesitaría esperar")
+- Pattern matching no captura negaciones correctamente
+- GPT tampoco lo corrigió
+- Bruce se quedó en "modo espera" cuando NO debía
+
+### Problema #3: Repetición de respuesta sin contexto
+- Bruce dice "Claro, espero" DOS veces consecutivas
+- No hay validación de coherencia conversacional
+- Debería detectar que ya respondió eso y cambiar estrategia
+
+## CAUSA RAÍZ:
+
+1. **Pattern matching NO tiene patrón para "salió a comer/almorzar/descanso"**
+2. **GPT no está manejando bien las negaciones en contexto temporal**
+3. **No hay validación anti-repetición de respuestas idénticas**
+
