@@ -1198,6 +1198,29 @@ class FSMEngine:
                 action_type=ActionType.TEMPLATE,
                 template_key="dictar_numero_bruce",
             )
+        # FIX 971: Recovery DESPEDIDA → cliente reabre después de rechazo previo
+        # "Espere, mejor mándelo al otro número" / "Sí, mándelo de todos modos"
+        elif (self.state == FSMState.DESPEDIDA and
+                intent in (FSMIntent.INTEREST, FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN) and
+                not any(k in self.context.templates_usados
+                        for k in ('confirmar_telefono', 'confirmar_correo', 'confirmar_dato_generico'))):
+            _reopen_signals_971 = [
+                'espere', 'espera', 'un momento', 'mejor si', 'mejor mandelo',
+                'mandelo de todos modos', 'si mandelo', 'mandalo', 'a otro numero',
+                'al otro numero', 'otro whatsapp', 'otro correo', 'pensandolo bien',
+                'si, mandemelo', 'si envielo', 'si mandame', 'al fin si',
+                'de acuerdo', 'okay si', 'ok si',
+            ]
+            if any(s in _texto_lower for s in _reopen_signals_971):
+                print(f"  [FIX 971] Reapertura post-DESPEDIDA detectada: '{texto[:40]}' -> CAPTURANDO_CONTACTO")
+                self.state = FSMState.CAPTURANDO_CONTACTO
+                transition = Transition(
+                    next_state=FSMState.CAPTURANDO_CONTACTO,
+                    action_type=ActionType.TEMPLATE,
+                    template_key="pedir_whatsapp_o_correo",
+                )
+            else:
+                transition = None
         else:
             transition = None
 
@@ -1725,6 +1748,23 @@ class FSMEngine:
                 return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_catalogo_whatsapp")
 
         elif self.state == S.CAPTURANDO_CONTACTO:
+            # FIX 970: Si cliente hace pregunta calificadora, dejar que GPT responda
+            # (no forzar "digame_numero" cuando el cliente pregunta sobre el producto/servicio)
+            _pregunta_calificadora_970 = (
+                '?' in texto or
+                any(qw in tn for qw in [
+                    'cuanto', 'cuantos', 'cuanta', 'cuantas', 'como es', 'como son',
+                    'que lineas', 'que productos', 'que categorias', 'que marcas',
+                    'manejan', 'tienen', 'dan credito', 'dan descuento', 'descuento',
+                    'credito', 'cuanto tarda', 'tiempo de entrega', 'a donde', 'desde donde',
+                    'de donde son', 'donde estan', 'tienen sucursal', 'fabricantes',
+                    'distribuidores', 'precio', 'precios', 'cuanto cuesta', 'cuanto vale',
+                ])
+            )
+            if _pregunta_calificadora_970:
+                print(f"  [FIX 970] CAPTURANDO_CONTACTO pregunta calificadora detectada: '{texto[:50]}' -> GPT_NARROW")
+                return None  # Fallback a GPT para responder la pregunta
+
             # FIX 909: Si ya pidió datos muchas veces, escalar
             if ctx.pedir_datos_count >= 3:
                 print(f"  [FIX 909] CAPTURANDO_CONTACTO: {ctx.pedir_datos_count} pedidos -> ofrecer contacto Bruce")
