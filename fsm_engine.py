@@ -614,11 +614,17 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # offer_data se checa ANTES → clasificación correcta como OFFER_DATA
         'mandame la info', 'mandame la informacion', 'mandame la información',
         'mandame el catalogo', 'mandame el catálogo', 'mandame todo',
+        'mandame info', 'mandame informacion', 'mandame información',
+        'mandame eso', 'mandame algo', 'mandame los datos',
         'mandamela', 'mandamelas', 'mandamelo todo',
         'mande la info', 'mande el catalogo', 'mande el catálogo',
         'mande la informacion', 'mande la información',
+        'mande info', 'mande informacion', 'mande todo',
         'enviame la info', 'enviame el catalogo', 'enviame todo',
+        'enviame info', 'enviame informacion', 'enviame información',
+        'enviame eso', 'enviame los datos',
         'enviale', 'mandele', 'mandele la info', 'mandele el catalogo',
+        'si mandame', 'ok mandame', 'mandame eso por favor',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
