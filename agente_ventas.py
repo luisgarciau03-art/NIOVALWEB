@@ -3707,11 +3707,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         whatsapp_ya_capturado = bool(self.lead_data.get("whatsapp"))
 
         # Contar veces que preguntó por WhatsApp
+        # FIX 967: Ampliar patrones para detectar más formas de pedir WhatsApp/número
         preguntas_whatsapp = [
             'cuál es su whatsapp', 'cual es su whatsapp',
             'me proporciona su whatsapp', 'me da su whatsapp',
             'me confirma su whatsapp', 'confirma su whatsapp',
-            'su número de whatsapp', 'su numero de whatsapp'
+            'su número de whatsapp', 'su numero de whatsapp',
+            # FIX 967: Patrones adicionales usados en práctica
+            'numero de whatsapp', 'número de whatsapp',
+            'whatsapp o correo', 'whatsapp o email',
+            'proporcionar un numero de whatsapp', 'proporcionar su numero de whatsapp',
+            'me dicta el numero de whatsapp', 'me dicta su numero de whatsapp',
+            'proporcionar un número', 'proporcionar su número',
+            'me dicta su número', 'me dicta el número',
+            'me dicta su numero', 'me dicta el numero',
         ]
         veces_pregunto_whatsapp = sum(
             1 for msg in ultimas_bruce_antiloop

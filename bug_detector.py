@@ -950,9 +950,10 @@ class ContentAnalyzer:
         'no vendemos eso', 'no trabajamos con eso',
         'no es aqui', 'aqui no es',
         # FIX 720: Variantes adicionales
-        'no es conmigo', 'no soy yo',
+        # NOTE: 'no soy yo' REMOVED (FIX 966 FP) — matches 'el dueno soy yo' (substring)
+        # NOTE: 'se equivoco','esta equivocado' REMOVED (FIX 966 FP) — too broad, already covered above
+        'no es conmigo',
         'no es mi departamento', 'no es de mi area',
-        'se equivoco', 'esta equivocado',
         'no hacemos compras', 'no compramos',
         'no hacemos ningun tipo de compra',
     ]

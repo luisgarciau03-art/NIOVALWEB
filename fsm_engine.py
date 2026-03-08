@@ -511,6 +511,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'esta bien como estamos', 'estamos bien asi', 'estamos bien gracias',
         'no muchas gracias', 'no gracias ya', 'no necesito nada',
         'no necesitamos nada', 'no nos hace falta',
+        # FIX 969: Slang mexicano hostil/agresivo → NO_INTEREST (FIX 950 también lo captura)
+        'dejen de fregar', 'dejame de fregar', 'ya no frieguen', 'no frieguen',
+        'dejen de chingar', 'no chinguen', 'dejame en paz', 'dejenos en paz',
+        'no quiero nada', 'ya vayanse', 'ya largense',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -1007,6 +1011,12 @@ class FSMEngine:
             'reportare a profeco', 'voy a reportar a profeco',
             'no quiero que me llamen', 'no quiero que nos llamen',
             'no me llamen mas', 'no nos llamen mas',
+            # FIX 969: Slang mexicano hostil/agresivo
+            'dejen de fregar', 'dejame de fregar', 'ya no frieguen', 'ya no friegue',
+            'no frieguen', 'no me frieguen', 'vayanse a fregar',
+            'dejen de chingar', 'no chinguen', 'ya no chinguen',
+            'dejame en paz', 'dejenos en paz', 'no nos molesten mas',
+            'ya vayanse', 'ya largense', 'no quiero nada',
         ]
         if any(h in _texto_lower for h in _hostil_950):
             print(f"  [FIX 950] Rechazo hostil/LFPDPPP detectado -> despedida definitiva sin recontacto")
@@ -1025,6 +1035,12 @@ class FSMEngine:
                 'es otro numero', 'otro numero es', 'el numero es',
                 'corrijo', 'lo corrijo', 'perdón es', 'perdon es', 'disculpe es',
                 'en realidad es', 'en realidad el', 'el real es',
+                # FIX 968: Variantes que no matcheaban (OOS-50: "el número correcto es")
+                'numero correcto', 'número correcto', 'correcto es',
+                'el numero correcto', 'el número correcto',
+                'numero equivocado', 'numero mal', 'dicte mal',
+                'perdon, el', 'perdón, el',  # "Perdón, el número correcto es..."
+                'es el correcto', 'ese era', 'ese numero era',
             ]
             if any(s in _texto_lower for s in _correccion_signals_952):
                 import re as _re952
