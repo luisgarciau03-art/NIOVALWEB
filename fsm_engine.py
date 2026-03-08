@@ -663,6 +663,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 987: 'wasap'/'whats' = abreviaciones coloquiales de WhatsApp → OFFER_DATA
         'por wasap', 'al wasap', 'a mi wasap', 'mejor por wasap',
         'por whats', 'al whats', 'wasap porfa', 'whats porfa',
+        # FIX 999: 'wa' = abreviación ultra-corta de WhatsApp
+        'al wa', 'por wa', 'a mi wa', 'mejor al wa', 'al wa esta bien',
+        'mande la lista de precios', 'mande la lista', 'mande los precios',
         # FIX 981: "por el whatsapp/wats" — 'el' intermedio rompe substring match de 'por whatsapp'
         'por el whatsapp', 'por el wats', 'a el whatsapp', 'a el wats',
         'esta bien el whatsapp', 'esta bien el wats', 'esta bien al wats',
@@ -718,6 +721,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ahorita esta ocupado', 'ahorita esta ocupada', 'esta en una llamada',
         'anda en una llamada', 'anda en junta', 'anda en reunion',
         'no esta disponible', 'no esta aqui ahorita', 'ahorita no se encuentra',
+        # FIX 999: Ausente por cita/evento/reunión externa
+        'se fue a una cita', 'fue a un evento', 'esta en una cita',
+        'fue a una reunion fuera', 'fue a una cita', 'salio a una cita',
+        'esta en un evento', 'fue al banco', 'fue a hacer un tramite',
         # FIX 992: Más variantes de ausencia
         'ahorita nadie', 'nadie ahorita', 'andan de viaje', 'se fue de viaje',
         'se fue de vacaciones', 'salio de viaje', 'esta de viaje',
@@ -761,6 +768,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo manejo eso', 'yo lo manejo', 'yo me encargo de eso',
         # FIX 998: "aqui mando yo" = soy el decisor
         'aqui mando yo', 'yo mando aqui', 'aqui mando yo solo',
+        # FIX 999: Propietario/dueño que responde directamente
+        'soy el dueno', 'soy la duena', 'soy el propietario', 'soy la propietaria',
+        'le habla el propietario', 'le habla la propietaria',
+        'el que habla es el dueno', 'el que habla es el propietario',
+        'soy el socio', 'soy el gerente', 'soy la gerente',
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
@@ -880,6 +892,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mejor marcame a fin', 'a fin del mes',
         # FIX 998: "quién sabe" = no sabe cuando regresa = callback tentativo
         'quien sabe', 'ni idea', 'no se cuando',
+        # FIX 999: Sin presupuesto = callback temporal
+        'no tenemos presupuesto', 'sin presupuesto', 'nos quedamos sin presupuesto',
+        'no hay presupuesto', 'no hay recursos', 'no hay fondos',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
         'lo comento con', 'voy a consultar', 'tengo que consultar',
