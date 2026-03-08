@@ -572,6 +572,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no tengo el email', 'no tengo el correo', 'no tengo el whatsapp',
         'no tengo el watsapp', 'no tengo el telefono',
         'no hay el correo', 'no hay el email', 'no hay el whatsapp',
+        # FIX 988: Rechazo coloquial de datos
+        'no se lo doy', 'no se los doy', 'no se lo paso', 'no ando dando datos',
+        'no ando dando el numero', 'no doy datos', 'no doy numeros',
+        'prefiero no dar ese dato', 'prefiero no dar el numero', 'prefiero no dar',
+        'no quiero dar mis datos', 'no quiero dar el numero', 'no quiero dar datos',
+        'no quiero proporcionar', 'no voy a dar', 'no te voy a dar',
+        'no me gusta dar datos', 'no acostumbramos dar', 'no acostumbramos pasar',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -672,6 +679,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # NOTE: 'con el encargado' EXCLUIDO — FP en "le comunico con el encargado" (TRANSFER)
         'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
         'habla el encargado', 'habla la encargada', 'encargado habla',
+        # FIX 988: Quién toma decisiones de compra = encargado
+        'soy la que compra', 'soy el que compra', 'soy quien compra',
+        'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
+        'yo soy la que decide', 'yo me encargo de eso', 'yo compro aqui',
+        'yo soy el responsable', 'yo soy la responsable', 'yo soy el dueno',
+        'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
     ]
     if any(m in tn for m in manager_present):
         # FIX 906: Si también hay callback, priorizar callback
