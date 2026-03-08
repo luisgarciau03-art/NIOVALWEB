@@ -605,6 +605,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # AHORA: offer_data se checa ANTES que callback_guard → OFFER_DATA correcto
         'al wats', 'por wats', 'a mi wats', 'wats porfa', 'al correo esta bien',
         'al correo si', 'al email', 'por email', 'mandamelo al', 'mandamelo por',
+        # FIX 987: 'wasap'/'whats' = abreviaciones coloquiales de WhatsApp → OFFER_DATA
+        'por wasap', 'al wasap', 'a mi wasap', 'mejor por wasap',
+        'por whats', 'al whats', 'wasap porfa', 'whats porfa',
         # FIX 981: "por el whatsapp/wats" — 'el' intermedio rompe substring match de 'por whatsapp'
         'por el whatsapp', 'por el wats', 'a el whatsapp', 'a el wats',
         'esta bien el whatsapp', 'esta bien el wats', 'esta bien al wats',
@@ -665,6 +668,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo me encargo', 'conmigo', 'a mi',
         # FIX 891: BRUCE2605 - "a la orden" / "a tus ordenes" = encargado presente
         'a la orden', 'a tus ordenes', 'a sus ordenes', 'a tu orden',
+        # FIX 987: Variantes coloquiales mexicanas de "soy el encargado"
+        # NOTE: 'con el encargado' EXCLUIDO — FP en "le comunico con el encargado" (TRANSFER)
+        'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
+        'habla el encargado', 'habla la encargada', 'encargado habla',
     ]
     if any(m in tn for m in manager_present):
         # FIX 906: Si también hay callback, priorizar callback
@@ -872,6 +879,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'de donde son', 'de donde me', 'de que ciudad', 'de donde llaman',
         'cuantos productos', 'cuantas categorias',
         'en que se especializan', 'que tipo de productos',
+        # FIX 987: Variantes coloquiales de preguntas sobre productos
+        'cuales son sus productos', 'cuales productos', 'que productos tienen',
+        'que tienen de productos', 'sus productos', 'que productos manejan',
         'tiempo de entrega', 'el tiempo de entrega', 'los tiempos de entrega',
         'catalogo en papel', 'prefiero catalogo en papel',
         'tienen pagina', 'tienen pagina web', 'tienen catalogo fisico',
