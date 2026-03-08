@@ -600,6 +600,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # AHORA: offer_data se checa ANTES que callback_guard → OFFER_DATA correcto
         'al wats', 'por wats', 'a mi wats', 'wats porfa', 'al correo esta bien',
         'al correo si', 'al email', 'por email', 'mandamelo al', 'mandamelo por',
+        # FIX 981: "por el whatsapp/wats" — 'el' intermedio rompe substring match de 'por whatsapp'
+        'por el whatsapp', 'por el wats', 'a el whatsapp', 'a el wats',
+        'esta bien el whatsapp', 'esta bien el wats', 'esta bien al wats',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
