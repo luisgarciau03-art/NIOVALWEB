@@ -380,7 +380,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     # Farewell debe chequearse ANTES de conteo numérico para evitar malclasificación
     # NOTA: NO incluir "buenas tardes/noches/buen dia" aquí - son saludos ambiguos
     farewell_strong_783 = ['hasta luego', 'adios', 'bye', 'nos vemos', 'que le vaya bien',
-                           'hasta pronto']
+                           'hasta pronto',
+                           # FIX 994: Despedidas coloquiales mexicanas (que + vaya/este/tenga)
+                           # DEBEN estar ANTES del question_markers check ('que' → QUESTION)
+                           'que le vaya bonito', 'que este bien', 'que tenga buen dia',
+                           'que tenga buenas tardes', 'que tenga buenas noches',
+                           'que le vaya muy bien', 'que le vaya bonita', 'que les vaya bien',
+                           'con permiso', 'con su permiso',
+                           ]
     farewell_weak_783 = ['gracias', 'muchas gracias', 'ok gracias']
     if any(f in tn for f in farewell_strong_783):
         return FSMIntent.FAREWELL
@@ -487,6 +494,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'area equivocada', 'departamento equivocado',
         'no es conmigo', ' no soy yo', 'no, no soy yo', 'no es mi departamento',
         'marco equivocado', 'llamo equivocado', 'marque equivocado',
+        # FIX 994: Casa particular / domicilio privado
+        'casa particular', 'domicilio particular', 'numero de casa', 'es mi casa',
+        'aqui es casa', 'esto es casa', 'soy particular', 'es residencial',
         # FIX 908: Giro equivocado - negocio no es ferreteria
         'aqui es un restaurante', 'somos restaurante', 'es un restaurante',
         'aqui es una tienda de', 'somos tienda de abarrotes', 'vendemos abarrotes',
@@ -580,6 +590,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no tenemos whatsapp', 'no tenemos correo', 'no tenemos wats',
         'mejor por otro medio', 'mejor no por whatsapp', 'mejor no por correo',
         'eso del whatsapp no', 'eso del correo no',
+        # FIX 994: Políticas de privacidad como rechazo de dato
+        'por politicas no podemos', 'por politicas no', 'politicas de privacidad',
+        'no podemos por politicas', 'no puedo por politicas',
         # FIX 983: Variantes con artículo 'el' que rompen substring match
         # 'no tengo email' matchea pero 'no tengo el email' NO (artículo intermedio)
         'no tengo el email', 'no tengo el correo', 'no tengo el whatsapp',
@@ -660,6 +673,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'le proporciono', 'le puedo proporcionar mi', 'le doy mi numero',
         'le doy mi whatsapp', 'le doy mi correo', 'le paso mi whatsapp',
         'le paso mi correo', 'le paso mi numero',
+        # FIX 994: "le escribo el correo" / "se lo anoto" = ofrece dato
+        'le escribo el correo', 'le anoto mi correo', 'le anoto mi numero',
+        'se lo anoto', 'se lo escribo',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -813,6 +829,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'horita no', 'ora no', 'por ora no', 'horita regresa', 'horita llega',
         # FIX 993: "en camino" = llegará pronto → callback implícito
         'esta en camino', 'viene en camino', 'va en camino', 'anda en camino',
+        # FIX 994: "el siguiente lunes/semana" = callback futuro
+        'el siguiente lunes', 'el siguiente martes', 'el siguiente miercoles',
+        'el siguiente jueves', 'el siguiente viernes', 'la siguiente semana',
+        'marque la siguiente', 'llame la siguiente', 'la proxima semana',
+        'regresa en dos horas', 'regresa en una hora', 'llega al mediodia',
+        'llega a mediodia', 'llega al rato', 'regresa al rato',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -857,6 +879,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'de parte de', 'de parte de quien', 'quien eres',
         'como te llamas', 'como se llama', 'quien me habla',
         'quien me llama', 'de que compania', 'de que marca',
+        # FIX 994: "y usted quién es" = pregunta identidad
+        'y usted quien', 'y tu quien', 'y usted de donde', 'y usted que',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
