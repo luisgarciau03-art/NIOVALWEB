@@ -526,6 +526,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'dejen de fregar', 'dejame de fregar', 'ya no frieguen', 'no frieguen',
         'dejen de chingar', 'no chinguen', 'dejame en paz', 'dejenos en paz',
         'no quiero nada', 'ya vayanse', 'ya largense',
+        # FIX 990: Variantes de no interés
+        'no estoy interesado', 'no estoy interesada', 'no estamos interesados en eso',
+        'no tenemos interes', 'no hay interes', 'no aplica para nosotros',
+        'no aplica', 'no es para nosotros', 'no trabajamos con eso',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -772,6 +776,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si gustas llamar', 'si gustas marcar', 'gustas marcar',
         'si gustas hablar', 'gustas llamar',
         'marcar en una hora', 'llamar en una hora',
+        # FIX 990: Variantes coloquiales "ahora no, después"
+        'por el momento no', 'no por el momento', 'en este momento no',
+        'ahorita no', 'ahorita no puedo', 'ahorita no puedes',
+        'no en este momento', 'no por ahora', 'ahora no puedo',
+        'en un momento', 'ahorita regresa', 'ahorita llega',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -924,6 +933,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si por favor', 'si porfavor', 'adelante pues',
         'que marcas', 'que productos', 'que categorias',
         'quiero ver', 'me gustaria ver', 'me gustaria conocer',
+        # FIX 990: Interés tentativo/condicional
+        'podria ser', 'quizas si', 'tal vez si', 'seria bueno', 'puede ser',
+        'pues si podria', 'cabria la posibilidad', 'habria que ver',
+        'estaria bien', 'algo asi', 'suena bien eso',
     ]
     # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
     # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
