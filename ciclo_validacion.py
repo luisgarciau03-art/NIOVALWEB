@@ -84,6 +84,9 @@ def _run(cmd_args, timeout=600, label=""):
     t0 = time.time()
     output_lines = []
     try:
+        import os as _os
+        _env = _os.environ.copy()
+        _env['PYTHONIOENCODING'] = 'utf-8'
         proc = subprocess.Popen(
             [sys.executable] + cmd_args,
             stdout=subprocess.PIPE,
@@ -91,6 +94,7 @@ def _run(cmd_args, timeout=600, label=""):
             encoding='utf-8',
             errors='replace',
             cwd=DIR,
+            env=_env,
         )
         for line in proc.stdout:
             line_s = line.rstrip('\n')

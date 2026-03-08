@@ -395,7 +395,10 @@ class ContentAnalyzer:
     # numeros en texto descriptivo o artefactos de replay (ej. "llevo 7 años", IDs internos).
     _CLIENTE_DIO_NUMERO = re.compile(r'\b\d{7,10}\b', re.IGNORECASE)
     _CLIENTE_DIO_EMAIL = re.compile(
-        r'(arroba|@|correo\s+es|mi\s+correo|email\s+es)',
+        # FIX 948: Removed 'mi\s+correo' - FP when client REQUESTS send to email
+        # ("mandar mi correo electrónico" = request, not providing email)
+        # Only match when client actually dictates the email (arroba/@) or explicit
+        r'(arroba|@|correo\s+es|mi\s+correo\s+es|email\s+es)',
         re.IGNORECASE
     )
     # Despedida
