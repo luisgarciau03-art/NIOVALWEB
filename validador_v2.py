@@ -59,7 +59,7 @@ BASELINE = {
 
 # ============================================================
 # 150 escenarios out-of-sample (NO usados en entrenamiento)
-# Organizados en 15 grupos de 10 variaciones cada uno
+# Organizados en 17 grupos: G01-G11 (10 convs c/u), G12-G17 (20 convs c/u) = 230 total
 # ============================================================
 ESCENARIOS_OOS = []
 
@@ -696,6 +696,736 @@ _make(17, 10, "STT-noise: respuesta_ambigua_luego_aclara",
         {"cliente": "3312170010", "check_not": []},
     ],
     bugs_criticos=["LOOP", "GPT_LOGICA_ROTA"],
+)
+
+# ============================================================
+# Grupos 12-17 EXTENDIDOS — +10 por grupo (todos a 20 convs)
+# ============================================================
+
+# --- Grupo 12 extendido: más variantes de recado ---
+
+# 12-11: Recepcionista ofrece WA del encargado directamente
+_make(12, 11, "Recado ext - recepcionista da WA del jefe",
+    {"nombre_negocio": "Ferreteria El Amanecer", "telefono": "3312180011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "No esta el encargado", "check_not": []},
+        {"cliente": "Ahorita le doy su WhatsApp", "check_not": []},
+        {"cliente": "Es el 3398760011", "check_not": []},
+    ],
+)
+
+# 12-12: Persona que contesta va a pasar la llamada al encargado
+_make(12, 12, "Recado ext - pasan llamada al encargado",
+    {"nombre_negocio": "Ferreteria La Paloma", "telefono": "3312180012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola, buenas", "check_not": []},
+        {"cliente": "El dueno esta, un momentito", "check_not": []},
+        {"cliente": "Si bueno, digame", "check_not": []},
+        {"cliente": "Si, por favor mandelo al correo", "check_not": []},
+        {"cliente": "Es compras@lapaloma.mx", "check_not": []},
+    ],
+)
+
+# 12-13: Encargado ausente, recepcionista pide datos de Bruce primero
+_make(12, 13, "Recado ext - recepcionista pide datos Bruce",
+    {"nombre_negocio": "Materiales El Roble", "telefono": "3312180013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Esta en camino el encargado", "check_not": []},
+        {"cliente": "Y usted como se llama", "check_not": []},
+        {"cliente": "De que empresa", "check_not": []},
+        {"cliente": "Ah si, le digo que llamo Nioval", "check_not": []},
+    ],
+)
+
+# 12-14: Encargado no toma llamadas de ventas
+_make(12, 14, "Recado ext - no toma llamadas de ventas",
+    {"nombre_negocio": "Herramientas El Clavo", "telefono": "3312180014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola", "check_not": []},
+        {"cliente": "El encargado no atiende llamadas de vendedores", "check_not": []},
+        {"cliente": "Asi son las indicaciones", "check_not": []},
+    ],
+)
+
+# 12-15: Recado aceptado y dan WA del encargado voluntariamente
+_make(12, 15, "Recado ext - da WA del encargado voluntariamente",
+    {"nombre_negocio": "Distribuidora El Pino", "telefono": "3312180015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "No esta la senora Maria", "check_not": []},
+        {"cliente": "Le aviso, pero por si acaso, su WhatsApp es 3398760015", "check_not": []},
+    ],
+)
+
+# 12-16: Recepcionista pide el correo de Nioval antes de dar datos
+_make(12, 16, "Recado ext - pide correo de Nioval",
+    {"nombre_negocio": "Ferreteria San Pedro", "telefono": "3312180016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "El encargado no esta", "check_not": []},
+        {"cliente": "Mandele un correo mejor", "check_not": []},
+        {"cliente": "Digame su correo para darle el del encargado", "check_not": []},
+    ],
+)
+
+# 12-17: Dueno ocupado en mostrador, al final atiende
+_make(12, 17, "Recado ext - dueno ocupado en mostrador",
+    {"nombre_negocio": "Tornillos Don Beto", "telefono": "3312180017", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "El dueno esta pero esta atendiendo en mostrador", "check_not": []},
+        {"cliente": "Espere tantito", "check_not": []},
+        {"cliente": "Si bueno, ya estoy", "check_not": []},
+        {"cliente": "Si mande la informacion al WhatsApp, el 3312180017", "check_not": []},
+    ],
+)
+
+# 12-18: No-encargado sugiere marcar a otra hora y ofrece WA
+_make(12, 18, "Recado ext - sugiere marcar mas tarde y da WA",
+    {"nombre_negocio": "Ferreteria El Aguila", "telefono": "3312180018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola", "check_not": []},
+        {"cliente": "El jefe no viene hasta las 3", "check_not": []},
+        {"cliente": "Si quiere le digo el WhatsApp del jefe", "check_not": []},
+        {"cliente": "Es el 3312180018", "check_not": []},
+    ],
+)
+
+# 12-19: Recepcionista desconfiada pide identificarse
+_make(12, 19, "Recado ext - recepcionista desconfiada",
+    {"nombre_negocio": "Materiales La Sierra", "telefono": "3312180019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Quien habla", "check_not": []},
+        {"cliente": "Y de que empresa es usted", "check_not": []},
+        {"cliente": "El encargado no esta por el momento", "check_not": []},
+        {"cliente": "Le digo que llamo NIOVAL si", "check_not": []},
+    ],
+)
+
+# 12-20: Cliente sugiere visitar en persona
+_make(12, 20, "Recado ext - sugiere visita en persona",
+    {"nombre_negocio": "Ferreteria Los Pinos", "telefono": "3312180020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Digame", "check_not": []},
+        {"cliente": "El encargado solo atiende en persona", "check_not": []},
+        {"cliente": "Venga a la tienda y pregunte por don Ramon", "check_not": []},
+    ],
+)
+
+
+# --- Grupo 13 extendido: más variantes de número inválido ---
+
+# 13-11: Número con +52 al inicio
+_make(13, 11, "Num invalido ext - con +52 al inicio",
+    {"nombre_negocio": "Ferreteria Numero Ext 11", "telefono": "3312190011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo el encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "Es el mas 52 331 219 0011", "check_not": []},
+    ],
+)
+
+# 13-12: Número de 7 dígitos (formato antiguo sin lada)
+_make(13, 12, "Num invalido ext - 7 digitos formato antiguo",
+    {"nombre_negocio": "Ferreteria Numero Ext 12", "telefono": "3312190012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Por WhatsApp", "check_not": []},
+        {"cliente": "Es el 219 0012", "check_not": []},
+        {"cliente": "Ah con lada, 33 12 19 00 12", "check_not": []},
+    ],
+)
+
+# 13-13: Cliente da el número del negocio en vez de WhatsApp personal
+_make(13, 13, "Num invalido ext - da telefono del negocio",
+    {"nombre_negocio": "Ferreteria Numero Ext 13", "telefono": "3312190013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "Este mismo numero que marco usted", "check_not": []},
+        {"cliente": "El 3312190013", "check_not": []},
+    ],
+)
+
+# 13-14: Número dictado dígito a dígito
+_make(13, 14, "Num invalido ext - dictado digito a digito",
+    {"nombre_negocio": "Ferreteria Numero Ext 14", "telefono": "3312190014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "Tres", "check_not": []},
+        {"cliente": "Tres", "check_not": []},
+        {"cliente": "Uno dos", "check_not": []},
+        {"cliente": "Nueve cero cero catorce", "check_not": []},
+    ],
+)
+
+# 13-15: Cliente corrige el número dos veces
+_make(13, 15, "Num invalido ext - corrige dos veces",
+    {"nombre_negocio": "Ferreteria Numero Ext 15", "telefono": "3312190015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo", "check_not": []},
+        {"cliente": "Al WhatsApp por favor", "check_not": []},
+        {"cliente": "3312190", "check_not": []},
+        {"cliente": "No espere, me equivoque", "check_not": []},
+        {"cliente": "El completo es 3312190015", "check_not": []},
+    ],
+)
+
+# 13-16: Cliente da email en lugar de número de WhatsApp
+_make(13, 16, "Num invalido ext - da email cuando piden WA",
+    {"nombre_negocio": "Ferreteria Numero Ext 16", "telefono": "3312190016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si, soy el encargado", "check_not": []},
+        {"cliente": "Mejor mande al correo", "check_not": []},
+        {"cliente": "Es almacen@ferreteriaext16.mx", "check_not": []},
+    ],
+)
+
+# 13-17: Dos números distintos, cliente aclara cuál usar
+_make(13, 17, "Num invalido ext - dos numeros aclara cual",
+    {"nombre_negocio": "Ferreteria Numero Ext 17", "telefono": "3312190017", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola buenas", "check_not": []},
+        {"cliente": "Si yo encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "El personal es 3312190017 y el del negocio es 3336001234", "check_not": []},
+        {"cliente": "Use el personal por favor", "check_not": []},
+    ],
+)
+
+# 13-18: Número con guiones (formato visual)
+_make(13, 18, "Num invalido ext - numero con guiones visuales",
+    {"nombre_negocio": "Ferreteria Numero Ext 18", "telefono": "3312190018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si, yo soy el encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "33-12-19-00-18", "check_not": []},
+    ],
+)
+
+# 13-19: Cliente dice que no usa WhatsApp pero da número de todas formas
+_make(13, 19, "Num invalido ext - dice no usa WA pero da numero",
+    {"nombre_negocio": "Ferreteria Numero Ext 19", "telefono": "3312190019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Yo no uso mucho el WhatsApp pero mandeme de todas formas", "check_not": []},
+        {"cliente": "El numero es 3312190019", "check_not": []},
+    ],
+)
+
+# 13-20: Número con extensión telefónica, cliente la aclara después
+_make(13, 20, "Num invalido ext - numero con extension",
+    {"nombre_negocio": "Ferreteria Numero Ext 20", "telefono": "3312190020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado soy yo", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "El 3312190020 extension 5", "check_not": []},
+        {"cliente": "No no, el celular es solo 3312190020", "check_not": []},
+    ],
+)
+
+
+# --- Grupo 14 extendido: más preguntas sobre Nioval/producto ---
+
+# 14-11: Pregunta precio específico
+_make(14, 11, "Pregunta ext - precio de producto especifico",
+    {"nombre_negocio": "Ferreteria Ubic Ext 11", "telefono": "3312200011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Cuanto cuestan los tornillos de 3 octavos por millar", "check_not": []},
+        {"cliente": "Ah que buen precio, si mandeme el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "3312200011", "check_not": []},
+    ],
+)
+
+# 14-12: Pregunta si dan crédito
+_make(14, 12, "Pregunta ext - manejo de credito",
+    {"nombre_negocio": "Ferreteria Ubic Ext 12", "telefono": "3312200012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si, encargado", "check_not": []},
+        {"cliente": "Trabajan con credito o solo contado", "check_not": []},
+        {"cliente": "Perfecto, mande la info al WhatsApp entonces", "check_not": []},
+        {"cliente": "3312200012", "check_not": []},
+    ],
+)
+
+# 14-13: Pregunta mínimo de compra
+_make(14, 13, "Pregunta ext - minimo de compra",
+    {"nombre_negocio": "Ferreteria Ubic Ext 13", "telefono": "3312200013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola buen dia", "check_not": []},
+        {"cliente": "Si soy yo el encargado", "check_not": []},
+        {"cliente": "Cual es el minimo de compra", "check_not": []},
+        {"cliente": "Esta bien, si mande catalogo al correo", "check_not": []},
+        {"cliente": "Es gerencia@ferreteriaext13.com", "check_not": []},
+    ],
+)
+
+# 14-14: Pregunta política de devoluciones
+_make(14, 14, "Pregunta ext - politica de devoluciones",
+    {"nombre_negocio": "Ferreteria Ubic Ext 14", "telefono": "3312200014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Encargado soy yo", "check_not": []},
+        {"cliente": "Si compro y no me sirve algo, aceptan devoluciones", "check_not": []},
+        {"cliente": "Ok, entonces si, mandeme el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "El numero es 3312200014", "check_not": []},
+    ],
+)
+
+# 14-15: Pregunta si son fabricante o distribuidor
+_make(14, 15, "Pregunta ext - fabricante o distribuidor",
+    {"nombre_negocio": "Ferreteria Ubic Ext 15", "telefono": "3312200015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno si", "check_not": []},
+        {"cliente": "Si yo soy", "check_not": []},
+        {"cliente": "Son fabricantes o distribuidores", "check_not": []},
+        {"cliente": "Ah distribuidores, bien, si manden al WhatsApp", "check_not": []},
+        {"cliente": "3312200015", "check_not": []},
+    ],
+)
+
+# 14-16: Ya tiene proveedor pero quiere comparar precios
+_make(14, 16, "Pregunta ext - ya tiene proveedor quiere comparar",
+    {"nombre_negocio": "Ferreteria Ubic Ext 16", "telefono": "3312200016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Ya tengo proveedor, en que son mejores ustedes", "check_not": []},
+        {"cliente": "Precios y entrega directa, ok, mande el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "3312200016", "check_not": []},
+    ],
+)
+
+# 14-17: Pregunta tiempo de entrega específico a su ciudad
+_make(14, 17, "Pregunta ext - tiempo entrega a ciudad especifica",
+    {"nombre_negocio": "Ferreteria Ubic Ext 17", "telefono": "3312200017", "ciudad": "Monterrey"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "En cuantos dias llega un pedido a Monterrey", "check_not": []},
+        {"cliente": "Dos a tres dias esta bien, si mande al correo", "check_not": []},
+        {"cliente": "pedidos@ferreteriaext17.mx", "check_not": []},
+    ],
+)
+
+# 14-18: Pregunta si el catálogo es físico o digital
+_make(14, 18, "Pregunta ext - catalogo fisico vs digital",
+    {"nombre_negocio": "Ferreteria Ubic Ext 18", "telefono": "3312200018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Encargado aqui", "check_not": []},
+        {"cliente": "El catalogo es fisico o digital", "check_not": []},
+        {"cliente": "Digital esta bien, mandelo al WhatsApp", "check_not": []},
+        {"cliente": "3312200018", "check_not": []},
+    ],
+)
+
+# 14-19: Pregunta qué líneas de producto manejan
+_make(14, 19, "Pregunta ext - lineas de producto especificas",
+    {"nombre_negocio": "Ferreteria Ubic Ext 19", "telefono": "3312200019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno si", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Que tipo de productos manejan exactamente", "check_not": []},
+        {"cliente": "Ah todo eso manejo, si mandeme el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "Es el 3312200019", "check_not": []},
+    ],
+)
+
+# 14-20: Pregunta si son empresa formal / tienen RFC
+_make(14, 20, "Pregunta ext - empresa formal con RFC",
+    {"nombre_negocio": "Ferreteria Ubic Ext 20", "telefono": "3312200020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Son empresa formal, tienen RFC y facturan", "check_not": []},
+        {"cliente": "Bien, entonces si mandeme la info al correo", "check_not": []},
+        {"cliente": "compras@ferreteriaext20.com", "check_not": []},
+    ],
+)
+
+
+# --- Grupo 15 extendido: más edge cases ---
+
+# 15-11: Cliente desconfiado de llamadas de ventas
+_make(15, 11, "Edge ext - cliente desconfiado de llamadas",
+    {"nombre_negocio": "Ferreteria Edge Ext 11", "telefono": "3312210011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado pero no me gustan las llamadas de ventas", "check_not": []},
+        {"cliente": "Mande informacion y yo la reviso", "check_not": []},
+        {"cliente": "Al WhatsApp, el 3312210011", "check_not": []},
+    ],
+)
+
+# 15-12: Cliente pregunta si Bruce es robot o grabación
+_make(15, 12, "Edge ext - pregunta si es robot o grabacion",
+    {"nombre_negocio": "Ferreteria Edge Ext 12", "telefono": "3312210012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo el encargado", "check_not": []},
+        {"cliente": "Oiga usted es una grabacion o persona real", "check_not": []},
+        {"cliente": "Ah bueno, pues si mande el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "3312210012", "check_not": []},
+    ],
+)
+
+# 15-13: Encargada es mujer
+_make(15, 13, "Edge ext - encargada es mujer",
+    {"nombre_negocio": "Ferreteria Edge Ext 13", "telefono": "3312210013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si, yo soy la encargada de compras", "check_not": []},
+        {"cliente": "Mandeme el catalogo al correo por favor", "check_not": []},
+        {"cliente": "Es admon@ferreteriaext13.com", "check_not": []},
+    ],
+)
+
+# 15-14: Cliente menciona mala experiencia previa con Nioval
+_make(15, 14, "Edge ext - mala experiencia previa con Nioval",
+    {"nombre_negocio": "Ferreteria Edge Ext 14", "telefono": "3312210014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy el encargado pero ya compre de Nioval y no fue bien", "check_not": []},
+        {"cliente": "Ah ok, pues mande el catalogo actualizado al WhatsApp", "check_not": []},
+        {"cliente": "3312210014", "check_not": []},
+    ],
+)
+
+# 15-15: Cliente muy escueto, respuestas de una sola palabra
+_make(15, 15, "Edge ext - cliente muy escoeto una palabra",
+    {"nombre_negocio": "Ferreteria Edge Ext 15", "telefono": "3312210015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Si", "check_not": []},
+        {"cliente": "Yo", "check_not": []},
+        {"cliente": "WhatsApp", "check_not": []},
+        {"cliente": "3312210015", "check_not": []},
+        {"cliente": "Ok", "check_not": []},
+    ],
+)
+
+# 15-16: Cliente dice que ya están registrados con Nioval
+_make(15, 16, "Edge ext - ya registrados con Nioval",
+    {"nombre_negocio": "Ferreteria Edge Ext 16", "telefono": "3312210016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy", "check_not": []},
+        {"cliente": "Ya nos registraron antes, ya tenemos el catalogo", "check_not": []},
+        {"cliente": "Pues mande el actualizado entonces al WhatsApp", "check_not": []},
+        {"cliente": "3312210016", "check_not": []},
+    ],
+)
+
+# 15-17: Cliente pide hablar con vendedor humano
+_make(15, 17, "Edge ext - pide hablar con vendedor humano",
+    {"nombre_negocio": "Ferreteria Edge Ext 17", "telefono": "3312210017", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Quiero hablar con el vendedor directamente no con grabacion", "check_not": []},
+        {"cliente": "Ah ok, entonces si, mande el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "3312210017", "check_not": []},
+    ],
+)
+
+# 15-18: Cliente bilingüe mezcla inglés y español
+_make(15, 18, "Edge ext - cliente bilingue espanol ingles",
+    {"nombre_negocio": "Ferreteria Edge Ext 18", "telefono": "3312210018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hello, bueno", "check_not": []},
+        {"cliente": "Yes, I am the manager, el encargado", "check_not": []},
+        {"cliente": "Send it to my WhatsApp please, mandelo", "check_not": []},
+        {"cliente": "3312210018", "check_not": []},
+    ],
+)
+
+# 15-19: Cliente confunde a Bruce con otra empresa
+_make(15, 19, "Edge ext - cliente confunde con otra empresa",
+    {"nombre_negocio": "Ferreteria Edge Ext 19", "telefono": "3312210019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo", "check_not": []},
+        {"cliente": "Son de Herrajes del Norte verdad", "check_not": []},
+        {"cliente": "Ah NIOVAL, ok si mande el catalogo al WhatsApp", "check_not": []},
+        {"cliente": "3312210019", "check_not": []},
+    ],
+)
+
+# 15-20: Cliente con mala señal, tiene que repetir la información
+_make(15, 20, "Edge ext - mala senal repite informacion",
+    {"nombre_negocio": "Ferreteria Edge Ext 20", "telefono": "3312210020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bue... bueno", "check_not": []},
+        {"cliente": "Si, soy el encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "No me oye bien, le repito, 3312210020", "check_not": []},
+    ],
+)
+
+
+# --- Grupo 16 extendido: más variantes FIX938 ---
+
+# 16-08: "ya tenemos proveedor fijo"
+_make(16, 8, "FIX938-E: ya_tenemos_proveedor_fijo",
+    {"nombre_negocio": "Ferreteria Test E", "telefono": "3312160008", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "Ya tenemos proveedor fijo, no necesitamos", "check_not": []},
+    ],
+)
+
+# 16-09: "no tenemos presupuesto este mes"
+_make(16, 9, "FIX938-F: sin_presupuesto_este_mes",
+    {"nombre_negocio": "Ferreteria Test F", "telefono": "3312160009", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "No tenemos presupuesto este mes, gracias", "check_not": []},
+    ],
+)
+
+# 16-10: "manda primero un correo de presentación"
+_make(16, 10, "FIX938-G: pide_correo_presentacion_primero",
+    {"nombre_negocio": "Ferreteria Test G", "telefono": "3312160010", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Manda primero un correo de presentacion a compras@testg.com", "check_not": []},
+    ],
+)
+
+# 16-11: "no somos ferretería, somos taller mecánico"
+_make(16, 11, "FIX938-H: giro_diferente_taller_mecanico",
+    {"nombre_negocio": "Taller Test H", "telefono": "3312160011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Nosotros somos taller mecanico, no ferreteria", "check_not": []},
+    ],
+)
+
+# 16-12: "regresa en tres meses"
+_make(16, 12, "FIX938-J: regresa_en_tres_meses",
+    {"nombre_negocio": "Ferreteria Test J", "telefono": "3312160012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Encargado soy yo", "check_not": []},
+        {"cliente": "Ahorita no, regresa en tres meses mejor", "check_not": []},
+    ],
+)
+
+# 16-13: "el dueño decide, él no está"
+_make(16, 13, "FIX938-K: dueno_decide_no_esta",
+    {"nombre_negocio": "Ferreteria Test K", "telefono": "3312160013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Yo no decido eso, el dueno es el que compra", "check_not": []},
+        {"cliente": "El no esta ahorita", "check_not": []},
+    ],
+)
+
+# 16-14: "¿cómo consiguieron este número?"
+_make(16, 14, "FIX938-L: pregunta_origen_numero_desconfia",
+    {"nombre_negocio": "Ferreteria Test L", "telefono": "3312160014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado, oiga como consiguio este numero", "check_not": []},
+        {"cliente": "Ah ya veo, pues igual no me interesa, gracias", "check_not": []},
+    ],
+)
+
+# 16-15: "ya pedimos hace poco, estamos bien surtidos"
+_make(16, 15, "FIX938-M: ya_pedimos_recientemente_surtidos",
+    {"nombre_negocio": "Ferreteria Test M", "telefono": "3312160015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "Ya pedimos hace poco y estamos bien surtidos, gracias", "check_not": []},
+    ],
+)
+
+# 16-16: "solo trabajamos con proveedores certificados"
+_make(16, 16, "FIX938-N: requiere_certificacion_especial",
+    {"nombre_negocio": "Ferreteria Test N", "telefono": "3312160016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Encargado aqui", "check_not": []},
+        {"cliente": "Solo trabajamos con proveedores certificados, tienen eso", "check_not": []},
+        {"cliente": "No, entonces no nos interesa, gracias", "check_not": []},
+    ],
+)
+
+# 16-17: "mándame un WhatsApp primero que yo lo veo"
+_make(16, 17, "FIX938-O: pide_wa_primero_da_numero",
+    {"nombre_negocio": "Ferreteria Test O", "telefono": "3312160017", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo", "check_not": []},
+        {"cliente": "Mandame un WhatsApp primero que yo lo veo con calma", "check_not": []},
+        {"cliente": "El numero es 3312160017", "check_not": []},
+    ],
+)
+
+# 16-18: "no me interesa por el momento, quizás en unos meses"
+_make(16, 18, "FIX938-P: no_interesa_quizas_en_meses",
+    {"nombre_negocio": "Ferreteria Test P", "telefono": "3312160018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Ahorita no me interesa, quizas en unos meses", "check_not": []},
+    ],
+)
+
+# 16-19: "llame al número principal de la empresa"
+_make(16, 19, "FIX938-Q: redirige_a_numero_principal",
+    {"nombre_negocio": "Ferreteria Test Q", "telefono": "3312160019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Aqui encargado", "check_not": []},
+        {"cliente": "Llame mejor al numero principal de la empresa el 3336001234", "check_not": []},
+    ],
+)
+
+# 16-20: "no necesitamos nada, estamos completos" (rechazo absoluto variante)
+_make(16, 20, "FIX938-R: rechazo_absoluto_estamos_completos",
+    {"nombre_negocio": "Ferreteria Test R", "telefono": "3312160020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si yo soy", "check_not": []},
+        {"cliente": "No gracias, no necesitamos nada, estamos completos", "check_not": []},
+    ],
+)
+
+
+# --- Grupo 17 extendido: más STT noise ---
+
+# 17-11: Número dictado completamente en palabras
+_make(17, 11, "STT-noise ext: numero_en_palabras_completo",
+    {"nombre_negocio": "Ferreteria STT Ext 11", "telefono": "3312170011", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy el encargado", "check_not": []},
+        {"cliente": "Al WhatsApp por favor", "check_not": []},
+        {"cliente": "Tres tres uno dos uno siete cero cero once", "check_not": []},
+    ],
+)
+
+# 17-12: Canal mencionado con ruido/interrupción de audio
+_make(17, 12, "STT-noise ext: canal_con_ruido_en_medio",
+    {"nombre_negocio": "Ferreteria STT Ext 12", "telefono": "3312170012", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno si digame", "check_not": []},
+        {"cliente": "Si, el encargado soy yo", "check_not": []},
+        {"cliente": "Al wha... WhatsApp digale", "check_not": []},
+        {"cliente": "El numero es 3312170012", "check_not": []},
+    ],
+)
+
+# 17-13: Fillers extremos intercalados en toda la conversación
+_make(17, 13, "STT-noise ext: fillers_extremos_toda_conv",
+    {"nombre_negocio": "Ferreteria STT Ext 13", "telefono": "3312170013", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Ehh bueno si", "check_not": []},
+        {"cliente": "Mmm este si soy yo el que atiende eso pues", "check_not": []},
+        {"cliente": "Ehhh pues si al WhatsApp este...", "check_not": []},
+        {"cliente": "El numero este ehhh 3312170013", "check_not": []},
+    ],
+)
+
+# 17-14: Email dictado con partes separadas en varios turnos
+_make(17, 14, "STT-noise ext: email_partes_separadas_turnos",
+    {"nombre_negocio": "Ferreteria STT Ext 14", "telefono": "3312170014", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado", "check_not": []},
+        {"cliente": "Al correo", "check_not": []},
+        {"cliente": "Es ventas", "check_not": []},
+        {"cliente": "Arroba sttferreteria14", "check_not": []},
+        {"cliente": "Punto com", "check_not": []},
+    ],
+)
+
+# 17-15: Recepcionista y encargado hablan en el mismo turno (STT mezcla voces)
+_make(17, 15, "STT-noise ext: dos_voces_mezcladas_en_turno",
+    {"nombre_negocio": "Ferreteria STT Ext 15", "telefono": "3312170015", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno buenas tardes ferreteria san jose en que le ayudo aqui le paso", "check_not": []},
+        {"cliente": "Si, diga, soy el encargado", "check_not": []},
+        {"cliente": "Si al WhatsApp mandelo", "check_not": []},
+        {"cliente": "3312170015", "check_not": []},
+    ],
+)
+
+# 17-16: Número dictado con código de país en palabras
+_make(17, 16, "STT-noise ext: codigo_pais_en_palabras",
+    {"nombre_negocio": "Ferreteria STT Ext 16", "telefono": "3312170016", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Hola si", "check_not": []},
+        {"cliente": "Si yo soy el encargado", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "Cincuenta y dos tres tres doce diecisiete cero dieciseis", "check_not": []},
+    ],
+)
+
+# 17-17: Turno vacío (silencio transcrito como cadena vacía)
+_make(17, 17, "STT-noise ext: silencio_turno_vacio",
+    {"nombre_negocio": "Ferreteria STT Ext 17", "telefono": "3312170017", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "", "check_not": []},
+        {"cliente": "Si soy el encargado, disculpe", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "3312170017", "check_not": []},
+    ],
+)
+
+# 17-18: Cliente interrumpe antes de que Bruce termine de hablar
+_make(17, 18, "STT-noise ext: interrupcion_mid_response",
+    {"nombre_negocio": "Ferreteria STT Ext 18", "telefono": "3312170018", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno si ya se de que me va a hablar Nioval", "check_not": []},
+        {"cliente": "Si encargado, mandeme al WhatsApp el 3312170018", "check_not": []},
+    ],
+)
+
+# 17-19: Número dictado en grupos de dos dígitos
+_make(17, 19, "STT-noise ext: numero_en_grupos_de_dos",
+    {"nombre_negocio": "Ferreteria STT Ext 19", "telefono": "3312170019", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si soy yo", "check_not": []},
+        {"cliente": "Al WhatsApp", "check_not": []},
+        {"cliente": "Treinta y tres, doce, diecisiete, cero, diecinueve", "check_not": []},
+    ],
+)
+
+# 17-20: STT captura eco de pregunta de Bruce como si fuera respuesta del cliente
+_make(17, 20, "STT-noise ext: eco_pregunta_bruce_como_cliente",
+    {"nombre_negocio": "Ferreteria STT Ext 20", "telefono": "3312170020", "ciudad": "Guadalajara"},
+    [
+        {"cliente": "Bueno", "check_not": []},
+        {"cliente": "Si encargado soy", "check_not": []},
+        {"cliente": "Catalogo de productos por WhatsApp o correo electronico", "check_not": []},
+        {"cliente": "Por WhatsApp", "check_not": []},
+        {"cliente": "3312170020", "check_not": []},
+    ],
 )
 
 # ============================================================
