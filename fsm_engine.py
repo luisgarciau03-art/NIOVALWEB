@@ -610,6 +610,15 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'esta bien el whatsapp', 'esta bien el wats', 'esta bien al wats',
         # FIX 983: 'al correo' / 'al email' como canal de preferencia (OFFER_DATA)
         'al correo', 'al email', 'por el correo', 'por el email',
+        # FIX 984: 'mandame la info'/'mandamela' caían en callback_guard ('mandame' substring)
+        # offer_data se checa ANTES → clasificación correcta como OFFER_DATA
+        'mandame la info', 'mandame la informacion', 'mandame la información',
+        'mandame el catalogo', 'mandame el catálogo', 'mandame todo',
+        'mandamela', 'mandamelas', 'mandamelo todo',
+        'mande la info', 'mande el catalogo', 'mande el catálogo',
+        'mande la informacion', 'mande la información',
+        'enviame la info', 'enviame el catalogo', 'enviame todo',
+        'enviale', 'mandele', 'mandele la info', 'mandele el catalogo',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
