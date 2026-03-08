@@ -545,6 +545,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no reviso correos', 'no revisa correos', 'no checa correos',
         'no checo correos', 'nunca revisa', 'no le llegan',
         'no tenemos internet', 'no hay internet', 'no hay senal',
+        # FIX 949: Variantes faltantes detectadas en test_1000_escenarios (22 FAIL)
+        'no manejo eso del whatsapp', 'no le se al whatsapp', 'no se usar el whatsapp',
+        'whatsapp no', 'correo no', 'correo tampoco', 'tampoco correo',
+        'no tengo wats', 'no tengo el wats', 'no tengo el whats',
+        'no tenemos whatsapp', 'no tenemos correo', 'no tenemos wats',
+        'mejor por otro medio', 'mejor no por whatsapp', 'mejor no por correo',
+        'eso del whatsapp no', 'eso del correo no',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -861,7 +868,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     _reject_short_824 = ['no tengo', 'tampoco tengo', 'no puedo', 'tampoco', 'no manejo',
                           'solo telefono', 'solo fijo', 'nada mas telefono', 'solo celular',
                           'no uso', 'no cuento con', 'no lo tengo', 'eso no', 'no de eso no',
-                          'solo el telefono', 'solo el fijo', 'nomas telefono', 'puro telefono']
+                          'solo el telefono', 'solo el fijo', 'nomas telefono', 'puro telefono',
+                          # FIX 949: Variantes genéricas faltantes
+                          'no tenemos de eso', 'no tenemos', 'no le se',
+                          'no se usar', 'no lo uso', 'la verdad no uso',
+                          'pues no tengo', 'no no']
     if any(tn == r or (tn.startswith(r) and len(tn) < 25) for r in _reject_short_824):
         if state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
                      FSMState.DICTANDO_DATO, FSMState.ENCARGADO_AUSENTE):
@@ -2275,7 +2286,7 @@ class FSMEngine:
         # Ahora: rechaza TANTO whatsapp (del texto) como correo (canal_solicitado)
         if intent == FSMIntent.REJECT_DATA:
             tn = _normalize(texto)
-            if 'whatsapp' in tn:
+            if 'whatsapp' in tn or 'whats' in tn or 'wats' in tn:
                 if 'whatsapp' not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append('whatsapp')
             if 'correo' in tn or 'email' in tn:
@@ -2434,7 +2445,7 @@ class FSMEngine:
         if texto:
             tn834 = _normalize(texto)
             # FIX 909: Expanded channel detection from text
-            if 'whatsapp' in tn834 or 'whats' in tn834:
+            if 'whatsapp' in tn834 or 'whats' in tn834 or 'wats' in tn834:
                 rechazados.add('whatsapp')
             if 'correo' in tn834 or 'email' in tn834 or 'mail' in tn834:
                 rechazados.add('correo')
