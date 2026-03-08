@@ -443,7 +443,18 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     words = set(tn.split())
     has_time_context = bool(words & _time_context)
 
-    if len(digits) >= 10 or (len(digits) + num_words) >= 10:
+    # FIX 973: Detectar área code implícita cuando cliente dice "de Guadalajara/CDMX/etc."
+    # "El 1754 7880 de Guadalajara" = 8 dígitos + ciudad → 8+2=10 → COMPLETE_PHONE
+    _ciudad_area_973 = {
+        'guadalajara', 'guad', 'cdmx', 'ciudad de mexico', 'monterrey', 'mty',
+        'puebla', 'cancun', 'queretaro', 'leon', 'tijuana', 'hermosillo',
+        'culiacan', 'mexicali', 'merida', 'chihuahua', 'saltillo', 'toluca',
+        'aqui', 'local', 'este', 'celaya', 'aguascalientes',
+    }
+    _tiene_ciudad_973 = any(c in tn for c in _ciudad_area_973)
+    _effective_digits = len(digits) + num_words + (2 if _tiene_ciudad_973 and len(digits) >= 6 else 0)
+
+    if _effective_digits >= 10 or len(digits) >= 10:
         # FIX 780: 10+ dígitos con contexto temporal en BUSCANDO_ENCARGADO = callback, no teléfono
         if has_time_context and state == FSMState.BUSCANDO_ENCARGADO:
             pass  # Fall through to callback/other classifiers
@@ -2247,11 +2258,20 @@ class FSMEngine:
                     ]
                     _src_959 = texto.lower()  # current turn (_texto_lower no disponible en _execute)
                     _correo_pref_ctx_959 = any(h in _src_959 for h in _hist_correo_959)
+                # FIX 972: No redirigir a correo si el cliente AHORA está dando un número de teléfono
+                # (el cliente cambió de canal → capturar el número que da, no insistir en correo)
                 if _correo_pref_ctx_959:
-                    print(f"  [FIX 959] confirmar_telefono pero cliente prefiere correo -> pedir correo")
-                    self.context.datos_capturados['prefiere_correo_959'] = True
-                    self.state = FSMState.DICTANDO_DATO  # Stay in data capture
-                    return "Claro, con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
+                    import re as _re972
+                    _tiene_digitos_972 = len(_re972.findall(r'\d', texto)) >= 8
+                    if _tiene_digitos_972:
+                        print(f"  [FIX 972] Cliente prefería correo pero ahora da número -> capturar número")
+                        self.context.datos_capturados.pop('prefiere_correo_959', None)
+                        _correo_pref_ctx_959 = False  # Capture as phone instead
+                    else:
+                        print(f"  [FIX 959] confirmar_telefono pero cliente prefiere correo -> pedir correo")
+                        self.context.datos_capturados['prefiere_correo_959'] = True
+                        self.state = FSMState.DICTANDO_DATO  # Stay in data capture
+                        return "Claro, con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
 
             # FIX 956: Doble despedida cuando cliente dice "gracias" post-confirmación
             # confirmar_telefono/confirmar_correo ya incluye "Muchas gracias". Si el cliente
