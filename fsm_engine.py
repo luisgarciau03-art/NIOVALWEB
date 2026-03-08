@@ -567,6 +567,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no tenemos whatsapp', 'no tenemos correo', 'no tenemos wats',
         'mejor por otro medio', 'mejor no por whatsapp', 'mejor no por correo',
         'eso del whatsapp no', 'eso del correo no',
+        # FIX 983: Variantes con artículo 'el' que rompen substring match
+        # 'no tengo email' matchea pero 'no tengo el email' NO (artículo intermedio)
+        'no tengo el email', 'no tengo el correo', 'no tengo el whatsapp',
+        'no tengo el watsapp', 'no tengo el telefono',
+        'no hay el correo', 'no hay el email', 'no hay el whatsapp',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -603,6 +608,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 981: "por el whatsapp/wats" — 'el' intermedio rompe substring match de 'por whatsapp'
         'por el whatsapp', 'por el wats', 'a el whatsapp', 'a el wats',
         'esta bien el whatsapp', 'esta bien el wats', 'esta bien al wats',
+        # FIX 983: 'al correo' / 'al email' como canal de preferencia (OFFER_DATA)
+        'al correo', 'al email', 'por el correo', 'por el email',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
