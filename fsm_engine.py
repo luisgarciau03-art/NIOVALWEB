@@ -647,6 +647,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'enviame eso', 'enviame los datos',
         'enviale', 'mandele', 'mandele la info', 'mandele el catalogo',
         'si mandame', 'ok mandame', 'mandame eso por favor',
+        # FIX 991: "le proporciono" = ofrece dato → OFFER_DATA
+        'le proporciono', 'le puedo proporcionar mi', 'le doy mi numero',
+        'le doy mi whatsapp', 'le doy mi correo', 'le paso mi whatsapp',
+        'le paso mi correo', 'le paso mi numero',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -666,6 +670,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 926: BRUCE1825 - "no hay nadie" no se detectaba
         'no hay nadie', 'no hay quien', 'nadie que atienda',
         'no nos puede atender', 'no puede atender', 'andan fuera',
+        # FIX 991: Variantes "ahorita anda ocupado/en llamada"
+        'ahorita anda ocupado', 'ahorita anda ocupada', 'anda ocupado', 'anda ocupada',
+        'ahorita esta ocupado', 'ahorita esta ocupada', 'esta en una llamada',
+        'anda en una llamada', 'anda en junta', 'anda en reunion',
+        'no esta disponible', 'no esta aqui ahorita', 'ahorita no se encuentra',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -691,6 +700,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # NOTE: 'con el encargado' EXCLUIDO — FP en "le comunico con el encargado" (TRANSFER)
         'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
         'habla el encargado', 'habla la encargada', 'encargado habla',
+        # FIX 991: "ando yo aqui" = soy yo el que está (coloquial)
+        'ando yo aqui', 'ando aqui yo', 'aqui andamos', 'yo ando aqui',
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
@@ -781,6 +792,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ahorita no', 'ahorita no puedo', 'ahorita no puedes',
         'no en este momento', 'no por ahora', 'ahora no puedo',
         'en un momento', 'ahorita regresa', 'ahorita llega',
+        # FIX 991: Pronunciaciones regionales coloquiales ("horita" / "ora")
+        'horita no', 'ora no', 'por ora no', 'horita regresa', 'horita llega',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -937,6 +950,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'podria ser', 'quizas si', 'tal vez si', 'seria bueno', 'puede ser',
         'pues si podria', 'cabria la posibilidad', 'habria que ver',
         'estaria bien', 'algo asi', 'suena bien eso',
+        # FIX 991: Más expresiones de interés coloquial
+        'seria una buena opcion', 'seria buena opcion', 'seria interesante',
+        'me gustaria recibir', 'me gustaria conocer', 'me gustaria ver',
+        'quiero saber mas', 'quisiera saber mas', 'me gustaria saber',
+        'quisiera informacion', 'me interesaria', 'estaria interesado',
+        'estaria interesada', 'nos podria interesar', 'podria interesarnos',
     ]
     # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
     # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
