@@ -391,7 +391,9 @@ class ContentAnalyzer:
         re.IGNORECASE
     )
     # Detectar que cliente dio datos
-    _CLIENTE_DIO_NUMERO = re.compile(r'\d{7,10}', re.IGNORECASE)
+    # FIX 944: Requiere turno dedicado a numero (>30% digitos) para evitar FP con
+    # numeros en texto descriptivo o artefactos de replay (ej. "llevo 7 años", IDs internos).
+    _CLIENTE_DIO_NUMERO = re.compile(r'\b\d{7,10}\b', re.IGNORECASE)
     _CLIENTE_DIO_EMAIL = re.compile(
         r'(arroba|@|correo\s+es|mi\s+correo|email\s+es)',
         re.IGNORECASE
@@ -564,6 +566,20 @@ class ContentAnalyzer:
                 _has_callback_crosstalk = True
                 print(f"  [FIX 892B] Llamada ultra-larga ({len(respuestas)} resp Bruce, {len(conv) if conv else 0} conv) → asumir cross-talk (anti-PREGUNTA_REPETIDA)")
 
+            # FIX 943: Si el cliente ya confirmo ser el encargado, preguntar de nuevo
+            # por el encargado es un falso positivo de GPT-variance en dictacion de email.
+            _CLIENTE_CONFIRMO_ENCARGADO_943 = re.compile(
+                r'(si.*encargado|soy (yo|el encargado)|encargado soy|yo mero|yo mismo|yo soy)',
+                re.IGNORECASE
+            )
+            _PREGUNTAR_ENCARGADO_943 = re.compile(
+                r'(encontrar[aá] el encargado|encargad[oa] de compras|hablar con (el|la) encargad)',
+                re.IGNORECASE
+            )
+            _cliente_ya_confirmo_encargado = conv and any(
+                _CLIENTE_CONFIRMO_ENCARGADO_943.search(t) for r, t in conv if r == 'cliente'
+            )
+
             for preg, (ref_palabras, count) in seen.items():
                 # FIX 892C: Normalizar acentos antes de comparar con _CONTACT_WORDS_858
                 # "número" (con acento) no matcheaba "numero" (sin acento) → _is_contact=False incorrecto
@@ -572,6 +588,10 @@ class ContentAnalyzer:
                 # FIX 869D: callback cross-talk con >10 turnos → skip contact Qs entirely
                 _min_count = 99 if (_has_callback_crosstalk and _is_contact) else 2
                 if count >= _min_count:
+                    # FIX 943: Encargado ya confirmado → preguntar de nuevo es FP de GPT-variance
+                    if _cliente_ya_confirmo_encargado and _PREGUNTAR_ENCARGADO_943.search(preg):
+                        print(f"  [FIX 943] SKIP PREGUNTA_REPETIDA encargado: cliente ya confirmo ser encargado")
+                        continue
                     bugs.append({
                         "tipo": "PREGUNTA_REPETIDA",
                         "severidad": MEDIO,
@@ -594,7 +614,15 @@ class ContentAnalyzer:
 
             for role, texto in conv:
                 if role == "cliente":
-                    if ContentAnalyzer._CLIENTE_DIO_NUMERO.search(texto):
+                    # FIX 944: Solo marcar numero si el turno es principalmente numerico
+                    # (>30% digitos) o el texto es corto y contiene el numero.
+                    # Evita FP con numeros en texto descriptivo o artefactos de replay.
+                    _digitos = sum(c.isdigit() for c in texto)
+                    _es_turno_numerico = (
+                        _digitos >= 7 and
+                        (_digitos / max(len(texto), 1) > 0.3 or len(texto.strip()) <= 15)
+                    )
+                    if _es_turno_numerico and ContentAnalyzer._CLIENTE_DIO_NUMERO.search(texto):
                         cliente_dio_numero = True
                     if ContentAnalyzer._CLIENTE_DIO_EMAIL.search(texto):
                         cliente_dio_email = True
@@ -628,11 +656,19 @@ class ContentAnalyzer:
         bugs = []
         try:
             bruce_ya_se_despidio = False
+            turns_post_despedida = 0
             for r in respuestas:
                 if ContentAnalyzer._DESPEDIDA_BRUCE.search(r):
                     bruce_ya_se_despidio = True
+                    turns_post_despedida = 0
                 elif bruce_ya_se_despidio:
-                    # Cualquier respuesta sustancial despues de despedida
+                    turns_post_despedida += 1
+                    # FIX 942: Si la conversacion continuo 2+ turnos tras la despedida,
+                    # fue una despedida prematura por deteccion falsa de IVR/buzon.
+                    # La llamada se reanudo → resetear flag y no flagear ofertas posteriores.
+                    if turns_post_despedida >= 2:
+                        bruce_ya_se_despidio = False
+                        continue
                     if ContentAnalyzer._OFERTA_CATALOGO.search(r) or ContentAnalyzer._PITCH_NIOVAL.search(r):
                         bugs.append({
                             "tipo": "OFERTA_POST_DESPEDIDA",

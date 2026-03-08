@@ -21,6 +21,7 @@ Uso:
     python ciclo_validacion.py --ultimas 20      # Limite N llamadas en auditoria prod
     python ciclo_validacion.py --reporte         # Mostrar ultimo reporte guardado
     python ciclo_validacion.py --nivel 4 --sin-confirmar --ultimas 15
+    python ciclo_validacion.py --nivel 4 --vscode-sonnet  # N4 gratis via Claude Code VSCode
 """
 
 import os
@@ -42,10 +43,13 @@ if sys.platform == 'win32':
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-REPORTE_JSON = os.path.join(DIR, 'ciclo_validacion_reporte.json')
-REPORTE_HTML = os.path.join(DIR, 'ciclo_validacion_reporte.html')
-AUDIT_JSON   = os.path.join(DIR, 'audit_data', 'ultima_auditoria.json')
-OOS_JSON     = os.path.join(DIR, 'validador_v2_reporte.json')
+REPORTE_JSON          = os.path.join(DIR, 'ciclo_validacion_reporte.json')
+REPORTE_HTML          = os.path.join(DIR, 'ciclo_validacion_reporte.html')
+AUDIT_JSON            = os.path.join(DIR, 'audit_data', 'ultima_auditoria.json')
+OOS_JSON              = os.path.join(DIR, 'validador_v2_reporte.json')
+TRANSCRIPCIONES_JSON  = os.path.join(DIR, 'validador_v2_transcripciones.json')
+VSCODE_EVAL_INPUT     = os.path.join(DIR, 'audit_data', 'vscode_eval_input.json')
+VSCODE_EVAL_OUTPUT    = os.path.join(DIR, 'audit_data', 'vscode_eval_output.json')
 
 # ============================================================
 # Colores
@@ -123,6 +127,112 @@ def _leer_json(path):
         except Exception:
             return None
     return None
+
+
+def evaluar_con_vscode(transcripciones_path=None):
+    """
+    Modo VSCode Sonnet: exporta transcripciones a audit_data/vscode_eval_input.json,
+    espera que el usuario pida a Claude Code (VSCode) que las evalúe y escriba
+    audit_data/vscode_eval_output.json, luego lee y devuelve los resultados.
+
+    Retorna dict compatible con fase3_sonnet_audit, o None si se salta.
+    """
+    tp = transcripciones_path or TRANSCRIPCIONES_JSON
+    transcripciones = _leer_json(tp)
+    if not transcripciones:
+        warn(f"No hay transcripciones en {tp} — salta evaluacion VSCode")
+        return None
+
+    os.makedirs(os.path.dirname(VSCODE_EVAL_INPUT), exist_ok=True)
+
+    # Construir input JSON con instrucciones y conversaciones
+    eval_input = {
+        "instrucciones": (
+            "Eres auditor de calidad de Bruce W, un agente de ventas AI que llama a negocios "
+            "para ofrecer el catálogo de Nioval. Evalúa cada conversación e identifica bugs.\n\n"
+            "TIPOS DE BUG a detectar:\n"
+            "  LOOP              - Bruce hace la misma pregunta 3+ veces sin avanzar\n"
+            "  DATO_IGNORADO     - El cliente dio un número/correo y Bruce no lo usa/confirma\n"
+            "  OFERTA_POST_DESPEDIDA - Bruce se despidió pero luego siguió ofreciendo\n"
+            "  PREGUNTA_REPETIDA - Bruce repite la misma pregunta 2 veces seguidas\n"
+            "  DATO_NEGADO_REINSISTIDO - Cliente rechazó WhatsApp/correo y Bruce vuelve a pedirlo\n"
+            "  GPT_LOGICA_ROTA   - Respuesta incoherente, mezcla idiomas, contradice lo dicho\n\n"
+            "Para cada conversación escribe tu evaluación en el output_path indicado."
+        ),
+        "formato_output": {
+            "path": VSCODE_EVAL_OUTPUT,
+            "estructura": {
+                "total": "número total de conversaciones evaluadas (int)",
+                "evaluaciones": [
+                    {
+                        "id": "OOS-XX-YY (del campo id de la conversacion)",
+                        "bugs": [
+                            {"tipo": "TIPO_BUG", "detalle": "descripción breve del problema"}
+                        ],
+                        "calidad": "BUENA | REGULAR | MALA",
+                        "nota": "observación opcional"
+                    }
+                ]
+            },
+            "nota": "Si no hay bugs en una conversacion, bugs debe ser [] y calidad BUENA o REGULAR"
+        },
+        "conversaciones": transcripciones,
+    }
+
+    with open(VSCODE_EVAL_INPUT, 'w', encoding='utf-8') as f:
+        json.dump(eval_input, f, ensure_ascii=False, indent=2)
+
+    titulo("PASO MANUAL — Evaluacion VSCode Sonnet (gratis)")
+    info(f"Transcripciones listas: {len(transcripciones)} conversaciones OOS")
+    info(f"Input : {VSCODE_EVAL_INPUT}")
+    info(f"Output: {VSCODE_EVAL_OUTPUT}")
+    print()
+    print(f"  {C.BOLD}INSTRUCCIONES:{C.RESET}")
+    print(f"  1. En VSCode, pide a Claude Code:")
+    print(f"     \"Evalúa las transcripciones en audit_data/vscode_eval_input.json")
+    print(f"      siguiendo las instrucciones del archivo, y escribe los resultados")
+    print(f"      en audit_data/vscode_eval_output.json\"")
+    print(f"  2. Espera que Claude Code termine de evaluar todas las conversaciones")
+    print(f"  3. Vuelve aquí y presiona Enter para incorporar los resultados al reporte")
+    print()
+
+    try:
+        input(f"  {C.WARN}[Esperando] Presiona Enter cuando Claude Code haya terminado...{C.RESET} ")
+    except (EOFError, KeyboardInterrupt):
+        warn("Evaluacion VSCode saltada por usuario (Ctrl+C / EOF)")
+        return None
+
+    output_data = _leer_json(VSCODE_EVAL_OUTPUT)
+    if not output_data:
+        warn(f"No se encontro {VSCODE_EVAL_OUTPUT} — continuando sin evaluacion Sonnet")
+        return None
+
+    evaluaciones = output_data.get('evaluaciones', [])
+    if not evaluaciones:
+        warn("vscode_eval_output.json no tiene 'evaluaciones' — revisa el formato")
+        return None
+
+    convs_con_bug = [e for e in evaluaciones if e.get('bugs')]
+    bug_counter = Counter(b['tipo'] for e in evaluaciones for b in e.get('bugs', []))
+    tasa = round(len(convs_con_bug) / max(len(evaluaciones), 1), 4)
+
+    ok(f"VSCode Sonnet: {len(evaluaciones)} evaluadas, {len(convs_con_bug)} con bugs, tasa {tasa:.1%}")
+
+    return {
+        "total_auditadas": len(evaluaciones),
+        "convs_con_bug":   len(convs_con_bug),
+        "tasa_bugs":       tasa,
+        "bugs_por_tipo":   dict(bug_counter),
+        "escenarios_con_bug": [
+            {
+                "id":      e.get("id", "?"),
+                "calidad": e.get("calidad", ""),
+                "nota":    e.get("nota", ""),
+                "bugs":    e.get("bugs", []),
+            }
+            for e in convs_con_bug
+        ],
+    }
 
 
 def _modelo_activo():
@@ -286,90 +396,130 @@ def ejecutar_n3(ultimas_n=30, dry_run=False, sin_confirmar=False):
 # ============================================================
 # Nivel 4 — Claude Sonnet: produccion + OOS
 # ============================================================
-def ejecutar_n4(ultimas_n=30, dry_run=False, sin_confirmar=False):
-    costo_prod = ultimas_n * 0.15
-    costo_oos  = 0.35   # ~17 batches de 10 escenarios × $0.02
-    costo_total = costo_prod + costo_oos
-
-    subtitulo(f"NIVEL 4 — Claude Sonnet completo  (~40min, ~${costo_total:.2f})")
-    info(f"4a: auditoria_profunda.py --agresivo --ultimas {ultimas_n}  (~${costo_prod:.2f})")
-    info(f"4b: validador_v2.py --fase 2 --sonnet                        (~${costo_oos:.2f})")
-    info(f"Costo estimado total: ~${costo_total:.2f} USD (Claude Sonnet 4.6)")
+def ejecutar_n4(ultimas_n=30, dry_run=False, sin_confirmar=False, vscode_sonnet=False):
+    if vscode_sonnet:
+        costo_prod  = ultimas_n * 0.03   # Solo GPT eval, no Sonnet API
+        costo_oos   = 0.0                # VSCode Claude Code es gratis
+        costo_total = costo_prod
+        subtitulo(f"NIVEL 4 — VSCode Sonnet  (~30min, ~${costo_total:.2f})")
+        info(f"4a: auditoria_profunda.py --gpt-eval --ultimas {ultimas_n}  (~${costo_prod:.2f})")
+        info(f"4b: validador_v2.py --exportar-transcripciones + Claude Code eval (GRATIS)")
+        info(f"Costo estimado total: ~${costo_total:.2f} USD (sin Anthropic API)")
+    else:
+        costo_prod  = ultimas_n * 0.15
+        costo_oos   = 0.35               # ~17 batches × $0.02
+        costo_total = costo_prod + costo_oos
+        subtitulo(f"NIVEL 4 — Claude Sonnet completo  (~40min, ~${costo_total:.2f})")
+        info(f"4a: auditoria_profunda.py --agresivo --ultimas {ultimas_n}  (~${costo_prod:.2f})")
+        info(f"4b: validador_v2.py --fase 2 --sonnet                        (~${costo_oos:.2f})")
+        info(f"Costo estimado total: ~${costo_total:.2f} USD (Claude Sonnet 4.6)")
 
     if dry_run:
         warn("[DRY-RUN] Saltando ejecucion")
         return {'status': 'DRY_RUN', 'pass': True, 'elapsed': 0, 'costo_real': 0}
 
-    if not sin_confirmar:
+    if not sin_confirmar and not vscode_sonnet:
         if not _confirmar(f"Ejecutar N4 Claude Sonnet (~${costo_total:.2f})?"):
             warn("N4 saltado por usuario")
             return {'status': 'SKIP', 'pass': True, 'elapsed': 0, 'costo_real': 0}
 
     t0 = time.time()
 
-    # 4a: auditoria_profunda con --agresivo (Claude Sonnet sobre prod)
-    info("  4a: auditoria_profunda.py --agresivo --gpt-eval --sin-descargar --exportar...")
-    exito_prod, salida_prod, el_prod = _run([
-        'auditoria_profunda.py',
-        '--agresivo',
-        '--gpt-eval',
-        '--ultimas', str(ultimas_n),
-        '--sin-descargar',
-        '--exportar',
-    ], timeout=2400, label="N4a")
+    # 4a: auditoria produccion
+    if vscode_sonnet:
+        info(f"  4a: auditoria_profunda.py --gpt-eval --sin-descargar ({ultimas_n} llamadas)...")
+        exito_prod, salida_prod, el_prod = _run([
+            'auditoria_profunda.py',
+            '--gpt-eval',
+            '--ultimas', str(ultimas_n),
+            '--sin-descargar',
+        ], timeout=900, label="N4a")
+    else:
+        info("  4a: auditoria_profunda.py --agresivo --gpt-eval --sin-descargar --exportar...")
+        exito_prod, salida_prod, el_prod = _run([
+            'auditoria_profunda.py',
+            '--agresivo',
+            '--gpt-eval',
+            '--ultimas', str(ultimas_n),
+            '--sin-descargar',
+            '--exportar',
+        ], timeout=2400, label="N4a")
 
-    # 4b: validador_v2 con --sonnet (Claude Sonnet sobre OOS)
-    info("  4b: validador_v2.py --fase 2 --sonnet (OOS 167 escenarios)...")
-    exito_oos, salida_oos, el_oos = _run([
-        'validador_v2.py',
-        '--fase', '2',
-        '--sonnet',
-    ], timeout=1800, label="N4b")
+    # 4b: OOS 167 escenarios con Sonnet o VSCode
+    fase3_vscode = None
+    if vscode_sonnet:
+        info("  4b: validador_v2.py --fase 2 --exportar-transcripciones...")
+        exito_oos, salida_oos, el_oos = _run([
+            'validador_v2.py',
+            '--fase', '2',
+            '--exportar-transcripciones',
+        ], timeout=360, label="N4b")
+        # Pausa interactiva para evaluación VSCode
+        fase3_vscode = evaluar_con_vscode(TRANSCRIPCIONES_JSON)
+        exito_oos = True  # La eval manual no bloquea el pipeline
+    else:
+        info("  4b: validador_v2.py --fase 2 --sonnet (OOS 167 escenarios)...")
+        exito_oos, salida_oos, el_oos = _run([
+            'validador_v2.py',
+            '--fase', '2',
+            '--sonnet',
+        ], timeout=1800, label="N4b")
 
     elapsed = time.time() - t0
 
     # Leer reportes
     audit_data = _leer_json(AUDIT_JSON) or {}
     analisis   = audit_data.get('analisis', {})
-    oos_data   = _leer_json(OOS_JSON) or {}
-    fase3      = oos_data.get('fase3_sonnet_audit', {})
 
-    # Scores Sonnet produccion
-    scores_prom = analisis.get('scores_promedio', {})
+    # Scores produccion (solo cuando --agresivo corre Sonnet en prod)
+    scores_prom = analisis.get('scores_promedio', {}) if not vscode_sonnet else {}
     score_total = sum(scores_prom.values()) / len(scores_prom) if scores_prom else 0
-
-    # Bugs Sonnet OOS
-    sonnet_bugs_oos  = fase3.get('bugs_totales', 0)
-    sonnet_tasa_oos  = fase3.get('tasa_bugs', 0)
-    sonnet_total_oos = fase3.get('total_auditadas', 0)
 
     bug_counter_prod = analisis.get('bug_counter', {})
     total_llamadas   = analisis.get('total', 0)
     tasa_bugs_prod   = analisis.get('tasa_bugs', 0)
 
+    # Bugs OOS Sonnet/VSCode
+    if vscode_sonnet and fase3_vscode:
+        sonnet_bugs_oos  = fase3_vscode.get('convs_con_bug', 0)
+        sonnet_tasa_oos  = fase3_vscode.get('tasa_bugs', 0)
+        sonnet_total_oos = fase3_vscode.get('total_auditadas', 0)
+        sonnet_bugs_tipo = fase3_vscode.get('bugs_por_tipo', {})
+    else:
+        oos_data = _leer_json(OOS_JSON) or {}
+        fase3    = oos_data.get('fase3_sonnet_audit', {})
+        sonnet_bugs_oos  = fase3.get('bugs_totales', 0)
+        sonnet_tasa_oos  = fase3.get('tasa_bugs', 0)
+        sonnet_total_oos = fase3.get('total_auditadas', 0)
+        sonnet_bugs_tipo = fase3.get('bugs_por_tipo', {})
+
     exito = exito_prod and exito_oos
+    costo_real = round(total_llamadas * (0.03 if vscode_sonnet else 0.15) + (0 if vscode_sonnet else costo_oos), 2)
+
     resultado = {
         'status': 'PASS' if exito else 'FAIL',
         'pass': exito,
+        'modo': 'vscode_sonnet' if vscode_sonnet else 'api_sonnet',
         'prod': {
-            'llamadas': total_llamadas,
-            'tasa_bugs': tasa_bugs_prod,
-            'bug_counter': bug_counter_prod,
-            'score_promedio': round(score_total, 2),
+            'llamadas':           total_llamadas,
+            'tasa_bugs':          tasa_bugs_prod,
+            'bug_counter':        bug_counter_prod,
+            'score_promedio':     round(score_total, 2),
             'scores_por_dimension': scores_prom,
         },
         'oos_sonnet': {
-            'total': sonnet_total_oos,
-            'bugs': sonnet_bugs_oos,
-            'tasa_bugs': sonnet_tasa_oos,
-            'bugs_por_tipo': fase3.get('bugs_por_tipo', {}),
+            'total':          sonnet_total_oos,
+            'bugs':           sonnet_bugs_oos,
+            'tasa_bugs':      sonnet_tasa_oos,
+            'bugs_por_tipo':  sonnet_bugs_tipo,
         },
-        'elapsed': round(elapsed, 1),
-        'costo_real': round(total_llamadas * 0.15 + costo_oos, 2),
+        'elapsed':    round(elapsed, 1),
+        'costo_real': costo_real,
     }
 
     if exito:
-        ok(f"N4 PASS — Prod score:{score_total:.1f}/10, OOS Sonnet: {sonnet_bugs_oos} bugs ({elapsed:.0f}s)")
+        modo_str = "VSCode" if vscode_sonnet else "Sonnet"
+        ok(f"N4 PASS ({modo_str}) — OOS: {sonnet_bugs_oos} bugs / {sonnet_total_oos} convs ({elapsed:.0f}s)")
     else:
         fail(f"N4 FAIL — Prod:{exito_prod} OOS:{exito_oos}")
 
@@ -455,7 +605,8 @@ def generar_reporte_html(reporte):
         elif clave == 'n2':
             detalles = f"OOS: {niv.get('oos_bugs','?')} bugs en {niv.get('oos_total','?')} escenarios"
         elif clave == 'n3':
-            detalles = f"Llamadas: {niv.get('llamadas','?')}, Bugs GPT: {niv.get('bugs_gpt','?')}, Tasa: {niv.get('tasa_bugs','?'):.1%}" if isinstance(niv.get('tasa_bugs'), float) else f"Bugs GPT: {niv.get('bugs_gpt','?')}"
+            tasa_n3h = niv.get('tasa_bugs', 0)
+            detalles = f"Llamadas: {niv.get('llamadas','?')}, Bugs GPT: {niv.get('bugs_gpt','?')}, Tasa: {tasa_n3h:.1f}%" if isinstance(tasa_n3h, float) else f"Bugs GPT: {niv.get('bugs_gpt','?')}"
         elif clave == 'n4':
             prod = niv.get('prod', {})
             oos_s = niv.get('oos_sonnet', {})
@@ -603,7 +754,9 @@ def imprimir_resumen_final(reporte):
         elif clave == 'n2':
             det = f"OOS: {niv.get('oos_bugs','?')} bugs / {niv.get('oos_total','?')} escenarios"
         elif clave == 'n3':
-            det = f"GPT bugs: {niv.get('bugs_gpt','?')} | tasa: {niv.get('tasa_bugs',0):.1%}" if isinstance(niv.get('tasa_bugs'), float) else f"GPT bugs: {niv.get('bugs_gpt','?')}"
+            # tasa_bugs viene de auditoria_profunda ya como porcentaje (ej. 3.3 = 3.3%)
+            tasa_n3 = niv.get('tasa_bugs', 0)
+            det = f"GPT bugs: {niv.get('bugs_gpt','?')} | tasa: {tasa_n3:.1f}%" if isinstance(tasa_n3, float) else f"GPT bugs: {niv.get('bugs_gpt','?')}"
         elif clave == 'n4':
             prod  = niv.get('prod', {})
             oos_s = niv.get('oos_sonnet', {})
@@ -708,6 +861,8 @@ def main():
                         help='N llamadas de produccion para N3/N4 (default: 30)')
     parser.add_argument('--reporte', action='store_true',
                         help='Mostrar ultimo reporte guardado')
+    parser.add_argument('--vscode-sonnet', action='store_true',
+                        help='N4: usa Claude Code (VSCode) para eval OOS en lugar de Anthropic API (gratis)')
     args = parser.parse_args()
 
     # ---- Solo mostrar reporte ----
@@ -726,6 +881,8 @@ def main():
     print(f"  Nivel maximo  : N{args.nivel}")
     print(f"  Llamadas prod : {args.ultimas} (N3/N4)")
     print(f"  Dry-run       : {'SI' if args.dry_run else 'NO'}")
+    if args.vscode_sonnet:
+        print(f"  {C.OK}Modo N4       : VSCode Sonnet (GRATIS — sin Anthropic API){C.RESET}")
     print()
 
     # Estimado de costo total
@@ -733,7 +890,10 @@ def main():
     if args.nivel >= 3:
         costo_est += args.ultimas * 0.03
     if args.nivel >= 4:
-        costo_est += args.ultimas * 0.15 + 0.35
+        if args.vscode_sonnet:
+            costo_est += args.ultimas * 0.03   # Solo GPT eval, VSCode gratis
+        else:
+            costo_est += args.ultimas * 0.15 + 0.35
     print(f"  Costo estimado: ${costo_est:.2f} USD")
     if args.dry_run:
         print(f"  {C.WARN}[DRY-RUN]{C.RESET} Los niveles se muestran pero NO se ejecutan")
@@ -759,6 +919,7 @@ def main():
             ultimas_n=args.ultimas,
             dry_run=args.dry_run,
             sin_confirmar=args.sin_confirmar,
+            vscode_sonnet=args.vscode_sonnet,
         )
 
     elapsed_total = time.time() - t_inicio
