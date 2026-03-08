@@ -2060,7 +2060,10 @@ class FSMEngine:
 
         # === OFRECIENDO_CONTACTO ===
         add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
-        add(S.OFRECIENDO_CONTACTO, I.INTEREST,      S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
+        # FIX 982: INTEREST en OFRECIENDO_CONTACTO = "mandeme el catalogo" = re-abre captura
+        # Sin fix: INTEREST → tiene_donde_anotar → Bruce da su propio número (confuso)
+        # Con fix: INTEREST → volver a pedir canal de contacto al cliente
+        add(S.OFRECIENDO_CONTACTO, I.INTEREST,      S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo")
         add(S.OFRECIENDO_CONTACTO, I.REJECT_DATA,   S.DESPEDIDA, A.TEMPLATE, "despedida_sin_contacto")
         add(S.OFRECIENDO_CONTACTO, I.NO_INTEREST,   S.DESPEDIDA, A.TEMPLATE, "despedida_sin_contacto")
         add(S.OFRECIENDO_CONTACTO, I.FAREWELL,      S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
