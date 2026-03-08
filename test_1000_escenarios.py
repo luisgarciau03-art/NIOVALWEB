@@ -14,6 +14,7 @@ Flags:
 """
 import os
 import sys
+import io
 import time
 import json
 import argparse
@@ -22,7 +23,12 @@ from collections import Counter
 DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, DIR)
 
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+os.environ["PYTHONIOENCODING"] = "utf-8"
+# Fix Windows cp1252 stdout encoding for unicode characters (e.g. →)
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 VSCODE_EVAL_INPUT  = os.path.join(DIR, 'audit_data', 'vscode_eval_1000_input.json')
 VSCODE_EVAL_OUTPUT = os.path.join(DIR, 'audit_data', 'vscode_eval_1000_output.json')
@@ -31,41 +37,129 @@ from escenarios_generator import generate_all
 
 
 def _evaluar_vscode_sonnet(transcripciones):
-    """Exporta transcripciones y espera evaluacion de Claude Code VSCode."""
+    """Exporta transcripciones y espera evaluacion de Claude Code VSCode.
+
+    Usa los mismos criterios que auditoria_profunda.py (_EVAL_AGRESIVO_PROMPT):
+    - 8 dimensiones de score (1-10)
+    - 20+ tipos de bug con severidad CRITICO/ALTO/MEDIO
+    - capa_pipeline, que_debio_decir, patron_repetitivo, sentimiento_cliente_progresion
+    - Score < 6.0 = bug de calidad automatico
+    """
     os.makedirs(os.path.dirname(VSCODE_EVAL_INPUT), exist_ok=True)
 
+    instrucciones = """\
+Eres un AUDITOR IMPLACABLE de calidad para llamadas de ventas telefonicas.
+Tu estandar de referencia es un VENDEDOR ESTRELLA humano con 15 anos de experiencia en ventas B2B en Mexico.
+CUALQUIER desviacion de ese estandar es un problema.
+
+Bruce es un agente AI que vende productos ferreteros de la marca NIOVAL por telefono. Su pipeline tiene varias capas:
+- FSM (maquina de estados): decide transiciones y selecciona templates pre-escritos
+- GPT Narrow: prompts especializados enviados a GPT-4.1-mini para respuestas dinamicas
+- BTE (Bruce Talk Engine): genera fillers/acknowledgments cuando FSM no tiene respuesta
+- Cache: respuestas GPT cacheadas para frases frecuentes
+- Post-filtros: reglas que modifican la respuesta final
+
+NOTA: Estas son simulaciones texto-a-texto (sin audio real). Ignora falsos positivos de:
+- DICTADO_INTERRUMPIDO (no hay audio)
+- AREA_EQUIVOCADA en conversaciones cortas o ambiguas
+
+ESCALA DE CALIFICACION (MUY ESTRICTA):
+- 10: PERFECTO. Imposible mejorar.
+- 8-9: MUY BUENO. Solo detalles menores.
+- 6-7: ACEPTABLE. Funciona pero con areas de mejora.
+- 4-5: DEFICIENTE. Errores notables que afectan la conversion.
+- 2-3: MALO. El cliente percibe que algo esta mal.
+- 1: DESASTROSO. Pierde completamente al cliente.
+
+EVALUA en 8 DIMENSIONES (1-10 cada una):
+1. naturalidad: Bruce suena como humano mexicano profesional o como robot
+2. efectividad_ventas: avanza la venta de forma estrategica
+3. manejo_objeciones: maneja rechazos, dudas o resistencia
+4. captura_datos: eficiente pidiendo WhatsApp/correo/telefono
+5. cierre: termina la llamada de forma profesional
+6. escucha_activa: demuestra que escucho lo que dijo el cliente
+7. adaptabilidad: se adapta al estilo/ritmo del cliente
+8. fluidez_conversacional: la conversacion fluye naturalmente
+
+TIPOS DE PROBLEMA (busca TODOS agresivamente):
+Calidad conversacional:
+- RESPUESTA_SUBOPTIMA: respondio "correcto" pero habia una respuesta MEJOR
+- SENTIMIENTO_NEGATIVO: el cliente se frustro, confundio o molesto
+- OPORTUNIDAD_PERDIDA: cliente mostro interes pero Bruce no lo capitalizo
+- FLUJO_ROBOTICO: siguio patron predecible sin adaptarse
+- TIMING_INCORRECTO: dijo algo correcto en el MOMENTO equivocado
+- FALTA_EMPATIA: no reconocio emocion o situacion del cliente
+- REDUNDANCIA: repitio informacion/conceptos/frases que ya dijo
+- RESPUESTA_IDEAL: para cada turno, indica si fue la respuesta optima
+
+Bugs tecnicos conocidos:
+- PREGUNTA_REPETIDA: repite la MISMA pregunta 2+ veces
+- PITCH_REPETIDO: repite el pitch/oferta de productos 2+ veces
+- LOOP: ciclo de 3+ turnos repitiendo el mismo patron
+- DATO_IGNORADO: cliente dio un dato pero Bruce lo ignoro
+- DATO_NEGADO_REINSISTIDO: cliente dijo que NO tiene WA/correo y Bruce vuelve a pedirlo
+- DESPEDIDA_PREMATURA: se despidio cuando el cliente aun estaba hablando/interesado
+- RESPUESTA_FILLER_INCOHERENTE: respondio con algo sin sentido (posible BTE malo)
+- TRANSFER_IGNORADA: cliente pidio hablar con alguien mas y Bruce lo ignoro
+- GPT_LOGICA_ROTA: respuesta de GPT contradice el contexto
+- TEMPLATE_INADECUADO: FSM selecciono template que no corresponde al contexto
+- CACHE_DESACTUALIZADO: respuesta cacheada que no refleja el estado actual
+
+REGLAS ULTRA-ESTRICTAS:
+- score_total = promedio de las 8 dimensiones
+- BUSCA PROBLEMAS ACTIVAMENTE. Si no encuentras al menos 2, estas siendo demasiado suave
+- Un score de 5 significa "mediocre". Un 7 es "aceptable". Solo un 9+ es "bueno"
+- Severidad CRITICO: afecta directamente la conversion
+- Severidad ALTO: el cliente lo nota y afecta su percepcion de profesionalismo
+- Severidad MEDIO: mejorable, un vendedor estrella no lo haria asi
+- Score < 6.0 automaticamente es un problema de calidad
+- Maximo 10 problemas por conversacion
+- Para cada problema indica la capa_pipeline: fsm_template|gpt_narrow|bte|cache|post_filtro|desconocido
+
+Para cada conversacion en "conversaciones", produce una evaluacion con el formato indicado en formato_output."""
+
     eval_input = {
-        "instrucciones": (
-            "Eres auditor de calidad de Bruce W, agente de ventas AI que llama a negocios "
-            "para ofrecer el catálogo de Nioval.\n\n"
-            "Evalúa cada conversación e identifica bugs reales (ignora FP de simulación de texto).\n\n"
-            "TIPOS DE BUG:\n"
-            "  LOOP                  - Bruce repite la misma pregunta 3+ veces sin avanzar\n"
-            "  DATO_IGNORADO         - Cliente dio número/correo y Bruce no lo usó/confirmó\n"
-            "  DATO_NEGADO_REINSISTIDO - Cliente rechazó WA/correo y Bruce vuelve a pedirlo\n"
-            "  OFERTA_POST_DESPEDIDA - Bruce se despidió y luego siguió ofreciendo\n"
-            "  PREGUNTA_REPETIDA     - Bruce repite la misma pregunta 2 veces seguidas\n"
-            "  PITCH_REPETIDO        - Bruce repite el pitch de NIOVAL innecesariamente\n"
-            "  GPT_LOGICA_ROTA       - Respuesta incoherente o fuera de contexto\n\n"
-            "NOTA: DICTADO_INTERRUMPIDO casi siempre es FP en simulación de texto (sin audio real).\n"
-            "NOTA: AREA_EQUIVOCADA puede ser FP si la conversación es corta o ambigua.\n\n"
-            "Para cada conversación: lista bugs reales con tipo+detalle, calidad (BUENA/REGULAR/MALA)."
-        ),
+        "instrucciones": instrucciones,
         "formato_output": {
             "path": VSCODE_EVAL_OUTPUT,
             "estructura": {
-                "total": "número total de conversaciones evaluadas (int)",
-                "bugs_reales": "total de bugs reales detectados (int)",
+                "total": "numero total de conversaciones evaluadas (int)",
+                "score_promedio": "promedio de score_total de todas las conversaciones (float)",
+                "convs_bajo_umbral": "numero de conversaciones con score_total < 6.0 (int)",
+                "bugs_criticos_total": "total de problemas con severidad CRITICO (int)",
                 "evaluaciones": [
                     {
                         "id": "OOS-XX-YY",
-                        "bugs": [{"tipo": "TIPO_BUG", "detalle": "descripción"}],
-                        "calidad": "BUENA | REGULAR | MALA",
-                        "nota": "observación opcional"
+                        "nombre": "nombre del escenario",
+                        "scores": {
+                            "naturalidad": "N (1-10)",
+                            "efectividad_ventas": "N (1-10)",
+                            "manejo_objeciones": "N (1-10)",
+                            "captura_datos": "N (1-10)",
+                            "cierre": "N (1-10)",
+                            "escucha_activa": "N (1-10)",
+                            "adaptabilidad": "N (1-10)",
+                            "fluidez_conversacional": "N (1-10)"
+                        },
+                        "score_total": "N (promedio 8 dimensiones, float)",
+                        "problemas": [
+                            {
+                                "tipo": "TIPO_PROBLEMA",
+                                "turno": "N (numero de turno donde ocurre)",
+                                "severidad": "CRITICO | ALTO | MEDIO",
+                                "detalle": "descripcion del problema",
+                                "que_dijo_bruce": "texto exacto de Bruce",
+                                "que_debio_decir": "lo que diria el vendedor estrella",
+                                "capa_pipeline": "fsm_template|gpt_narrow|bte|cache|post_filtro|desconocido"
+                            }
+                        ],
+                        "patron_repetitivo": "si Bruce usa la misma estructura/frase en multiples turnos, describelo",
+                        "sentimiento_cliente_progresion": "como evoluciono la actitud del cliente (positivo/neutro/negativo)",
+                        "resumen": "2-3 frases evaluando la conversacion con honestidad brutal"
                     }
                 ]
             },
-            "nota": "Si no hay bugs reales, bugs=[] y calidad=BUENA o REGULAR"
+            "nota": "Evalua TODAS las conversaciones del array 'conversaciones'. Score < 6.0 = problema de calidad."
         },
         "conversaciones": transcripciones,
     }
@@ -74,9 +168,10 @@ def _evaluar_vscode_sonnet(transcripciones):
         json.dump(eval_input, f, ensure_ascii=False, indent=2)
 
     print(f"\n{'='*65}")
-    print(f"  EVALUACION VSCODE SONNET")
+    print(f"  EVALUACION VSCODE SONNET (Auditoria Profunda)")
     print(f"{'='*65}")
     print(f"  Transcripciones: {len(transcripciones)} conversaciones")
+    print(f"  Criterios: 8 dimensiones | 20+ tipos de bug | severidad CRITICO/ALTO/MEDIO")
     print(f"  Input : {VSCODE_EVAL_INPUT}")
     print(f"  Output: {VSCODE_EVAL_OUTPUT}")
     print()
@@ -107,28 +202,70 @@ def _evaluar_vscode_sonnet(transcripciones):
         print("  [WARN] vscode_eval_output no tiene 'evaluaciones'")
         return None
 
-    bugs_reales = [b for e in evaluaciones for b in e.get('bugs', [])]
-    bug_counter = Counter(b['tipo'] for b in bugs_reales)
-    convs_con_bug = [e for e in evaluaciones if e.get('bugs')]
+    # Procesar resultados con criterios de auditoria_profunda
+    todos_problemas = [p for e in evaluaciones for p in e.get('problemas', [])]
+    bug_counter = Counter(p['tipo'] for p in todos_problemas)
+    by_sev = Counter(p.get('severidad', 'MEDIO') for p in todos_problemas)
 
-    print(f"\n  [Sonnet] {len(evaluaciones)} evaluadas — {len(convs_con_bug)} con bugs reales")
+    scores_totales = [e['score_total'] for e in evaluaciones if isinstance(e.get('score_total'), (int, float))]
+    score_prom = sum(scores_totales) / len(scores_totales) if scores_totales else 0
+    bajo_umbral = [e for e in evaluaciones if isinstance(e.get('score_total'), (int, float)) and e['score_total'] < 6.0]
+
+    convs_criticas = [e for e in evaluaciones if any(
+        p.get('severidad') == 'CRITICO' for p in e.get('problemas', [])
+    )]
+
+    print(f"\n  [Sonnet] {len(evaluaciones)} evaluadas")
+    print(f"  Score promedio: {score_prom:.1f}/10")
+    print(f"  Bajo umbral (<6.0): {len(bajo_umbral)} conversaciones")
+    print(f"  Problemas: {len(todos_problemas)} total | CRITICO:{by_sev.get('CRITICO',0)} ALTO:{by_sev.get('ALTO',0)} MEDIO:{by_sev.get('MEDIO',0)}")
+
     if bug_counter:
-        print(f"  Bugs por tipo:")
+        print(f"\n  Problemas por tipo:")
         for bt, cnt in sorted(bug_counter.items(), key=lambda x: -x[1]):
             print(f"    {bt}: {cnt}")
 
-    # Mostrar bugs reales encontrados
-    if convs_con_bug:
-        print(f"\n  Escenarios con bugs reales:")
-        for e in convs_con_bug[:30]:
-            print(f"    {e['id']} [{e['calidad']}]")
-            for b in e['bugs']:
-                print(f"      - {b['tipo']}: {b['detalle']}")
+    # Scores por dimension
+    dims = ['naturalidad','efectividad_ventas','manejo_objeciones','captura_datos',
+            'cierre','escucha_activa','adaptabilidad','fluidez_conversacional']
+    scores_dim = {d: [] for d in dims}
+    for e in evaluaciones:
+        for d in dims:
+            v = e.get('scores', {}).get(d)
+            if isinstance(v, (int, float)):
+                scores_dim[d].append(v)
+    print(f"\n  Scores por dimension:")
+    for d in dims:
+        vals = scores_dim[d]
+        avg = sum(vals)/len(vals) if vals else 0
+        print(f"    {d:<28s}: {avg:.1f}")
+
+    # Mostrar conversaciones criticas
+    if convs_criticas:
+        print(f"\n  Conversaciones con problemas CRITICOS ({len(convs_criticas)}):")
+        for e in convs_criticas[:20]:
+            print(f"    {e['id']} score={e.get('score_total','?')} — {e.get('resumen','')[:80]}")
+            for p in e.get('problemas', []):
+                if p.get('severidad') == 'CRITICO':
+                    print(f"      !!! {p['tipo']}: {p.get('detalle','')[:80]}")
+                    if p.get('que_debio_decir'):
+                        print(f"          -> Estrella: \"{p['que_debio_decir'][:70]}\"")
+
+    # Bajo umbral
+    if bajo_umbral:
+        print(f"\n  Conversaciones bajo umbral score<6 ({len(bajo_umbral)}):")
+        for e in sorted(bajo_umbral, key=lambda x: x.get('score_total', 10))[:10]:
+            print(f"    {e['id']} score={e.get('score_total','?')} — {e.get('resumen','')[:80]}")
 
     return {
         "total_evaluadas": len(evaluaciones),
-        "convs_con_bug": len(convs_con_bug),
+        "score_promedio": round(score_prom, 2),
+        "bajo_umbral": len(bajo_umbral),
+        "bugs_criticos": by_sev.get('CRITICO', 0),
+        "bugs_altos": by_sev.get('ALTO', 0),
+        "bugs_medios": by_sev.get('MEDIO', 0),
         "bugs_por_tipo": dict(bug_counter),
+        "scores_dimension": {d: round(sum(v)/len(v), 1) if (v := scores_dim[d]) else 0 for d in dims},
     }
 
 

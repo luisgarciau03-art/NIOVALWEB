@@ -497,6 +497,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 994: Casa particular / domicilio privado
         'casa particular', 'domicilio particular', 'numero de casa', 'es mi casa',
         'aqui es casa', 'esto es casa', 'soy particular', 'es residencial',
+        # FIX 998: "este no es el número correcto"
+        'este no es el numero correcto', 'no es el numero correcto',
+        'no es el numero', 'numero incorrecto',
         # FIX 908: Giro equivocado - negocio no es ferreteria
         'aqui es un restaurante', 'somos restaurante', 'es un restaurante',
         'aqui es una tienda de', 'somos tienda de abarrotes', 'vendemos abarrotes',
@@ -600,6 +603,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'solo manejo llamadas', 'solo recibo llamadas', 'prefiero por telefono',
         'mejor por telefono', 'solo por telefono', 'nada mas por telefono',
         'prefiero llamadas', 'solo llamadas',
+        # FIX 998: No tienen redes / ese tipo de contacto
+        'no tenemos redes sociales', 'no tenemos ese tipo de contacto',
+        'no le puedo decir el numero', 'no le puedo decir',
+        'no tenemos correo corporativo', 'no tenemos pagina',
         # FIX 983: Variantes con artículo 'el' que rompen substring match
         # 'no tengo email' matchea pero 'no tengo el email' NO (artículo intermedio)
         'no tengo el email', 'no tengo el correo', 'no tengo el whatsapp',
@@ -752,6 +759,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'con el encargado si', 'con la encargada si',
         # FIX 997: "yo manejo eso" = yo soy el que toma decisiones
         'yo manejo eso', 'yo lo manejo', 'yo me encargo de eso',
+        # FIX 998: "aqui mando yo" = soy el decisor
+        'aqui mando yo', 'yo mando aqui', 'aqui mando yo solo',
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
@@ -865,6 +874,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'marque el proximo', 'llame el proximo',
         'esta semana no', 'esta semana no puedo', 'la semana que entra',
         'la semana entrante', 'la semana siguiente',
+        # FIX 998: Callbacks con referencias temporales más específicas
+        'a fin de mes', 'a finales del mes', 'a principios del mes',
+        'principios del mes que entra', 'finales del mes que entra',
+        'mejor marcame a fin', 'a fin del mes',
+        # FIX 998: "quién sabe" = no sabe cuando regresa = callback tentativo
+        'quien sabe', 'ni idea', 'no se cuando',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
         'lo comento con', 'voy a consultar', 'tengo que consultar',
@@ -1058,6 +1073,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'quiero saber mas', 'quisiera saber mas', 'me gustaria saber',
         'quisiera informacion', 'me interesaria', 'estaria interesado',
         'estaria interesada', 'nos podria interesar', 'podria interesarnos',
+        # FIX 998: Interés tentativo / posibilista
+        'pues puede que si', 'puede que si', 'quizas podria', 'tal vez podria',
+        'pues quizas', 'pues tal vez', 'habria que ver',
     ]
     # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
     # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
