@@ -10542,6 +10542,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                     except Exception as e_bte:
                         print(f"  [BTE] Error: {e_bte}")
 
+                # NOTE: FIX 977 (DESPEDIDA+HANGUP→silencio) REVERTIDO
+                # Causaba DATO_SIN_RESPUESTA en OOS-17-06 (IVR→DESPEDIDA→humano da número)
+                # La doble despedida es calidad GPT, no un bug funcional del N2 gate
+
                 if fsm_result is not None:
                     # FIX 762: Sync FSM state/data back to agent before returning
                     self._sync_fsm_to_agent(respuesta_cliente, fsm_result)

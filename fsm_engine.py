@@ -1235,6 +1235,20 @@ class FSMEngine:
         else:
             transition = None
 
+        # FIX 979: PITCH + VERIFICATION + saludo humano → re-pitch (IVR/conmutador)
+        # "Si bueno, digame" después de que Bruce habló con IVR = nuevo humano tomó la llamada
+        # Sin este fix: PITCH+VERIFICATION → verificacion_aqui_estoy (ambos dicen "Dígame")
+        if (transition is None and
+                self.state == FSMState.PITCH and
+                intent == FSMIntent.VERIFICATION and
+                any(s in _texto_lower for s in [
+                    'digame', 'diga', 'si bueno', 'bueno si',
+                    'si buenas', 'buenas tardes digame', 'buenas dias digame',
+                ])):
+            print(f"  [FIX 979] PITCH+VERIFICATION+saludo → re-pitch (nuevo humano en llamada)")
+            self.state = FSMState.PITCH
+            transition = Transition(FSMState.PITCH, ActionType.TEMPLATE, "pitch_inicial")
+
         # FIX 763: REJECT_DATA dinámico con alternación de canales
         if (transition is None and
                 intent == FSMIntent.REJECT_DATA and
@@ -2010,6 +2024,9 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_ABSENT,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_PRESENT, S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
         add(S.CAPTURANDO_CONTACTO, I.QUESTION,        S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
+        # FIX 978: INTEREST en CAPTURANDO_CONTACTO = "mándeme el catálogo" → pedir dato directamente
+        # Sin esta línea, INTEREST no tenía transición → GPT → "Si, aqui estoy. Digame." (FLUJO_ROBOTICO)
+        add(S.CAPTURANDO_CONTACTO, I.INTEREST,       S.DICTANDO_DATO, A.TEMPLATE, "digame_numero")
 
         # === DICTANDO_DATO ===
         add(S.DICTANDO_DATO, I.DICTATING_PARTIAL,       S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
