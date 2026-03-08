@@ -486,7 +486,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'aqui no hay negocio', 'no es aqui', 'aqui no es',
         'area equivocada', 'departamento equivocado',
         'no es conmigo', ' no soy yo', 'no, no soy yo', 'no es mi departamento',
-        'marco equivocado', 'llamo equivocado',
+        'marco equivocado', 'llamo equivocado', 'marque equivocado',
         # FIX 908: Giro equivocado - negocio no es ferreteria
         'aqui es un restaurante', 'somos restaurante', 'es un restaurante',
         'aqui es una tienda de', 'somos tienda de abarrotes', 'vendemos abarrotes',
@@ -534,6 +534,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no nos llame', 'ya no nos llame', 'ya no marque', 'no marque mas',
         'no llame mas', 'ya no llame', 'no vuelva a llamar', 'no vuelva a marcar',
         'borrenos de su lista', 'quitenos de su lista', 'borreme de su lista',
+        # FIX 993: Ya tienen otro proveedor/distribuidor
+        'trabajamos con otro proveedor', 'tenemos otro proveedor',
+        'trabajamos con alguien mas', 'ya trabajamos con alguien',
+        'tenemos ya distribuidor', 'tenemos distribuidor', 'tenemos proveedor fijo',
+        'ya tenemos a alguien', 'ya tenemos quien nos surta',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -806,6 +811,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'en un momento', 'ahorita regresa', 'ahorita llega',
         # FIX 991: Pronunciaciones regionales coloquiales ("horita" / "ora")
         'horita no', 'ora no', 'por ora no', 'horita regresa', 'horita llega',
+        # FIX 993: "en camino" = llegará pronto → callback implícito
+        'esta en camino', 'viene en camino', 'va en camino', 'anda en camino',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -828,6 +835,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 888: BRUCE2580 - "ahí te comunican a compras" / "comunicarte a matríz"
         'comunican a compras', 'te comunican a', 'comunicarte a matri',
         'comunicar a matri', 'comunicate a', 'habla a compras',
+        # FIX 993: Área incorrecta dentro de la empresa
+        'esto es recursos humanos', 'area de recursos humanos', 'esto es contabilidad',
+        'esto es administracion', 'esto es recepcion', 'somos el area de',
+        'aqui es el departamento de', 'esto es el area de',
     ]
     if any(a in tn for a in another):
         return FSMIntent.ANOTHER_BRANCH
@@ -904,6 +915,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si si', 'si si si', 'ah si', 'ah ok si', 'ah ya',
         'efectivamente', 'mande', 'si mande', 'ya', 'listo',
         'si gracias', 'ok gracias', 'perfecto', 'muy bien',
+        # FIX 993: Multi-word confirmations
+        'si perfecto', 'si listo', 'si muy bien', 'si adelante', 'si sale',
+        'si va', 'si orale', 'si andale', 'si correcto', 'si exacto',
+        'ok perfecto', 'ok listo', 'ok sale', 'ok va', 'ok orale',
+        'claro perfecto', 'claro que si perfecto',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
         # FIX 884 (reemplaza FIX 893): BRUCE2619 - "Dígame" en BUSCANDO_ENCARGADO
