@@ -994,10 +994,119 @@ class FSMEngine:
         # 1.05 FIX 918: Extraer datos mencionados por el cliente cada turno
         self._extraer_datos_cliente(texto)
 
-        # 1.1 FIX 920: Detección de frustración/sentimiento negativo pre-respuesta
+        # 1.0 FIX 950: Rechazo hostil / solicitud LFPDPPP (quiten mi número, voy a colgar)
+        # Debe ejecutarse ANTES de FIX 920 para no mezclar con frustración normal.
+        # Template sin oferta de retomar contacto (art. 16 LFPDPPP — derecho de supresión).
         _texto_lower = texto.lower()
+        _hostil_950 = [
+            'le voy a colgar', 'voy a colgar', 'les voy a colgar',
+            'quiten mi numero', 'borren mi numero', 'eliminen mi numero',
+            'no vuelvan a llamar', 'no me vuelvan a llamar', 'no nos vuelvan a llamar',
+            'no me vuelvan a marcar', 'no nos vuelvan a marcar',
+            'me va a demandar', 'voy a demandar', 'voy a reportar',
+            'reportare a profeco', 'voy a reportar a profeco',
+            'no quiero que me llamen', 'no quiero que nos llamen',
+            'no me llamen mas', 'no nos llamen mas',
+        ]
+        if any(h in _texto_lower for h in _hostil_950):
+            print(f"  [FIX 950] Rechazo hostil/LFPDPPP detectado -> despedida definitiva sin recontacto")
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("despedida_hostil_950")
+
+        # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
+        # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
+        if self.state == FSMState.CONTACTO_CAPTURADO:
+            _correccion_signals_952 = [
+                'ese no es', 'ese no era', 'ese no estaba', 'ese numero no es',
+                'el correcto es', 'el bueno es', 'el verdadero es', 'el que es',
+                'me equivoque', 'me equivoqué', 'di mal', 'di mal el', 'di el equivocado',
+                'le di el equivocado', 'le di mal', 'lo di mal',
+                'no era ese', 'era otro', 'era diferente', 'es diferente',
+                'es otro numero', 'otro numero es', 'el numero es',
+                'corrijo', 'lo corrijo', 'perdón es', 'perdon es', 'disculpe es',
+                'en realidad es', 'en realidad el', 'el real es',
+            ]
+            if any(s in _texto_lower for s in _correccion_signals_952):
+                import re as _re952
+                _numeros_952 = _re952.findall(r'\d[\d\s\-]{6,}\d', texto)
+                _numero_limpio_952 = None
+                for _n in _numeros_952:
+                    _solo_digits = _re952.sub(r'\D', '', _n)
+                    if len(_solo_digits) >= 8:
+                        _numero_limpio_952 = _solo_digits
+                        break
+                if _numero_limpio_952:
+                    print(f"  [FIX 952] Corrección post-captura detectada -> actualizando dato a {_numero_limpio_952}")
+                    if hasattr(self.context, 'whatsapp') and self.context.whatsapp:
+                        self.context.whatsapp = _numero_limpio_952
+                    elif hasattr(self.context, 'email') and self.context.email:
+                        pass  # email corrections handled by GPT (complex format)
+                    # Stay in CONTACTO_CAPTURADO, confirm correction
+                    _tmpl_952 = self._get_template("confirmar_correccion_952")
+                    return _tmpl_952.replace("{numero}", _numero_limpio_952) if "{numero}" in _tmpl_952 else _tmpl_952
+
+        # 1.02 FIX 953: Acumulación de dígitos parciales en DICTANDO_DATO
+        # Cliente da número en múltiples turnos; confirmar cuando acumulado >= 10 dígitos.
+        # Sin este fix, el último turno con pocos dígitos queda como DICTATING_PARTIAL
+        # y Bruce sigue diciendo "aja" sin confirmar, o cae a GPT con "Si, aqui estoy".
+        if self.state == FSMState.DICTANDO_DATO:
+            import re as _re953
+            if intent == FSMIntent.DICTATING_PARTIAL:
+                _nuevos_953 = ''.join(_re953.findall(r'\d', texto))
+                # Contar palabras numéricas en español como dígitos adicionales
+                _num_words_953 = sum(1 for w in _texto_lower.split() if w in _NUMS_ESP)
+                _num_words_953 += sum(2 for w in _texto_lower.split() if w in {
+                    'diez','once','doce','trece','catorce','quince','dieciseis','diecisiete',
+                    'dieciocho','diecinueve','veinte','treinta','cuarenta','cincuenta',
+                    'sesenta','setenta','ochenta','noventa'
+                })
+                _placeholder_953 = 'X' * max(0, _num_words_953 - len(_nuevos_953))
+                _acum_953 = self.context.datos_parciales + _nuevos_953 + _placeholder_953
+                self.context.datos_parciales = _acum_953
+                print(f"  [FIX 953] Dígitos acumulados: '{_acum_953}' ({len(_acum_953)} dígitos)")
+                if len(_acum_953) >= 10:
+                    print(f"  [FIX 953] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
+                    intent = FSMIntent.DICTATING_COMPLETE_PHONE
+                    self.context.datos_parciales = ""
+            elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL) and len(self.context.datos_parciales) >= 8:
+                # Cliente confirmó/terminó con suficientes dígitos acumulados
+                _acum_953 = self.context.datos_parciales
+                print(f"  [FIX 953] {intent.value} post-parcial con {len(_acum_953)} dígitos -> DICTATING_COMPLETE_PHONE")
+                intent = FSMIntent.DICTATING_COMPLETE_PHONE
+                self.context.datos_parciales = ""
+            elif intent not in (FSMIntent.DICTATING_PARTIAL, FSMIntent.CONTINUATION, FSMIntent.VERIFICATION):
+                # Saliendo de DICTANDO_DATO por otra razón — resetear buffer
+                if self.context.datos_parciales:
+                    print(f"  [FIX 953] Reseteando buffer dígitos parciales (intent={intent.value})")
+                    self.context.datos_parciales = ""
+
+        # 1.03 FIX 957: "Ya me llamaron antes" — detectar si hay interés simultáneo
+        # Si el cliente menciona llamada previa + interés → no despedida → capturar contacto
+        # Si solo menciona llamada previa (sin interés) → FIX 920 lo maneja abajo
+        _ya_llamaron_957 = [
+            'ya me llamaron', 'ya nos llamaron', 'ya les llamaron', 'ya llamaron antes',
+            'ya me hablan', 'ya nos hablan', 'ya han llamado', 'ya nos han llamado',
+            'ya me habian llamado', 'ustedes ya llamaron', 'ya llamaron de ahi',
+        ]
+        _interes_simultaneo_957 = [
+            'pero si', 'pero sí', 'pero me interesa', 'pero mandeme', 'pero enviame',
+            'ahora si', 'ahora sí', 'esta vez si', 'esta vez sí', 'si me interesa',
+            'quiero el catalogo', 'mandeme el catalogo', 'si me manda', 'si me envias',
+            'si puedo', 'si le atiendo', 'adelante', 'digame', 'cuénteme', 'cuenteme',
+        ]
+        if any(s in _texto_lower for s in _ya_llamaron_957):
+            if any(i in _texto_lower for i in _interes_simultaneo_957):
+                # Cliente dice "ya llamaron pero sí me interesa" → saltar pitch, pedir contacto
+                print(f"  [FIX 957] Ya llamaron + interés simultáneo -> saltar pitch, pedir contacto")
+                self.context.pitch_dado = True
+                self.context.datos_capturados['relacion_previa'] = 'cliente_existente'
+                self.state = FSMState.CAPTURANDO_CONTACTO
+                return self._get_template("pedir_whatsapp_o_correo")
+            # else: cae a FIX 920 para despedida
+
+        # 1.1 FIX 920: Detección de frustración/sentimiento negativo pre-respuesta
         _frustracion_signals = [
-            'ya me llamaron', 'dejen de llamar', 'otra vez', 'ya no me llamen',
+            'ya me llamaron', 'ya nos llamaron', 'dejen de llamar', 'otra vez', 'ya no me llamen',
             'estoy ocupado', 'no tengo tiempo', 'estoy en junta', 'ahorita no puedo',
             'no me interesa para nada', 'ya les dije que no',
             # FIX 906: Variaciones reales de queja detectadas en simulador masivo
@@ -1046,6 +1155,23 @@ class FSMEngine:
             print(f"  [FIX 906] Situación sensible detectada -> despedida empática")
             self.state = FSMState.DESPEDIDA
             return self._get_template("despedida_sensible_906")
+
+        # 1.04 FIX 958: Despedida prematura sin dato capturado
+        # En CAPTURANDO_CONTACTO, NO_INTEREST sin señales negativas claras → GPT_NARROW
+        # en vez de despedida. Evita 6 casos de despedida prematura.
+        if (intent == FSMIntent.NO_INTEREST and
+                self.state == FSMState.CAPTURANDO_CONTACTO and
+                not getattr(self.context, 'catalogo_prometido', False)):
+            _negativos_958 = [
+                'no me interesa', 'no nos interesa', 'no gracias', 'no, gracias',
+                'no quiero', 'no queremos', 'no necesito', 'no necesitamos',
+                'no por el momento', 'no lo necesito', 'quitenos', 'quiteme',
+                'no le interesa', 'no lo necesita',
+            ]
+            if not any(n in _texto_lower for n in _negativos_958):
+                # No hay señal negativa clara → dejar que GPT decida
+                print(f"  [FIX 958] NO_INTEREST sin señal negativa en CAPTURANDO_CONTACTO -> GPT_NARROW (anti-despedida-prematura)")
+                intent = FSMIntent.UNKNOWN  # GPT_NARROW via UNKNOWN catch-all
 
         # 1.5. Recovery: DESPEDIDA + CONFIRMATION cuando último fue ofrecer contacto
         if (self.state == FSMState.DESPEDIDA and
@@ -1394,6 +1520,16 @@ class FSMEngine:
             if nombre.lower() not in _no_nombres and len(nombre) >= 3:
                 self.context.datos_capturados['nombre_encargado'] = nombre
                 print(f"  [FIX 918] Dato extraído: nombre_encargado={nombre}")
+
+        # FIX 959: Detectar preferencia de canal correo/email del cliente
+        _correo_prefer_patterns_959 = [
+            'al correo', 'por correo', 'al email', 'por email', 'al mail', 'via correo',
+            'mandeme al correo', 'enviame al correo', 'correo mejor', 'mejor al correo',
+            'prefiero correo', 'prefiero el correo', 'mejor correo', 'correo electronico',
+        ]
+        if any(p in tn for p in _correo_prefer_patterns_959):
+            self.context.datos_capturados['prefiere_correo_959'] = True
+            print(f"  [FIX 959] Preferencia correo detectada en texto del cliente")
 
         # FIX 923: Detectar tono del cliente (informal vs formal)
         _informal_markers = [
@@ -2040,6 +2176,62 @@ class FSMEngine:
                         print(f"  [FIX 878/885B] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
                         # FIX 885B: BRUCE2551/1975 - 3er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
+
+            # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
+            # Si cliente expresó preferencia por correo/email en últimos 2 turnos del contexto
+            # y la FSM está a punto de confirmar un TELÉFONO, redirigir a pedir email.
+            if transition.template_key == "confirmar_telefono":
+                _correo_pref_ctx_959 = self.context.datos_capturados.get('prefiere_correo_959', False)
+                if not _correo_pref_ctx_959:
+                    # También revisar datos_parciales context desde _actualizar_prefiere_correo
+                    _hist_correo_959 = [
+                        'al correo', 'por correo', 'mi correo', 'al email', 'por email',
+                        'al mail', 'por mail', 'correo mejor', 'mejor al correo',
+                        'mandeme al correo', 'enviame al correo', 'via correo', 'via email',
+                    ]
+                    _src_959 = texto.lower()  # current turn (_texto_lower no disponible en _execute)
+                    _correo_pref_ctx_959 = any(h in _src_959 for h in _hist_correo_959)
+                if _correo_pref_ctx_959:
+                    print(f"  [FIX 959] confirmar_telefono pero cliente prefiere correo -> pedir correo")
+                    self.context.datos_capturados['prefiere_correo_959'] = True
+                    self.state = FSMState.DICTANDO_DATO  # Stay in data capture
+                    return "Claro, con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
+
+            # FIX 956: Doble despedida cuando cliente dice "gracias" post-confirmación
+            # confirmar_telefono/confirmar_correo ya incluye "Muchas gracias". Si el cliente
+            # dice "gracias" tras eso, NO emitir otra despedida — solo colgar (NOOP/empty).
+            if (transition.template_key == "despedida_catalogo_prometido" and
+                    any(k in self.context.templates_usados
+                        for k in ('confirmar_telefono', 'confirmar_correo', 'confirmar_dato_generico',
+                                  'confirmar_correccion_952'))):
+                print(f"  [FIX 956] despedida_catalogo_prometido post-confirmar -> colgar (anti-doble despedida)")
+                self.state = FSMState.DESPEDIDA
+                return None  # Colgar en silencio
+
+            # FIX 954: "Si, aqui estoy. Digame." en momento incorrecto
+            # En CAPTURANDO_CONTACTO/PITCH (pitch ya dado) → pedir contacto, no "aqui estoy"
+            # VERIFICATION debería ser checkeo de presencia solo en DICTANDO/BUSCANDO states
+            if (transition.template_key == "verificacion_aqui_estoy" and
+                    self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_PRESENTE)):
+                _veri_954_tmpl = (
+                    "pedir_whatsapp_o_correo_breve"
+                    if "pedir_whatsapp_o_correo_breve" not in self.context.templates_usados
+                    else "pedir_numero_directo_885"
+                )
+                print(f"  [FIX 954] verificacion_aqui_estoy en {self.state.value} -> {_veri_954_tmpl}")
+                return self._get_template(_veri_954_tmpl)
+
+            # FIX 955: "Si, adelante." post-número sin confirmar dato
+            # En DICTANDO_DATO, si datos_parciales tiene 8+ dígitos y recibimos "aja_si",
+            # hay que intentar confirmar en lugar de solo asentir.
+            # (La transición fue DICTATING_PARTIAL → DICTANDO_DATO → aja_si pero el número estaba casi completo)
+            if (transition.template_key == "aja_si" and
+                    self.state == FSMState.DICTANDO_DATO and
+                    len(self.context.datos_parciales) >= 8):
+                print(f"  [FIX 955] aja_si con {len(self.context.datos_parciales)} dígitos acumulados -> confirmar_telefono")
+                self.state = FSMState.CONTACTO_CAPTURADO
+                self.context.datos_parciales = ""
+                return self._get_template("confirmar_telefono")
 
             return self._get_template(transition.template_key)
 

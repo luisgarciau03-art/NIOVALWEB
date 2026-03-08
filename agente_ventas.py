@@ -2878,7 +2878,10 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
         # FIX 835 revisa canales_rechazados del FSM (TODA la conversación).
         # Si GPT pide un canal que el cliente rechazó en CUALQUIER turno → override
         # ============================================================
-        if not filtro_aplicado and getattr(self, 'fsm', None) and hasattr(self.fsm, 'context'):
+        # FIX 951: Incondicional — canal rechazado nunca debe aparecer en respuesta,
+        # incluso si otro filtro ya corrió. Cubre OOS-37-286 (GPT re-ofrece WA rechazado
+        # al responder pregunta comercial, cuando FIX 835 fue saltado por filtro_aplicado).
+        if getattr(self, 'fsm', None) and hasattr(self.fsm, 'context'):
             _rechazados_835 = getattr(self.fsm.context, 'canales_rechazados', [])
             if _rechazados_835:
                 _pide_rechazado_835 = None

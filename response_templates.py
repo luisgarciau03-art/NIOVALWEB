@@ -328,6 +328,21 @@ TEMPLATES = {
         "Que tenga muy buen dia.",
     ],
 
+    # FIX 950: Template para rechazo hostil / solicitud LFPDPPP de eliminar datos
+    # NO ofrecer retomar contacto. NO mencionar WhatsApp/correo. Cierre definitivo.
+    "despedida_hostil_950": [
+        "Disculpe la molestia, no era mi intencion incomodar. Que tenga buen dia.",
+        "Le ofrezco una disculpa. No le volveremos a marcar. Que tenga excelente dia.",
+    ],
+
+    # FIX 952: Confirmación de corrección de número/dato post-captura
+    # Usar {numero} como placeholder — se reemplaza en fsm_engine.py
+    "confirmar_correccion_952": [
+        "Perfecto, ya actualice el numero al {numero}. Le enviamos el catalogo a ese numero. Muchas gracias.",
+        "Listo, quedo registrado el {numero}. Le mandamos el catalogo por ahi. Que tenga buen dia.",
+        "Anotado, el numero correcto es el {numero}. Le enviamos el catalogo a ese. Gracias por avisar.",
+    ],
+
     # FIX 906: Template empatico para situaciones sensibles (fallecimiento, cierre)
     "despedida_sensible_906": [
         "Lamento mucho escuchar eso. Le ofrezco mis condolencias. "
