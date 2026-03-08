@@ -676,6 +676,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 994: "le escribo el correo" / "se lo anoto" = ofrece dato
         'le escribo el correo', 'le anoto mi correo', 'le anoto mi numero',
         'se lo anoto', 'se lo escribo',
+        # FIX 995: Tipos específicos de teléfono como dato
+        'mi telefono de oficina', 'mi celular es el', 'mi celular es',
+        'mi numero de celular', 'mi numero de oficina', 'mi numero fijo',
+        'el numero de la tienda', 'el numero del negocio',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -703,6 +707,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 992: Más variantes de ausencia
         'ahorita nadie', 'nadie ahorita', 'andan de viaje', 'se fue de viaje',
         'se fue de vacaciones', 'salio de viaje', 'esta de viaje',
+        # FIX 995: Encargado en otra área o atendiendo
+        'esta en la bodega', 'esta en el almacen', 'esta en el piso de venta',
+        'esta atendiendo un cliente', 'esta con un cliente', 'esta con visita',
+        'esta en caja', 'esta cargando mercancia', 'esta en el patio',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -835,6 +843,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'marque la siguiente', 'llame la siguiente', 'la proxima semana',
         'regresa en dos horas', 'regresa en una hora', 'llega al mediodia',
         'llega a mediodia', 'llega al rato', 'regresa al rato',
+        # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
+        'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
+        'lo comento con', 'voy a consultar', 'tengo que consultar',
+        'hay que verlo', 'hay que pensarlo', 'hay que consultarlo',
+        'me lo tiene que autorizar', 'tiene que autorizar', 'necesita autorizarlo',
+        'lo tengo que consultar', 'lo tenemos que consultar',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
