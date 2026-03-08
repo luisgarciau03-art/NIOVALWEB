@@ -595,6 +595,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mi numero es', 'el numero es', 'el correo es',
         'mandelo por whatsapp', 'por whatsapp', 'mandalo por whatsapp',
         'al whatsapp', 'a mi whatsapp', 'a mi correo',
+        # FIX 980: Variantes con 'wats' (abreviación informal de WhatsApp)
+        # ANTES: 'al wats'/'mandamelo al wats' caía en callback_guard ('mandame' substring)
+        # AHORA: offer_data se checa ANTES que callback_guard → OFFER_DATA correcto
+        'al wats', 'por wats', 'a mi wats', 'wats porfa', 'al correo esta bien',
+        'al correo si', 'al email', 'por email', 'mandamelo al', 'mandamelo por',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
