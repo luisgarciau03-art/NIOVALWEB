@@ -555,6 +555,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'trabajamos con alguien mas', 'ya trabajamos con alguien',
         'tenemos ya distribuidor', 'tenemos distribuidor', 'tenemos proveedor fijo',
         'ya tenemos a alguien', 'ya tenemos quien nos surta',
+        # FIX 1000: Rechazos formales/educados que contienen 'no esta' como substring FP
+        # IMPORTANTE: Deben estar ANTES del manager_absent check (que matchea 'no esta' en 'no estamos')
+        'no estamos en posicion', 'no estamos considerando', 'no consideramos necesario',
+        'no es de nuestro interes', 'no es de nuestro interés',
+        'estamos satisfechos con nuestros proveedores', 'contamos con todo lo necesario',
+        'por el momento contamos con', 'estamos bien cubiertos', 'no necesitamos cambiar',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -773,6 +779,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'le habla el propietario', 'le habla la propietaria',
         'el que habla es el dueno', 'el que habla es el propietario',
         'soy el socio', 'soy el gerente', 'soy la gerente',
+        # FIX 1000: "con él habla" = soy yo el encargado
+        'con el habla', 'con ella habla', 'con el mismo habla',
+
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
@@ -890,6 +899,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'a fin de mes', 'a finales del mes', 'a principios del mes',
         'principios del mes que entra', 'finales del mes que entra',
         'mejor marcame a fin', 'a fin del mes',
+        # FIX 1000: Callbacks formales/educados
+        'podria volver a contactarnos', 'contactenos la proxima',
+        'la proxima quincena', 'el siguiente trimestre', 'el proximo trimestre',
+        'el siguiente mes', 'a finales de mes', 'la quincena que viene',
         # FIX 998: "quién sabe" = no sabe cuando regresa = callback tentativo
         'quien sabe', 'ni idea', 'no se cuando',
         # FIX 999: Sin presupuesto = callback temporal
@@ -947,6 +960,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'quien me llama', 'de que compania', 'de que marca',
         # FIX 994: "y usted quién es" = pregunta identidad
         'y usted quien', 'y tu quien', 'y usted de donde', 'y usted que',
+        # FIX 1000: "quién le llama" = pregunta identidad
+        'quien le llama', 'quien me esta llamando', 'quien llama',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
@@ -1091,6 +1106,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 998: Interés tentativo / posibilista
         'pues puede que si', 'puede que si', 'quizas podria', 'tal vez podria',
         'pues quizas', 'pues tal vez', 'habria que ver',
+        # FIX 1000: Búsqueda activa de nuevos proveedores = interés real
+        'estamos considerando cambiar de proveedor', 'estamos buscando nuevos proveedores',
+        'nos vendria bien un nuevo proveedor', 'estamos buscando proveedor',
+        'queremos cambiar de proveedor', 'estamos evaluando opciones',
+        'estamos comparando precios', 'estamos cotizando',
     ]
     # FIX 884B: "digame" removido de interest substring - ya manejado en confirm_exact (FIX 884)
     # BRUCE2621: "Dígame. Fíjese que no." → "digame" substring match → INTEREST → pide WhatsApp
