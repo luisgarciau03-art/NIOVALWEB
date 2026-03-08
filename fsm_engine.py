@@ -540,6 +540,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no estoy interesado', 'no estoy interesada', 'no estamos interesados en eso',
         'no tenemos interes', 'no hay interes', 'no aplica para nosotros',
         'no aplica', 'no es para nosotros', 'no trabajamos con eso',
+        # FIX 997: "no manejo eso" = no aplica para el negocio → NO_INTEREST
+        'es que no manejo eso', 'no manejamos eso', 'no es nuestro giro',
+        'no aplica en nuestro giro', 'no trabajamos con eso',
         # FIX 992: Peticiones de no llamar más = rechazo definitivo
         'no nos llame', 'ya no nos llame', 'ya no marque', 'no marque mas',
         'no llame mas', 'ya no llame', 'no vuelva a llamar', 'no vuelva a marcar',
@@ -747,6 +750,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ella anda aqui', 'el esta aqui', 'aqui con usted', 'si con el',
         'si con ella', 'le atiende el encargado', 'le atiende la encargada',
         'con el encargado si', 'con la encargada si',
+        # FIX 997: "yo manejo eso" = yo soy el que toma decisiones
+        'yo manejo eso', 'yo lo manejo', 'yo me encargo de eso',
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
@@ -854,6 +859,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 996: "mejor llámennos" = callback (ellos llaman)
         'mejor llamamenos', 'mejor llamenos', 'llamamenos',
         'mejor nos llama', 'puede llamarnos', 'vuelva a llamarnos',
+        # FIX 997: "el próximo lunes/viernes" / "esta semana no" / "la semana que entra"
+        'el proximo lunes', 'el proximo martes', 'el proximo miercoles',
+        'el proximo jueves', 'el proximo viernes',
+        'marque el proximo', 'llame el proximo',
+        'esta semana no', 'esta semana no puedo', 'la semana que entra',
+        'la semana entrante', 'la semana siguiente',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
         'lo comento con', 'voy a consultar', 'tengo que consultar',
@@ -1005,6 +1016,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 996: Preguntas de precio implícitas (sin iniciar con question marker)
         'precio de mayoreo', 'precio de distribuidor', 'precio especial',
         'descuento por volumen', 'precio por volumen', 'manejo de precio',
+        # FIX 997: Servicios logísticos como preguntas sobre la empresa
+        'hacen entregas', 'manejan envios', 'hacen instalacion', 'tienen instalacion',
+        'hacen flete', 'manejan flete', 'tienen servicio a domicilio',
+        'llegan hasta aca', 'llegan a esta zona', 'hacen envio a',
         'tiempo de entrega', 'el tiempo de entrega', 'los tiempos de entrega',
         'catalogo en papel', 'prefiero catalogo en papel',
         'tienen pagina', 'tienen pagina web', 'tienen catalogo fisico',
