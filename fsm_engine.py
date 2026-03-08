@@ -593,6 +593,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 994: Políticas de privacidad como rechazo de dato
         'por politicas no podemos', 'por politicas no', 'politicas de privacidad',
         'no podemos por politicas', 'no puedo por politicas',
+        # FIX 996: Solo teléfono (rechazo de canales digitales)
+        'solo manejo llamadas', 'solo recibo llamadas', 'prefiero por telefono',
+        'mejor por telefono', 'solo por telefono', 'nada mas por telefono',
+        'prefiero llamadas', 'solo llamadas',
         # FIX 983: Variantes con artículo 'el' que rompen substring match
         # 'no tengo email' matchea pero 'no tengo el email' NO (artículo intermedio)
         'no tengo el email', 'no tengo el correo', 'no tengo el whatsapp',
@@ -768,6 +772,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'permiteme', 'un momento', 'un momentito', 'un segundo',
         'dejeme ver', 'le comunico', 'se lo paso', 'se lo comunico',
         'ahorita le paso', 'ahorita se lo comunico',
+        # FIX 996: Más variantes de transferencia
+        'espere le busco', 'espere le llamo', 'le llamo al encargado',
+        'le llamo a la encargada', 'voy por el encargado', 'voy por ella',
+        'voy por el', 'ahorita le busco', 'ahorita le llamo',
         # FIX 896: BRUCE2580 - Transfer en 3ra persona
         'te comunican', 'te pasan', 'te transfieren', 'te paso',
         'ahi te comunican', 'ahi te pasan', 'te van a pasar',
@@ -843,6 +851,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'marque la siguiente', 'llame la siguiente', 'la proxima semana',
         'regresa en dos horas', 'regresa en una hora', 'llega al mediodia',
         'llega a mediodia', 'llega al rato', 'regresa al rato',
+        # FIX 996: "mejor llámennos" = callback (ellos llaman)
+        'mejor llamamenos', 'mejor llamenos', 'llamamenos',
+        'mejor nos llama', 'puede llamarnos', 'vuelva a llamarnos',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
         'lo comento con', 'voy a consultar', 'tengo que consultar',
@@ -991,6 +1002,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 987: Variantes coloquiales de preguntas sobre productos
         'cuales son sus productos', 'cuales productos', 'que productos tienen',
         'que tienen de productos', 'sus productos', 'que productos manejan',
+        # FIX 996: Preguntas de precio implícitas (sin iniciar con question marker)
+        'precio de mayoreo', 'precio de distribuidor', 'precio especial',
+        'descuento por volumen', 'precio por volumen', 'manejo de precio',
         'tiempo de entrega', 'el tiempo de entrega', 'los tiempos de entrega',
         'catalogo en papel', 'prefiero catalogo en papel',
         'tienen pagina', 'tienen pagina web', 'tienen catalogo fisico',
@@ -1016,6 +1030,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'podria ser', 'quizas si', 'tal vez si', 'seria bueno', 'puede ser',
         'pues si podria', 'cabria la posibilidad', 'habria que ver',
         'estaria bien', 'algo asi', 'suena bien eso',
+        # FIX 996: Preguntas implícitas de precio sin question marker
+        'a cuanto me lo dejan', 'a como me lo dan', 'a cuanto me sale',
+        'precio especial', 'tienen precio especial', 'precio por volumen',
+        'hacen descuento por volumen', 'manejan precio de mayoreo',
+        'precio de mayoreo', 'precio de distribuidor',
+        # FIX 996: Canal alternativo social = ofrecer dato (Bruce no usa pero cliente confirma)
+        'por mensaje de whatsapp', 'por whatsapp mensaje', 'mensaje de wa',
         # FIX 991: Más expresiones de interés coloquial
         'seria una buena opcion', 'seria buena opcion', 'seria interesante',
         'me gustaria recibir', 'me gustaria conocer', 'me gustaria ver',
