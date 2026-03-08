@@ -530,6 +530,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no estoy interesado', 'no estoy interesada', 'no estamos interesados en eso',
         'no tenemos interes', 'no hay interes', 'no aplica para nosotros',
         'no aplica', 'no es para nosotros', 'no trabajamos con eso',
+        # FIX 992: Peticiones de no llamar más = rechazo definitivo
+        'no nos llame', 'ya no nos llame', 'ya no marque', 'no marque mas',
+        'no llame mas', 'ya no llame', 'no vuelva a llamar', 'no vuelva a marcar',
+        'borrenos de su lista', 'quitenos de su lista', 'borreme de su lista',
     ]
     if any(n in tn for n in no_interest):
         return FSMIntent.NO_INTEREST
@@ -675,6 +679,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'ahorita esta ocupado', 'ahorita esta ocupada', 'esta en una llamada',
         'anda en una llamada', 'anda en junta', 'anda en reunion',
         'no esta disponible', 'no esta aqui ahorita', 'ahorita no se encuentra',
+        # FIX 992: Más variantes de ausencia
+        'ahorita nadie', 'nadie ahorita', 'andan de viaje', 'se fue de viaje',
+        'se fue de vacaciones', 'salio de viaje', 'esta de viaje',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -702,6 +709,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'habla el encargado', 'habla la encargada', 'encargado habla',
         # FIX 991: "ando yo aqui" = soy yo el que está (coloquial)
         'ando yo aqui', 'ando aqui yo', 'aqui andamos', 'yo ando aqui',
+        # FIX 992: Variantes de "aquí estoy / soy yo el encargado"
+        'para servirle', 'para servirles', 'para servir', 'a sus ordenes',
+        'ella anda aqui', 'el esta aqui', 'aqui con usted', 'si con el',
+        'si con ella', 'le atiende el encargado', 'le atiende la encargada',
+        'con el encargado si', 'con la encargada si',
         # FIX 988: Quién toma decisiones de compra = encargado
         'soy la que compra', 'soy el que compra', 'soy quien compra',
         'yo tomo las decisiones', 'yo decido las compras', 'yo soy quien decide',
