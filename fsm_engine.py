@@ -1884,7 +1884,11 @@ class FSMEngine:
         add(S.SALUDO, I.CONTINUATION,  S.SALUDO, A.NOOP, None)
 
         # === PITCH ===
-        add(S.PITCH, I.CONFIRMATION,   S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
+        # FIX 985: PITCH + CONFIRMATION → ENCARGADO_PRESENTE (no BUSCANDO_ENCARGADO)
+        # pitch_inicial siempre termina con "¿Se encontrará el encargado?" →
+        # cliente dice "Sí" = manager presente → ir directo a captura contacto.
+        # ANTES: BUSCANDO_ENCARGADO + "preguntar_encargado" → pregunta REPETIDA (BRUCE2527)
+        add(S.PITCH, I.CONFIRMATION,   S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.PITCH, I.INTEREST,       S.BUSCANDO_ENCARGADO, A.TEMPLATE, "preguntar_encargado")
         add(S.PITCH, I.QUESTION,       S.PITCH, A.GPT_NARROW, "responder_pregunta_producto")
         add(S.PITCH, I.IDENTITY,       S.PITCH, A.TEMPLATE, "identificacion_nioval")

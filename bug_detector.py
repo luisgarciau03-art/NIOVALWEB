@@ -494,7 +494,11 @@ class ContentAnalyzer:
             # pregunta "¿Quién habla?" varias veces → respuesta correcta, no repetición.
             _IDENTITY_RESPONSE_869 = re.compile(
                 r'(mi nombre es|le llamo de|me llamo|soy bruce|le hablo de|'
-                r'somos distribuidores de productos ferreteros de guadalajara)',
+                r'somos distribuidores de productos ferreteros de guadalajara|'
+                # FIX 986: "¿Le puedo dejar mi número?" en OFRECIENDO_CONTACTO es correcto
+                # cuando cliente primero rechaza datos suyos y luego reconsidera.
+                # La repetición es el FSM ofreciendo el número de Bruce como alternativa.
+                r'le puedo dejar mi n[uú]mero|puedo dejar.*n[uú]mero|dejar mi n[uú]mero)',
                 re.IGNORECASE
             )
             preguntas = []
