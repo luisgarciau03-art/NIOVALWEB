@@ -566,6 +566,28 @@ class ContentAnalyzer:
                 _has_callback_crosstalk = True
                 print(f"  [FIX 892B] Llamada ultra-larga ({len(respuestas)} resp Bruce, {len(conv) if conv else 0} conv) → asumir cross-talk (anti-PREGUNTA_REPETIDA)")
 
+            # FIX 946: Si el cliente está dictando un número dígito a dígito (turnos cortos
+            # con palabras numéricas o dígitos solos), PREGUNTA_REPETIDA por número es FP.
+            # OOS-13-14: Cliente dice "Tres", "Tres", "Uno dos", "Nueve cero..." → Bruce pregunta
+            # "¿me puede dar el número completo?" múltiples veces → comportamiento correcto ante
+            # fragmentos parciales; no es bug real.
+            _DIGIT_WORDS_946 = re.compile(
+                r'^(cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|'
+                r'diez|once|doce|trece|catorce|quince|veinte|treinta|'
+                r'\d{1,4}|[0-9\s]{1,8})$',
+                re.IGNORECASE
+            )
+            _cliente_dicta_digito_946 = False
+            if conv:
+                _msgs_cliente = [(i, t) for i, (r, t) in enumerate(conv) if r == 'cliente' and t.strip()]
+                _short_numeric = sum(
+                    1 for _, t in _msgs_cliente
+                    if len(t.split()) <= 3 and _DIGIT_WORDS_946.search(t.strip())
+                )
+                if _short_numeric >= 3:
+                    _cliente_dicta_digito_946 = True
+                    print(f"  [FIX 946] Detectado dictado dígito-a-dígito ({_short_numeric} turnos cortos numéricos) → PREGUNTA_REPETIDA suprimido")
+
             # FIX 943: Si el cliente ya confirmo ser el encargado, preguntar de nuevo
             # por el encargado es un falso positivo de GPT-variance en dictacion de email.
             _CLIENTE_CONFIRMO_ENCARGADO_943 = re.compile(
@@ -588,6 +610,10 @@ class ContentAnalyzer:
                 # FIX 869D: callback cross-talk con >10 turnos → skip contact Qs entirely
                 _min_count = 99 if (_has_callback_crosstalk and _is_contact) else 2
                 if count >= _min_count:
+                    # FIX 946: Cliente dictando número dígito a dígito → pedir número completo es correcto
+                    if _cliente_dicta_digito_946 and any(w in preg for w in ('numero', 'completo', 'whatsapp', 'telefono')):
+                        print(f"  [FIX 946] SKIP PREGUNTA_REPETIDA número: cliente dictando dígito a dígito")
+                        continue
                     # FIX 943: Encargado ya confirmado → preguntar de nuevo es FP de GPT-variance
                     if _cliente_ya_confirmo_encargado and _PREGUNTAR_ENCARGADO_943.search(preg):
                         print(f"  [FIX 943] SKIP PREGUNTA_REPETIDA encargado: cliente ya confirmo ser encargado")
@@ -806,6 +832,27 @@ class ContentAnalyzer:
 
             if not bruce_respondio_despues:
                 texto_dato = conv[ultimo_dato_cliente_idx][1]
+
+                # FIX 947: Si el último mensaje del cliente es una corrección de número
+                # ("No no, el celular es solo XXXX" / "Perdón, es XXXX" / "Me equivoqué"),
+                # y hay un mensaje de Bruce que confirmó datos antes → FP de scenario truncado.
+                _CORRECCION_947 = re.compile(
+                    r'(no\s+no[,.]|perd[oó]n[,.]|disculpe[,.]|me\s+equivoqu[eé]|'
+                    r'el\s+(celular|whatsapp|n[uú]mero)\s+(es\s+)?solo|'
+                    r'mejor\s+(?:use|usa|utilice)\s+el)',
+                    re.IGNORECASE
+                )
+                _es_correccion_947 = _CORRECCION_947.search(texto_dato)
+                if _es_correccion_947:
+                    # Verificar si Bruce dio alguna respuesta antes (no es silencio total)
+                    _bruce_respondio_antes = any(
+                        r == 'bruce' and t.strip()
+                        for r, t in conv[:ultimo_dato_cliente_idx]
+                    )
+                    if _bruce_respondio_antes:
+                        print(f"  [FIX 947] SKIP DATO_SIN_RESPUESTA: corrección al final de escenario truncado (Bruce sí respondió antes)")
+                        return bugs  # FP: corrección en último turno, escenario truncado
+
                 bugs.append({
                     "tipo": "DATO_SIN_RESPUESTA",
                     "severidad": CRITICO,
@@ -1202,6 +1249,7 @@ class ContentAnalyzer:
         r'prefiero (?:correo|whatsapp|que me llamen|email|tel[eé]fono)|'
         r'por (?:correo|whatsapp) mejor|'
         r'mand[ea]me(?:lo)? por (?:correo|whatsapp|email)|'
+        r'mand[ea](?:me|lo)?.+(?:correo|email)|'
         r'env[ií]ame(?:lo)? por (?:correo|whatsapp|email)|'
         r'mejor.+(?:correo|whatsapp|email)|'
         r'(?:d[ea]me|dame).+(?:correo|whatsapp|email))',

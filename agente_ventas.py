@@ -2918,6 +2918,55 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         filtro_aplicado = True
 
         # ============================================================
+        # FIX 945: PREFERENCIA_IGNORADA - Cliente dice "correo" como canal preferido
+        # pero GPT responde pidiendo WhatsApp. Detectado en OOS-13-16, OOS-15-13, OOS-17-09.
+        # Patrón: cliente menciona "correo/email" como canal → Bruce pide WhatsApp → override.
+        # INCONDICIONAL: PREFERENCIA_IGNORADA es error crítico, corre siempre.
+        # ============================================================
+        if True:  # FIX 945: incondicional — no gated por filtro_aplicado
+            _PREFIERE_CORREO_945 = re.compile(
+                r'(mejor.*(?:correo|email)|al\s+correo|por\s+correo|'
+                r'mand[ae](?:me|lo)?.+(?:correo|email)|'
+                r'env[ií][ae](?:me|lo)?.+(?:correo|email)|'
+                r'(?:correo|email)\s+(?:por favor|mejor|si|esta bien|entonces))',
+                re.IGNORECASE
+            )
+            _BRUCE_PIDE_WA_945 = re.compile(r'whatsapp', re.IGNORECASE)
+            _BRUCE_PIDE_CORREO_945 = re.compile(r'correo|email', re.IGNORECASE)
+
+            # Revisar últimos 2 mensajes del cliente por si la preferencia fue antes
+            _ultimos_cliente_945 = []
+            for _item_945 in reversed(self.conversation_history):
+                if isinstance(_item_945, dict):
+                    _rr_945 = _item_945.get('role', '')
+                    _tt_945 = _item_945.get('content', '') or ''
+                else:
+                    continue
+                if _rr_945 == 'user' and _tt_945.strip():
+                    _ultimos_cliente_945.append(_tt_945.lower())
+                    if len(_ultimos_cliente_945) >= 2:
+                        break
+
+            _cliente_prefiere_correo_945 = any(
+                _PREFIERE_CORREO_945.search(msg) for msg in _ultimos_cliente_945
+            )
+            _bruce_pide_wa_945 = _BRUCE_PIDE_WA_945.search(respuesta)
+
+            if _cliente_prefiere_correo_945 and _bruce_pide_wa_945:
+                # Cliente prefiere correo pero Bruce pide WhatsApp → override
+                _resp_orig_945 = respuesta
+                # Si Bruce ya tiene la parte de "¿Me podría..." reemplazar con correo
+                if '?' in respuesta:
+                    respuesta = "Claro, ¿me podria proporcionar su correo electronico?"
+                else:
+                    respuesta = "Con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
+                respuesta_lower = respuesta.lower()
+                print(f"[OK] FIX 945: PREFERENCIA_IGNORADA — cliente prefirió correo, Bruce pedía WA → override")
+                print(f"   Original: '{_resp_orig_945[:80]}'")
+                print(f"   Corregida: '{respuesta[:60]}'")
+                filtro_aplicado = True
+
+        # ============================================================
         # FIX 667B: BRUCE2173 - GPT_LOGICA_ROTA (Bruce ignora información clave)
         # "esa no es la sucursal correcta" → Bruce pide datos de esa sucursal (INCORRECTO)
         # FIX 646A regla #3 en system prompt NO funciona → mover a POST-FILTER
@@ -10458,6 +10507,29 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 if fsm_result is not None:
                     # FIX 762: Sync FSM state/data back to agent before returning
                     self._sync_fsm_to_agent(respuesta_cliente, fsm_result)
+                    # FIX 945B: PREFERENCIA_IGNORADA inline check antes de retornar respuesta FSM
+                    # FSM bypasa _filtrar_respuesta_post_gpt, por eso el check debe ir aqui tambien
+                    try:
+                        import re as _re945b
+                        _rc945 = respuesta_cliente.lower() if respuesta_cliente else ""
+                        _CORREO_945B = _re945b.compile(
+                            r'(mejor.*(?:correo|email)|al\s+correo|por\s+correo|'
+                            r'mand[ae](?:me|lo|le)?.+(?:correo|email)|'
+                            r'env[ií][ae](?:me|lo|le)?.+(?:correo|email)|'
+                            r'(?:correo|email)\s+(?:por favor|mejor|si|esta bien|entonces))',
+                            _re945b.IGNORECASE
+                        )
+                        if (_CORREO_945B.search(_rc945) and
+                                _re945b.search(r'whatsapp', fsm_result, _re945b.IGNORECASE)):
+                            _fsm_orig_945b = fsm_result
+                            if '?' in fsm_result:
+                                fsm_result = "Claro, ¿me podria proporcionar su correo electronico?"
+                            else:
+                                fsm_result = "Con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
+                            print(f"[OK] FIX 945B: PREFERENCIA_IGNORADA en FSM - override")
+                            print(f"   Original FSM: '{_fsm_orig_945b[:80]}'")
+                    except Exception:
+                        pass
                     self.conversation_history.append({
                         "role": "assistant",
                         "content": fsm_result
@@ -11000,6 +11072,32 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                                           'a qué hora', 'a que hora']):
                     self.esperando_hora_callback = True
                     print(f"   FIX 620B: esperando_hora_callback=True (patrón {tipo_patron_620} pregunta hora)")
+
+            # FIX 945C: PREFERENCIA_IGNORADA inline check antes de retornar respuesta de patrón
+            # Patrón detector también bypasa _filtrar_respuesta_post_gpt
+            try:
+                import re as _re945p
+                _rc945p = respuesta_cliente.lower() if respuesta_cliente else ""
+                _CORREO_945P = _re945p.compile(
+                    r'(mejor.*(?:correo|email)|al\s+correo|por\s+correo|'
+                    r'mand[ae](?:me|lo|le)?.+(?:correo|email)|'
+                    r'env[ií][ae](?:me|lo|le)?.+(?:correo|email)|'
+                    r'(?:correo|email)\s+(?:por favor|mejor|si|esta bien|entonces))',
+                    _re945p.IGNORECASE
+                )
+                _resp_patron_945p = patron_detectado['respuesta']
+                if (_CORREO_945P.search(_rc945p) and
+                        _re945p.search(r'whatsapp', _resp_patron_945p, _re945p.IGNORECASE)):
+                    if '?' in _resp_patron_945p:
+                        patron_detectado = dict(patron_detectado)
+                        patron_detectado['respuesta'] = "Claro, ¿me podria proporcionar su correo electronico?"
+                    else:
+                        patron_detectado = dict(patron_detectado)
+                        patron_detectado['respuesta'] = "Con gusto le envio la informacion al correo. ¿Me podria proporcionar su correo electronico?"
+                    print(f"[OK] FIX 945C: PREFERENCIA_IGNORADA en patron - override")
+                    print(f"   Original patron: '{_resp_patron_945p[:80]}'")
+            except Exception:
+                pass
 
             # Agregar respuesta al historial
             self.conversation_history.append({
