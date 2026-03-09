@@ -904,11 +904,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo soy la que decide', 'yo me encargo de eso', 'yo compro aqui',
         'yo soy el responsable', 'yo soy la responsable', 'yo soy el dueno',
         'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
-        # FIX 1081: Intermediario da nombre del encargado (post-relay) → MANAGER_PRESENT
-        # "El encargado es el señor Juan" → identificacion_breve_1068 en estado DESPEDIDA
-        'el encargado es', 'la encargada es', 'el dueno es', 'la duena es',
-        'el jefe es', 'la jefa es', 'el gerente es', 'el responsable es',
-        'se llama el encargado', 'el nombre del encargado', 'la nombre del encargado',
+        # NOTE: 'el encargado es X' (3rd-person info from intermediary) intentionally NOT here
+        # FIX 1082 handles those via UNKNOWN → "Muchas gracias por la informacion" (no re-pitch)
     ]
     if any(m in tn for m in manager_present):
         # FIX 1075: Mala experiencia previa con NIOVAL → GPT maneja empáticamente
@@ -2093,10 +2090,15 @@ class FSMEngine:
             # Phase 2: state is in active set -> intercept
             # Skip HANGUP/NOOP (let existing code handle closing)
             if transition.action_type in (ActionType.HANGUP, ActionType.NOOP):
-                # FIX 1071: En DESPEDIDA, retornar "" en vez de None para prevenir GPT_FALLBACK
+                # FIX 1071: En DESPEDIDA, retornar respuesta breve en vez de None para prevenir GPT_FALLBACK
                 # None → agente_ventas.py llama GPT → posible OFERTA_POST_DESPEDIDA (OOS-12-01)
-                # "" → bypass GPT, silencio (conversacion ya terminada)
+                # FIX 1082: En vez de "" (silencio), usar despedida breve si hay texto sustancial del cliente
+                # Evita RESPUESTA_VACIA cuando intermediario da info post-relay ("Se llama X", "Es la Sra Y")
                 if self.state == FSMState.DESPEDIDA:
+                    _texto_len_1082 = len(texto.strip().split()) if texto else 0
+                    if _texto_len_1082 >= 2:
+                        print(f"  [FIX 1082] DESPEDIDA + {intent.value} + texto sustancial -> despedida breve (anti-RESPUESTA_VACIA)")
+                        return self._get_template("despedida_reconfirmacion_1082")
                     print(f"  [FIX 1071] DESPEDIDA + {intent.value} + {transition.action_type.value} -> '' (anti-GPT)")
                     return ""
                 print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "

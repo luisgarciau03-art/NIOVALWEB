@@ -67,6 +67,11 @@ TEMPLATES = {
     "identificacion_breve_1068": [
         "Le llamo de NIOVAL, distribuidores de ferreteria. Que tenga excelente dia.",
     ],
+    # FIX 1082: Despedida breve cuando intermediario da info post-relay en estado DESPEDIDA
+    # "Se llama el señor Juan" / "Es la señora Lupita" → acknowled without re-opening sale
+    "despedida_reconfirmacion_1082": [
+        "Muchas gracias por la informacion. Que tenga excelente dia.",
+    ],
 
     # === FIX 894: Templates para IDENTITY_QUESTION y WHAT_OFFER ===
     # Evitan que GPT genere respuestas genéricas cuando cliente pregunta quién es Bruce
