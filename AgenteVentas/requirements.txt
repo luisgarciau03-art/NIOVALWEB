@@ -1,0 +1,47 @@
+# ============================================
+# REQUIREMENTS - NIOVAL Sistema de Llamadas
+# Agente de Ventas Bruce W + Automatización
+# ============================================
+
+# ===== CORE AI =====
+openai>=1.12.0              # GPT-4o para conversaciones
+anthropic>=0.25.0           # Claude (opcional, para análisis)
+
+# ===== TEXT-TO-SPEECH =====
+elevenlabs>=1.0.0           # Voz de Bruce W
+
+# ===== TELEPHONY =====
+twilio>=8.10.0              # Sistema de llamadas
+
+# ===== GOOGLE SHEETS INTEGRATION =====
+gspread>=5.12.0             # Google Sheets API
+google-auth>=2.23.0         # Autenticación Google
+google-auth-oauthlib>=1.1.0 # OAuth2 para Google
+google-auth-httplib2>=0.1.1 # HTTP lib para Google Auth
+
+# ===== DATA PROCESSING =====
+pandas>=2.0.0               # Manejo de datos
+openpyxl>=3.1.0             # Excel (respaldos)
+
+# ===== WEB FRAMEWORK =====
+flask>=3.0.0                # Servidor webhooks
+flask-cors>=4.0.0           # CORS para API
+
+# ===== SCHEDULING =====
+schedule>=1.2.0             # Programación de tareas automáticas
+
+# ===== ENVIRONMENT =====
+python-dotenv>=1.0.0        # Variables de entorno
+
+# ===== UTILITIES =====
+requests>=2.31.0            # HTTP requests
+pytz>=2023.3                # Zonas horarias
+
+# ===== AUDIO PROCESSING (Opcional) =====
+# pydub>=0.25.1             # Procesamiento de audio
+# pyaudio>=0.2.13           # Audio I/O
+
+# ===== ADVANCED FEATURES (Opcional) =====
+# textblob>=0.17.0          # Análisis de sentimientos
+# nltk>=3.8                 # Procesamiento de lenguaje natural
+# loguru>=0.7.0             # Logging avanzado

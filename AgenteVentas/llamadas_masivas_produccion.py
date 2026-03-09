@@ -1,0 +1,470 @@
+# -*- coding: utf-8 -*-
+"""
+Sistema de Llamadas Masivas en Producción (Railway)
+Lee contactos de Google Sheets y hace llamadas reales vía Twilio/Railway
+"""
+
+import os
+import sys
+import requests
+import time
+from dotenv import load_dotenv
+from nioval_sheets_adapter import NiovalSheetsAdapter
+from twilio.rest import Client
+
+# Configurar encoding UTF-8 para Windows
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+load_dotenv()
+
+# URL del servidor en Railway
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://nioval-webhook-server-production.up.railway.app")
+
+# Configuración de Telegram para notificaciones
+TELEGRAM_BOTS = [
+    {
+        "token": "8537624347:AAHDIe60mb2TkdDk4vqlcS2tpakTB_5D4qE",
+        "chat_id": "7314842427",
+        "nombre": "Bot 1"
+    },
+    {
+        "token": "8524460310:AAFAwph27rSagooKTNSGXauBycpDpCjhKjI",
+        "chat_id": "5838212022",
+        "nombre": "Bot 2"
+    }
+]
+
+
+def notificar_telegram(mensaje: str):
+    """Envía notificación a Telegram cuando terminen las llamadas"""
+    for bot in TELEGRAM_BOTS:
+        try:
+            url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
+            data = {
+                "chat_id": bot['chat_id'],
+                "text": mensaje,
+                "parse_mode": "HTML"
+            }
+            response = requests.post(url, data=data, timeout=10)
+            if response.status_code == 200:
+                print(f" Notificación enviada a {bot['nombre']}")
+        except Exception as e:
+            print(f" Error notificando a {bot['nombre']}: {e}")
+
+# Credenciales Twilio
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+
+
+class SistemaLlamadasMasivas:
+    """Sistema para hacer llamadas masivas en producción"""
+
+    def __init__(self):
+        """Inicializa conexión con Google Sheets y Twilio"""
+        print("\n Inicializando Sistema de Llamadas Masivas...")
+        self.sheets_adapter = NiovalSheetsAdapter()
+
+        # FIX 178: Inicializar cliente Twilio para verificar estado de llamadas
+        if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+            self.twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+            print(" Cliente Twilio inicializado")
+        else:
+            self.twilio_client = None
+            print("  Cliente Twilio no disponible (credenciales faltantes)")
+
+        print(" Conectado a Google Sheets\n")
+
+    def ejecutar_llamadas(self, cantidad: int = 10, delay_entre_llamadas: int = 10, pedir_confirmacion: bool = True):
+        """
+        FIX 88: Ejecuta llamadas CONSECUTIVAS (una tras otra, esperando a que termine cada una)
+
+        Args:
+            cantidad: Número de llamadas a realizar
+            delay_entre_llamadas: Segundos de espera DESPUÉS de que termine una llamada (default: 10)
+            pedir_confirmacion: Si False, omite mensaje de confirmación (default: True)
+        """
+        from datetime import datetime
+
+        print("\n" + "=" * 60)
+        print(f" INICIANDO LLAMADAS MASIVAS EN PRODUCCIÓN")
+        print("=" * 60 + "\n")
+
+        # Registrar hora de inicio
+        hora_inicio = datetime.now()
+        print(f" Hora de inicio: {hora_inicio.strftime('%H:%M:%S')}\n")
+
+        # Obtener contactos pendientes (sin valor en columna F)
+        print(" Obteniendo contactos pendientes de Google Sheets...")
+        contactos = self.sheets_adapter.obtener_contactos_pendientes(limite=cantidad)
+
+        if not contactos:
+            print("ℹ  No hay contactos pendientes")
+            return
+
+        print(f" Encontrados {len(contactos)} contactos pendientes\n")
+
+        # Mostrar primeros contactos
+        print(" Primeros 3 contactos:")
+        for c in contactos[:3]:
+            print(f"   Fila {c['fila']}: {c['nombre_negocio']} - {c['telefono']}")
+
+        print(f"\n Se realizarán {len(contactos)} llamadas")
+        print(f"  Delay entre llamadas: {delay_entre_llamadas} segundos\n")
+
+        # Confirmar (opcional)
+        if pedir_confirmacion:
+            confirmar = input("  ¿Deseas continuar? (s/n): ").strip().lower()
+            if confirmar != 's':
+                print(" Cancelado")
+                return
+
+        # Ejecutar llamadas
+        resultados = {
+            'exitosas': 0,
+            'fallidas': 0,
+            'total': len(contactos),
+            'contactos_fallidos': []  # Lista de contactos que fallaron
+        }
+
+        for i, contacto in enumerate(contactos, 1):
+            print("\n" + "=" * 60)
+            print(f" LLAMADA {i}/{len(contactos)} - PROGRESO: {round(i/len(contactos)*100)}%")
+            print("=" * 60 + "\n")
+
+            fila = contacto['fila']
+            nombre = contacto['nombre_negocio']
+            telefono = contacto['telefono']
+
+            print(f" Contacto #{i}:")
+            print(f"   Fila: {fila}")
+            print(f"   Negocio: {nombre}")
+            print(f"   Teléfono: {telefono}")
+            print(f"   Progreso: {i}/{len(contactos)} ({round(i/len(contactos)*100)}%)")
+
+            # FIX 88: Hacer llamada vía Railway y obtener Call SID
+            print(f"\n Iniciando llamada...")
+            call_sid = self._iniciar_llamada_railway(contacto)
+
+            if call_sid:
+                resultados['exitosas'] += 1
+                print(f" Llamada iniciada - Call SID: {call_sid[:15]}...")
+
+                # FIX 178: ESPERAR A QUE LA LLAMADA TERMINE VERIFICANDO ESTADO REAL
+                print(f" Esperando finalización de llamada...")
+                duracion = self._esperar_fin_llamada(call_sid, contacto)
+                if duracion is not None:
+                    print(f" Llamada completada - Duración: {duracion}s")
+                else:
+                    print("  No se pudo verificar finalización de llamada")
+            else:
+                resultados['fallidas'] += 1
+                resultados['contactos_fallidos'].append({
+                    'nombre': nombre,
+                    'telefono': telefono,
+                    'fila': fila
+                })
+                print(" Error al iniciar llamada")
+
+            # Mostrar resumen parcial
+            print(f"\n Resumen parcial: {resultados['exitosas']} exitosas / {resultados['fallidas']} fallidas de {i} llamadas")
+
+            # FIX 88: Esperar delay DESPUÉS de que termine la llamada (excepto en la última)
+            if i < len(contactos):
+                print(f"\n  Esperando {delay_entre_llamadas}s antes de la siguiente llamada...")
+                time.sleep(delay_entre_llamadas)
+
+        # Calcular tiempos
+        hora_fin = datetime.now()
+        duracion_total = hora_fin - hora_inicio
+        minutos = int(duracion_total.total_seconds() // 60)
+        segundos = int(duracion_total.total_seconds() % 60)
+
+        # Resumen final
+        print("\n" + "=" * 60)
+        print(" RESUMEN DE LLAMADAS")
+        print("=" * 60)
+        print(f"Total: {resultados['total']}")
+        print(f" Exitosas: {resultados['exitosas']}")
+        print(f" Fallidas: {resultados['fallidas']}")
+        tasa_exito = round(resultados['exitosas']/resultados['total']*100, 1)
+        print(f" Tasa de éxito: {tasa_exito}%")
+        print(f" Inicio: {hora_inicio.strftime('%H:%M:%S')}")
+        print(f" Fin: {hora_fin.strftime('%H:%M:%S')}")
+        print(f" Duración: {minutos}m {segundos}s")
+        print("=" * 60 + "\n")
+
+        # Notificar por Telegram
+        mensaje_telegram = f"""<b>LLAMADAS MASIVAS COMPLETADAS</b>
+
+<b>Resumen:</b>
+Total: {resultados['total']}
+Exitosas: {resultados['exitosas']}
+Fallidas: {resultados['fallidas']}
+Tasa de éxito: {tasa_exito}%
+
+<b>Tiempos:</b>
+Inicio: {hora_inicio.strftime('%H:%M:%S')}
+Fin: {hora_fin.strftime('%H:%M:%S')}
+Duración total: {minutos}m {segundos}s"""
+
+        # Agregar lista de fallidos si hay
+        if resultados['contactos_fallidos']:
+            mensaje_telegram += "\n\n<b>Contactos fallidos:</b>"
+            for cf in resultados['contactos_fallidos'][:10]:  # Máximo 10 para no saturar
+                mensaje_telegram += f"\n- {cf['nombre']} ({cf['telefono']})"
+            if len(resultados['contactos_fallidos']) > 10:
+                mensaje_telegram += f"\n... y {len(resultados['contactos_fallidos']) - 10} más"
+
+        print(" Enviando notificación a Telegram...")
+        notificar_telegram(mensaje_telegram)
+
+    def _iniciar_llamada_railway(self, contacto: dict) -> str:
+        """
+        FIX 88: Inicia una llamada a través de Railway
+
+        Args:
+            contacto: Diccionario completo con toda la información del contacto
+
+        Returns:
+            Call SID si se inició correctamente, None si hubo error
+        """
+        try:
+            url = f"{WEBHOOK_URL}/iniciar-llamada"
+
+            # Referencia ya viene incluida en el contacto desde obtener_contactos_pendientes
+            referencia = contacto.get('referencia', '')
+            if referencia:
+                print(f" Referencia encontrada: {referencia[:50]}...")
+
+            # Enviar contacto completo con TODA la información
+            payload = {
+                "telefono": contacto['telefono'],
+                "nombre_negocio": contacto['nombre_negocio'],
+                "contacto_info": contacto,  # Enviar TODO el diccionario
+                # FIX 179: Deshabilitar reintentos automáticos para evitar empalmes
+                "deshabilitar_reintentos": True
+            }
+
+            print(f" Enviando solicitud a Railway: {url}")
+
+            response = requests.post(url, json=payload, timeout=10)
+
+            if response.status_code == 200:
+                data = response.json()
+                call_sid = data.get('call_sid', None)
+                print(f" Call SID: {call_sid}")
+                return call_sid  # FIX 88: Retornar Call SID
+            else:
+                print(f" Error HTTP {response.status_code}: {response.text}")
+                return None
+
+        except Exception as e:
+            print(f" Error al iniciar llamada: {e}")
+            return None
+
+    def _esperar_fin_llamada(self, call_sid: str, contacto: dict, max_tiempo_espera: int = 180) -> int:
+        """
+        FIX 178: Verifica el estado REAL de la llamada en Twilio hasta que termine
+        FIX 180: Muestra información detallada del contacto y estado de la llamada
+
+        Args:
+            call_sid: ID de la llamada de Twilio
+            contacto: Diccionario con información del contacto
+            max_tiempo_espera: Tiempo máximo a esperar (default: 180s = 3 minutos)
+
+        Returns:
+            Duración de la llamada en segundos, o None si hubo error
+
+        Estados de llamada en Twilio:
+        - queued: En cola
+        - ringing: Timbrando
+        - in-progress: En progreso (conversación activa)
+        - completed: Completada
+        - busy: Ocupado
+        - failed: Falló
+        - no-answer: No respondió
+        - canceled: Cancelada
+        """
+        if not call_sid or not self.twilio_client:
+            print("  No se puede verificar estado (Call SID o cliente Twilio faltante)")
+            # Fallback: esperar tiempo fijo
+            time.sleep(45)
+            return None
+
+        nombre_negocio = contacto.get('nombre_negocio', 'Desconocido')
+        telefono = contacto.get('telefono', 'N/A')
+
+        inicio = time.time()
+        tiempo_transcurrido = 0
+        ultimo_estado = None
+
+        # Estados que indican que la llamada terminó
+        estados_finales = ["completed", "busy", "failed", "no-answer", "canceled"]
+
+        # Mapeo de estados a español para mejor visualización
+        estados_es = {
+            "queued": "En cola",
+            "ringing": "Timbrando",
+            "in-progress": "En conversación",
+            "completed": "Completada",
+            "busy": "Ocupado",
+            "failed": "Falló",
+            "no-answer": "No contestó",
+            "canceled": "Cancelada"
+        }
+
+        while tiempo_transcurrido < max_tiempo_espera:
+            try:
+                # Consultar estado actual de la llamada
+                call = self.twilio_client.calls(call_sid).fetch()
+                estado_actual = call.status
+                duracion = call.duration  # Duración en segundos (None si aún no termina)
+
+                # Mostrar cambio de estado
+                if estado_actual != ultimo_estado:
+                    estado_texto = estados_es.get(estado_actual, estado_actual)
+                    print(f"    Estado: {estado_texto}")
+                    print(f"      Contacto: {nombre_negocio} ({telefono})")
+                    print(f"      Tiempo transcurrido: {int(tiempo_transcurrido)}s")
+                    ultimo_estado = estado_actual
+
+                # Verificar si la llamada terminó
+                if estado_actual in estados_finales:
+                    duracion_total = int(duracion) if duracion else 0
+                    estado_texto = estados_es.get(estado_actual, estado_actual)
+                    print(f"\n    Llamada finalizada: {estado_texto}")
+                    print(f"      Duración total: {duracion_total}s")
+                    print(f"      Contacto: {nombre_negocio}")
+                    return duracion_total
+
+                # Esperar 3 segundos antes de volver a consultar
+                time.sleep(3)
+                tiempo_transcurrido = int(time.time() - inicio)
+
+            except Exception as e:
+                print(f"     Error consultando estado: {e}")
+                # Esperar y reintentar
+                time.sleep(5)
+                tiempo_transcurrido = int(time.time() - inicio)
+
+        # Si llegamos aquí, se agotó el tiempo máximo
+        print(f"     Timeout alcanzado ({max_tiempo_espera}s) - continuando de todas formas")
+        print(f"      Contacto: {nombre_negocio}")
+        return None
+
+    def ver_estadisticas(self):
+        """Muestra estadísticas de contactos"""
+        print("\n" + "=" * 60)
+        print(" ESTADÍSTICAS DE CONTACTOS")
+        print("=" * 60 + "\n")
+
+        stats = self.sheets_adapter.obtener_estadisticas()
+
+        print(f"Total contactos: {stats.get('total_contactos', 0)}")
+        print(f"Con número: {stats.get('con_numero', 0)}")
+        print(f"Llamados: {stats.get('llamados', 0)}")
+        print(f"Pendientes: {stats.get('pendientes', 0)}")
+        print(f"Progreso: {stats.get('porcentaje_completado', 0)}%")
+        print("\n" + "=" * 60 + "\n")
+
+
+def main():
+    """Menú principal"""
+    try:
+        sistema = SistemaLlamadasMasivas()
+
+        while True:
+            print("\n" + "=" * 60)
+            print(" SISTEMA DE LLAMADAS MASIVAS - PRODUCCIÓN")
+            print("=" * 60 + "\n")
+
+            print("1. Ver estadísticas")
+            print("2. Ejecutar 1 llamada (prueba)")
+            print("3. Ejecutar 2 llamadas (delay: 10s)")
+            print("4. Ejecutar 5 llamadas (delay: 10s)")
+            print("5. Ejecutar 10 llamadas (delay: 10s)")
+            print("6. Ejecutar 25 llamadas (delay: 10s)")
+            print("7. Ejecutar 50 llamadas (delay: 10s)")
+            print("8. Ejecutar cantidad personalizada")
+            print("9. Iniciar monitor de logs (segundo plano)")
+            print("0. Salir")
+
+            opcion = input("\nSelecciona una opción: ").strip()
+
+            if opcion == "1":
+                sistema.ver_estadisticas()
+
+            elif opcion == "2":
+                sistema.ejecutar_llamadas(cantidad=1, delay_entre_llamadas=10, pedir_confirmacion=False)
+
+            elif opcion == "3":
+                sistema.ejecutar_llamadas(cantidad=2, delay_entre_llamadas=10)
+
+            elif opcion == "4":
+                sistema.ejecutar_llamadas(cantidad=5, delay_entre_llamadas=10)
+
+            elif opcion == "5":
+                sistema.ejecutar_llamadas(cantidad=10, delay_entre_llamadas=10)
+
+            elif opcion == "6":
+                # Iniciar monitor de logs automáticamente para 25+ llamadas
+                import subprocess
+                script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                print(f"\n Iniciando monitor de logs automáticamente...")
+                subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                sistema.ejecutar_llamadas(cantidad=25, delay_entre_llamadas=10)
+
+            elif opcion == "7":
+                confirmar = input("  ¿Ejecutar 50 llamadas? (s/n): ").strip().lower()
+                if confirmar == 's':
+                    # Iniciar monitor de logs automáticamente para 50 llamadas
+                    import subprocess
+                    script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                    print(f"\n Iniciando monitor de logs automáticamente...")
+                    subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                    sistema.ejecutar_llamadas(cantidad=50, delay_entre_llamadas=10)
+
+            elif opcion == "8":
+                try:
+                    cantidad = int(input("¿Cuántas llamadas? "))
+                    delay = int(input("¿Delay entre llamadas (segundos)? [default: 10]: ") or "10")
+                    # Iniciar monitor de logs automáticamente si son 20+ llamadas
+                    if cantidad >= 20:
+                        import subprocess
+                        script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                        print(f"\n Iniciando monitor de logs automáticamente...")
+                        subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                    sistema.ejecutar_llamadas(cantidad=cantidad, delay_entre_llamadas=delay)
+                except ValueError:
+                    print(" Valores inválidos")
+
+            elif opcion == "9":
+                import subprocess
+                script_path = os.path.join(os.path.dirname(__file__), "auto_descarga_logs_smart.py")
+                print(f"\n Iniciando monitor de logs en segundo plano...")
+                subprocess.Popen(
+                    [sys.executable, script_path],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE
+                )
+                print(" Monitor iniciado en nueva ventana")
+                print(" Los logs se descargarán automáticamente cada 5000 líneas o nuevo deploy")
+
+            elif opcion == "0":
+                print("\n Hasta pronto!")
+                break
+
+            else:
+                print(" Opción inválida")
+
+    except KeyboardInterrupt:
+        print("\n\n  Programa interrumpido por el usuario")
+    except Exception as e:
+        print(f"\n Error fatal: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == "__main__":
+    main()
