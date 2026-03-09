@@ -717,6 +717,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'para que le marque', 'para que le llame', 'le podemos marcar',
         'le podemos llamar', 'que le marque', 'que le llame',
         'nos puede dar su numero', 'nos da su numero', 'dejenos su numero',
+        # FIX 1081c: "Digame su correo/número" = receptionist asking for Bruce's contact
+        'digame su correo', 'digame su email', 'su correo por favor', 'su correo electronico',
+        'nos da su correo', 'nos puede dar su correo', 'dejenos su correo',
+        'digame su numero de contacto', 'digame su numero directo',
     ]
     if any(p in tn for p in _pide_contacto_bruce_897):
         return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
@@ -900,6 +904,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo soy la que decide', 'yo me encargo de eso', 'yo compro aqui',
         'yo soy el responsable', 'yo soy la responsable', 'yo soy el dueno',
         'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
+        # FIX 1081: Intermediario da nombre del encargado (post-relay) → MANAGER_PRESENT
+        # "El encargado es el señor Juan" → identificacion_breve_1068 en estado DESPEDIDA
+        'el encargado es', 'la encargada es', 'el dueno es', 'la duena es',
+        'el jefe es', 'la jefa es', 'el gerente es', 'el responsable es',
+        'se llama el encargado', 'el nombre del encargado', 'la nombre del encargado',
     ]
     if any(m in tn for m in manager_present):
         # FIX 1075: Mala experiencia previa con NIOVAL → GPT maneja empáticamente
@@ -1081,7 +1090,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
                      FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
                      FSMState.ENCARGADO_PRESENTE, FSMState.DICTANDO_DATO,
-                     FSMState.CAPTURANDO_CONTACTO):  # FIX 935 + FIX 938
+                     FSMState.CAPTURANDO_CONTACTO,
+                     FSMState.DESPEDIDA):  # FIX 935 + FIX 938 + FIX 1080 (DESPEDIDA)
             return FSMIntent.CALLBACK
 
     # --- Otra sucursal ---
@@ -1131,6 +1141,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'es automatizado', 'es inteligencia artificial', 'es una ia',
         'son de herrajes', 'son de ferreteria', 'verdad que son de',
         'son ustedes de', 'es usted de',
+        # FIX 1081b: "¿De NIOVAL verdad?" / "¿Son de NIOVAL?" = verificar identidad
+        'de nioval verdad', 'son de nioval', 'nioval verdad', 'son nioval',
+        'es de nioval', 'llama nioval', 'llaman de nioval',
         # FIX 1077: "no con grabacion" / "hablar con el vendedor directamente" → IDENTITY
         # Bruce responde con identificacion_nioval para aclarar que es agente de ventas
         'no con grabacion', 'no con un robot', 'no quiero grabacion',
