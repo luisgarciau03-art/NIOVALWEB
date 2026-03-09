@@ -489,7 +489,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             pass  # Fall through to callback/other classifiers
         # OOS-16-19: "numero principal de la empresa" + digits = callback request
         elif _callback_num_principal:
-            pass  # Fall through to callback classifiers
+            # FIX 1050: In CAPTURANDO_CONTACTO, "numero principal + digits" = client giving contact
+            if state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO):
+                return FSMIntent.DICTATING_COMPLETE_PHONE
+            pass  # Fall through to callback classifiers for other states
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
@@ -597,6 +600,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no es de nuestro interes', 'no es de nuestro interés',
         'estamos satisfechos con nuestros proveedores', 'contamos con todo lo necesario',
         'por el momento contamos con', 'estamos bien cubiertos', 'no necesitamos cambiar',
+        # FIX 1047: Encargado no atiende llamadas de vendedores/proveedores → NO_INTEREST
+        'no atiende llamadas de vendedores', 'no atiende llamadas de ventas',
+        'no atiende a proveedores', 'no atiende proveedores', 'no atiende vendedores',
+        'no recibimos vendedores', 'no recibimos llamadas de ventas',
+        'no recibimos llamadas de proveedores', 'no atiende a vendedores',
+        'el encargado no atiende', 'la encargada no atiende',
+        'no tenemos autorizacion para compras', 'no tenemos presupuesto para compras',
     ]
     if any(n in tn for n in no_interest):
         # FIX 1014c: "ya tengo proveedor, en que son mejores?" = competitive inquiry
@@ -700,6 +710,16 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     ]
     if any(p in tn for p in _pide_contacto_bruce_897):
         return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
+
+    # FIX 1051: "aqui le paso" = TRANSFER (receptionist transferring call)
+    # Must check BEFORE offer_data which also has 'le paso' as substring
+    _le_paso_transfer_1051 = any(p in tn for p in [
+        'aqui le paso', 'aqui te paso', 'le paso a ', 'le paso con ',
+        'te paso a ', 'te paso con ', 'ya le paso', 'ya te paso',
+        'le voy a pasar', 'le paso ahora',
+    ])
+    if _le_paso_transfer_1051:
+        return FSMIntent.TRANSFER
 
     # --- Oferta de dato ---
     offer_data = [
@@ -2467,6 +2487,8 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.REJECT_DATA,             S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
         add(S.CAPTURANDO_CONTACTO, I.NO_INTEREST,             S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.CAPTURANDO_CONTACTO, I.FAREWELL,                S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        # FIX 1048: "no tenemos presupuesto" (CALLBACK) in CAPTURANDO_CONTACTO → ask callback time
+        add(S.CAPTURANDO_CONTACTO, I.CALLBACK,                S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
         add(S.CAPTURANDO_CONTACTO, I.VERIFICATION,            S.CAPTURANDO_CONTACTO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.CAPTURANDO_CONTACTO, I.UNKNOWN,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "conversacion_libre")
         # FIX 786: CONTINUATION - cliente sigue hablando
@@ -2536,7 +2558,9 @@ class FSMEngine:
         add(S.OFRECIENDO_CONTACTO, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
 
         # === CONTACTO_CAPTURADO ===
-        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        # FIX 1049: CONFIRMATION post-captura = cliente da instrucción adicional ("use el personal")
+        # Use GPT_NARROW so it can acknowledge the specific instruction before saying goodbye
+        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.GPT_NARROW, "reconocer_y_despedir")
         add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         # FIX 839: Cliente repite número después de captura -> despedida corta (ya tenemos el dato)
