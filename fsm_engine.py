@@ -487,12 +487,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 780: 10+ dígitos con contexto temporal en BUSCANDO_ENCARGADO = callback, no teléfono
         if has_time_context and state == FSMState.BUSCANDO_ENCARGADO:
             pass  # Fall through to callback/other classifiers
-        # OOS-16-19: "numero principal de la empresa" + digits = callback request
+        # OOS-16-19: "numero principal de la empresa" + digits = callback request (en CUALQUIER estado)
+        # FIX 1073: Removido FIX 1050 CAPTURANDO_CONTACTO exception — "llame al numero principal"
+        # siempre es un redirect/callback, nunca el contacto personal del cliente
         elif _callback_num_principal:
-            # FIX 1050: In CAPTURANDO_CONTACTO, "numero principal + digits" = client giving contact
-            if state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO):
-                return FSMIntent.DICTATING_COMPLETE_PHONE
-            pass  # Fall through to callback classifiers for other states
+            pass  # Fall through to callback classifiers for all states
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
@@ -903,6 +902,20 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
     ]
     if any(m in tn for m in manager_present):
+        # FIX 1075: Mala experiencia previa con NIOVAL → GPT maneja empáticamente
+        # "Ya compré de NIOVAL y no fue bien" → QUESTION para respuesta empática, no pedir datos
+        _mala_exp_1075 = any(p in tn for p in [
+            'no fue bien', 'no nos fue bien', 'no salio bien', 'no resulto bien',
+            'tuvimos problemas', 'tuve problemas', 'hubo problemas',
+            'mala experiencia', 'mal servicio', 'mal producto',
+            'ya compramos y', 'ya compre y', 'ya pedimos y', 'ya probamos y',
+            'no quedamos satisfechos', 'no quedamos contentos',
+            'no me gusto', 'no nos gusto', 'no quedo bien', 'no quedo satisfecho',
+        ])
+        if _mala_exp_1075:
+            print(f"  [FIX 1075] Mala experiencia previa → QUESTION (GPT empático)")
+            return FSMIntent.QUESTION
+
         # FIX 906: Si también hay callback, priorizar callback
         # Ej: "si soy pero marqueme el lunes" = CALLBACK, no MANAGER_PRESENT
         _has_callback_906 = any(c in tn for c in [
@@ -1118,6 +1131,17 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'es automatizado', 'es inteligencia artificial', 'es una ia',
         'son de herrajes', 'son de ferreteria', 'verdad que son de',
         'son ustedes de', 'es usted de',
+        # FIX 1077: "no con grabacion" / "hablar con el vendedor directamente" → IDENTITY
+        # Bruce responde con identificacion_nioval para aclarar que es agente de ventas
+        'no con grabacion', 'no con un robot', 'no quiero grabacion',
+        'hablar con el vendedor', 'con el vendedor directamente', 'con alguien de verdad',
+        'con una persona real', 'hablar con una persona', 'no con una grabacion',
+        'no con automatico', 'con alguien real',
+        # FIX 1078: "Como consiguio este numero?" → IDENTITY (Bruce se identifica y explica)
+        # GPT_NARROW via QUESTION devuelve "Perfecto, digame" — mejor usar identificacion_nioval
+        'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+        'como consiguio mi numero', 'de donde consiguio mi numero',
+        'quien le dio este numero', 'como tiene mi numero', 'de donde salio mi numero',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
@@ -1845,6 +1869,27 @@ class FSMEngine:
                     template_key='confirmar_callback_generico',
                 )
                 print(f"  [FIX 789B] Callback hora ya preguntada -> confirmar_callback_generico (anti-loop)")
+
+        # FIX 1076: Long-term callback ("en tres meses/semanas/año") → no preguntar hora específica
+        # "Ahorita no, regresa en tres meses mejor" → confirmar genérico (no "¿A qué hora?")
+        if (intent == FSMIntent.CALLBACK and
+                transition.template_key == 'preguntar_hora_callback'):
+            _tn_1076 = texto.lower()
+            _largo_plazo_1076 = any(p in _tn_1076 for p in [
+                'en tres meses', 'en dos meses', 'en unos meses', 'en un mes',
+                'dentro de un mes', 'dentro de dos meses', 'dentro de tres meses',
+                'en unas semanas', 'en dos semanas', 'en tres semanas',
+                'el siguiente trimestre', 'el proximo trimestre',
+                'el siguiente año', 'el proximo año', 'en un año',
+                'en algunos meses', 'en varios meses', 'en unos meses regresa',
+            ])
+            if _largo_plazo_1076:
+                transition = Transition(
+                    next_state=transition.next_state,
+                    action_type=transition.action_type,
+                    template_key='confirmar_callback_generico',
+                )
+                print(f"  [FIX 1076] Callback largo plazo → confirmar_callback_generico (sin preguntar hora)")
 
         # FIX 839: Anti catálogo repetido - si ya prometimos catálogo, no repetirlo
         # BRUCE2550/2546: despedida_catalogo_prometido después de confirmar_telefono duplica "catálogo"
@@ -2778,12 +2823,17 @@ class FSMEngine:
             # FIX 1065: NO intentar captura mínima si cliente dijo explícitamente NO_INTEREST
             # despedida_no_interesa viene de intent NO_INTEREST = rechazo firme → no salvage
             # Solo hacer salvage para despedida_cortes (FAREWELL ambiguo)
+            # FIX 1074: Si ya se preguntó hora de callback, no volver a preguntar en captura mínima
+            # OOS-12-13: "Ah si, le digo que llamo Nioval" → relay (FAREWELL) → FIX 922 disparaba
+            # porque pedir_datos_count=0 (Bruce preguntó hora de callback, no WhatsApp/correo)
+            _ya_pregunto_callback_1074 = getattr(self.context, 'callback_hora_preguntada', False)
             if (transition.template_key == 'despedida_cortes'
                     and self.state != FSMState.DESPEDIDA
                     and getattr(self.context, 'pitch_dado', False)
                     and not getattr(self.context, 'datos_capturados', {})
                     and not getattr(self.context, 'catalogo_prometido', False)
                     and getattr(self.context, 'pedir_datos_count', 0) == 0
+                    and not _ya_pregunto_callback_1074
                     and not _area_equivocada_939
                     and not _rechazo_firme_938
                     and "captura_minima_pre_despedida" not in getattr(self.context, 'templates_usados', set())):
