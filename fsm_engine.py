@@ -306,6 +306,7 @@ class FSMContext:
     confusion_count: int = 0           # FIX 918: contador de turnos confusos del cliente
     ultima_respuesta_bruce: str = ""   # FIX 910: ultima respuesta para dedup
     pitch_turno: int = 0              # FIX 919: turno en que se dio el pitch
+    encargado_identificado: bool = False  # FIX 1010: True cuando encargado ya se presentó (no solo "existe")
 
 
 # ============================================================
@@ -500,6 +501,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 998: "este no es el número correcto"
         'este no es el numero correcto', 'no es el numero correcto',
         'no es el numero', 'numero incorrecto',
+        # FIX 1003: Número personal / domicilio privado (riesgo reputacional)
+        'numero personal', 'es un numero personal', 'es numero personal',
+        'somos familia', 'es mi familia', 'hablan con un particular',
+        'numero domestico', 'linea personal', 'telefono personal',
+        'este es un celular personal', 'es celular personal',
         # FIX 908: Giro equivocado - negocio no es ferreteria
         'aqui es un restaurante', 'somos restaurante', 'es un restaurante',
         'aqui es una tienda de', 'somos tienda de abarrotes', 'vendemos abarrotes',
@@ -1276,6 +1282,13 @@ class FSMEngine:
             'dejen de chingar', 'no chinguen', 'ya no chinguen',
             'dejame en paz', 'dejenos en paz', 'no nos molesten mas',
             'ya vayanse', 'ya largense', 'no quiero nada',
+            # FIX 1003: Acoso / denuncia (riesgo legal y reputacional)
+            'esto es acoso', 'es acoso', 'me estan acosando', 'nos estan acosando',
+            'esto es hostigamiento', 'es hostigamiento', 'me estan hostigando',
+            'nos estan molestando', 'me estan molestando', 'estan molestando',
+            'ya no llamen', 'dejen de llamar', 'ya no marquen',
+            'voy a denunciar', 'vamos a denunciar', 'lo voy a denunciar',
+            'voy a poner una queja', 'voy a poner queja',
         ]
         if any(h in _texto_lower for h in _hostil_950):
             print(f"  [FIX 950] Rechazo hostil/LFPDPPP detectado -> despedida definitiva sin recontacto")
@@ -1343,7 +1356,9 @@ class FSMEngine:
                     print(f"  [FIX 953] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
-            elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL) and len(self.context.datos_parciales) >= 8:
+            elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL,
+                            FSMIntent.CONTINUATION) \
+                    and len(self.context.datos_parciales) >= 8:  # FIX 1008: CONTINUATION también activa fallback
                 # Cliente confirmó/terminó con suficientes dígitos acumulados
                 _acum_953 = self.context.datos_parciales
                 print(f"  [FIX 953] {intent.value} post-parcial con {len(_acum_953)} dígitos -> DICTATING_COMPLETE_PHONE")
@@ -1732,6 +1747,22 @@ class FSMEngine:
                 template_key="ofrecer_catalogo_sin_compromiso",
             )
 
+        # 4D. FIX 1009: No despedir si estamos en PITCH y nunca se intentó capturar contacto
+        # (FSM clasifica "Entiendo"/"OK" como FAREWELL antes de que Bruce pida datos)
+        if (transition.next_state == FSMState.DESPEDIDA
+                and self.state == FSMState.PITCH
+                and intent == FSMIntent.FAREWELL
+                and not self.context.catalogo_prometido
+                and self.context.pedir_datos_count == 0
+                and self.context.turnos_bruce >= 2):
+            print(f"  [FIX 1009] Despedida prematura en PITCH sin captura intentada "
+                  f"(turnos={self.context.turnos_bruce}) -> pedir_whatsapp_o_correo")
+            transition = Transition(
+                next_state=FSMState.CAPTURANDO_CONTACTO,
+                action_type=ActionType.TEMPLATE,
+                template_key="pedir_whatsapp_o_correo",
+            )
+
         # 5. Ejecutar acción
         response = self._execute(transition, texto, agente)
 
@@ -1995,10 +2026,16 @@ class FSMEngine:
                 if ctx.identity_repetidas >= 2:
                     print(f"  [FIX 891] UNKNOWN en encargado_ausente + identity_repetidas={ctx.identity_repetidas} → pedir_telefono_directo_891")
                     return Transition(S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_telefono_directo_891")
+                # FIX 1010: Si encargado ya se identificó, usar template neutro (no callback template)
+                _tmpl_885_1010 = (
+                    "pedir_numero_directo_885"
+                    if not ctx.encargado_identificado
+                    else "pedir_whatsapp_o_correo"
+                )
                 opciones = [
                     (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo"),
                     (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_whatsapp_o_correo_breve"),
-                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_numero_directo_885"),
+                    (S.CAPTURANDO_CONTACTO, A.TEMPLATE, _tmpl_885_1010),
                 ]
                 return _seleccionar_template(opciones)
             elif ctx.callback_pedido:
@@ -2293,7 +2330,10 @@ class FSMEngine:
         add(S.DICTANDO_DATO, I.VERIFICATION,             S.DICTANDO_DATO, A.TEMPLATE, "verificacion_aqui_estoy")
         # FIX 820: UNKNOWN durante dictado -> Claude decide (no fillers)
         # ANTES: A.ACKNOWLEDGE "aja_si" -> loop de fillers cuando cliente no dicta
-        add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.GPT_NARROW, "conversacion_libre")
+        # FIX 1011: DICTANDO_DATO + UNKNOWN → ACKNOWLEDGE (anti-PREGUNTA_REPETIDA)
+        # GPT en este estado generaba preguntas repetidas ("¿Me confirma su correo?")
+        # Si el cliente dicta algo ambiguo, asentir y dejar continuar.
+        add(S.DICTANDO_DATO, I.UNKNOWN,                  S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_si")
         # FIX 788: Gaps - NO_INTEREST, REJECT_DATA, IDENTITY
         add(S.DICTANDO_DATO, I.NO_INTEREST,              S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.DICTANDO_DATO, I.REJECT_DATA,              S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
@@ -2581,6 +2621,18 @@ class FSMEngine:
                 self.context.datos_parciales = ""
                 return self._get_template("confirmar_telefono")
 
+            # FIX 1007: Confirmar correo repitiendo el dato capturado (reduce errores en dictado oral)
+            if transition.template_key == 'confirmar_correo':
+                import re as _re1007
+                _email_match_1007 = _re1007.search(
+                    r'[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', texto or '')
+                if _email_match_1007:
+                    _email_1007 = _email_match_1007.group()
+                    print(f"  [FIX 1007] Confirmando correo con repeticion: {_email_1007}")
+                    self.context.templates_usados.add('confirmar_correo')
+                    return (f"Perfecto, le confirmo el correo: {_email_1007}. "
+                            f"Le envio el catalogo en breve.")
+
             return self._get_template(transition.template_key)
 
         elif transition.action_type == ActionType.ACKNOWLEDGE:
@@ -2803,6 +2855,11 @@ class FSMEngine:
         # Track encargado es interlocutor
         if intent == FSMIntent.MANAGER_PRESENT:
             self.context.encargado_es_interlocutor = True
+            self.context.encargado_identificado = True  # FIX 1010: encargado ya se presentó
+
+        # FIX 1010: También marcar al transicionar a ENCARGADO_PRESENTE
+        if transition.next_state == FSMState.ENCARGADO_PRESENTE:
+            self.context.encargado_identificado = True
 
         # Track canales
         # FIX 838: Incluir pedir_alternativa_* para que canal_solicitado se actualice
@@ -2819,6 +2876,16 @@ class FSMEngine:
             self.context.canal_solicitado = 'telefono'
             if 'telefono' not in self.context.canales_intentados:
                 self.context.canales_intentados.append('telefono')
+
+        # FIX 1005: Si canal_solicitado='correo' y cliente dio teléfono → aceptar como WhatsApp
+        # Caso: Bruce pide correo, cliente da 10 dígitos → tratar como WhatsApp alternativo
+        # (el cliente probablemente prefiere WhatsApp en vez de correo)
+        if (intent == FSMIntent.DICTATING_COMPLETE_PHONE and
+                self.context.canal_solicitado == 'correo' and
+                'correo' not in self.context.canales_rechazados):
+            print(f"  [FIX 1005] Cliente dio telefono cuando se pedia correo -> "
+                  f"tratar como WhatsApp (canal_solicitado: correo -> whatsapp)")
+            self.context.canal_solicitado = 'whatsapp'
 
         # Track rechazos
         # FIX 838B: Usar 'if' en vez de 'elif' + siempre rechazar canal_solicitado
