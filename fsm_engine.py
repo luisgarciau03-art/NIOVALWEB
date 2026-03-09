@@ -1157,6 +1157,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             return FSMIntent.MANAGER_PRESENT
         return FSMIntent.CONFIRMATION
 
+    # FIX 1052: Pausas/hold words durante dictado → CONTINUATION (no resetean datos_parciales)
+    # "espere" entre "33 12" y "34 90 09" causaba reset del buffer → número perdido
+    _pausa_hold_1052 = ['espere', 'espera', 'un momento', 'un seg', 'momentito', 'ahorita', 'momento']
+    if any(tn == p or tn.startswith(p + ' ') for p in _pausa_hold_1052):
+        return FSMIntent.CONTINUATION
+
     # --- Continuación (texto termina en conector) ---
     if tn.endswith(' y') or tn.endswith(' o') or tn.endswith(' pero'):
         return FSMIntent.CONTINUATION
@@ -1219,6 +1225,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'estan certificados', 'tienen certificacion', 'tienen certificado',
         'son proveedores certificados', 'cuentan con certificacion',
         'requieren certificacion', 'requieren estar certificados',
+        # FIX 1053: "¿Es gratis el catálogo?" → QUESTION (frase sin '?' pero es consulta de costo)
+        'es gratis el catalogo', 'el catalogo es gratis', 'es gratuito el catalogo',
+        'tiene costo el catalogo', 'cobran por el catalogo', 'el catalogo cuesta',
+        'el catalogo tiene costo', 'hay costo por el catalogo', 'es de paga el catalogo',
+        'es gratis la informacion', 'el catalogo es de costo',
     ]
     if any(q in tn for q in implicit_questions):
         return FSMIntent.QUESTION
@@ -1531,7 +1542,13 @@ class FSMEngine:
                 _acum_953 = self.context.datos_parciales + _nuevos_953 + _placeholder_953
                 self.context.datos_parciales = _acum_953
                 print(f"  [FIX 953] Dígitos acumulados: '{_acum_953}' ({len(_acum_953)} dígitos)")
-                if len(_acum_953) >= 10:
+                # FIX 1054: 8+ word-only digits in single turn = near-complete phone (0 numeric chars)
+                # "tres tres uno dos tres cuatro cinco seis" = 8 word-digits, faltan 2 → promote
+                if not _nuevos_953 and _num_words_953 >= 8:
+                    print(f"  [FIX 1054] {_num_words_953} palabras numéricas puras → DICTATING_COMPLETE_PHONE")
+                    intent = FSMIntent.DICTATING_COMPLETE_PHONE
+                    self.context.datos_parciales = ""
+                elif len(_acum_953) >= 10:
                     print(f"  [FIX 953] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""

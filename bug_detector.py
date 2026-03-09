@@ -652,6 +652,14 @@ class ContentAnalyzer:
                     if _cliente_ya_confirmo_encargado and _PREGUNTAR_ENCARGADO_943.search(preg):
                         print(f"  [FIX 943] SKIP PREGUNTA_REPETIDA encargado: cliente ya confirmo ser encargado")
                         continue
+                    # FIX 1057: Bruce en espera de transferencia → repetir pregunta de contacto es correcto
+                    # "Si, aqui estoy" (verificacion_aqui_estoy) indica estado ESPERANDO_TRANSFERENCIA
+                    _bruce_en_espera_1057 = conv and any(
+                        'aqui estoy' in t.lower() for r2, t in conv if r2 == 'bruce'
+                    )
+                    if _bruce_en_espera_1057 and _is_contact:
+                        print(f"  [FIX 1057] SKIP PREGUNTA_REPETIDA: Bruce en espera de transferencia → repite contacto = correcto")
+                        continue
                     bugs.append({
                         "tipo": "PREGUNTA_REPETIDA",
                         "severidad": MEDIO,
@@ -722,6 +730,7 @@ class ContentAnalyzer:
                     # FIX 1041: Si la misma respuesta también confirma entrega de catálogo/dato,
                     # es un template tipo "confirmar_telefono" (data + cierre cortés), NO despedida.
                     # "Le envio el catalogo... Muchas gracias por su tiempo" ≠ colgar.
+                    # FIX 1059: También exempt si contiene "proximas horas" (despedida_catalogo_prometido)
                     if (ContentAnalyzer._OFERTA_CATALOGO.search(r) or
                             ContentAnalyzer._CONFIRMACION_DATO_862.search(r)):
                         continue  # No es despedida real, no settear flag
@@ -769,10 +778,19 @@ class ContentAnalyzer:
                     return bugs
                 # FIX 886B: BRUCE2038 - Llamada muy corta (≤2 turnos Bruce): FIX 751 + FSM doble-fire.
                 # Solo 2 pitches para 1 turno cliente = artifact del replay, no bug real.
-                # FIX 1043: Extender umbral a 4 turnos (IVR re-pitch post-despedida también afecta)
-                if len(respuestas) <= 4 and count == 2:
-                    print(f"  [FIX 886B/1043] SKIP PITCH_REPETIDO: llamada corta ({len(respuestas)} resp) = posible doble-fire o re-pitch post-IVR")
+                # FIX 1043: Extender umbral a 4 turnos
+                # FIX 1056: Extender umbral a 6 turnos (recovery IVR→despedida→re-pitch en 5-6 resp)
+                if len(respuestas) <= 6 and count == 2:
+                    print(f"  [FIX 886B/1043/1056] SKIP PITCH_REPETIDO: ≤6 resp, count=2 = recovery/IVR re-pitch")
                     return bugs
+                # FIX 1060: Si hubo despedida entre los dos pitches = recovery post-IVR, no repetición
+                _pitch_indices_1060 = [i for i, r in enumerate(_resp_for_pitch)
+                                       if ContentAnalyzer._PITCH_NIOVAL.search(r)]
+                if len(_pitch_indices_1060) >= 2:
+                    _entre_pitches = _resp_for_pitch[_pitch_indices_1060[0]+1:_pitch_indices_1060[1]]
+                    if any(ContentAnalyzer._DESPEDIDA_BRUCE.search(r) for r in _entre_pitches):
+                        print(f"  [FIX 1060] SKIP PITCH_REPETIDO: despedida entre los dos pitches = recovery post-IVR")
+                        return bugs
                 bugs.append({
                     "tipo": "PITCH_REPETIDO",
                     "severidad": MEDIO,
@@ -799,7 +817,11 @@ class ContentAnalyzer:
         # FIX 928A: confirmaciones post-dato — "le envío/mando el catálogo ahora/hoy/en breve/con lista"
         r'(le env[ií]o|le mando) (el|nuestro) cat[aá]logo.{0,5}(ahora|hoy|en breve|de inmediato|con lista|en las|en este|ya)|'
         r'le llega.{0,30}(cat[aá]logo|hoy|de inmediato|ahora|en breve)|'
-        r'(anotado|registrado).{0,30}(le env[ií]o|le mando|le llega))',
+        r'(anotado|registrado).{0,30}(le env[ií]o|le mando|le llega)|'
+        # FIX 1055: despedida_catalogo_prometido = "En las proximas dos horas le llega el catalogo"
+        # La frase combina despedida ("Muchas gracias") + entrega → NO es oferta post-despedida
+        r'pr[oó]ximas.{0,15}horas?.{0,30}(cat[aá]logo|llega)|'
+        r'(el cat[aá]logo|la informaci[oó]n).{0,20}(en breve|en las pr[oó]ximas|ahora mismo|de inmediato))',
         re.IGNORECASE
     )
 
