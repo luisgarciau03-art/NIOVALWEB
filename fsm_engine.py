@@ -607,6 +607,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no recibimos llamadas de proveedores', 'no atiende a vendedores',
         'el encargado no atiende', 'la encargada no atiende',
         'no tenemos autorizacion para compras', 'no tenemos presupuesto para compras',
+        # FIX 1072: "Venga a la tienda" = visita presencial (Bruce no puede ir → NO_INTEREST)
+        # Cliente ofrece alternativa física que no aplica para agente telefónico
+        'venga a la tienda', 'pase a la tienda', 'venga por aqui', 'pase por aqui',
+        'atiende en persona', 'solo en persona', 'atiende personalmente',
+        'solo atiende en persona', 'venga en persona', 'pase en persona',
+        'pregunte por', 'pase a visitarnos', 'venga a visitarnos',
     ]
     if any(n in tn for n in no_interest):
         # FIX 1014c: "ya tengo proveedor, en que son mejores?" = competitive inquiry
@@ -686,6 +692,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no me acuerdo del numero', 'no me acuerdo del whatsapp',
         'no me acuerdo del correo', 'no recuerdo el numero',
         'no recuerdo cual es', 'no me recuerdo',
+        # FIX 1069: "Deje su numero" = receptionist asking for Bruce's number (not giving theirs)
+        # = rejection of giving their own data, asking Bruce to leave his contact instead
+        'deje su numero', 'deje un numero', 'deja tu numero', 'deje el numero',
+        'deje sus datos', 'deje un recado con su numero', 'deje su contacto',
+        'puede dejar su numero', 'puede dejar un numero',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -713,13 +724,32 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # FIX 1051: "aqui le paso" = TRANSFER (receptionist transferring call)
     # Must check BEFORE offer_data which also has 'le paso' as substring
+    # FIX 1066: Agregar "en seguida le paso" y variantes temporales antes de offer_data
     _le_paso_transfer_1051 = any(p in tn for p in [
         'aqui le paso', 'aqui te paso', 'le paso a ', 'le paso con ',
         'te paso a ', 'te paso con ', 'ya le paso', 'ya te paso',
         'le voy a pasar', 'le paso ahora',
+        # FIX 1066: Variantes temporales ("en seguida", "de inmediato", "ahorita")
+        'en seguida le paso', 'enseguida le paso', 'en un momento le paso',
+        'ahorita le paso', 'de inmediato le paso', 'ahorita te paso',
+        'en seguida te paso', 'ya te voy a pasar', 'ya le voy a pasar',
     ])
     if _le_paso_transfer_1051:
         return FSMIntent.TRANSFER
+
+    # FIX 1062: Relay/recado = receptionist gracefully closing call
+    # "Si, digale que llamaron de Nioval" / "Le dejo el recado" → FAREWELL (accept relay, despedida)
+    _relay_recado_1062 = any(p in tn for p in [
+        'digale que llamaron', 'digale que llamo', 'le digo que llamaron',
+        'le digo que llamo', 'le pongo el recado', 'le dejo el recado',
+        'le paso el recado', 'le dejo el mensaje', 'le paso el mensaje',
+        'le aviso que llamaron', 'si deje el recado', 'si le dejo el recado',
+        'le voy a dejar el recado', 'le voy a dar el recado', 'le doy el recado',
+        'le doy su recado', 'le paso su recado', 'le dejo su recado',
+        'le aviso', 'le pongo el mensaje',
+    ])
+    if _relay_recado_1062:
+        return FSMIntent.FAREWELL
 
     # --- Oferta de dato ---
     offer_data = [
@@ -884,6 +914,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             'estoy atendiendo', 'estoy en junta', 'estoy en reunion',
             'estoy trabajando', 'estoy con clientes', 'estoy con un cliente',
             'ahorita no puedo', 'no puedo en este momento', 'no es buen momento',
+            # FIX 1063: "tengo un cliente" = encargado ocupado con cliente → CALLBACK
+            'tengo un cliente', 'con un cliente', 'atendiendo a un cliente',
+            'atendiendo cliente', 'tengo clientes', 'con clientes ahorita',
         ])
         if _has_callback_906:
             return FSMIntent.CALLBACK
@@ -994,7 +1027,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 998: "quién sabe" = no sabe cuando regresa = callback tentativo
         'quien sabe', 'ni idea', 'no se cuando',
         # FIX 999: Sin presupuesto = callback temporal
-        'no tenemos presupuesto', 'sin presupuesto', 'nos quedamos sin presupuesto',
+        # FIX 1064: EXCEPTO si termina con "gracias"/"buen dia" = rechazo definitivo (ver abajo)
+        'sin presupuesto', 'nos quedamos sin presupuesto',
         'no hay presupuesto', 'no hay recursos', 'no hay fondos',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
@@ -1017,6 +1051,19 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'el siguiente año', 'el proximo año', 'a inicio del año',
         'en unas semanas', 'dentro de unas semanas', 'en dos semanas', 'en tres semanas',
     ]
+    # FIX 1064: "no tenemos presupuesto + gracias/buen dia" = rechazo definitivo (no callback)
+    # "no tenemos presupuesto este mes, gracias" termina la conversacion, NO es callback tentativo
+    _presupuesto_1064 = any(p in tn for p in [
+        'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+        'no contamos con presupuesto',
+    ])
+    _farewell_end_1064 = any(tn.endswith(f) for f in [
+        'gracias', 'buen dia', 'buenas tardes', 'buenas noches', 'hasta luego',
+        'adios', 'que le vaya bien', 'hasta pronto',
+    ])
+    if _presupuesto_1064 and _farewell_end_1064:
+        return FSMIntent.NO_INTEREST
+
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
                      FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
@@ -1657,6 +1704,9 @@ class FSMEngine:
                 'no quiero', 'no queremos', 'no necesito', 'no necesitamos',
                 'no por el momento', 'no lo necesito', 'quitenos', 'quiteme',
                 'no le interesa', 'no lo necesita',
+                # FIX 1067: presupuesto = señal negativa clara (ya tenemos/no hay presupuesto)
+                'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+                'no contamos con presupuesto', 'ya tenemos proveedor', 'tenemos proveedor',
             ]
             if not any(n in _texto_lower for n in _negativos_958):
                 # No hay señal negativa clara → dejar que GPT decida
@@ -1985,6 +2035,12 @@ class FSMEngine:
             # Phase 2: state is in active set -> intercept
             # Skip HANGUP/NOOP (let existing code handle closing)
             if transition.action_type in (ActionType.HANGUP, ActionType.NOOP):
+                # FIX 1071: En DESPEDIDA, retornar "" en vez de None para prevenir GPT_FALLBACK
+                # None → agente_ventas.py llama GPT → posible OFERTA_POST_DESPEDIDA (OOS-12-01)
+                # "" → bypass GPT, silencio (conversacion ya terminada)
+                if self.state == FSMState.DESPEDIDA:
+                    print(f"  [FIX 1071] DESPEDIDA + {intent.value} + {transition.action_type.value} -> '' (anti-GPT)")
+                    return ""
                 print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
                       f"-> {transition.action_type.value} (fallthrough - let existing code handle)")
                 return None
@@ -2591,7 +2647,10 @@ class FSMEngine:
         add(S.CONTACTO_CAPTURADO, I.NO_INTEREST,  S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
 
         # === DESPEDIDA ===
-        add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.HANGUP, None)
+        # FIX 1070: UNKNOWN en DESPEDIDA → NOOP ("") en vez de HANGUP (None)
+        # None → agente_ventas.py llama GPT → posible OFERTA_POST_DESPEDIDA (OOS-12-01)
+        # "" → bypass GPT, silencio (conversacion ya terminada, estado post-relay)
+        add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.NOOP, None)
         add(S.DESPEDIDA, I.FAREWELL,      S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
         # FIX 1038: DESPEDIDA + VERIFICATION → restart pitch (humano llega post-IVR)
@@ -2611,9 +2670,12 @@ class FSMEngine:
         # FIX 1016: Human greeting after IVR-triggered DESPEDIDA → restart pitch
         # "Para continuar en español marque uno" → DESPEDIDA → human arrives → retomar
         add(S.DESPEDIDA, I.MANAGER_PRESENT,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
-        add(S.DESPEDIDA, I.WHAT_OFFER,       S.PITCH, A.TEMPLATE, "pitch_completo_894")
-        add(S.DESPEDIDA, I.IDENTITY,         S.PITCH, A.TEMPLATE, "identificacion_pitch")
-        add(S.DESPEDIDA, I.INTEREST,         S.PITCH, A.TEMPLATE, "pitch_completo_894")
+        # FIX 1068: Post-despedida identity/question → brief ID + stay in DESPEDIDA (no re-pitch)
+        # OOS-12-05/07/10: "Que empresa es" / "Me dice su numero" → brief identification only
+        add(S.DESPEDIDA, I.WHAT_OFFER,       S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        add(S.DESPEDIDA, I.IDENTITY,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        add(S.DESPEDIDA, I.INTEREST,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        add(S.DESPEDIDA, I.QUESTION,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
         # FIX 1031: DESPEDIDA + CALLBACK → confirmar callback (cliente da hora después de despedida)
         # Ej: FSM dice adiós porque "estoy ocupado" → cliente dice "Mejor llámame en una hora"
         add(S.DESPEDIDA, I.CALLBACK,         S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
@@ -2713,7 +2775,10 @@ class FSMEngine:
                 'no necesito nada', 'no nos hace falta', 'estamos bien',
                 'no por favor', 'no muchas gracias',
             ])
-            if (transition.template_key in ('despedida_no_interesa', 'despedida_cortes')
+            # FIX 1065: NO intentar captura mínima si cliente dijo explícitamente NO_INTEREST
+            # despedida_no_interesa viene de intent NO_INTEREST = rechazo firme → no salvage
+            # Solo hacer salvage para despedida_cortes (FAREWELL ambiguo)
+            if (transition.template_key == 'despedida_cortes'
                     and self.state != FSMState.DESPEDIDA
                     and getattr(self.context, 'pitch_dado', False)
                     and not getattr(self.context, 'datos_capturados', {})
@@ -3109,6 +3174,9 @@ class FSMEngine:
         # Track canales
         # FIX 838: Incluir pedir_alternativa_* para que canal_solicitado se actualice
         # cuando FIX 763 pide canal alternativo (antes solo trackeaba pedir_whatsapp/pedir_correo)
+        # FIX 1061: Guardar canal ANTERIOR para que REJECT_DATA handler use el viejo valor
+        # (no el nuevo canal que acaba de seleccionar FIX 763)
+        _old_canal_solicitado_1061 = self.context.canal_solicitado
         if transition.template_key in ('pedir_whatsapp', 'pedir_alternativa_whatsapp'):
             self.context.canal_solicitado = 'whatsapp'
             if 'whatsapp' not in self.context.canales_intentados:
@@ -3144,8 +3212,12 @@ class FSMEngine:
             if 'correo' in tn or 'email' in tn:
                 if 'correo' not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append('correo')
-            if self.context.canal_solicitado:
-                c = self.context.canal_solicitado
+            # FIX 1061: Usar canal ANTERIOR (antes de esta transición) para no agregar
+            # el canal recién elegido por FIX 763 a la lista de rechazados.
+            # Ej: cliente dice "No tengo WhatsApp" → FIX 763 elige correo como alternativa
+            # → NO agregar 'correo' a rechazados (era canal nuevo, no el rechazado)
+            if _old_canal_solicitado_1061:
+                c = _old_canal_solicitado_1061
                 if c not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append(c)
 

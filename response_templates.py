@@ -62,6 +62,11 @@ TEMPLATES = {
         "ferreteros. Manejamos mas de quince categorias. "
         "¿Se encontrara el encargado de compras?",
     ],
+    # FIX 1068: Identificacion breve post-despedida (sin reiniciar pitch completo)
+    # Cuando en DESPEDIDA el cliente pregunta empresa/numero, solo identificarse y despedirse
+    "identificacion_breve_1068": [
+        "Le llamo de NIOVAL, distribuidores de ferreteria. Que tenga excelente dia.",
+    ],
 
     # === FIX 894: Templates para IDENTITY_QUESTION y WHAT_OFFER ===
     # Evitan que GPT genere respuestas genéricas cuando cliente pregunta quién es Bruce
