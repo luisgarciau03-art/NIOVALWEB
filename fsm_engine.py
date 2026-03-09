@@ -462,10 +462,34 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     _tiene_ciudad_973 = any(c in tn for c in _ciudad_area_973)
     _effective_digits = len(digits) + num_words + (2 if _tiene_ciudad_973 and len(digits) >= 6 else 0)
 
+    # FIX 1018: "número extensión X" → strip extension digits, validate remaining 10
+    # "El 3312190020 extensión 5" = 11 digits raw but phone is just 3312190020 (10)
+    _extension_stripped_1018 = False
+    if 'extension' in tn or 'ext' in tn.split():
+        import re as _re1018
+        _tn_no_ext = _re1018.sub(r'\bext(?:ension)?\s*\d+', '', tn).strip()
+        _digits_no_ext = _re1018.findall(r'\d', _tn_no_ext)
+        if len(_digits_no_ext) >= 10:
+            # Valid 10-digit number without extension → treat as complete phone
+            print(f"  [FIX 1018] Extension stripped → {len(_digits_no_ext)} dígitos válidos")
+            _extension_stripped_1018 = True
+            digits = _digits_no_ext  # Use stripped digits for further checks
+            _effective_digits = len(_digits_no_ext)
+
+    # OOS-16-19: "Llame al número principal de la empresa + digits" = CALLBACK, not capture
+    _callback_num_principal = any(p in tn for p in [
+        'numero principal', 'numero de la empresa', 'numero del negocio',
+        'llame al numero', 'llame mejor al', 'mejor llame al',
+        'llamen al numero', 'marque al numero principal',
+    ])
+
     if _effective_digits >= 10 or len(digits) >= 10:
         # FIX 780: 10+ dígitos con contexto temporal en BUSCANDO_ENCARGADO = callback, no teléfono
         if has_time_context and state == FSMState.BUSCANDO_ENCARGADO:
             pass  # Fall through to callback/other classifiers
+        # OOS-16-19: "numero principal de la empresa" + digits = callback request
+        elif _callback_num_principal:
+            pass  # Fall through to callback classifiers
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
@@ -517,6 +541,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'aqui es una verduleria', 'aqui vendemos comida',
         'no es ferreteria esto', 'esto no es ferreteria',
         'aqui no manejamos nada de eso', 'no es nuestro giro',
+        # FIX 1012: Taller mecánico / giro diferente → negocio no aplica
+        'somos taller mecanico', 'somos un taller mecanico', 'somos taller',
+        'somos un taller', 'somos mecanicos', 'somos un taller de',
+        'somos consultorio', 'somos clinica', 'somos salon de belleza',
+        'somos peluqueria', 'somos panaderia', 'somos negocio de otro giro',
+        'aqui es un taller mecanico', 'esto es un taller',
     ]
     if any(w in tn for w in wrong_number):
         return FSMIntent.WRONG_NUMBER
@@ -569,6 +599,15 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'por el momento contamos con', 'estamos bien cubiertos', 'no necesitamos cambiar',
     ]
     if any(n in tn for n in no_interest):
+        # FIX 1014c: "ya tengo proveedor, en que son mejores?" = competitive inquiry
+        # Don't farewell — answer the differentiation question
+        _competitiva_1014 = any(q in tn for q in [
+            'en que son mejores', 'en que se diferencian', 'en que son diferentes',
+            'que ventaja', 'que diferencia', 'como se comparan', 'que los hace',
+            'por que deberia', 'que ofrecen de mas', 'en que mejoran',
+        ])
+        if _competitiva_1014:
+            return FSMIntent.QUESTION
         return FSMIntent.NO_INTEREST
 
     # --- Rechazo de dato específico ---
@@ -709,6 +748,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mi telefono de oficina', 'mi celular es el', 'mi celular es',
         'mi numero de celular', 'mi numero de oficina', 'mi numero fijo',
         'el numero de la tienda', 'el numero del negocio',
+        # FIX 1017: "Mándame un WhatsApp primero" = quiere recibirlo en WhatsApp → dar número
+        # ANTES: 'mandame' en callback_guard → CALLBACK → "¿A qué hora?"
+        # AHORA: offer_data se checa ANTES → OFFER_DATA correcto (cliente da su WA)
+        'mandame un whatsapp', 'mandame un wats', 'mandame un wasap',
+        'mandame un mensaje', 'mandame un wha', 'mandame al whatsapp primero',
+        'primero mandame', 'mandame algo al whatsapp',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -999,6 +1044,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'como le podemos ayudar', 'como le puedo ayudar',
         'en que le puedo servir', 'en que le podemos servir',
         'podemos ayudarle', 'puedo ayudarle', 'diga usted',
+        # FIX 1013: Solicitud de supervisor → redirigir con pitch (Bruce es el contacto)
+        'con su supervisor', 'con el supervisor', 'hablar con el supervisor',
+        'hablar con su supervisor', 'comunicarme con su supervisor',
+        'quiero hablar con el supervisor', 'supervisor por favor',
+        'me puede comunicar con su', 'me puede comunicar con el supervisor',
     ]
     if any(q in tn for q in _what_offer_894):
         return FSMIntent.WHAT_OFFER
@@ -1031,6 +1081,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'si va', 'si orale', 'si andale', 'si correcto', 'si exacto',
         'ok perfecto', 'ok listo', 'ok sale', 'ok va', 'ok orale',
         'claro perfecto', 'claro que si perfecto',
+        # OOS-13-17: Preferencia de número cuando ya se dio → CONFIRMATION
+        'use el personal', 'use el del negocio', 'use el de la tienda',
+        'el personal por favor', 'mejor el personal', 'el personal mejor',
+        'use el personal por favor', 'prefiero el personal',
     ]
     if tn in confirm_exact or any(c == tn for c in confirm_exact):
         # FIX 884 (reemplaza FIX 893): BRUCE2619 - "Dígame" en BUSCANDO_ENCARGADO
@@ -1074,6 +1128,18 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'tiempo de entrega', 'el tiempo de entrega', 'los tiempos de entrega',
         'catalogo en papel', 'prefiero catalogo en papel',
         'tienen pagina', 'tienen pagina web', 'tienen catalogo fisico',
+        # FIX 1014a: Preguntas de precio (antes en interest → OFFER_DATA/digame_numero incorrecto)
+        'cuanto cuesta', 'cuanto sale', 'cuanto vale', 'a cuanto esta',
+        'cuanto cuesta el catalogo', 'cuanto cuesta eso', 'cuanto nos sale',
+        'cuanto me cuesta', 'cuanto cobran', 'cuantos cuesta',
+        # FIX 1014b: Preguntas de productos específicos no capturadas antes
+        'tienen tornilleria', 'tiene tornilleria', 'manejan tornilleria',
+        'tienen material de construccion', 'manejan material de construccion',
+        'tienen candados', 'manejan candados', 'tienen cintas', 'tienen silicones',
+        'tienen herramienta electrica', 'manejan herramienta electrica',
+        'que productos tienen exactamente', 'que venden exactamente',
+        'que venden', 'que manejan', 'cuantos productos tienen',
+        'son mayoristas', 'son distribuidores de',
     ]
     if any(q in tn for q in implicit_questions):
         return FSMIntent.QUESTION
@@ -1085,7 +1151,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'a ver', 'que ofrece', 'que ofrecen', 'que tiene', 'que tienen',
         'mandame', 'mandeme', 'enviame', 'envieme', 'pasame',
         'como le hago', 'como funciona', 'que precio', 'que precios',
-        'cuanto cuesta', 'cuanto sale', 'que descuento', 'que promocion',
+        'que descuento', 'que promocion',
+        # NOTE: 'cuanto cuesta'/'cuanto sale' movidos a implicit_questions (FIX 1014a)
         'suena bien', 'suena interesante', 'esta interesante',
         'si claro', 'por supuesto', 'como no', 'va que va',
         'mandalo', 'mandelo', 'envialo', 'envielo',
@@ -2393,6 +2460,12 @@ class FSMEngine:
         # FIX 788: Gaps - NO_INTEREST, WRONG_NUMBER
         add(S.DESPEDIDA, I.NO_INTEREST,  S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.WRONG_NUMBER, S.DESPEDIDA, A.HANGUP, None)
+        # FIX 1016: Human greeting after IVR-triggered DESPEDIDA → restart pitch
+        # "Para continuar en español marque uno" → DESPEDIDA → human arrives → retomar
+        add(S.DESPEDIDA, I.MANAGER_PRESENT,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.DESPEDIDA, I.WHAT_OFFER,       S.PITCH, A.TEMPLATE, "pitch_completo_894")
+        add(S.DESPEDIDA, I.IDENTITY,         S.PITCH, A.TEMPLATE, "identificacion_pitch")
+        add(S.DESPEDIDA, I.INTEREST,         S.PITCH, A.TEMPLATE, "pitch_completo_894")
 
         # === CONVERSACION_LIBRE (FIX 790: shadow transitions, sin entry points aún) ===
         # No está en FSM_ACTIVE_STATES - solo shadow logging.
@@ -2620,6 +2693,26 @@ class FSMEngine:
                 self.state = FSMState.CONTACTO_CAPTURADO
                 self.context.datos_parciales = ""
                 return self._get_template("confirmar_telefono")
+
+            # FIX 1015: Callback with time already given → acknowledge, don't ask again
+            # "Mejor a las 3 de la tarde" → preguntar_hora_callback → asks "¿A qué hora?"
+            # Fix: if time is in the text, confirm it directly
+            if transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo'):
+                import re as _re1015
+                _hora_1015 = _re1015.search(
+                    r'a\s+las?\s+([\w]+(?:\s+(?:de\s+la\s+)?(?:tarde|manana|noche|madrugada))?)',
+                    texto, _re1015.IGNORECASE)
+                if not _hora_1015:
+                    # Try simpler: "las 3", "las tres", "3 pm"
+                    _hora_1015 = _re1015.search(
+                        r'(?:las?|desde\s+las?)\s+(\d+(?::\d+)?(?:\s*(?:am|pm))?)',
+                        texto, _re1015.IGNORECASE)
+                if _hora_1015:
+                    _hora_str_1015 = _hora_1015.group(1).strip()
+                    print(f"  [FIX 1015] Hora ya dada '{_hora_str_1015}' → confirmar sin preguntar")
+                    self.state = FSMState.ENCARGADO_AUSENTE
+                    return (f"Perfecto, le marco a las {_hora_str_1015}. "
+                            f"Muchas gracias por su tiempo, que tenga excelente dia.")
 
             # FIX 1007: Confirmar correo repitiendo el dato capturado (reduce errores en dictado oral)
             if transition.template_key == 'confirmar_correo':

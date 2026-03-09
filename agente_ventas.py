@@ -10654,10 +10654,19 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             r'ya tengo|ya lo tengo|quedo registrado|le confirmo el correo'
                             r'|le confirmo.*numero|perfecto.*le env',
                             fsm_result or '', _re1006.IGNORECASE)
-                        if (_prev_desp_1006 and fsm_result and not _es_confirmacion_1006 and
-                                _re1006.search(
-                                    r'catalogo|cat\u00e1logo|lista de precios|le env\u00edo|le envio|whatsapp|correo',
-                                    fsm_result, _re1006.IGNORECASE)):
+                        # FIX 1006B: OOS-12-18 — "claro digame/proporcionar" = captura activa
+                        # El despedida era de callback-confirmation, NO de verdadero cierre
+                        # No bloquear respuestas que PIDEN dato al cliente (solo las que OFRECEN catálogo)
+                        _es_captura_activa_1006 = _re1006.search(
+                            r'digame|d\u00edgame|proporcionar|claro.*digame|anotar|anote|'
+                            r'me puede facilitar|me da su|me puede dar',
+                            fsm_result or '', _re1006.IGNORECASE)
+                        # Only block if response OFFERS catalog/product (not just asks for data)
+                        _es_oferta_1006 = _re1006.search(
+                            r'cat\u00e1logo|catalogo|lista de precios|le env\u00edo|le envio',
+                            fsm_result or '', _re1006.IGNORECASE)
+                        if (_prev_desp_1006 and fsm_result and not _es_confirmacion_1006
+                                and not _es_captura_activa_1006 and _es_oferta_1006):
                             print(f"[OK] FIX 1006: OFERTA_POST_DESPEDIDA en ruta FSM -> override")
                             fsm_result = "Que tenga excelente d\u00eda. Hasta luego."
                     except Exception:
