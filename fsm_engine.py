@@ -2300,6 +2300,9 @@ class FSMEngine:
         add(S.SALUDO, I.WHAT_OFFER,        S.PITCH, A.TEMPLATE, "pitch_completo_894")
         # FIX 786: CONTINUATION - cliente sigue hablando, no interrumpir
         add(S.SALUDO, I.CONTINUATION,  S.SALUDO, A.NOOP, None)
+        # FIX 1046: SALUDO + TRANSFER → ESPERANDO_TRANSFERENCIA (antes: no entry → GPT da pitch)
+        # "Un momento, le transfiero la llamada" en primer turno = cliente pasa a encargado
+        add(S.SALUDO, I.TRANSFER, S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === PITCH ===
         # FIX 985: PITCH + CONFIRMATION → ENCARGADO_PRESENTE (no BUSCANDO_ENCARGADO)
@@ -2364,6 +2367,8 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.UNKNOWN,         S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "conversacion_libre")
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.BUSCANDO_ENCARGADO, I.CONTINUATION,  S.BUSCANDO_ENCARGADO, A.NOOP, None)
+        # FIX 1046: BUSCANDO_ENCARGADO + TRANSFER → ESPERANDO_TRANSFERENCIA
+        add(S.BUSCANDO_ENCARGADO, I.TRANSFER, S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === ENCARGADO_PRESENTE ===
         # FIX 916B: Solo pedir WhatsApp si ya se dio pitch completo
