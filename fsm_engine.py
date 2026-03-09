@@ -789,6 +789,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'esta en la bodega', 'esta en el almacen', 'esta en el piso de venta',
         'esta atendiendo un cliente', 'esta con un cliente', 'esta con visita',
         'esta en caja', 'esta cargando mercancia', 'esta en el patio',
+        # FIX 1024: "yo no decido eso" = no es el decisor → redirigir al que decide
+        'yo no decido', 'no soy quien decide', 'no tomo esas decisiones',
+        'no es mi decision', 'no soy el que decide', 'no decido yo',
+        'las compras las hace', 'las compras las decide',
+        'no tengo autoridad para', 'no tengo poder de decision',
     ]
     if any(m in tn for m in manager_absent):
         return FSMIntent.MANAGER_ABSENT
@@ -1013,6 +1018,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'y usted quien', 'y tu quien', 'y usted de donde', 'y usted que',
         # FIX 1000: "quién le llama" = pregunta identidad
         'quien le llama', 'quien me esta llamando', 'quien llama',
+        # FIX 1021: "¿es usted una grabación/robot?" y empresa equivocada
+        'es una grabacion', 'es grabacion', 'eres una grabacion',
+        'son una grabacion', 'es robot', 'es un robot', 'es un bot',
+        'persona real', 'es humano', 'habla con alguien real',
+        'es automatizado', 'es inteligencia artificial', 'es una ia',
+        'son de herrajes', 'son de ferreteria', 'verdad que son de',
+        'son ustedes de', 'es usted de',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
@@ -1054,7 +1066,7 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         return FSMIntent.WHAT_OFFER
 
     # --- Pregunta general ---
-    question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'por que']
+    question_markers = ['que', 'cual', 'como', 'cuando', 'donde', 'cuanto', 'cuantos', 'por que']
     # FIX 795: Saludos que empiezan con "que" NO son preguntas reales
     # "que tal buen dia" -> NO QUESTION (es re-saludo)
     greeting_not_question_795 = ['que tal', 'que onda', 'que hubo', 'que paso']
@@ -1140,6 +1152,17 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'que productos tienen exactamente', 'que venden exactamente',
         'que venden', 'que manejan', 'cuantos productos tienen',
         'son mayoristas', 'son distribuidores de',
+        # FIX 1020: Preguntas de servicio/empresa ignoradas como UNKNOWN
+        'aceptan devoluciones', 'devoluciones', 'politica de devolucion',
+        'aceptan devolucion', 'hacen devoluciones', 'puedo devolver',
+        'tienen rfc', 'dan factura', 'facturan', 'factura electronica',
+        'son empresa formal', 'emiten factura', 'tienen facturacion',
+        'facturacion', 'requiero factura', 'necesito factura',
+        'catalogo fisico', 'catalogo es fisico', 'fisico o digital',
+        'el catalogo es fisico', 'catalogo digital', 'tienen catalogo en digital',
+        'en cuantos dias', 'cuantos dias llega', 'cuantos dias tarda',
+        'en que tiempo llega', 'cuando llega el pedido', 'dias de entrega',
+        'cuanto tarda el envio', 'cuanto tarda la entrega',
     ]
     if any(q in tn for q in implicit_questions):
         return FSMIntent.QUESTION
@@ -1380,6 +1403,15 @@ class FSMEngine:
                 'numero equivocado', 'numero mal', 'dicte mal',
                 'perdon, el', 'perdón, el',  # "Perdón, el número correcto es..."
                 'es el correcto', 'ese era', 'ese numero era',
+                # FIX 1026: "use el personal / use el del negocio" = preferencia de número
+                'use el personal', 'el personal por favor', 'mejor el personal',
+                'use el del negocio', 'use el de la tienda', 'el del negocio',
+                'prefiero el personal', 'use ese personal',
+                # FIX 1029: "No no, el celular es solo X" / "sin extensión" = clarificación
+                'el celular es solo', 'el numero es solo', 'sin extension',
+                'es sin extension', 'solo es el', 'solo el celular',
+                'nada mas el', 'nada mas', 'el correcto es solo',
+                'sin la extension', 'numero sin extension',
             ]
             if any(s in _texto_lower for s in _correccion_signals_952):
                 import re as _re952
@@ -1390,6 +1422,30 @@ class FSMEngine:
                     if len(_solo_digits) >= 8:
                         _numero_limpio_952 = _solo_digits
                         break
+                # FIX 1026: Si no hay número en el texto actual, buscar en historial
+                # "Use el personal por favor" → extraer el número marcado como "personal"
+                _hist_1026 = getattr(self, 'conversation_history', [])
+                if not _numero_limpio_952 and ('personal' in _texto_lower or 'negocio' in _texto_lower):
+                    _prefer_personal = 'personal' in _texto_lower
+                    for _msg in reversed(_hist_1026[-6:]):
+                        if _msg.get('role') != 'user':
+                            continue
+                        _hist_txt = _msg.get('content', '')
+                        _found_pairs = _re952.findall(r'(\w+)\s+es\s+(\d{10})', _hist_txt)
+                        for _label, _num in _found_pairs:
+                            if _prefer_personal and 'personal' in _label.lower():
+                                _numero_limpio_952 = _num
+                                break
+                            elif not _prefer_personal and any(w in _label.lower() for w in ['negocio', 'tienda', 'empresa']):
+                                _numero_limpio_952 = _num
+                                break
+                        if not _numero_limpio_952:
+                            # Fallback: find all 10-digit numbers in history and pick first/last
+                            _all_hist_nums = _re952.findall(r'\d{10}', _re952.sub(r'\s', '', _hist_txt))
+                            if len(_all_hist_nums) >= 2:
+                                _numero_limpio_952 = _all_hist_nums[0] if _prefer_personal else _all_hist_nums[-1]
+                        if _numero_limpio_952:
+                            break
                 if _numero_limpio_952:
                     print(f"  [FIX 952] Corrección post-captura detectada -> actualizando dato a {_numero_limpio_952}")
                     if hasattr(self.context, 'whatsapp') and self.context.whatsapp:
@@ -1495,7 +1551,11 @@ class FSMEngine:
             'la persona que llama no esta disponible',
             'la persona con la que intentas comunicarte',
             'para ventas marque', 'para soporte marque', 'marque uno',
-            'bienvenido a empresa', 'menu principal', 'extension',
+            'bienvenido a empresa', 'menu principal',
+            # FIX 1028: 'extension' solo era demasiado amplio → FP con "mi número es X extensión 5"
+            # Ahora solo patrones que realmente son IVR (marque/presione extension)
+            'marque la extension', 'marque extension', 'presione la extension',
+            'presione extension', 'para la extension',
         ]
         if any(b in _texto_lower for b in _buzon_ivr_signals):
             print(f"  [FIX 906] Buzón/IVR detectado por texto -> colgar")
@@ -2298,7 +2358,8 @@ class FSMEngine:
         add(S.ENCARGADO_PRESENTE, I.TRANSFER,       S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
         # FIX 894: New intents for ENCARGADO_PRESENTE
         add(S.ENCARGADO_PRESENTE, I.IDENTITY_QUESTION, S.ENCARGADO_PRESENTE, A.TEMPLATE, "identificacion_nioval")
-        add(S.ENCARGADO_PRESENTE, I.WHAT_OFFER,        S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_completo_894")
+        # FIX 1022: WHAT_OFFER en encargado presente = pregunta producto → GPT_NARROW responder
+        add(S.ENCARGADO_PRESENTE, I.WHAT_OFFER,        S.ENCARGADO_PRESENTE, A.GPT_NARROW, "responder_pregunta_producto")
 
         # === ENCARGADO_AUSENTE ===
         add(S.ENCARGADO_AUSENTE, I.OFFER_DATA,     S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
@@ -2374,7 +2435,9 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.WRONG_NUMBER,           S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
         # FIX 894: New intents for CAPTURANDO_CONTACTO
         add(S.CAPTURANDO_CONTACTO, I.IDENTITY_QUESTION, S.CAPTURANDO_CONTACTO, A.TEMPLATE, "identificacion_nioval")
-        add(S.CAPTURANDO_CONTACTO, I.WHAT_OFFER,        S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pitch_completo_894")
+        # FIX 1022: WHAT_OFFER en captura = pregunta sobre productos → responder con GPT_NARROW
+        # Antes era pitch_completo_894 → FIX 925 lo interceptaba → pedir_whatsapp (INCORRECTO)
+        add(S.CAPTURANDO_CONTACTO, I.WHAT_OFFER,        S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
         # FIX 797: En CAPTURANDO_CONTACTO, manejar intents de encargado (eco STT)
         # STT echo "no está" -> MANAGER_ABSENT -> sin transición -> UNKNOWN -> GPT "contacto alternativo"
         add(S.CAPTURANDO_CONTACTO, I.MANAGER_ABSENT,  S.CAPTURANDO_CONTACTO, A.TEMPLATE, "digame_numero")
@@ -2616,17 +2679,18 @@ class FSMEngine:
 
             # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
-            # Si identity_repetidas >= 2, pivotar a pedir_whatsapp_o_correo para avanzar la conv.
+            # FIX 1023: threshold subido de 2→3: cliente puede hacer 2 preguntas de identidad legítimas
+            # ("¿cómo se llama?" + "¿de qué empresa?") antes de pivotar a captura
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
-                if self.context.identity_repetidas >= 2:
-                    if self.context.identity_repetidas == 2:
-                        print(f"  [FIX 878] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
+                if self.context.identity_repetidas >= 3:
+                    if self.context.identity_repetidas == 3:
+                        print(f"  [FIX 878/1023] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
                         # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_whatsapp_o_correo_breve")
                     else:
-                        print(f"  [FIX 878/885B] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
-                        # FIX 885B: BRUCE2551/1975 - 3er+ identity → template distinto para evitar PREGUNTA_REPETIDA
+                        print(f"  [FIX 878/885B/1023] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
+                        # FIX 885B: BRUCE2551/1975 - 4er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
 
             # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
