@@ -690,6 +690,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'me dejas tu numero', 'me pasas tu numero', 'me pasas tus datos',
         'dejame el numero', 'dame el numero', 'tu numero de telefono',
         'si gustas dejarme', 'dejame un telefono',
+        # FIX 1032: "Deje su número y él le llama" / "Me dice su número" → Bruce da su contacto
+        'deje su numero', 'deje el numero', 'me da su numero', 'digame su numero',
+        'denos su numero', 'me dice su numero', 'me das tu numero de contacto',
+        'el le llama', 'el le marca', 'ella le llama', 'ella le marca',
+        'para que le marque', 'para que le llame', 'le podemos marcar',
+        'le podemos llamar', 'que le marque', 'que le llame',
+        'nos puede dar su numero', 'nos da su numero', 'dejenos su numero',
     ]
     if any(p in tn for p in _pide_contacto_bruce_897):
         return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
@@ -852,6 +859,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             'marqueme', 'llameme', 'marque el', 'llame el',
             'mas tarde', 'despues', 'luego', 'otro dia',
             'la proxima', 'no puedo ahorita', 'ando ocupado',
+            # FIX 1031: 'estoy ocupado' / 'estoy atendiendo' = CALLBACK no MANAGER_PRESENT
+            'estoy ocupado', 'estoy muy ocupado', 'estoy bastante ocupado',
+            'estoy atendiendo', 'estoy en junta', 'estoy en reunion',
+            'estoy trabajando', 'estoy con clientes', 'estoy con un cliente',
+            'ahorita no puedo', 'no puedo en este momento', 'no es buen momento',
         ])
         if _has_callback_906:
             return FSMIntent.CALLBACK
@@ -977,6 +989,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'marcame manana', 'marca manana', 'marcame mañana',
         'llama otro dia', 'llamame otro dia', 'en otro momento',
         'en unos dias', 'en unos días', 'dentro de unos dias',
+        # FIX 1033: "en unos meses" / "en tres meses" / "regresa en N meses" = callback long-term
+        'en unos meses', 'en algunos meses', 'en tres meses', 'en dos meses',
+        'en un mes', 'dentro de un mes', 'dentro de dos meses', 'dentro de tres meses',
+        'regresa en tres meses', 'regresa en dos meses', 'regresa en un mes',
+        'en unos meses regresa', 'en unos meses llega', 'en unos meses viene',
+        'el siguiente año', 'el proximo año', 'a inicio del año',
+        'en unas semanas', 'dentro de unas semanas', 'en dos semanas', 'en tres semanas',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
@@ -1170,6 +1189,16 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'en cuantos dias', 'cuantos dias llega', 'cuantos dias tarda',
         'en que tiempo llega', 'cuando llega el pedido', 'dias de entrega',
         'cuanto tarda el envio', 'cuanto tarda la entrega',
+        # FIX 1034: "¿Cómo consiguió este número?" → GPT explica origen de datos
+        'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+        'como consiguio mi numero', 'de donde consiguio mi numero',
+        'quien le dio mi numero', 'como obtuvo mi contacto', 'donde consiguio mi contacto',
+        'de donde saco mi numero', 'como tiene mi numero',
+        # FIX 1035: "Solo trabajamos con proveedores certificados, ¿tienen eso?" → QUESTION
+        'proveedores certificados', 'proveedor certificado', 'certificacion de proveedor',
+        'estan certificados', 'tienen certificacion', 'tienen certificado',
+        'son proveedores certificados', 'cuentan con certificacion',
+        'requieren certificacion', 'requieren estar certificados',
     ]
     if any(q in tn for q in implicit_questions):
         return FSMIntent.QUESTION
@@ -2519,7 +2548,10 @@ class FSMEngine:
         add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.FAREWELL,      S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
-        add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        # FIX 1038: DESPEDIDA + VERIFICATION → restart pitch (humano llega post-IVR)
+        # Antes: "Bueno buenas tardes" en DESPEDIDA → doble despedida (bug OOS-17-06)
+        # Ahora: tratarlo como señal de humano presente → pitch (igual que FIX 1016)
+        add(S.DESPEDIDA, I.VERIFICATION,  S.PITCH, A.TEMPLATE, "pitch_completo_894")
         add(S.DESPEDIDA, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         # FIX 839: Cliente sigue dictando después de despedida -> hangup (ya tenemos el dato)
         add(S.DESPEDIDA, I.DICTATING_COMPLETE_PHONE, S.DESPEDIDA, A.HANGUP, None)
@@ -2536,6 +2568,9 @@ class FSMEngine:
         add(S.DESPEDIDA, I.WHAT_OFFER,       S.PITCH, A.TEMPLATE, "pitch_completo_894")
         add(S.DESPEDIDA, I.IDENTITY,         S.PITCH, A.TEMPLATE, "identificacion_pitch")
         add(S.DESPEDIDA, I.INTEREST,         S.PITCH, A.TEMPLATE, "pitch_completo_894")
+        # FIX 1031: DESPEDIDA + CALLBACK → confirmar callback (cliente da hora después de despedida)
+        # Ej: FSM dice adiós porque "estoy ocupado" → cliente dice "Mejor llámame en una hora"
+        add(S.DESPEDIDA, I.CALLBACK,         S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
 
         # === CONVERSACION_LIBRE (FIX 790: shadow transitions, sin entry points aún) ===
         # No está en FSM_ACTIVE_STATES - solo shadow logging.
@@ -3196,6 +3231,21 @@ class FSMEngine:
             return "en la tarde"
         if 'en la noche' in tn or 'por la noche' in tn:
             return "en la noche"
+
+        # FIX 1033: Callbacks long-term ("en unos meses", "en dos semanas", etc.)
+        # Devolver la frase como hora para que se use confirmar_callback_generico
+        _long_term_patterns = [
+            ('en unos meses', 'en unos meses'), ('en algunos meses', 'en algunos meses'),
+            ('en tres meses', 'en tres meses'), ('en dos meses', 'en dos meses'),
+            ('en un mes', 'en un mes'), ('dentro de un mes', 'en un mes'),
+            ('dentro de dos meses', 'en dos meses'), ('dentro de tres meses', 'en tres meses'),
+            ('en unas semanas', 'en unas semanas'), ('en dos semanas', 'en dos semanas'),
+            ('en tres semanas', 'en tres semanas'), ('dentro de unas semanas', 'en unas semanas'),
+            ('pasado manana', 'pasado manana'), ('pasado mañana', 'pasado manana'),
+        ]
+        for pattern, label in _long_term_patterns:
+            if pattern in tn:
+                return label
 
         return None
 
