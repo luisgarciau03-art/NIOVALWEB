@@ -970,6 +970,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'hay que verlo', 'hay que pensarlo', 'hay que consultarlo',
         'me lo tiene que autorizar', 'tiene que autorizar', 'necesita autorizarlo',
         'lo tengo que consultar', 'lo tenemos que consultar',
+        # FIX 1030: "pasado mañana" / "vuélveme a llamar" / "llama mañana" = callback específico
+        'pasado manana', 'pasado mañana',
+        'vuelveme a llamar', 'vuelvame a llamar', 'vuelve a llamar',
+        'llamame manana', 'llama manana', 'llama mañana', 'llamame mañana',
+        'marcame manana', 'marca manana', 'marcame mañana',
+        'llama otro dia', 'llamame otro dia', 'en otro momento',
+        'en unos dias', 'en unos días', 'dentro de unos dias',
     ]
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
