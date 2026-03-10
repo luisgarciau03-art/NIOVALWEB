@@ -1551,8 +1551,17 @@ class FSMEngine:
             'le dejo el recado', 'le paso el recado', 'le dejo recado',
             'le dejo el mensaje', 'le paso el mensaje', 'si le dejo el mensaje',
             'si le comento', 'le comento que llamo', 'le dejo su recado',
+            # FIX 1095b: patrones faltantes (OOS-12-01/02/04/09/10)
+            'le doy el recado', 'deje el recado', 'si deje', 'con gusto le doy el recado',
+            'yo le doy el recado', 'aqui le dejo el recado', 'le dejamos el recado',
         ]
-        if (any(p in _texto_lower for p in _recado_1095) and
+        # FIX 1095b: en ENCARGADO_AUSENTE también detectar "le aviso" corto (OOS-12-09)
+        _recado_ausente_1095 = ['le aviso', 'si le aviso', 'yo aviso', 'yo le aviso', 'aqui le aviso']
+        _es_recado_1095 = any(p in _texto_lower for p in _recado_1095) or (
+            self.state == FSMState.ENCARGADO_AUSENTE and
+            any(p in _texto_lower for p in _recado_ausente_1095)
+        )
+        if (_es_recado_1095 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
             print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir contacto")
@@ -1638,8 +1647,11 @@ class FSMEngine:
             if intent == FSMIntent.DICTATING_PARTIAL:
                 _nuevos_953 = ''.join(_re953.findall(r'\d', texto))
                 # Contar palabras numéricas en español como dígitos adicionales
-                _num_words_953 = sum(1 for w in _texto_lower.split() if w in _NUMS_ESP)
-                _num_words_953 += sum(2 for w in _texto_lower.split() if w in {
+                # FIX 1101: Strip punctuation (dots, ellipsis "...") before splitting
+                # OOS-17-08: "tres tres... uno dos..." → "tres" matched but "dos..." not in _NUMS_ESP
+                _texto_clean_1101 = _re953.sub(r'[^\w\s]', '', _texto_lower)
+                _num_words_953 = sum(1 for w in _texto_clean_1101.split() if w in _NUMS_ESP)
+                _num_words_953 += sum(2 for w in _texto_clean_1101.split() if w in {
                     'diez','once','doce','trece','catorce','quince','dieciseis','diecisiete',
                     'dieciocho','diecinueve','veinte','treinta','cuarenta','cincuenta',
                     'sesenta','setenta','ochenta','noventa'
@@ -1971,8 +1983,9 @@ class FSMEngine:
                 'pasame tus datos', 'dame tus datos', 'me das tu numero',
                 'me dejas tu numero', 'me pasas tu numero', 'si gustas dejarme',
                 # FIX 1086: Sincronizar con classify_intent() _pide_contacto_bruce_897
+                # FIX 1100: 'me dice su numero' → dar contacto Bruce (OOS-12-07)
                 'deje su numero', 'deje el numero', 'me da su numero', 'digame su numero',
-                'denos su numero', 'dejenos su numero', 'el le llama', 'el le marca',
+                'denos su numero', 'dejenos su numero', 'me dice su numero', 'el le llama', 'el le marca',
                 'para que le marque', 'para que le llame', 'nos puede dar su numero',
                 'digame su correo', 'digame su email', 'su correo por favor',
                 'digame su numero de contacto', 'numero de contacto',
@@ -2774,7 +2787,8 @@ class FSMEngine:
         add(S.DESPEDIDA, I.MANAGER_PRESENT,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         # FIX 1068: Post-despedida identity/question → brief ID + stay in DESPEDIDA (no re-pitch)
         # OOS-12-05/07/10: "Que empresa es" / "Me dice su numero" → brief identification only
-        add(S.DESPEDIDA, I.WHAT_OFFER,       S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        # FIX 1098: WHAT_OFFER after despedida = real curiosity → re-pitch (OOS-15-09: "a ver de que se trata")
+        add(S.DESPEDIDA, I.WHAT_OFFER,       S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.DESPEDIDA, I.IDENTITY,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
         # FIX 1092: DESPEDIDA + INTEREST → re-pitch encargado (cliente reabre con interés real)
         # OOS-15-09: cliente muestra interés real → re-pitch, no solo identificacion_breve
@@ -2945,17 +2959,18 @@ class FSMEngine:
             # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
             # FIX 1023: threshold subido de 2→3: cliente puede hacer 2 preguntas de identidad legítimas
-            # ("¿cómo se llama?" + "¿de qué empresa?") antes de pivotar a captura
+            # FIX 1099: threshold bajado de 3→2 para evitar PREGUNTA_REPETIDA en 2ª respuesta idéntica
+            # (OOS-12-13/19: "quien llama?" x2 → Bruce da misma identificacion_nioval x2)
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
-                if self.context.identity_repetidas >= 3:
-                    if self.context.identity_repetidas == 3:
-                        print(f"  [FIX 878/1023] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
+                if self.context.identity_repetidas >= 2:
+                    if self.context.identity_repetidas == 2:
+                        print(f"  [FIX 878/1099] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
                         # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_whatsapp_o_correo_breve")
                     else:
-                        print(f"  [FIX 878/885B/1023] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
-                        # FIX 885B: BRUCE2551/1975 - 4er+ identity → template distinto para evitar PREGUNTA_REPETIDA
+                        print(f"  [FIX 878/885B/1099] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
+                        # FIX 885B: BRUCE2551/1975 - 3er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
 
             # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
