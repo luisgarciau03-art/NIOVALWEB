@@ -10665,8 +10665,20 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                         _es_oferta_1006 = _re1006.search(
                             r'cat\u00e1logo|catalogo|lista de precios|le env\u00edo|le envio',
                             fsm_result or '', _re1006.IGNORECASE)
+                        # FIX 1006C: No bloquear si FSM ya salió de DESPEDIDA (re-pitch legítimo)
+                        # OOS-15-09: cliente reabre con "a ver de que se trata" → FIX 1098 envía a
+                        # ENCARGADO_PRESENTE. FIX 1006 bloqueaba pitch_encargado por 'catálogo'.
+                        try:
+                            from fsm_engine import FSMState as _FSMState1006
+                            _fsm_still_desp_1006 = (
+                                getattr(getattr(self, 'fsm', None), 'state', None)
+                                == _FSMState1006.DESPEDIDA
+                            )
+                        except Exception:
+                            _fsm_still_desp_1006 = True  # Asumir despedida si no se puede verificar
                         if (_prev_desp_1006 and fsm_result and not _es_confirmacion_1006
-                                and not _es_captura_activa_1006 and _es_oferta_1006):
+                                and not _es_captura_activa_1006 and _es_oferta_1006
+                                and _fsm_still_desp_1006):
                             print(f"[OK] FIX 1006: OFERTA_POST_DESPEDIDA en ruta FSM -> override")
                             fsm_result = "Que tenga excelente d\u00eda. Hasta luego."
                     except Exception:

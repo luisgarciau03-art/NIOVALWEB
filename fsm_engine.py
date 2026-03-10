@@ -491,9 +491,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 1073: Removido FIX 1050 CAPTURANDO_CONTACTO exception — "llame al numero principal"
         # siempre es un redirect/callback, nunca el contacto personal del cliente
         # FIX 1083: Retornar CALLBACK directamente (antes: pass → caía en DICTATING_PARTIAL)
-        # FIX 1105: Si dan el número explícitamente, capturarlo (DICTATING_COMPLETE_PHONE)
-        # "Llame mejor al número principal el 3336001234" → capturar 3336001234, no preguntar cuándo
-        elif _callback_num_principal and _effective_digits < 10:
+        # OOS-16-19 hard case: "Llame mejor al numero principal el 3336001234" = redirect,
+        # no el WhatsApp del cliente → mantener como CALLBACK (preguntar hora, no capturar)
+        elif _callback_num_principal:
             return FSMIntent.CALLBACK
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
