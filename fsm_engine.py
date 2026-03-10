@@ -724,6 +724,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'digame su correo', 'digame su email', 'su correo por favor', 'su correo electronico',
         'nos da su correo', 'nos puede dar su correo', 'dejenos su correo',
         'digame su numero de contacto', 'digame su numero directo',
+        # FIX 1114: "cuál es su número" (OOS-12-09: cliente pide número de Bruce)
+        'cual es su numero', 'cual es el numero', 'cual es tu numero',
     ]
     if any(p in tn for p in _pide_contacto_bruce_897):
         return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
@@ -754,7 +756,18 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'le doy su recado', 'le paso su recado', 'le dejo su recado',
         'le aviso', 'le pongo el mensaje',
     ])
+    # FIX 1112: relay + time indicator → CALLBACK not FAREWELL
+    # OOS-12-09 MALA: "si le aviso mañana" → 'le aviso' matches relay → FAREWELL → despedida prematura
+    # Con tiempo explícito = callback implícito (mañana, lunes, en la tarde, etc.)
+    _relay_time_1112 = any(t in tn for t in [
+        'manana', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado',
+        'en la tarde', 'en la manana', 'despues de comer', 'mas tarde', 'mas al rato',
+        'pasado manana', 'la proxima semana', 'la semana que viene',
+    ])
     if _relay_recado_1062:
+        if _relay_time_1112:
+            print(f"  [FIX 1112] Relay+tiempo detectado -> CALLBACK (no FAREWELL)")
+            return FSMIntent.CALLBACK
         return FSMIntent.FAREWELL
 
     # --- Oferta de dato ---
@@ -1607,10 +1620,27 @@ class FSMEngine:
             'en la tarde', 'en la manana', 'despues de comer', 'mas tarde',
             'pasado manana', 'la proxima semana', 'la semana que viene',
         ])
+        # FIX 1111: Nombre encargado post-recado → agradecer y despedir (no re-pedir WhatsApp)
+        # OOS-12-01/02/04: "El encargado es el señor Juan" después de recado → Bruce re-pedía WhatsApp
+        _recado_previo_1111 = getattr(self.context, '_recado_dado_1111', False)
+        _name_patterns_1111 = [
+            'el encargado es', 'la encargada es', 'se llama', 'es la senora', 'es el senor',
+            'el licenciado', 'la licenciada', 'el ingeniero', 'la ingeniera',
+            'el dueno se llama', 'la duena se llama', 'el jefe es', 'la jefa es',
+        ]
+        if (_recado_previo_1111 and
+                any(p in _texto_lower for p in _name_patterns_1111) and
+                not _tiene_numero_1103):
+            print(f"  [FIX 1111] Nombre encargado post-recado → agradecer y despedir")
+            self.context._recado_dado_1111 = False
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("despedida_cortes")
+
         if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
             print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir callback")
+            self.context._recado_dado_1111 = True  # FIX 1111: track recado given
             return self._get_template("recado_y_pedir_contacto_1095")
 
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)

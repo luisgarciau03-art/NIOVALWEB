@@ -133,13 +133,11 @@ TEMPLATES = {
         "Claro, no hay problema. ¿Me podria facilitar algun medio de contacto "
         "del encargado para hacerle llegar nuestra informacion?",
     ],
-    # FIX 938-F: OOS audit V2 - Aceptar oferta de recado + pedir contacto del encargado
+    # FIX 938-F+1113: Aceptar oferta de recado + preguntar hora callback (NO re-pedir WhatsApp)
+    # FIX 1113: Re-pedir WhatsApp causaba PREGUNTA_REPETIDA (OOS-12-03)
     "aceptar_recado_pedir_wa": [
-        "Muchas gracias. Si es posible, le agradeceria que le comentara que somos NIOVAL, "
-        "distribuidores de ferreteria. ¿Habria un WhatsApp o correo del encargado para "
-        "enviarle la informacion directamente?",
-        "Con mucho gusto. Si tiene oportunidad, le comenta que llamo NIOVAL. "
-        "¿Tendra el WhatsApp o correo del encargado para enviarle nuestro catalogo?",
+        "Muchas gracias, le agradezco mucho. ¿A que hora me recomienda volver a llamar?",
+        "Con mucho gusto, se lo agradezco. ¿Cuando estaria disponible el encargado?",
     ],
     "digame_numero": [
         "Claro, digame por favor.",
