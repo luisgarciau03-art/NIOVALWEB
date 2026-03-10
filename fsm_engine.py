@@ -864,11 +864,24 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     ]
     # FIX 1104: Guard FP - "dueNO ESTa, momentito" contains 'no esta' as substring but is POSITIVE presence
     # "El dueño está, un momentito" → manager IS present, just putting on hold → should be TRANSFER
+    _titulos_presente_1104 = ['dueno esta', 'duena esta', 'jefe esta', 'jefa esta',
+                               'gerente esta', 'gerenta esta', 'encargado esta', 'encargada esta']
     _es_positivo_holding_1104 = (
-        any(p in tn for p in ['dueno esta', 'duena esta', 'jefe esta', 'jefa esta',
-                               'gerente esta', 'gerenta esta', 'encargado esta'])
+        any(p in tn for p in _titulos_presente_1104)
         and any(t in tn for t in ['momentito', 'momento', 'segundo', 'espere', 'espera'])
     )
+    # FIX 1108: "encargado está + ocupado/atendiendo/almacén" → CALLBACK not MANAGER_ABSENT
+    # OOS-12-06: "El encargado está en el almacén" → Bruce decía "no se encuentra" (incorrecto)
+    # OOS-12-17: "El dueño está pero está atendiendo en mostrador" → idem
+    _es_ocupado_pero_presente_1108 = (
+        any(p in tn for p in _titulos_presente_1104)
+        and any(t in tn for t in ['atendiendo', 'ocupado', 'ocupada', 'con un cliente',
+                                   'en mostrador', 'en el almacen', 'en la bodega', 'en el patio',
+                                   'pero esta', 'pero anda', 'cargando mercancia', 'en caja'])
+    )
+    if _es_ocupado_pero_presente_1108:
+        print(f"  [FIX 1108] Encargado presente pero ocupado -> CALLBACK (no MANAGER_ABSENT)")
+        return FSMIntent.CALLBACK
     if any(m in tn for m in manager_absent) and not _es_positivo_holding_1104:
         return FSMIntent.MANAGER_ABSENT
     # "No" a secas después de preguntar por encargado = MANAGER_ABSENT contextual
@@ -1587,10 +1600,17 @@ class FSMEngine:
         # OOS-12-15: "Le aviso, pero por si acaso, su WhatsApp es 3398760015" → capturar número
         import re as _re1103
         _tiene_numero_1103 = bool(_re1103.search(r'\d{10}|\d[\d\s\-]{8,}\d', texto))
-        if (_es_recado_1095 and not _tiene_numero_1103 and
+        # FIX 1109: "si le aviso mañana" con indicador de tiempo → CALLBACK no recado
+        # OOS-12-09 MALA: "si le aviso mañana" tiene 'le aviso' (recado) + 'mañana' (tiempo)
+        _tiene_tiempo_1109 = any(t in _texto_lower for t in [
+            'manana', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes',
+            'en la tarde', 'en la manana', 'despues de comer', 'mas tarde',
+            'pasado manana', 'la proxima semana', 'la semana que viene',
+        ])
+        if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
-            print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir contacto")
+            print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir callback")
             return self._get_template("recado_y_pedir_contacto_1095")
 
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
@@ -2989,6 +3009,11 @@ class FSMEngine:
             # FIX 1099 REVERTIDO: threshold 2 causaba pivot agresivo en 1ª pregunta explícita (OOS-12-13/19 MALA)
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
+                # FIX 1110: 2da pregunta de identidad → variante diferente (anti-PREGUNTA_REPETIDA)
+                # OOS-12-13/19: "¿Cómo se llama?" + "¿De qué empresa?" → misma respuesta verbatim
+                if self.context.identity_repetidas == 2:
+                    print(f"  [FIX 1110] identificacion_nioval #{self.context.identity_repetidas} → variante")
+                    return self._get_template("identificacion_nioval_variante")
                 if self.context.identity_repetidas >= 3:
                     if self.context.identity_repetidas == 3:
                         print(f"  [FIX 878/1023] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")

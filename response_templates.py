@@ -57,6 +57,12 @@ TEMPLATES = {
         "Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores "
         "de productos ferreteros de Guadalajara, Jalisco.",
     ],
+    # FIX 1110: Variante para 2da pregunta de identidad (anti-PREGUNTA_REPETIDA)
+    # OOS-12-13: "¿Cómo se llama?" → identificacion_nioval, "¿De qué empresa?" → MISMA respuesta
+    "identificacion_nioval_variante": [
+        "Somos NIOVAL, empresa de Guadalajara dedicada a la distribucion de "
+        "productos ferreteros. Manejamos mas de quince categorias con entrega directa.",
+    ],
     "identificacion_pitch": [
         "Mi nombre es Bruce, le llamo de NIOVAL. Somos distribuidores de productos "
         "ferreteros. Manejamos mas de quince categorias. "
@@ -202,11 +208,12 @@ TEMPLATES = {
         "Somos NIOVAL, distribuidores de productos ferreteros.",
     ],
 
-    # FIX 1095: Recado verbal → reconocer + insistir en captura de contacto
+    # FIX 1095+1107: Recado verbal → reconocer + preguntar hora callback (NO re-pedir WhatsApp)
+    # FIX 1107: Re-pedir WhatsApp causaba PREGUNTA_REPETIDA en 22/230 convs (OOS-05, OOS-12)
     "recado_y_pedir_contacto_1095": [
-        "Con mucho gusto le dejamos el recado. Y para darle seguimiento, ¿habría un número de WhatsApp o correo del negocio donde pueda contactarnos el encargado?",
-        "Claro, con gusto le avisamos. ¿Y habría un número de WhatsApp o correo donde el encargado pueda contactarnos cuando guste?",
-        "Perfecto, le dejamos el mensaje. ¿Tendría un dato de contacto del negocio para enviarle información?",
+        "Con mucho gusto le dejamos el recado. ¿A que hora me recomienda volver a llamar?",
+        "Claro, le dejamos el mensaje. ¿Cuando estaria disponible el encargado para llamarle?",
+        "Perfecto, le dejamos el recado. ¿A que hora puedo volver a marcar?",
     ],
 
     # === TRANSFER / ESPERA ===
