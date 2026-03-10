@@ -181,12 +181,12 @@ TEMPLATES = {
     # FIX 1126: Phone-only confirmation (WA+correo rechazados) — sin "escribir"
     # OOS-03 (10 convs): "me puede escribir" es incoherente para teléfono fijo
     "confirmar_telefono_fijo_1126": [
-        # FIX 1159: Cierre cálido completo (OOS-03: 10 REGULAR por despedida truncada)
-        "Perfecto, ya tengo su numero. Le envio el catalogo con lista de precios "
-        "en las proximas horas. Si tiene alguna duda, nos puede llamar. "
+        # FIX 1168: Teléfono fijo → no se puede enviar catálogo, ofrecer llamar/WA de NIOVAL
+        "Perfecto, ya tengo su numero. Le llamamos a ese numero para darle "
+        "mas detalles de nuestros productos y precios. "
         "Muchas gracias por su tiempo, que tenga excelente dia.",
-        "Excelente, quedo registrado. En breve le envio toda la informacion "
-        "de nuestros productos con precios. Muchas gracias, que tenga excelente dia.",
+        "Excelente, quedo registrado. Le contactamos por ese numero "
+        "para compartirle la informacion de precios. Muchas gracias, que tenga excelente dia.",
     ],
     "confirmar_correo": [
         "Perfecto, ya tengo el correo. Le envio el catalogo con "

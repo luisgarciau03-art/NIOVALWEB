@@ -2168,9 +2168,11 @@ class FSMEngine:
             if 'ocupado' in _texto_lower or 'tiempo' in _texto_lower or 'junta' in _texto_lower or 'no puedo' in _texto_lower:
                 # FIX 1164: Si encargado se identifica + ocupado → preguntar hora callback (no despedida prematura)
                 # OOS-11-01/04/06: "Si soy yo pero estoy ocupado" → despedida sin preguntar hora
+                # FIX 1169: "si pero tengo junta" implica ser el encargado
                 _es_encargado_1164 = any(p in _texto_lower for p in [
                     'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
                     'soy el dueno', 'soy el jefe', 'si soy', 'si yo',
+                    'si pero', 'si estoy', 'si ando',
                 ])
                 if _es_encargado_1164:
                     print(f"  [FIX 1164] Encargado ocupado → preguntar hora callback (no despedida)")
@@ -2321,9 +2323,12 @@ class FSMEngine:
         # FIX 1084C: Agregar DESPEDIDA al guard (encargado ya se identificó antes de despedirse)
         # FIX 1161: Agregar PITCH cuando el hablante SE IDENTIFICA como encargado + callback
         # OOS-11-02/07/08/09: "Soy el encargado pero estoy ocupado" en PITCH → "encontrar al encargado" incorrecto
+        # FIX 1169: Ampliar detección — "si pero tengo junta" en PITCH implica que ES el encargado
+        # (contestó "sí" a "¿se encontrará el encargado?")
         _encargado_en_texto_1161 = any(p in _texto_lower for p in [
             'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
             'soy el dueno', 'soy el jefe', 'encargado soy',
+            'si pero', 'si estoy', 'si ando',
         ]) if self.state == FSMState.PITCH else False
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback' and
