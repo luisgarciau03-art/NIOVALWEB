@@ -1807,6 +1807,21 @@ class FSMEngine:
             print(f"  [FIX 1131] No es decisor → preguntar si encargado está")
             return self._get_template("preguntar_decisor_1131")
 
+        # FIX 1162: "No tenemos presupuesto" → ofrecer callback el próximo mes
+        # OOS-16-09: "no tenemos presupuesto este mes" → Bruce cierra sin ofrecer seguimiento
+        if any(p in _texto_lower for p in [
+            'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+            'sin presupuesto', 'no contamos con presupuesto',
+            'no tenemos dinero', 'no hay dinero para eso',
+            'no hay recursos', 'no tenemos recursos',
+            'estamos cortos', 'andamos cortos', 'no podemos comprar ahorita',
+        ]) and self.state in (FSMState.PITCH, FSMState.ENCARGADO_PRESENTE,
+                               FSMState.CAPTURANDO_CONTACTO):
+            print(f"  [FIX 1162] Sin presupuesto → ofrecer callback próximo mes")
+            self.state = FSMState.DESPEDIDA
+            self.context.callback_hora = "el proximo mes"
+            return self._get_template("callback_sin_presupuesto_1162")
+
         # FIX 1135: Supervisor request → explain Bruce is the contact
         # OOS-15-10: "Me puede comunicar con su supervisor" → GPT evasivo
         if any(p in _texto_lower for p in [
@@ -1948,10 +1963,19 @@ class FSMEngine:
         if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
-            # FIX 1125: Recado simple → aceptar y despedir (OOS-05-07/08/09/10: MALA por pedir callback)
-            print(f"  [FIX 1125] Recado verbal en {self.state.value} → aceptar y despedir")
-            self.state = FSMState.DESPEDIDA
-            return self._get_template("recado_aceptado_despedida_1125")
+            # FIX 1160: Primer recado → agradecer + intentar captura una vez más
+            # OOS-05 (6 REGULAR): Bruce aceptaba recado sin segundo intento de captura
+            _recado_intento_1160 = getattr(self.context, '_recado_intento_1160', 0)
+            if _recado_intento_1160 == 0:
+                self.context._recado_intento_1160 = 1
+                self.context._recado_dado_1111 = True
+                print(f"  [FIX 1160] Primer recado → agradecer + re-pedir dato")
+                return self._get_template("recado_repedir_dato_1160")
+            else:
+                # FIX 1125: Segundo recado o insistencia → aceptar y despedir
+                print(f"  [FIX 1125] Recado verbal #{_recado_intento_1160+1} → aceptar y despedir")
+                self.state = FSMState.DESPEDIDA
+                return self._get_template("recado_aceptado_despedida_1125")
 
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
         # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
@@ -2269,16 +2293,22 @@ class FSMEngine:
         # FIX 938-C: OOS audit V2 - Si ya estamos hablando con el encargado y pide callback,
         # usar template "directo" en vez de "¿A qué hora para encontrar al encargado?"
         # FIX 1084C: Agregar DESPEDIDA al guard (encargado ya se identificó antes de despedirse)
+        # FIX 1161: Agregar PITCH cuando el hablante SE IDENTIFICA como encargado + callback
+        # OOS-11-02/07/08/09: "Soy el encargado pero estoy ocupado" en PITCH → "encontrar al encargado" incorrecto
+        _encargado_en_texto_1161 = any(p in _texto_lower for p in [
+            'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
+            'soy el dueno', 'soy el jefe', 'encargado soy',
+        ]) if self.state == FSMState.PITCH else False
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback' and
-                self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
-                               FSMState.DICTANDO_DATO, FSMState.DESPEDIDA)):
+                (self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.DICTANDO_DATO, FSMState.DESPEDIDA) or _encargado_en_texto_1161)):
             transition = Transition(
                 next_state=transition.next_state,
                 action_type=transition.action_type,
                 template_key='preguntar_hora_callback_directo',
             )
-            print(f"  [FIX 938-C/1084C] Encargado presente + callback -> preguntar_hora_callback_directo")
+            print(f"  [FIX 938-C/1161] Encargado presente + callback -> preguntar_hora_callback_directo")
 
         # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
         # FIX 1084A: Ampliar para cubrir preguntar_hora_callback_directo (FIX 938-C cambia template antes)

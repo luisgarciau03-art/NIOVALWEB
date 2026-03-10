@@ -172,7 +172,7 @@ TEMPLATES = {
     "confirmar_telefono": [
         "Perfecto, ya tengo su numero. Le envio el catalogo con "
         "lista de precios en las proximas horas. Si tiene alguna duda, "
-        "me puede escribir a ese mismo numero. Muchas gracias por su tiempo.",
+        "me puede escribir a ese mismo numero. Muchas gracias por su tiempo, que tenga excelente dia.",
         "Excelente, quedo registrado. En breve le envio toda la informacion "
         "de nuestros productos con precios. Muchas gracias, que tenga excelente dia.",
         "Muy bien, ya lo tengo anotado. Le envio el catalogo en un momento. "
@@ -181,15 +181,17 @@ TEMPLATES = {
     # FIX 1126: Phone-only confirmation (WA+correo rechazados) — sin "escribir"
     # OOS-03 (10 convs): "me puede escribir" es incoherente para teléfono fijo
     "confirmar_telefono_fijo_1126": [
+        # FIX 1159: Cierre cálido completo (OOS-03: 10 REGULAR por despedida truncada)
         "Perfecto, ya tengo su numero. Le envio el catalogo con lista de precios "
-        "en las proximas horas. Si tiene alguna duda, nos puede llamar. Muchas gracias por su tiempo.",
+        "en las proximas horas. Si tiene alguna duda, nos puede llamar. "
+        "Muchas gracias por su tiempo, que tenga excelente dia.",
         "Excelente, quedo registrado. En breve le envio toda la informacion "
         "de nuestros productos con precios. Muchas gracias, que tenga excelente dia.",
     ],
     "confirmar_correo": [
         "Perfecto, ya tengo el correo. Le envio el catalogo con "
         "lista de precios en las proximas horas. Si tiene alguna duda, "
-        "me puede escribir. Muchas gracias por su tiempo.",
+        "me puede escribir. Muchas gracias por su tiempo, que tenga excelente dia.",
         "Excelente, quedo registrado el correo. En breve le envio toda la "
         "informacion con precios. Muchas gracias, que tenga excelente dia.",
     ],
@@ -338,6 +340,13 @@ TEMPLATES = {
         "No se preocupe. ¿Usted es quien decide las compras de productos o quien los recibe?",
     ],
 
+    # FIX 1160: Primer recado → agradecer + intentar captura una vez más
+    # OOS-05 (6 REGULAR): Bruce aceptaba sin segundo intento
+    "recado_repedir_dato_1160": [
+        "Se lo agradezco mucho. ¿De casualidad tendra un WhatsApp o correo del encargado "
+        "para enviarle la informacion directamente?",
+    ],
+
     # FIX 1134: "ya les compré" como encargado_presente → reconocer + ofrecer
     # FIX 1132: FIX 1111 name post-recado → acknowledge name in despedida
     "despedida_con_nombre_1132": [
@@ -401,6 +410,14 @@ TEMPLATES = {
     "confirmar_callback_generico": [
         "Perfecto, le vuelvo a llamar mas tarde. Muchas gracias por su tiempo, "
         "que tenga excelente dia.",
+    ],
+    # FIX 1162: Sin presupuesto → callback el próximo mes
+    "callback_sin_presupuesto_1162": [
+        "Entiendo perfectamente, no se preocupe. Le parece si le marco el proximo mes "
+        "para ver si ya cuentan con presupuesto? Asi le envio el catalogo con lista de precios. "
+        "Que tenga excelente dia.",
+        "Claro, lo entiendo. Si gusta le llamo el proximo mes cuando cuenten con presupuesto, "
+        "y con gusto le comparto nuestro catalogo. Muchas gracias por su tiempo, buen dia.",
     ],
 
     # === DESPEDIDAS ===
