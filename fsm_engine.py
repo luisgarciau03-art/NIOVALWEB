@@ -941,6 +941,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             # FIX 1063: "tengo un cliente" = encargado ocupado con cliente → CALLBACK
             'tengo un cliente', 'con un cliente', 'atendiendo a un cliente',
             'atendiendo cliente', 'tengo clientes', 'con clientes ahorita',
+            # FIX 1096: "estoy entregando/en ruta" = encargado haciendo entregas → CALLBACK (OOS-11-07)
+            'estoy entregando', 'voy en entrega', 'estoy en ruta', 'andamos entregando',
+            'estamos entregando', 'estoy haciendo entregas', 'ando en entregas',
+            'voy en camino', 'estoy de camino', 'ando en ruta', 'estoy repartiendo',
         ])
         if _has_callback_906:
             return FSMIntent.CALLBACK
@@ -1538,6 +1542,22 @@ class FSMEngine:
             self.state = FSMState.DESPEDIDA
             return self._get_template("despedida_hostil_950")
 
+        # 1.00b FIX 1095: Verbal recado ("Dígale que llamaron de NIOVAL") → reconocer + re-pedir contacto
+        # OOS-05 completo (10 instancias) + OOS-12-07/19: interlocutor ofrece recado verbal
+        # Bruce trata esas frases como CONFIRMATION → cuelga. FIX: reconocer y volver a pedir dato.
+        _recado_1095 = [
+            'digale que llamo', 'le digo que llamo', 'digale que llamaron',
+            'le digo que llamaron', 'le aviso que llamo', 'le aviso que llamaron',
+            'le dejo el recado', 'le paso el recado', 'le dejo recado',
+            'le dejo el mensaje', 'le paso el mensaje', 'si le dejo el mensaje',
+            'si le comento', 'le comento que llamo', 'le dejo su recado',
+        ]
+        if (any(p in _texto_lower for p in _recado_1095) and
+                self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
+                               FSMState.ENCARGADO_PRESENTE)):
+            print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir contacto")
+            return self._get_template("recado_y_pedir_contacto_1095")
+
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
         # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
         if self.state == FSMState.CONTACTO_CAPTURADO:
@@ -1634,10 +1654,16 @@ class FSMEngine:
                     print(f"  [FIX 1054] {_num_words_953} palabras numéricas puras → DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
-                elif len(_acum_953) >= 8:  # FIX 1089: 10 → 8 dígitos (números locales/incompletos)
-                    print(f"  [FIX 953/1089] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
-                    intent = FSMIntent.DICTATING_COMPLETE_PHONE
-                    self.context.datos_parciales = ""
+                else:
+                    # FIX 1089 revised: Smart threshold
+                    # Acumulación pura de palabras numéricas (todo X) → confirmar a 8 (número hablado completo)
+                    # Acumulación mixta o numérica → esperar 10 (número de 10 dígitos en chunks)
+                    _all_word_1089 = bool(_acum_953) and all(c == 'X' for c in _acum_953)
+                    _threshold_1089 = 8 if _all_word_1089 else 10
+                    if len(_acum_953) >= _threshold_1089:
+                        print(f"  [FIX 953/1089] Número {'hablado' if _all_word_1089 else 'acumulado'} completo ({len(_acum_953)}d, thr={_threshold_1089}) -> DICTATING_COMPLETE_PHONE")
+                        intent = FSMIntent.DICTATING_COMPLETE_PHONE
+                        self.context.datos_parciales = ""
             elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL,
                             FSMIntent.CONTINUATION) \
                     and len(self.context.datos_parciales) >= 8:  # FIX 1008: CONTINUATION también activa fallback

@@ -202,6 +202,13 @@ TEMPLATES = {
         "Somos NIOVAL, distribuidores de productos ferreteros.",
     ],
 
+    # FIX 1095: Recado verbal → reconocer + insistir en captura de contacto
+    "recado_y_pedir_contacto_1095": [
+        "Con mucho gusto le dejamos el recado. Y para darle seguimiento, ¿habría un número de WhatsApp o correo del negocio donde pueda contactarnos el encargado?",
+        "Claro, con gusto le avisamos. ¿Y habría un número de WhatsApp o correo donde el encargado pueda contactarnos cuando guste?",
+        "Perfecto, le dejamos el mensaje. ¿Tendría un dato de contacto del negocio para enviarle información?",
+    ],
+
     # === TRANSFER / ESPERA ===
     "claro_espero": [
         "Claro, espero.",
