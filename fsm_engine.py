@@ -491,7 +491,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 1073: Removido FIX 1050 CAPTURANDO_CONTACTO exception — "llame al numero principal"
         # siempre es un redirect/callback, nunca el contacto personal del cliente
         # FIX 1083: Retornar CALLBACK directamente (antes: pass → caía en DICTATING_PARTIAL)
-        elif _callback_num_principal:
+        # FIX 1105: Si dan el número explícitamente, capturarlo (DICTATING_COMPLETE_PHONE)
+        # "Llame mejor al número principal el 3336001234" → capturar 3336001234, no preguntar cuándo
+        elif _callback_num_principal and _effective_digits < 10:
             return FSMIntent.CALLBACK
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
@@ -860,7 +862,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'las compras las hace', 'las compras las decide',
         'no tengo autoridad para', 'no tengo poder de decision',
     ]
-    if any(m in tn for m in manager_absent):
+    # FIX 1104: Guard FP - "dueNO ESTa, momentito" contains 'no esta' as substring but is POSITIVE presence
+    # "El dueño está, un momentito" → manager IS present, just putting on hold → should be TRANSFER
+    _es_positivo_holding_1104 = (
+        any(p in tn for p in ['dueno esta', 'duena esta', 'jefe esta', 'jefa esta',
+                               'gerente esta', 'gerenta esta', 'encargado esta'])
+        and any(t in tn for t in ['momentito', 'momento', 'segundo', 'espere', 'espera'])
+    )
+    if any(m in tn for m in manager_absent) and not _es_positivo_holding_1104:
         return FSMIntent.MANAGER_ABSENT
     # "No" a secas después de preguntar por encargado = MANAGER_ABSENT contextual
     # FIX 890: BRUCE2621 - "Dígame. Fíjese que no." → "fijese que no" = manager absent
@@ -1164,6 +1173,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'hablar con el vendedor', 'con el vendedor directamente', 'con alguien de verdad',
         'con una persona real', 'hablar con una persona', 'no con una grabacion',
         'no con automatico', 'con alguien real',
+        # FIX 1106: "¿Es una grabación o persona real?" → IDENTITY (OOS-15-12)
+        # Cliente pregunta si Bruce es bot o persona → explicar que es agente de ventas
+        'es una grabacion', 'es usted grabacion', 'grabacion o persona', 'persona real o grabacion',
+        'es grabacion', 'eres grabacion', 'eres un robot', 'es un robot',
+        'eres una grabacion', 'es usted un robot', 'es usted una grabacion',
         # FIX 1078: "Como consiguio este numero?" → IDENTITY (Bruce se identifica y explica)
         # GPT_NARROW via QUESTION devuelve "Perfecto, digame" — mejor usar identificacion_nioval
         'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
