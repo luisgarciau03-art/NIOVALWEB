@@ -1592,7 +1592,15 @@ class FSMEngine:
             _saludos_802 = ['hola', 'bueno', 'buen dia', 'buenas tardes', 'buenas noches', 'que tal', 'digame', 'diga', 'si digame', 'mande']
             _es_saludo_802 = any(s in _t802 for s in _saludos_802)
             _es_identidad_802 = any(q in _t802 for q in ['quien habla', 'quien llama', 'de donde', 'que empresa', 'de parte de'])
-            if _es_saludo_802 and not _es_identidad_802:
+            # FIX 1175: Filtrar ruido de fondo que matchea saludo por accidente
+            # BRUCE2670: "mira va a aparecer buena min... bueno, mi voz" → FP
+            # Solo activar si el texto es limpio (< 50 chars) y no tiene palabras de ruido
+            _ruido_1175 = any(r in _t802 for r in [
+                'mira', 'aparecer', 'mi voz', 'chavo', 'gordito', 'muerto',
+                'luz', 'galvi', 'baco', 'jefe el',
+            ])
+            _texto_limpio_1175 = len(_t802) < 50 and not _ruido_1175
+            if _es_saludo_802 and not _es_identidad_802 and _texto_limpio_1175:
                 # Persona nueva saludando -> re-introducción con pitch
                 print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' -> pitch_persona_nueva")
                 self.state = FSMState.BUSCANDO_ENCARGADO
@@ -2627,6 +2635,23 @@ class FSMEngine:
                 action_type=ActionType.TEMPLATE,
                 template_key="pedir_whatsapp_o_correo",
             )
+
+        # 4E. FIX 1176: "Si, gracias" durante transferencia NO es persona nueva
+        # BRUCE2672: persona original dice "gracias" al pasar teléfono → no salir de espera
+        if (self.state == FSMState.ESPERANDO_TRANSFERENCIA and
+                transition.template_key == "pitch_persona_nueva"):
+            _tl_1176 = texto.lower().strip()
+            _solo_gracias_1176 = any(p in _tl_1176 for p in [
+                'gracias', 'si gracias', 'ok gracias', 'bueno gracias',
+                'ahorita', 'un momento', 'espere', 'permitame',
+            ]) and len(_tl_1176) < 30
+            if _solo_gracias_1176:
+                print(f"  [FIX 1176] 'gracias/espere' durante transfer → seguir esperando")
+                transition = Transition(
+                    next_state=FSMState.ESPERANDO_TRANSFERENCIA,
+                    action_type=ActionType.TEMPLATE,
+                    template_key='claro_espero',
+                )
 
         # 5. Ejecutar acción
         response = self._execute(transition, texto, agente)
