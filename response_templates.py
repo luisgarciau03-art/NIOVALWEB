@@ -286,9 +286,10 @@ TEMPLATES = {
 
     # FIX 1142: Tiempo de entrega → respuesta directa
     # OOS-14-17: GPT dice "esa info en el catálogo" (evasivo)
+    # FIX 1158: Redirect más directo a WA/correo (OOS-09-09: cliente salva la situación)
     "respuesta_tiempo_entrega_1142": [
-        "Manejamos entregas de 2 a 5 dias habiles dependiendo de su ubicacion. "
-        "¿Le envio el catalogo con toda la informacion?",
+        "Generalmente de 2 a 5 dias habiles dependiendo de su ubicacion. "
+        "¿Le envio el catalogo con precios por WhatsApp o correo?",
     ],
 
     # FIX 1142B: Precio de producto → respuesta directa
@@ -309,6 +310,32 @@ TEMPLATES = {
     # OOS-13-13: "este mismo número que marcó usted"
     "confirmar_mismo_numero_1133": [
         "Perfecto, le envio la informacion a este mismo numero entonces. Muchas gracias por su tiempo, que tenga buen dia.",
+    ],
+
+    # FIX 1148: "De dónde son" → respuesta de ubicación sin re-introducción
+    # OOS-09-05: Bruce re-dice "Mi nombre es Bruce" (redundante)
+    "respuesta_ubicacion_1148": [
+        "Somos de Guadalajara, Jalisco. Distribuidores de productos ferreteros con entrega a toda la republica.",
+    ],
+
+    # FIX 1149: "¿Es grabación/robot?" → respuesta explícita
+    # OOS-15-12/15-17: Bruce evade con identidad corporativa
+    "respuesta_agente_real_1149": [
+        "Soy Bruce, agente de ventas de NIOVAL. Con gusto le atiendo. "
+        "¿Le gustaria recibir nuestro catalogo de productos?",
+    ],
+
+    # FIX 1150: "¿Cómo consiguió este número?" → explicar prospección
+    # OOS-16-14: Bruce da identidad pero no responde la pregunta
+    "respuesta_origen_numero_1150": [
+        "Estamos contactando negocios del giro ferretero para ofrecer nuestros productos. "
+        "¿Le gustaria recibir nuestro catalogo con lista de precios?",
+    ],
+
+    # FIX 1156: "no sé si soy el encargado" → preguntar si decide compras
+    # OOS-15-06: Bruce dice "Excelente" ante incertidumbre de rol
+    "preguntar_si_decide_1156": [
+        "No se preocupe. ¿Usted es quien decide las compras de productos o quien los recibe?",
     ],
 
     # FIX 1134: "ya les compré" como encargado_presente → reconocer + ofrecer

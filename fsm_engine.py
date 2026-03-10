@@ -948,6 +948,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 1128: Post-transfer "aquí el encargado" (OOS-08-04/06/08)
         'aqui el encargado', 'aqui la encargada', 'aqui el jefe', 'aqui el dueno',
         'aqui el gerente', 'el encargado al habla', 'la encargada al habla',
+        # FIX 1154: "correcto, con el encargado" (OOS-07-04: classified as CONFIRMATION → skipped catalog)
+        'correcto con el encargado', 'correcto el encargado', 'correcto soy el encargado',
+        'correcto con la encargada', 'si con el encargado', 'si el encargado',
         # FIX 991: "ando yo aqui" = soy yo el que está (coloquial)
         'ando yo aqui', 'ando aqui yo', 'aqui andamos', 'yo ando aqui',
         # FIX 992: Variantes de "aquí estoy / soy yo el encargado"
@@ -1727,6 +1730,61 @@ class FSMEngine:
             print(f"  [FIX 1142B] Pregunta precio → template directo")
             return self._get_template("respuesta_precio_producto_1142")
 
+        # FIX 1148: "de dónde son" → respuesta de ubicación SIN re-introducción completa
+        # OOS-09-05: Bruce re-dice "Mi nombre es Bruce, le llamo de NIOVAL" (redundante)
+        if any(p in _texto_lower for p in [
+            'de donde son', 'de donde son ustedes', 'de que ciudad son',
+            'de donde llaman', 'de donde me llaman', 'de que estado son',
+            'de donde me hablan', 'donde estan ubicados', 'donde estan',
+        ]) and not any(p in _texto_lower for p in ['robot', 'grabacion', 'persona real']):
+            print(f"  [FIX 1148] Pregunta ubicación → respuesta directa sin re-intro")
+            return self._get_template("respuesta_ubicacion_1148")
+
+        # FIX 1149: "¿Es grabación/robot?" → respuesta explícita de agente de ventas
+        # OOS-15-12/15-17: Bruce evade con identidad corporativa sin aclarar
+        if any(p in _texto_lower for p in [
+            'es una grabacion', 'es grabacion', 'eres una grabacion', 'eres grabacion',
+            'es robot', 'es un robot', 'eres un robot', 'es un bot',
+            'persona real', 'es humano', 'grabacion o persona',
+            'es automatizado', 'no con grabacion', 'no con un robot',
+            'no quiero grabacion', 'hablar con el vendedor', 'con el vendedor directamente',
+            'con una persona real', 'hablar con una persona', 'con alguien real',
+            'quiero hablar con el vendedor', 'no con una grabacion',
+        ]):
+            print(f"  [FIX 1149] Pregunta robot/grabación → soy agente de ventas")
+            return self._get_template("respuesta_agente_real_1149")
+
+        # FIX 1150: "¿Cómo consiguió este número?" → explicar prospección
+        # OOS-16-14: Bruce da identidad corporativa pero no responde la pregunta
+        if any(p in _texto_lower for p in [
+            'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+            'como consiguio mi numero', 'de donde consiguio mi numero',
+            'quien le dio mi numero', 'como tiene mi numero', 'de donde salio mi numero',
+            'como consiguieron este numero', 'como consiguieron mi numero',
+        ]):
+            print(f"  [FIX 1150] Pregunta origen número → explicar prospección")
+            return self._get_template("respuesta_origen_numero_1150")
+
+        # FIX 1156: "no sé si soy el encargado" → no asumir, preguntar
+        # OOS-15-06: Bruce dice "Excelente" ante incertidumbre sobre rol
+        if any(p in _texto_lower for p in [
+            'no se si soy el encargado', 'no se si soy', 'no estoy seguro si soy',
+            'no se si yo sea', 'creo que no soy el encargado',
+        ]):
+            print(f"  [FIX 1156] Rol ambiguo → preguntar si decide compras")
+            return self._get_template("preguntar_si_decide_1156")
+
+        # FIX 1157: "no me oye bien" / "mala señal" → acknowledge antes de continuar
+        # OOS-15-20: Bruce ignora aviso de mala señal
+        if any(p in _texto_lower for p in [
+            'no me oye bien', 'no me oye', 'mala senal', 'no se oye',
+            'no se escucha', 'se escucha mal', 'se oye mal', 'no me escucha',
+            'se corta', 'se corta la llamada', 'se corta la senal',
+        ]) and self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
+                              FSMState.ENCARGADO_PRESENTE, FSMState.PITCH):
+            print(f"  [FIX 1157] Mala señal → acknowledge")
+            return "Si, le escucho bien. Digame por favor."
+
         # FIX 1131: "yo no decido" → preguntar si el decisor está (no asumir ausencia)
         # OOS-16-13: "Yo no decido eso, el dueño compra" → Bruce decía "no se encuentra"
         if any(p in _texto_lower for p in [
@@ -1760,6 +1818,50 @@ class FSMEngine:
             print(f"  [FIX 1133] 'Este mismo número' → confirmar y despedir")
             self.state = FSMState.DESPEDIDA
             return self._get_template("confirmar_mismo_numero_1133")
+
+        # FIX 1151: DESPEDIDA + "deje su número y él le llama" → dar número de NIOVAL
+        # OOS-12-03: After recado, client asks Bruce to leave HIS number → Bruce closes without giving it
+        if self.state == FSMState.DESPEDIDA and any(p in _texto_lower for p in [
+            'deje su numero', 'deje el numero', 'dejeme su numero', 'me da su numero',
+            'digame su numero', 'cual es su numero', 'dejenos su numero', 'deme su numero',
+            'el le llama', 'el le marca', 'para que le marque', 'para que le llame',
+        ]):
+            print(f"  [FIX 1151] DESPEDIDA + piden número de Bruce → dar número NIOVAL")
+            return self._get_template("ofrecer_contacto_bruce")
+
+        # FIX 1152: DESPEDIDA + 10-digit number → capture it (don't ignore)
+        # OOS-13-13: After "este mismo número", client gives a DIFFERENT number → Bruce ignores it
+        import re as _re1152
+        _num_1152 = _re1152.search(r'(\d{10})', texto) if self.state == FSMState.DESPEDIDA else None
+        if _num_1152:
+            _tel_1152 = _num_1152.group(1)
+            print(f"  [FIX 1152] DESPEDIDA + número {_tel_1152} → capturar y confirmar")
+            self.state = FSMState.DESPEDIDA
+            return (f"Perfecto, anoto el {_tel_1152}. Le envio la informacion a ese numero. "
+                    f"Muchas gracias por su tiempo, que tenga buen dia.")
+
+        # FIX 1153: Two numbers in same message → ask which one to use
+        # OOS-13-17: "El personal es 331... y el del negocio es 333..." → Bruce doesn't clarify
+        _nums_1153 = _re1152.findall(r'\d{10}', texto) if self.state not in (FSMState.DESPEDIDA,) else []
+        if len(_nums_1153) >= 2 and self.state in (
+            FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO, FSMState.ENCARGADO_PRESENTE,
+        ):
+            print(f"  [FIX 1153] Dos números detectados: {_nums_1153} → preguntar cuál usar")
+            self.state = FSMState.DICTANDO_DATO
+            return (f"Me dio dos numeros. ¿A cual le envio la informacion, "
+                    f"al {_nums_1153[0]} o al {_nums_1153[1]}?")
+
+        # FIX 1155: 11-digit number → flag and ask to confirm
+        # OOS-09-10: Client gives 33123480010 (11 digits) → Bruce accepts without observation
+        _num11_1155 = _re1152.search(r'(\d{11})', texto) if self.state in (
+            FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO, FSMState.ENCARGADO_PRESENTE,
+        ) else None
+        if _num11_1155 and not _re1152.search(r'\d{12}', texto):
+            _tel11_1155 = _num11_1155.group(1)
+            print(f"  [FIX 1155] Número de 11 dígitos: {_tel11_1155} → pedir confirmación")
+            self.state = FSMState.DICTANDO_DATO
+            return (f"Disculpe, me dicto un numero de 11 digitos: {_tel11_1155}. "
+                    f"¿Podria confirmarme el numero correcto de 10 digitos?")
 
         # 1.00b FIX 1095: Verbal recado ("Dígale que llamaron de NIOVAL") → reconocer + re-pedir contacto
         # OOS-05 completo (10 instancias) + OOS-12-07/19: interlocutor ofrece recado verbal
@@ -2202,12 +2304,17 @@ class FSMEngine:
                 'en algunos meses', 'en varios meses', 'en unos meses regresa',
             ])
             if _largo_plazo_1076:
+                # FIX 1147: Use confirmar_callback with specific timeframe (not genérico "más tarde")
+                # OOS-16-12: "regresa en tres meses" → "le marco más tarde" lost the timing
+                _hora_1147 = self._detectar_hora_callback(texto)
+                if _hora_1147:
+                    self.context.callback_hora = _hora_1147
                 transition = Transition(
                     next_state=transition.next_state,
                     action_type=transition.action_type,
-                    template_key='confirmar_callback_generico',
+                    template_key='confirmar_callback',
                 )
-                print(f"  [FIX 1076] Callback largo plazo → confirmar_callback_generico (sin preguntar hora)")
+                print(f"  [FIX 1076/1147] Callback largo plazo → confirmar_callback con hora '{_hora_1147}'")
 
         # FIX 839: Anti catálogo repetido - si ya prometimos catálogo, no repetirlo
         # BRUCE2550/2546: despedida_catalogo_prometido después de confirmar_telefono duplica "catálogo"
@@ -3837,6 +3944,21 @@ class FSMEngine:
                     hora_str += " de la noche"
                 return hora_str
 
+        # FIX 1147: Long-term callbacks FIRST (before "ahorita no" which returns "mas tarde")
+        # OOS-16-12: "ahorita no, regresa en tres meses" matched "ahorita no" → "mas tarde"
+        _long_term_patterns = [
+            ('en unos meses', 'en unos meses'), ('en algunos meses', 'en algunos meses'),
+            ('en tres meses', 'en tres meses'), ('en dos meses', 'en dos meses'),
+            ('en un mes', 'en un mes'), ('dentro de un mes', 'en un mes'),
+            ('dentro de dos meses', 'en dos meses'), ('dentro de tres meses', 'en tres meses'),
+            ('en unas semanas', 'en unas semanas'), ('en dos semanas', 'en dos semanas'),
+            ('en tres semanas', 'en tres semanas'), ('dentro de unas semanas', 'en unas semanas'),
+            ('pasado manana', 'pasado manana'), ('pasado mañana', 'pasado manana'),
+        ]
+        for pattern, label in _long_term_patterns:
+            if pattern in tn:
+                return label
+
         # 3. FIX 934: Tiempos relativos: "en una hora", "en un rato", "en media hora"
         if 'en una hora' in tn:
             return "en una hora"
@@ -3854,27 +3976,14 @@ class FSMEngine:
             return "en la tarde"
         if 'en la noche' in tn or 'por la noche' in tn:
             return "en la noche"
+        # FIX 1146: "primera hora" ANTES de "mañana" para no perder detalle de timing
+        # OOS-11-10: "llama mañana a primera hora" matcheaba "mañana" primero → perdía "a primera hora"
+        if 'manana a primera hora' in tn or 'primera hora' in tn:
+            return "manana a primera hora"
         # FIX 1084B: "mañana" solo (sin "en la") como tiempo relativo futuro
         # "Vuelveme a llamar manana" → hora="manana" → confirmar_callback en vez de preguntar
         if 'manana' in tn and 'pasado manana' not in tn:
             return "manana"
-        if 'manana a primera hora' in tn or 'primera hora' in tn:
-            return "manana a primera hora"
-
-        # FIX 1033: Callbacks long-term ("en unos meses", "en dos semanas", etc.)
-        # Devolver la frase como hora para que se use confirmar_callback_generico
-        _long_term_patterns = [
-            ('en unos meses', 'en unos meses'), ('en algunos meses', 'en algunos meses'),
-            ('en tres meses', 'en tres meses'), ('en dos meses', 'en dos meses'),
-            ('en un mes', 'en un mes'), ('dentro de un mes', 'en un mes'),
-            ('dentro de dos meses', 'en dos meses'), ('dentro de tres meses', 'en tres meses'),
-            ('en unas semanas', 'en unas semanas'), ('en dos semanas', 'en dos semanas'),
-            ('en tres semanas', 'en tres semanas'), ('dentro de unas semanas', 'en unas semanas'),
-            ('pasado manana', 'pasado manana'), ('pasado mañana', 'pasado manana'),
-        ]
-        for pattern, label in _long_term_patterns:
-            if pattern in tn:
-                return label
 
         return None
 
