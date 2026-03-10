@@ -1219,6 +1219,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'y usted quien', 'y tu quien', 'y usted de donde', 'y usted que',
         # FIX 1000: "quién le llama" = pregunta identidad
         'quien le llama', 'quien me esta llamando', 'quien llama',
+        # FIX 1170: "¿con quién tengo el gusto?" = pregunta nombre/identidad
+        'con quien tengo el gusto', 'con quien tengo', 'tengo el gusto',
+        'cual es su nombre', 'como es su nombre', 'su nombre',
+        'digame su nombre', 'me dice su nombre',
         # FIX 1021: "¿es usted una grabación/robot?" y empresa equivocada
         'es una grabacion', 'es grabacion', 'eres una grabacion',
         'son una grabacion', 'es robot', 'es un robot', 'es un bot',
@@ -3525,6 +3529,26 @@ class FSMEngine:
                 self.state = FSMState.DESPEDIDA
                 return None  # Colgar en silencio
 
+            # FIX 1171: Post-transfer, persona nueva dice "bueno/dígame/hola" → re-presentar
+            # Bug producción: Bruce dice "Sí, aquí estoy" sin contexto para la persona nueva
+            if (transition.template_key == "verificacion_aqui_estoy" and
+                    self.state == FSMState.ESPERANDO_TRANSFERENCIA):
+                # Persona nueva post-transfer → re-hacer pitch completo
+                _nuevo_saludo_1171 = any(p in texto.lower() for p in [
+                    'bueno', 'digame', 'hola', 'si digame', 'si bueno',
+                    'buenas tardes', 'buenas noches', 'buenos dias',
+                    'quien habla', 'si que paso', 'que se le ofrece',
+                    'mande', 'alo', 'si diga', 'si',
+                ])
+                if _nuevo_saludo_1171:
+                    print(f"  [FIX 1171] Post-transfer persona nueva → pitch_persona_nueva")
+                    self.context.pitch_dado = False
+                    transition = Transition(
+                        next_state=FSMState.PITCH,
+                        action_type=transition.action_type,
+                        template_key='pitch_persona_nueva',
+                    )
+
             # FIX 954: "Si, aqui estoy. Digame." en momento incorrecto
             # En CAPTURANDO_CONTACTO/PITCH (pitch ya dado) → pedir contacto, no "aqui estoy"
             # VERIFICATION debería ser checkeo de presencia solo en DICTANDO/BUSCANDO states
@@ -3600,17 +3624,9 @@ class FSMEngine:
                     return (f"Perfecto, le marco a las {_hora_str_1015}. "
                             f"Muchas gracias por su tiempo, que tenga excelente dia.")
 
-            # FIX 1007: Confirmar correo repitiendo el dato capturado (reduce errores en dictado oral)
-            if transition.template_key == 'confirmar_correo':
-                import re as _re1007
-                _email_match_1007 = _re1007.search(
-                    r'[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', texto or '')
-                if _email_match_1007:
-                    _email_1007 = _email_match_1007.group()
-                    print(f"  [FIX 1007] Confirmando correo con repeticion: {_email_1007}")
-                    self.context.templates_usados.add('confirmar_correo')
-                    return (f"Perfecto, le confirmo el correo: {_email_1007}. "
-                            f"Le envio el catalogo en breve.")
+            # FIX 1007→1172: NO repetir correo (STT transcribe mal emails dictados oralmente)
+            # Antes: extraía email de texto y lo repetía → errores frecuentes
+            # Ahora: solo confirmar sin repetir, usar template default
 
             # FIX 1116B: General post-filter — ofrecer_contacto_bruce cuando pidieron correo
             # OOS-12-16: "Dígame su correo" en DICTANDO_DATO → INTEREST → ofrecer_contacto_bruce
