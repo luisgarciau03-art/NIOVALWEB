@@ -193,6 +193,14 @@ TEMPLATES = {
 
     # === OFRECER CONTACTO DE BRUCE ===
     # FIX 1094: Más empático y natural (antes muy directo/mecánico)
+    # FIX 1122: Mala experiencia previa → respuesta empática (GPT no era empático)
+    # OOS-15-14: "ya compré de NIOVAL y no fue bien" → GPT decía "catálogo"
+    "empatia_mala_experiencia_1122": [
+        "Lamento mucho escuchar eso. Le ofrezco una disculpa de parte de NIOVAL. "
+        "Nos gustaria tener la oportunidad de mejorar su experiencia. "
+        "¿Me permite enviarle nuestro catalogo actualizado para que vea las novedades?",
+    ],
+
     # FIX 1121: Certificaciones → respuesta honesta (no GPT que hallucina)
     # OOS-16-16: "Solo trabajamos con proveedores certificados" → GPT decía "tenemos documentos en orden"
     "respuesta_certificaciones_1121": [

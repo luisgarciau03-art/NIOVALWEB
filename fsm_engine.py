@@ -1593,6 +1593,20 @@ class FSMEngine:
             self.state = FSMState.DESPEDIDA
             return self._get_template("despedida_hostil_950")
 
+        # FIX 1122: Mala experiencia previa con NIOVAL → template empático directo
+        # OOS-15-14: "ya compré de NIOVAL y no fue bien" → GPT responde con catálogo sin empatía
+        # FIX 1075 clasifica como QUESTION → GPT_NARROW, pero GPT no es empático → template directo
+        _mala_exp_1122 = any(p in _texto_lower for p in [
+            'no fue bien', 'no nos fue bien', 'no salio bien', 'no resulto bien',
+            'tuvimos problemas', 'tuve problemas', 'hubo problemas',
+            'mala experiencia', 'mal servicio', 'mal producto',
+            'no quedamos satisfechos', 'no quedamos contentos',
+            'no me gusto', 'no nos gusto',
+        ])
+        if _mala_exp_1122:
+            print(f"  [FIX 1122] Mala experiencia previa → template empático")
+            return self._get_template("empatia_mala_experiencia_1122")
+
         # FIX 1121: Certificaciones → template directo (GPT_NARROW no confiable para esto)
         # OOS-16-16: "Solo trabajamos con proveedores certificados" → GPT evade con catálogo
         _cert_1121 = any(p in _texto_lower for p in [
@@ -2848,7 +2862,8 @@ class FSMEngine:
         # === CONTACTO_CAPTURADO ===
         # FIX 1049: CONFIRMATION post-captura = cliente da instrucción adicional ("use el personal")
         # Use GPT_NARROW so it can acknowledge the specific instruction before saying goodbye
-        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.GPT_NARROW, "reconocer_y_despedir")
+        # FIX 1123: TEMPLATE en vez de GPT_NARROW (OOS-01-03: GPT fallback daba "Si, adelante")
+        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         # FIX 839: Cliente repite número después de captura -> despedida corta (ya tenemos el dato)
