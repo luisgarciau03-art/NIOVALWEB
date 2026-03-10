@@ -3277,6 +3277,19 @@ class FSMEngine:
 
             result = result.strip()
 
+            # FIX 1118: Post-filter GPT_NARROW responder_pregunta_producto
+            # OOS-14-08: GPT ignora instrucción y repite "¿Le gustaría recibir catálogo por WhatsApp?"
+            # Strip oraciones que mencionan WhatsApp/correo/email (ya prohibidos en prompt)
+            if prompt_key == 'responder_pregunta_producto' and result:
+                import re as _re1118
+                _sentences_1118 = _re1118.split(r'(?<=[.?!])\s+', result)
+                _clean_1118 = [s for s in _sentences_1118
+                               if not _re1118.search(r'whatsapp|correo|email|e-mail', s, _re1118.IGNORECASE)]
+                if _clean_1118:
+                    result = ' '.join(_clean_1118)
+                    if not result.endswith('.'):
+                        result += '.'
+
             # FIX 822: Anti-repetición en LLM_NARROW
             # BRUCE2539: Claude repitió "segunda opción" 4 veces en loop
             if agente and hasattr(agente, 'conversation_history'):
