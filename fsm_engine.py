@@ -490,8 +490,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # OOS-16-19: "numero principal de la empresa" + digits = callback request (en CUALQUIER estado)
         # FIX 1073: Removido FIX 1050 CAPTURANDO_CONTACTO exception — "llame al numero principal"
         # siempre es un redirect/callback, nunca el contacto personal del cliente
+        # FIX 1083: Retornar CALLBACK directamente (antes: pass → caía en DICTATING_PARTIAL)
         elif _callback_num_principal:
-            pass  # Fall through to callback classifiers for all states
+            return FSMIntent.CALLBACK
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
@@ -814,6 +815,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mandame un whatsapp', 'mandame un wats', 'mandame un wasap',
         'mandame un mensaje', 'mandame un wha', 'mandame al whatsapp primero',
         'primero mandame', 'mandame algo al whatsapp',
+        # FIX 1088: "manda un mensaje" (2a persona sin 'me') → OFFER_DATA (cliente pide contacto WA)
+        # "No puedo atenderte, manda un mensaje de WhatsApp" = quiere ser contactado por WA
+        'manda un mensaje', 'manda un whatsapp', 'manda un wats', 'manda un wasap',
+        'mejor manda un', 'manda al whatsapp', 'manda al wats', 'manda algo al',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -1629,8 +1634,8 @@ class FSMEngine:
                     print(f"  [FIX 1054] {_num_words_953} palabras numéricas puras → DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
-                elif len(_acum_953) >= 10:
-                    print(f"  [FIX 953] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
+                elif len(_acum_953) >= 8:  # FIX 1089: 10 → 8 dígitos (números locales/incompletos)
+                    print(f"  [FIX 953/1089] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
             elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL,
@@ -1828,20 +1833,22 @@ class FSMEngine:
 
         # FIX 938-C: OOS audit V2 - Si ya estamos hablando con el encargado y pide callback,
         # usar template "directo" en vez de "¿A qué hora para encontrar al encargado?"
+        # FIX 1084C: Agregar DESPEDIDA al guard (encargado ya se identificó antes de despedirse)
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback' and
                 self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
-                               FSMState.DICTANDO_DATO)):
+                               FSMState.DICTANDO_DATO, FSMState.DESPEDIDA)):
             transition = Transition(
                 next_state=transition.next_state,
                 action_type=transition.action_type,
                 template_key='preguntar_hora_callback_directo',
             )
-            print(f"  [FIX 938-C] Encargado presente + callback -> preguntar_hora_callback_directo")
+            print(f"  [FIX 938-C/1084C] Encargado presente + callback -> preguntar_hora_callback_directo")
 
         # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
+        # FIX 1084A: Ampliar para cubrir preguntar_hora_callback_directo (FIX 938-C cambia template antes)
         if (intent == FSMIntent.CALLBACK and
-                transition.template_key == 'preguntar_hora_callback'):
+                transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo')):
             hora_detectada = self._detectar_hora_en_texto_784(texto)
             # FIX 934: También usar hora pre-guardada de MANAGER_ABSENT previo
             if not hora_detectada and self.context.callback_hora:
@@ -1882,8 +1889,9 @@ class FSMEngine:
 
         # FIX 1076: Long-term callback ("en tres meses/semanas/año") → no preguntar hora específica
         # "Ahorita no, regresa en tres meses mejor" → confirmar genérico (no "¿A qué hora?")
+        # FIX 1085: Ampliar para cubrir preguntar_hora_callback_directo (mismo razonamiento)
         if (intent == FSMIntent.CALLBACK and
-                transition.template_key == 'preguntar_hora_callback'):
+                transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo')):
             _tn_1076 = texto.lower()
             _largo_plazo_1076 = any(p in _tn_1076 for p in [
                 'en tres meses', 'en dos meses', 'en unos meses', 'en un mes',
@@ -1936,6 +1944,12 @@ class FSMEngine:
                 'dame tu numero', 'dame tu telefono', 'pasame tu numero',
                 'pasame tus datos', 'dame tus datos', 'me das tu numero',
                 'me dejas tu numero', 'me pasas tu numero', 'si gustas dejarme',
+                # FIX 1086: Sincronizar con classify_intent() _pide_contacto_bruce_897
+                'deje su numero', 'deje el numero', 'me da su numero', 'digame su numero',
+                'denos su numero', 'dejenos su numero', 'el le llama', 'el le marca',
+                'para que le marque', 'para que le llame', 'nos puede dar su numero',
+                'digame su correo', 'digame su email', 'su correo por favor',
+                'digame su numero de contacto', 'numero de contacto',
             ]
             if any(p in _tn_897 for p in _pide_bruce_897):
                 transition = Transition(
@@ -2667,6 +2681,8 @@ class FSMEngine:
         # FIX 801: BRUCE2522 - QUESTION durante dictado -> responder pregunta y salir de dictado
         # Sin esta transición, QUESTION cae al catch-all UNKNOWN -> filler loop infinito
         add(S.DICTANDO_DATO, I.QUESTION,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
+        # FIX 1087: DICTANDO_DATO + INTEREST → cliente pide datos de Bruce (contacto invertido)
+        add(S.DICTANDO_DATO, I.INTEREST,                 S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
 
         # === OFRECIENDO_CONTACTO ===
         add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
@@ -2734,11 +2750,16 @@ class FSMEngine:
         # OOS-12-05/07/10: "Que empresa es" / "Me dice su numero" → brief identification only
         add(S.DESPEDIDA, I.WHAT_OFFER,       S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
         add(S.DESPEDIDA, I.IDENTITY,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
-        add(S.DESPEDIDA, I.INTEREST,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        # FIX 1092: DESPEDIDA + INTEREST → re-pitch encargado (cliente reabre con interés real)
+        # OOS-15-09: cliente muestra interés real → re-pitch, no solo identificacion_breve
+        add(S.DESPEDIDA, I.INTEREST,         S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
         add(S.DESPEDIDA, I.QUESTION,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
         # FIX 1031: DESPEDIDA + CALLBACK → confirmar callback (cliente da hora después de despedida)
         # Ej: FSM dice adiós porque "estoy ocupado" → cliente dice "Mejor llámame en una hora"
         add(S.DESPEDIDA, I.CALLBACK,         S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        # FIX 1091: DESPEDIDA + TRANSFER → esperar transferencia (OOS-08-01)
+        # Cliente dice "te transfiero con el encargado" tras despedida → reactivar conversación
+        add(S.DESPEDIDA, I.TRANSFER,         S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === CONVERSACION_LIBRE (FIX 790: shadow transitions, sin entry points aún) ===
         # No está en FSM_ACTIVE_STATES - solo shadow logging.
@@ -3414,6 +3435,12 @@ class FSMEngine:
             return "en la tarde"
         if 'en la noche' in tn or 'por la noche' in tn:
             return "en la noche"
+        # FIX 1084B: "mañana" solo (sin "en la") como tiempo relativo futuro
+        # "Vuelveme a llamar manana" → hora="manana" → confirmar_callback en vez de preguntar
+        if 'manana' in tn and 'pasado manana' not in tn:
+            return "manana"
+        if 'manana a primera hora' in tn or 'primera hora' in tn:
+            return "manana a primera hora"
 
         # FIX 1033: Callbacks long-term ("en unos meses", "en dos semanas", etc.)
         # Devolver la frase como hora para que se use confirmar_callback_generico

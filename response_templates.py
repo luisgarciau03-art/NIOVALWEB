@@ -188,8 +188,11 @@ TEMPLATES = {
     ],
 
     # === OFRECER CONTACTO DE BRUCE ===
+    # FIX 1094: Más empático y natural (antes muy directo/mecánico)
     "ofrecer_contacto_bruce": [
-        "¿Le puedo dejar mi numero para que el encargado nos contacte cuando guste?",
+        "Con gusto le dejo el numero de NIOVAL para que nos contacte cuando le convenga. ¿Le anoto?",
+        "¿Le puedo dejar mi numero directo para que el encargado nos llame cuando guste?",
+        "Con mucho gusto le dejo los datos de contacto de NIOVAL. ¿Tiene donde anotar?",
     ],
     "tiene_donde_anotar": [
         "Perfecto. ¿Tiene donde anotar?",
@@ -440,7 +443,8 @@ NARROW_PROMPTS = {
             "- Empresa equivocada (Herrajes del Norte, etc.): 'No, somos NIOVAL, "
             "distribuidores ferreteros de Guadalajara. Quiza nos confunde con otra empresa.'\n"
             "FORMATO: 1-2 oraciones maximas. SIEMPRE 'usted'/'le'. Mexicano profesional. "
-            "NUNCA menciones WhatsApp, correo, email en esta respuesta."
+            "NUNCA menciones WhatsApp, correo, email, numero de telefono ni pidas datos de contacto. "  # FIX 1093
+            "NUNCA preguntes 'me puede dar su numero' ni similares. Solo responde la pregunta."
         ),
         "max_tokens": 100,
         "temperature": 0.4,

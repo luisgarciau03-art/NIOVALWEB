@@ -17,7 +17,7 @@ import traceback  # FIX 102: Para logging de errores detallados
 from datetime import datetime  # FIX 272.10: Movido al inicio para DEPLOY_ID
 from dotenv import load_dotenv
 from agente_ventas import AgenteVentas
-from elevenlabs import ElevenLabs
+from elevenlabs import ElevenLabs, VoiceSettings
 from openai import OpenAI  # FIX 60: Para Whisper API
 import requests  # FIX 60: Para descargar grabaciones de Twilio
 import re  # FIX 458: Para limpiar puntuación en detección de saludos
@@ -902,7 +902,8 @@ def registrar_frase_usada(texto):
                 text=texto_para_cache,  # Usar plantilla con (NAME) si tiene nombre
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128",
-                optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
+                voice_settings=VoiceSettings(stability=0.35, similarity_boost=0.80, style=0.40, use_speaker_boost=True),
+                optimize_streaming_latency=2
             )
 
             # Guardar en archivo temporal
@@ -995,7 +996,8 @@ def pre_generar_audios_cache():
                 text=texto,
                 model_id="eleven_multilingual_v2",  # Mejor acento
                 output_format="mp3_44100_128",
-                optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
+                voice_settings=VoiceSettings(stability=0.35, similarity_boost=0.80, style=0.40, use_speaker_boost=True),
+                optimize_streaming_latency=2
             )
 
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
@@ -1100,7 +1102,8 @@ def generar_audio_con_nombre(texto_plantilla, nombre, frase_key_plantilla):
         text=texto_final,
         model_id="eleven_multilingual_v2",
         output_format="mp3_44100_128",
-        optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
+        voice_settings=VoiceSettings(stability=0.35, similarity_boost=0.80, style=0.40, use_speaker_boost=True),
+        optimize_streaming_latency=2
     )
 
     # Guardar en archivo temporal
@@ -1243,7 +1246,13 @@ def generar_audio_elevenlabs(texto, audio_id, usar_cache_key=None):
                     text=texto_corregido,
                     model_id=modelo,
                     output_format="mp3_44100_128",
-                    optimize_streaming_latency=4  # FIX 608A: Máxima velocidad (-500ms hasta primer chunk)
+                    voice_settings=VoiceSettings(
+                        stability=0.35,           # Bajo = más expresivo/natural (default 0.75 = robótico)
+                        similarity_boost=0.80,    # Alto = fiel a la voz original
+                        style=0.40,               # Algo de estilo/emoción
+                        use_speaker_boost=True    # Claridad de voz
+                    ),
+                    optimize_streaming_latency=2  # Balanceado: calidad > velocidad (era 4 = cortado)
                 )
 
                 # Guardar en archivo temporal con streaming
@@ -7783,7 +7792,8 @@ def generar_cache_manual():
                     text=texto,
                     model_id="eleven_multilingual_v2",
                     output_format="mp3_44100_128",
-                    optimize_streaming_latency=4  # FIX 608A: Máxima velocidad
+                    voice_settings=VoiceSettings(stability=0.35, similarity_boost=0.80, style=0.40, use_speaker_boost=True),
+                    optimize_streaming_latency=2
                 )
 
                 # Guardar en memoria
