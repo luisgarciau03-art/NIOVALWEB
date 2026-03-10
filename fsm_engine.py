@@ -921,6 +921,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # NOTE: 'con el encargado' EXCLUIDO — FP en "le comunico con el encargado" (TRANSFER)
         'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
         'habla el encargado', 'habla la encargada', 'encargado habla',
+        # FIX 1128: Post-transfer "aquí el encargado" (OOS-08-04/06/08)
+        'aqui el encargado', 'aqui la encargada', 'aqui el jefe', 'aqui el dueno',
+        'aqui el gerente', 'el encargado al habla', 'la encargada al habla',
         # FIX 991: "ando yo aqui" = soy yo el que está (coloquial)
         'ando yo aqui', 'ando aqui yo', 'aqui andamos', 'yo ando aqui',
         # FIX 992: Variantes de "aquí estoy / soy yo el encargado"
@@ -1617,6 +1620,81 @@ class FSMEngine:
             print(f"  [FIX 1121] Pregunta certificaciones → template honesto (no GPT)")
             return self._get_template("respuesta_certificaciones_1121")
 
+        # FIX 1127: Phase 1 intercepts para preguntas frecuentes donde GPT es evasivo
+        # OOS-14-14: devoluciones, OOS-14-20: RFC, OOS-14-18: catálogo digital
+        # OOS-14-19: líneas de producto, OOS-14-09/15-05: ya compré antes
+        if any(p in _texto_lower for p in [
+            'aceptan devoluciones', 'politica de devoluciones', 'devolucion',
+            'devolver producto', 'devolver mercancia',
+        ]):
+            print(f"  [FIX 1127] Pregunta devoluciones → template directo")
+            return self._get_template("respuesta_devoluciones_1127")
+
+        if any(p in _texto_lower for p in [
+            'tienen rfc', 'tiene rfc', 'son empresa formal', 'facturan',
+            'emiten factura', 'dan factura', 'hacen factura', 'manejan factura',
+        ]):
+            print(f"  [FIX 1127] Pregunta RFC/facturación → template directo")
+            return self._get_template("respuesta_rfc_1127")
+
+        if any(p in _texto_lower for p in [
+            'catalogo es fisico', 'catalogo fisico', 'catalogo digital',
+            'es fisico o digital', 'es digital o fisico',
+        ]):
+            print(f"  [FIX 1127] Pregunta catálogo físico/digital → template directo")
+            return self._get_template("respuesta_catalogo_digital_1127")
+
+        if any(p in _texto_lower for p in [
+            'que tipo de productos', 'que productos manejan', 'que es lo que venden',
+            'que venden exactamente', 'que lineas manejan', 'que tipo de mercancia',
+        ]):
+            print(f"  [FIX 1127] Pregunta líneas de producto → template directo")
+            return self._get_template("respuesta_lineas_producto_1127")
+
+        # FIX 1134: "ya les compré antes" → reconocer cliente existente
+        # OOS-14-09: "Ya les compré antes" → Bruce ignora y pide WA
+        # OOS-15-05: "Ya me mandaron el catálogo antes"
+        if any(p in _texto_lower for p in [
+            'ya les compre', 'ya les compre antes', 'ya compre con ustedes',
+            'ya me mandaron el catalogo', 'ya tengo el catalogo', 'ya lo tengo',
+            'ya me lo mandaron', 'ya soy cliente', 'ya les he comprado',
+        ]):
+            print(f"  [FIX 1134] Cliente existente → reconocer y ofrecer actualización")
+            return self._get_template("reconocer_cliente_existente_1127")
+
+        # FIX 1131: "yo no decido" → preguntar si el decisor está (no asumir ausencia)
+        # OOS-16-13: "Yo no decido eso, el dueño compra" → Bruce decía "no se encuentra"
+        if any(p in _texto_lower for p in [
+            'yo no decido', 'no soy quien decide', 'no tomo esas decisiones',
+            'no es mi decision', 'no soy el que decide', 'no decido yo',
+            'las compras las hace', 'las compras las decide',
+        ]):
+            print(f"  [FIX 1131] No es decisor → preguntar si encargado está")
+            return self._get_template("preguntar_decisor_1131")
+
+        # FIX 1135: Supervisor request → explain Bruce is the contact
+        # OOS-15-10: "Me puede comunicar con su supervisor" → GPT evasivo
+        if any(p in _texto_lower for p in [
+            'con su supervisor', 'con el supervisor', 'hablar con supervisor',
+            'hablar con su jefe', 'con su gerente', 'paseme con su jefe',
+        ]) and self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.PITCH):
+            print(f"  [FIX 1135] Solicitud de supervisor → soy el ejecutivo")
+            return ("Soy el ejecutivo de ventas de NIOVAL, con gusto le ayudo directamente. "
+                    "¿Le envio nuestro catalogo con lista de precios?")
+
+        # FIX 1133: "este mismo número" / "al que me está marcando" → confirmar
+        # OOS-13-13: "este mismo número que marcó usted" → Bruce dice "Si, adelante"
+        if self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
+                          FSMState.ENCARGADO_PRESENTE) and any(p in _texto_lower for p in [
+            'este mismo numero', 'al que me esta marcando', 'al que me marco',
+            'a este numero', 'al mismo numero', 'al que llamo',
+            'use este numero', 'use este', 'a este mismo',
+        ]):
+            print(f"  [FIX 1133] 'Este mismo número' → confirmar y despedir")
+            self.state = FSMState.CONTACTO_CAPTURADO
+            return self._get_template("confirmar_mismo_numero_1133")
+
         # 1.00b FIX 1095: Verbal recado ("Dígale que llamaron de NIOVAL") → reconocer + re-pedir contacto
         # OOS-05 completo (10 instancias) + OOS-12-07/19: interlocutor ofrece recado verbal
         # Bruce trata esas frases como CONFIRMATION → cuelga. FIX: reconocer y volver a pedir dato.
@@ -1658,17 +1736,19 @@ class FSMEngine:
         if (_recado_previo_1111 and
                 any(p in _texto_lower for p in _name_patterns_1111) and
                 not _tiene_numero_1103):
-            print(f"  [FIX 1111] Nombre encargado post-recado → agradecer y despedir")
+            # FIX 1132: Acknowledge name in despedida (OOS-12-01/02/04: genérica)
+            print(f"  [FIX 1132] Nombre encargado post-recado → agradecer con nombre y despedir")
             self.context._recado_dado_1111 = False
             self.state = FSMState.DESPEDIDA
-            return self._get_template("despedida_cortes")
+            return self._get_template("despedida_con_nombre_1132")
 
         if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
-            print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir callback")
-            self.context._recado_dado_1111 = True  # FIX 1111: track recado given
-            return self._get_template("recado_y_pedir_contacto_1095")
+            # FIX 1125: Recado simple → aceptar y despedir (OOS-05-07/08/09/10: MALA por pedir callback)
+            print(f"  [FIX 1125] Recado verbal en {self.state.value} → aceptar y despedir")
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("recado_aceptado_despedida_1125")
 
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
         # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
@@ -3104,6 +3184,14 @@ class FSMEngine:
                         # FIX 885B: BRUCE2551/1975 - 4er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
 
+            # FIX 1126: Phone-only confirmation (WA+correo rechazados) sin "escribir"
+            # OOS-03 (10 convs): "me puede escribir" incoherente para teléfono fijo
+            if transition.template_key == "confirmar_telefono":
+                _rechazados_1126 = set(self.context.canales_rechazados)
+                if 'whatsapp' in _rechazados_1126 and 'correo' in _rechazados_1126:
+                    print(f"  [FIX 1126] Phone-only (WA+correo rechazados) → confirmar sin 'escribir'")
+                    return self._get_template("confirmar_telefono_fijo_1126")
+
             # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
             # Si cliente expresó preferencia por correo/email en últimos 2 turnos del contexto
             # y la FSM está a punto de confirmar un TELÉFONO, redirigir a pedir email.
@@ -3169,6 +3257,22 @@ class FSMEngine:
                 self.context.datos_parciales = ""
                 return self._get_template("confirmar_telefono")
 
+            # FIX 1130: "Llame al número principal 3336001234" → capturar número + callback
+            # OOS-16-19: cliente da número alternativo pero Bruce ignora y solo pregunta hora
+            if transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo'):
+                import re as _re1130
+                _num_1130 = _re1130.search(r'\b(\d{10})\b', texto or '')
+                _num_principal_1130 = any(p in (texto or '').lower() for p in [
+                    'numero principal', 'numero de la empresa', 'numero del negocio',
+                    'llame al', 'llame mejor al', 'mejor llame al', 'marque al',
+                ])
+                if _num_1130 and _num_principal_1130:
+                    _tel_1130 = _num_1130.group(1)
+                    print(f"  [FIX 1130] Número principal {_tel_1130} → capturar + preguntar hora")
+                    self.state = FSMState.ENCARGADO_AUSENTE
+                    return (f"Perfecto, anoto el numero {_tel_1130}. "
+                            f"¿A que hora seria buen momento para marcarle?")
+
             # FIX 1015: Callback with time already given → acknowledge, don't ask again
             # "Mejor a las 3 de la tarde" → preguntar_hora_callback → asks "¿A qué hora?"
             # Fix: if time is in the text, confirm it directly
@@ -3213,6 +3317,15 @@ class FSMEngine:
                     'mandele un correo', 'enviele un correo', 'mandeme un correo',
                 ])
                 if _pide_correo_1116b:
+                    # FIX 1129: Correo exchange — "dígame su correo para darle el del encargado"
+                    _intercambio_1129 = any(p in _tn_1116b for p in [
+                        'para darle el', 'para darle el del', 'a cambio', 'intercambio',
+                        'para darle el correo', 'le doy el del encargado',
+                    ])
+                    if _intercambio_1129:
+                        print(f"  [FIX 1129] Intercambio de correos → capturar correo encargado")
+                        self.state = FSMState.DICTANDO_DATO
+                        return self._get_template("capturar_correo_encargado_1129")
                     print(f"  [FIX 1116B] Cliente pidió correo → ofrecer_telefono_sin_correo_1116")
                     return self._get_template("ofrecer_telefono_sin_correo_1116")
 

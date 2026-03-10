@@ -178,6 +178,14 @@ TEMPLATES = {
         "Muy bien, ya lo tengo anotado. Le envio el catalogo en un momento. "
         "Si necesita algo mas, con gusto le atendemos. Que tenga buen dia.",
     ],
+    # FIX 1126: Phone-only confirmation (WA+correo rechazados) — sin "escribir"
+    # OOS-03 (10 convs): "me puede escribir" es incoherente para teléfono fijo
+    "confirmar_telefono_fijo_1126": [
+        "Perfecto, ya tengo su numero. Le envio el catalogo con lista de precios "
+        "en las proximas horas. Si tiene alguna duda, nos puede llamar. Muchas gracias por su tiempo.",
+        "Excelente, quedo registrado. En breve le envio toda la informacion "
+        "de nuestros productos con precios. Muchas gracias, que tenga excelente dia.",
+    ],
     "confirmar_correo": [
         "Perfecto, ya tengo el correo. Le envio el catalogo con "
         "lista de precios en las proximas horas. Si tiene alguna duda, "
@@ -209,6 +217,59 @@ TEMPLATES = {
         "para resolverle esa duda. ¿Le gustaria que le enviemos la informacion?",
     ],
 
+    # FIX 1127: Phase 1 intercepts para preguntas frecuentes (GPT evasivo)
+    # OOS-14-14: devoluciones → GPT redirects a catálogo
+    "respuesta_devoluciones_1127": [
+        "Si, aceptamos devoluciones por producto en mal estado. Le detallo las condiciones "
+        "junto con el catalogo. ¿Se lo envio?",
+    ],
+    # OOS-14-20: RFC/facturación → GPT redirects a catálogo
+    "respuesta_rfc_1127": [
+        "Si, somos empresa formal con RFC y emitimos facturas electronicas. "
+        "Con gusto le enviamos la informacion. ¿Tiene WhatsApp o correo?",
+    ],
+    # OOS-14-18: catálogo físico/digital → GPT circular
+    "respuesta_catalogo_digital_1127": [
+        "Manejamos catalogo digital que le enviamos directamente. Es mas practico "
+        "y siempre esta actualizado. ¿Se lo mando por WhatsApp o correo?",
+    ],
+    # OOS-14-09/15-05: "ya les compré antes" → reconocer cliente existente
+    "reconocer_cliente_existente_1127": [
+        "Que bien, gracias por su confianza. Tenemos novedades en el catalogo desde entonces. "
+        "¿Le gustaria que le envie la informacion actualizada?",
+    ],
+    # OOS-14-19: "qué productos manejan" → enumerar líneas
+    "respuesta_lineas_producto_1127": [
+        "Somos distribuidores ferreteros: manejamos herramienta, tornilleria, plomeria, "
+        "griferia, silicones, candados, adhesivos, cerraduras, electricidad y mas de 500 articulos. "
+        "¿Le envio el catalogo con precios?",
+    ],
+
+    # FIX 1129: Correo exchange — cliente ofrece dar correo del encargado
+    # OOS-12-16: "Dígame su correo para darle el del encargado"
+    "capturar_correo_encargado_1129": [
+        "No manejo correo de contacto, pero con gusto me puede dictar el correo del encargado "
+        "y le mandamos la informacion directamente.",
+    ],
+
+    # FIX 1131: "yo no decido" → preguntar si el decisor está
+    # OOS-16-13: "Yo no decido eso, el dueño es el que compra"
+    "preguntar_decisor_1131": [
+        "Entiendo. ¿Se encontrara el encargado de compras para platicarle brevemente?",
+    ],
+
+    # FIX 1133: "este mismo número" → confirmar
+    # OOS-13-13: "este mismo número que marcó usted"
+    "confirmar_mismo_numero_1133": [
+        "Perfecto, le envio la informacion a este mismo numero entonces. Muchas gracias por su tiempo, que tenga buen dia.",
+    ],
+
+    # FIX 1134: "ya les compré" como encargado_presente → reconocer + ofrecer
+    # FIX 1132: FIX 1111 name post-recado → acknowledge name in despedida
+    "despedida_con_nombre_1132": [
+        "Perfecto, muchas gracias. Quedamos al pendiente con el encargado. Que tenga buen dia.",
+    ],
+
     # FIX 1116: Cliente pide correo de NIOVAL → no manejamos correo, ofrecer teléfono
     # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
     "ofrecer_telefono_sin_correo_1116": [
@@ -234,6 +295,14 @@ TEMPLATES = {
         "Con mucho gusto le dejamos el recado. ¿A que hora me recomienda volver a llamar?",
         "Claro, le dejamos el mensaje. ¿Cuando estaria disponible el encargado para llamarle?",
         "Perfecto, le dejamos el recado. ¿A que hora puedo volver a marcar?",
+    ],
+
+    # FIX 1125: Recado simple → aceptar y despedir (no preguntar callback)
+    # OOS-05-07/08/09/10: "dígale que llamaron de Nioval" → goodbye, no callback
+    "recado_aceptado_despedida_1125": [
+        "Con mucho gusto le dejamos el recado. Muchas gracias por su tiempo, que tenga buen dia.",
+        "Perfecto, le dejamos el mensaje. Muchas gracias, que tenga excelente dia.",
+        "Claro, le dejamos el recado. Muchas gracias por su atencion, hasta pronto.",
     ],
 
     # === TRANSFER / ESPERA ===
