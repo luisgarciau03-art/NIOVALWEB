@@ -382,6 +382,14 @@ TEMPLATES = {
         "Le ofrezco una disculpa. No le volveremos a marcar. Que tenga excelente dia.",
     ],
 
+    # FIX 1124: Confirmación de preferencia de número ("use el personal")
+    # Cliente dio 2 números y aclara cuál usar — confirmar y despedir
+    "confirmar_preferencia_numero_1124": [
+        "Perfecto, le envio el catalogo al {numero}. Muchas gracias por su tiempo. Que tenga excelente dia.",
+        "Entendido, usamos el {numero}. Le mandamos el catalogo por ahi. Que tenga buen dia.",
+        "Listo, le enviamos todo al {numero}. Muchas gracias. Hasta pronto.",
+    ],
+
     # FIX 952: Confirmación de corrección de número/dato post-captura
     # Usar {numero} como placeholder — se reemplaza en fsm_engine.py
     "confirmar_correccion_952": [

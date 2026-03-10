@@ -1709,7 +1709,8 @@ class FSMEngine:
                         break
                 # FIX 1026: Si no hay número en el texto actual, buscar en historial
                 # "Use el personal por favor" → extraer el número marcado como "personal"
-                _hist_1026 = getattr(self, 'conversation_history', [])
+                # FIX 1124: usar agente.conversation_history (self es FSMEngine, no tiene historial)
+                _hist_1026 = getattr(agente, 'conversation_history', []) if agente else []
                 if not _numero_limpio_952 and ('personal' in _texto_lower or 'negocio' in _texto_lower):
                     _prefer_personal = 'personal' in _texto_lower
                     for _msg in reversed(_hist_1026[-6:]):
@@ -1737,6 +1738,16 @@ class FSMEngine:
                         self.context.whatsapp = _numero_limpio_952
                     elif hasattr(self.context, 'email') and self.context.email:
                         pass  # email corrections handled by GPT (complex format)
+                    # FIX 1124: Distinguir preferencia ("use el personal") vs corrección ("me equivoqué")
+                    _is_preference_1124 = any(p in _texto_lower for p in [
+                        'use el personal', 'use el del negocio', 'use el de la tienda',
+                        'el personal por favor', 'mejor el personal', 'prefiero el personal',
+                        'use el personal por favor', 'el del negocio por favor',
+                    ])
+                    if _is_preference_1124:
+                        _tmpl_1124 = self._get_template("confirmar_preferencia_numero_1124")
+                        self.state = FSMState.DESPEDIDA
+                        return _tmpl_1124.replace("{numero}", _numero_limpio_952) if "{numero}" in _tmpl_1124 else _tmpl_1124
                     # Stay in CONTACTO_CAPTURADO, confirm correction
                     _tmpl_952 = self._get_template("confirmar_correccion_952")
                     return _tmpl_952.replace("{numero}", _numero_limpio_952) if "{numero}" in _tmpl_952 else _tmpl_952
