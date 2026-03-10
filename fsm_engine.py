@@ -1174,7 +1174,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Pregunta identidad ---
     identity = [
-        'quien habla', 'de donde', 'de que empresa', 'de que parte',
+        'quien habla', 'de donde', 'de que empresa', 'que empresa es',
+        'que empresa', 'de que parte',
         'a donde llama', 'de donde llama', 'con quien hablo',
         # FIX 883: BRUCE2630/2634 - "de parte de quién" no matcheaba
         # Cliente pregunta procedencia → Bruce debe identificarse
@@ -1591,6 +1592,16 @@ class FSMEngine:
             print(f"  [FIX 950] Rechazo hostil/LFPDPPP detectado -> despedida definitiva sin recontacto")
             self.state = FSMState.DESPEDIDA
             return self._get_template("despedida_hostil_950")
+
+        # FIX 1121: Certificaciones → template directo (GPT_NARROW no confiable para esto)
+        # OOS-16-16: "Solo trabajamos con proveedores certificados" → GPT evade con catálogo
+        _cert_1121 = any(p in _texto_lower for p in [
+            'proveedores certificados', 'proveedor certificado', 'estan certificados',
+            'tienen certificacion', 'tienen certificado', 'cuentan con certificacion',
+        ])
+        if _cert_1121:
+            print(f"  [FIX 1121] Pregunta certificaciones → template honesto (no GPT)")
+            return self._get_template("respuesta_certificaciones_1121")
 
         # 1.00b FIX 1095: Verbal recado ("Dígale que llamaron de NIOVAL") → reconocer + re-pedir contacto
         # OOS-05 completo (10 instancias) + OOS-12-07/19: interlocutor ofrece recado verbal
@@ -3163,6 +3174,21 @@ class FSMEngine:
                     self.context.templates_usados.add('confirmar_correo')
                     return (f"Perfecto, le confirmo el correo: {_email_1007}. "
                             f"Le envio el catalogo en breve.")
+
+            # FIX 1116B: General post-filter — ofrecer_contacto_bruce cuando pidieron correo
+            # OOS-12-16: "Dígame su correo" en DICTANDO_DATO → INTEREST → ofrecer_contacto_bruce
+            # FIX 897 solo cubre pedir_whatsapp/preguntar_encargado/pitch_encargado paths
+            if transition.template_key == 'ofrecer_contacto_bruce' and texto:
+                _tn_1116b = _normalize(texto)
+                _pide_correo_1116b = any(p in _tn_1116b for p in [
+                    'digame su correo', 'digame su email', 'su correo por favor',
+                    'su correo electronico', 'nos da su correo', 'nos puede dar su correo',
+                    'dejenos su correo', 'cual es su correo', 'cual es su email',
+                    'mandele un correo', 'enviele un correo', 'mandeme un correo',
+                ])
+                if _pide_correo_1116b:
+                    print(f"  [FIX 1116B] Cliente pidió correo → ofrecer_telefono_sin_correo_1116")
+                    return self._get_template("ofrecer_telefono_sin_correo_1116")
 
             return self._get_template(transition.template_key)
 

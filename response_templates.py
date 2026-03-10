@@ -193,6 +193,14 @@ TEMPLATES = {
 
     # === OFRECER CONTACTO DE BRUCE ===
     # FIX 1094: Más empático y natural (antes muy directo/mecánico)
+    # FIX 1121: Certificaciones → respuesta honesta (no GPT que hallucina)
+    # OOS-16-16: "Solo trabajamos con proveedores certificados" → GPT decía "tenemos documentos en orden"
+    "respuesta_certificaciones_1121": [
+        "Somos empresa formal con RFC y facturacion electronica. Sobre certificaciones adicionales, "
+        "no cuento con esa informacion en este momento, pero con gusto le conecto con mi equipo "
+        "para resolverle esa duda. ¿Le gustaria que le enviemos la informacion?",
+    ],
+
     # FIX 1116: Cliente pide correo de NIOVAL → no manejamos correo, ofrecer teléfono
     # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
     "ofrecer_telefono_sin_correo_1116": [
