@@ -57,6 +57,10 @@ TEMPLATES = {
         "Mi nombre es Bruce, le llamo de la marca NIOVAL. Somos distribuidores "
         "de productos ferreteros de Guadalajara, Jalisco.",
     ],
+    # FIX 1174: Deletreo de nombre Bruce
+    "deletreo_bruce_1174": [
+        "Claro, mi nombre es Bruce. Se escribe: B, R, U, C, E. Bruce, de la marca NIOVAL.",
+    ],
     # FIX 1110: Variante para 2da pregunta de identidad (anti-PREGUNTA_REPETIDA)
     # OOS-12-13: "¿Cómo se llama?" → identificacion_nioval, "¿De qué empresa?" → MISMA respuesta
     "identificacion_nioval_variante": [

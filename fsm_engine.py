@@ -364,7 +364,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
                                   'no vino', 'no llego', 'no viene', 'esta en su hora',
                                   'hora de comida', 'fueron a comer', 'anda fuera', 'andan fuera',
                                   'no hay nadie', 'no hay quien', 'no nos puede atender',
-                                  'no puede atender', 'nadie que atienda', 'no atiende']
+                                  'no puede atender', 'nadie que atienda', 'no atiende',
+                                  # FIX 1173: BRUCE2669 "no hay ninguno ahorita"
+                                  'no hay ninguno', 'ninguno ahorita', 'no hay encargado',
+                                  'no hay jefe', 'no hay quien atienda']
     if tl.endswith(',') and len(tn) < 40:
         if any(m in tn for m in _manager_absent_quick_889):
             # FIX 930: BRUCE2550 - En SALUDO, "No, no está," con coma = cliente sigue hablando
@@ -853,6 +856,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 926: BRUCE1825 - "no hay nadie" no se detectaba
         'no hay nadie', 'no hay quien', 'nadie que atienda',
         'no nos puede atender', 'no puede atender', 'andan fuera',
+        # FIX 1173: BRUCE2669 "no hay ninguno ahorita"
+        'no hay ninguno', 'ninguno ahorita', 'no hay encargado',
+        'no hay jefe', 'no hay quien atienda',
         # FIX 991: Variantes "ahorita anda ocupado/en llamada"
         'ahorita anda ocupado', 'ahorita anda ocupada', 'anda ocupado', 'anda ocupada',
         'ahorita esta ocupado', 'ahorita esta ocupada', 'esta en una llamada',
@@ -1223,6 +1229,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'con quien tengo el gusto', 'con quien tengo', 'tengo el gusto',
         'cual es su nombre', 'como es su nombre', 'su nombre',
         'digame su nombre', 'me dice su nombre',
+        # FIX 1174: "deletrear/deletree su nombre" → identidad
+        'deletrear', 'deletree', 'deletreo', 'como se escribe su nombre',
+        'como se escribe bruce', 'me puede deletrear',
         # FIX 1021: "¿es usted una grabación/robot?" y empresa equivocada
         'es una grabacion', 'es grabacion', 'eres una grabacion',
         'son una grabacion', 'es robot', 'es un robot', 'es un bot',
@@ -1813,6 +1822,14 @@ class FSMEngine:
         ]):
             print(f"  [FIX 1131] No es decisor → preguntar si encargado está")
             return self._get_template("preguntar_decisor_1131")
+
+        # FIX 1174: "deletrear/deletree su nombre" → deletrear B-R-U-C-E
+        if any(p in _texto_lower for p in [
+            'deletrear', 'deletree', 'deletreo', 'como se escribe',
+            'me puede deletrear', 'podria deletrear',
+        ]):
+            print(f"  [FIX 1174] Deletreo solicitado → responder con B-R-U-C-E")
+            return self._get_template("deletreo_bruce_1174")
 
         # FIX 1166: "Somos taller mecánico" → mencionar herramienta/tornillería que aplica
         # OOS-16-11: Bruce cierra sin explicar que NIOVAL tiene productos útiles para talleres
