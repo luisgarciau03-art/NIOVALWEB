@@ -912,6 +912,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     manager_present = [
         'soy yo', 'yo soy', 'si soy', 'yo mero', 'yo soy el encargado',
         'yo soy la encargada', 'si yo soy', 'aqui yo', 'servidor',
+        # FIX 1117: "soy el encargado" sin "yo" prefix (OOS-17-15: "Si, diga, soy el encargado")
+        'soy el encargado', 'soy la encargada', 'soy encargado', 'soy encargada',
         'yo me encargo', 'conmigo', 'a mi',
         # FIX 891: BRUCE2605 - "a la orden" / "a tus ordenes" = encargado presente
         'a la orden', 'a tus ordenes', 'a sus ordenes', 'a tu orden',
@@ -2065,14 +2067,25 @@ class FSMEngine:
                 'para que le marque', 'para que le llame', 'nos puede dar su numero',
                 'digame su correo', 'digame su email', 'su correo por favor',
                 'digame su numero de contacto', 'numero de contacto',
+                # FIX 1115: Sync con classify_intent (FIX 1114)
+                'cual es su numero', 'cual es el numero', 'cual es tu numero',
             ]
             if any(p in _tn_897 for p in _pide_bruce_897):
+                # FIX 1116: Si piden específicamente correo/email de NIOVAL → template sin correo
+                # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
+                _pide_correo_1116 = any(p in _tn_897 for p in [
+                    'digame su correo', 'digame su email', 'su correo por favor',
+                    'su correo electronico', 'nos da su correo', 'nos puede dar su correo',
+                    'dejenos su correo', 'cual es su correo', 'cual es su email',
+                    'mandele un correo', 'enviele un correo', 'mandeme un correo',
+                ])
+                _template_897 = 'ofrecer_telefono_sin_correo_1116' if _pide_correo_1116 else 'ofrecer_contacto_bruce'
                 transition = Transition(
                     next_state=FSMState.OFRECIENDO_CONTACTO,
                     action_type=ActionType.TEMPLATE,
-                    template_key='ofrecer_contacto_bruce',
+                    template_key=_template_897,
                 )
-                print(f'  [FIX 897] Contacto invertido detectado -> ofrecer_contacto_bruce')
+                print(f'  [FIX 897] Contacto invertido detectado -> {_template_897}')
 
         # FIX 785/860: BRUCE2492/2497/2462 - No repetir pregunta encargado si ya se preguntó
         # FIX 785: solo bloqueaba 'preguntar_encargado'

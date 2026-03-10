@@ -193,6 +193,12 @@ TEMPLATES = {
 
     # === OFRECER CONTACTO DE BRUCE ===
     # FIX 1094: Más empático y natural (antes muy directo/mecánico)
+    # FIX 1116: Cliente pide correo de NIOVAL → no manejamos correo, ofrecer teléfono
+    # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
+    "ofrecer_telefono_sin_correo_1116": [
+        "Por el momento no manejamos correo de contacto, pero con gusto le dejo nuestro numero telefonico para que nos llame cuando guste. ¿Tiene donde anotar?",
+        "No tenemos correo de contacto disponible, pero le puedo dejar nuestro numero directo. ¿Le anoto?",
+    ],
     "ofrecer_contacto_bruce": [
         "Con gusto le dejo el numero de NIOVAL para que nos contacte cuando le convenga. ¿Le anoto?",
         "¿Le puedo dejar mi numero directo para que el encargado nos llame cuando guste?",
