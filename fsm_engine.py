@@ -962,6 +962,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo manejo eso', 'yo lo manejo', 'yo me encargo de eso',
         # FIX 998: "aqui mando yo" = soy el decisor
         'aqui mando yo', 'yo mando aqui', 'aqui mando yo solo',
+        # FIX 1163: "si, encargado" / "si encargado" (confirmación corta)
+        'si encargado', 'si el encargado', 'si la encargada',
+        'si yo', 'si soy', 'si aqui',
         # FIX 999: Propietario/dueño que responde directamente
         'soy el dueno', 'soy la duena', 'soy el propietario', 'soy la propietaria',
         'le habla el propietario', 'le habla la propietaria',
@@ -1807,6 +1810,17 @@ class FSMEngine:
             print(f"  [FIX 1131] No es decisor → preguntar si encargado está")
             return self._get_template("preguntar_decisor_1131")
 
+        # FIX 1166: "Somos taller mecánico" → mencionar herramienta/tornillería que aplica
+        # OOS-16-11: Bruce cierra sin explicar que NIOVAL tiene productos útiles para talleres
+        if any(p in _texto_lower for p in [
+            'somos taller mecanico', 'somos un taller mecanico', 'somos taller',
+            'somos un taller', 'somos mecanicos', 'aqui es un taller mecanico',
+            'esto es un taller',
+        ]) and self.state in (FSMState.PITCH, FSMState.ENCARGADO_PRESENTE,
+                               FSMState.CAPTURANDO_CONTACTO, FSMState.BUSCANDO_ENCARGADO):
+            print(f"  [FIX 1166] Taller mecánico → ofrecer herramienta/tornillería aplicable")
+            return self._get_template("taller_mecanico_1166")
+
         # FIX 1162: "No tenemos presupuesto" → ofrecer callback el próximo mes
         # OOS-16-09: "no tenemos presupuesto este mes" → Bruce cierra sin ofrecer seguimiento
         if any(p in _texto_lower for p in [
@@ -2152,6 +2166,18 @@ class FSMEngine:
         if any(f in _texto_lower for f in _frustracion_signals):
             # Cliente frustrado -> responder con empatía, no con script
             if 'ocupado' in _texto_lower or 'tiempo' in _texto_lower or 'junta' in _texto_lower or 'no puedo' in _texto_lower:
+                # FIX 1164: Si encargado se identifica + ocupado → preguntar hora callback (no despedida prematura)
+                # OOS-11-01/04/06: "Si soy yo pero estoy ocupado" → despedida sin preguntar hora
+                _es_encargado_1164 = any(p in _texto_lower for p in [
+                    'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
+                    'soy el dueno', 'soy el jefe', 'si soy', 'si yo',
+                ])
+                if _es_encargado_1164:
+                    print(f"  [FIX 1164] Encargado ocupado → preguntar hora callback (no despedida)")
+                    self.state = FSMState.ENCARGADO_PRESENTE
+                    self.context.encargado_es_interlocutor = True
+                    self.context._encargado_ocupado_1137 = True
+                    return self._get_template("preguntar_hora_callback_directo")
                 print(f"  [FIX 920] Frustración detectada: cliente ocupado -> ofrecer rellamar")
                 self.state = FSMState.DESPEDIDA
                 return self._get_template("despedida_ocupado_920")

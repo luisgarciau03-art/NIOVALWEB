@@ -349,8 +349,12 @@ TEMPLATES = {
 
     # FIX 1134: "ya les compré" como encargado_presente → reconocer + ofrecer
     # FIX 1132: FIX 1111 name post-recado → acknowledge name in despedida
+    # FIX 1167: Agregar número de NIOVAL para que el encargado pueda llamar
     "despedida_con_nombre_1132": [
-        "Perfecto, muchas gracias. Quedamos al pendiente con el encargado. Que tenga buen dia.",
+        "Perfecto, muchas gracias. Si el encargado gusta comunicarse, nuestro numero "
+        "es 662-353-1804. Que tenga excelente dia.",
+        "Muchas gracias. Le dejo nuestro numero 662-353-1804 para que el encargado "
+        "nos marque cuando pueda. Que tenga buen dia.",
     ],
 
     # FIX 1116: Cliente pide correo de NIOVAL → no manejamos correo, ofrecer teléfono
@@ -533,6 +537,16 @@ TEMPLATES = {
         "interrumpirle. Que tenga excelente dia.",
         "Disculpe la insistencia, no era nuestra intencion molestar. "
         "Que tenga muy buen dia.",
+    ],
+
+    # FIX 1166: Taller mecánico → herramienta/tornillería aplica
+    "taller_mecanico_1166": [
+        "Entiendo, es un taller mecanico. Fijese que manejamos herramienta, "
+        "tornilleria, adhesivos y productos que tambien se usan en talleres. "
+        "¿Le gustaria que le envie el catalogo para que lo revise?",
+        "No se preocupe. Aunque somos distribuidores ferreteros, manejamos "
+        "herramienta y tornilleria que tambien aplica para talleres mecanicos. "
+        "¿Le envio la informacion por WhatsApp?",
     ],
 
     # FIX 950: Template para rechazo hostil / solicitud LFPDPPP de eliminar datos
