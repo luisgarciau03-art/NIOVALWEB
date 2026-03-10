@@ -945,6 +945,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             'estoy entregando', 'voy en entrega', 'estoy en ruta', 'andamos entregando',
             'estamos entregando', 'estoy haciendo entregas', 'ando en entregas',
             'voy en camino', 'estoy de camino', 'ando en ruta', 'estoy repartiendo',
+            # FIX 1102: Encargado presente pero ocupado → CALLBACK (OOS-11-05/08/10)
+            # "en este momento no puedo" / "pero ocupado" / "estoy entreganado" (typo)
+            'en este momento no puedo', 'pero estoy ocupado', 'pero ocupado',
+            'estoy entreganado', 'andamos entreganando',  # typo variant of "entregando"
         ])
         if _has_callback_906:
             return FSMIntent.CALLBACK
@@ -1048,6 +1052,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'a fin de mes', 'a finales del mes', 'a principios del mes',
         'principios del mes que entra', 'finales del mes que entra',
         'mejor marcame a fin', 'a fin del mes',
+        # FIX 1102: Ocupado sin identificarse como encargado (OOS-11-08: "Si pero tengo una junta ahorita")
+        # Estos NO pasan por el bloque manager_present → necesitan detección standalone
+        'tengo una junta', 'tengo junta', 'estoy en junta',
+        'si pero tengo', 'si pero estoy ocupado', 'si pero ando',
         # FIX 1000: Callbacks formales/educados
         'podria volver a contactarnos', 'contactenos la proxima',
         'la proxima quincena', 'el siguiente trimestre', 'el proximo trimestre',
@@ -1561,7 +1569,11 @@ class FSMEngine:
             self.state == FSMState.ENCARGADO_AUSENTE and
             any(p in _texto_lower for p in _recado_ausente_1095)
         )
-        if (_es_recado_1095 and
+        # FIX 1103: Si cliente da recado + número en mismo mensaje → priorizar captura del número
+        # OOS-12-15: "Le aviso, pero por si acaso, su WhatsApp es 3398760015" → capturar número
+        import re as _re1103
+        _tiene_numero_1103 = bool(_re1103.search(r'\d{10}|\d[\d\s\-]{8,}\d', texto))
+        if (_es_recado_1095 and not _tiene_numero_1103 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
             print(f"  [FIX 1095] Recado verbal detectado en {self.state.value} → pedir contacto")
@@ -2959,18 +2971,18 @@ class FSMEngine:
             # FIX 878: identificacion_nioval repetido → pivot a pedir contacto
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
             # FIX 1023: threshold subido de 2→3: cliente puede hacer 2 preguntas de identidad legítimas
-            # FIX 1099: threshold bajado de 3→2 para evitar PREGUNTA_REPETIDA en 2ª respuesta idéntica
-            # (OOS-12-13/19: "quien llama?" x2 → Bruce da misma identificacion_nioval x2)
+            # ("¿cómo se llama?" + "¿de qué empresa?") antes de pivotar a captura
+            # FIX 1099 REVERTIDO: threshold 2 causaba pivot agresivo en 1ª pregunta explícita (OOS-12-13/19 MALA)
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
-                if self.context.identity_repetidas >= 2:
-                    if self.context.identity_repetidas == 2:
-                        print(f"  [FIX 878/1099] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
+                if self.context.identity_repetidas >= 3:
+                    if self.context.identity_repetidas == 3:
+                        print(f"  [FIX 878/1023] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
                         # FIX 884: Usar template breve para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_whatsapp_o_correo_breve")
                     else:
-                        print(f"  [FIX 878/885B/1099] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
-                        # FIX 885B: BRUCE2551/1975 - 3er+ identity → template distinto para evitar PREGUNTA_REPETIDA
+                        print(f"  [FIX 878/885B/1023] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
+                        # FIX 885B: BRUCE2551/1975 - 4er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
 
             # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
