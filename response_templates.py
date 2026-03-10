@@ -258,6 +258,53 @@ TEMPLATES = {
         "Entiendo. ¿Se encontrara el encargado de compras para platicarle brevemente?",
     ],
 
+    # FIX 1137: Encargado ocupado (presente pero busy) → no decir "no se encuentra"
+    # OOS-05-05/06: "Está atendiendo un cliente" / "Está en el almacén"
+    "encargado_ocupado_1137": [
+        "Entiendo que esta ocupado. ¿Me podria proporcionar un WhatsApp o correo del encargado?",
+    ],
+
+    # FIX 1138: Callback cuando el PROPIO encargado está ocupado
+    # OOS-11-03: "Soy el dueño pero estoy muy ocupado" → "para encontrar al encargado" es incorrecto
+    "callback_encargado_ocupado_1138": [
+        "Entiendo, no se preocupe. ¿A que hora le puedo volver a marcar?",
+        "Sin problema. ¿Cuando le quedaria bien que le marque?",
+    ],
+
+    # FIX 1139: "¿Es gratis el catálogo?" → respuesta directa
+    # OOS-15-07: GPT responde "Esa info viene en el catálogo" (circular)
+    "catalogo_gratis_1139": [
+        "Si, el catalogo es totalmente gratis y sin compromiso. ¿Se lo envio por WhatsApp o correo?",
+    ],
+
+    # FIX 1140: "No me gustan las llamadas de ventas" → empatía + oferta rápida
+    # OOS-15-11: Bruce ignora y pide WA directamente
+    "empatia_no_gustan_llamadas_1140": [
+        "Lo entiendo perfectamente, sere muy breve. Solo le queria ofrecer nuestro catalogo "
+        "de productos ferreteros sin compromiso. ¿Le puedo enviar la informacion por WhatsApp o correo?",
+    ],
+
+    # FIX 1142: Tiempo de entrega → respuesta directa
+    # OOS-14-17: GPT dice "esa info en el catálogo" (evasivo)
+    "respuesta_tiempo_entrega_1142": [
+        "Manejamos entregas de 2 a 5 dias habiles dependiendo de su ubicacion. "
+        "¿Le envio el catalogo con toda la informacion?",
+    ],
+
+    # FIX 1142B: Precio de producto → respuesta directa
+    # OOS-14-11: GPT con error gramatical "le la envío"
+    "respuesta_precio_producto_1142": [
+        "Manejamos precios de mayoreo muy competitivos. Con gusto le envio la lista "
+        "de precios para que pueda revisar. ¿Se la mando por WhatsApp o correo?",
+    ],
+
+    # FIX 1144: "Quizás en unos meses" → deferred callback con seguimiento
+    # OOS-16-18: Bruce se despide sin confirmar callback futuro
+    "despedida_callback_diferido_1144": [
+        "Entendido, no hay problema. Nos ponemos en contacto mas adelante entonces. "
+        "Le dejo nuestro numero por si antes necesita algo. Que tenga buen dia.",
+    ],
+
     # FIX 1133: "este mismo número" → confirmar
     # OOS-13-13: "este mismo número que marcó usted"
     "confirmar_mismo_numero_1133": [
