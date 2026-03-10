@@ -1776,14 +1776,26 @@ class FSMEngine:
 
         # FIX 1157: "no me oye bien" / "mala señal" → acknowledge antes de continuar
         # OOS-15-20: Bruce ignora aviso de mala señal
-        if any(p in _texto_lower for p in [
+        # FIX 1157B: Si mala señal PERO ya trae un número → capturar el número (no solo acknowledge)
+        _mala_senal_1157 = any(p in _texto_lower for p in [
             'no me oye bien', 'no me oye', 'mala senal', 'no se oye',
             'no se escucha', 'se escucha mal', 'se oye mal', 'no me escucha',
             'se corta', 'se corta la llamada', 'se corta la senal',
-        ]) and self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
+        ])
+        if _mala_senal_1157 and self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
                               FSMState.ENCARGADO_PRESENTE, FSMState.PITCH):
-            print(f"  [FIX 1157] Mala señal → acknowledge")
-            return "Si, le escucho bien. Digame por favor."
+            import re as _re1157b
+            _num_1157b = _re1157b.search(r'(\d{10})', texto)
+            if _num_1157b:
+                # FIX 1157B: Number already in the message → capture it
+                _tel_1157b = _num_1157b.group(1)
+                print(f"  [FIX 1157B] Mala señal + número {_tel_1157b} → capturar")
+                self.state = FSMState.CONTACTO_CAPTURADO
+                return (f"Si le escucho, no se preocupe. Ya anote el {_tel_1157b}. "
+                        f"Le envio el catalogo con lista de precios. Muchas gracias por su tiempo.")
+            else:
+                print(f"  [FIX 1157] Mala señal → acknowledge")
+                return "Si, le escucho bien. Digame por favor."
 
         # FIX 1131: "yo no decido" → preguntar si el decisor está (no asumir ausencia)
         # OOS-16-13: "Yo no decido eso, el dueño compra" → Bruce decía "no se encuentra"
@@ -1840,6 +1852,26 @@ class FSMEngine:
             return (f"Perfecto, anoto el {_tel_1152}. Le envio la informacion a ese numero. "
                     f"Muchas gracias por su tiempo, que tenga buen dia.")
 
+        # FIX 1153B: Handle selection after asking "which number"
+        # OOS-13-17 MALA: "Use el personal por favor" → "Sí, adelante" (no selection handling)
+        _two_nums_ctx = getattr(self.context, '_two_numbers_1153', None)
+        if _two_nums_ctx and self.state == FSMState.DICTANDO_DATO:
+            _sel_1153 = _texto_lower
+            _num1, _num2 = _two_nums_ctx
+            _selected_1153 = None
+            if any(p in _sel_1153 for p in ['personal', 'primero', 'primer', 'el de el', _num1[-4:]]):
+                _selected_1153 = _num1
+            elif any(p in _sel_1153 for p in ['negocio', 'segundo', 'tienda', 'trabajo', _num2[-4:]]):
+                _selected_1153 = _num2
+            elif _re1152.search(r'(\d{10})', texto):
+                _selected_1153 = _re1152.search(r'(\d{10})', texto).group(1)
+            if _selected_1153:
+                print(f"  [FIX 1153B] Selección de número: {_selected_1153}")
+                self.context._two_numbers_1153 = None
+                self.state = FSMState.CONTACTO_CAPTURADO
+                return (f"Perfecto, le envio el catalogo al {_selected_1153}. "
+                        f"Muchas gracias por su tiempo. Que tenga excelente dia.")
+
         # FIX 1153: Two numbers in same message → ask which one to use
         # OOS-13-17: "El personal es 331... y el del negocio es 333..." → Bruce doesn't clarify
         _nums_1153 = _re1152.findall(r'\d{10}', texto) if self.state not in (FSMState.DESPEDIDA,) else []
@@ -1847,6 +1879,7 @@ class FSMEngine:
             FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO, FSMState.ENCARGADO_PRESENTE,
         ):
             print(f"  [FIX 1153] Dos números detectados: {_nums_1153} → preguntar cuál usar")
+            self.context._two_numbers_1153 = (_nums_1153[0], _nums_1153[1])
             self.state = FSMState.DICTANDO_DATO
             return (f"Me dio dos numeros. ¿A cual le envio la informacion, "
                     f"al {_nums_1153[0]} o al {_nums_1153[1]}?")
