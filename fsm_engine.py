@@ -352,6 +352,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     tn = _normalize(texto)
     tl = texto.lower().strip()
 
+    # FIX 1182: Empty/whitespace text = silence → CONTINUATION (wait for real input)
+    # OOS-17-17: empty turn → UNKNOWN → GPT asked for WhatsApp without pitch
+    if not tn:
+        return FSMIntent.CONTINUATION
+
     # --- Mid-sentence: texto termina en coma = cliente sigue hablando ---
     # FIX 821: REJECT_DATA tiene prioridad sobre CONTINUATION
     # BRUCE2538: "No tengo WhatsApp," -> era CONTINUATION por la coma, debe ser REJECT_DATA
@@ -959,8 +964,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
         'habla el encargado', 'habla la encargada', 'encargado habla',
         # FIX 1128: Post-transfer "aquí el encargado" (OOS-08-04/06/08)
+        # FIX 1185: "Encargado aquí" (orden invertido, OOS-14-18)
         'aqui el encargado', 'aqui la encargada', 'aqui el jefe', 'aqui el dueno',
         'aqui el gerente', 'el encargado al habla', 'la encargada al habla',
+        'encargado aqui', 'encargada aqui', 'jefe aqui', 'dueno aqui',
         # FIX 1154: "correcto, con el encargado" (OOS-07-04: classified as CONFIRMATION → skipped catalog)
         'correcto con el encargado', 'correcto el encargado', 'correcto soy el encargado',
         'correcto con la encargada', 'si con el encargado', 'si el encargado',
@@ -1353,7 +1360,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # FIX 1052: Pausas/hold words durante dictado → CONTINUATION (no resetean datos_parciales)
     # "espere" entre "33 12" y "34 90 09" causaba reset del buffer → número perdido
-    _pausa_hold_1052 = ['espere', 'espera', 'un momento', 'un seg', 'momentito', 'ahorita', 'momento']
+    # FIX 1181: "este" = hesitation filler → CONTINUATION (no UNKNOWN → GPT)
+    # OOS-17-10: "este" en PITCH → GPT respondió pidiendo WhatsApp sin confirmar rol
+    _pausa_hold_1052 = ['espere', 'espera', 'un momento', 'un seg', 'momentito', 'ahorita', 'momento',
+                         'este', 'pues', 'a ver', 'mira', 'oiga', 'fijese']
     if any(tn == p or tn.startswith(p + ' ') for p in _pausa_hold_1052):
         return FSMIntent.CONTINUATION
 
@@ -2013,19 +2023,22 @@ class FSMEngine:
         if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
                 self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
                                FSMState.ENCARGADO_PRESENTE)):
-            # FIX 1160: Primer recado → agradecer + intentar captura una vez más
-            # OOS-05 (6 REGULAR): Bruce aceptaba recado sin segundo intento de captura
+            # FIX 1177: Si ya estamos en CAPTURANDO_CONTACTO (ya pedimos WA/correo),
+            # el recado ES la respuesta del cliente = no quiere dar dato → despedida directa
+            # OOS-05-07/08/09/10: Bruce re-preguntaba WA tras recado = PREGUNTA_REPETIDA
             _recado_intento_1160 = getattr(self.context, '_recado_intento_1160', 0)
-            if _recado_intento_1160 == 0:
+            if self.state == FSMState.CAPTURANDO_CONTACTO or _recado_intento_1160 > 0:
+                # Ya pedimos dato y cliente deflectó con recado → cerrar con número NIOVAL
+                print(f"  [FIX 1177] Recado en CAPTURANDO_CONTACTO → despedida con número NIOVAL")
+                self.context._recado_dado_1111 = True
+                self.state = FSMState.DESPEDIDA
+                return self._get_template("recado_aceptado_despedida_1125")
+            else:
+                # FIX 1160: Primer recado en ENCARGADO_AUSENTE/PRESENTE → intentar captura una vez
                 self.context._recado_intento_1160 = 1
                 self.context._recado_dado_1111 = True
                 print(f"  [FIX 1160] Primer recado → agradecer + re-pedir dato")
                 return self._get_template("recado_repedir_dato_1160")
-            else:
-                # FIX 1125: Segundo recado o insistencia → aceptar y despedir
-                print(f"  [FIX 1125] Recado verbal #{_recado_intento_1160+1} → aceptar y despedir")
-                self.state = FSMState.DESPEDIDA
-                return self._get_template("recado_aceptado_despedida_1125")
 
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
         # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
@@ -2131,18 +2144,18 @@ class FSMEngine:
                 _acum_953 = self.context.datos_parciales + _nuevos_953 + _placeholder_953
                 self.context.datos_parciales = _acum_953
                 print(f"  [FIX 953] Dígitos acumulados: '{_acum_953}' ({len(_acum_953)} dígitos)")
-                # FIX 1054: 8+ word-only digits in single turn = near-complete phone (0 numeric chars)
-                # "tres tres uno dos tres cuatro cinco seis" = 8 word-digits, faltan 2 → promote
-                if not _nuevos_953 and _num_words_953 >= 8:
+                # FIX 1054+1180: 10+ word-only digits in single turn = complete phone
+                # OOS-17-08: 8 word-digits promoted as complete → accepted without validation
+                # Fix: require 10 word-digits (Mexican phone = 10 dígitos exactos)
+                if not _nuevos_953 and _num_words_953 >= 10:
                     print(f"  [FIX 1054] {_num_words_953} palabras numéricas puras → DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
                 else:
-                    # FIX 1089 revised: Smart threshold
-                    # Acumulación pura de palabras numéricas (todo X) → confirmar a 8 (número hablado completo)
-                    # Acumulación mixta o numérica → esperar 10 (número de 10 dígitos en chunks)
+                    # FIX 1089+1180: Threshold always 10 (Mexican phone = 10 digits)
+                    # OOS-17-08: threshold 8 for word-only accepted 8-digit number
                     _all_word_1089 = bool(_acum_953) and all(c == 'X' for c in _acum_953)
-                    _threshold_1089 = 8 if _all_word_1089 else 10
+                    _threshold_1089 = 10
                     if len(_acum_953) >= _threshold_1089:
                         print(f"  [FIX 953/1089] Número {'hablado' if _all_word_1089 else 'acumulado'} completo ({len(_acum_953)}d, thr={_threshold_1089}) -> DICTATING_COMPLETE_PHONE")
                         intent = FSMIntent.DICTATING_COMPLETE_PHONE
@@ -3997,8 +4010,9 @@ class FSMEngine:
                                         'despedida_catalogo_prometido'):
             self.context.catalogo_prometido = True
 
-        # FIX 789B: Track callback hora preguntada
-        if transition.template_key == 'preguntar_hora_callback':
+        # FIX 789B+1179: Track callback hora preguntada (ambos templates)
+        # OOS-11-09: preguntar_hora_callback_directo no seteaba flag → re-ask innecesario
+        if transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo'):
             self.context.callback_hora_preguntada = True
 
         # FIX 849: Track callback confirmaciones emitidas

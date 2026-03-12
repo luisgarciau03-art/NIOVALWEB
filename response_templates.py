@@ -363,14 +363,17 @@ TEMPLATES = {
 
     # FIX 1116: Cliente pide correo de NIOVAL → no manejamos correo, ofrecer teléfono
     # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
+    # FIX 1176: Dar número directo sin "¿Le anoto?"
     "ofrecer_telefono_sin_correo_1116": [
-        "Por el momento no manejamos correo de contacto, pero con gusto le dejo nuestro numero telefonico para que nos llame cuando guste. ¿Tiene donde anotar?",
-        "No tenemos correo de contacto disponible, pero le puedo dejar nuestro numero directo. ¿Le anoto?",
+        "Por el momento no manejamos correo de contacto, pero nuestro numero telefonico es 662 353 1804. Con gusto le atendemos por ahi.",
+        "No tenemos correo disponible, pero nuestro numero directo es 662 353 1804. Quedamos a sus ordenes.",
     ],
+    # FIX 1176: Dar 662-353-1804 DIRECTO sin pedir permiso ("¿Le anoto?" generaba turno innecesario)
+    # OOS-12-03/07/09: Cliente pide número → Bruce debe darlo inmediatamente
     "ofrecer_contacto_bruce": [
-        "Con gusto le dejo el numero de NIOVAL para que nos contacte cuando le convenga. ¿Le anoto?",
-        "¿Le puedo dejar mi numero directo para que el encargado nos llame cuando guste?",
-        "Con mucho gusto le dejo los datos de contacto de NIOVAL. ¿Tiene donde anotar?",
+        "Con gusto. Nuestro numero es 662 353 1804. Somos NIOVAL, distribuidores de productos ferreteros. Que tenga excelente dia.",
+        "Claro que si. El numero de NIOVAL es 662 353 1804. Quedamos a sus ordenes. Que tenga buen dia.",
+        "Por supuesto. Nuestro numero directo es 662 353 1804. Cualquier duda, con gusto le atendemos. Que tenga excelente dia.",
     ],
     "tiene_donde_anotar": [
         "Perfecto. ¿Tiene donde anotar?",
@@ -388,12 +391,12 @@ TEMPLATES = {
         "Perfecto, le dejamos el recado. ¿A que hora puedo volver a marcar?",
     ],
 
-    # FIX 1125: Recado simple → aceptar y despedir (no preguntar callback)
-    # OOS-05-07/08/09/10: "dígale que llamaron de Nioval" → goodbye, no callback
+    # FIX 1125+1177: Recado → aceptar, dejar número NIOVAL y despedir
+    # OOS-05-07/08/09/10: cerrar con número para que encargado pueda llamar
     "recado_aceptado_despedida_1125": [
-        "Con mucho gusto le dejamos el recado. Muchas gracias por su tiempo, que tenga buen dia.",
-        "Perfecto, le dejamos el mensaje. Muchas gracias, que tenga excelente dia.",
-        "Claro, le dejamos el recado. Muchas gracias por su atencion, hasta pronto.",
+        "Con mucho gusto le dejamos el recado. Nuestro numero es 662 353 1804 por si el encargado gusta comunicarse. Muchas gracias, que tenga buen dia.",
+        "Perfecto, le dejamos el mensaje. Si el encargado quiere contactarnos, nuestro numero es 662 353 1804. Que tenga excelente dia.",
+        "Claro, le dejamos el recado. Le dejo nuestro numero 662 353 1804 para que nos marque cuando pueda. Muchas gracias, hasta pronto.",
     ],
 
     # === TRANSFER / ESPERA ===
@@ -667,6 +670,8 @@ NARROW_PROMPTS = {
             "Hablo directamente con usted.'\n"
             "- Empresa equivocada (Herrajes del Norte, etc.): 'No, somos NIOVAL, "
             "distribuidores ferreteros de Guadalajara. Quiza nos confunde con otra empresa.'\n"
+            "IMPORTANTE: NUNCA deflectes diciendo 'esa informacion viene en el catalogo' como "
+            "unica respuesta. SIEMPRE responde con info concreta PRIMERO, luego ofrece catalogo.\n"
             "FORMATO: 1-2 oraciones maximas. SIEMPRE 'usted'/'le'. Mexicano profesional. "
             "NUNCA menciones WhatsApp, correo, email, numero de telefono ni pidas datos de contacto. "  # FIX 1093
             "NUNCA preguntes 'me puede dar su numero' ni similares. Solo responde la pregunta."
@@ -702,6 +707,9 @@ NARROW_PROMPTS = {
             "REGLAS DE ESCUCHA ACTIVA (FIX 915):\n"
             "- Menciona algo ESPECIFICO que el cliente dijo (no respuestas genericas)\n"
             "- Si el cliente pregunto algo, responde ESO primero\n"
+            "- NUNCA deflectes con 'esa informacion viene en el catalogo'. Responde con info concreta.\n"
+            "- Sobre ubicacion: 'Estamos en Guadalajara, hacemos envios a toda la Republica.'\n"
+            "- Sobre ventaja competitiva: 'Nuestros precios de mayoreo y envio directo son muy competitivos.'\n"
             "Maximo 2 oraciones. Mexicano coloquial. NO insistas si rechazo firme."
         ),
         "max_tokens": 80,
