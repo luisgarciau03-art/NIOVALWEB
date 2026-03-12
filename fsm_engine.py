@@ -618,6 +618,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'atiende en persona', 'solo en persona', 'atiende personalmente',
         'solo atiende en persona', 'venga en persona', 'pase en persona',
         'pregunte por', 'pase a visitarnos', 'venga a visitarnos',
+        # FIX 1175: BRUCE2677 "no te puedo dar información" → CONTINUATION → "Claro, dígame" (CRÍTICO)
+        # 'no puedo dar informacion' (sin 'te') ya en reject_data pero no matcheaba con 'te' intermedio
+        # Total refusal = NO_INTEREST (Bruce debe despedirse con número NIOVAL, no pedir dato)
+        'no te puedo dar informacion', 'no le puedo dar informacion',
+        'no puedo darle informacion', 'no podemos dar informacion',
+        'no te puedo dar ninguna informacion', 'no le puedo dar ninguna informacion',
+        'yo no te puedo dar informacion', 'yo no puedo dar informacion',
     ]
     if any(n in tn for n in no_interest):
         # FIX 1014c: "ya tengo proveedor, en que son mejores?" = competitive inquiry
