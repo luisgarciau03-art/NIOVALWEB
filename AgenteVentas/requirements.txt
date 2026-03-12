@@ -38,6 +38,7 @@ python-dotenv>=1.0.0        # Variables de entorno
 
 # ===== UTILITIES =====
 requests>=2.31.0            # HTTP requests
+httpx>=0.25.0               # Async HTTP (recording proxy en v2)
 pytz>=2023.3                # Zonas horarias
 
 # ===== AUDIO PROCESSING (Opcional) =====
