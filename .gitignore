@@ -1,90 +1,17 @@
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Ignorar archivos sensibles
+import dropbox.py
+subir_dropbox.py
+# Ignora archivos sensibles y temporales
+# No subir estos archivos a GitHub
 
-# Credenciales de Google
-*.json
-!render.yaml
-!audio_cache/respuestas_cache.json
-!audio_cache_diana_sanchez/respuestas_cache.json
-!audio_cache_diana_sanchez/metadata.json
-!audio_cache_diana_sanchez/voz_info.json
-!audio_cache_mauricio/respuestas_cache.json
-!audio_cache_mauricio/metadata.json
-!audio_cache_mauricio/voz_info.json
-!tracker_data.json
-
-# Python
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
+token.json
+client_secret_*.json
+.env
 .DS_Store
-Thumbs.db
-
-# Logs
 *.log
-logs/
-llamadas/
-
-# Respaldos
-respaldos/
-respaldos_importador/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Archivos temporales
-*.tmp
-*.bak
-*.cache
-
-# Excel temporales
-~$*.xlsx
-~$*.xls
-
-# Archivos específicos del usuario
-ChromeSeleniumProfile*/
-.gologin/
-.cache/
-.claude/
-perfiles_creados.txt
-nul
-*.xlsx
-*.bat
+client_secret.json
+token2.json
+webniovalpdfs.json
+C:/Users/PC 1/NIOVALWEB/

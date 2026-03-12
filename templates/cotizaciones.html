@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cotizaciones</title>
+</head>
+<body>
+  <h2>Cotizaciones</h2>
+  {% if cotizaciones %}
+    <table border="1">
+      <tr><th>Descripción</th><th>Precio</th></tr>
+      {% for c in cotizaciones %}
+        <tr>
+          <td>{{ c.get('descripcion', '') }}</td>
+          <td>${{ c.get('precio', '0') }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No tienes cotizaciones aún.</p>
+  {% endif %}
+  <a href="javascript:history.back()">Volver</a>
+</body>
+</html>
