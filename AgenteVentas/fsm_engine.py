@@ -364,7 +364,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
                                   'no vino', 'no llego', 'no viene', 'esta en su hora',
                                   'hora de comida', 'fueron a comer', 'anda fuera', 'andan fuera',
                                   'no hay nadie', 'no hay quien', 'no nos puede atender',
-                                  'no puede atender', 'nadie que atienda', 'no atiende']
+                                  'no puede atender', 'nadie que atienda', 'no atiende',
+                                  # FIX 1173: BRUCE2669 "no hay ninguno ahorita"
+                                  'no hay ninguno', 'ninguno ahorita', 'no hay encargado',
+                                  'no hay jefe', 'no hay quien atienda']
     if tl.endswith(',') and len(tn) < 40:
         if any(m in tn for m in _manager_absent_quick_889):
             # FIX 930: BRUCE2550 - En SALUDO, "No, no está," con coma = cliente sigue hablando
@@ -487,9 +490,14 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 780: 10+ dígitos con contexto temporal en BUSCANDO_ENCARGADO = callback, no teléfono
         if has_time_context and state == FSMState.BUSCANDO_ENCARGADO:
             pass  # Fall through to callback/other classifiers
-        # OOS-16-19: "numero principal de la empresa" + digits = callback request
+        # OOS-16-19: "numero principal de la empresa" + digits = callback request (en CUALQUIER estado)
+        # FIX 1073: Removido FIX 1050 CAPTURANDO_CONTACTO exception — "llame al numero principal"
+        # siempre es un redirect/callback, nunca el contacto personal del cliente
+        # FIX 1083: Retornar CALLBACK directamente (antes: pass → caía en DICTATING_PARTIAL)
+        # OOS-16-19 hard case: "Llame mejor al numero principal el 3336001234" = redirect,
+        # no el WhatsApp del cliente → mantener como CALLBACK (preguntar hora, no capturar)
         elif _callback_num_principal:
-            pass  # Fall through to callback classifiers
+            return FSMIntent.CALLBACK
         else:
             return FSMIntent.DICTATING_COMPLETE_PHONE
     if len(digits) >= 2 or num_words >= 2:
@@ -597,6 +605,19 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no es de nuestro interes', 'no es de nuestro interés',
         'estamos satisfechos con nuestros proveedores', 'contamos con todo lo necesario',
         'por el momento contamos con', 'estamos bien cubiertos', 'no necesitamos cambiar',
+        # FIX 1047: Encargado no atiende llamadas de vendedores/proveedores → NO_INTEREST
+        'no atiende llamadas de vendedores', 'no atiende llamadas de ventas',
+        'no atiende a proveedores', 'no atiende proveedores', 'no atiende vendedores',
+        'no recibimos vendedores', 'no recibimos llamadas de ventas',
+        'no recibimos llamadas de proveedores', 'no atiende a vendedores',
+        'el encargado no atiende', 'la encargada no atiende',
+        'no tenemos autorizacion para compras', 'no tenemos presupuesto para compras',
+        # FIX 1072: "Venga a la tienda" = visita presencial (Bruce no puede ir → NO_INTEREST)
+        # Cliente ofrece alternativa física que no aplica para agente telefónico
+        'venga a la tienda', 'pase a la tienda', 'venga por aqui', 'pase por aqui',
+        'atiende en persona', 'solo en persona', 'atiende personalmente',
+        'solo atiende en persona', 'venga en persona', 'pase en persona',
+        'pregunte por', 'pase a visitarnos', 'venga a visitarnos',
     ]
     if any(n in tn for n in no_interest):
         # FIX 1014c: "ya tengo proveedor, en que son mejores?" = competitive inquiry
@@ -676,6 +697,11 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'no me acuerdo del numero', 'no me acuerdo del whatsapp',
         'no me acuerdo del correo', 'no recuerdo el numero',
         'no recuerdo cual es', 'no me recuerdo',
+        # FIX 1069: "Deje su numero" = receptionist asking for Bruce's number (not giving theirs)
+        # = rejection of giving their own data, asking Bruce to leave his contact instead
+        'deje su numero', 'deje un numero', 'deja tu numero', 'deje el numero',
+        'deje sus datos', 'deje un recado con su numero', 'deje su contacto',
+        'puede dejar su numero', 'puede dejar un numero',
     ]
     if any(r in tn for r in reject_data):
         return FSMIntent.REJECT_DATA
@@ -690,9 +716,62 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'me dejas tu numero', 'me pasas tu numero', 'me pasas tus datos',
         'dejame el numero', 'dame el numero', 'tu numero de telefono',
         'si gustas dejarme', 'dejame un telefono',
+        # FIX 1032: "Deje su número y él le llama" / "Me dice su número" → Bruce da su contacto
+        'deje su numero', 'deje el numero', 'me da su numero', 'digame su numero',
+        'denos su numero', 'me dice su numero', 'me das tu numero de contacto',
+        'el le llama', 'el le marca', 'ella le llama', 'ella le marca',
+        'para que le marque', 'para que le llame', 'le podemos marcar',
+        'le podemos llamar', 'que le marque', 'que le llame',
+        'nos puede dar su numero', 'nos da su numero', 'dejenos su numero',
+        # FIX 1081c: "Digame su correo/número" = receptionist asking for Bruce's contact
+        'digame su correo', 'digame su email', 'su correo por favor', 'su correo electronico',
+        'nos da su correo', 'nos puede dar su correo', 'dejenos su correo',
+        'digame su numero de contacto', 'digame su numero directo',
+        # FIX 1114: "cuál es su número" (OOS-12-09: cliente pide número de Bruce)
+        'cual es su numero', 'cual es el numero', 'cual es tu numero',
     ]
     if any(p in tn for p in _pide_contacto_bruce_897):
         return FSMIntent.INTEREST  # Triggers ofrecer_contacto_bruce via FSM table
+
+    # FIX 1051: "aqui le paso" = TRANSFER (receptionist transferring call)
+    # Must check BEFORE offer_data which also has 'le paso' as substring
+    # FIX 1066: Agregar "en seguida le paso" y variantes temporales antes de offer_data
+    _le_paso_transfer_1051 = any(p in tn for p in [
+        'aqui le paso', 'aqui te paso', 'le paso a ', 'le paso con ',
+        'te paso a ', 'te paso con ', 'ya le paso', 'ya te paso',
+        'le voy a pasar', 'le paso ahora',
+        # FIX 1066: Variantes temporales ("en seguida", "de inmediato", "ahorita")
+        'en seguida le paso', 'enseguida le paso', 'en un momento le paso',
+        'ahorita le paso', 'de inmediato le paso', 'ahorita te paso',
+        'en seguida te paso', 'ya te voy a pasar', 'ya le voy a pasar',
+    ])
+    if _le_paso_transfer_1051:
+        return FSMIntent.TRANSFER
+
+    # FIX 1062: Relay/recado = receptionist gracefully closing call
+    # "Si, digale que llamaron de Nioval" / "Le dejo el recado" → FAREWELL (accept relay, despedida)
+    _relay_recado_1062 = any(p in tn for p in [
+        'digale que llamaron', 'digale que llamo', 'le digo que llamaron',
+        'le digo que llamo', 'le pongo el recado', 'le dejo el recado',
+        'le paso el recado', 'le dejo el mensaje', 'le paso el mensaje',
+        'le aviso que llamaron', 'si deje el recado', 'si le dejo el recado',
+        'le voy a dejar el recado', 'le voy a dar el recado', 'le doy el recado',
+        'le doy su recado', 'le paso su recado', 'le dejo su recado',
+        'le aviso', 'le pongo el mensaje',
+    ])
+    # FIX 1112: relay + time indicator → CALLBACK not FAREWELL
+    # OOS-12-09 MALA: "si le aviso mañana" → 'le aviso' matches relay → FAREWELL → despedida prematura
+    # Con tiempo explícito = callback implícito (mañana, lunes, en la tarde, etc.)
+    _relay_time_1112 = any(t in tn for t in [
+        'manana', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado',
+        'en la tarde', 'en la manana', 'despues de comer', 'mas tarde', 'mas al rato',
+        'pasado manana', 'la proxima semana', 'la semana que viene',
+    ])
+    if _relay_recado_1062:
+        if _relay_time_1112:
+            print(f"  [FIX 1112] Relay+tiempo detectado -> CALLBACK (no FAREWELL)")
+            return FSMIntent.CALLBACK
+        return FSMIntent.FAREWELL
 
     # --- Oferta de dato ---
     offer_data = [
@@ -754,6 +833,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'mandame un whatsapp', 'mandame un wats', 'mandame un wasap',
         'mandame un mensaje', 'mandame un wha', 'mandame al whatsapp primero',
         'primero mandame', 'mandame algo al whatsapp',
+        # FIX 1088: "manda un mensaje" (2a persona sin 'me') → OFFER_DATA (cliente pide contacto WA)
+        # "No puedo atenderte, manda un mensaje de WhatsApp" = quiere ser contactado por WA
+        'manda un mensaje', 'manda un whatsapp', 'manda un wats', 'manda un wasap',
+        'mejor manda un', 'manda al whatsapp', 'manda al wats', 'manda algo al',
     ]
     if any(o in tn for o in offer_data):
         return FSMIntent.OFFER_DATA
@@ -773,6 +856,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 926: BRUCE1825 - "no hay nadie" no se detectaba
         'no hay nadie', 'no hay quien', 'nadie que atienda',
         'no nos puede atender', 'no puede atender', 'andan fuera',
+        # FIX 1173: BRUCE2669 "no hay ninguno ahorita"
+        'no hay ninguno', 'ninguno ahorita', 'no hay encargado',
+        'no hay jefe', 'no hay quien atienda',
         # FIX 991: Variantes "ahorita anda ocupado/en llamada"
         'ahorita anda ocupado', 'ahorita anda ocupada', 'anda ocupado', 'anda ocupada',
         'ahorita esta ocupado', 'ahorita esta ocupada', 'esta en una llamada',
@@ -795,7 +881,51 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'las compras las hace', 'las compras las decide',
         'no tengo autoridad para', 'no tengo poder de decision',
     ]
-    if any(m in tn for m in manager_absent):
+    # FIX 1104: Guard FP - "dueNO ESTa, momentito" contains 'no esta' as substring but is POSITIVE presence
+    # "El dueño está, un momentito" → manager IS present, just putting on hold → should be TRANSFER
+    _titulos_presente_1104 = ['dueno esta', 'duena esta', 'jefe esta', 'jefa esta',
+                               'gerente esta', 'gerenta esta', 'encargado esta', 'encargada esta']
+    _es_positivo_holding_1104 = (
+        any(p in tn for p in _titulos_presente_1104)
+        and any(t in tn for t in ['momentito', 'momento', 'segundo', 'espere', 'espera'])
+    )
+    # FIX 1108: "encargado está + ocupado/atendiendo/almacén" → CALLBACK not MANAGER_ABSENT
+    # OOS-12-06: "El encargado está en el almacén" → Bruce decía "no se encuentra" (incorrecto)
+    # OOS-12-17: "El dueño está pero está atendiendo en mostrador" → idem
+    _es_ocupado_pero_presente_1108 = (
+        any(p in tn for p in _titulos_presente_1104)
+        and any(t in tn for t in ['atendiendo', 'ocupado', 'ocupada', 'con un cliente',
+                                   'en mostrador', 'en el almacen', 'en la bodega', 'en el patio',
+                                   'pero esta', 'pero anda', 'cargando mercancia', 'en caja'])
+    )
+    # FIX 1137: Widened — "está atendiendo/en almacén" sin título también es ocupado
+    # OOS-05-05: "Está atendiendo un cliente" OOS-05-06: "Está en el almacén, no puede hablar"
+    _ocupado_sin_titulo_1137 = any(p in tn for p in [
+        'esta atendiendo', 'esta con un cliente', 'esta con visita',
+        'esta en el almacen', 'esta en la bodega', 'esta en caja',
+        'esta en el patio', 'esta cargando', 'esta en el piso de venta',
+        'no puede hablar', 'no puede atender', 'esta ocupado', 'esta ocupada',
+        # FIX 1138: First person busy ("estoy ocupado")
+        'estoy ocupado', 'estoy ocupada', 'estoy muy ocupado',
+        'no puedo ahorita', 'en este momento no puedo', 'ahorita no puedo',
+    ])
+    if _es_ocupado_pero_presente_1108 or _ocupado_sin_titulo_1137:
+        # FIX 1138: If the person IS the manager AND busy → CALLBACK (not MANAGER_ABSENT)
+        # OOS-11-03: "Soy el dueño pero estoy muy ocupado" → callback directo
+        _also_manager_1138 = any(p in tn for p in [
+            'soy yo', 'yo soy', 'soy el dueno', 'soy la duena', 'soy el encargado',
+            'soy la encargada', 'soy el jefe', 'soy la jefa', 'yo mero',
+        ])
+        if _also_manager_1138:
+            print(f"  [FIX 1138] Encargado ES interlocutor + ocupado -> CALLBACK directo")
+            context.encargado_es_interlocutor = True
+            context._encargado_ocupado_1137 = True
+            return FSMIntent.CALLBACK
+        print(f"  [FIX 1108/1137] Encargado presente pero ocupado -> MANAGER_ABSENT + flag")
+        # FIX 1137: Set context flag for better template (no "no se encuentra")
+        context._encargado_ocupado_1137 = True
+        return FSMIntent.MANAGER_ABSENT
+    if any(m in tn for m in manager_absent) and not _es_positivo_holding_1104:
         return FSMIntent.MANAGER_ABSENT
     # "No" a secas después de preguntar por encargado = MANAGER_ABSENT contextual
     # FIX 890: BRUCE2621 - "Dígame. Fíjese que no." → "fijese que no" = manager absent
@@ -812,6 +942,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
     manager_present = [
         'soy yo', 'yo soy', 'si soy', 'yo mero', 'yo soy el encargado',
         'yo soy la encargada', 'si yo soy', 'aqui yo', 'servidor',
+        # FIX 1117: "soy el encargado" sin "yo" prefix (OOS-17-15: "Si, diga, soy el encargado")
+        'soy el encargado', 'soy la encargada', 'soy encargado', 'soy encargada',
         'yo me encargo', 'conmigo', 'a mi',
         # FIX 891: BRUCE2605 - "a la orden" / "a tus ordenes" = encargado presente
         'a la orden', 'a tus ordenes', 'a sus ordenes', 'a tu orden',
@@ -819,6 +951,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # NOTE: 'con el encargado' EXCLUIDO — FP en "le comunico con el encargado" (TRANSFER)
         'aqui ando', 'aqui estoy yo', 'le habla el encargado', 'le habla la encargada',
         'habla el encargado', 'habla la encargada', 'encargado habla',
+        # FIX 1128: Post-transfer "aquí el encargado" (OOS-08-04/06/08)
+        'aqui el encargado', 'aqui la encargada', 'aqui el jefe', 'aqui el dueno',
+        'aqui el gerente', 'el encargado al habla', 'la encargada al habla',
+        # FIX 1154: "correcto, con el encargado" (OOS-07-04: classified as CONFIRMATION → skipped catalog)
+        'correcto con el encargado', 'correcto el encargado', 'correcto soy el encargado',
+        'correcto con la encargada', 'si con el encargado', 'si el encargado',
         # FIX 991: "ando yo aqui" = soy yo el que está (coloquial)
         'ando yo aqui', 'ando aqui yo', 'aqui andamos', 'yo ando aqui',
         # FIX 992: Variantes de "aquí estoy / soy yo el encargado"
@@ -830,6 +968,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo manejo eso', 'yo lo manejo', 'yo me encargo de eso',
         # FIX 998: "aqui mando yo" = soy el decisor
         'aqui mando yo', 'yo mando aqui', 'aqui mando yo solo',
+        # FIX 1163: "si, encargado" / "si encargado" (confirmación corta)
+        'si encargado', 'si el encargado', 'si la encargada',
+        'si yo', 'si soy', 'si aqui',
         # FIX 999: Propietario/dueño que responde directamente
         'soy el dueno', 'soy la duena', 'soy el propietario', 'soy la propietaria',
         'le habla el propietario', 'le habla la propietaria',
@@ -844,14 +985,46 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo soy la que decide', 'yo me encargo de eso', 'yo compro aqui',
         'yo soy el responsable', 'yo soy la responsable', 'yo soy el dueno',
         'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
+        # NOTE: 'el encargado es X' (3rd-person info from intermediary) intentionally NOT here
+        # FIX 1082 handles those via UNKNOWN → "Muchas gracias por la informacion" (no re-pitch)
     ]
     if any(m in tn for m in manager_present):
+        # FIX 1075: Mala experiencia previa con NIOVAL → GPT maneja empáticamente
+        # "Ya compré de NIOVAL y no fue bien" → QUESTION para respuesta empática, no pedir datos
+        _mala_exp_1075 = any(p in tn for p in [
+            'no fue bien', 'no nos fue bien', 'no salio bien', 'no resulto bien',
+            'tuvimos problemas', 'tuve problemas', 'hubo problemas',
+            'mala experiencia', 'mal servicio', 'mal producto',
+            'ya compramos y', 'ya compre y', 'ya pedimos y', 'ya probamos y',
+            'no quedamos satisfechos', 'no quedamos contentos',
+            'no me gusto', 'no nos gusto', 'no quedo bien', 'no quedo satisfecho',
+        ])
+        if _mala_exp_1075:
+            print(f"  [FIX 1075] Mala experiencia previa → QUESTION (GPT empático)")
+            return FSMIntent.QUESTION
+
         # FIX 906: Si también hay callback, priorizar callback
         # Ej: "si soy pero marqueme el lunes" = CALLBACK, no MANAGER_PRESENT
         _has_callback_906 = any(c in tn for c in [
             'marqueme', 'llameme', 'marque el', 'llame el',
             'mas tarde', 'despues', 'luego', 'otro dia',
             'la proxima', 'no puedo ahorita', 'ando ocupado',
+            # FIX 1031: 'estoy ocupado' / 'estoy atendiendo' = CALLBACK no MANAGER_PRESENT
+            'estoy ocupado', 'estoy muy ocupado', 'estoy bastante ocupado',
+            'estoy atendiendo', 'estoy en junta', 'estoy en reunion',
+            'estoy trabajando', 'estoy con clientes', 'estoy con un cliente',
+            'ahorita no puedo', 'no puedo en este momento', 'no es buen momento',
+            # FIX 1063: "tengo un cliente" = encargado ocupado con cliente → CALLBACK
+            'tengo un cliente', 'con un cliente', 'atendiendo a un cliente',
+            'atendiendo cliente', 'tengo clientes', 'con clientes ahorita',
+            # FIX 1096: "estoy entregando/en ruta" = encargado haciendo entregas → CALLBACK (OOS-11-07)
+            'estoy entregando', 'voy en entrega', 'estoy en ruta', 'andamos entregando',
+            'estamos entregando', 'estoy haciendo entregas', 'ando en entregas',
+            'voy en camino', 'estoy de camino', 'ando en ruta', 'estoy repartiendo',
+            # FIX 1102: Encargado presente pero ocupado → CALLBACK (OOS-11-05/08/10)
+            # "en este momento no puedo" / "pero ocupado" / "estoy entreganado" (typo)
+            'en este momento no puedo', 'pero estoy ocupado', 'pero ocupado',
+            'estoy entreganado', 'andamos entreganando',  # typo variant of "entregando"
         ])
         if _has_callback_906:
             return FSMIntent.CALLBACK
@@ -955,6 +1128,10 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'a fin de mes', 'a finales del mes', 'a principios del mes',
         'principios del mes que entra', 'finales del mes que entra',
         'mejor marcame a fin', 'a fin del mes',
+        # FIX 1102: Ocupado sin identificarse como encargado (OOS-11-08: "Si pero tengo una junta ahorita")
+        # Estos NO pasan por el bloque manager_present → necesitan detección standalone
+        'tengo una junta', 'tengo junta', 'estoy en junta',
+        'si pero tengo', 'si pero estoy ocupado', 'si pero ando',
         # FIX 1000: Callbacks formales/educados
         'podria volver a contactarnos', 'contactenos la proxima',
         'la proxima quincena', 'el siguiente trimestre', 'el proximo trimestre',
@@ -962,7 +1139,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         # FIX 998: "quién sabe" = no sabe cuando regresa = callback tentativo
         'quien sabe', 'ni idea', 'no se cuando',
         # FIX 999: Sin presupuesto = callback temporal
-        'no tenemos presupuesto', 'sin presupuesto', 'nos quedamos sin presupuesto',
+        # FIX 1064: EXCEPTO si termina con "gracias"/"buen dia" = rechazo definitivo (ver abajo)
+        'sin presupuesto', 'nos quedamos sin presupuesto',
         'no hay presupuesto', 'no hay recursos', 'no hay fondos',
         # FIX 995: "lo voy a pensar" / "consultar con el dueño" = callback tentativo
         'lo voy a pensar', 'lo pensare', 'voy a pensar', 'tengo que pensar',
@@ -977,12 +1155,33 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'marcame manana', 'marca manana', 'marcame mañana',
         'llama otro dia', 'llamame otro dia', 'en otro momento',
         'en unos dias', 'en unos días', 'dentro de unos dias',
+        # FIX 1033: "en unos meses" / "en tres meses" / "regresa en N meses" = callback long-term
+        'en unos meses', 'en algunos meses', 'en tres meses', 'en dos meses',
+        'en un mes', 'dentro de un mes', 'dentro de dos meses', 'dentro de tres meses',
+        'regresa en tres meses', 'regresa en dos meses', 'regresa en un mes',
+        'en unos meses regresa', 'en unos meses llega', 'en unos meses viene',
+        'el siguiente año', 'el proximo año', 'a inicio del año',
+        'en unas semanas', 'dentro de unas semanas', 'en dos semanas', 'en tres semanas',
     ]
+    # FIX 1064: "no tenemos presupuesto + gracias/buen dia" = rechazo definitivo (no callback)
+    # "no tenemos presupuesto este mes, gracias" termina la conversacion, NO es callback tentativo
+    _presupuesto_1064 = any(p in tn for p in [
+        'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+        'no contamos con presupuesto',
+    ])
+    _farewell_end_1064 = any(tn.endswith(f) for f in [
+        'gracias', 'buen dia', 'buenas tardes', 'buenas noches', 'hasta luego',
+        'adios', 'que le vaya bien', 'hasta pronto',
+    ])
+    if _presupuesto_1064 and _farewell_end_1064:
+        return FSMIntent.NO_INTEREST
+
     if any(c in tn for c in callback):
         if state in (FSMState.BUSCANDO_ENCARGADO, FSMState.ENCARGADO_AUSENTE,
                      FSMState.PITCH, FSMState.ESPERANDO_TRANSFERENCIA,
                      FSMState.ENCARGADO_PRESENTE, FSMState.DICTANDO_DATO,
-                     FSMState.CAPTURANDO_CONTACTO):  # FIX 935 + FIX 938
+                     FSMState.CAPTURANDO_CONTACTO,
+                     FSMState.DESPEDIDA):  # FIX 935 + FIX 938 + FIX 1080 (DESPEDIDA)
             return FSMIntent.CALLBACK
 
     # --- Otra sucursal ---
@@ -1014,7 +1213,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
 
     # --- Pregunta identidad ---
     identity = [
-        'quien habla', 'de donde', 'de que empresa', 'de que parte',
+        'quien habla', 'de donde', 'de que empresa', 'que empresa es',
+        'que empresa', 'de que parte',
         'a donde llama', 'de donde llama', 'con quien hablo',
         # FIX 883: BRUCE2630/2634 - "de parte de quién" no matcheaba
         # Cliente pregunta procedencia → Bruce debe identificarse
@@ -1025,6 +1225,13 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'y usted quien', 'y tu quien', 'y usted de donde', 'y usted que',
         # FIX 1000: "quién le llama" = pregunta identidad
         'quien le llama', 'quien me esta llamando', 'quien llama',
+        # FIX 1170: "¿con quién tengo el gusto?" = pregunta nombre/identidad
+        'con quien tengo el gusto', 'con quien tengo', 'tengo el gusto',
+        'cual es su nombre', 'como es su nombre', 'su nombre',
+        'digame su nombre', 'me dice su nombre',
+        # FIX 1174: "deletrear/deletree su nombre" → identidad
+        'deletrear', 'deletree', 'deletreo', 'como se escribe su nombre',
+        'como se escribe bruce', 'me puede deletrear',
         # FIX 1021: "¿es usted una grabación/robot?" y empresa equivocada
         'es una grabacion', 'es grabacion', 'eres una grabacion',
         'son una grabacion', 'es robot', 'es un robot', 'es un bot',
@@ -1032,6 +1239,25 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'es automatizado', 'es inteligencia artificial', 'es una ia',
         'son de herrajes', 'son de ferreteria', 'verdad que son de',
         'son ustedes de', 'es usted de',
+        # FIX 1081b: "¿De NIOVAL verdad?" / "¿Son de NIOVAL?" = verificar identidad
+        'de nioval verdad', 'son de nioval', 'nioval verdad', 'son nioval',
+        'es de nioval', 'llama nioval', 'llaman de nioval',
+        # FIX 1077: "no con grabacion" / "hablar con el vendedor directamente" → IDENTITY
+        # Bruce responde con identificacion_nioval para aclarar que es agente de ventas
+        'no con grabacion', 'no con un robot', 'no quiero grabacion',
+        'hablar con el vendedor', 'con el vendedor directamente', 'con alguien de verdad',
+        'con una persona real', 'hablar con una persona', 'no con una grabacion',
+        'no con automatico', 'con alguien real',
+        # FIX 1106: "¿Es una grabación o persona real?" → IDENTITY (OOS-15-12)
+        # Cliente pregunta si Bruce es bot o persona → explicar que es agente de ventas
+        'es una grabacion', 'es usted grabacion', 'grabacion o persona', 'persona real o grabacion',
+        'es grabacion', 'eres grabacion', 'eres un robot', 'es un robot',
+        'eres una grabacion', 'es usted un robot', 'es usted una grabacion',
+        # FIX 1078: "Como consiguio este numero?" → IDENTITY (Bruce se identifica y explica)
+        # GPT_NARROW via QUESTION devuelve "Perfecto, digame" — mejor usar identificacion_nioval
+        'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+        'como consiguio mi numero', 'de donde consiguio mi numero',
+        'quien le dio este numero', 'como tiene mi numero', 'de donde salio mi numero',
     ]
     if any(i in tn for i in identity):
         return FSMIntent.IDENTITY
@@ -1118,6 +1344,12 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             return FSMIntent.MANAGER_PRESENT
         return FSMIntent.CONFIRMATION
 
+    # FIX 1052: Pausas/hold words durante dictado → CONTINUATION (no resetean datos_parciales)
+    # "espere" entre "33 12" y "34 90 09" causaba reset del buffer → número perdido
+    _pausa_hold_1052 = ['espere', 'espera', 'un momento', 'un seg', 'momentito', 'ahorita', 'momento']
+    if any(tn == p or tn.startswith(p + ' ') for p in _pausa_hold_1052):
+        return FSMIntent.CONTINUATION
+
     # --- Continuación (texto termina en conector) ---
     if tn.endswith(' y') or tn.endswith(' o') or tn.endswith(' pero'):
         return FSMIntent.CONTINUATION
@@ -1170,6 +1402,21 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'en cuantos dias', 'cuantos dias llega', 'cuantos dias tarda',
         'en que tiempo llega', 'cuando llega el pedido', 'dias de entrega',
         'cuanto tarda el envio', 'cuanto tarda la entrega',
+        # FIX 1034: "¿Cómo consiguió este número?" → GPT explica origen de datos
+        'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+        'como consiguio mi numero', 'de donde consiguio mi numero',
+        'quien le dio mi numero', 'como obtuvo mi contacto', 'donde consiguio mi contacto',
+        'de donde saco mi numero', 'como tiene mi numero',
+        # FIX 1035: "Solo trabajamos con proveedores certificados, ¿tienen eso?" → QUESTION
+        'proveedores certificados', 'proveedor certificado', 'certificacion de proveedor',
+        'estan certificados', 'tienen certificacion', 'tienen certificado',
+        'son proveedores certificados', 'cuentan con certificacion',
+        'requieren certificacion', 'requieren estar certificados',
+        # FIX 1053: "¿Es gratis el catálogo?" → QUESTION (frase sin '?' pero es consulta de costo)
+        'es gratis el catalogo', 'el catalogo es gratis', 'es gratuito el catalogo',
+        'tiene costo el catalogo', 'cobran por el catalogo', 'el catalogo cuesta',
+        'el catalogo tiene costo', 'hay costo por el catalogo', 'es de paga el catalogo',
+        'es gratis la informacion', 'el catalogo es de costo',
     ]
     if any(q in tn for q in implicit_questions):
         return FSMIntent.QUESTION
@@ -1345,7 +1592,15 @@ class FSMEngine:
             _saludos_802 = ['hola', 'bueno', 'buen dia', 'buenas tardes', 'buenas noches', 'que tal', 'digame', 'diga', 'si digame', 'mande']
             _es_saludo_802 = any(s in _t802 for s in _saludos_802)
             _es_identidad_802 = any(q in _t802 for q in ['quien habla', 'quien llama', 'de donde', 'que empresa', 'de parte de'])
-            if _es_saludo_802 and not _es_identidad_802:
+            # FIX 1175: Filtrar ruido de fondo que matchea saludo por accidente
+            # BRUCE2670: "mira va a aparecer buena min... bueno, mi voz" → FP
+            # Solo activar si el texto es limpio (< 50 chars) y no tiene palabras de ruido
+            _ruido_1175 = any(r in _t802 for r in [
+                'mira', 'aparecer', 'mi voz', 'chavo', 'gordito', 'muerto',
+                'luz', 'galvi', 'baco', 'jefe el',
+            ])
+            _texto_limpio_1175 = len(_t802) < 50 and not _ruido_1175
+            if _es_saludo_802 and not _es_identidad_802 and _texto_limpio_1175:
                 # Persona nueva saludando -> re-introducción con pitch
                 print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' -> pitch_persona_nueva")
                 self.state = FSMState.BUSCANDO_ENCARGADO
@@ -1392,6 +1647,379 @@ class FSMEngine:
             self.state = FSMState.DESPEDIDA
             return self._get_template("despedida_hostil_950")
 
+        # FIX 1122: Mala experiencia previa con NIOVAL → template empático directo
+        # OOS-15-14: "ya compré de NIOVAL y no fue bien" → GPT responde con catálogo sin empatía
+        # FIX 1075 clasifica como QUESTION → GPT_NARROW, pero GPT no es empático → template directo
+        _mala_exp_1122 = any(p in _texto_lower for p in [
+            'no fue bien', 'no nos fue bien', 'no salio bien', 'no resulto bien',
+            'tuvimos problemas', 'tuve problemas', 'hubo problemas',
+            'mala experiencia', 'mal servicio', 'mal producto',
+            'no quedamos satisfechos', 'no quedamos contentos',
+            'no me gusto', 'no nos gusto',
+        ])
+        if _mala_exp_1122:
+            print(f"  [FIX 1122] Mala experiencia previa → template empático")
+            return self._get_template("empatia_mala_experiencia_1122")
+
+        # FIX 1121: Certificaciones → template directo (GPT_NARROW no confiable para esto)
+        # OOS-16-16: "Solo trabajamos con proveedores certificados" → GPT evade con catálogo
+        _cert_1121 = any(p in _texto_lower for p in [
+            'proveedores certificados', 'proveedor certificado', 'estan certificados',
+            'tienen certificacion', 'tienen certificado', 'cuentan con certificacion',
+        ])
+        if _cert_1121:
+            print(f"  [FIX 1121] Pregunta certificaciones → template honesto (no GPT)")
+            return self._get_template("respuesta_certificaciones_1121")
+
+        # FIX 1127: Phase 1 intercepts para preguntas frecuentes donde GPT es evasivo
+        # OOS-14-14: devoluciones, OOS-14-20: RFC, OOS-14-18: catálogo digital
+        # OOS-14-19: líneas de producto, OOS-14-09/15-05: ya compré antes
+        if any(p in _texto_lower for p in [
+            'aceptan devoluciones', 'politica de devoluciones', 'devolucion',
+            'devolver producto', 'devolver mercancia',
+        ]):
+            print(f"  [FIX 1127] Pregunta devoluciones → template directo")
+            return self._get_template("respuesta_devoluciones_1127")
+
+        if any(p in _texto_lower for p in [
+            'tienen rfc', 'tiene rfc', 'son empresa formal', 'facturan',
+            'emiten factura', 'dan factura', 'hacen factura', 'manejan factura',
+        ]):
+            print(f"  [FIX 1127] Pregunta RFC/facturación → template directo")
+            return self._get_template("respuesta_rfc_1127")
+
+        if any(p in _texto_lower for p in [
+            'catalogo es fisico', 'catalogo fisico', 'catalogo digital',
+            'es fisico o digital', 'es digital o fisico',
+        ]):
+            print(f"  [FIX 1127] Pregunta catálogo físico/digital → template directo")
+            return self._get_template("respuesta_catalogo_digital_1127")
+
+        if any(p in _texto_lower for p in [
+            'que tipo de productos', 'que productos manejan', 'que es lo que venden',
+            'que venden exactamente', 'que lineas manejan', 'que tipo de mercancia',
+        ]):
+            print(f"  [FIX 1127] Pregunta líneas de producto → template directo")
+            return self._get_template("respuesta_lineas_producto_1127")
+
+        # FIX 1134: "ya les compré antes" → reconocer cliente existente
+        # OOS-14-09: "Ya les compré antes" → Bruce ignora y pide WA
+        # OOS-15-05: "Ya me mandaron el catálogo antes"
+        if any(p in _texto_lower for p in [
+            'ya les compre', 'ya les compre antes', 'ya compre con ustedes',
+            'ya me mandaron el catalogo', 'ya tengo el catalogo', 'ya lo tengo',
+            'ya me lo mandaron', 'ya soy cliente', 'ya les he comprado',
+            # FIX 1141: plural variants (OOS-15-16: "ya tenemos el catalogo")
+            'ya tenemos el catalogo', 'ya nos registraron', 'ya nos mandaron',
+        ]):
+            print(f"  [FIX 1134] Cliente existente → reconocer y ofrecer actualización")
+            return self._get_template("reconocer_cliente_existente_1127")
+
+        # FIX 1139: "¿Es gratis el catálogo?" → respuesta directa
+        # OOS-15-07: GPT responde "Esa info viene en el catálogo" (circular)
+        if any(p in _texto_lower for p in [
+            'es gratis', 'tiene costo', 'cuesta el catalogo', 'cobran el catalogo',
+            'gratis el catalogo', 'catalogo gratis',
+        ]):
+            print(f"  [FIX 1139] Pregunta catálogo gratis → template directo")
+            return self._get_template("catalogo_gratis_1139")
+
+        # FIX 1140: "No me gustan las llamadas de ventas" → empatía + oferta rápida
+        # OOS-15-11: Bruce ignora el sentimiento y pide WA directamente
+        if any(p in _texto_lower for p in [
+            'no me gustan las llamadas', 'no me gustan llamadas de ventas',
+            'no me gusta que me llamen', 'no me gustan las llamadas de ventas',
+            'odio las llamadas', 'no me llamen',
+        ]) and not any(p in _texto_lower for p in ['dejen de llamar', 'ya no llamen', 'denunciar']):
+            print(f"  [FIX 1140] No gustan llamadas → empatía + oferta rápida")
+            return self._get_template("empatia_no_gustan_llamadas_1140")
+
+        # FIX 1142: Tiempo de entrega → respuesta directa
+        # OOS-14-17: GPT dice "esa info en el catálogo" (evasivo)
+        if any(p in _texto_lower for p in [
+            'cuantos dias llega', 'tiempo de entrega', 'cuando llega',
+            'cuanto tarda en llegar', 'dias de entrega', 'dias habiles',
+            'cuando me llega', 'tarda en llegar',
+        ]):
+            print(f"  [FIX 1142] Pregunta tiempo entrega → template directo")
+            return self._get_template("respuesta_tiempo_entrega_1142")
+
+        # FIX 1142B: Precio de producto específico → respuesta directa
+        # OOS-14-11: GPT con error gramatical "le la envío"
+        if any(p in _texto_lower for p in [
+            'cuanto cuestan', 'cuanto cuesta', 'que precio tienen',
+            'a cuanto esta', 'a cuanto estan', 'cual es el precio',
+            'precio de los', 'precio del', 'precios de',
+        ]):
+            print(f"  [FIX 1142B] Pregunta precio → template directo")
+            return self._get_template("respuesta_precio_producto_1142")
+
+        # FIX 1148: "de dónde son" → respuesta de ubicación SIN re-introducción completa
+        # OOS-09-05: Bruce re-dice "Mi nombre es Bruce, le llamo de NIOVAL" (redundante)
+        if any(p in _texto_lower for p in [
+            'de donde son', 'de donde son ustedes', 'de que ciudad son',
+            'de donde llaman', 'de donde me llaman', 'de que estado son',
+            'de donde me hablan', 'donde estan ubicados', 'donde estan',
+        ]) and not any(p in _texto_lower for p in ['robot', 'grabacion', 'persona real']):
+            print(f"  [FIX 1148] Pregunta ubicación → respuesta directa sin re-intro")
+            return self._get_template("respuesta_ubicacion_1148")
+
+        # FIX 1149: "¿Es grabación/robot?" → respuesta explícita de agente de ventas
+        # OOS-15-12/15-17: Bruce evade con identidad corporativa sin aclarar
+        if any(p in _texto_lower for p in [
+            'es una grabacion', 'es grabacion', 'eres una grabacion', 'eres grabacion',
+            'es robot', 'es un robot', 'eres un robot', 'es un bot',
+            'persona real', 'es humano', 'grabacion o persona',
+            'es automatizado', 'no con grabacion', 'no con un robot',
+            'no quiero grabacion', 'hablar con el vendedor', 'con el vendedor directamente',
+            'con una persona real', 'hablar con una persona', 'con alguien real',
+            'quiero hablar con el vendedor', 'no con una grabacion',
+        ]):
+            print(f"  [FIX 1149] Pregunta robot/grabación → soy agente de ventas")
+            return self._get_template("respuesta_agente_real_1149")
+
+        # FIX 1150: "¿Cómo consiguió este número?" → explicar prospección
+        # OOS-16-14: Bruce da identidad corporativa pero no responde la pregunta
+        if any(p in _texto_lower for p in [
+            'como consiguio este numero', 'como obtuvo este numero', 'de donde saco este numero',
+            'como consiguio mi numero', 'de donde consiguio mi numero',
+            'quien le dio mi numero', 'como tiene mi numero', 'de donde salio mi numero',
+            'como consiguieron este numero', 'como consiguieron mi numero',
+        ]):
+            print(f"  [FIX 1150] Pregunta origen número → explicar prospección")
+            return self._get_template("respuesta_origen_numero_1150")
+
+        # FIX 1156: "no sé si soy el encargado" → no asumir, preguntar
+        # OOS-15-06: Bruce dice "Excelente" ante incertidumbre sobre rol
+        if any(p in _texto_lower for p in [
+            'no se si soy el encargado', 'no se si soy', 'no estoy seguro si soy',
+            'no se si yo sea', 'creo que no soy el encargado',
+        ]):
+            print(f"  [FIX 1156] Rol ambiguo → preguntar si decide compras")
+            return self._get_template("preguntar_si_decide_1156")
+
+        # FIX 1157: "no me oye bien" / "mala señal" → acknowledge antes de continuar
+        # OOS-15-20: Bruce ignora aviso de mala señal
+        # FIX 1157B: Si mala señal PERO ya trae un número → capturar el número (no solo acknowledge)
+        _mala_senal_1157 = any(p in _texto_lower for p in [
+            'no me oye bien', 'no me oye', 'mala senal', 'no se oye',
+            'no se escucha', 'se escucha mal', 'se oye mal', 'no me escucha',
+            'se corta', 'se corta la llamada', 'se corta la senal',
+        ])
+        if _mala_senal_1157 and self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
+                              FSMState.ENCARGADO_PRESENTE, FSMState.PITCH):
+            import re as _re1157b
+            _num_1157b = _re1157b.search(r'(\d{10})', texto)
+            if _num_1157b:
+                # FIX 1157B: Number already in the message → capture it
+                _tel_1157b = _num_1157b.group(1)
+                print(f"  [FIX 1157B] Mala señal + número {_tel_1157b} → capturar")
+                self.state = FSMState.CONTACTO_CAPTURADO
+                return (f"Si le escucho, no se preocupe. Ya anote el {_tel_1157b}. "
+                        f"Le envio el catalogo con lista de precios. Muchas gracias por su tiempo.")
+            else:
+                print(f"  [FIX 1157] Mala señal → acknowledge")
+                return "Si, le escucho bien. Digame por favor."
+
+        # FIX 1131: "yo no decido" → preguntar si el decisor está (no asumir ausencia)
+        # OOS-16-13: "Yo no decido eso, el dueño compra" → Bruce decía "no se encuentra"
+        if any(p in _texto_lower for p in [
+            'yo no decido', 'no soy quien decide', 'no tomo esas decisiones',
+            'no es mi decision', 'no soy el que decide', 'no decido yo',
+            'las compras las hace', 'las compras las decide',
+        ]):
+            print(f"  [FIX 1131] No es decisor → preguntar si encargado está")
+            return self._get_template("preguntar_decisor_1131")
+
+        # FIX 1174: "deletrear/deletree su nombre" → deletrear B-R-U-C-E
+        if any(p in _texto_lower for p in [
+            'deletrear', 'deletree', 'deletreo', 'como se escribe',
+            'me puede deletrear', 'podria deletrear',
+        ]):
+            print(f"  [FIX 1174] Deletreo solicitado → responder con B-R-U-C-E")
+            return self._get_template("deletreo_bruce_1174")
+
+        # FIX 1166: "Somos taller mecánico" → mencionar herramienta/tornillería que aplica
+        # OOS-16-11: Bruce cierra sin explicar que NIOVAL tiene productos útiles para talleres
+        if any(p in _texto_lower for p in [
+            'somos taller mecanico', 'somos un taller mecanico', 'somos taller',
+            'somos un taller', 'somos mecanicos', 'aqui es un taller mecanico',
+            'esto es un taller',
+        ]) and self.state in (FSMState.PITCH, FSMState.ENCARGADO_PRESENTE,
+                               FSMState.CAPTURANDO_CONTACTO, FSMState.BUSCANDO_ENCARGADO):
+            print(f"  [FIX 1166] Taller mecánico → ofrecer herramienta/tornillería aplicable")
+            return self._get_template("taller_mecanico_1166")
+
+        # FIX 1162: "No tenemos presupuesto" → ofrecer callback el próximo mes
+        # OOS-16-09: "no tenemos presupuesto este mes" → Bruce cierra sin ofrecer seguimiento
+        if any(p in _texto_lower for p in [
+            'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+            'sin presupuesto', 'no contamos con presupuesto',
+            'no tenemos dinero', 'no hay dinero para eso',
+            'no hay recursos', 'no tenemos recursos',
+            'estamos cortos', 'andamos cortos', 'no podemos comprar ahorita',
+        ]) and self.state in (FSMState.PITCH, FSMState.ENCARGADO_PRESENTE,
+                               FSMState.CAPTURANDO_CONTACTO):
+            print(f"  [FIX 1162] Sin presupuesto → ofrecer callback próximo mes")
+            self.state = FSMState.DESPEDIDA
+            self.context.callback_hora = "el proximo mes"
+            return self._get_template("callback_sin_presupuesto_1162")
+
+        # FIX 1135: Supervisor request → explain Bruce is the contact
+        # OOS-15-10: "Me puede comunicar con su supervisor" → GPT evasivo
+        if any(p in _texto_lower for p in [
+            'con su supervisor', 'con el supervisor', 'hablar con supervisor',
+            'hablar con su jefe', 'con su gerente', 'paseme con su jefe',
+        ]) and self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.PITCH):
+            print(f"  [FIX 1135] Solicitud de supervisor → soy el ejecutivo")
+            return ("Soy el ejecutivo de ventas de NIOVAL, con gusto le ayudo directamente. "
+                    "¿Le envio nuestro catalogo con lista de precios?")
+
+        # FIX 1133: "este mismo número" / "al que me está marcando" → confirmar
+        # OOS-13-13: "este mismo número que marcó usted" → Bruce dice "Si, adelante"
+        if self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO,
+                          FSMState.ENCARGADO_PRESENTE) and any(p in _texto_lower for p in [
+            'este mismo numero', 'al que me esta marcando', 'al que me marco',
+            'a este numero', 'al mismo numero', 'al que llamo',
+            'use este numero', 'use este', 'a este mismo',
+        ]):
+            # FIX 1143: Set DESPEDIDA (not CONTACTO_CAPTURADO) to prevent post-number confusion
+            print(f"  [FIX 1133] 'Este mismo número' → confirmar y despedir")
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("confirmar_mismo_numero_1133")
+
+        # FIX 1151: DESPEDIDA + "deje su número y él le llama" → dar número de NIOVAL
+        # OOS-12-03: After recado, client asks Bruce to leave HIS number → Bruce closes without giving it
+        if self.state == FSMState.DESPEDIDA and any(p in _texto_lower for p in [
+            'deje su numero', 'deje el numero', 'dejeme su numero', 'me da su numero',
+            'digame su numero', 'cual es su numero', 'dejenos su numero', 'deme su numero',
+            'el le llama', 'el le marca', 'para que le marque', 'para que le llame',
+        ]):
+            print(f"  [FIX 1151] DESPEDIDA + piden número de Bruce → dar número NIOVAL")
+            return self._get_template("ofrecer_contacto_bruce")
+
+        # FIX 1152: DESPEDIDA + 10-digit number → capture it (don't ignore)
+        # OOS-13-13: After "este mismo número", client gives a DIFFERENT number → Bruce ignores it
+        import re as _re1152
+        _num_1152 = _re1152.search(r'(\d{10})', texto) if self.state == FSMState.DESPEDIDA else None
+        if _num_1152:
+            _tel_1152 = _num_1152.group(1)
+            print(f"  [FIX 1152] DESPEDIDA + número {_tel_1152} → capturar y confirmar")
+            self.state = FSMState.DESPEDIDA
+            return (f"Perfecto, anoto el {_tel_1152}. Le envio la informacion a ese numero. "
+                    f"Muchas gracias por su tiempo, que tenga buen dia.")
+
+        # FIX 1153B: Handle selection after asking "which number"
+        # OOS-13-17 MALA: "Use el personal por favor" → "Sí, adelante" (no selection handling)
+        _two_nums_ctx = getattr(self.context, '_two_numbers_1153', None)
+        if _two_nums_ctx and self.state == FSMState.DICTANDO_DATO:
+            _sel_1153 = _texto_lower
+            _num1, _num2 = _two_nums_ctx
+            _selected_1153 = None
+            if any(p in _sel_1153 for p in ['personal', 'primero', 'primer', 'el de el', _num1[-4:]]):
+                _selected_1153 = _num1
+            elif any(p in _sel_1153 for p in ['negocio', 'segundo', 'tienda', 'trabajo', _num2[-4:]]):
+                _selected_1153 = _num2
+            elif _re1152.search(r'(\d{10})', texto):
+                _selected_1153 = _re1152.search(r'(\d{10})', texto).group(1)
+            if _selected_1153:
+                print(f"  [FIX 1153B] Selección de número: {_selected_1153}")
+                self.context._two_numbers_1153 = None
+                self.state = FSMState.CONTACTO_CAPTURADO
+                return (f"Perfecto, le envio el catalogo al {_selected_1153}. "
+                        f"Muchas gracias por su tiempo. Que tenga excelente dia.")
+
+        # FIX 1153: Two numbers in same message → ask which one to use
+        # OOS-13-17: "El personal es 331... y el del negocio es 333..." → Bruce doesn't clarify
+        _nums_1153 = _re1152.findall(r'\d{10}', texto) if self.state not in (FSMState.DESPEDIDA,) else []
+        if len(_nums_1153) >= 2 and self.state in (
+            FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO, FSMState.ENCARGADO_PRESENTE,
+        ):
+            print(f"  [FIX 1153] Dos números detectados: {_nums_1153} → preguntar cuál usar")
+            self.context._two_numbers_1153 = (_nums_1153[0], _nums_1153[1])
+            self.state = FSMState.DICTANDO_DATO
+            return (f"Me dio dos numeros. ¿A cual le envio la informacion, "
+                    f"al {_nums_1153[0]} o al {_nums_1153[1]}?")
+
+        # FIX 1155: 11-digit number → flag and ask to confirm
+        # OOS-09-10: Client gives 33123480010 (11 digits) → Bruce accepts without observation
+        _num11_1155 = _re1152.search(r'(\d{11})', texto) if self.state in (
+            FSMState.CAPTURANDO_CONTACTO, FSMState.DICTANDO_DATO, FSMState.ENCARGADO_PRESENTE,
+        ) else None
+        if _num11_1155 and not _re1152.search(r'\d{12}', texto):
+            _tel11_1155 = _num11_1155.group(1)
+            print(f"  [FIX 1155] Número de 11 dígitos: {_tel11_1155} → pedir confirmación")
+            self.state = FSMState.DICTANDO_DATO
+            return (f"Disculpe, me dicto un numero de 11 digitos: {_tel11_1155}. "
+                    f"¿Podria confirmarme el numero correcto de 10 digitos?")
+
+        # 1.00b FIX 1095: Verbal recado ("Dígale que llamaron de NIOVAL") → reconocer + re-pedir contacto
+        # OOS-05 completo (10 instancias) + OOS-12-07/19: interlocutor ofrece recado verbal
+        # Bruce trata esas frases como CONFIRMATION → cuelga. FIX: reconocer y volver a pedir dato.
+        _recado_1095 = [
+            'digale que llamo', 'le digo que llamo', 'digale que llamaron',
+            'le digo que llamaron', 'le aviso que llamo', 'le aviso que llamaron',
+            'le dejo el recado', 'le paso el recado', 'le dejo recado',
+            'le dejo el mensaje', 'le paso el mensaje', 'si le dejo el mensaje',
+            'si le comento', 'le comento que llamo', 'le dejo su recado',
+            # FIX 1095b: patrones faltantes (OOS-12-01/02/04/09/10)
+            'le doy el recado', 'deje el recado', 'si deje', 'con gusto le doy el recado',
+            'yo le doy el recado', 'aqui le dejo el recado', 'le dejamos el recado',
+            # FIX 1145: OOS-12-03 "si puedo darle razón" = ofrece relay
+            'puedo darle razon', 'le doy razon', 'le puedo dar razon',
+        ]
+        # FIX 1095b: en ENCARGADO_AUSENTE también detectar "le aviso" corto (OOS-12-09)
+        _recado_ausente_1095 = ['le aviso', 'si le aviso', 'yo aviso', 'yo le aviso', 'aqui le aviso']
+        _es_recado_1095 = any(p in _texto_lower for p in _recado_1095) or (
+            self.state == FSMState.ENCARGADO_AUSENTE and
+            any(p in _texto_lower for p in _recado_ausente_1095)
+        )
+        # FIX 1103: Si cliente da recado + número en mismo mensaje → priorizar captura del número
+        # OOS-12-15: "Le aviso, pero por si acaso, su WhatsApp es 3398760015" → capturar número
+        import re as _re1103
+        _tiene_numero_1103 = bool(_re1103.search(r'\d{10}|\d[\d\s\-]{8,}\d', texto))
+        # FIX 1109: "si le aviso mañana" con indicador de tiempo → CALLBACK no recado
+        # OOS-12-09 MALA: "si le aviso mañana" tiene 'le aviso' (recado) + 'mañana' (tiempo)
+        _tiene_tiempo_1109 = any(t in _texto_lower for t in [
+            'manana', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes',
+            'en la tarde', 'en la manana', 'despues de comer', 'mas tarde',
+            'pasado manana', 'la proxima semana', 'la semana que viene',
+        ])
+        # FIX 1111: Nombre encargado post-recado → agradecer y despedir (no re-pedir WhatsApp)
+        # OOS-12-01/02/04: "El encargado es el señor Juan" después de recado → Bruce re-pedía WhatsApp
+        _recado_previo_1111 = getattr(self.context, '_recado_dado_1111', False)
+        _name_patterns_1111 = [
+            'el encargado es', 'la encargada es', 'se llama', 'es la senora', 'es el senor',
+            'el licenciado', 'la licenciada', 'el ingeniero', 'la ingeniera',
+            'el dueno se llama', 'la duena se llama', 'el jefe es', 'la jefa es',
+        ]
+        if (_recado_previo_1111 and
+                any(p in _texto_lower for p in _name_patterns_1111) and
+                not _tiene_numero_1103):
+            # FIX 1132: Acknowledge name in despedida (OOS-12-01/02/04: genérica)
+            print(f"  [FIX 1132] Nombre encargado post-recado → agradecer con nombre y despedir")
+            self.context._recado_dado_1111 = False
+            self.state = FSMState.DESPEDIDA
+            return self._get_template("despedida_con_nombre_1132")
+
+        if (_es_recado_1095 and not _tiene_numero_1103 and not _tiene_tiempo_1109 and
+                self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE,
+                               FSMState.ENCARGADO_PRESENTE)):
+            # FIX 1160: Primer recado → agradecer + intentar captura una vez más
+            # OOS-05 (6 REGULAR): Bruce aceptaba recado sin segundo intento de captura
+            _recado_intento_1160 = getattr(self.context, '_recado_intento_1160', 0)
+            if _recado_intento_1160 == 0:
+                self.context._recado_intento_1160 = 1
+                self.context._recado_dado_1111 = True
+                print(f"  [FIX 1160] Primer recado → agradecer + re-pedir dato")
+                return self._get_template("recado_repedir_dato_1160")
+            else:
+                # FIX 1125: Segundo recado o insistencia → aceptar y despedir
+                print(f"  [FIX 1125] Recado verbal #{_recado_intento_1160+1} → aceptar y despedir")
+                self.state = FSMState.DESPEDIDA
+                return self._get_template("recado_aceptado_despedida_1125")
+
         # 1.01 FIX 952: Corrección de número/dato post-captura (CONTACTO_CAPTURADO state)
         # Cliente dice "ese no es el bueno", "me equivoqué", "el correcto es 3312345678"
         if self.state == FSMState.CONTACTO_CAPTURADO:
@@ -1431,7 +2059,8 @@ class FSMEngine:
                         break
                 # FIX 1026: Si no hay número en el texto actual, buscar en historial
                 # "Use el personal por favor" → extraer el número marcado como "personal"
-                _hist_1026 = getattr(self, 'conversation_history', [])
+                # FIX 1124: usar agente.conversation_history (self es FSMEngine, no tiene historial)
+                _hist_1026 = getattr(agente, 'conversation_history', []) if agente else []
                 if not _numero_limpio_952 and ('personal' in _texto_lower or 'negocio' in _texto_lower):
                     _prefer_personal = 'personal' in _texto_lower
                     for _msg in reversed(_hist_1026[-6:]):
@@ -1459,6 +2088,16 @@ class FSMEngine:
                         self.context.whatsapp = _numero_limpio_952
                     elif hasattr(self.context, 'email') and self.context.email:
                         pass  # email corrections handled by GPT (complex format)
+                    # FIX 1124: Distinguir preferencia ("use el personal") vs corrección ("me equivoqué")
+                    _is_preference_1124 = any(p in _texto_lower for p in [
+                        'use el personal', 'use el del negocio', 'use el de la tienda',
+                        'el personal por favor', 'mejor el personal', 'prefiero el personal',
+                        'use el personal por favor', 'el del negocio por favor',
+                    ])
+                    if _is_preference_1124:
+                        _tmpl_1124 = self._get_template("confirmar_preferencia_numero_1124")
+                        self.state = FSMState.DESPEDIDA
+                        return _tmpl_1124.replace("{numero}", _numero_limpio_952) if "{numero}" in _tmpl_1124 else _tmpl_1124
                     # Stay in CONTACTO_CAPTURADO, confirm correction
                     _tmpl_952 = self._get_template("confirmar_correccion_952")
                     return _tmpl_952.replace("{numero}", _numero_limpio_952) if "{numero}" in _tmpl_952 else _tmpl_952
@@ -1472,8 +2111,11 @@ class FSMEngine:
             if intent == FSMIntent.DICTATING_PARTIAL:
                 _nuevos_953 = ''.join(_re953.findall(r'\d', texto))
                 # Contar palabras numéricas en español como dígitos adicionales
-                _num_words_953 = sum(1 for w in _texto_lower.split() if w in _NUMS_ESP)
-                _num_words_953 += sum(2 for w in _texto_lower.split() if w in {
+                # FIX 1101: Strip punctuation (dots, ellipsis "...") before splitting
+                # OOS-17-08: "tres tres... uno dos..." → "tres" matched but "dos..." not in _NUMS_ESP
+                _texto_clean_1101 = _re953.sub(r'[^\w\s]', '', _texto_lower)
+                _num_words_953 = sum(1 for w in _texto_clean_1101.split() if w in _NUMS_ESP)
+                _num_words_953 += sum(2 for w in _texto_clean_1101.split() if w in {
                     'diez','once','doce','trece','catorce','quince','dieciseis','diecisiete',
                     'dieciocho','diecinueve','veinte','treinta','cuarenta','cincuenta',
                     'sesenta','setenta','ochenta','noventa'
@@ -1482,10 +2124,22 @@ class FSMEngine:
                 _acum_953 = self.context.datos_parciales + _nuevos_953 + _placeholder_953
                 self.context.datos_parciales = _acum_953
                 print(f"  [FIX 953] Dígitos acumulados: '{_acum_953}' ({len(_acum_953)} dígitos)")
-                if len(_acum_953) >= 10:
-                    print(f"  [FIX 953] Número completo acumulado ({len(_acum_953)} dígitos) -> DICTATING_COMPLETE_PHONE")
+                # FIX 1054: 8+ word-only digits in single turn = near-complete phone (0 numeric chars)
+                # "tres tres uno dos tres cuatro cinco seis" = 8 word-digits, faltan 2 → promote
+                if not _nuevos_953 and _num_words_953 >= 8:
+                    print(f"  [FIX 1054] {_num_words_953} palabras numéricas puras → DICTATING_COMPLETE_PHONE")
                     intent = FSMIntent.DICTATING_COMPLETE_PHONE
                     self.context.datos_parciales = ""
+                else:
+                    # FIX 1089 revised: Smart threshold
+                    # Acumulación pura de palabras numéricas (todo X) → confirmar a 8 (número hablado completo)
+                    # Acumulación mixta o numérica → esperar 10 (número de 10 dígitos en chunks)
+                    _all_word_1089 = bool(_acum_953) and all(c == 'X' for c in _acum_953)
+                    _threshold_1089 = 8 if _all_word_1089 else 10
+                    if len(_acum_953) >= _threshold_1089:
+                        print(f"  [FIX 953/1089] Número {'hablado' if _all_word_1089 else 'acumulado'} completo ({len(_acum_953)}d, thr={_threshold_1089}) -> DICTATING_COMPLETE_PHONE")
+                        intent = FSMIntent.DICTATING_COMPLETE_PHONE
+                        self.context.datos_parciales = ""
             elif intent in (FSMIntent.CONFIRMATION, FSMIntent.UNKNOWN, FSMIntent.FAREWELL,
                             FSMIntent.CONTINUATION) \
                     and len(self.context.datos_parciales) >= 8:  # FIX 1008: CONTINUATION también activa fallback
@@ -1541,6 +2195,20 @@ class FSMEngine:
         if any(f in _texto_lower for f in _frustracion_signals):
             # Cliente frustrado -> responder con empatía, no con script
             if 'ocupado' in _texto_lower or 'tiempo' in _texto_lower or 'junta' in _texto_lower or 'no puedo' in _texto_lower:
+                # FIX 1164: Si encargado se identifica + ocupado → preguntar hora callback (no despedida prematura)
+                # OOS-11-01/04/06: "Si soy yo pero estoy ocupado" → despedida sin preguntar hora
+                # FIX 1169: "si pero tengo junta" implica ser el encargado
+                _es_encargado_1164 = any(p in _texto_lower for p in [
+                    'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
+                    'soy el dueno', 'soy el jefe', 'si soy', 'si yo',
+                    'si pero', 'si estoy', 'si ando',
+                ])
+                if _es_encargado_1164:
+                    print(f"  [FIX 1164] Encargado ocupado → preguntar hora callback (no despedida)")
+                    self.state = FSMState.ENCARGADO_PRESENTE
+                    self.context.encargado_es_interlocutor = True
+                    self.context._encargado_ocupado_1137 = True
+                    return self._get_template("preguntar_hora_callback_directo")
                 print(f"  [FIX 920] Frustración detectada: cliente ocupado -> ofrecer rellamar")
                 self.state = FSMState.DESPEDIDA
                 return self._get_template("despedida_ocupado_920")
@@ -1591,6 +2259,9 @@ class FSMEngine:
                 'no quiero', 'no queremos', 'no necesito', 'no necesitamos',
                 'no por el momento', 'no lo necesito', 'quitenos', 'quiteme',
                 'no le interesa', 'no lo necesita',
+                # FIX 1067: presupuesto = señal negativa clara (ya tenemos/no hay presupuesto)
+                'no tenemos presupuesto', 'no hay presupuesto', 'no tengo presupuesto',
+                'no contamos con presupuesto', 'ya tenemos proveedor', 'tenemos proveedor',
             ]
             if not any(n in _texto_lower for n in _negativos_958):
                 # No hay señal negativa clara → dejar que GPT decida
@@ -1678,20 +2349,31 @@ class FSMEngine:
 
         # FIX 938-C: OOS audit V2 - Si ya estamos hablando con el encargado y pide callback,
         # usar template "directo" en vez de "¿A qué hora para encontrar al encargado?"
+        # FIX 1084C: Agregar DESPEDIDA al guard (encargado ya se identificó antes de despedirse)
+        # FIX 1161: Agregar PITCH cuando el hablante SE IDENTIFICA como encargado + callback
+        # OOS-11-02/07/08/09: "Soy el encargado pero estoy ocupado" en PITCH → "encontrar al encargado" incorrecto
+        # FIX 1169: Ampliar detección — "si pero tengo junta" en PITCH implica que ES el encargado
+        # (contestó "sí" a "¿se encontrará el encargado?")
+        _encargado_en_texto_1161 = any(p in _texto_lower for p in [
+            'soy yo', 'yo soy', 'soy el encargado', 'soy la encargada',
+            'soy el dueno', 'soy el jefe', 'encargado soy',
+            'si pero', 'si estoy', 'si ando',
+        ]) if self.state == FSMState.PITCH else False
         if (intent == FSMIntent.CALLBACK and
                 transition.template_key == 'preguntar_hora_callback' and
-                self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
-                               FSMState.DICTANDO_DATO)):
+                (self.state in (FSMState.ENCARGADO_PRESENTE, FSMState.CAPTURANDO_CONTACTO,
+                               FSMState.DICTANDO_DATO, FSMState.DESPEDIDA) or _encargado_en_texto_1161)):
             transition = Transition(
                 next_state=transition.next_state,
                 action_type=transition.action_type,
                 template_key='preguntar_hora_callback_directo',
             )
-            print(f"  [FIX 938-C] Encargado presente + callback -> preguntar_hora_callback_directo")
+            print(f"  [FIX 938-C/1161] Encargado presente + callback -> preguntar_hora_callback_directo")
 
         # FIX 784: BRUCE2490 - Si callback y cliente YA mencionó hora, confirmar en vez de preguntar
+        # FIX 1084A: Ampliar para cubrir preguntar_hora_callback_directo (FIX 938-C cambia template antes)
         if (intent == FSMIntent.CALLBACK and
-                transition.template_key == 'preguntar_hora_callback'):
+                transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo')):
             hora_detectada = self._detectar_hora_en_texto_784(texto)
             # FIX 934: También usar hora pre-guardada de MANAGER_ABSENT previo
             if not hora_detectada and self.context.callback_hora:
@@ -1730,6 +2412,33 @@ class FSMEngine:
                 )
                 print(f"  [FIX 789B] Callback hora ya preguntada -> confirmar_callback_generico (anti-loop)")
 
+        # FIX 1076: Long-term callback ("en tres meses/semanas/año") → no preguntar hora específica
+        # "Ahorita no, regresa en tres meses mejor" → confirmar genérico (no "¿A qué hora?")
+        # FIX 1085: Ampliar para cubrir preguntar_hora_callback_directo (mismo razonamiento)
+        if (intent == FSMIntent.CALLBACK and
+                transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo')):
+            _tn_1076 = texto.lower()
+            _largo_plazo_1076 = any(p in _tn_1076 for p in [
+                'en tres meses', 'en dos meses', 'en unos meses', 'en un mes',
+                'dentro de un mes', 'dentro de dos meses', 'dentro de tres meses',
+                'en unas semanas', 'en dos semanas', 'en tres semanas',
+                'el siguiente trimestre', 'el proximo trimestre',
+                'el siguiente año', 'el proximo año', 'en un año',
+                'en algunos meses', 'en varios meses', 'en unos meses regresa',
+            ])
+            if _largo_plazo_1076:
+                # FIX 1147: Use confirmar_callback with specific timeframe (not genérico "más tarde")
+                # OOS-16-12: "regresa en tres meses" → "le marco más tarde" lost the timing
+                _hora_1147 = self._detectar_hora_callback(texto)
+                if _hora_1147:
+                    self.context.callback_hora = _hora_1147
+                transition = Transition(
+                    next_state=transition.next_state,
+                    action_type=transition.action_type,
+                    template_key='confirmar_callback',
+                )
+                print(f"  [FIX 1076/1147] Callback largo plazo → confirmar_callback con hora '{_hora_1147}'")
+
         # FIX 839: Anti catálogo repetido - si ya prometimos catálogo, no repetirlo
         # BRUCE2550/2546: despedida_catalogo_prometido después de confirmar_telefono duplica "catálogo"
         if (transition.template_key == 'despedida_catalogo_prometido' and
@@ -1740,6 +2449,18 @@ class FSMEngine:
                 template_key='despedida_cortes',
             )
             print(f"  [FIX 839] Catálogo ya prometido -> despedida_cortes (sin repetir catálogo)")
+
+        # FIX 1137: Encargado ocupado → "está ocupado" (no "no se encuentra")
+        # OOS-05-05/06: "Está atendiendo un cliente" → pedir_contacto_alternativo dice "no se encuentra"
+        if (transition.template_key == 'pedir_contacto_alternativo' and
+                getattr(self.context, '_encargado_ocupado_1137', False)):
+            print(f"  [FIX 1137] Encargado ocupado → template 'está ocupado'")
+            self.context._encargado_ocupado_1137 = False
+            transition = Transition(
+                next_state=transition.next_state,
+                action_type=ActionType.TEMPLATE,
+                template_key='encargado_ocupado_1137',
+            )
 
         # FIX 892A: BRUCE1975 - pedir_contacto_alternativo duplicado en FSM table
         # PITCH→ENCARGADO_AUSENTE y ESPERANDO_TRANSFERENCIA→ENCARGADO_AUSENTE usan mismo template.
@@ -1765,14 +2486,32 @@ class FSMEngine:
                 'dame tu numero', 'dame tu telefono', 'pasame tu numero',
                 'pasame tus datos', 'dame tus datos', 'me das tu numero',
                 'me dejas tu numero', 'me pasas tu numero', 'si gustas dejarme',
+                # FIX 1086: Sincronizar con classify_intent() _pide_contacto_bruce_897
+                # FIX 1100: 'me dice su numero' → dar contacto Bruce (OOS-12-07)
+                'deje su numero', 'deje el numero', 'me da su numero', 'digame su numero',
+                'denos su numero', 'dejenos su numero', 'me dice su numero', 'el le llama', 'el le marca',
+                'para que le marque', 'para que le llame', 'nos puede dar su numero',
+                'digame su correo', 'digame su email', 'su correo por favor',
+                'digame su numero de contacto', 'numero de contacto',
+                # FIX 1115: Sync con classify_intent (FIX 1114)
+                'cual es su numero', 'cual es el numero', 'cual es tu numero',
             ]
             if any(p in _tn_897 for p in _pide_bruce_897):
+                # FIX 1116: Si piden específicamente correo/email de NIOVAL → template sin correo
+                # OOS-12-16: "Dígame su correo para darle el del encargado" → Bruce no tiene email público
+                _pide_correo_1116 = any(p in _tn_897 for p in [
+                    'digame su correo', 'digame su email', 'su correo por favor',
+                    'su correo electronico', 'nos da su correo', 'nos puede dar su correo',
+                    'dejenos su correo', 'cual es su correo', 'cual es su email',
+                    'mandele un correo', 'enviele un correo', 'mandeme un correo',
+                ])
+                _template_897 = 'ofrecer_telefono_sin_correo_1116' if _pide_correo_1116 else 'ofrecer_contacto_bruce'
                 transition = Transition(
                     next_state=FSMState.OFRECIENDO_CONTACTO,
                     action_type=ActionType.TEMPLATE,
-                    template_key='ofrecer_contacto_bruce',
+                    template_key=_template_897,
                 )
-                print(f'  [FIX 897] Contacto invertido detectado -> ofrecer_contacto_bruce')
+                print(f'  [FIX 897] Contacto invertido detectado -> {_template_897}')
 
         # FIX 785/860: BRUCE2492/2497/2462 - No repetir pregunta encargado si ya se preguntó
         # FIX 785: solo bloqueaba 'preguntar_encargado'
@@ -1897,6 +2636,23 @@ class FSMEngine:
                 template_key="pedir_whatsapp_o_correo",
             )
 
+        # 4E. FIX 1176: "Si, gracias" durante transferencia NO es persona nueva
+        # BRUCE2672: persona original dice "gracias" al pasar teléfono → no salir de espera
+        if (self.state == FSMState.ESPERANDO_TRANSFERENCIA and
+                transition.template_key == "pitch_persona_nueva"):
+            _tl_1176 = texto.lower().strip()
+            _solo_gracias_1176 = any(p in _tl_1176 for p in [
+                'gracias', 'si gracias', 'ok gracias', 'bueno gracias',
+                'ahorita', 'un momento', 'espere', 'permitame',
+            ]) and len(_tl_1176) < 30
+            if _solo_gracias_1176:
+                print(f"  [FIX 1176] 'gracias/espere' durante transfer → seguir esperando")
+                transition = Transition(
+                    next_state=FSMState.ESPERANDO_TRANSFERENCIA,
+                    action_type=ActionType.TEMPLATE,
+                    template_key='claro_espero',
+                )
+
         # 5. Ejecutar acción
         response = self._execute(transition, texto, agente)
 
@@ -1919,6 +2675,17 @@ class FSMEngine:
             # Phase 2: state is in active set -> intercept
             # Skip HANGUP/NOOP (let existing code handle closing)
             if transition.action_type in (ActionType.HANGUP, ActionType.NOOP):
+                # FIX 1071: En DESPEDIDA, retornar respuesta breve en vez de None para prevenir GPT_FALLBACK
+                # None → agente_ventas.py llama GPT → posible OFERTA_POST_DESPEDIDA (OOS-12-01)
+                # FIX 1082: En vez de "" (silencio), usar despedida breve si hay texto sustancial del cliente
+                # Evita RESPUESTA_VACIA cuando intermediario da info post-relay ("Se llama X", "Es la Sra Y")
+                if self.state == FSMState.DESPEDIDA:
+                    _texto_len_1082 = len(texto.strip().split()) if texto else 0
+                    if _texto_len_1082 >= 2:
+                        print(f"  [FIX 1082] DESPEDIDA + {intent.value} + texto sustancial -> despedida breve (anti-RESPUESTA_VACIA)")
+                        return self._get_template("despedida_reconfirmacion_1082")
+                    print(f"  [FIX 1071] DESPEDIDA + {intent.value} + {transition.action_type.value} -> '' (anti-GPT)")
+                    return ""
                 print(f"  [FSM PHASE2] state={prev_state.value} intent={intent.value} "
                       f"-> {transition.action_type.value} (fallthrough - let existing code handle)")
                 return None
@@ -2271,6 +3038,9 @@ class FSMEngine:
         add(S.SALUDO, I.WHAT_OFFER,        S.PITCH, A.TEMPLATE, "pitch_completo_894")
         # FIX 786: CONTINUATION - cliente sigue hablando, no interrumpir
         add(S.SALUDO, I.CONTINUATION,  S.SALUDO, A.NOOP, None)
+        # FIX 1046: SALUDO + TRANSFER → ESPERANDO_TRANSFERENCIA (antes: no entry → GPT da pitch)
+        # "Un momento, le transfiero la llamada" en primer turno = cliente pasa a encargado
+        add(S.SALUDO, I.TRANSFER, S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === PITCH ===
         # FIX 985: PITCH + CONFIRMATION → ENCARGADO_PRESENTE (no BUSCANDO_ENCARGADO)
@@ -2335,6 +3105,8 @@ class FSMEngine:
         add(S.BUSCANDO_ENCARGADO, I.UNKNOWN,         S.BUSCANDO_ENCARGADO, A.GPT_NARROW, "conversacion_libre")
         # FIX 786: CONTINUATION - cliente sigue hablando
         add(S.BUSCANDO_ENCARGADO, I.CONTINUATION,  S.BUSCANDO_ENCARGADO, A.NOOP, None)
+        # FIX 1046: BUSCANDO_ENCARGADO + TRANSFER → ESPERANDO_TRANSFERENCIA
+        add(S.BUSCANDO_ENCARGADO, I.TRANSFER, S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === ENCARGADO_PRESENTE ===
         # FIX 916B: Solo pedir WhatsApp si ya se dio pitch completo
@@ -2433,6 +3205,8 @@ class FSMEngine:
         add(S.CAPTURANDO_CONTACTO, I.REJECT_DATA,             S.CAPTURANDO_CONTACTO, A.TEMPLATE, "pedir_alternativa_correo")
         add(S.CAPTURANDO_CONTACTO, I.NO_INTEREST,             S.DESPEDIDA, A.TEMPLATE, "despedida_no_interesa")
         add(S.CAPTURANDO_CONTACTO, I.FAREWELL,                S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        # FIX 1048: "no tenemos presupuesto" (CALLBACK) in CAPTURANDO_CONTACTO → ask callback time
+        add(S.CAPTURANDO_CONTACTO, I.CALLBACK,                S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
         add(S.CAPTURANDO_CONTACTO, I.VERIFICATION,            S.CAPTURANDO_CONTACTO, A.TEMPLATE, "verificacion_aqui_estoy")
         add(S.CAPTURANDO_CONTACTO, I.UNKNOWN,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "conversacion_libre")
         # FIX 786: CONTINUATION - cliente sigue hablando
@@ -2478,6 +3252,8 @@ class FSMEngine:
         # FIX 801: BRUCE2522 - QUESTION durante dictado -> responder pregunta y salir de dictado
         # Sin esta transición, QUESTION cae al catch-all UNKNOWN -> filler loop infinito
         add(S.DICTANDO_DATO, I.QUESTION,                 S.CAPTURANDO_CONTACTO, A.GPT_NARROW, "responder_pregunta_producto")
+        # FIX 1087: DICTANDO_DATO + INTEREST → cliente pide datos de Bruce (contacto invertido)
+        add(S.DICTANDO_DATO, I.INTEREST,                 S.OFRECIENDO_CONTACTO, A.TEMPLATE, "ofrecer_contacto_bruce")
 
         # === OFRECIENDO_CONTACTO ===
         add(S.OFRECIENDO_CONTACTO, I.CONFIRMATION,  S.OFRECIENDO_CONTACTO, A.TEMPLATE, "tiene_donde_anotar", ["!donde_anotar_preguntado"])
@@ -2502,7 +3278,10 @@ class FSMEngine:
         add(S.OFRECIENDO_CONTACTO, I.WRONG_NUMBER,  S.DESPEDIDA, A.TEMPLATE, "despedida_area_equivocada")
 
         # === CONTACTO_CAPTURADO ===
-        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
+        # FIX 1049: CONFIRMATION post-captura = cliente da instrucción adicional ("use el personal")
+        # Use GPT_NARROW so it can acknowledge the specific instruction before saying goodbye
+        # FIX 1123: TEMPLATE en vez de GPT_NARROW (OOS-01-03: GPT fallback daba "Si, adelante")
+        add(S.CONTACTO_CAPTURADO, I.CONFIRMATION, S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
         add(S.CONTACTO_CAPTURADO, I.FAREWELL,     S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         add(S.CONTACTO_CAPTURADO, I.UNKNOWN,      S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
         # FIX 839: Cliente repite número después de captura -> despedida corta (ya tenemos el dato)
@@ -2516,10 +3295,16 @@ class FSMEngine:
         add(S.CONTACTO_CAPTURADO, I.NO_INTEREST,  S.DESPEDIDA, A.TEMPLATE, "despedida_catalogo_prometido")
 
         # === DESPEDIDA ===
-        add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.HANGUP, None)
+        # FIX 1070: UNKNOWN en DESPEDIDA → NOOP ("") en vez de HANGUP (None)
+        # None → agente_ventas.py llama GPT → posible OFERTA_POST_DESPEDIDA (OOS-12-01)
+        # "" → bypass GPT, silencio (conversacion ya terminada, estado post-relay)
+        add(S.DESPEDIDA, I.UNKNOWN,       S.DESPEDIDA, A.NOOP, None)
         add(S.DESPEDIDA, I.FAREWELL,      S.DESPEDIDA, A.HANGUP, None)
         add(S.DESPEDIDA, I.CONFIRMATION,  S.DESPEDIDA, A.HANGUP, None)
-        add(S.DESPEDIDA, I.VERIFICATION,  S.DESPEDIDA, A.TEMPLATE, "despedida_cortes")
+        # FIX 1038: DESPEDIDA + VERIFICATION → restart pitch (humano llega post-IVR)
+        # Antes: "Bueno buenas tardes" en DESPEDIDA → doble despedida (bug OOS-17-06)
+        # Ahora: tratarlo como señal de humano presente → pitch (igual que FIX 1016)
+        add(S.DESPEDIDA, I.VERIFICATION,  S.PITCH, A.TEMPLATE, "pitch_completo_894")
         add(S.DESPEDIDA, I.OFFER_DATA,    S.DICTANDO_DATO, A.ACKNOWLEDGE, "aja_digame")
         # FIX 839: Cliente sigue dictando después de despedida -> hangup (ya tenemos el dato)
         add(S.DESPEDIDA, I.DICTATING_COMPLETE_PHONE, S.DESPEDIDA, A.HANGUP, None)
@@ -2533,9 +3318,21 @@ class FSMEngine:
         # FIX 1016: Human greeting after IVR-triggered DESPEDIDA → restart pitch
         # "Para continuar en español marque uno" → DESPEDIDA → human arrives → retomar
         add(S.DESPEDIDA, I.MANAGER_PRESENT,  S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
-        add(S.DESPEDIDA, I.WHAT_OFFER,       S.PITCH, A.TEMPLATE, "pitch_completo_894")
-        add(S.DESPEDIDA, I.IDENTITY,         S.PITCH, A.TEMPLATE, "identificacion_pitch")
-        add(S.DESPEDIDA, I.INTEREST,         S.PITCH, A.TEMPLATE, "pitch_completo_894")
+        # FIX 1068: Post-despedida identity/question → brief ID + stay in DESPEDIDA (no re-pitch)
+        # OOS-12-05/07/10: "Que empresa es" / "Me dice su numero" → brief identification only
+        # FIX 1098: WHAT_OFFER after despedida = real curiosity → re-pitch (OOS-15-09: "a ver de que se trata")
+        add(S.DESPEDIDA, I.WHAT_OFFER,       S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.DESPEDIDA, I.IDENTITY,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        # FIX 1092: DESPEDIDA + INTEREST → re-pitch encargado (cliente reabre con interés real)
+        # OOS-15-09: cliente muestra interés real → re-pitch, no solo identificacion_breve
+        add(S.DESPEDIDA, I.INTEREST,         S.ENCARGADO_PRESENTE, A.TEMPLATE, "pitch_encargado")
+        add(S.DESPEDIDA, I.QUESTION,         S.DESPEDIDA, A.TEMPLATE, "identificacion_breve_1068")
+        # FIX 1031: DESPEDIDA + CALLBACK → confirmar callback (cliente da hora después de despedida)
+        # Ej: FSM dice adiós porque "estoy ocupado" → cliente dice "Mejor llámame en una hora"
+        add(S.DESPEDIDA, I.CALLBACK,         S.ENCARGADO_AUSENTE, A.TEMPLATE, "preguntar_hora_callback")
+        # FIX 1091: DESPEDIDA + TRANSFER → esperar transferencia (OOS-08-01)
+        # Cliente dice "te transfiero con el encargado" tras despedida → reactivar conversación
+        add(S.DESPEDIDA, I.TRANSFER,         S.ESPERANDO_TRANSFERENCIA, A.TEMPLATE, "claro_espero")
 
         # === CONVERSACION_LIBRE (FIX 790: shadow transitions, sin entry points aún) ===
         # No está en FSM_ACTIVE_STATES - solo shadow logging.
@@ -2605,6 +3402,18 @@ class FSMEngine:
                 print(f"  [FIX 919] TIMING: pitch no dado aun, dar valor antes de pedir datos")
                 return self._get_template("pitch_inicial")
 
+            # FIX 1144: "quizás en unos meses" → callback diferido (no solo despedida)
+            # OOS-16-18: "Ahorita no me interesa, quizás en unos meses"
+            if transition.template_key == 'despedida_no_interesa' and texto:
+                _diferido_1144 = any(p in texto.lower() for p in [
+                    'en unos meses', 'mas adelante', 'despues', 'luego',
+                    'otro momento', 'otro dia', 'la proxima', 'mas tarde',
+                    'cuando tenga', 'en un futuro', 'tal vez despues',
+                ]) and not any(p in texto.lower() for p in ['nunca', 'jamas', 'definitivamente no'])
+                if _diferido_1144:
+                    print(f"  [FIX 1144] Callback diferido → despedida con seguimiento")
+                    return self._get_template("despedida_callback_diferido_1144")
+
             # FIX 920: Explorar antes de despedida - si NO_INTEREST/FAREWELL en estado temprano
             # y no se ha explorado alternativas, ofrecer algo antes de colgar
             # Guard: No interceptar si ya estamos en DESPEDIDA (ya nos estamos despidiendo)
@@ -2632,12 +3441,20 @@ class FSMEngine:
                 'no necesito nada', 'no nos hace falta', 'estamos bien',
                 'no por favor', 'no muchas gracias',
             ])
-            if (transition.template_key in ('despedida_no_interesa', 'despedida_cortes')
+            # FIX 1065: NO intentar captura mínima si cliente dijo explícitamente NO_INTEREST
+            # despedida_no_interesa viene de intent NO_INTEREST = rechazo firme → no salvage
+            # Solo hacer salvage para despedida_cortes (FAREWELL ambiguo)
+            # FIX 1074: Si ya se preguntó hora de callback, no volver a preguntar en captura mínima
+            # OOS-12-13: "Ah si, le digo que llamo Nioval" → relay (FAREWELL) → FIX 922 disparaba
+            # porque pedir_datos_count=0 (Bruce preguntó hora de callback, no WhatsApp/correo)
+            _ya_pregunto_callback_1074 = getattr(self.context, 'callback_hora_preguntada', False)
+            if (transition.template_key == 'despedida_cortes'
                     and self.state != FSMState.DESPEDIDA
                     and getattr(self.context, 'pitch_dado', False)
                     and not getattr(self.context, 'datos_capturados', {})
                     and not getattr(self.context, 'catalogo_prometido', False)
                     and getattr(self.context, 'pedir_datos_count', 0) == 0
+                    and not _ya_pregunto_callback_1074
                     and not _area_equivocada_939
                     and not _rechazo_firme_938
                     and "captura_minima_pre_despedida" not in getattr(self.context, 'templates_usados', set())):
@@ -2688,8 +3505,14 @@ class FSMEngine:
             # BRUCE2551: cliente preguntó "¿Dónde están?" 4x, FSM respondió "Mi nombre es Bruce..." 3x.
             # FIX 1023: threshold subido de 2→3: cliente puede hacer 2 preguntas de identidad legítimas
             # ("¿cómo se llama?" + "¿de qué empresa?") antes de pivotar a captura
+            # FIX 1099 REVERTIDO: threshold 2 causaba pivot agresivo en 1ª pregunta explícita (OOS-12-13/19 MALA)
             if transition.template_key == "identificacion_nioval":
                 self.context.identity_repetidas += 1
+                # FIX 1110: 2da pregunta de identidad → variante diferente (anti-PREGUNTA_REPETIDA)
+                # OOS-12-13/19: "¿Cómo se llama?" + "¿De qué empresa?" → misma respuesta verbatim
+                if self.context.identity_repetidas == 2:
+                    print(f"  [FIX 1110] identificacion_nioval #{self.context.identity_repetidas} → variante")
+                    return self._get_template("identificacion_nioval_variante")
                 if self.context.identity_repetidas >= 3:
                     if self.context.identity_repetidas == 3:
                         print(f"  [FIX 878/1023] identificacion_nioval #{self.context.identity_repetidas} → pivot a pedir_whatsapp_o_correo_breve")
@@ -2699,6 +3522,14 @@ class FSMEngine:
                         print(f"  [FIX 878/885B/1023] identificacion_nioval #{self.context.identity_repetidas} → pedir_numero_directo_885")
                         # FIX 885B: BRUCE2551/1975 - 4er+ identity → template distinto para evitar PREGUNTA_REPETIDA
                         return self._get_template("pedir_numero_directo_885")
+
+            # FIX 1126: Phone-only confirmation (WA+correo rechazados) sin "escribir"
+            # OOS-03 (10 convs): "me puede escribir" incoherente para teléfono fijo
+            if transition.template_key == "confirmar_telefono":
+                _rechazados_1126 = set(self.context.canales_rechazados)
+                if 'whatsapp' in _rechazados_1126 and 'correo' in _rechazados_1126:
+                    print(f"  [FIX 1126] Phone-only (WA+correo rechazados) → confirmar sin 'escribir'")
+                    return self._get_template("confirmar_telefono_fijo_1126")
 
             # FIX 959: Canal ignorado — cliente pide correo, Bruce acepta teléfono
             # Si cliente expresó preferencia por correo/email en últimos 2 turnos del contexto
@@ -2740,6 +3571,26 @@ class FSMEngine:
                 self.state = FSMState.DESPEDIDA
                 return None  # Colgar en silencio
 
+            # FIX 1171: Post-transfer, persona nueva dice "bueno/dígame/hola" → re-presentar
+            # Bug producción: Bruce dice "Sí, aquí estoy" sin contexto para la persona nueva
+            if (transition.template_key == "verificacion_aqui_estoy" and
+                    self.state == FSMState.ESPERANDO_TRANSFERENCIA):
+                # Persona nueva post-transfer → re-hacer pitch completo
+                _nuevo_saludo_1171 = any(p in texto.lower() for p in [
+                    'bueno', 'digame', 'hola', 'si digame', 'si bueno',
+                    'buenas tardes', 'buenas noches', 'buenos dias',
+                    'quien habla', 'si que paso', 'que se le ofrece',
+                    'mande', 'alo', 'si diga', 'si',
+                ])
+                if _nuevo_saludo_1171:
+                    print(f"  [FIX 1171] Post-transfer persona nueva → pitch_persona_nueva")
+                    self.context.pitch_dado = False
+                    transition = Transition(
+                        next_state=FSMState.PITCH,
+                        action_type=transition.action_type,
+                        template_key='pitch_persona_nueva',
+                    )
+
             # FIX 954: "Si, aqui estoy. Digame." en momento incorrecto
             # En CAPTURANDO_CONTACTO/PITCH (pitch ya dado) → pedir contacto, no "aqui estoy"
             # VERIFICATION debería ser checkeo de presencia solo en DICTANDO/BUSCANDO states
@@ -2765,6 +3616,36 @@ class FSMEngine:
                 self.context.datos_parciales = ""
                 return self._get_template("confirmar_telefono")
 
+            # FIX 1130: "Llame al número principal 3336001234" → capturar número + callback
+            # OOS-16-19: cliente da número alternativo pero Bruce ignora y solo pregunta hora
+            if transition.template_key in ('preguntar_hora_callback', 'preguntar_hora_callback_directo'):
+                import re as _re1130
+                _num_1130 = _re1130.search(r'\b(\d{10})\b', texto or '')
+                _num_principal_1130 = any(p in (texto or '').lower() for p in [
+                    'numero principal', 'numero de la empresa', 'numero del negocio',
+                    'llame al', 'llame mejor al', 'mejor llame al', 'marque al',
+                ])
+                if _num_1130 and _num_principal_1130:
+                    _tel_1130 = _num_1130.group(1)
+                    # FIX 1136: Better closure — capture + goodbye (evaluator wants clear close)
+                    print(f"  [FIX 1136] Número principal {_tel_1130} → capturar + despedir")
+                    self.state = FSMState.DESPEDIDA
+                    return (f"Perfecto, anoto el numero {_tel_1130}. Le marcamos por ahi entonces. "
+                            f"Muchas gracias por su tiempo, que tenga buen dia.")
+
+            # FIX 1137/1138: Callback when encargado is busy (not absent)
+            # OOS-05-05/06: "Está atendiendo" → "no se encuentra" incorrecto
+            # OOS-11-03: "Soy el dueño pero estoy ocupado" → "para encontrar al encargado" incorrecto
+            if transition.template_key == 'preguntar_hora_callback':
+                _ocupado_1137 = getattr(self.context, '_encargado_ocupado_1137', False)
+                _es_el_encargado_1138 = self.context.encargado_es_interlocutor
+                if _es_el_encargado_1138:
+                    print(f"  [FIX 1138] Callback del propio encargado → template directo")
+                    return self._get_template("callback_encargado_ocupado_1138")
+                elif _ocupado_1137:
+                    print(f"  [FIX 1137] Encargado ocupado → 'está ocupado' (no 'no se encuentra')")
+                    return self._get_template("encargado_ocupado_1137")
+
             # FIX 1015: Callback with time already given → acknowledge, don't ask again
             # "Mejor a las 3 de la tarde" → preguntar_hora_callback → asks "¿A qué hora?"
             # Fix: if time is in the text, confirm it directly
@@ -2785,17 +3666,33 @@ class FSMEngine:
                     return (f"Perfecto, le marco a las {_hora_str_1015}. "
                             f"Muchas gracias por su tiempo, que tenga excelente dia.")
 
-            # FIX 1007: Confirmar correo repitiendo el dato capturado (reduce errores en dictado oral)
-            if transition.template_key == 'confirmar_correo':
-                import re as _re1007
-                _email_match_1007 = _re1007.search(
-                    r'[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', texto or '')
-                if _email_match_1007:
-                    _email_1007 = _email_match_1007.group()
-                    print(f"  [FIX 1007] Confirmando correo con repeticion: {_email_1007}")
-                    self.context.templates_usados.add('confirmar_correo')
-                    return (f"Perfecto, le confirmo el correo: {_email_1007}. "
-                            f"Le envio el catalogo en breve.")
+            # FIX 1007→1172: NO repetir correo (STT transcribe mal emails dictados oralmente)
+            # Antes: extraía email de texto y lo repetía → errores frecuentes
+            # Ahora: solo confirmar sin repetir, usar template default
+
+            # FIX 1116B: General post-filter — ofrecer_contacto_bruce cuando pidieron correo
+            # OOS-12-16: "Dígame su correo" en DICTANDO_DATO → INTEREST → ofrecer_contacto_bruce
+            # FIX 897 solo cubre pedir_whatsapp/preguntar_encargado/pitch_encargado paths
+            if transition.template_key == 'ofrecer_contacto_bruce' and texto:
+                _tn_1116b = _normalize(texto)
+                _pide_correo_1116b = any(p in _tn_1116b for p in [
+                    'digame su correo', 'digame su email', 'su correo por favor',
+                    'su correo electronico', 'nos da su correo', 'nos puede dar su correo',
+                    'dejenos su correo', 'cual es su correo', 'cual es su email',
+                    'mandele un correo', 'enviele un correo', 'mandeme un correo',
+                ])
+                if _pide_correo_1116b:
+                    # FIX 1129: Correo exchange — "dígame su correo para darle el del encargado"
+                    _intercambio_1129 = any(p in _tn_1116b for p in [
+                        'para darle el', 'para darle el del', 'a cambio', 'intercambio',
+                        'para darle el correo', 'le doy el del encargado',
+                    ])
+                    if _intercambio_1129:
+                        print(f"  [FIX 1129] Intercambio de correos → capturar correo encargado")
+                        self.state = FSMState.DICTANDO_DATO
+                        return self._get_template("capturar_correo_encargado_1129")
+                    print(f"  [FIX 1116B] Cliente pidió correo → ofrecer_telefono_sin_correo_1116")
+                    return self._get_template("ofrecer_telefono_sin_correo_1116")
 
             return self._get_template(transition.template_key)
 
@@ -2909,6 +3806,19 @@ class FSMEngine:
             )
 
             result = result.strip()
+
+            # FIX 1118: Post-filter GPT_NARROW responder_pregunta_producto
+            # OOS-14-08: GPT ignora instrucción y repite "¿Le gustaría recibir catálogo por WhatsApp?"
+            # Strip oraciones que mencionan WhatsApp/correo/email (ya prohibidos en prompt)
+            if prompt_key == 'responder_pregunta_producto' and result:
+                import re as _re1118
+                _sentences_1118 = _re1118.split(r'(?<=[.?!])\s+', result)
+                _clean_1118 = [s for s in _sentences_1118
+                               if not _re1118.search(r'whatsapp|correo|email|e-mail', s, _re1118.IGNORECASE)]
+                if _clean_1118:
+                    result = ' '.join(_clean_1118)
+                    if not result.endswith('.'):
+                        result += '.'
 
             # FIX 822: Anti-repetición en LLM_NARROW
             # BRUCE2539: Claude repitió "segunda opción" 4 veces en loop
@@ -3028,6 +3938,9 @@ class FSMEngine:
         # Track canales
         # FIX 838: Incluir pedir_alternativa_* para que canal_solicitado se actualice
         # cuando FIX 763 pide canal alternativo (antes solo trackeaba pedir_whatsapp/pedir_correo)
+        # FIX 1061: Guardar canal ANTERIOR para que REJECT_DATA handler use el viejo valor
+        # (no el nuevo canal que acaba de seleccionar FIX 763)
+        _old_canal_solicitado_1061 = self.context.canal_solicitado
         if transition.template_key in ('pedir_whatsapp', 'pedir_alternativa_whatsapp'):
             self.context.canal_solicitado = 'whatsapp'
             if 'whatsapp' not in self.context.canales_intentados:
@@ -3063,8 +3976,12 @@ class FSMEngine:
             if 'correo' in tn or 'email' in tn:
                 if 'correo' not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append('correo')
-            if self.context.canal_solicitado:
-                c = self.context.canal_solicitado
+            # FIX 1061: Usar canal ANTERIOR (antes de esta transición) para no agregar
+            # el canal recién elegido por FIX 763 a la lista de rechazados.
+            # Ej: cliente dice "No tengo WhatsApp" → FIX 763 elige correo como alternativa
+            # → NO agregar 'correo' a rechazados (era canal nuevo, no el rechazado)
+            if _old_canal_solicitado_1061:
+                c = _old_canal_solicitado_1061
                 if c not in self.context.canales_rechazados:
                     self.context.canales_rechazados.append(c)
 
@@ -3179,6 +4096,21 @@ class FSMEngine:
                     hora_str += " de la noche"
                 return hora_str
 
+        # FIX 1147: Long-term callbacks FIRST (before "ahorita no" which returns "mas tarde")
+        # OOS-16-12: "ahorita no, regresa en tres meses" matched "ahorita no" → "mas tarde"
+        _long_term_patterns = [
+            ('en unos meses', 'en unos meses'), ('en algunos meses', 'en algunos meses'),
+            ('en tres meses', 'en tres meses'), ('en dos meses', 'en dos meses'),
+            ('en un mes', 'en un mes'), ('dentro de un mes', 'en un mes'),
+            ('dentro de dos meses', 'en dos meses'), ('dentro de tres meses', 'en tres meses'),
+            ('en unas semanas', 'en unas semanas'), ('en dos semanas', 'en dos semanas'),
+            ('en tres semanas', 'en tres semanas'), ('dentro de unas semanas', 'en unas semanas'),
+            ('pasado manana', 'pasado manana'), ('pasado mañana', 'pasado manana'),
+        ]
+        for pattern, label in _long_term_patterns:
+            if pattern in tn:
+                return label
+
         # 3. FIX 934: Tiempos relativos: "en una hora", "en un rato", "en media hora"
         if 'en una hora' in tn:
             return "en una hora"
@@ -3196,6 +4128,14 @@ class FSMEngine:
             return "en la tarde"
         if 'en la noche' in tn or 'por la noche' in tn:
             return "en la noche"
+        # FIX 1146: "primera hora" ANTES de "mañana" para no perder detalle de timing
+        # OOS-11-10: "llama mañana a primera hora" matcheaba "mañana" primero → perdía "a primera hora"
+        if 'manana a primera hora' in tn or 'primera hora' in tn:
+            return "manana a primera hora"
+        # FIX 1084B: "mañana" solo (sin "en la") como tiempo relativo futuro
+        # "Vuelveme a llamar manana" → hora="manana" → confirmar_callback en vez de preguntar
+        if 'manana' in tn and 'pasado manana' not in tn:
+            return "manana"
 
         return None
 

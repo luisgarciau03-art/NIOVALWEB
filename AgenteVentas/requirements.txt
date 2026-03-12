@@ -24,8 +24,11 @@ pandas>=2.0.0               # Manejo de datos
 openpyxl>=3.1.0             # Excel (respaldos)
 
 # ===== WEB FRAMEWORK =====
-flask>=3.0.0                # Servidor webhooks
-flask-cors>=4.0.0           # CORS para API
+flask>=3.0.0                # Servidor webhooks (v1)
+flask-cors>=4.0.0           # CORS para API (v1)
+fastapi>=0.104.0            # Servidor async (v2 Realtime)
+uvicorn[standard]>=0.24.0   # ASGI server para FastAPI
+websockets>=12.0            # WebSocket client (OpenAI Realtime + ElevenLabs)
 
 # ===== SCHEDULING =====
 schedule>=1.2.0             # Programación de tareas automáticas
