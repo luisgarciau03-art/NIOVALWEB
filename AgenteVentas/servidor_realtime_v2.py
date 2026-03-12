@@ -39,11 +39,34 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
+import threading
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 log = logging.getLogger("bruce_v2")
+
+# Log buffer for /logs/download endpoint
+LOG_BUFFER_MAX = 10000
+log_buffer = deque(maxlen=LOG_BUFFER_MAX)
+log_lock = threading.Lock()
+
+
+class BufferHandler(logging.Handler):
+    """Captures log lines into an in-memory deque for the /logs/download endpoint."""
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            with log_lock:
+                log_buffer.append(msg)
+        except Exception:
+            pass
+
+
+_buffer_handler = BufferHandler()
+_buffer_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+logging.getLogger().addHandler(_buffer_handler)
 
 # ---------------------------------------------------------------------------
 # Config
@@ -545,6 +568,59 @@ async def health():
         "cache_mp3": len(audio_cache_mp3),
         "cache_ulaw": len(audio_cache_ulaw),
     }
+
+
+# ---------------------------------------------------------------------------
+# /info-cache — health/cache info (used by auto_descarga_logs_smart.py)
+# ---------------------------------------------------------------------------
+@app.get("/info-cache")
+async def info_cache():
+    """Cache info endpoint — compatible with auto_descarga_logs_smart.py deploy detection."""
+    archivos_disco = []
+    tamano_total = 0
+    if os.path.exists(CACHE_DIR):
+        archivos_disco = os.listdir(CACHE_DIR)
+        for archivo in archivos_disco:
+            filepath = os.path.join(CACHE_DIR, archivo)
+            if os.path.isfile(filepath):
+                tamano_total += os.path.getsize(filepath)
+
+    return {
+        "audios_en_cache": len(audio_cache_mp3),
+        "audios_ulaw": len(audio_cache_ulaw),
+        "archivos_en_disco": len(archivos_disco),
+        "tamano_mb": round(tamano_total / (1024 * 1024), 2),
+        "directorio": CACHE_DIR,
+        "frases_registradas": len(audio_cache_mp3),
+    }
+
+
+# ---------------------------------------------------------------------------
+# /logs/download — log download (used by auto_descarga_logs_smart.py)
+# ---------------------------------------------------------------------------
+@app.get("/logs/download")
+async def descargar_logs(request: Request):
+    """Download recent server logs. Compatible with auto_descarga_logs_smart.py."""
+    lineas = min(int(request.query_params.get("lineas", "1000")), LOG_BUFFER_MAX)
+    formato = request.query_params.get("formato", "txt")
+
+    with log_lock:
+        logs_list = list(log_buffer)[-lineas:]
+
+    if formato == "json":
+        return JSONResponse({
+            "total_logs": len(log_buffer),
+            "logs_solicitados": lineas,
+            "logs": logs_list,
+        })
+
+    logs_texto = "\n".join(logs_list)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Response(
+        content=logs_texto,
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename=logs_bruce_{timestamp}.txt"},
+    )
 
 
 # ---------------------------------------------------------------------------
