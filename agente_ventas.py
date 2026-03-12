@@ -7494,8 +7494,23 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                 respuesta = ""
                 print(f"   FIX 574: Estado ESPERANDO_TRANSFERENCIA - silencio (ya se dijo 'Claro, espero')")
             else:
-                respuesta = "Sí, dígame."
-                print(f"   FIX 467: Estado genérico - respuesta neutral")
+                # FIX 1002: Si cliente estaba dando datos activamente → pedir repetición
+                # (evita silencio accidental = lead perdido)
+                try:
+                    _intent_1002 = getattr(self, '_last_fsm_intent', None)
+                    _intent_str_1002 = str(_intent_1002).lower() if _intent_1002 else ''
+                    _captura_activa_1002 = any(k in _intent_str_1002 for k in [
+                        'offer_data', 'dictating_complete', 'dictating_partial'
+                    ])
+                    if _captura_activa_1002:
+                        respuesta = "¿Me podría repetir eso, por favor?"
+                        print(f"   FIX 1002: GPT vacío en captura activa ({_intent_1002}) -> pedir repetición")
+                    else:
+                        respuesta = "Sí, dígame."
+                        print(f"   FIX 467: Estado genérico - respuesta neutral")
+                except Exception:
+                    respuesta = "Sí, dígame."
+                    print(f"   FIX 467: Estado genérico - respuesta neutral")
 
             print(f"   Respuesta fallback: \"{respuesta}\"")
 
@@ -10535,6 +10550,25 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                                 })
 
                         if _bte_result:
+                            # FIX 1004: Anti-loop BTE (mismo patrón que FIX 845 para FSM)
+                            # BTE usa anti-repetición interna pero solo últimos 10 templates.
+                            # Si resultado exacto aparece 2+ veces en últimas 8 respuestas → ceder a GPT.
+                            try:
+                                _prev_bte_1004 = [
+                                    m['content'] for m in self.conversation_history[-8:]
+                                    if m.get('role') == 'assistant'
+                                ]
+                                _norm_bte_1004 = re.sub(r'[^\w\s]', '', _bte_result.lower()).strip()
+                                _loop_bte_1004 = sum(
+                                    1 for r in _prev_bte_1004
+                                    if re.sub(r'[^\w\s]', '', r.lower()).strip() == _norm_bte_1004
+                                )
+                                if _loop_bte_1004 >= 2:
+                                    print(f"  [FIX 1004] LOOP BTE detectado ({_loop_bte_1004}x) -> ceder a GPT")
+                                    _bte_result = None
+                            except Exception:
+                                pass
+                        if _bte_result:
                             print(f"  [BTE] FSM no resolvio, BTE responde: '{_bte_result[:60]}...'")
                             fsm_result = _bte_result
                     except ImportError:
@@ -10572,6 +10606,84 @@ FIN CONTEXTO DINÁMICO - Reglas completas ya proporcionadas arriba
                             print(f"   Original FSM: '{_fsm_orig_945b[:80]}'")
                     except Exception:
                         pass
+                    # FIX 835C: Anti-canal-rechazado en ruta FSM
+                    # FIX 835 vive en _filtrar_respuesta_post_gpt() que NO corre aquí.
+                    # Si GPT_NARROW PREGUNTA por un canal rechazado → override.
+                    # SOLO cuando hay '?' → preguntando el canal (no confirmando/mencionando).
+                    try:
+                        _rechazados_835c = getattr(getattr(self, 'fsm', None), 'context', None)
+                        _rechazados_835c = getattr(_rechazados_835c, 'canales_rechazados', []) if _rechazados_835c else []
+                        if _rechazados_835c and fsm_result and '?' in fsm_result:
+                            _fl835c = fsm_result.lower()
+                            _pide_835c = None
+                            if 'whatsapp' in _rechazados_835c and 'whatsapp' in _fl835c:
+                                _pide_835c = 'whatsapp'
+                            elif 'correo' in _rechazados_835c and any(w in _fl835c for w in ['correo', 'email']):
+                                _pide_835c = 'correo'
+                            elif 'telefono' in _rechazados_835c and any(w in _fl835c for w in ['telefono', 'celular', 'numero']):
+                                _pide_835c = 'telefono'
+                            if _pide_835c:
+                                _canales_835c = ['whatsapp', 'correo', 'telefono']
+                                _disp_835c = [c for c in _canales_835c if c not in _rechazados_835c]
+                                _orig_835c = fsm_result
+                                if _disp_835c:
+                                    _alt_map_835c = {'whatsapp': 'WhatsApp', 'correo': 'correo electronico', 'telefono': 'telefono'}
+                                    _alt_835c = _alt_map_835c.get(_disp_835c[0], _disp_835c[0])
+                                    fsm_result = f"Entiendo. ¿Me podria proporcionar entonces un {_alt_835c}?"
+                                else:
+                                    fsm_result = "Entiendo. Si gusta le dejo mi numero para cuando necesiten algo de ferreteria."
+                                print(f"[OK] FIX 835C: FSM-GPT pidio {_pide_835c} pero rechazados={_rechazados_835c}")
+                                print(f"   Original: '{_orig_835c[:80]}'")
+                                print(f"   Corregido: '{fsm_result[:80]}'")
+                    except Exception:
+                        pass
+
+                    # FIX 1006: Anti-OFERTA_POST_DESPEDIDA en ruta FSM
+                    # (FIX 816 corre solo en ruta GPT, aquí hay que replicarlo)
+                    try:
+                        import re as _re1006
+                        _prev_desp_1006 = any(
+                            _re1006.search(
+                                r'hasta luego|que tenga|buen dia|buen d\u00eda|adios|adi\u00f3s|hasta pronto',
+                                m.get('content', ''), _re1006.IGNORECASE)
+                            for m in self.conversation_history[-3:]
+                            if m.get('role') == 'assistant'
+                        )
+                        # Guard: no sobrescribir si fsm_result ES una confirmación de dato capturado
+                        _es_confirmacion_1006 = _re1006.search(
+                            r'ya tengo|ya lo tengo|quedo registrado|le confirmo el correo'
+                            r'|le confirmo.*numero|perfecto.*le env',
+                            fsm_result or '', _re1006.IGNORECASE)
+                        # FIX 1006B: OOS-12-18 — "claro digame/proporcionar" = captura activa
+                        # El despedida era de callback-confirmation, NO de verdadero cierre
+                        # No bloquear respuestas que PIDEN dato al cliente (solo las que OFRECEN catálogo)
+                        _es_captura_activa_1006 = _re1006.search(
+                            r'digame|d\u00edgame|proporcionar|claro.*digame|anotar|anote|'
+                            r'me puede facilitar|me da su|me puede dar',
+                            fsm_result or '', _re1006.IGNORECASE)
+                        # Only block if response OFFERS catalog/product (not just asks for data)
+                        _es_oferta_1006 = _re1006.search(
+                            r'cat\u00e1logo|catalogo|lista de precios|le env\u00edo|le envio',
+                            fsm_result or '', _re1006.IGNORECASE)
+                        # FIX 1006C: No bloquear si FSM ya salió de DESPEDIDA (re-pitch legítimo)
+                        # OOS-15-09: cliente reabre con "a ver de que se trata" → FIX 1098 envía a
+                        # ENCARGADO_PRESENTE. FIX 1006 bloqueaba pitch_encargado por 'catálogo'.
+                        try:
+                            from fsm_engine import FSMState as _FSMState1006
+                            _fsm_still_desp_1006 = (
+                                getattr(getattr(self, 'fsm', None), 'state', None)
+                                == _FSMState1006.DESPEDIDA
+                            )
+                        except Exception:
+                            _fsm_still_desp_1006 = True  # Asumir despedida si no se puede verificar
+                        if (_prev_desp_1006 and fsm_result and not _es_confirmacion_1006
+                                and not _es_captura_activa_1006 and _es_oferta_1006
+                                and _fsm_still_desp_1006):
+                            print(f"[OK] FIX 1006: OFERTA_POST_DESPEDIDA en ruta FSM -> override")
+                            fsm_result = "Que tenga excelente d\u00eda. Hasta luego."
+                    except Exception:
+                        pass
+
                     self.conversation_history.append({
                         "role": "assistant",
                         "content": fsm_result

@@ -194,8 +194,24 @@ class BugDetector:
                 # FIX 869H: Identity re-statements are not loops
                 # BRUCE1975: "Mi nombre es Bruce, le llamo de NIOVAL" 3x = client keeps
                 # asking "¿Quién habla?" → response is correct, not a loop.
-                r'mi nombre es|le llamo de.{0,10}nioval|soy bruce)',
+                r'mi nombre es|le llamo de.{0,10}nioval|soy bruce|'
+                # FIX 1039: Acknowledgment durante dictado de dígitos/datos parciales
+                # "Claro, prosiga." / "Si, lo escucho." / "Entendido, prosiga." repetido
+                # 3x mientras cliente dicta número por partes = comportamiento correcto FSM.
+                r'claro.*prosiga|s[ií].*lo escucho|entendido.*prosiga|'
+                r'prosiga|lo escucho|claro.*digame|s[ií].*digame|'
+                # FIX 1039B: GPT-generated farewell repeated in DESPEDIDA state
+                # "Que tenga excelente día. Hasta luego." = GPT farewell during hangup flow
+                # En DESPEDIDA state, GPT puede generar la misma despedida 3-4x = FP
+                r'hasta luego|hasta pronto|excelente d[ií]a.*hasta|que tenga.*excelente)',
                 re.IGNORECASE
+            )
+            # FIX 1039: También skip LOOP si hay 3+ turnos de cliente con dígitos parciales
+            # (señal de que el cliente está dictando en partes y los aja_si son correctos)
+            _dictado_parcial_count_1039 = sum(
+                1 for role, txt in tracker.conversacion
+                if role == 'cliente' and len([c for c in txt if c.isdigit()]) >= 2
+                and len(txt) <= 20
             )
             if len(tracker.respuestas_bruce) >= 3:
                 _max_consecutive = 1
@@ -210,7 +226,9 @@ class BugDetector:
                             _loop_resp = _r
                     else:
                         _current_consecutive = 1
-                if _max_consecutive >= 3 and not _VERIFICATION_LOOP_EXEMPT.search(_loop_resp):
+                if (_max_consecutive >= 3
+                        and not _VERIFICATION_LOOP_EXEMPT.search(_loop_resp)
+                        and _dictado_parcial_count_1039 < 3):  # FIX 1039: skip si cliente dictando en partes
                     bugs.append({
                         "tipo": "LOOP",
                         "severidad": ALTO,
@@ -265,8 +283,10 @@ class BugDetector:
             bugs.extend(area_bugs)
 
             # FIX 718: DICTADO_INTERRUMPIDO - cliente dictando dato y Bruce se despide
-            dictado_bugs = ContentAnalyzer._check_dictado_interrumpido(tracker.conversacion)
-            bugs.extend(dictado_bugs)
+            # FIX 1045: Skip in text simulator (audio phenomenon, same as INTERRUPCION_CONVERSACIONAL)
+            if not getattr(tracker, 'simulador_texto', False):
+                dictado_bugs = ContentAnalyzer._check_dictado_interrumpido(tracker.conversacion)
+                bugs.extend(dictado_bugs)
 
             # FIX 721: TRANSFER_IGNORADA - cliente pide esperar/transferir y Bruce sigue vendiendo
             transfer_bugs = ContentAnalyzer._check_transfer_ignorada(tracker.conversacion)
@@ -495,6 +515,13 @@ class ContentAnalyzer:
             _IDENTITY_RESPONSE_869 = re.compile(
                 r'(mi nombre es|le llamo de|me llamo|soy bruce|le hablo de|'
                 r'somos distribuidores de productos ferreteros de guadalajara|'
+                # FIX 1040: "me comunico de la marca NIOVAL" (pitch_inicial variant 1)
+                # no matcheaba "le llamo de" → se extraía la pregunta del encargado y se
+                # contaba como repetición. Agregar variantes de presentación de pitch.
+                r'me comunico de|me comunico de la marca|manejamos m[aá]s de|'
+                # FIX 1040: La pregunta "¿se encontrará el encargado?" es call-to-action
+                # estándar en templates de pitch/identidad → no es repetición real.
+                r'se encontrar[aá] el encargad|encargado.{0,10}de compras\?|'
                 # FIX 986: "¿Le puedo dejar mi número?" en OFRECIENDO_CONTACTO es correcto
                 # cuando cliente primero rechaza datos suyos y luego reconsidera.
                 # La repetición es el FSM ofreciendo el número de Bruce como alternativa.
@@ -625,6 +652,14 @@ class ContentAnalyzer:
                     if _cliente_ya_confirmo_encargado and _PREGUNTAR_ENCARGADO_943.search(preg):
                         print(f"  [FIX 943] SKIP PREGUNTA_REPETIDA encargado: cliente ya confirmo ser encargado")
                         continue
+                    # FIX 1057: Bruce en espera de transferencia → repetir pregunta de contacto es correcto
+                    # "Si, aqui estoy" (verificacion_aqui_estoy) indica estado ESPERANDO_TRANSFERENCIA
+                    _bruce_en_espera_1057 = conv and any(
+                        'aqui estoy' in t.lower() for r2, t in conv if r2 == 'bruce'
+                    )
+                    if _bruce_en_espera_1057 and _is_contact:
+                        print(f"  [FIX 1057] SKIP PREGUNTA_REPETIDA: Bruce en espera de transferencia → repite contacto = correcto")
+                        continue
                     bugs.append({
                         "tipo": "PREGUNTA_REPETIDA",
                         "severidad": MEDIO,
@@ -692,6 +727,13 @@ class ContentAnalyzer:
             turns_post_despedida = 0
             for r in respuestas:
                 if ContentAnalyzer._DESPEDIDA_BRUCE.search(r):
+                    # FIX 1041: Si la misma respuesta también confirma entrega de catálogo/dato,
+                    # es un template tipo "confirmar_telefono" (data + cierre cortés), NO despedida.
+                    # "Le envio el catalogo... Muchas gracias por su tiempo" ≠ colgar.
+                    # FIX 1059: También exempt si contiene "proximas horas" (despedida_catalogo_prometido)
+                    if (ContentAnalyzer._OFERTA_CATALOGO.search(r) or
+                            ContentAnalyzer._CONFIRMACION_DATO_862.search(r)):
+                        continue  # No es despedida real, no settear flag
                     bruce_ya_se_despidio = True
                     turns_post_despedida = 0
                 elif bruce_ya_se_despidio:
@@ -736,9 +778,19 @@ class ContentAnalyzer:
                     return bugs
                 # FIX 886B: BRUCE2038 - Llamada muy corta (≤2 turnos Bruce): FIX 751 + FSM doble-fire.
                 # Solo 2 pitches para 1 turno cliente = artifact del replay, no bug real.
-                if len(respuestas) <= 3 and count == 2:
-                    print(f"  [FIX 886B] SKIP PITCH_REPETIDO: llamada muy corta ({len(respuestas)} resp) = posible doble-fire")
+                # FIX 1043: Extender umbral a 4 turnos
+                # FIX 1056: Extender umbral a 6 turnos (recovery IVR→despedida→re-pitch en 5-6 resp)
+                if len(respuestas) <= 6 and count == 2:
+                    print(f"  [FIX 886B/1043/1056] SKIP PITCH_REPETIDO: ≤6 resp, count=2 = recovery/IVR re-pitch")
                     return bugs
+                # FIX 1060: Si hubo despedida entre los dos pitches = recovery post-IVR, no repetición
+                _pitch_indices_1060 = [i for i, r in enumerate(_resp_for_pitch)
+                                       if ContentAnalyzer._PITCH_NIOVAL.search(r)]
+                if len(_pitch_indices_1060) >= 2:
+                    _entre_pitches = _resp_for_pitch[_pitch_indices_1060[0]+1:_pitch_indices_1060[1]]
+                    if any(ContentAnalyzer._DESPEDIDA_BRUCE.search(r) for r in _entre_pitches):
+                        print(f"  [FIX 1060] SKIP PITCH_REPETIDO: despedida entre los dos pitches = recovery post-IVR")
+                        return bugs
                 bugs.append({
                     "tipo": "PITCH_REPETIDO",
                     "severidad": MEDIO,
@@ -765,7 +817,11 @@ class ContentAnalyzer:
         # FIX 928A: confirmaciones post-dato — "le envío/mando el catálogo ahora/hoy/en breve/con lista"
         r'(le env[ií]o|le mando) (el|nuestro) cat[aá]logo.{0,5}(ahora|hoy|en breve|de inmediato|con lista|en las|en este|ya)|'
         r'le llega.{0,30}(cat[aá]logo|hoy|de inmediato|ahora|en breve)|'
-        r'(anotado|registrado).{0,30}(le env[ií]o|le mando|le llega))',
+        r'(anotado|registrado).{0,30}(le env[ií]o|le mando|le llega)|'
+        # FIX 1055: despedida_catalogo_prometido = "En las proximas dos horas le llega el catalogo"
+        # La frase combina despedida ("Muchas gracias") + entrega → NO es oferta post-despedida
+        r'pr[oó]ximas.{0,15}horas?.{0,30}(cat[aá]logo|llega)|'
+        r'(el cat[aá]logo|la informaci[oó]n).{0,20}(en breve|en las pr[oó]ximas|ahora mismo|de inmediato))',
         re.IGNORECASE
     )
 
@@ -846,7 +902,11 @@ class ContentAnalyzer:
                 _CORRECCION_947 = re.compile(
                     r'(no\s+no[,.]|perd[oó]n[,.]|disculpe[,.]|me\s+equivoqu[eé]|'
                     r'el\s+(celular|whatsapp|n[uú]mero)\s+(es\s+)?solo|'
-                    r'mejor\s+(?:use|usa|utilice)\s+el)',
+                    r'mejor\s+(?:use|usa|utilice)\s+el|'
+                    # FIX 1044: Más patrones de corrección al final de escenario
+                    r'le\s+di\s+el\s+equivocado|ay\s+no[,\s]+ese\s+no\s+es|'
+                    r'ese\s+no\s+es[,\s]+es\s+el|anote\s+bien|no\s+espere[,\s]+me|'
+                    r'el\s+equivocado[,\s]+es\s+el|espere.*me\s+equivoqu)',
                     re.IGNORECASE
                 )
                 _es_correccion_947 = _CORRECCION_947.search(texto_dato)
@@ -1209,6 +1269,20 @@ class ContentAnalyzer:
                 if _speculative_917:
                     print(f"  [FIX 917] SKIP transfer: frase especulativa ('{texto[:50]}')")
                     continue
+
+                # FIX 1042: "Espere... oye Juanito no toques eso!... ya dígame" = distraido,
+                # no solicitud de transferencia. Detectar por: retorno inmediato en mismo turno
+                # o dirección a tercero (nombre + imperativo).
+                _DISTRAIDO_1042 = re.compile(
+                    r'(ya\s+dig[aá]me|ya\s+estoy|ya\s+listo|ya\s+cont[ií]nue|'
+                    r'perd[oó]n.{0,20}que\s+dec[ií]a|disculpe.{0,20}dec[ií]a|'
+                    r'\b(oye|mira|hey)\s+\w+\s+(no|pon|baja|cierra|deja|ven|'
+                    r'que\s+haces|para|sube|baja)|'
+                    r'\b(hijo|hija|juanito|juanita|ni[ñn]o|ni[ñn]a)\b)',
+                    re.IGNORECASE
+                )
+                if _DISTRAIDO_1042.search(texto):
+                    continue  # Cliente distraído con tercero, no pidiendo transferencia
 
                 # Buscar siguiente respuesta de Bruce
                 for j in range(i + 1, len(conv)):

@@ -659,7 +659,8 @@ class BTEEngine:
         self._contador_por_accion[accion] = idx + 1
 
         # Anti-repeticion: si este template exacto fue usado recientemente, rotar
-        if template in self._historial_templates[-5:]:
+        # FIX 1004: ampliar ventana de 5 → 10 para evitar loop más largo
+        if template in self._historial_templates[-10:]:
             idx += 1
             template = templates[idx % len(templates)]
             self._contador_por_accion[accion] = idx + 1
