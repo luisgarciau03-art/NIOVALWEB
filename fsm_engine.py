@@ -1287,7 +1287,8 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
             return FSMIntent.VERIFICATION
     # FIX 837: Fillers cortos - SOLO exact match (no substring)
     # NO incluir 'mmhmm' - en ESPERANDO_TRANSFERENCIA es ruido de fondo (debe ser NOOP)
-    _filler_exact_837 = ['mhm', 'mmm', 'aha', 'ajam']
+    # FIX 1195: Agregar 'mm' (OOS-17-05: "Mm" en PITCH → GPT saltaba pitch)
+    _filler_exact_837 = ['mhm', 'mmm', 'mm', 'aha', 'ajam']
     if tn in _filler_exact_837:
         return FSMIntent.VERIFICATION
 
@@ -1621,9 +1622,9 @@ class FSMEngine:
             ])
             _texto_limpio_1175 = len(_t802) < 50 and not _ruido_1175
             if _es_saludo_802 and not _es_identidad_802 and _texto_limpio_1175:
-                # Persona nueva saludando -> re-introducción con pitch
-                print(f"\n [FIX 802] FSM: Post-transfer greeting '{texto[:60]}' -> pitch_persona_nueva")
-                self.state = FSMState.BUSCANDO_ENCARGADO
+                # FIX 1192: Persona nueva post-transfer ES el encargado → ENCARGADO_PRESENTE
+                print(f"\n [FIX 802+1192] FSM: Post-transfer greeting '{texto[:60]}' -> pitch_persona_nueva (→ENCARGADO_PRESENTE)")
+                self.state = FSMState.ENCARGADO_PRESENTE
                 self.context.pitch_dado = True
                 self.context.encargado_preguntado = True
                 return self._get_template("pitch_persona_nueva")
@@ -1858,6 +1859,15 @@ class FSMEngine:
         ]):
             print(f"  [FIX 1174] Deletreo solicitado → responder con B-R-U-C-E")
             return self._get_template("deletreo_bruce_1174")
+
+        # FIX 1194: "catálogo en papel/físico" → explicar que es digital (OOS-15-08: GPT incoherente)
+        if any(p in _texto_lower for p in [
+            'catalogo en papel', 'catalogo fisico', 'prefiero en papel',
+            'catalogo impreso', 'tienen fisico', 'lo quiero en papel',
+            'no digital', 'no me gusta digital',
+        ]):
+            print(f"  [FIX 1194] Catálogo en papel → explicar digital + WhatsApp")
+            return self._get_template("catalogo_es_digital_1194")
 
         # FIX 1190: Sucursal/envíos (OOS-14-06: GPT dice "eso viene en el catálogo" — evasivo)
         if any(p in _texto_lower for p in [

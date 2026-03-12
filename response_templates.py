@@ -30,10 +30,11 @@ TEMPLATES = {
     # FIX 846: Cambiado "Me comunico de la marca NIOVAL" → "Le llamo de parte de NIOVAL"
     # para evitar que _PITCH_NIOVAL matchee 2 veces (pitch_inicial + pitch_persona_nueva)
     # y cause PITCH_REPETIDO en bug_detector
+    # FIX 1192: Post-transfer NO re-preguntar encargado (OOS-12-12: persona nueva ES el encargado)
     "pitch_persona_nueva": [
-        "Hola, buen dia. Le llamo de parte de NIOVAL para ofrecerle informacion de "
-        "nuestros productos de ferreteria. "
-        "¿Se encontrara el encargado o encargada de compras?",
+        "Hola, buen dia. Le llamo de parte de NIOVAL, somos distribuidores de productos "
+        "ferreteros con precios muy competitivos y entrega directa. "
+        "¿Le gustaria recibir nuestro catalogo con lista de precios?",
     ],
     # FIX 912: Pitch encargado corto con beneficios (anti FLUJO_ROBOTICO)
     "pitch_encargado": [
@@ -243,6 +244,12 @@ TEMPLATES = {
         "¿Por donde se lo mando, WhatsApp o correo?",
     ],
 
+    # FIX 1194: Catálogo en papel → explicar que es digital (OOS-15-08)
+    "catalogo_es_digital_1194": [
+        "Nuestro catalogo es digital en formato PDF, muy completo con fotos y precios. "
+        "Se lo puedo enviar por WhatsApp o correo, como prefiera.",
+    ],
+
     # FIX 1127: Phase 1 intercepts para preguntas frecuentes (GPT evasivo)
     # OOS-14-14: devoluciones → GPT redirects a catálogo
     "respuesta_devoluciones_1127": [
@@ -442,21 +449,22 @@ TEMPLATES = {
     "confirmar_callback_generico": [
         "Perfecto, le vuelvo a llamar mas tarde. Nuestro numero es 662 353 1804 por si prefiere llamarnos. Que tenga excelente dia.",
     ],
-    # FIX 1162: Sin presupuesto → callback el próximo mes
+    # FIX 1162+1193: Sin presupuesto → callback + numero NIOVAL (OOS-16-09)
     "callback_sin_presupuesto_1162": [
         "Entiendo perfectamente, no se preocupe. Le parece si le marco el proximo mes "
-        "para ver si ya cuentan con presupuesto? Asi le envio el catalogo con lista de precios. "
+        "para ver si ya cuentan con presupuesto? Nuestro numero es 662 353 1804 por si gusta llamarnos. "
         "Que tenga excelente dia.",
-        "Claro, lo entiendo. Si gusta le llamo el proximo mes cuando cuenten con presupuesto, "
-        "y con gusto le comparto nuestro catalogo. Muchas gracias por su tiempo, buen dia.",
+        "Claro, lo entiendo. Si gusta le llamo el proximo mes cuando cuenten con presupuesto. "
+        "Nuestro numero es 662 353 1804. Muchas gracias por su tiempo, buen dia.",
     ],
 
     # === DESPEDIDAS ===
     # FIX 911/914: Variantes de despedida con empatía
+    # FIX 1193: Incluir numero NIOVAL en despedida cortés (OOS-06-10)
     "despedida_cortes": [
-        "Muchas gracias por su tiempo. Que tenga excelente dia. Hasta pronto.",
-        "Le agradezco mucho su atencion. Que tenga muy buen dia.",
-        "Muchas gracias, fue un gusto. Que le vaya muy bien.",
+        "Muchas gracias por su tiempo. Nuestro numero es 662 353 1804 por si le interesa mas adelante. Que tenga excelente dia.",
+        "Le agradezco mucho su atencion. Le dejo nuestro numero 662 353 1804. Que tenga muy buen dia.",
+        "Muchas gracias, fue un gusto. Nuestro numero es 662 353 1804, somos NIOVAL. Que le vaya muy bien.",
     ],
     # FIX 1187: Incluir 662-353-1804 explícito (OOS-16-08/15/20)
     "despedida_no_interesa": [
