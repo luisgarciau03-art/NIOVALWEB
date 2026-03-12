@@ -223,6 +223,26 @@ TEMPLATES = {
         "para resolverle esa duda. ¿Le gustaria que le enviemos la informacion?",
     ],
 
+    # FIX 1190: Sucursal/envíos (OOS-14-06: GPT decía "eso en el catálogo")
+    "respuesta_sucursal_envios_1190": [
+        "No manejamos sucursales, hacemos envios a todo Mexico. Normalmente llega en 2 a 5 dias habiles. "
+        "¿Le gustaria recibir nuestro catalogo con lista de precios?",
+    ],
+
+    # FIX 1190B: Crédito/formas de pago (OOS-14-12: GPT decía "Claro" sin info)
+    "respuesta_credito_pago_1190": [
+        "Manejamos pago de contado por transferencia o deposito. Para credito, se maneja directo "
+        "con el equipo de ventas dependiendo del volumen. ¿Le envio el catalogo con lista de precios "
+        "para que vea si le convienen los productos?",
+    ],
+
+    # FIX 1190C: Diferenciadores (OOS-14-16: GPT evadía con "catálogo")
+    "respuesta_diferenciadores_1190": [
+        "Manejamos precios muy competitivos, entrega directa a su negocio en 2 a 5 dias, "
+        "y mas de 4000 productos ferreteros. Le envio el catalogo para que compare precios. "
+        "¿Por donde se lo mando, WhatsApp o correo?",
+    ],
+
     # FIX 1127: Phase 1 intercepts para preguntas frecuentes (GPT evasivo)
     # OOS-14-14: devoluciones → GPT redirects a catálogo
     "respuesta_devoluciones_1127": [
@@ -307,9 +327,10 @@ TEMPLATES = {
 
     # FIX 1144: "Quizás en unos meses" → deferred callback con seguimiento
     # OOS-16-18: Bruce se despide sin confirmar callback futuro
+    # FIX 1187: Incluir 662-353-1804 explícito
     "despedida_callback_diferido_1144": [
         "Entendido, no hay problema. Nos ponemos en contacto mas adelante entonces. "
-        "Le dejo nuestro numero por si antes necesita algo. Que tenga buen dia.",
+        "Nuestro numero es 662 353 1804 por si antes necesita algo. Que tenga buen dia.",
     ],
 
     # FIX 1133: "este mismo número" → confirmar
@@ -414,13 +435,12 @@ TEMPLATES = {
         "¿Cuando le puedo marcar para hablar con mas calma?",
         "Claro, con gusto. ¿A que hora le queda mejor?",
     ],
+    # FIX 1188: Incluir numero NIOVAL en callbacks (OOS-06-04/08)
     "confirmar_callback": [
-        "Perfecto, le marco {hora}. Muchas gracias por su tiempo, que tenga "
-        "excelente dia.",
+        "Perfecto, le marco {hora}. Nuestro numero es 662 353 1804 por si gusta llamarnos. Que tenga excelente dia.",
     ],
     "confirmar_callback_generico": [
-        "Perfecto, le vuelvo a llamar mas tarde. Muchas gracias por su tiempo, "
-        "que tenga excelente dia.",
+        "Perfecto, le vuelvo a llamar mas tarde. Nuestro numero es 662 353 1804 por si prefiere llamarnos. Que tenga excelente dia.",
     ],
     # FIX 1162: Sin presupuesto → callback el próximo mes
     "callback_sin_presupuesto_1162": [
@@ -438,11 +458,12 @@ TEMPLATES = {
         "Le agradezco mucho su atencion. Que tenga muy buen dia.",
         "Muchas gracias, fue un gusto. Que le vaya muy bien.",
     ],
+    # FIX 1187: Incluir 662-353-1804 explícito (OOS-16-08/15/20)
     "despedida_no_interesa": [
-        "Entendido, no se preocupe. Le dejo nuestro numero por si mas adelante "
+        "Entendido, no se preocupe. Nuestro numero es 662 353 1804 por si mas adelante "
         "le interesa. Que tenga buen dia.",
-        "Claro, lo entiendo perfectamente. Si en algun momento necesita productos "
-        "ferreteros, con gusto le atendemos. Que tenga buen dia.",
+        "Claro, lo entiendo perfectamente. Le dejo nuestro numero 662 353 1804. Si en algun "
+        "momento necesita productos ferreteros, con gusto le atendemos. Que tenga buen dia.",
     ],
     "despedida_otra_sucursal": [
         "Entiendo, disculpe la molestia. ¿Me podria indicar el telefono de la "
@@ -532,12 +553,14 @@ TEMPLATES = {
         "Claro que si. Le agradezco mucho su tiempo. Que tenga excelente dia.",
     ],
 
-    # FIX 920: Templates empáticos para frustración detectada
+    # FIX 920+1188: Ocupado → directo a ofrecer rellamar + número NIOVAL
+    # OOS-06-04/08: no dejaba número; OOS-11-04: disculpa larga innecesaria
+    # FIX 1188: Ambas variantes preguntan hora + dejan numero (OOS-11-04)
     "despedida_ocupado_920": [
-        "Entiendo perfectamente que esta ocupado. Le pido una disculpa por la "
-        "interrupcion. Si gusta, le puedo marcar en otro momento. Que tenga buen dia.",
-        "Disculpe la molestia, entiendo que no es buen momento. "
-        "¿Le marco mas tarde o prefiere que le envie la informacion por otro medio?",
+        "Entiendo, no es buen momento. ¿A que hora le puedo marcar? Nuestro numero "
+        "es 662 353 1804 por si prefiere llamarnos usted.",
+        "Claro, entiendo que esta ocupado. ¿A que hora le queda mejor para marcarle? "
+        "Nuestro numero es 662 353 1804 por si gusta llamarnos.",
     ],
     "despedida_ya_llamaron_920": [
         "Le ofrezco una disculpa por las molestias. Tomo nota para no volver a "
@@ -609,9 +632,10 @@ TEMPLATES = {
 
     # FIX 922: Template pre-despedida para captura minima (CAPTURA_DATOS)
     # FIX 938-D: OOS audit V2 - Templates menos invasivos (no pedir nombre después de pitch)
+    # FIX 1187: Incluir 662-353-1804 explícito
     "captura_minima_pre_despedida": [
         "¿A que hora seria buen momento para llamarle otro dia?",
-        "Claro, no hay problema. Le dejo nuestro numero por si mas adelante le interesa.",
+        "Claro, no hay problema. Nuestro numero es 662 353 1804 por si mas adelante le interesa.",
     ],
 
     # FIX 921: Template de catálogo sin compromiso mejorado

@@ -999,6 +999,9 @@ def classify_intent(texto: str, context: FSMContext, state: FSMState) -> FSMInte
         'yo soy la que decide', 'yo me encargo de eso', 'yo compro aqui',
         'yo soy el responsable', 'yo soy la responsable', 'yo soy el dueno',
         'yo soy la duena', 'yo soy el jefe', 'yo soy la jefa',
+        # FIX 1191: English patterns (OOS-15-18: "Yes I am the manager" not matched)
+        'yes i am', 'i am the manager', 'i am the owner', 'speaking',
+        'yes this is', 'i am in charge', 'thats me', "that's me",
         # NOTE: 'el encargado es X' (3rd-person info from intermediary) intentionally NOT here
         # FIX 1082 handles those via UNKNOWN → "Muchas gracias por la informacion" (no re-pitch)
     ]
@@ -1856,6 +1859,35 @@ class FSMEngine:
             print(f"  [FIX 1174] Deletreo solicitado → responder con B-R-U-C-E")
             return self._get_template("deletreo_bruce_1174")
 
+        # FIX 1190: Sucursal/envíos (OOS-14-06: GPT dice "eso viene en el catálogo" — evasivo)
+        if any(p in _texto_lower for p in [
+            'tienen sucursal', 'tienen sucursal aqui', 'tienen sucursal en',
+            'sucursal en mi ciudad', 'sucursal local', 'oficina aqui',
+            'estan aqui en', 'tienen oficina en', 'tienen bodega en',
+            'hacen envios', 'envian a', 'llegan hasta', 'entregan aqui',
+        ]):
+            print(f"  [FIX 1190] Pregunta sucursal/envíos → template directo")
+            return self._get_template("respuesta_sucursal_envios_1190")
+
+        # FIX 1190B: Crédito/contado (OOS-14-12: GPT dice "Claro" sin info concreta)
+        if any(p in _texto_lower for p in [
+            'trabajan con credito', 'manejan credito', 'dan credito',
+            'es de contado', 'solo de contado', 'a credito o contado',
+            'contado o credito', 'formas de pago', 'como se paga',
+            'aceptan tarjeta', 'pago con tarjeta',
+        ]):
+            print(f"  [FIX 1190B] Pregunta crédito/pago → template directo")
+            return self._get_template("respuesta_credito_pago_1190")
+
+        # FIX 1190C: Diferenciadores/ventaja competitiva (OOS-14-16: GPT evade con "catálogo")
+        if any(p in _texto_lower for p in [
+            'en que son mejores', 'que los diferencia', 'por que ustedes',
+            'que ventaja tienen', 'por que comprarles', 'que los hace diferentes',
+            'que tienen de especial', 'por que nioval', 'que ofrecen diferente',
+        ]):
+            print(f"  [FIX 1190C] Pregunta diferenciadores → template directo")
+            return self._get_template("respuesta_diferenciadores_1190")
+
         # FIX 1166: "Somos taller mecánico" → mencionar herramienta/tornillería que aplica
         # OOS-16-11: Bruce cierra sin explicar que NIOVAL tiene productos útiles para talleres
         if any(p in _texto_lower for p in [
@@ -2027,7 +2059,8 @@ class FSMEngine:
             # el recado ES la respuesta del cliente = no quiere dar dato → despedida directa
             # OOS-05-07/08/09/10: Bruce re-preguntaba WA tras recado = PREGUNTA_REPETIDA
             _recado_intento_1160 = getattr(self.context, '_recado_intento_1160', 0)
-            if self.state == FSMState.CAPTURANDO_CONTACTO or _recado_intento_1160 > 0:
+            # FIX 1189: Incluir ENCARGADO_AUSENTE (OOS-05-07/10: Bruce re-pide WA tras recado)
+            if self.state in (FSMState.CAPTURANDO_CONTACTO, FSMState.ENCARGADO_AUSENTE) or _recado_intento_1160 > 0:
                 # Ya pedimos dato y cliente deflectó con recado → cerrar con número NIOVAL
                 print(f"  [FIX 1177] Recado en CAPTURANDO_CONTACTO → despedida con número NIOVAL")
                 self.context._recado_dado_1111 = True
