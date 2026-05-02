@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIOVAL — Distribución Mayorista | Herramientas, Grifería & Más</title>
+<meta name="description" content="Proveedor mayorista de herramientas, grifería, cerraduras, mochilas y más. Precios de mayoreo directos para ferreterías y tiendas en México.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --blue:       #0033FF;
+  --blue-dark:  #0022CC;
+  --blue-mid:   #0028DD;
+  --blue-light: #E8EEFF;
+  --blue-xlight:#F0F3FF;
+  --white:      #FFFFFF;
+  --gray-50:    #F9FAFB;
+  --gray-100:   #F3F4F6;
+  --gray-200:   #E5E7EB;
+  --gray-400:   #9CA3AF;
+  --gray-600:   #4B5563;
+  --gray-800:   #1F2937;
+  --text:       #111827;
+  --radius:     12px;
+  --shadow:     0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1);
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', -apple-system, sans-serif; color: var(--text); background: var(--white); }
+
+/* ── NAVBAR ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 1px 12px rgba(0,51,255,0.08);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 24px;
+  height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px;
+}
+.nav-logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-link {
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; color: var(--gray-600);
+  text-decoration: none; transition: all 0.15s;
+}
+.nav-link:hover { color: var(--blue); background: var(--blue-xlight); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-outline {
+  padding: 9px 20px; border-radius: 8px;
+  font-size: 14px; font-weight: 600;
+  border: 1.5px solid var(--blue); color: var(--blue);
+  background: transparent; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.btn-outline:hover { background: var(--blue-xlight); }
+.btn-primary {
+  padding: 9px 20px; border-radius: 8px;
+  font-size: 14px; font-weight: 700;
+  background: var(--blue); color: white;
+  border: none; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 14px rgba(0,51,255,0.4); }
+.btn-lg {
+  padding: 14px 28px; font-size: 16px; border-radius: 10px;
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-link.mobile-show { display: flex; }
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, #001299 0%, #0033FF 45%, #1a4fff 100%);
+  padding: 90px 24px 100px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+.hero-logo { margin-bottom: 36px; display: inline-block; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px; padding: 6px 16px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.hero-badge span { width:6px; height:6px; border-radius:50%; background:#4eff8a; flex-shrink:0; animation: pulseGreen 2s infinite; }
+@keyframes pulseGreen { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.hero h1 {
+  font-size: clamp(36px, 6vw, 62px);
+  font-weight: 900; line-height: 1.08;
+  color: white; letter-spacing: -1.5px;
+  margin-bottom: 18px;
+}
+.hero h1 em { font-style: normal; color: #FFD740; }
+.hero p {
+  font-size: clamp(15px, 2.5vw, 19px);
+  color: rgba(255,255,255,0.8);
+  line-height: 1.65; max-width: 560px;
+  margin: 0 auto 36px;
+}
+.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn-gold {
+  padding: 15px 32px; border-radius: 10px;
+  font-size: 16px; font-weight: 700;
+  background: #FFD740; color: #111;
+  border: none; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 14px rgba(255,215,64,0.4);
+}
+.btn-gold:hover { background: #FFC400; box-shadow: 0 6px 20px rgba(255,215,64,0.5); transform: translateY(-1px); }
+.btn-white {
+  padding: 15px 32px; border-radius: 10px;
+  font-size: 16px; font-weight: 600;
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1.5px solid rgba(255,255,255,0.35); cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(4px);
+}
+.btn-white:hover { background: rgba(255,255,255,0.25); }
+.hero-stats {
+  display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+  margin-top: 56px; padding-top: 40px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+.hero-stat-val { font-size: 32px; font-weight: 900; color: white; line-height: 1; }
+.hero-stat-val em { font-style: normal; color: #FFD740; }
+.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+/* ── SECTION SHARED ── */
+.section { padding: 80px 24px; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-tag {
+  display: inline-block;
+  background: var(--blue-light); color: var(--blue);
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 5px 14px; border-radius: 20px;
+  margin-bottom: 12px;
+}
+.section-title { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 14px; }
+.section-sub { font-size: 16px; color: var(--gray-600); line-height: 1.65; max-width: 560px; }
+.section-header { margin-bottom: 48px; }
+
+/* ── CATÁLOGO ── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.cat-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-decoration: none; color: var(--text);
+  transition: all 0.2s; position: relative; overflow: hidden;
+  display: block;
+}
+.cat-card::before {
+  content: ''; position: absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--blue), #1a4fff);
+  opacity: 0; transition: opacity 0.2s;
+}
+.cat-card:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(0,51,255,0.12); transform: translateY(-2px); }
+.cat-card:hover::before { opacity: 1; }
+.cat-icon { font-size: 36px; margin-bottom: 14px; display: block; }
+.cat-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.cat-count { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+.cat-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; color: var(--blue);
+  margin-top: 14px; opacity: 0; transform: translateX(-4px);
+  transition: all 0.2s;
+}
+.cat-card:hover .cat-cta { opacity: 1; transform: translateX(0); }
+.catalog-cta-row { text-align: center; margin-top: 36px; }
+
+/* ── TRUST SIGNALS ── */
+.trust { background: var(--blue-xlight); }
+.trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.trust-card {
+  background: white; border-radius: var(--radius);
+  padding: 28px 24px; text-align: center;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+}
+.trust-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+.trust-val { font-size: 36px; font-weight: 900; color: var(--blue); letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+.trust-label { font-size: 13px; color: var(--gray-600); font-weight: 500; line-height: 1.4; }
+
+/* ── TESTIMONIOS ── */
+.test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+.test-card {
+  background: var(--white); border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius); padding: 26px;
+  box-shadow: var(--shadow); position: relative;
+  transition: box-shadow 0.2s;
+}
+.test-card:hover { box-shadow: var(--shadow-lg); }
+.test-stars { color: #FFC107; font-size: 15px; letter-spacing: 1px; margin-bottom: 14px; }
+.test-quote { font-size: 14px; line-height: 1.75; color: var(--gray-600); margin-bottom: 20px; }
+.test-quote::before { content: '\201C'; font-size: 48px; color: var(--blue-light); font-family: Georgia, serif; line-height: 0; vertical-align: -18px; margin-right: 4px; }
+.test-author { display: flex; align-items: center; gap: 12px; }
+.test-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), #1a4fff);
+  color: white; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.test-name { font-size: 14px; font-weight: 700; }
+.test-biz { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.test-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--blue); font-weight: 600; margin-top: 3px; }
+
+/* ── REDES SOCIALES ── */
+.social-section { background: #0a0e1a; padding: 72px 24px; }
+.social-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+.social-section .section-tag { background: rgba(0,51,255,0.25); color: #6f9dff; }
+.social-section .section-title { color: white; }
+.social-section .section-sub { color: rgba(255,255,255,0.55); margin: 0 auto 48px; }
+.social-grid { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 36px; }
+.social-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-radius: 10px;
+  font-size: 15px; font-weight: 600;
+  text-decoration: none; transition: all 0.2s;
+  border: 1.5px solid rgba(255,255,255,0.1);
+}
+.social-btn-ig  { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: white; }
+.social-btn-fb  { background: #1877F2; color: white; }
+.social-btn-wa  { background: #25D366; color: white; }
+.social-btn-tt  { background: #010101; color: white; border-color: rgba(255,255,255,0.2); }
+.social-btn-yt  { background: #FF0000; color: white; }
+.social-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+.linktree-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 36px; border-radius: 12px;
+  background: #43E55C; color: #0a1a0a;
+  font-size: 16px; font-weight: 700; text-decoration: none;
+  transition: all 0.2s; box-shadow: 0 4px 20px rgba(67,229,92,0.3);
+}
+.linktree-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(67,229,92,0.5); }
+.linktree-divider { color: rgba(255,255,255,0.2); font-size: 13px; margin-bottom: 20px; }
+
+/* ── CONTACTO ── */
+.contacto { background: var(--gray-50); }
+.contacto-wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: start; }
+@media (max-width: 860px) { .contacto-wrap { grid-template-columns: 1fr; } }
+.contacto-info {}
+.contacto-info .section-title { margin-bottom: 16px; }
+.contacto-info .section-sub { margin-bottom: 32px; }
+.contact-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+.contact-icon-wrap { width:42px; height:42px; border-radius:10px; background: var(--blue-light); color: var(--blue); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.contact-item-label { font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.contact-item-val { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
+.form-card {
+  background: white; border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-200);
+}
+.form-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.form-card p { font-size: 13px; color: var(--gray-600); margin-bottom: 26px; }
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 6px; }
+.form-input {
+  width: 100%; padding: 11px 14px; border-radius: 8px;
+  border: 1.5px solid var(--gray-200); font-size: 14px;
+  font-family: inherit; color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: var(--gray-50); outline: none;
+}
+.form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,51,255,0.1); background: white; }
+.form-input::placeholder { color: var(--gray-400); }
+textarea.form-input { resize: vertical; min-height: 100px; }
+.btn-submit {
+  width: 100%; padding: 14px; border-radius: 10px;
+  background: var(--blue); color: white;
+  font-size: 15px; font-weight: 700; border: none;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { background: var(--blue-dark); box-shadow: 0 6px 18px rgba(0,51,255,0.35); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-success {
+  display: none; text-align: center; padding: 28px 20px;
+}
+.form-success-icon { font-size: 48px; margin-bottom: 12px; }
+.form-success h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--blue); }
+.form-success p { font-size: 14px; color: var(--gray-600); }
+.form-error { display: none; padding: 10px 14px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; font-size: 13px; color: #DC2626; margin-top: 12px; }
+
+/* ── LOGIN SECTION ── */
+.login-section { padding: 72px 24px; background: white; text-align: center; }
+.login-card {
+  max-width: 460px; margin: 0 auto;
+  background: var(--gray-50); border: 1.5px solid var(--gray-200);
+  border-radius: 16px; padding: 40px 36px;
+}
+.login-card .section-tag { margin-bottom: 20px; }
+.login-card h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+.login-card p { font-size: 14px; color: var(--gray-600); margin-bottom: 28px; }
+.btn-login-main {
+  width: 100%; padding: 14px; border-radius: 10px;
+  background: var(--blue); color: white;
+  font-size: 16px; font-weight: 700; border: none;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-login-main:hover { background: var(--blue-dark); box-shadow: 0 6px 18px rgba(0,51,255,0.35); }
+.login-divider { display:flex; align-items:center; gap:12px; margin: 20px 0; color: var(--gray-400); font-size:12px; }
+.login-divider::before, .login-divider::after { content:''; flex:1; height:1px; background: var(--gray-200); }
+.login-register { font-size: 13px; color: var(--gray-600); margin-top: 16px; }
+.login-register a { color: var(--blue); font-weight: 600; text-decoration: none; }
+.login-register a:hover { text-decoration: underline; }
+
+/* ── FOOTER ── */
+footer {
+  background: #0a0e1a; padding: 56px 24px 28px;
+  color: rgba(255,255,255,0.55);
+}
+.footer-inner { max-width: 1200px; margin: 0 auto; }
+.footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+@media (max-width: 768px) { .footer-top { grid-template-columns: 1fr 1fr; } }
+.footer-brand p { font-size: 13px; line-height: 1.8; margin-top: 14px; max-width: 280px; }
+.footer-col h4 { font-size: 12px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.footer-link { display: block; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; margin-bottom: 10px; transition: color 0.15s; }
+.footer-link:hover { color: white; }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+.footer-copy { color: rgba(255,255,255,0.3); }
+
+/* ── LOGIN MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 18px;
+  padding: 40px 36px; width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.94) translateY(10px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: var(--gray-100); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--gray-600); transition: background 0.15s;
+}
+.modal-close:hover { background: var(--gray-200); }
+.modal-logo { display: flex; justify-content: center; margin-bottom: 24px; }
+.modal h2 { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.modal p.modal-sub { font-size: 13px; color: var(--gray-600); text-align: center; margin-bottom: 28px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: #111; color: white; padding: 14px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: all 0.3s;
+}
+#toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#toast.success { background: #065F46; }
+#toast.error { background: #991B1B; }
+
+/* ── UTILITIES ── */
+.text-blue { color: var(--blue); }
+.mt-4 { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ══════ NAVBAR ══════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#inicio">
+      <svg viewBox="0 0 220 72" xmlns="http://www.w3.org/2000/svg" style="height:38px">
+        <polygon points="8,6 212,2 208,17 4,20" fill="#0033FF"/>
+        <text x="110" y="51" font-family="Arial Black,Arial" font-weight="900" font-size="32" fill="#0033FF" text-anchor="middle" letter-spacing="3">NIOVAL</text>
+        <polygon points="4,57 208,55 212,70 8,66" fill="#0033FF"/>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="#catalogo">Catálogo</a>
+      <a class="nav-link" href="#nosotros">Nosotros</a>
+      <a class="nav-link" href="#testimonios">Clientes</a>
+      <a class="nav-link" href="#contacto">Contacto</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn-outline" href="https://linktr.ee/NIOVAL" target="_blank">🔗 Redes</a>
+      <a class="btn-primary" href="/login">🔑 Iniciar Sesión</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════ HERO ══════ -->
+<section class="hero" id="inicio">
+  <div class="hero-inner">
+    <div class="hero-logo">
+      <svg viewBox="0 0 280 90" xmlns="http://www.w3.org/2000/svg" style="height:62px">
+        <polygon points="10,7 270,3 265,20 5,23" fill="rgba(255,255,255,0.92)"/>
+        <text x="140" y="62" font-family="Arial Black,Arial" font-weight="900" font-size="40" fill="white" text-anchor="middle" letter-spacing="4">NIOVAL</text>
+        <polygon points="5,70 265,67 270,84 10,83" fill="rgba(255,255,255,0.92)"/>
+      </svg>
+    </div>
+    <div class="hero-badge"><span></span>Distribución Mayorista · México</div>
+    <h1>Tu proveedor<br>mayorista de <em>confianza</em></h1>
+    <p>Herramientas, grifería, cerraduras, mochilas y más. Precios directos de mayoreo para ferreterías, tlapalerías y tiendas en todo México.</p>
+    <div class="hero-ctas">
+      <a class="btn-gold" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        📂 Ver Catálogo Completo
+      </a>
+      <a class="btn-white" href="#contacto">💬 Contáctanos</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val"><em>123</em>+</div>
+        <div class="hero-stat-label">Productos</div>
+      </div>
+      <div>
+        <div class="hero-stat-val"><em>11</em></div>
+        <div class="hero-stat-label">Categorías</div>
+      </div>
+      <div>
+        <div class="hero-stat-val"><em>500</em>+</div>
+        <div class="hero-stat-label">Clientes activos</div>
+      </div>
+      <div>
+        <div class="hero-stat-val"><em>24</em>h</div>
+        <div class="hero-stat-label">Entrega rápida</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CATÁLOGO ══════ -->
+<section class="section" id="catalogo">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-tag">Catálogo de Productos</span>
+      <h2 class="section-title">Todo lo que tu negocio necesita</h2>
+      <p class="section-sub">123 productos en 11 categorías. Precios de mayoreo con IVA incluido disponibles en nuestro catálogo completo.</p>
+    </div>
+    <div class="cat-grid">
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🚿</span>
+        <div class="cat-name">Grifería</div>
+        <div class="cat-count">24 productos · $37 – $697 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🎗️</span>
+        <div class="cat-name">Cintas &amp; Adhesivos</div>
+        <div class="cat-count">23 productos · $9 – $196 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🔧</span>
+        <div class="cat-name">Herramientas</div>
+        <div class="cat-count">15 productos · $25 – $1,053 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🔐</span>
+        <div class="cat-name">Cerraduras &amp; Candados</div>
+        <div class="cat-count">12 productos · $58 – $597 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🎒</span>
+        <div class="cat-name">Mochilas &amp; Bolsas</div>
+        <div class="cat-count">10 productos · $77 – $437 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🚿</span>
+        <div class="cat-name">Accesorios de Baño</div>
+        <div class="cat-count">9 productos · $47 – $133 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🔊</span>
+        <div class="cat-name">Audio Automotriz</div>
+        <div class="cat-count">8 productos · $67 – $623 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+      <a class="cat-card" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        <span class="cat-icon">🐾</span>
+        <div class="cat-name">Mascotas</div>
+        <div class="cat-count">3 productos · $85 – $572 MXN</div>
+        <div class="cat-cta">Ver productos →</div>
+      </a>
+    </div>
+    <div class="catalog-cta-row">
+      <a class="btn-primary btn-lg" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
+        📂 Descargar Catálogo Completo
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ TRUST SIGNALS ══════ -->
+<section class="section trust" id="nosotros">
+  <div class="section-inner">
+    <div class="section-header" style="text-align:center">
+      <span class="section-tag">¿Por qué NIOVAL?</span>
+      <h2 class="section-title">Confianza que respalda cada pedido</h2>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-card">
+        <span class="trust-icon">🏆</span>
+        <div class="trust-val">15+</div>
+        <div class="trust-label">Años en el mercado mayorista mexicano</div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">🤝</span>
+        <div class="trust-val">500+</div>
+        <div class="trust-label">Ferreterías y tiendas atendidas activamente</div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">📦</span>
+        <div class="trust-val">123+</div>
+        <div class="trust-label">Productos disponibles en catálogo actualizado</div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">⚡</span>
+        <div class="trust-val">24 h</div>
+        <div class="trust-label">Procesamiento de pedidos en días hábiles</div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">💰</span>
+        <div class="trust-val">Mayoreo</div>
+        <div class="trust-label">Precios directos de distribuidor sin intermediarios</div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">🇲🇽</span>
+        <div class="trust-val">Nacional</div>
+        <div class="trust-label">Envíos a toda la República Mexicana</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ TESTIMONIOS ══════ -->
+<section class="section" id="testimonios" style="background:var(--gray-50)">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-tag">Clientes que confían en NIOVAL</span>
+      <h2 class="section-title">Lo que dicen nuestros compradores</h2>
+      <p class="section-sub">Ferreterías, tlapalerías y tiendas en todo México eligen NIOVAL como su proveedor de confianza.</p>
+    </div>
+    <div class="test-grid">
+
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">Llevamos más de 3 años comprando con NIOVAL. Los precios de mayoreo son muy competitivos y el surtido de grifería me ayuda a mantener variedad en mi local sin invertir de más.</p>
+        <div class="test-author">
+          <div class="test-avatar">RH</div>
+          <div>
+            <div class="test-name">Roberto Hernández</div>
+            <div class="test-biz">Ferretería El Ancla · Hermosillo, Son.</div>
+            <div class="test-verified">✔ Cliente verificado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">Lo que más me gusta es la atención. Siempre me ayudan a encontrar exactamente lo que busco y los tiempos de entrega son rápidos. Nunca me han fallado en un pedido urgente.</p>
+        <div class="test-author">
+          <div class="test-avatar" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)">PM</div>
+          <div>
+            <div class="test-name">Patricia Medina</div>
+            <div class="test-biz">Tlapalería La Victoria · Culiacán, Sin.</div>
+            <div class="test-verified">✔ Cliente verificado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">Empecé comprando herramientas y ahora surto toda mi tienda con NIOVAL. El catálogo es muy amplio y los precios son justos para el mayoreo. Definitivamente el mejor proveedor que he tenido.</p>
+        <div class="test-author">
+          <div class="test-avatar" style="background:linear-gradient(135deg,#059669,#065f46)">JS</div>
+          <div>
+            <div class="test-name">Ing. Jorge Sánchez</div>
+            <div class="test-biz">Distribuidora Noroeste · Guadalajara, Jal.</div>
+            <div class="test-verified">✔ Cliente verificado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-quote">Tengo mochilas y accesorios de NIOVAL en mi tienda y los clientes siempre vuelven a pedir más. La calidad es excelente para el precio. Me sorprendió la variedad de categorías que manejan.</p>
+        <div class="test-author">
+          <div class="test-avatar" style="background:linear-gradient(135deg,#d97706,#b45309)">DA</div>
+          <div>
+            <div class="test-name">Dulce Arvizu</div>
+            <div class="test-biz">Bazar El Surtidor · Los Mochis, Sin.</div>
+            <div class="test-verified">✔ Cliente verificada</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════ REDES SOCIALES ══════ -->
+<section class="social-section" id="redes">
+  <div class="social-inner">
+    <div style="margin-bottom:10px">
+      <span class="section-tag">Síguenos</span>
+    </div>
+    <h2 class="section-title" style="font-size:clamp(26px,4vw,36px);margin-bottom:14px">Encuéntranos en redes sociales</h2>
+    <p class="section-sub">Novedades, productos en oferta y contenido exclusivo para nuestros distribuidores.</p>
+    <div class="social-grid">
+      <a class="social-btn social-btn-ig" href="https://linktr.ee/NIOVAL" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Instagram
+      </a>
+      <a class="social-btn social-btn-fb" href="https://linktr.ee/NIOVAL" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <a class="social-btn social-btn-wa" href="https://linktr.ee/NIOVAL" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a class="social-btn social-btn-tt" href="https://linktr.ee/NIOVAL" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+        TikTok
+      </a>
+    </div>
+    <div class="linktree-divider">— o encuéntranos en todos nuestros canales —</div>
+    <a class="linktree-btn" href="https://linktr.ee/NIOVAL" target="_blank">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.953 15.066c-.08.163-.08.324-.08.486.08.811.892 1.378 1.703 1.135l4.247-1.378v2.108c0 .324.08.567.243.81.405.486 1.135.567 1.62.081l6.115-6.439c.405-.405.486-.973.243-1.459-.08-.162-.243-.324-.405-.405l-6.115-3.24c-.486-.244-1.135-.163-1.541.243-.244.243-.325.567-.325.892v2.431l-4.247-1.135c-.649-.162-1.297.162-1.54.811-.08.162-.08.324-.08.486v4.167c0-.08 0-.08.162-.162l-.244.568zM2.917 3.5C2.917 2.67 3.586 2 4.417 2h1.083c.83 0 1.5.67 1.5 1.5v17c0 .83-.67 1.5-1.5 1.5H4.417c-.83 0-1.5-.67-1.5-1.5v-17z"/></svg>
+      Ver todos nuestros links en Linktree
+    </a>
+  </div>
+</section>
+
+<!-- ══════ CONTACTO ══════ -->
+<section class="section contacto" id="contacto">
+  <div class="section-inner">
+    <div class="contacto-wrap">
+      <div class="contacto-info">
+        <span class="section-tag">Contáctanos</span>
+        <h2 class="section-title">¿Listo para hacer tu primer pedido?</h2>
+        <p class="section-sub">Déjanos tus datos y un asesor de ventas te contactará en menos de 24 horas con precios y disponibilidad personalizados.</p>
+        <div class="mt-4">
+          <div class="contact-item">
+            <div class="contact-icon-wrap">📧</div>
+            <div>
+              <div class="contact-item-label">Correo</div>
+              <div class="contact-item-val">ventas@nioval.mx</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon-wrap">💬</div>
+            <div>
+              <div class="contact-item-label">WhatsApp</div>
+              <div class="contact-item-val">Disponible en Linktree</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon-wrap">🗓️</div>
+            <div>
+              <div class="contact-item-label">Horario de atención</div>
+              <div class="contact-item-val">Lunes a Viernes · 9:00 AM – 6:00 PM</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon-wrap">🇲🇽</div>
+            <div>
+              <div class="contact-item-label">Cobertura</div>
+              <div class="contact-item-val">República Mexicana</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div id="form-content">
+          <h3>Envíanos un mensaje</h3>
+          <p>Completa el formulario y te respondemos en breve.</p>
+          <div class="form-group">
+            <label class="form-label" for="f-nombre">Nombre completo *</label>
+            <input class="form-input" type="text" id="f-nombre" placeholder="Ej. Carlos Ramírez" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-celular">Celular *</label>
+            <input class="form-input" type="tel" id="f-celular" placeholder="Ej. 6641234567" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-negocio">Nombre de tu negocio</label>
+            <input class="form-input" type="text" id="f-negocio" placeholder="Ej. Ferretería El Clavo">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-comentario">Comentario o consulta *</label>
+            <textarea class="form-input" id="f-comentario" rows="4" placeholder="¿Qué productos te interesan? ¿En qué ciudad estás? ¿Cuánto compras al mes?"></textarea>
+          </div>
+          <div id="form-error" class="form-error">Por favor completa todos los campos obligatorios.</div>
+          <button class="btn-submit" id="btn-enviar" onclick="enviarContacto()">
+            <span id="btn-enviar-txt">Enviar mensaje</span>
+            <span>📨</span>
+          </button>
+        </div>
+        <div class="form-success" id="form-success">
+          <div class="form-success-icon">✅</div>
+          <h4>¡Mensaje enviado!</h4>
+          <p>Recibimos tu mensaje. Un asesor de NIOVAL te contactará en menos de 24 horas hábiles.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ INICIAR SESIÓN (sección dedicada) ══════ -->
+<section class="login-section" id="acceso">
+  <div class="login-card">
+    <span class="section-tag">Acceso exclusivo</span>
+    <h2>Panel de Clientes</h2>
+    <p>Si ya eres cliente NIOVAL, accede a tu panel para ver pedidos, precios especiales y catálogo actualizado.</p>
+    <a class="btn-login-main" href="/login">
+      🔑 Iniciar Sesión
+    </a>
+    <div class="login-divider">¿No tienes cuenta?</div>
+    <div style="text-align:center">
+      <a class="btn-outline" href="#contacto" style="width:100%; justify-content:center; padding:12px 20px;">
+        Solicitar acceso →
+      </a>
+    </div>
+    <div class="login-register">
+      ¿Dudas? <a href="#contacto">Contáctanos</a> y te ayudamos a registrarte.
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FOOTER ══════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <svg viewBox="0 0 220 72" xmlns="http://www.w3.org/2000/svg" style="height:36px">
+          <polygon points="8,6 212,2 208,17 4,20" fill="rgba(255,255,255,0.8)"/>
+          <text x="110" y="51" font-family="Arial Black,Arial" font-weight="900" font-size="32" fill="white" text-anchor="middle" letter-spacing="3">NIOVAL</text>
+          <polygon points="4,57 208,55 212,70 8,66" fill="rgba(255,255,255,0.8)"/>
+        </svg>
+        <p>Distribución mayorista de herramientas, grifería, cerraduras y más. Tu proveedor de confianza en México.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Catálogo</h4>
+        <a class="footer-link" href="#catalogo">Grifería</a>
+        <a class="footer-link" href="#catalogo">Herramientas</a>
+        <a class="footer-link" href="#catalogo">Cerraduras</a>
+        <a class="footer-link" href="#catalogo">Mochilas</a>
+        <a class="footer-link" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">Ver todo →</a>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <a class="footer-link" href="#nosotros">Nosotros</a>
+        <a class="footer-link" href="#testimonios">Clientes</a>
+        <a class="footer-link" href="#contacto">Contacto</a>
+        <a class="footer-link" href="/login">Iniciar sesión</a>
+      </div>
+      <div class="footer-col">
+        <h4>Síguenos</h4>
+        <a class="footer-link" href="https://linktr.ee/NIOVAL" target="_blank">🔗 Linktree</a>
+        <a class="footer-link" href="https://linktr.ee/NIOVAL" target="_blank">📸 Instagram</a>
+        <a class="footer-link" href="https://linktr.ee/NIOVAL" target="_blank">📘 Facebook</a>
+        <a class="footer-link" href="https://linktr.ee/NIOVAL" target="_blank">🎵 TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 NIOVAL. Todos los derechos reservados.</span>
+      <span class="footer-copy">Distribución Mayorista · México 🇲🇽</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════ TOAST ══════ -->
+<div id="toast"></div>
+
+<script>
+
+// ── FORMULARIO CONTACTO ──
+async function enviarContacto() {
+  const nombre    = document.getElementById('f-nombre').value.trim();
+  const celular   = document.getElementById('f-celular').value.trim();
+  const negocio   = document.getElementById('f-negocio').value.trim();
+  const comentario = document.getElementById('f-comentario').value.trim();
+  const errEl = document.getElementById('form-error');
+  errEl.style.display = 'none';
+
+  if (!nombre || !celular || !comentario) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Por favor completa los campos obligatorios (Nombre, Celular, Comentario).';
+    return;
+  }
+  if (!/^\d{7,15}$/.test(celular.replace(/[\s\-\+]/g, ''))) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Ingresa un número de celular válido.';
+    return;
+  }
+
+  const btn = document.getElementById('btn-enviar');
+  const btnTxt = document.getElementById('btn-enviar-txt');
+  btn.disabled = true;
+  btnTxt.textContent = 'Enviando…';
+
+  try {
+    const r = await fetch('/contacto', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ nombre, celular, negocio, comentario })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      document.getElementById('form-content').style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+      showToast('¡Mensaje enviado con éxito!', 'success');
+    } else {
+      errEl.style.display = 'block';
+      errEl.textContent = data.error || 'Error al enviar. Intenta de nuevo.';
+      btn.disabled = false;
+      btnTxt.textContent = 'Enviar mensaje';
+    }
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Error de red. Por favor intenta de nuevo.';
+    btn.disabled = false;
+    btnTxt.textContent = 'Enviar mensaje';
+  }
+}
+
+// ── TOAST ──
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type || '');
+  setTimeout(() => t.className = '', 3500);
+}
+
+// ── SMOOTH SCROLL para links del nav ──
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({behavior: 'smooth'}); }
+  });
+});
+</script>
+</body>
+</html>
