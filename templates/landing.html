@@ -395,6 +395,65 @@ footer {
 /* ── UTILITIES ── */
 .text-blue { color: var(--blue); }
 .mt-4 { margin-top: 16px; }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  /* Navbar */
+  .nav-inner { padding: 0 14px; height: 58px; }
+  .nav-right .btn-outline { display: none; }
+  .btn-primary { padding: 8px 14px; font-size: 13px; }
+
+  /* Hero */
+  .hero { padding: 52px 16px 64px; }
+  .hero-logo svg { height: 46px !important; }
+  .hero-badge { font-size: 10px; padding: 5px 12px; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+  .btn-gold, .btn-white { width: 100%; max-width: 300px; justify-content: center; padding: 14px 20px; font-size: 15px; }
+  .hero-stats { gap: 22px; margin-top: 40px; padding-top: 32px; flex-wrap: wrap; }
+  .hero-stat-val { font-size: 26px; }
+  .hero-stat-label { font-size: 11px; }
+
+  /* Sections */
+  .section { padding: 52px 16px; }
+  .section-header { margin-bottom: 32px; }
+  .section-title { font-size: clamp(22px, 6vw, 30px); }
+  .section-sub { font-size: 14px; }
+
+  /* Catalog */
+  .cat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cat-card { padding: 18px 14px; }
+  .cat-icon { font-size: 28px; margin-bottom: 10px; }
+  .cat-name { font-size: 13px; }
+  .cat-count { font-size: 11px; }
+  .catalog-cta-row .btn-primary { width: 100%; justify-content: center; font-size: 15px; }
+
+  /* Trust */
+  .trust-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .trust-card { padding: 20px 14px; }
+  .trust-val { font-size: 28px; }
+
+  /* Testimonials */
+  .test-grid { grid-template-columns: 1fr; }
+
+  /* Social */
+  .social-section { padding: 52px 16px; }
+  .social-grid { flex-direction: column; align-items: center; gap: 10px; }
+  .social-btn { width: 100%; max-width: 280px; justify-content: center; }
+  .linktree-btn { width: 100%; max-width: 280px; justify-content: center; padding: 14px 20px; }
+
+  /* Contacto */
+  .section.contacto { padding: 52px 16px; }
+  .form-card { padding: 24px 18px; }
+
+  /* Login section */
+  .login-section { padding: 52px 16px; }
+  .login-card { padding: 28px 20px; }
+
+  /* Footer */
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+  footer { padding: 44px 16px 24px; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: 6px; }
+}
 </style>
 </head>
 <body>
@@ -403,10 +462,10 @@ footer {
 <nav class="nav">
   <div class="nav-inner">
     <a class="nav-logo" href="#inicio">
-      <svg viewBox="0 0 220 72" xmlns="http://www.w3.org/2000/svg" style="height:38px">
-        <polygon points="8,6 212,2 208,17 4,20" fill="#0033FF"/>
-        <text x="110" y="51" font-family="Arial Black,Arial" font-weight="900" font-size="32" fill="#0033FF" text-anchor="middle" letter-spacing="3">NIOVAL</text>
-        <polygon points="4,57 208,55 212,70 8,66" fill="#0033FF"/>
+      <svg viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg" style="height:38px">
+        <polygon points="0,2 260,2 244,16 16,16" fill="#0033FF"/>
+        <text x="130" y="59" font-family="Arial Black,Arial" font-weight="900" font-size="34" fill="#0033FF" text-anchor="middle" letter-spacing="4">NIOVAL</text>
+        <polygon points="16,73 244,73 260,88 0,88" fill="#0033FF"/>
       </svg>
     </a>
     <div class="nav-links">
@@ -426,14 +485,14 @@ footer {
 <section class="hero" id="inicio">
   <div class="hero-inner">
     <div class="hero-logo">
-      <svg viewBox="0 0 280 90" xmlns="http://www.w3.org/2000/svg" style="height:62px">
-        <polygon points="10,7 270,3 265,20 5,23" fill="rgba(255,255,255,0.92)"/>
-        <text x="140" y="62" font-family="Arial Black,Arial" font-weight="900" font-size="40" fill="white" text-anchor="middle" letter-spacing="4">NIOVAL</text>
-        <polygon points="5,70 265,67 270,84 10,83" fill="rgba(255,255,255,0.92)"/>
+      <svg viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg" style="height:68px">
+        <polygon points="0,2 260,2 244,16 16,16" fill="rgba(255,255,255,0.95)"/>
+        <text x="130" y="59" font-family="Arial Black,Arial" font-weight="900" font-size="34" fill="white" text-anchor="middle" letter-spacing="4">NIOVAL</text>
+        <polygon points="16,73 244,73 260,88 0,88" fill="rgba(255,255,255,0.95)"/>
       </svg>
     </div>
     <div class="hero-badge"><span></span>Distribución Mayorista · México</div>
-    <h1>Tu proveedor<br>mayorista de <em>confianza</em></h1>
+    <h1>De nosotros<br>a tu anaquel, <em>sin complicaciones</em></h1>
     <p>Herramientas, grifería, cerraduras, mochilas y más. Precios directos de mayoreo para ferreterías, tlapalerías y tiendas en todo México.</p>
     <div class="hero-ctas">
       <a class="btn-gold" href="https://drive.google.com/file/d/18XWr9ojpjjuVMnN_6tJFkzVDrqmGCbhv/view" target="_blank">
@@ -772,10 +831,10 @@ footer {
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <svg viewBox="0 0 220 72" xmlns="http://www.w3.org/2000/svg" style="height:36px">
-          <polygon points="8,6 212,2 208,17 4,20" fill="rgba(255,255,255,0.8)"/>
-          <text x="110" y="51" font-family="Arial Black,Arial" font-weight="900" font-size="32" fill="white" text-anchor="middle" letter-spacing="3">NIOVAL</text>
-          <polygon points="4,57 208,55 212,70 8,66" fill="rgba(255,255,255,0.8)"/>
+        <svg viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg" style="height:34px">
+          <polygon points="0,2 260,2 244,16 16,16" fill="rgba(255,255,255,0.8)"/>
+          <text x="130" y="59" font-family="Arial Black,Arial" font-weight="900" font-size="34" fill="white" text-anchor="middle" letter-spacing="4">NIOVAL</text>
+          <polygon points="16,73 244,73 260,88 0,88" fill="rgba(255,255,255,0.8)"/>
         </svg>
         <p>Distribución mayorista de herramientas, grifería, cerraduras y más. Tu proveedor de confianza en México.</p>
       </div>
