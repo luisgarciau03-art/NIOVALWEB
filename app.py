@@ -4,10 +4,7 @@ import os
 import json
 import base64
 import tempfile
-import smtplib
 import threading
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 # --- RAILWAY: Inyectar service accounts desde env vars base64 ---
 def _setup_service_account_file(env_var, fallback_filename):
@@ -116,54 +113,25 @@ def landing():
 
 # ── FORMULARIO DE CONTACTO ────────────────────────────────────────────────────
 
-def _enviar_email_contacto(nombre, celular, negocio, comentario):
-    email_from = os.environ.get("EMAIL_SENDER", "")
-    email_pass = os.environ.get("EMAIL_PASSWORD", "")
-    email_to   = "luisgarciau03@gmail.com"
-    if not email_from or not email_pass:
-        print("[CONTACTO] EMAIL_SENDER/PASSWORD no configurados")
-        return
+TELEGRAM_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "8456512277:AAGmEedqxsa5L6h88tPnLKoA9LuXtjFmexc")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "5838212022")
+
+def _enviar_telegram_contacto(nombre, celular, negocio, comentario):
     from datetime import datetime
-    msg = MIMEMultipart("alternative")
-    msg["From"]    = f"NIOVAL Web <{email_from}>"
-    msg["To"]      = email_to
-    msg["Subject"] = f"Nuevo contacto NIOVAL — {nombre}"
-    cuerpo_txt = (
-        f"Nuevo contacto desde nioval.mx\n\n"
-        f"Nombre:    {nombre}\n"
-        f"Celular:   {celular}\n"
-        f"Negocio:   {negocio or '(no especificado)'}\n"
-        f"Comentario:\n{comentario}\n\n"
-        f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    texto = (
+        f"📋 *Nuevo contacto NIOVAL*\n\n"
+        f"👤 *Nombre:* {nombre}\n"
+        f"📱 *Celular:* {celular}\n"
+        f"🏪 *Negocio:* {negocio or '(no especificado)'}\n"
+        f"💬 *Comentario:* {comentario}\n\n"
+        f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     )
-    cuerpo_html = f"""
-<html><body style="font-family:Arial,sans-serif;color:#111">
-<div style="max-width:520px;margin:0 auto;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
-  <div style="background:#0033FF;padding:20px 28px">
-    <h2 style="color:white;margin:0;letter-spacing:2px">NIOVAL</h2>
-    <p style="color:rgba(255,255,255,0.7);margin:4px 0 0;font-size:12px">Nuevo contacto desde nioval.mx</p>
-  </div>
-  <div style="padding:28px">
-    <table style="width:100%;border-collapse:collapse;font-size:14px">
-      <tr><td style="padding:8px 0;color:#6b7280;width:110px">Nombre</td><td style="font-weight:600">{nombre}</td></tr>
-      <tr><td style="padding:8px 0;color:#6b7280">Celular</td><td style="font-weight:600">{celular}</td></tr>
-      <tr><td style="padding:8px 0;color:#6b7280">Negocio</td><td>{negocio or '(no especificado)'}</td></tr>
-    </table>
-    <div style="margin-top:16px;background:#f3f4f6;border-radius:8px;padding:16px;font-size:14px;line-height:1.7">
-      <strong>Comentario:</strong><br>{comentario}
-    </div>
-  </div>
-</div>
-</body></html>"""
-    msg.attach(MIMEText(cuerpo_txt, "plain", "utf-8"))
-    msg.attach(MIMEText(cuerpo_html, "html", "utf-8"))
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as smtp:
-            smtp.login(email_from, email_pass)
-            smtp.send_message(msg)
-        print(f"[CONTACTO] Email enviado: {nombre} / {celular}")
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": texto, "parse_mode": "Markdown"}, timeout=10)
+        print(f"[CONTACTO] Telegram enviado: {nombre} / {celular}")
     except Exception as e:
-        print(f"[CONTACTO] Error al enviar email: {e}")
+        print(f"[CONTACTO] Error Telegram: {e}")
 
 
 @app.route("/contacto", methods=["POST"])
@@ -175,7 +143,7 @@ def contacto():
     comentario = (data.get("comentario") or "").strip()
     if not nombre or not celular or not comentario:
         return jsonify({"ok": False, "error": "Faltan campos obligatorios"}), 422
-    threading.Thread(target=_enviar_email_contacto, args=(nombre, celular, negocio, comentario), daemon=True).start()
+    threading.Thread(target=_enviar_telegram_contacto, args=(nombre, celular, negocio, comentario), daemon=True).start()
     return jsonify({"ok": True})
 
 
