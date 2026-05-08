@@ -1,0 +1,944 @@
+{
+  "griferia": [
+    {
+      "sku": "6546",
+      "nombre": "Llave Mezcladora Grifo Para Cocina Baño Monomando Fregadero",
+      "precio": 516.06,
+      "precio_iva": 589.78
+    },
+    {
+      "sku": "6547",
+      "nombre": "Grifo De Cocina Llave Mezcladora Monomando Fregadero Negro",
+      "precio": 514.09,
+      "precio_iva": 587.53
+    },
+    {
+      "sku": "5544",
+      "nombre": "Grifo Baño Llave Monomando Fregadero Mezcladora Inoxidable",
+      "precio": 307.51,
+      "precio_iva": 351.44
+    },
+    {
+      "sku": "5590",
+      "nombre": "Mezcladora Cromada Para Lavabo Ahorradora De Agua",
+      "precio": 60.97,
+      "precio_iva": 69.68
+    },
+    {
+      "sku": "5520",
+      "nombre": "Grifo Monomando Fregadero Llave Mezcladora Tarja Cocina",
+      "precio": 237.97,
+      "precio_iva": 271.96
+    },
+    {
+      "sku": "5958",
+      "nombre": "Llave Mezcladora Lavabo Cuello Curvo Largo Nioval",
+      "precio": 74.09,
+      "precio_iva": 84.66
+    },
+    {
+      "sku": "6059",
+      "nombre": "Grifo Mezclador De Cocina Doble Comando Fregadero 6059",
+      "precio": 87.47,
+      "precio_iva": 99.97
+    },
+    {
+      "sku": "6362",
+      "nombre": "Llave Mezcladora Monomando Fregadero Grifo Acero Inox 6362",
+      "precio": 148.46,
+      "precio_iva": 169.66
+    },
+    {
+      "sku": "6463",
+      "nombre": "Grifo Mezclador Doble Comando Fregadero Nioval 6463",
+      "precio": 173.32,
+      "precio_iva": 198.08
+    },
+    {
+      "sku": "6564",
+      "nombre": "Grifo Mezclador Doble Comando Fregadero Nioval 6564",
+      "precio": 65.81,
+      "precio_iva": 75.21
+    },
+    {
+      "sku": "7665",
+      "nombre": "Llave Mezcladora Lavabo Cuello Curvo Largo Nioval",
+      "precio": 57.79,
+      "precio_iva": 66.04
+    },
+    {
+      "sku": "5152",
+      "nombre": "Grifo Mezclador Para Baño Nioval 5152",
+      "precio": 339.88,
+      "precio_iva": 388.44
+    },
+    {
+      "sku": "5314",
+      "nombre": "Monomando Grifo Mezcladora Llave Pared Para Baño Nioval 5314",
+      "precio": 609.72,
+      "precio_iva": 696.82
+    },
+    {
+      "sku": "5435",
+      "nombre": "Grifo Mezclador De Una Sola Manija Nioval 5435",
+      "precio": 396.99,
+      "precio_iva": 453.71
+    },
+    {
+      "sku": "6940",
+      "nombre": "Juego De Manerales Para Regadera Baño Metalico De Lujo",
+      "precio": 81.72,
+      "precio_iva": 93.39
+    },
+    {
+      "sku": "6910",
+      "nombre": "Juego De Manerales Con Chapeton Acero Inoxidable Negro Mate",
+      "precio": 56.99,
+      "precio_iva": 65.14
+    },
+    {
+      "sku": "6952",
+      "nombre": "Juego De 2 Manerales Metálicos Y 2 Chapetones Para Regadera",
+      "precio": 47.46,
+      "precio_iva": 54.23
+    },
+    {
+      "sku": "6766",
+      "nombre": "Juego De Manerales Para Regadera Baño Acrilico De Lujo 6766",
+      "precio": 51.97,
+      "precio_iva": 59.39
+    },
+    {
+      "sku": "17566",
+      "nombre": "Juego Maneral Llaves Nura C/chapeton Nioval 17566",
+      "precio": 99.97,
+      "precio_iva": 114.25
+    },
+    {
+      "sku": "16154",
+      "nombre": "Juego De Manerales Ronda Con Chapetón Cromado Nioval 16154",
+      "precio": 59.98,
+      "precio_iva": 68.54
+    },
+    {
+      "sku": "17523",
+      "nombre": "Juego De Ensamble De Manerales Cruz Para Baño Nioval 17523",
+      "precio": 75.69,
+      "precio_iva": 86.5
+    },
+    {
+      "sku": "16265",
+      "nombre": "Manerales Para Regadera Negro Compatibilidad Nioval 16265",
+      "precio": 107.05,
+      "precio_iva": 122.34
+    },
+    {
+      "sku": "6867",
+      "nombre": "Mezcladora Monomando Para Regadera Negro Mate, Laton 6867",
+      "precio": 210.72,
+      "precio_iva": 240.83
+    },
+    {
+      "sku": "6968",
+      "nombre": "Monomando Para Regadera Mezcladora Cromado Empotrable Lujo",
+      "precio": 247.93,
+      "precio_iva": 283.35
+    },
+    {
+      "sku": "104589",
+      "nombre": "Manguera De Regadera P/ Tipo Teléfono 13mmx150cm",
+      "precio": 34.41,
+      "precio_iva": 39.32
+    },
+    {
+      "sku": "6055",
+      "nombre": "Llave Angular 2 Salidas 1/2 Nioval 6055",
+      "precio": 37.14,
+      "precio_iva": 42.44
+    },
+    {
+      "sku": "5551",
+      "nombre": "Juego 3 Adaptadores Para Taladro 2-3/4'' Nioval 5551",
+      "precio": 24.92,
+      "precio_iva": 28.48
+    },
+    {
+      "sku": "5352",
+      "nombre": "Juego Dados Magnéticos Para Taladro 14 Piezas Nioval 5352",
+      "precio": 25.48,
+      "precio_iva": 29.13
+    },
+    {
+      "sku": "5453",
+      "nombre": "Puntas Phillips #2 Tablaroca, 5 Piezas Ph2 5453 Nioval",
+      "precio": 30.93,
+      "precio_iva": 35.34
+    },
+    {
+      "sku": "5756",
+      "nombre": "Dado Universal Grip Con Adaptador (1/4-3/4)(7mm-19mm)",
+      "precio": 39.09,
+      "precio_iva": 44.66
+    },
+    {
+      "sku": "5857",
+      "nombre": "Matraca Con Dado Universal De (1/4-3/4)(7mm-19mm) Tuercas",
+      "precio": 83.63,
+      "precio_iva": 95.58
+    },
+    {
+      "sku": "5554",
+      "nombre": "Juego De Herramientas Matraca Con Dados 40 Pza + Estuche",
+      "precio": 74.83,
+      "precio_iva": 85.52
+    },
+    {
+      "sku": "5655",
+      "nombre": "Juego De Herramientas Matraca Con Dados 46 Pza & Estuche",
+      "precio": 118.37,
+      "precio_iva": 135.28
+    },
+    {
+      "sku": "5712",
+      "nombre": "Juego De Herramientas Portafolio 16 Piezas Negro Nioval 5712",
+      "precio": 105.91,
+      "precio_iva": 121.03
+    },
+    {
+      "sku": "5831",
+      "nombre": "Juego De Herramientas Mecánica Portafolio 100 Pz Nioval 5831",
+      "precio": 302.2,
+      "precio_iva": 345.37
+    },
+    {
+      "sku": "5962",
+      "nombre": "Juego De Herramientas Reparación De Automóviles Nioval 5962",
+      "precio": 921.47,
+      "precio_iva": 1053.1
+    },
+    {
+      "sku": "6160",
+      "nombre": "Matraca Profesional Doble Cuadro 3/8' X 1/4' Nioval 6160",
+      "precio": 77.88,
+      "precio_iva": 89.0
+    },
+    {
+      "sku": "6261",
+      "nombre": "Matraca Profesional Doble Cuadro 3/8' X 1/2'",
+      "precio": 73.89,
+      "precio_iva": 84.45
+    },
+    {
+      "sku": "7069",
+      "nombre": "Kit De Desarmadores Y Herramientas De Precisión 115 En 1",
+      "precio": 108.92,
+      "precio_iva": 124.48
+    },
+    {
+      "sku": "9679",
+      "nombre": "Cinta Reflejante Alta Visibilidad Amarillo Fosforesente 10m",
+      "precio": 28.06,
+      "precio_iva": 32.07
+    },
+    {
+      "sku": "9769",
+      "nombre": "Cinta Reflejante Rojo Con Blanco Tipo Barricada Rollo 10m",
+      "precio": 48.1,
+      "precio_iva": 54.97
+    },
+    {
+      "sku": "1917",
+      "nombre": "Cinta Reflejante Rojo Con Blanco Tipo Barricada Rollo 10m",
+      "precio": 32.07,
+      "precio_iva": 36.65
+    },
+    {
+      "sku": "10149",
+      "nombre": "Cinta Adhesiva Empaque Frágil 48x150 Super Fijación Visible",
+      "precio": 28.06,
+      "precio_iva": 32.07
+    },
+    {
+      "sku": "9985",
+      "nombre": "Cinta Antiderrapante Gruesa Y Resistente 2 Pulgadas",
+      "precio": 25.83,
+      "precio_iva": 29.52
+    },
+    {
+      "sku": "9949",
+      "nombre": "Cinta Doble Cara De 19 Mm X 5 M",
+      "precio": 8.53,
+      "precio_iva": 9.75
+    },
+    {
+      "sku": "2345",
+      "nombre": "Cinta Magica Doble Cara Nano Tape Lavable Reutilizable",
+      "precio": 25.66,
+      "precio_iva": 27.37
+    },
+    {
+      "sku": "10279",
+      "nombre": "Cinta Transparente Adhesiva Empaque 48mm X 150 Mt",
+      "precio": 25.48,
+      "precio_iva": 29.13
+    },
+    {
+      "sku": "10489",
+      "nombre": "Cinta Gorila Kraft Reforzada Y Engomada 70mm X 137m 1 Pieza",
+      "precio": 171.6,
+      "precio_iva": 196.12
+    },
+    {
+      "sku": "10309",
+      "nombre": "Cinta Adhesiva 18 Mm X 33 M Pack De 10 Rollos",
+      "precio": 30.59,
+      "precio_iva": 34.95
+    },
+    {
+      "sku": "9859",
+      "nombre": "Cinta Impermeable Tapa Goteras 4 X 10mts",
+      "precio": 84.96,
+      "precio_iva": 97.09
+    },
+    {
+      "sku": "10399",
+      "nombre": "Cinta Adhesiva Para Ductos Negra 48mm X 55m Uso Industrial",
+      "precio": 62.53,
+      "precio_iva": 71.47
+    },
+    {
+      "sku": "1127",
+      "nombre": "Cinta Kapton, Aislamiento Térmico 33 M X 1 Cm Nioval 1127",
+      "precio": 21.38,
+      "precio_iva": 24.43
+    },
+    {
+      "sku": "4578",
+      "nombre": "Cinta De Contacto De Velcro 10m, Negra Nioval 4578",
+      "precio": 25.39,
+      "precio_iva": 29.02
+    },
+    {
+      "sku": "7894",
+      "nombre": "Rollo Etiqueta Térmica (50x25 Mm) C/1000 Etiquetas",
+      "precio": 17.46,
+      "precio_iva": 19.95
+    },
+    {
+      "sku": "8521",
+      "nombre": "Rollo Etiqueta Térmica 4 X8 C/200 Etiquetas Guias Envios",
+      "precio": 68.18,
+      "precio_iva": 77.92
+    },
+    {
+      "sku": "1312",
+      "nombre": "Rampa Para Mascotas Plegable Camionetas Coche Perro Gato",
+      "precio": 500.13,
+      "precio_iva": 571.58
+    },
+    {
+      "sku": "12319",
+      "nombre": "Escalera Para Mascota 3 Niveles Perro Gato Plegable",
+      "precio": 335.52,
+      "precio_iva": 383.45
+    },
+    {
+      "sku": "8070",
+      "nombre": "Paraguas Sombrilla De Bolsillo Anti-ultravioleta 6 Costillas",
+      "precio": 111.41,
+      "precio_iva": 127.32
+    },
+    {
+      "sku": "8064",
+      "nombre": "Paraguas Sombrilla De Bolsillo Anti-ultravioleta 6 Costillas",
+      "precio": 111.41,
+      "precio_iva": 127.32
+    },
+    {
+      "sku": "8072",
+      "nombre": "Paraguas Sombrilla De Bolsillo Anti-ultravioleta 6 Costillas",
+      "precio": 111.41,
+      "precio_iva": 127.32
+    },
+    {
+      "sku": "4874",
+      "nombre": "Pistola De Lavado Coche Alta Presión Inalámbrico Nioval 4874",
+      "precio": 358.47,
+      "precio_iva": 409.68
+    },
+    {
+      "sku": "140201",
+      "nombre": "Cable Para Bocina Automotriz Bicolor Calibre 22 Rollo 100m 140201",
+      "precio": 66.81,
+      "precio_iva": 76.35
+    },
+    {
+      "sku": "6989",
+      "nombre": "Cable Para Bocina Automotriz Bicolor Calibre 18 Rollo 100m 6989",
+      "precio": 113.65,
+      "precio_iva": 129.88
+    },
+    {
+      "sku": "4095",
+      "nombre": "Rollo De Cable Para Bocina 100mts Calibre 16 X 2 4095",
+      "precio": 168.46,
+      "precio_iva": 192.53
+    },
+    {
+      "sku": "8574",
+      "nombre": "Candado Loto Dielectrico Candadeo De Seguridad Maquinaria",
+      "precio": 31.78,
+      "precio_iva": 36.32
+    },
+    {
+      "sku": "9696",
+      "nombre": "Candados De Combinación Para Equipaje Locker Viaje",
+      "precio": 52.85,
+      "precio_iva": 60.41
+    },
+    {
+      "sku": "9514",
+      "nombre": "Candado Cortina Extra Seguridad (70mm) Metalico Antirrobo",
+      "precio": 73.6,
+      "precio_iva": 84.11
+    },
+    {
+      "sku": "7485",
+      "nombre": "Candado De Combinación 4 Dígitos Mini Locker Seguridad",
+      "precio": 32.28,
+      "precio_iva": 36.9
+    },
+    {
+      "sku": "1598",
+      "nombre": "Candado De Combinación 4 Dígitos Mini Locker Seguridad",
+      "precio": 28.89,
+      "precio_iva": 33.02
+    },
+    {
+      "sku": "5814",
+      "nombre": "Juego De Herramientas Mecánicas Autocle Dados 53pcs",
+      "precio": 153.58,
+      "precio_iva": 175.52
+    },
+    {
+      "sku": "6652",
+      "nombre": "Juego De Dados Con Matraca 1/2 Nioval 6652",
+      "precio": 130.4,
+      "precio_iva": 149.03
+    },
+    {
+      "sku": "6312",
+      "nombre": "12 Pzs Llaves Tubo De Extensión Para Matraca Nioval 6312",
+      "precio": 188.35,
+      "precio_iva": 215.26
+    },
+    {
+      "sku": "5819",
+      "nombre": "Juego De Dados De Alto Impacto De Aire 35 Piezas Nioval 5819",
+      "precio": 451.67,
+      "precio_iva": 516.2
+    },
+    {
+      "sku": "3565",
+      "nombre": "Cerradura De Gatillo De Latón Nioval 3565",
+      "precio": 262.14,
+      "precio_iva": 299.58
+    },
+    {
+      "sku": "6352",
+      "nombre": "Cerradura Para Puerta Principal Gatillo De Laton Nioval 6352",
+      "precio": 262.14,
+      "precio_iva": 299.58
+    },
+    {
+      "sku": "9584",
+      "nombre": "Cerradura De Gatillo Cromo Mate Nioval 9584",
+      "precio": 396.3,
+      "precio_iva": 452.92
+    },
+    {
+      "sku": "5589",
+      "nombre": "Cerradura De Gatillo De Níquel Satinado Nioval 5589",
+      "precio": 263.96,
+      "precio_iva": 301.66
+    },
+    {
+      "sku": "4569",
+      "nombre": "Chapa Cerradura Residencial Puerta Principal Nioval 4569",
+      "precio": 301.07,
+      "precio_iva": 344.08
+    },
+    {
+      "sku": "5547",
+      "nombre": "Cerradura De Manija Puerta Principal Nioval 5547",
+      "precio": 120.03,
+      "precio_iva": 137.18
+    },
+    {
+      "sku": "5156",
+      "nombre": "Cerradura Chapa De Perilla Puerta Principal Nioval 5156",
+      "precio": 88.27,
+      "precio_iva": 100.87
+    },
+    {
+      "sku": "5855",
+      "nombre": "Cerradura Perilla Puerta Principal Nioval 5855",
+      "precio": 71.06,
+      "precio_iva": 81.21
+    },
+    {
+      "sku": "4755",
+      "nombre": "Cinta De Aluminio De 2 Pulgadas X 50 Metros Nioval 4755",
+      "precio": 57.45,
+      "precio_iva": 65.66
+    },
+    {
+      "sku": "5368",
+      "nombre": "Cinta De Aislar Vulcanizada 5368",
+      "precio": 24.05,
+      "precio_iva": 27.49
+    },
+    {
+      "sku": "4567",
+      "nombre": "Cinta Canela Para Empaque 150m Nioval 4567",
+      "precio": 28.66,
+      "precio_iva": 32.75
+    },
+    {
+      "sku": "9672",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 48.57,
+      "precio_iva": 55.51
+    },
+    {
+      "sku": "9851",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 47.57,
+      "precio_iva": 54.36
+    },
+    {
+      "sku": "9675",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 48.57,
+      "precio_iva": 55.51
+    },
+    {
+      "sku": "5874",
+      "nombre": "Par De Bocinas 8 Pulgadas 250 W Zoar Sounds 5874",
+      "precio": 544.98,
+      "precio_iva": 622.84
+    },
+    {
+      "sku": "1245",
+      "nombre": "Bocina De 6.5 Pulgadas Para Carro 150 W Zoar Sounds 1245",
+      "precio": 509.66,
+      "precio_iva": 582.47
+    },
+    {
+      "sku": "9615",
+      "nombre": "Bocinas De 6.5 Pulgadas Para Carro 150 W Zoar Sounds 9615",
+      "precio": 509.66,
+      "precio_iva": 582.47
+    },
+    {
+      "sku": "2536",
+      "nombre": "Bocinas De 6.5 Pulgadas Para Carro 150 W Zoar Sounds 2536",
+      "precio": 373.41,
+      "precio_iva": 426.76
+    },
+    {
+      "sku": "3625",
+      "nombre": "Bocinas De 6.5 Pulgadas Para Carro 150 W Zoar Sounds 3625",
+      "precio": 393.6,
+      "precio_iva": 449.83
+    },
+    {
+      "sku": "8525",
+      "nombre": "Bocinas De 6.5 Pulgadas Para Carro 150 W Zoar Sounds 8525",
+      "precio": 449.1,
+      "precio_iva": 513.27
+    },
+    {
+      "sku": "5836",
+      "nombre": "Bocinas De 6.5 Pulgadas Para Carro 200 W Zoar Sounds 5836",
+      "precio": 456.68,
+      "precio_iva": 521.92
+    },
+    {
+      "sku": "75162",
+      "nombre": "Valvula Desviadora De 3 Vias 1/2 Adaptador En Forma De T",
+      "precio": 86.16,
+      "precio_iva": 98.46
+    },
+    {
+      "sku": "9285",
+      "nombre": "Llave Para Temporizadora Para Pared Autocierre Nioval 9285",
+      "precio": 169.66,
+      "precio_iva": 193.91
+    },
+    {
+      "sku": "26517",
+      "nombre": "Manerales Para Regadera Negro Nioval 26517",
+      "precio": 78.2,
+      "precio_iva": 89.37
+    },
+    {
+      "sku": "66354",
+      "nombre": "Manerales Para Regadera Plateado Nioval 66354",
+      "precio": 116.17,
+      "precio_iva": 132.77
+    },
+    {
+      "sku": "99562",
+      "nombre": "Grifería De Baño Color Dorado Acabado Brillante 99562",
+      "precio": 338.0,
+      "precio_iva": 386.28
+    },
+    {
+      "sku": "4549",
+      "nombre": "Tapete Entrenador + Cesped Nioval 4549",
+      "precio": 254.88,
+      "precio_iva": 291.29
+    },
+    {
+      "sku": "7482",
+      "nombre": "Silla Giratoria De Oficina Nioval 7482",
+      "precio": 821.2,
+      "precio_iva": 938.51
+    },
+    {
+      "sku": "7898",
+      "nombre": "Silla De Escritorio Tapizado De Vinipiel Nioval 7898",
+      "precio": 1831.9,
+      "precio_iva": 2093.59
+    },
+    {
+      "sku": "7899",
+      "nombre": "Silla De Escritorio Ejecutica Nioval 7899",
+      "precio": 1210.11,
+      "precio_iva": 1382.98
+    },
+    {
+      "sku": "9879",
+      "nombre": "Cinta Espuma De Vinilo Autoadhesivo Negra Sellar Puertas 5m",
+      "precio": 9.09,
+      "precio_iva": 10.38
+    },
+    {
+      "sku": "1139",
+      "nombre": "Cinta Adhesiva De Cobre, 5 Mm X 15 M Nioval 1139",
+      "precio": 22.44,
+      "precio_iva": 25.64
+    },
+    {
+      "sku": "2241",
+      "nombre": "Rollo Etiquetas Para Etiquetadora Manual Pistola De Precios",
+      "precio": 4.94,
+      "precio_iva": 5.64
+    },
+    {
+      "sku": "6890",
+      "nombre": "Juego De Dados Con Matraca 3/8 Profesional Nioval 6890",
+      "precio": 138.2,
+      "precio_iva": 157.94
+    },
+    {
+      "sku": "3052",
+      "nombre": "Cerradura De Gatillo Llave/llave Laton Antiguo G Nioval 3052",
+      "precio": 500.78,
+      "precio_iva": 572.32
+    },
+    {
+      "sku": "4463",
+      "nombre": "Cerradura Chapa Manija Cuadrada Puerta Recamara O Principal",
+      "precio": 216.16,
+      "precio_iva": 247.04
+    },
+    {
+      "sku": "9092",
+      "nombre": "Cerradura Chapa - Alta Seguridad 70mm - Nioval 9092",
+      "precio": 522.4,
+      "precio_iva": 597.02
+    },
+    {
+      "sku": "4537",
+      "nombre": "Dispensador Comedero Y Bebedero 2 En 1 Perros Gatos Nioval",
+      "precio": 84.96,
+      "precio_iva": 97.09
+    },
+    {
+      "sku": "9598",
+      "nombre": "Candado Loto Bloqueo Nioval 9598",
+      "precio": 79.86,
+      "precio_iva": 91.27
+    },
+    {
+      "sku": "9594",
+      "nombre": "Dispositivo Loto Multi-candado Nioval 9594",
+      "precio": 58.11,
+      "precio_iva": 66.41
+    },
+    {
+      "sku": "5984",
+      "nombre": "Grifo Mezclador Para Lavabo De Acero Inoxidable Nioval 5984",
+      "precio": 301.78,
+      "precio_iva": 344.89
+    },
+    {
+      "sku": "5995",
+      "nombre": "Juego De Llaves De Empotrar Regadera Ppr Nioval 5995",
+      "precio": 198.8,
+      "precio_iva": 227.21
+    },
+    {
+      "sku": "5979",
+      "nombre": "Llave Monomando Para Fregadero Nioval 5979",
+      "precio": 339.84,
+      "precio_iva": 388.39
+    },
+    {
+      "sku": "4136",
+      "nombre": "10 Metros Tira Cinta Magnetica Adherible Nioval 4136",
+      "precio": 65.25,
+      "precio_iva": 74.57
+    },
+    {
+      "sku": "4526",
+      "nombre": "Maletín Porta Laptop Nioval 4526 Profesional Y Resistente",
+      "precio": 271.51,
+      "precio_iva": 310.29
+    },
+    {
+      "sku": "4522",
+      "nombre": "Mochila Impermeable Para Laptop 15.6 Nioval 4522 Negra",
+      "precio": 344.83,
+      "precio_iva": 394.09
+    },
+    {
+      "sku": "4529",
+      "nombre": "Lonchera Térmica Grande Con Correa Nioval 4529 Ajustable",
+      "precio": 382.33,
+      "precio_iva": 436.95
+    },
+    {
+      "sku": "4524",
+      "nombre": "Cangurera Unisex Negra Nioval 4524 Para Hombre Y Mujer",
+      "precio": 231.68,
+      "precio_iva": 264.78
+    },
+    {
+      "sku": "4525",
+      "nombre": "Portafolio Para Laptop Nioval 4525 De Alta Calidad",
+      "precio": 156.25,
+      "precio_iva": 178.57
+    },
+    {
+      "sku": "4527",
+      "nombre": "Lonchera Térmica Doble Compartimento Nioval 4527 Para Comida",
+      "precio": 119.59,
+      "precio_iva": 136.67
+    },
+    {
+      "sku": "4528",
+      "nombre": "Bolsa Térmica Grande Nioval 4528 Para Alimentos Y Bebidas",
+      "precio": 106.68,
+      "precio_iva": 121.92
+    },
+    {
+      "sku": "4519",
+      "nombre": "Mochila Para Laptop Con Puerto Usb Antirrobo Nioval 4519",
+      "precio": 98.07,
+      "precio_iva": 112.08
+    },
+    {
+      "sku": "4520",
+      "nombre": "Mochila Profesional Urbana Segura Nioval 4520 Para Laptop",
+      "precio": 188.58,
+      "precio_iva": 215.52
+    },
+    {
+      "sku": "4532",
+      "nombre": "Neceser Organizador De Viaje Nioval 4532 Para Cosméticos",
+      "precio": 77.31,
+      "precio_iva": 88.35
+    },
+    {
+      "sku": "4530",
+      "nombre": "Lonchera Térmica De Alta Capacidad Nioval 4530 Para Trabajo",
+      "precio": 197.74,
+      "precio_iva": 225.98
+    },
+    {
+      "sku": "4531",
+      "nombre": "Organizador De Maquillaje De Viaje Nioval 4531 Compacto",
+      "precio": 176.79,
+      "precio_iva": 202.04
+    },
+    {
+      "sku": "4521",
+      "nombre": "Mochila Gris Nioval 4521 Urbana, Comoda Y Segura",
+      "precio": 188.58,
+      "precio_iva": 215.52
+    },
+    {
+      "sku": "4523",
+      "nombre": "Mochila Escolar Vintage Negra Nioval 4523 Para Estudiantes",
+      "precio": 193.97,
+      "precio_iva": 221.67
+    }
+  ],
+  "cerraduras": [
+    {
+      "sku": "3565",
+      "nombre": "Cerradura De Gatillo De Latón Nioval 3565",
+      "precio": 383.33
+    },
+    {
+      "sku": "6352",
+      "nombre": "Cerradura Para Puerta Principal Gatillo De Laton Nioval 6352",
+      "precio": 357.69
+    },
+    {
+      "sku": "9584",
+      "nombre": "Cerradura De Gatillo Cromo Mate Nioval 9584",
+      "precio": 447.44
+    },
+    {
+      "sku": "5589",
+      "nombre": "Cerradura De Gatillo De Níquel Satinado Nioval 5589",
+      "precio": 383.33
+    },
+    {
+      "sku": "4569",
+      "nombre": "Chapa Cerradura Residencial Puerta Principal Nioval 4569",
+      "precio": 370.51
+    },
+    {
+      "sku": "5547",
+      "nombre": "Cerradura De Manija Puerta Principal Nioval 5547",
+      "precio": 142.81
+    },
+    {
+      "sku": "5156",
+      "nombre": "Cerradura Chapa De Perilla Puerta Principal Nioval 5156",
+      "precio": 88.13
+    },
+    {
+      "sku": "5855",
+      "nombre": "Cerradura Perilla Puerta Principal Nioval 5855",
+      "precio": 84.54
+    }
+  ],
+  "cintas": [
+    {
+      "sku": "9679",
+      "nombre": "Cinta Reflejante Alta Visibilidad Amarillo Fosforesente 10m",
+      "precio": 51.28
+    },
+    {
+      "sku": "9769",
+      "nombre": "Cinta Reflejante Rojo Con Blanco Tipo Barricada Rollo 10m",
+      "precio": 76.92
+    },
+    {
+      "sku": "1917",
+      "nombre": "Cinta Reflejante Rojo Con Blanco Tipo Barricada Rollo 10m",
+      "precio": 80.77
+    },
+    {
+      "sku": "10149",
+      "nombre": "Cinta Adhesiva Empaque Frágil 48x150 Super Fijación Visible",
+      "precio": 67.95
+    },
+    {
+      "sku": "9985",
+      "nombre": "Cinta Antiderrapante Gruesa Y Resistente 2 Pulgadas",
+      "precio": 32.36
+    },
+    {
+      "sku": "9949",
+      "nombre": "Cinta Doble Cara De 19 Mm X 5 M",
+      "precio": 19.23
+    },
+    {
+      "sku": "2345",
+      "nombre": "Cinta Magica Doble Cara Nano Tape Lavable Reutilizable",
+      "precio": 38.36
+    },
+    {
+      "sku": "10279",
+      "nombre": "Cinta Transparente Adhesiva Empaque 48mm X 150 Mt",
+      "precio": 30.89
+    },
+    {
+      "sku": "10489",
+      "nombre": "Cinta Gorila Kraft Reforzada Y Engomada 70mm X 137m 1 Pieza",
+      "precio": 204.17
+    },
+    {
+      "sku": "10309",
+      "nombre": "Cinta Adhesiva 18 Mm X 33 M Pack De 10 Rollos",
+      "precio": 38.53
+    },
+    {
+      "sku": "9859",
+      "nombre": "Cinta Impermeable Tapa Goteras 4 X 10mts",
+      "precio": 134.62
+    },
+    {
+      "sku": "10399",
+      "nombre": "Cinta Adhesiva Para Ductos Negra 48mm X 55m Uso Industrial",
+      "precio": 98.72
+    },
+    {
+      "sku": "1127",
+      "nombre": "Cinta Kapton, Aislamiento Térmico 33 M X 1 Cm Nioval 1127",
+      "precio": 31.96
+    },
+    {
+      "sku": "4578",
+      "nombre": "Cinta De Contacto De Velcro 10m, Negra Nioval 4578",
+      "precio": 37.96
+    },
+    {
+      "sku": "7894",
+      "nombre": "Rollo Etiqueta Térmica (50x25 Mm) C/1000 Etiquetas",
+      "precio": 25.58
+    },
+    {
+      "sku": "8521",
+      "nombre": "Rollo Etiqueta Térmica 4 X8 C/200 Etiquetas Guias Envios",
+      "precio": 81.12
+    },
+    {
+      "sku": "4755",
+      "nombre": "Cinta De Aluminio De 2 Pulgadas X 50 Metros Nioval 4755",
+      "precio": 69.79
+    },
+    {
+      "sku": "5368",
+      "nombre": "Cinta De Aislar Vulcanizada 5368",
+      "precio": 29.22
+    },
+    {
+      "sku": "4567",
+      "nombre": "Cinta Canela Para Empaque 150m Nioval 4567",
+      "precio": 34.09
+    },
+    {
+      "sku": "9672",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 57.78
+    },
+    {
+      "sku": "9851",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 57.78
+    },
+    {
+      "sku": "9675",
+      "nombre": "Cinta Perimetral Delimitante Barricada 8cm X 305m Nioval",
+      "precio": 57.78
+    }
+  ]
+}

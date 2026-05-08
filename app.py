@@ -115,13 +115,61 @@ def sitemap():
     from flask import Response
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://nioval.mx/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://nioval.mx/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://nioval.mx/catalogo/griferia</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.mx/catalogo/cerraduras</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.mx/catalogo/cintas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>"""
     return Response(xml, mimetype="application/xml")
+
+
+# ── CATÁLOGO ──────────────────────────────────────────────────────────────────
+
+def _cargar_catalogo():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'catalogo_data.json')
+    if os.path.exists(path):
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+_CATALOGO = _cargar_catalogo()
+
+_CATALOGO_META = {
+    'griferia': {
+        'titulo': 'Grifería al Mayoreo para Ferreterías | NIOVAL',
+        'h1': 'Grifería al Mayoreo — Llaves, Mezcladoras y Grifos',
+        'descripcion': 'Distribuidor mayorista de grifería en México. Llaves mezcladoras, grifos monomando, mezcladores cromados y más al mayoreo para ferreterías y tlapalerías. Precios directos, entrega en 24 h. Solicita tu catálogo con precios de mayoreo.',
+        'keywords': 'grifería mayoreo, llaves mezcladoras mayoreo, grifos ferretería mayoreo México',
+        'slug': 'griferia'
+    },
+    'cerraduras': {
+        'titulo': 'Cerraduras al Mayoreo para Ferreterías | NIOVAL',
+        'h1': 'Cerraduras al Mayoreo — Gatillo, Latón y Cromo',
+        'descripcion': 'Cerraduras al mayoreo en México. Cerraduras de gatillo, latón y cromo mate para ferreterías y tlapalerías. Precios de mayoreo directos, mínimo de compra accesible y entrega rápida. Solicita cotización en NIOVAL.',
+        'keywords': 'cerraduras mayoreo México, cerraduras ferretería al mayoreo, cerraduras gatillo mayoreo',
+        'slug': 'cerraduras'
+    },
+    'cintas': {
+        'titulo': 'Cintas Reflejantes al Mayoreo | NIOVAL',
+        'h1': 'Cintas Reflejantes al Mayoreo — Alta Visibilidad',
+        'descripcion': 'Cintas reflejantes al mayoreo en México. Cintas de alta visibilidad, barricada y seguridad para ferreterías, tlapalerías y distribuidores. Precios directos de mayoreo con entrega en 24 h. Solicita tu pedido en NIOVAL.',
+        'keywords': 'cintas reflejantes mayoreo México, cinta barricada mayoreo, cintas seguridad ferretería',
+        'slug': 'cintas'
+    }
+}
+
+@app.route("/catalogo")
+def catalogo_index():
+    return render_template("catalogo_index.html", categorias=_CATALOGO_META)
+
+@app.route("/catalogo/<categoria>")
+def catalogo_categoria(categoria):
+    if categoria not in _CATALOGO_META:
+        from flask import abort
+        abort(404)
+    meta = _CATALOGO_META[categoria]
+    productos = _CATALOGO.get(categoria, [])
+    return render_template("catalogo_categoria.html", meta=meta, productos=productos)
 
 @app.route("/robots.txt")
 def robots():

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo Mayoreo NIOVAL | Herramientas, Grifería y Cerraduras</title>
+<meta name="description" content="Catálogo mayorista NIOVAL. Grifería, cerraduras y cintas reflejantes al mayoreo para ferreterías y tlapalerías en México. Precios directos, entrega en 24 h.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#111}
+nav{background:#0033FF;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+nav a{color:#fff;text-decoration:none;font-weight:700;letter-spacing:2px;font-size:18px}
+nav .back{font-size:14px;font-weight:400;opacity:.8}
+.hero{background:#0033FF;color:#fff;padding:48px 24px;text-align:center}
+.hero h1{font-size:clamp(24px,4vw,40px);font-weight:800;margin-bottom:12px}
+.hero p{font-size:16px;opacity:.85;max-width:600px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:960px;margin:48px auto;padding:0 24px}
+.card{background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-decoration:none;color:#111;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,51,255,.15)}
+.card-icon{font-size:40px;margin-bottom:16px}
+.card h2{font-size:20px;font-weight:700;margin-bottom:8px;color:#0033FF}
+.card p{font-size:14px;color:#555;line-height:1.6}
+.card .count{display:inline-block;margin-top:12px;background:#E8EEFF;color:#0033FF;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600}
+footer{text-align:center;padding:32px;color:#888;font-size:13px}
+footer a{color:#0033FF;text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">NIOVAL</a>
+  <a href="/" class="back">← Inicio</a>
+</nav>
+<div class="hero">
+  <h1>Catálogo Mayoreo NIOVAL</h1>
+  <p>Herramientas, grifería, cerraduras y más al mayoreo para ferreterías y tlapalerías en México.</p>
+</div>
+<div class="grid">
+  <a href="/catalogo/griferia" class="card">
+    <div class="card-icon">🚰</div>
+    <h2>Grifería</h2>
+    <p>Llaves mezcladoras, grifos monomando, mezcladores para cocina y baño al mayoreo.</p>
+    <span class="count">131 productos</span>
+  </a>
+  <a href="/catalogo/cerraduras" class="card">
+    <div class="card-icon">🔒</div>
+    <h2>Cerraduras</h2>
+    <p>Cerraduras de gatillo, latón y cromo mate para puerta principal y accesos.</p>
+    <span class="count">8 productos</span>
+  </a>
+  <a href="/catalogo/cintas" class="card">
+    <div class="card-icon">⚠️</div>
+    <h2>Cintas Reflejantes</h2>
+    <p>Cintas de alta visibilidad, barricada y seguridad para obras y señalización.</p>
+    <span class="count">22 productos</span>
+  </a>
+</div>
+<footer>
+  <p>NIOVAL — Distribución Mayorista · <a href="/">nioval.mx</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ meta.titulo }}</title>
+<meta name="description" content="{{ meta.descripcion }}">
+<meta name="keywords" content="{{ meta.keywords }}">
+<link rel="canonical" href="https://nioval.mx/catalogo/{{ meta.slug }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#111}
+nav{background:#0033FF;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+nav a{color:#fff;text-decoration:none;font-weight:700;letter-spacing:2px;font-size:18px}
+nav .back{font-size:14px;font-weight:400;opacity:.8}
+.hero{background:#0033FF;color:#fff;padding:48px 24px}
+.hero-inner{max-width:900px;margin:0 auto}
+.hero h1{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:12px}
+.hero p{font-size:15px;opacity:.85;max-width:680px;line-height:1.7}
+.cta-bar{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;text-align:center}
+.cta-bar a{display:inline-block;background:#0033FF;color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid #e5e7eb}
+.card .sku{font-size:11px;color:#9ca3af;margin-bottom:6px;font-weight:600;letter-spacing:.5px}
+.card h3{font-size:14px;font-weight:600;line-height:1.5;margin-bottom:12px;color:#111}
+.precio{font-size:20px;font-weight:800;color:#0033FF}
+.precio-label{font-size:11px;color:#6b7280;margin-top:2px}
+.precio-iva{font-size:13px;color:#374151;margin-top:4px}
+.badge{display:inline-block;background:#E8EEFF;color:#0033FF;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-bottom:10px}
+.desc-seo{background:#fff;border-radius:10px;padding:28px;margin-bottom:24px;box-shadow:0 1px 6px rgba(0,0,0,.07);line-height:1.8;color:#374151;font-size:15px}
+.desc-seo strong{color:#0033FF}
+footer{text-align:center;padding:32px;color:#888;font-size:13px;margin-top:32px}
+footer a{color:#0033FF;text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">NIOVAL</a>
+  <a href="/catalogo" class="back">← Catálogo</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>{{ meta.h1 }}</h1>
+    <p>{{ meta.descripcion }}</p>
+  </div>
+</div>
+
+<div class="cta-bar">
+  <a href="/#contacto">Solicitar cotización con precios de mayoreo →</a>
+</div>
+
+<div class="container">
+
+  <div class="desc-seo">
+    {{ meta.descripcion }}
+    Todos los precios son <strong>precios de mayoreo</strong> sin IVA.
+    Para pedidos con IVA incluido o cotización personalizada, contáctanos directamente.
+    Enviamos a toda la <strong>República Mexicana</strong>.
+  </div>
+
+  <div class="grid">
+    {% for p in productos %}
+    <div class="card">
+      <div class="sku">SKU {{ p.sku }}</div>
+      <h3>{{ p.nombre }}</h3>
+      <span class="badge">Mayoreo</span>
+      <div class="precio">${{ "%.2f"|format(p.precio) }} MXN</div>
+      <div class="precio-label">Precio sin IVA</div>
+      {% if p.precio_iva %}
+      <div class="precio-iva">Con IVA: ${{ "%.2f"|format(p.precio_iva) }} MXN</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<footer>
+  <p>NIOVAL — Distribución Mayorista · <a href="/">nioval.mx</a> · Solicita tu catálogo completo</p>
+</footer>
+</body>
+</html>
