@@ -249,6 +249,37 @@ def _enviar_telegram_contacto(nombre, celular, negocio, comentario):
         print(f"[CONTACTO] Error Telegram: {e}")
 
 
+@app.route("/mayoreo")
+def mayoreo():
+    return render_template("mayoreo.html")
+
+@app.route("/lead", methods=["POST"])
+def lead():
+    data = request.get_json(silent=True) or request.form
+    nombre   = (data.get("nombre") or "").strip()
+    whatsapp = (data.get("whatsapp") or "").strip()
+    ciudad   = (data.get("ciudad") or "").strip()
+    negocio  = (data.get("negocio") or "").strip()
+    if not nombre or not whatsapp:
+        return jsonify({"ok": False}), 422
+    def _enviar():
+        from datetime import datetime
+        texto = (
+            f"🔥 *Nuevo Lead B2B NIOVAL*\n\n"
+            f"👤 *Nombre:* {nombre}\n"
+            f"📱 *WhatsApp:* {whatsapp}\n"
+            f"📍 *Ciudad:* {ciudad}\n"
+            f"🏪 *Negocio:* {negocio or '(no especificado)'}\n\n"
+            f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        )
+        try:
+            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+            requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": texto, "parse_mode": "Markdown"}, timeout=10)
+        except Exception as e:
+            print(f"[LEAD] Error Telegram: {e}")
+    threading.Thread(target=_enviar, daemon=True).start()
+    return jsonify({"ok": True})
+
 @app.route("/contacto", methods=["POST"])
 def contacto():
     data = request.get_json(silent=True) or request.form
