@@ -116,9 +116,15 @@ def sitemap():
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nioval.mx/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://nioval.mx/catalogo</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://nioval.mx/catalogo/griferia</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.mx/catalogo/herramientas</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://nioval.mx/catalogo/cerraduras</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://nioval.mx/catalogo/cintas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/catalogo/mochilas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/catalogo/mascotas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/catalogo/audio</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/catalogo/sillas</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>"""
     return Response(xml, mimetype="application/xml")
 
@@ -138,24 +144,66 @@ _CATALOGO_META = {
     'griferia': {
         'titulo': 'Grifería al Mayoreo para Ferreterías | NIOVAL',
         'h1': 'Grifería al Mayoreo — Llaves, Mezcladoras y Grifos',
-        'descripcion': 'Distribuidor mayorista de grifería en México. Llaves mezcladoras, grifos monomando, mezcladores cromados y más al mayoreo para ferreterías y tlapalerías. Precios directos, entrega en 24 h. Solicita tu catálogo con precios de mayoreo.',
+        'descripcion': 'Distribuidor mayorista de grifería en México. Llaves mezcladoras, grifos monomando, mezcladores cromados y más al mayoreo para ferreterías y tlapalerías. Precios directos, entrega en 24 h.',
         'keywords': 'grifería mayoreo, llaves mezcladoras mayoreo, grifos ferretería mayoreo México',
-        'slug': 'griferia'
+        'icono': '🚰', 'slug': 'griferia'
+    },
+    'herramientas': {
+        'titulo': 'Herramientas al Mayoreo para Ferreterías | NIOVAL',
+        'h1': 'Herramientas al Mayoreo — Matracas, Dados y Juegos',
+        'descripcion': 'Herramientas al mayoreo en México. Matracas, juegos de dados, desarmadores, puntas y más para ferreterías y distribuidores. Precios directos de mayoreo con entrega en 24 h.',
+        'keywords': 'herramientas mayoreo México, matraca mayoreo ferretería, juego de dados mayoreo',
+        'icono': '🔧', 'slug': 'herramientas'
     },
     'cerraduras': {
         'titulo': 'Cerraduras al Mayoreo para Ferreterías | NIOVAL',
-        'h1': 'Cerraduras al Mayoreo — Gatillo, Latón y Cromo',
-        'descripcion': 'Cerraduras al mayoreo en México. Cerraduras de gatillo, latón y cromo mate para ferreterías y tlapalerías. Precios de mayoreo directos, mínimo de compra accesible y entrega rápida. Solicita cotización en NIOVAL.',
-        'keywords': 'cerraduras mayoreo México, cerraduras ferretería al mayoreo, cerraduras gatillo mayoreo',
-        'slug': 'cerraduras'
+        'h1': 'Cerraduras al Mayoreo — Gatillo, Latón y Candados',
+        'descripcion': 'Cerraduras y candados al mayoreo en México. Cerraduras de gatillo, latón, cromo mate y candados de seguridad para ferreterías y tlapalerías. Precios directos y entrega rápida.',
+        'keywords': 'cerraduras mayoreo México, cerraduras ferretería al mayoreo, candados mayoreo',
+        'icono': '🔒', 'slug': 'cerraduras'
     },
     'cintas': {
-        'titulo': 'Cintas Reflejantes al Mayoreo | NIOVAL',
-        'h1': 'Cintas Reflejantes al Mayoreo — Alta Visibilidad',
-        'descripcion': 'Cintas reflejantes al mayoreo en México. Cintas de alta visibilidad, barricada y seguridad para ferreterías, tlapalerías y distribuidores. Precios directos de mayoreo con entrega en 24 h. Solicita tu pedido en NIOVAL.',
-        'keywords': 'cintas reflejantes mayoreo México, cinta barricada mayoreo, cintas seguridad ferretería',
-        'slug': 'cintas'
-    }
+        'titulo': 'Cintas y Adhesivos al Mayoreo | NIOVAL',
+        'h1': 'Cintas y Adhesivos al Mayoreo — Reflejantes y Doble Cara',
+        'descripcion': 'Cintas al mayoreo en México. Cintas reflejantes, adhesivas, doble cara, antiderrapantes y nano tape para ferreterías y distribuidores. Entrega en 24 h.',
+        'keywords': 'cintas reflejantes mayoreo México, cinta doble cara mayoreo, cintas adhesivas ferretería',
+        'icono': '🎗️', 'slug': 'cintas'
+    },
+    'mochilas': {
+        'titulo': 'Mochilas y Bolsas al Mayoreo | NIOVAL',
+        'h1': 'Mochilas, Maletines y Loncheras al Mayoreo',
+        'descripcion': 'Mochilas, maletines, loncheras térmicas y bolsas al mayoreo en México. Para laptop, trabajo y uso diario. Precios directos de mayoreo para distribuidores y tiendas.',
+        'keywords': 'mochilas mayoreo México, maletines mayoreo, loncheras térmicas mayoreo',
+        'icono': '🎒', 'slug': 'mochilas'
+    },
+    'mascotas': {
+        'titulo': 'Artículos para Mascotas al Mayoreo | NIOVAL',
+        'h1': 'Artículos para Mascotas al Mayoreo — Perros y Gatos',
+        'descripcion': 'Artículos para mascotas al mayoreo en México. Rampas, escaleras, comederos y accesorios para perros y gatos. Precios de mayoreo para distribuidores y tiendas de mascotas.',
+        'keywords': 'articulos mascotas mayoreo México, accesorios perros mayoreo, rampas mascotas mayoreo',
+        'icono': '🐾', 'slug': 'mascotas'
+    },
+    'audio': {
+        'titulo': 'Audio Automotriz al Mayoreo | NIOVAL',
+        'h1': 'Audio Automotriz al Mayoreo — Cables y Accesorios',
+        'descripcion': 'Audio automotriz al mayoreo en México. Cables para bocinas, accesorios de instalación y más para distribuidores y talleres. Precios directos de mayoreo.',
+        'keywords': 'audio automotriz mayoreo, cables bocina mayoreo México, accesorios audio carro mayoreo',
+        'icono': '🔊', 'slug': 'audio'
+    },
+    'sillas': {
+        'titulo': 'Sillas de Oficina al Mayoreo | NIOVAL',
+        'h1': 'Sillas de Oficina y Escritorio al Mayoreo',
+        'descripcion': 'Sillas giratorias y de escritorio al mayoreo en México. Sillas ejecutivas, tapizadas y ergonómicas para oficinas y distribuidores. Precios de mayoreo directo.',
+        'keywords': 'sillas oficina mayoreo México, sillas escritorio mayoreo, sillas giratorias mayoreo',
+        'icono': '🪑', 'slug': 'sillas'
+    },
+    'otros': {
+        'titulo': 'Productos Varios al Mayoreo | NIOVAL',
+        'h1': 'Productos Varios al Mayoreo',
+        'descripcion': 'Productos varios al mayoreo en México. Paraguas, etiquetas y más para distribuidores y tiendas. Precios directos de mayoreo con entrega en 24 h.',
+        'keywords': 'productos mayoreo México, distribución mayorista variedad',
+        'icono': '📦', 'slug': 'otros'
+    },
 }
 
 @app.route("/catalogo")
