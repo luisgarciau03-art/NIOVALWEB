@@ -102,6 +102,7 @@ async function enviarLead() {
   } catch(e) {}
   document.getElementById('form-area').style.display = 'none';
   document.getElementById('success').style.display = 'block';
+  setTimeout(() => { window.location.href = '/catalogo'; }, 2500);
 }
 </script>
 </body>

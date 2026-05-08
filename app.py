@@ -264,13 +264,19 @@ def lead():
         return jsonify({"ok": False}), 422
     def _enviar():
         from datetime import datetime
+        wa_number = ''.join(filter(str.isdigit, whatsapp))
+        if wa_number and not wa_number.startswith('52'):
+            wa_number = '52' + wa_number
+        msg_wa = f"Hola {nombre}, vi que eres de {ciudad} y quieres ver nuestro cat%C3%A1logo de mayoreo. %C2%BFEn qu%C3%A9 te puedo ayudar%3F"
+        wa_link = f"https://api.whatsapp.com/send?phone={wa_number}&text={msg_wa}" if wa_number else ""
         texto = (
             f"🔥 *Nuevo Lead B2B NIOVAL*\n\n"
             f"👤 *Nombre:* {nombre}\n"
             f"📱 *WhatsApp:* {whatsapp}\n"
             f"📍 *Ciudad:* {ciudad}\n"
             f"🏪 *Negocio:* {negocio or '(no especificado)'}\n\n"
-            f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+            f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+            f"{'👉 [Responder por WhatsApp](' + wa_link + ')' if wa_link else ''}"
         )
         try:
             url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
