@@ -110,6 +110,25 @@ def get_cotizaciones(uid):
 def landing():
     return render_template("landing.html")
 
+@app.route("/sitemap.xml")
+def sitemap():
+    from flask import Response
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://nioval.mx/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>"""
+    return Response(xml, mimetype="application/xml")
+
+@app.route("/robots.txt")
+def robots():
+    from flask import Response
+    txt = "User-agent: *\nAllow: /\nSitemap: https://nioval.mx/sitemap.xml\n"
+    return Response(txt, mimetype="text/plain")
+
 
 # ── FORMULARIO DE CONTACTO ────────────────────────────────────────────────────
 
