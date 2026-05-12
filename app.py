@@ -249,6 +249,12 @@ def _enviar_telegram_contacto(nombre, celular, negocio, comentario):
         print(f"[CONTACTO] Error Telegram: {e}")
 
 
+@app.route("/admin/churn")
+def churn():
+    from churn_detector import run
+    alertas = run()
+    return jsonify({"ok": True, "alertas": len(alertas)})
+
 @app.route("/mayoreo")
 def mayoreo():
     return render_template("mayoreo.html")
