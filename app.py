@@ -255,6 +255,50 @@ def churn():
     alertas = run()
     return jsonify({"ok": True, "alertas": len(alertas)})
 
+@app.route("/distribuidor")
+def distribuidor():
+    return render_template("distribuidor.html")
+
+@app.route("/distribuidor-lead", methods=["POST"])
+def distribuidor_lead():
+    data     = request.get_json(silent=True) or request.form
+    nombre   = (data.get("nombre") or "").strip()
+    empresa  = (data.get("empresa") or "").strip()
+    whatsapp = (data.get("whatsapp") or "").strip()
+    ciudad   = (data.get("ciudad") or "").strip()
+    negocio  = (data.get("negocio") or "").strip()
+    volumen  = (data.get("volumen") or "").strip()
+    nivel    = (data.get("nivel") or "").strip()
+    if not nombre or not whatsapp:
+        return jsonify({"ok": False}), 422
+    def _enviar():
+        from datetime import datetime
+        wa_number = ''.join(filter(str.isdigit, whatsapp))
+        if wa_number and not wa_number.startswith('52'):
+            wa_number = '52' + wa_number
+        msg = f"Hola {nombre.split()[0]}, soy asesor de NIOVAL. Vi tu solicitud para ser {nivel or 'distribuidor'}. %C2%BFTienes un momento para platicar%3F"
+        wa_link = f"https://api.whatsapp.com/send?phone={wa_number}&text={msg}" if wa_number else ""
+        texto = (
+            f"🏭 *Nueva Solicitud Distribuidor NIOVAL*\n\n"
+            f"👤 *Nombre:* {nombre}\n"
+            f"🏪 *Empresa:* {empresa}\n"
+            f"📱 *WhatsApp:* {whatsapp}\n"
+            f"📍 *Ciudad:* {ciudad or '(no indicada)'}\n"
+            f"🔧 *Negocio:* {negocio or '(no indicado)'}\n"
+            f"💰 *Volumen estimado:* {volumen or '(no indicado)'}\n"
+            f"⭐ *Nivel solicitado:* {nivel or '(no indicado)'}\n\n"
+            f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+            f"{'👉 [Contactar al lead](' + wa_link + ')' if wa_link else ''}"
+        )
+        try:
+            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+            requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": texto,
+                                     "parse_mode": "Markdown", "disable_web_page_preview": True}, timeout=10)
+        except Exception as e:
+            print(f"[DIST] Error Telegram: {e}")
+    threading.Thread(target=_enviar, daemon=True).start()
+    return jsonify({"ok": True})
+
 @app.route("/mayoreo")
 def mayoreo():
     return render_template("mayoreo.html")
