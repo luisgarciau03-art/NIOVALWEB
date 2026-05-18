@@ -125,6 +125,14 @@ def sitemap():
   <url><loc>https://nioval.mx/catalogo/mascotas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://nioval.mx/catalogo/audio</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://nioval.mx/catalogo/sillas</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nioval.mx/blog</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/herramientas-para-plomero-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/herramientas-para-instalar-aire-acondicionado</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/extensiones-electricas-para-obra</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/herramientas-para-electricista-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/kit-herramientas-cerrajero</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/griferia-para-ferreteria</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.mx/blog/herramientas-para-albanil-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>"""
     return Response(xml, mimetype="application/xml")
 
@@ -224,6 +232,24 @@ def robots():
     from flask import Response
     txt = "User-agent: *\nAllow: /\nSitemap: https://nioval.mx/sitemap.xml\n"
     return Response(txt, mimetype="text/plain")
+
+
+# ── BLOG ──────────────────────────────────────────────────────────────────────
+
+from blog_articles import ARTICULOS, ARTICULOS_POR_SLUG
+
+@app.route("/blog")
+def blog_index():
+    return render_template("blog_index.html", articulos=ARTICULOS)
+
+@app.route("/blog/<slug>")
+def blog_articulo(slug):
+    art = ARTICULOS_POR_SLUG.get(slug)
+    if not art:
+        from flask import abort
+        abort(404)
+    relacionados = [ARTICULOS_POR_SLUG[s] for s in art.get("articulos_relacionados", []) if s in ARTICULOS_POR_SLUG]
+    return render_template("blog_articulo.html", art=art, relacionados=relacionados)
 
 
 # ── FORMULARIO DE CONTACTO ────────────────────────────────────────────────────
