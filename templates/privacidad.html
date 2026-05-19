@@ -6,103 +6,302 @@
 <title>Política de Privacidad | NIOVAL</title>
 <meta name="description" content="Política de privacidad de NIOVAL. Conoce cómo recopilamos, usamos y protegemos tus datos personales conforme a la LFPDPPP de México.">
 <meta name="robots" content="noindex,follow">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8f9fb;color:#111}
-nav{background:#0033FF;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-nav a.brand{color:#fff;text-decoration:none;font-weight:900;letter-spacing:3px;font-size:18px}
-nav a.back{color:rgba(255,255,255,.8);text-decoration:none;font-size:13px;font-weight:500}
-nav a.back:hover{color:#fff}
-.wrap{max-width:760px;margin:0 auto;padding:48px 24px 100px}
-.breadcrumb{font-size:13px;color:#666;margin-bottom:24px}
-.breadcrumb a{color:#0033FF;text-decoration:none}
-h1{font-size:32px;font-weight:900;color:#0a0a2e;margin-bottom:8px}
-.fecha{font-size:13px;color:#888;margin-bottom:40px}
-h2{font-size:18px;font-weight:800;color:#0033FF;margin:36px 0 12px;padding-left:14px;border-left:4px solid #0033FF}
-p{font-size:15px;line-height:1.8;color:#333;margin-bottom:14px}
-ul{margin:10px 0 16px 24px}
-li{font-size:15px;line-height:1.8;color:#333;margin-bottom:6px}
-strong{font-weight:700;color:#111}
-a{color:#0033FF}
-.box{background:#E8EEFF;border-radius:12px;padding:20px 24px;margin:28px 0}
-.box p{margin:0;font-size:14px}
-footer{background:#0033FF;color:rgba(255,255,255,.7);text-align:center;padding:20px;font-size:13px}
-footer a{color:#FFD740;text-decoration:none}
+body{font-family:'Inter',sans-serif;background:#f4f6fb;color:#1a1a2e}
+
+/* NAV */
+nav{background:#0033FF;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,200,.18)}
+.nav-brand{color:#fff;text-decoration:none;font-weight:900;letter-spacing:3px;font-size:19px;display:flex;align-items:center;gap:10px}
+.nav-back{color:rgba(255,255,255,.75);text-decoration:none;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:color .15s}
+.nav-back:hover{color:#fff}
+
+/* HERO BANNER */
+.hero{background:linear-gradient(120deg,#0a0a2e 60%,#0033FF);padding:56px 32px 48px;text-align:center}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);padding:6px 18px;border-radius:30px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-size:clamp(26px,4vw,40px);font-weight:900;color:#fff;margin-bottom:12px;line-height:1.2}
+.hero-meta{font-size:13px;color:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+.hero-meta span{display:flex;align-items:center;gap:6px}
+
+/* LAYOUT */
+.layout{max-width:1060px;margin:0 auto;padding:48px 24px 100px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.toc{display:none}}
+
+/* TABLE OF CONTENTS */
+.toc{position:sticky;top:88px;background:#fff;border-radius:14px;padding:24px 20px;box-shadow:0 2px 12px rgba(0,0,33,.07)}
+.toc h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0033FF;margin-bottom:16px}
+.toc a{display:block;font-size:13px;color:#444;text-decoration:none;padding:7px 0;border-bottom:1px solid #f0f0f0;line-height:1.4;transition:color .15s}
+.toc a:last-child{border-bottom:none}
+.toc a:hover{color:#0033FF}
+.toc-num{font-weight:700;color:#0033FF;margin-right:6px}
+
+/* CONTENT */
+.content{display:flex;flex-direction:column;gap:4px}
+.highlight-box{background:#fff;border-radius:14px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,33,.07);border-left:4px solid #0033FF;margin-bottom:8px}
+.highlight-box p{font-size:14px;line-height:1.8;color:#333;margin:0}
+.highlight-box strong{color:#0033FF}
+
+.section{background:#fff;border-radius:14px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,33,.07)}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.section-num{width:36px;height:36px;background:#0033FF;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.section h2{font-size:18px;font-weight:800;color:#0a0a2e}
+.section p{font-size:14px;line-height:1.85;color:#444;margin-bottom:14px}
+.section p:last-child{margin-bottom:0}
+.section ul{margin:10px 0 16px 0;padding:0;list-style:none}
+.section ul li{font-size:14px;line-height:1.8;color:#444;padding:6px 0 6px 20px;position:relative;border-bottom:1px solid #f5f5f5}
+.section ul li:last-child{border-bottom:none}
+.section ul li::before{content:"›";position:absolute;left:0;color:#0033FF;font-weight:700;font-size:16px}
+.section ul li strong{color:#0a0a2e;font-weight:700}
+
+/* ARCO TABLE */
+.arco-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:500px){.arco-grid{grid-template-columns:1fr}}
+.arco-card{background:#f4f6fb;border-radius:10px;padding:16px}
+.arco-card .letter{font-size:28px;font-weight:900;color:#0033FF;line-height:1}
+.arco-card .name{font-size:13px;font-weight:700;color:#0a0a2e;margin:4px 0 6px}
+.arco-card .desc{font-size:12px;color:#666;line-height:1.6}
+
+/* TRACKER TABLE */
+.tracker-table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+.tracker-table th{background:#f4f6fb;padding:10px 14px;text-align:left;font-weight:700;color:#0a0a2e;border-bottom:2px solid #e5e7eb}
+.tracker-table td{padding:10px 14px;border-bottom:1px solid #f0f0f0;color:#444;vertical-align:top}
+.tracker-table tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-ad{background:#e8eeff;color:#0033FF}
+.badge-analytics{background:#e8fff2;color:#059669}
+
+/* CONTACT BOX */
+.contact-box{background:linear-gradient(135deg,#0033FF,#0055FF);border-radius:14px;padding:28px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.contact-box h3{font-size:16px;font-weight:800;margin-bottom:6px}
+.contact-box p{font-size:13px;opacity:.8;line-height:1.6}
+.contact-box .btn{display:inline-block;background:#FFD740;color:#111;padding:11px 22px;border-radius:9px;font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap}
+
+/* FOOTER */
+footer{background:#0a0a2e;color:rgba(255,255,255,.4);text-align:center;padding:24px;font-size:12px}
+footer a{color:rgba(255,255,255,.6);text-decoration:none}
+footer a:hover{color:#fff}
 </style>
 </head>
 <body>
+
 <nav>
-  <a class="brand" href="/">NIOVAL</a>
-  <a class="back" href="/">← Inicio</a>
+  <a class="nav-brand" href="/">
+    <svg viewBox="0 0 120 36" xmlns="http://www.w3.org/2000/svg" style="height:28px">
+      <text x="4" y="28" font-family="Arial Black,Arial" font-weight="900" font-size="28" fill="white" letter-spacing="2">NIOVAL</text>
+    </svg>
+  </a>
+  <a class="nav-back" href="/">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+    Volver al inicio
+  </a>
 </nav>
 
-<div class="wrap">
-  <div class="breadcrumb"><a href="/">Inicio</a> › Política de Privacidad</div>
-
-  <h1>Política de Privacidad</h1>
-  <div class="fecha">Última actualización: 19 de mayo de 2025</div>
-
-  <div class="box">
-    <p>NIOVAL, con domicilio en Hermosillo, Sonora, México, es responsable del tratamiento de tus datos personales conforme a la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>.</p>
+<div class="hero">
+  <div class="hero-tag">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Documento Legal
   </div>
+  <h1>Política de Privacidad</h1>
+  <div class="hero-meta">
+    <span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Última actualización: 19 de mayo de 2025
+    </span>
+    <span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Hermosillo, Sonora, México
+    </span>
+    <span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      LFPDPPP México
+    </span>
+  </div>
+</div>
 
-  <h2>1. ¿Qué datos recopilamos?</h2>
-  <p>Recopilamos únicamente los datos que tú nos proporcionas a través de los formularios del sitio web:</p>
-  <ul>
-    <li>Nombre completo</li>
-    <li>Número de WhatsApp / teléfono celular</li>
-    <li>Ciudad o estado</li>
-    <li>Tipo de negocio</li>
-    <li>Comentarios o mensajes que nos envíes voluntariamente</li>
-  </ul>
-  <p>No recopilamos datos sensibles (salud, origen étnico, creencias religiosas, etc.).</p>
+<div class="layout">
 
-  <h2>2. ¿Para qué usamos tus datos?</h2>
-  <p>Tus datos se usan exclusivamente para:</p>
-  <ul>
-    <li>Contactarte para darte información sobre nuestros productos y precios de mayoreo.</li>
-    <li>Enviarte cotizaciones o responder a tus consultas.</li>
-    <li>Gestionar tu relación comercial con NIOVAL.</li>
-    <li>Mejorar nuestros servicios y comunicaciones.</li>
-  </ul>
-  <p>No vendemos, rentamos ni compartimos tus datos con terceros, salvo que sea necesario para prestarte el servicio (p. ej., plataformas de mensajería como WhatsApp).</p>
+  <!-- TABLE OF CONTENTS -->
+  <aside class="toc">
+    <h3>Contenido</h3>
+    <a href="#responsable"><span class="toc-num">1</span>Responsable</a>
+    <a href="#datos"><span class="toc-num">2</span>Datos recopilados</a>
+    <a href="#finalidad"><span class="toc-num">3</span>Finalidad</a>
+    <a href="#cookies"><span class="toc-num">4</span>Cookies y píxeles</a>
+    <a href="#seguridad"><span class="toc-num">5</span>Seguridad</a>
+    <a href="#arco"><span class="toc-num">6</span>Derechos ARCO</a>
+    <a href="#cambios"><span class="toc-num">7</span>Cambios</a>
+    <a href="#contacto"><span class="toc-num">8</span>Contacto</a>
+  </aside>
 
-  <h2>3. Cookies y tecnologías de rastreo</h2>
-  <p>Este sitio utiliza cookies y píxeles de seguimiento de:</p>
-  <ul>
-    <li><strong>Meta (Facebook/Instagram):</strong> para medir el desempeño de campañas publicitarias.</li>
-    <li><strong>TikTok:</strong> para medir el desempeño de campañas en TikTok Ads.</li>
-    <li><strong>Google Analytics:</strong> para analizar el tráfico del sitio de forma anónima.</li>
-  </ul>
-  <p>Estas tecnologías pueden recopilar tu dirección IP y comportamiento de navegación de forma agregada y anónima. Puedes desactivarlas desde la configuración de tu navegador.</p>
+  <!-- CONTENT -->
+  <main class="content">
 
-  <h2>4. ¿Cómo protegemos tus datos?</h2>
-  <p>Implementamos medidas de seguridad administrativas, técnicas y físicas para proteger tus datos personales contra acceso no autorizado, pérdida o uso indebido. El acceso a los datos está restringido al personal autorizado de NIOVAL.</p>
+    <!-- Intro -->
+    <div class="highlight-box">
+      <p><strong>NIOVAL</strong> (en adelante "nosotros" o "la empresa"), con domicilio en Hermosillo, Sonora, México, es el responsable del tratamiento de tus datos personales. Este aviso de privacidad se emite en cumplimiento de la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong> y su Reglamento.</p>
+    </div>
 
-  <h2>5. Tus derechos ARCO</h2>
-  <p>Tienes derecho a:</p>
-  <ul>
-    <li><strong>Acceso:</strong> conocer qué datos tenemos sobre ti.</li>
-    <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>
-    <li><strong>Cancelación:</strong> solicitar que eliminemos tus datos.</li>
-    <li><strong>Oposición:</strong> oponerte al tratamiento de tus datos para fines específicos.</li>
-  </ul>
-  <p>Para ejercer tus derechos ARCO, envíanos un correo a <a href="mailto:luisgarciau03@gmail.com">luisgarciau03@gmail.com</a> indicando tu nombre, los datos que deseas ejercer y una copia de tu identificación oficial. Responderemos en un plazo máximo de 20 días hábiles.</p>
+    <!-- 1. Responsable -->
+    <div class="section" id="responsable">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>Responsable del tratamiento</h2>
+      </div>
+      <ul>
+        <li><strong>Empresa:</strong> NIOVAL — Distribución Mayorista</li>
+        <li><strong>Domicilio:</strong> Hermosillo, Sonora, México</li>
+        <li><strong>Sitio web:</strong> nioval.mx</li>
+        <li><strong>Correo de contacto:</strong> luisgarciau03@gmail.com</li>
+        <li><strong>WhatsApp:</strong> +52 662 415 1997</li>
+      </ul>
+    </div>
 
-  <h2>6. Cambios a esta política</h2>
-  <p>Podemos actualizar esta política en cualquier momento. La versión vigente siempre estará disponible en esta página con la fecha de última actualización indicada al inicio.</p>
+    <!-- 2. Datos recopilados -->
+    <div class="section" id="datos">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>Datos personales que recopilamos</h2>
+      </div>
+      <p>Únicamente recopilamos los datos que tú nos proporcionas de forma voluntaria a través de los formularios del sitio:</p>
+      <ul>
+        <li><strong>Nombre completo</strong></li>
+        <li><strong>Número de WhatsApp / teléfono celular</strong></li>
+        <li><strong>Ciudad o estado de residencia</strong></li>
+        <li><strong>Tipo de negocio</strong></li>
+        <li><strong>Comentarios o mensajes</strong> enviados voluntariamente</li>
+      </ul>
+      <p>No recopilamos datos sensibles como estado de salud, origen étnico, creencias religiosas, opiniones políticas ni datos biométricos.</p>
+    </div>
 
-  <h2>7. Contacto</h2>
-  <p>Si tienes dudas sobre esta política, contáctanos:</p>
-  <ul>
-    <li>Correo: <a href="mailto:luisgarciau03@gmail.com">luisgarciau03@gmail.com</a></li>
-    <li>WhatsApp: <a href="https://api.whatsapp.com/send?phone=526624151997" target="_blank">+52 662 415 1997</a></li>
-  </ul>
+    <!-- 3. Finalidad -->
+    <div class="section" id="finalidad">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>Finalidad del tratamiento</h2>
+      </div>
+      <p>Tus datos se utilizan <strong>exclusivamente</strong> para las siguientes finalidades:</p>
+      <ul>
+        <li>Contactarte para proporcionarte información sobre productos y precios de mayoreo.</li>
+        <li>Enviar cotizaciones y responder consultas comerciales.</li>
+        <li>Gestionar tu relación como cliente o distribuidor de NIOVAL.</li>
+        <li>Mejorar nuestros servicios y comunicaciones.</li>
+      </ul>
+      <p>No vendemos, rentamos ni compartimos tus datos personales con terceros, salvo que sea estrictamente necesario para prestarte el servicio solicitado (p. ej., plataformas de mensajería como WhatsApp).</p>
+    </div>
+
+    <!-- 4. Cookies -->
+    <div class="section" id="cookies">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>Cookies y tecnologías de rastreo</h2>
+      </div>
+      <p>Este sitio utiliza las siguientes tecnologías de seguimiento para medir el desempeño de nuestras campañas de marketing:</p>
+      <table class="tracker-table">
+        <tr>
+          <th>Plataforma</th>
+          <th>Tipo</th>
+          <th>Finalidad</th>
+        </tr>
+        <tr>
+          <td><strong>Meta (Facebook / Instagram)</strong></td>
+          <td><span class="badge badge-ad">Publicidad</span></td>
+          <td>Medir conversiones y optimizar anuncios</td>
+        </tr>
+        <tr>
+          <td><strong>TikTok Ads</strong></td>
+          <td><span class="badge badge-ad">Publicidad</span></td>
+          <td>Medir conversiones en TikTok</td>
+        </tr>
+        <tr>
+          <td><strong>Google Analytics</strong></td>
+          <td><span class="badge badge-analytics">Analítica</span></td>
+          <td>Analizar tráfico del sitio de forma anónima</td>
+        </tr>
+      </table>
+      <p>Puedes desactivar las cookies desde la configuración de tu navegador en cualquier momento. Esto no afectará tu capacidad de navegar en el sitio.</p>
+    </div>
+
+    <!-- 5. Seguridad -->
+    <div class="section" id="seguridad">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <h2>Seguridad de tus datos</h2>
+      </div>
+      <p>Implementamos medidas de seguridad <strong>administrativas, técnicas y físicas</strong> para proteger tus datos personales contra acceso no autorizado, pérdida, alteración o uso indebido.</p>
+      <p>El acceso a la información personal está restringido al personal autorizado de NIOVAL que necesita conocerla para atender tu solicitud. Todo el personal está comprometido a mantener la confidencialidad de tus datos.</p>
+    </div>
+
+    <!-- 6. ARCO -->
+    <div class="section" id="arco">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <h2>Tus derechos ARCO</h2>
+      </div>
+      <p>Conforme a la LFPDPPP, tienes los siguientes derechos sobre tus datos personales:</p>
+      <div class="arco-grid">
+        <div class="arco-card">
+          <div class="letter">A</div>
+          <div class="name">Acceso</div>
+          <div class="desc">Conocer qué datos personales tenemos sobre ti y cómo los utilizamos.</div>
+        </div>
+        <div class="arco-card">
+          <div class="letter">R</div>
+          <div class="name">Rectificación</div>
+          <div class="desc">Solicitar que corrijamos datos inexactos, desactualizados o incompletos.</div>
+        </div>
+        <div class="arco-card">
+          <div class="letter">C</div>
+          <div class="name">Cancelación</div>
+          <div class="desc">Pedir que eliminemos tus datos cuando ya no sean necesarios.</div>
+        </div>
+        <div class="arco-card">
+          <div class="letter">O</div>
+          <div class="name">Oposición</div>
+          <div class="desc">Oponerte al tratamiento de tus datos para fines específicos.</div>
+        </div>
+      </div>
+      <p>Para ejercer tus derechos ARCO envíanos un correo a <a href="mailto:luisgarciau03@gmail.com" style="color:#0033FF;font-weight:600">luisgarciau03@gmail.com</a> indicando: tu nombre completo, los datos sobre los que deseas ejercer tu derecho y una copia de tu identificación oficial. Responderemos en un plazo máximo de <strong>20 días hábiles</strong>.</p>
+    </div>
+
+    <!-- 7. Cambios -->
+    <div class="section" id="cambios">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <h2>Cambios a esta política</h2>
+      </div>
+      <p>NIOVAL se reserva el derecho de modificar esta política en cualquier momento para adaptarla a cambios legislativos, jurisprudenciales o de negocio. La versión vigente siempre estará disponible en esta página con la fecha de última actualización indicada al inicio del documento.</p>
+      <p>Te recomendamos revisar esta política periódicamente. El uso continuado del sitio implica la aceptación de la versión vigente.</p>
+    </div>
+
+    <!-- 8. Contacto -->
+    <div class="section" id="contacto">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <h2>Contacto</h2>
+      </div>
+      <p>Si tienes dudas, comentarios o deseas ejercer tus derechos sobre esta política de privacidad, puedes contactarnos por cualquiera de los siguientes medios:</p>
+      <div class="contact-box">
+        <div>
+          <h3>¿Tienes dudas sobre tu privacidad?</h3>
+          <p>Escríbenos y te respondemos en menos de 24 horas hábiles.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="mailto:luisgarciau03@gmail.com" class="btn">✉️ Correo electrónico</a>
+          <a href="https://api.whatsapp.com/send?phone=526624151997&text=Hola%2C%20tengo%20una%20duda%20sobre%20la%20pol%C3%ADtica%20de%20privacidad%20de%20NIOVAL." target="_blank" class="btn" style="background:#25D366;color:#fff">💬 WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
 <footer>
-  © 2025 NIOVAL · <a href="/privacidad">Política de Privacidad</a>
+  © 2025 NIOVAL · Distribución Mayorista · México &nbsp;|&nbsp;
+  <a href="/">Inicio</a> &nbsp;·&nbsp;
+  <a href="/catalogo">Catálogo</a> &nbsp;·&nbsp;
+  <a href="/privacidad">Política de Privacidad</a>
 </footer>
+
 </body>
 </html>
