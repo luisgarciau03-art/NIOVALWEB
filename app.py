@@ -329,6 +329,10 @@ def distribuidor_lead():
 def mayoreo():
     return render_template("mayoreo.html")
 
+@app.route("/privacidad")
+def privacidad():
+    return render_template("privacidad.html")
+
 @app.route("/lead", methods=["POST"])
 def lead():
     data = request.get_json(silent=True) or request.form
