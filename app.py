@@ -115,24 +115,24 @@ def sitemap():
     from flask import Response
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://nioval.mx/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://nioval.mx/catalogo</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://nioval.mx/catalogo/griferia</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://nioval.mx/catalogo/herramientas</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://nioval.mx/catalogo/cerraduras</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://nioval.mx/catalogo/cintas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/catalogo/mochilas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/catalogo/mascotas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/catalogo/audio</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/catalogo/sillas</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nioval.mx/blog</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/herramientas-para-plomero-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/herramientas-para-instalar-aire-acondicionado</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/extensiones-electricas-para-obra</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/herramientas-para-electricista-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/kit-herramientas-cerrajero</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/griferia-para-ferreteria</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nioval.mx/blog/herramientas-para-albanil-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://nioval.com/catalogo</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.com/catalogo/griferia</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.com/catalogo/herramientas</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.com/catalogo/cerraduras</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nioval.com/catalogo/cintas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/catalogo/mochilas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/catalogo/mascotas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/catalogo/audio</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/catalogo/sillas</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nioval.com/blog</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/herramientas-para-plomero-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/herramientas-para-instalar-aire-acondicionado</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/extensiones-electricas-para-obra</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/herramientas-para-electricista-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/kit-herramientas-cerrajero</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/griferia-para-ferreteria</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nioval.com/blog/herramientas-para-albanil-mexico</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>"""
     return Response(xml, mimetype="application/xml")
 
@@ -230,7 +230,7 @@ def catalogo_categoria(categoria):
 @app.route("/robots.txt")
 def robots():
     from flask import Response
-    txt = "User-agent: *\nAllow: /\nSitemap: https://nioval.mx/sitemap.xml\n"
+    txt = "User-agent: *\nAllow: /\nSitemap: https://nioval.com/sitemap.xml\n"
     return Response(txt, mimetype="text/plain")
 
 
