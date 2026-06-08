@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect
 import requests
 import os
 import json
@@ -105,6 +105,10 @@ def get_cotizaciones(uid):
     cotizaciones = [x.to_dict() for x in cotizaciones_ref.stream()]
     print(f"Cotizaciones para uid {uid}: {cotizaciones}")
     return cotizaciones
+
+@app.route("/favicon.ico")
+def favicon():
+    return redirect("https://res.cloudinary.com/dipt3jq6r/image/upload/v1764307686/NIOVAL-05_xhfrrh.jpg", code=301)
 
 @app.route("/")
 def landing():
