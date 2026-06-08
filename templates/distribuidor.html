@@ -267,8 +267,7 @@ async function enviarDistribuidor() {
     if(typeof fbq !== 'undefined'){ fbq('track','Lead'); fbq('track','Contact'); }
     if(typeof ttq !== 'undefined'){ ttq.track('SubmitForm'); }
   } catch(e) {}
-  document.getElementById('form-area').style.display = 'none';
-  document.getElementById('d-success').style.display = 'block';
+  window.location.href = '/distribuidor/gracias';
 }
 </script>
 </body>

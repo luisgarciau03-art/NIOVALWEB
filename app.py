@@ -285,6 +285,10 @@ def churn():
 def distribuidor():
     return render_template("distribuidor.html")
 
+@app.route("/distribuidor/gracias")
+def distribuidor_gracias():
+    return render_template("gracias_distribuidor.html")
+
 @app.route("/distribuidor-lead", methods=["POST"])
 def distribuidor_lead():
     data     = request.get_json(silent=True) or request.form
