@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>¡Solicitud recibida! | NIOVAL</title>
 <meta name="robots" content="noindex, nofollow">
+<meta property="og:image" content="https://res.cloudinary.com/dipt3jq6r/image/upload/v1764307686/NIOVAL-05_xhfrrh.jpg">
+<link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dipt3jq6r/image/upload/v1764307686/NIOVAL-05_xhfrrh.jpg">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/dipt3jq6r/image/upload/v1764307686/NIOVAL-05_xhfrrh.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -18,9 +21,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 body{font-family:'Inter',sans-serif;background:#f8f9fb;color:#111}
 
 /* NAV */
-nav{background:#0033FF;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-nav a{color:#fff;text-decoration:none;font-weight:700;letter-spacing:2px;font-size:18px}
-nav .back{font-size:13px;font-weight:500;opacity:.8;letter-spacing:0}
+nav{background:#0033FF;padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo img{height:44px;display:block;object-fit:contain}
+.nav-back-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0;transition:background .2s,transform .15s;display:flex;align-items:center;gap:6px}
+.nav-back-btn:hover{background:rgba(255,255,255,.28);transform:translateX(-2px)}
 
 /* HERO */
 .hero{background:linear-gradient(135deg,#0033FF 55%,#0055FF);color:#fff;padding:72px 24px 80px;text-align:center;position:relative;overflow:hidden}
@@ -72,8 +76,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <nav>
-  <a href="/">NIOVAL</a>
-  <a href="/distribuidor" class="back">← Volver</a>
+  <a href="/" class="nav-logo"><img src="/static/img/logo.png" alt="NIOVAL" onerror="this.src='https://res.cloudinary.com/dipt3jq6r/image/upload/v1764307686/NIOVAL-05_xhfrrh.jpg'"></a>
+  <a href="/distribuidor" class="nav-back-btn">← Volver</a>
 </nav>
 
 <!-- HERO -->
