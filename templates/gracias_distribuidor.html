@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>¡Solicitud recibida! | NIOVAL</title>
 <meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -14,21 +15,53 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8f9fb;color:#111;min-height:100vh;display:flex;flex-direction:column}
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+body{font-family:'Inter',sans-serif;background:#f8f9fb;color:#111}
+
+/* NAV */
 nav{background:#0033FF;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 nav a{color:#fff;text-decoration:none;font-weight:700;letter-spacing:2px;font-size:18px}
 nav .back{font-size:13px;font-weight:500;opacity:.8;letter-spacing:0}
-.main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
-.card{background:#fff;border-radius:20px;padding:52px 40px;box-shadow:0 4px 24px rgba(0,0,0,.09);max-width:520px;width:100%;text-align:center}
-.check{font-size:64px;margin-bottom:20px}
-h1{font-size:28px;font-weight:900;color:#0033FF;margin-bottom:12px}
-.sub{font-size:15px;color:#6b7280;line-height:1.7;margin-bottom:32px}
-.wa-btn{display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:16px}
-.wa-btn:hover{background:#22c55e}
-.back-link{display:block;font-size:13px;color:#9ca3af;text-decoration:none;margin-top:8px}
-.back-link:hover{color:#0033FF}
-footer{text-align:center;padding:24px;color:#9ca3af;font-size:13px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#0033FF 55%,#0055FF);color:#fff;padding:72px 24px 80px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(255,255,255,.07) 0%,transparent 70%);pointer-events:none}
+.badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;padding:7px 18px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:24px;letter-spacing:.5px}
+.confetti{font-size:72px;margin-bottom:20px;display:block;animation:pop .6s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes pop{0%{transform:scale(0) rotate(-10deg);opacity:0}70%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.hero h1{font-size:clamp(30px,5vw,52px);font-weight:900;line-height:1.15;margin-bottom:16px}
+.hero h1 span{color:#FBBF24}
+.hero p{font-size:16px;opacity:.88;max-width:520px;margin:0 auto 36px;line-height:1.75}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-wa{background:#25D366;color:#fff;padding:15px 30px;border-radius:12px;font-weight:800;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;transition:background .2s,transform .15s;box-shadow:0 4px 16px rgba(37,211,102,.35)}
+.btn-wa:hover{background:#22c55e;transform:translateY(-2px)}
+.btn-outline{background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.4);color:#fff;padding:15px 30px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;transition:background .2s}
+.btn-outline:hover{background:rgba(255,255,255,.22)}
+
+/* PASOS */
+.section{padding:60px 24px}
+.section-inner{max-width:900px;margin:0 auto}
+.section-label{display:inline-block;background:#E8EEFF;color:#0033FF;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:12px;letter-spacing:.5px}
+.section-title{font-size:clamp(22px,3.5vw,32px);font-weight:800;margin-bottom:8px}
+.section-sub{font-size:15px;color:#6b7280;line-height:1.7;margin-bottom:40px}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.paso{background:#fff;border-radius:16px;padding:32px 26px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:4px solid #0033FF;position:relative;animation:fadeUp .5s ease both}
+.paso:nth-child(2){animation-delay:.1s;border-color:#FBBF24}
+.paso:nth-child(3){animation-delay:.2s;border-color:#25D366}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.paso-num{width:36px;height:36px;background:#0033FF;color:#fff;border-radius:50%;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.paso:nth-child(2) .paso-num{background:#FBBF24;color:#111}
+.paso:nth-child(3) .paso-num{background:#25D366}
+.paso-icon{font-size:30px;margin-bottom:12px}
+.paso h3{font-size:16px;font-weight:800;margin-bottom:8px}
+.paso p{font-size:13px;color:#6b7280;line-height:1.65}
+
+/* BANNER ASESOR */
+.banner{background:#0033FF;color:#fff;padding:52px 24px;text-align:center}
+.banner h2{font-size:clamp(20px,3.5vw,28px);font-weight:900;margin-bottom:10px}
+.banner p{font-size:15px;opacity:.85;max-width:480px;margin:0 auto 28px;line-height:1.7}
+
+/* FOOTER */
+footer{text-align:center;padding:28px;color:#9ca3af;font-size:13px}
 footer a{color:#0033FF;text-decoration:none}
 </style>
 </head>
@@ -43,21 +76,64 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <a href="/distribuidor" class="back">← Volver</a>
 </nav>
 
-<div class="main">
-  <div class="card">
-    <div class="check">🎉</div>
-    <h1>¡Solicitud recibida!</h1>
-    <p class="sub">Tu asesor NIOVAL te contacta en menos de 24 horas por WhatsApp con las condiciones para tu nivel de distribución.</p>
-    <a class="wa-btn" href="https://api.whatsapp.com/send?phone=526624151997&text=Hola%2C%20acabo%20de%20llenar%20el%20formulario%20para%20ser%20distribuidor%20NIOVAL." target="_blank">
+<!-- HERO -->
+<div class="hero">
+  <span class="badge">Programa de Distribuidores</span>
+  <span class="confetti">🎉</span>
+  <h1>¡Solicitud <span>recibida!</span></h1>
+  <p>Bienvenido a la red NIOVAL. Tu asesor te contacta en <strong>menos de 24 horas</strong> por WhatsApp con las condiciones de tu nivel.</p>
+  <div class="hero-btns">
+    <a href="https://api.whatsapp.com/send?phone=526624151997&text=Hola%2C%20acabo%20de%20llenar%20el%20formulario%20para%20ser%20distribuidor%20NIOVAL." target="_blank" class="btn-wa">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Escribir al asesor ahora
     </a>
-    <a href="/" class="back-link">Volver al inicio →</a>
+    <a href="/" class="btn-outline">Explorar catálogo →</a>
   </div>
 </div>
 
+<!-- PASOS -->
+<section class="section">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:40px">
+      <span class="section-label">¿Qué sigue?</span>
+      <h2 class="section-title">Tu proceso de incorporación</h2>
+      <p class="section-sub">Tres pasos simples para empezar a distribuir con NIOVAL.</p>
+    </div>
+    <div class="pasos">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-icon">📋</div>
+        <h3>Revisamos tu solicitud</h3>
+        <p>Nuestro equipo analiza tu perfil y el nivel de distribución más conveniente para tu negocio.</p>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-icon">📲</div>
+        <h3>Tu asesor te contacta</h3>
+        <p>En menos de 24 horas recibes WhatsApp de tu asesor NIOVAL con condiciones, precios y catálogo completo.</p>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-icon">🚀</div>
+        <h3>Empiezas a distribuir</h3>
+        <p>Realiza tu primer pedido con precio de mayoreo directo y recíbelo en 2 días hábiles en cualquier estado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER CTA -->
+<div class="banner">
+  <h2>¿Tienes dudas mientras tanto?</h2>
+  <p>Escríbenos por WhatsApp y un asesor real te responde al instante. Sin bots, sin esperas.</p>
+  <a href="https://api.whatsapp.com/send?phone=526624151997&text=Hola%2C%20acabo%20de%20llenar%20el%20formulario%20para%20ser%20distribuidor%20NIOVAL." target="_blank" class="btn-wa">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Hablar con asesor NIOVAL
+  </a>
+</div>
+
 <footer>
-  <p>NIOVAL — Distribución Mayorista · <a href="/">nioval.com</a></p>
+  <p>NIOVAL — Distribución Mayorista · <a href="/">nioval.com</a> · <a href="/privacidad">Privacidad</a></p>
 </footer>
 </body>
 </html>
