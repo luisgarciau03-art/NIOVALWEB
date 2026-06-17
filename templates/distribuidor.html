@@ -77,6 +77,29 @@ input:focus,select:focus{border-color:#0033FF}
 .success p{color:#6b7280;font-size:14px;margin-bottom:20px}
 .wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:13px 24px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none}
 
+/* STATS BAR */
+.stats-bar{background:#fff;border-bottom:1px solid #e5e7eb;padding:20px 24px}
+.stats-bar-inner{max-width:900px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-num{font-size:26px;font-weight:900;color:#0033FF;line-height:1}
+.stat-label{font-size:12px;color:#6b7280;margin-top:4px}
+
+/* TRUST STRIP */
+.trust-strip{background:#f0f4ff;border-top:1px solid #e0e7ff;border-bottom:1px solid #e0e7ff;padding:14px 24px}
+.trust-strip-inner{max-width:900px;margin:0 auto;display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#374151}
+.trust-item span{color:#0033FF}
+
+/* FAQ */
+.faq-section{padding:56px 24px;background:#f8f9fb}
+.faq-inner{max-width:700px;margin:0 auto}
+.faq-item{background:#fff;border-radius:12px;margin-bottom:12px;border:1px solid #e5e7eb;overflow:hidden}
+.faq-q{width:100%;text-align:left;padding:18px 20px;background:none;border:none;cursor:pointer;font-size:15px;font-weight:700;color:#111;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:inherit}
+.faq-q::after{content:'+';font-size:20px;font-weight:400;color:#0033FF;flex-shrink:0;transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{display:none;padding:0 20px 18px;font-size:14px;color:#374151;line-height:1.7}
+.faq-item.open .faq-a{display:block}
+
 /* FOOTER */
 footer{text-align:center;padding:28px;color:#9ca3af;font-size:13px}
 footer a{color:#0033FF;text-decoration:none}
@@ -105,15 +128,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <!-- HERO -->
 <div class="hero">
-  <span class="hero-tag">Programa de Distribuidores</span>
+  <span class="hero-tag">Programa de Distribuidores NIOVAL</span>
   <h1>Sé el que surte de todo<br><span>en tu zona</span></h1>
-  <p>Herramientas, grifería, cerraduras y más en un solo pedido. Precio directo de mayoreo y un asesor NIOVAL que te acompaña desde el primer día.</p>
+  <p>150+ productos al mayoreo en un solo pedido — herramientas, grifería y cerraduras. Precio directo sin intermediarios y un asesor que te contacta en menos de 4 horas.</p>
   <div class="hero-btns">
     <a href="#solicitud" class="btn-gold">Quiero ser distribuidor →</a>
     <a href="https://api.whatsapp.com/send?phone=526624151997&text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20programa%20de%20distribuidores%20NIOVAL." target="_blank" class="btn-wa">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Hablar con asesor
     </a>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-bar-inner">
+    <div class="stat-item"><div class="stat-num">150+</div><div class="stat-label">Productos en catálogo</div></div>
+    <div class="stat-item"><div class="stat-num">32</div><div class="stat-label">Estados con entrega</div></div>
+    <div class="stat-item"><div class="stat-num">2 días</div><div class="stat-label">Tiempo de entrega</div></div>
+    <div class="stat-item"><div class="stat-num">1 asesor</div><div class="stat-label">Dedicado a tu negocio</div></div>
   </div>
 </div>
 
@@ -171,12 +204,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </div>
 
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-strip-inner">
+    <div class="trust-item"><span>✓</span> Sin costo de membresía</div>
+    <div class="trust-item"><span>✓</span> Asesor real por WhatsApp</div>
+    <div class="trust-item"><span>✓</span> Respuesta en menos de 4 horas</div>
+    <div class="trust-item"><span>✓</span> Pedido mínimo accesible</div>
+  </div>
+</div>
+
 <!-- FORMULARIO -->
 <section class="section" id="solicitud">
   <div class="section-inner">
     <div class="form-wrap">
-      <h2>Solicita información</h2>
-      <p>Completa el formulario y tu asesor NIOVAL te contacta en menos de 24 horas con las condiciones para tu nivel.</p>
+      <h2>Solicita tus precios de mayoreo</h2>
+      <p>Déjanos tus datos y tu asesor NIOVAL te contacta <strong>en menos de 4 horas</strong> con precios y condiciones para tu negocio.</p>
       <div id="form-area">
         <div class="form-grid">
           <div>
@@ -195,38 +238,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <label>Ciudad</label>
             <input type="text" id="d-ciudad" placeholder="Hermosillo, Sonora">
           </div>
-          <div>
-            <label>Tipo de negocio</label>
-            <select id="d-negocio">
-              <option value="">Selecciona...</option>
-              <option>Ferretería</option>
-              <option>Tlapalería</option>
-              <option>Distribuidora</option>
-              <option>Tienda en línea</option>
-              <option>Otro</option>
-            </select>
-          </div>
-          <div>
-            <label>Volumen mensual estimado</label>
-            <select id="d-volumen">
-              <option value="">Selecciona...</option>
-              <option>Menos de $5,000 MXN</option>
-              <option>$5,000 – $15,000 MXN</option>
-              <option>$15,000 – $50,000 MXN</option>
-              <option>Más de $50,000 MXN</option>
-            </select>
-          </div>
-          <div class="full">
-            <label>Nivel de interés</label>
-            <select id="d-nivel">
-              <option value="">Selecciona...</option>
-              <option>Mayorista</option>
-              <option>Distribuidor</option>
-              <option>No sé aún, quiero información</option>
-            </select>
-          </div>
+          <input type="hidden" id="d-negocio" value="">
+          <input type="hidden" id="d-volumen" value="">
+          <input type="hidden" id="d-nivel" value="">
         </div>
-        <button class="btn-submit" onclick="enviarDistribuidor()">Quiero ser distribuidor NIOVAL →</button>
+        <button class="btn-submit" onclick="enviarDistribuidor()">Quiero mis precios de mayoreo →</button>
+        <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:12px">Sin spam. Tu asesor te contacta solo por WhatsApp.</p>
       </div>
       <div class="success" id="d-success">
         <h3>¡Solicitud recibida! 🎉</h3>
@@ -236,6 +253,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           Escribir al asesor ahora
         </a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="faq-inner">
+    <div style="text-align:center;margin-bottom:36px">
+      <span class="section-tag">Preguntas frecuentes</span>
+      <h2 class="section-title">¿Tienes dudas? Las resolvemos aquí</h2>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">¿Cuánto necesito para empezar como distribuidor?</button>
+      <div class="faq-a">No hay costo de membresía ni cuota de entrada. El requerimiento es un pedido mínimo inicial, que tu asesor te explica según tu nivel (Mayorista o Distribuidor). Si cumples el volumen, entras a la red.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">¿Puedo pedir productos sueltos o solo por paquete?</button>
+      <div class="faq-a">Puedes armar tu pedido con los productos que más se venden en tu zona. No estás obligado a comprar toda la línea. Tu asesor te ayuda a identificar qué productos rotan mejor en tu mercado.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">¿En cuánto tiempo llega mi primer pedido?</button>
+      <div class="faq-a">Enviamos a los 32 estados de México. El tiempo de entrega es de 2 días hábiles a partir de que confirmamos tu pedido y pago. Recibes número de seguimiento por WhatsApp.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">¿NIOVAL me da apoyo para vender?</button>
+      <div class="faq-a">Sí. Cada distribuidor tiene un asesor B2B dedicado que te acompaña desde el primer pedido. Te ayudamos con catálogos, precios sugeridos de reventa y estrategia para los productos que más se venden en ferreterías y tlapalerías.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">¿Puedo obtener crédito?</button>
+      <div class="faq-a">El crédito está disponible para distribuidores del nivel Distribuidor, sujeto a evaluación. Es algo que tu asesor puede gestionar contigo una vez que hayas realizado tus primeros pedidos y se haya establecido la relación comercial.</div>
     </div>
   </div>
 </section>
@@ -251,6 +298,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </a>
 
 <script>
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
 async function enviarDistribuidor() {
   const nombre   = document.getElementById('d-nombre').value.trim();
   const empresa  = document.getElementById('d-empresa').value.trim();
